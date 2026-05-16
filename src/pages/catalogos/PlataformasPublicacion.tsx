@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,21 +23,18 @@ import {
   Trash2, 
   Globe, 
   Link, 
-  MessageSquare, 
   CheckCircle2, 
   XCircle, 
   Filter,
-  ShieldCheck,
-  Building2,
   ExternalLink,
-  Loader2
+  Loader2,
+  Settings2
 } from 'lucide-react';
 import { useVacancyPlatforms, type VacancyPublicationPlatform } from '@/hooks/useVacancyPlatforms';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { cn } from '@/lib/utils';
 
 export default function PlataformasPublicacion() {
-  const { data, isLoading, create, update, delete: deleteItem, isCreating, isUpdating } = useVacancyPlatforms();
+  const { data = [], isLoading, create, update, delete: deleteItem, isCreating, isUpdating } = useVacancyPlatforms();
   const [searchTerm, setSearchTerm] = useState('');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<VacancyPublicationPlatform | null>(null);
@@ -50,9 +46,11 @@ export default function PlataformasPublicacion() {
   const [url, setUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
 
-  const filtered = data.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    return data.filter(p =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [data, searchTerm]);
 
   const openCreate = () => {
     setEditing(null);
@@ -83,316 +81,292 @@ export default function PlataformasPublicacion() {
     setFormOpen(false);
   };
 
+  const stats = useMemo(() => ({
+    total: data.length,
+    active: data.filter(p => p.is_active).length,
+    withUrl: data.filter(p => p.url).length,
+  }), [data]);
+
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto">
-      {/* Header Premium */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }} 
-        animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-indigo-500/10 via-background to-background border border-indigo-500/10 overflow-hidden"
-      >
-        
-        
-        <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
-              <Globe className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Catálogo de Reclutamiento</span>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header - Flat Style */}
+      <div className="bg-white border border-slate-200 rounded-xl p-6 sm:p-8 shadow-none">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+              <Settings2 className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">Módulo de Reclutamiento</span>
             </div>
-            <div className="space-y-1">
-              <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
-                Plataformas de Publicación
-              </h1>
-              <p className="text-lg text-slate-500 font-medium max-w-xl">
-                Configura los canales y portales externos para la publicación de vacantes.
-              </p>
-            </div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">
+              Plataformas de Publicación
+            </h1>
+            <p className="text-slate-500 text-sm max-w-xl font-medium">
+              Configura los canales y portales externos para la publicación de vacantes.
+            </p>
           </div>
           
           <Button 
-            onClick={openCreate} 
-            className="h-14 px-8 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 font-black uppercase tracking-widest text-xs transition-all active:scale-95"
+            onClick={openCreate}
+            className="h-11 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs transition-all shadow-none"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="w-4 h-4 mr-2" />
             NUEVA PLATAFORMA
           </Button>
         </div>
-      </motion.div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 bg-white p-8 group hover:scale-[1.02] transition-all">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Plataformas</p>
-              <p className="text-4xl font-black text-slate-900 tracking-tighter">{data.length}</p>
-            </div>
-            <div className="h-14 w-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:rotate-12 transition-transform">
-              <Globe className="w-7 h-7" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 bg-white p-8 group hover:scale-[1.02] transition-all">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activas</p>
-              <p className="text-4xl font-black text-emerald-600 tracking-tighter">
-                {data.filter(p => p.is_active).length}
-              </p>
-            </div>
-            <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:rotate-12 transition-transform">
-              <CheckCircle2 className="w-7 h-7" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 bg-white p-8 group hover:scale-[1.02] transition-all">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Enlaces Configurados</p>
-              <p className="text-4xl font-black text-amber-600 tracking-tighter">
-                {data.filter(p => p.url).length}
-              </p>
-            </div>
-            <div className="h-14 w-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600 group-hover:rotate-12 transition-transform">
-              <Link className="w-7 h-7" />
-            </div>
-          </div>
-        </Card>
       </div>
 
-      {/* Main Content */}
-      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 ">
-        <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
+      {/* Grid de Estadísticas - Flat Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {[
+          { label: 'Total Canales', value: stats.total, icon: Globe, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Canales Activos', value: stats.active, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Con Enlace', value: stats.withUrl, icon: Link, color: 'text-amber-600', bg: 'bg-amber-50' },
+        ].map((kpi, i) => (
+          <Card key={i} className="border border-slate-200 shadow-none bg-white rounded-xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight leading-none">
+                    {isLoading ? <Skeleton className="h-8 w-12" /> : kpi.value}
+                  </p>
+                </div>
+                <div className={cn("h-12 w-12 rounded-lg flex items-center justify-center shrink-0", kpi.bg, kpi.color)}>
+                  <kpi.icon className="w-6 h-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Listado - Flat Style */}
+      <Card className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-none">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input 
-              placeholder="Buscar por nombre..." 
-              className="pl-11 h-12 rounded-2xl bg-white border-slate-200 shadow-sm transition-all font-medium"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Buscar por nombre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-10 bg-slate-50 border-slate-200 rounded-lg focus:bg-white transition-all text-sm"
             />
           </div>
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-white shadow-sm font-bold text-slate-600">
+          <Button variant="outline" className="h-10 px-4 rounded-lg border-slate-200 font-bold text-slate-600 text-sm">
             <Filter className="w-4 h-4 mr-2" />
-            Filtrar Canales
+            Filtros
           </Button>
         </div>
 
-        <CardContent className="p-0">
+        <div className="p-0">
           {isLoading ? (
-            <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">Cargando Plataformas...</div>
+            <div className="p-8 space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 w-full bg-slate-50 rounded-lg animate-pulse" />
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="py-32 text-center space-y-6">
-              <div className="h-20 w-20 bg-card rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
-                <Globe className="w-10 h-10" />
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+              <div className="h-16 w-16 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300">
+                <Globe className="h-8 w-8" />
               </div>
-              <p className="text-slate-500 font-bold">No se encontraron plataformas registradas</p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-900">No se encontraron plataformas</h3>
+                <p className="text-slate-500 text-sm font-medium">
+                  {searchTerm ? 'Prueba con otro término de búsqueda.' : 'Comienza registrando la primera plataforma.'}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-card">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Plataforma</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Enlace de Acceso</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="hover:bg-transparent border-slate-200">
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-500 pl-6 py-4">Canal de Publicación</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-500">Enlace</TableHead>
+                    <TableHead className="font-bold text-[10px] uppercase tracking-widest text-slate-500 text-center">Estado</TableHead>
+                    <TableHead className="text-right pr-6 font-bold text-[10px] uppercase tracking-widest text-slate-500">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <AnimatePresence mode="popLayout">
-                    {filtered.map((item, idx) => (
-                      <motion.tr 
-                        key={item.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-card transition-colors"
-                      >
-                        <TableCell className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-indigo-600 font-black group-hover:scale-110 transition-transform">
-                              <Globe className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <div className="font-black text-slate-900 leading-none">{item.name}</div>
-                              <div className="text-[10px] font-bold text-slate-400 mt-1 truncate max-w-[200px]">
-                                {item.description || 'Sin descripción adicional'}
-                              </div>
-                            </div>
+                  {filtered.map((item) => (
+                    <TableRow key={item.id} className="group border-slate-100 last:border-0 hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="pl-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 font-black text-sm">
+                            <Globe className="w-5 h-5" />
                           </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6">
-                          {item.url ? (
-                            <a 
-                              href={item.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-2 text-xs font-black text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-                            >
-                              <ExternalLink className="w-3 h-3" />
-                              VER PORTAL
-                            </a>
-                          ) : (
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Sin URL configurada</span>
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm text-slate-900">{item.name}</span>
+                            <span className="text-[10px] text-slate-400 font-medium line-clamp-1">{item.description || 'Sin descripción'}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {item.url ? (
+                          <a 
+                            href={item.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-wider"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Ver Portal
+                          </a>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No configurada</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge 
+                          className={cn(
+                            "h-6 px-2.5 rounded-md border-none font-bold text-[10px] uppercase tracking-wider",
+                            item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
                           )}
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-center">
-                          <Badge className={cn(
-                            "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            item.is_active ? "bg-emerald-50 text-emerald-600" : "bg-card text-slate-400"
-                          )}>
-                            {item.is_active ? 'Activa' : 'Inactiva'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(item)} className="h-10 w-10 rounded-xl hover:bg-indigo-50 hover:text-indigo-600">
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
+                        >
+                          {item.is_active ? 'Activa' : 'Inactiva'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity gap-1">
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            onClick={() => openEdit(item)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors"
+                            onClick={() => setDeleteId(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       {/* Form Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
-          <div className="relative flex-1 flex flex-col min-h-0">
-            
-            
-            <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-card">
-              <div className="flex items-center gap-6">
-                <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl">
-                  <Globe className="w-8 h-8 text-indigo-600" />
-                </div>
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[10px] font-black text-emerald-600 uppercase tracking-widest border border-emerald-100/50 mb-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {editing ? 'Actualizando Canal' : 'Nuevo Canal de Publicación'}
-                  </div>
-                  <DialogTitle className="text-4xl font-black tracking-tight text-slate-900 leading-none">
-                    {editing ? 'Editar Plataforma' : 'Nueva Plataforma'}
-                  </DialogTitle>
-                </div>
+        <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border border-slate-200 rounded-xl">
+          <DialogHeader className="px-6 py-6 bg-slate-50 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center text-white">
+                <Globe className="w-5 h-5" />
               </div>
-            </DialogHeader>
+              <DialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">
+                {editing ? 'Editar Plataforma' : 'Nueva Plataforma'}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
-              <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8 custom-scrollbar bg-[#f8fafc]">
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Nombre del Portal *</Label>
-                    <Input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ej: LinkedIn, Indeed, Portal Corporativo..."
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-indigo-500/5 transition-all font-bold text-slate-700"
-                      required
-                    />
-                  </div>
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nombre del Portal *</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ej: LinkedIn, Indeed..."
+                  className="h-11 rounded-lg border-slate-200 bg-slate-50/50 focus:bg-white font-bold"
+                  required
+                />
+              </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Descripción Breve</Label>
-                    <Textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Agrega detalles sobre este canal de reclutamiento..."
-                      className="min-h-[100px] pt-4 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all font-medium text-slate-600"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Enlace Directo (URL)</Label>
-                    <div className="relative">
-                      <Link className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-500" />
-                      <Input
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        placeholder="https://plataforma.com/vacantes"
-                        className="h-14 pl-12 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all font-bold text-slate-700"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 shadow-sm group hover:border-indigo-500/30 transition-all">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="w-4 h-4 text-indigo-500" />
-                        <Label className="text-xs font-black text-slate-700 uppercase tracking-widest">Habilitar Plataforma</Label>
-                      </div>
-                      <p className="text-[10px] text-slate-400 font-medium leading-tight">Define si este canal estará disponible para nuevas publicaciones</p>
-                    </div>
-                    <Switch
-                      checked={isActive}
-                      onCheckedChange={setIsActive}
-                      className="data-[state=checked]:bg-indigo-600"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Enlace de Acceso (URL)</Label>
+                <div className="relative">
+                  <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://portal.com/vacantes"
+                    className="h-11 pl-10 rounded-lg border-slate-200 bg-slate-50/50 focus:bg-white font-bold"
+                  />
                 </div>
               </div>
 
-              <DialogFooter className="shrink-0 px-10 py-8 border-t border-slate-100 bg-[#f1f5f9] flex items-center justify-end gap-6 rounded-b-[2.5rem]">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  onClick={() => setFormOpen(false)} 
-                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs text-slate-600 hover:bg-slate-200 transition-all"
-                >
-                  CANCELAR
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={!name.trim() || isCreating || isUpdating} 
-                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-xl shadow-indigo-600/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  {isCreating || isUpdating ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : editing ? (
-                    'GUARDAR CAMBIOS'
-                  ) : (
-                    'CREAR PLATAFORMA'
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Descripción</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detalles sobre el alcance o uso de esta plataforma..."
+                  className="min-h-[100px] rounded-lg border-slate-200 bg-slate-50/50 focus:bg-white font-medium text-sm"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 border border-slate-100">
+                <div className="space-y-0.5">
+                  <Label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Habilitar Plataforma</Label>
+                  <p className="text-[10px] text-slate-400 font-medium">Permitir publicaciones en este canal</p>
+                </div>
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={setIsActive}
+                  className="data-[state=checked]:bg-blue-600 scale-90"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-4 flex gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setFormOpen(false)} 
+                className="flex-1 h-11 rounded-lg font-bold border-slate-200 uppercase text-xs tracking-widest"
+              >
+                CANCELAR
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={!name.trim() || isCreating || isUpdating} 
+                className="flex-1 h-11 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase text-xs tracking-widest shadow-none"
+              >
+                {isCreating || isUpdating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : editing ? (
+                  'GUARDAR CAMBIOS'
+                ) : (
+                  'CREAR CANAL'
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
       {/* Delete Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-white">
+        <AlertDialogContent className="rounded-xl border border-slate-200 bg-white p-0 overflow-hidden max-w-md">
           <div className="p-8 space-y-6 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive mx-auto">
+            <div className="h-16 w-16 rounded-xl bg-red-50 flex items-center justify-center text-red-600 mx-auto">
               <Trash2 className="w-8 h-8" />
             </div>
             <div className="space-y-2">
-              <AlertDialogTitle className="text-2xl font-black text-slate-900 tracking-tight">¿Eliminar Plataforma?</AlertDialogTitle>
+              <AlertDialogTitle className="text-2xl font-black text-slate-900 tracking-tight uppercase">¿Eliminar Plataforma?</AlertDialogTitle>
               <AlertDialogDescription className="text-slate-500 font-medium">
-                Esta acción no se puede deshacer. Se eliminará permanentemente del catálogo de reclutamiento.
+                Esta acción eliminará la plataforma permanentemente. Asegúrate de que no haya vacantes activas vinculadas.
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-card flex gap-3 sm:gap-0">
-            <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
+          <AlertDialogFooter className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <AlertDialogCancel className="flex-1 h-12 rounded-lg font-bold border-slate-200 bg-white uppercase text-xs tracking-widest shadow-none">CANCELAR</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => { if (deleteId) { deleteItem(deleteId); setDeleteId(null); } }}
-              className="flex-1 h-12 rounded-xl bg-destructive hover:bg-destructive/90 font-bold shadow-lg shadow-destructive/20"
+              className="flex-1 h-12 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest shadow-none"
             >
-              ELIMINAR AHORA
+              ELIMINAR
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +11,6 @@ import {
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { 
@@ -21,15 +19,13 @@ import {
   Pencil, 
   Trash2, 
   Building2, 
-  ShieldCheck, 
-  Info,
   Filter,
   CheckCircle2,
   XCircle,
-  Briefcase
+  Briefcase,
+  Settings2
 } from 'lucide-react';
 import { SocialSecurityCatalogFormDialog } from '@/components/config/SocialSecurityCatalogFormDialog';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import type { CatalogItem, CatalogIPS } from '@/hooks/useSocialSecurityCatalogs';
 import { cn } from '@/lib/utils';
 
@@ -93,51 +89,51 @@ export function SocialSecurityCatalogPage({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Premium - Clean Sky Style */}
-      <div className="bg-card border-none shadow-sm rounded-2xl p-6 sm:p-8 relative overflow-hidden">
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="h-1 w-10 bg-primary rounded-full" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Catálogo de Configuración</span>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header Plano */}
+      <div className="bg-white border border-slate-200 shadow-none rounded-xl p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                <Settings2 className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Catálogo de Configuración</span>
+              </div>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">
               {title}
             </h1>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed font-medium">
+            <p className="text-slate-500 text-sm sm:text-base max-w-xl leading-relaxed font-medium">
               {description}
             </p>
           </div>
           
-          <div className="flex gap-2 shrink-0">
-            <Button 
-              onClick={() => { setEditItem(null); setDialogOpen(true); }} 
-              className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              NUEVA {title.toUpperCase()}
-            </Button>
-          </div>
+          <Button 
+            onClick={() => { setEditItem(null); setDialogOpen(true); }} 
+            className="h-11 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs transition-all shadow-none"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            NUEVA {title.toUpperCase()}
+          </Button>
         </div>
       </div>
 
-      {/* Grid de Estadísticas - Clean Sky Style */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Grid de Estadísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total Registros', value: data.length, icon: Building2, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Entidades Activas', value: data.filter(i => i.is_active).length, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'En Desuso', value: data.filter(i => !i.is_active).length, icon: XCircle, color: 'text-slate-400', bg: 'bg-slate-100' },
+          { label: 'Total Registros', value: data.length, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Entidades Activas', value: data.filter(i => i.is_active).length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'En Desuso', value: data.filter(i => !i.is_active).length, icon: XCircle, color: 'text-slate-400', bg: 'bg-slate-50' },
         ].map((kpi, i) => (
-          <Card key={i} className="border-none shadow-sm bg-card hover:shadow-md transition-all duration-300 group rounded-2xl overflow-hidden">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${kpi.bg} group-hover:scale-110 transition-transform shrink-0`}>
-                  <kpi.icon className={`w-6 h-6 ${kpi.color}`} />
+          <Card key={i} className="border border-slate-200 shadow-none bg-white rounded-xl overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight truncate leading-none">{kpi.value}</p>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-2xl font-black tracking-tight truncate leading-none mb-1">{kpi.value}</p>
-                  <p className="text-[11px] font-bold text-foreground/80 leading-tight uppercase tracking-widest">{kpi.label}</p>
+                <div className={cn("p-3 rounded-lg flex items-center justify-center shrink-0", kpi.bg, kpi.color)}>
+                  <kpi.icon className="w-6 h-6" />
                 </div>
               </div>
             </CardContent>
@@ -145,111 +141,106 @@ export function SocialSecurityCatalogPage({
         ))}
       </div>
 
-      {/* Listado - Clean Sky Style */}
-      <div className="bg-card border-none shadow-sm rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+      {/* Listado */}
+      <Card className="bg-white border border-slate-200 shadow-none rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input 
-              placeholder={`Buscar por nombre, NIT o código...`} 
-              className="pl-11 h-10 bg-background border-none rounded-xl shadow-sm focus-visible:ring-primary/20 font-medium"
+              placeholder={`Buscar...`} 
+              className="pl-10 h-10 bg-slate-50 border-slate-200 rounded-lg shadow-none focus:bg-white transition-all text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="h-10 px-5 rounded-xl border-border bg-background shadow-sm font-bold text-muted-foreground hover:text-primary transition-all">
+          <Button variant="outline" className="h-10 px-4 rounded-lg border-slate-200 bg-white font-bold text-slate-600 hover:text-blue-600 text-sm transition-all">
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </Button>
         </div>
 
-        <div className="overflow-x-auto scrollbar-hide">
+        <div className="overflow-x-auto">
           {isLoading ? (
             <div className="p-8 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 w-full bg-muted/20 rounded-xl animate-pulse" />
+                <div key={i} className="h-16 w-full bg-slate-50 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : filteredData.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-              <div className="h-16 w-16 rounded-2xl bg-muted/20 flex items-center justify-center text-muted-foreground/30">
+              <div className="h-16 w-16 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300">
                 <Search className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-bold text-foreground">No hay resultados</h3>
-                <p className="text-muted-foreground text-sm font-medium">{searchTerm ? 'Prueba con otros términos' : `Agrega una nueva ${title.toLowerCase()}`}</p>
+                <h3 className="text-lg font-bold text-slate-900">No hay resultados</h3>
+                <p className="text-slate-500 text-sm">{searchTerm ? 'Prueba con otros términos' : `Agrega una nueva ${title.toLowerCase()}`}</p>
               </div>
             </div>
           ) : (
             <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="px-6 py-4">Información Básica</TableHead>
-                  <TableHead className="px-6 py-4 text-center">Código / NIT</TableHead>
-                  {showIPSFields && <TableHead className="px-6 py-4 text-center">Ubicación</TableHead>}
-                  <TableHead className="px-6 py-4 text-center">Estado</TableHead>
-                  <TableHead className="px-6 py-4 text-right">Acciones</TableHead>
+              <TableHeader className="bg-slate-50">
+                <TableRow className="hover:bg-transparent border-slate-200">
+                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Información Básica</TableHead>
+                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">NIT / Código</TableHead>
+                  {showIPSFields && <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Ubicación</TableHead>}
+                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Estado</TableHead>
+                  <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <AnimatePresence mode="popLayout">
-                  {filteredData.map((item, idx) => (
-                    <motion.tr 
-                      key={item.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.03 }}
-                      className="group hover:bg-muted/10 border-border/50 transition-colors"
-                    >
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl bg-background border border-border shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
-                            <Briefcase className="w-5 h-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <div className="font-bold text-foreground truncate">{item.name}</div>
-                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Ref: {item.id.split('-')[0]}</div>
-                          </div>
+                {filteredData.map((item) => (
+                  <TableRow key={item.id} className="group hover:bg-slate-50/50 border-slate-100 transition-colors">
+                    <TableCell className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 shrink-0">
+                          <Briefcase className="w-5 h-5" />
                         </div>
-                      </TableCell>
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-900 truncate text-sm">{item.name}</div>
+                          <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Ref: {item.id.split('-')[0]}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
+                      <div className="space-y-1">
+                        <div className="text-xs font-bold text-slate-700">{item.nit || 'Sin NIT'}</div>
+                        {item.code && (
+                          <Badge variant="outline" className="text-[9px] h-5 rounded px-1.5 border-slate-200 bg-slate-50">
+                            {item.code}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    {showIPSFields && (
                       <TableCell className="px-6 py-4 text-center">
-                        <div className="space-y-1">
-                          <div className="text-xs font-bold text-foreground">{item.nit || 'Sin NIT'}</div>
-                          {item.code && (
-                            <Badge variant="outline">
-                              {item.code}
-                            </Badge>
-                          )}
-                        </div>
+                        <div className="text-xs font-bold text-slate-500">{(item as CatalogIPS).city || '-'}</div>
                       </TableCell>
-                      {showIPSFields && (
-                        <TableCell className="px-6 py-4 text-center">
-                          <div className="text-xs font-bold text-muted-foreground">{(item as CatalogIPS).city || '-'}</div>
-                        </TableCell>
-                      )}
-                      <TableCell className="px-6 py-4 text-center">
-                        <Badge variant={item.is_active ? "success" : "secondary"}>
-                          {item.is_active ? 'Activa' : 'Inactiva'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </motion.tr>
-                  ))}
-                </AnimatePresence>
+                    )}
+                    <TableCell className="px-6 py-4 text-center">
+                      <Badge className={cn(
+                        "h-6 px-2.5 rounded-md border-none font-bold text-[10px] uppercase tracking-wider",
+                        item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
+                      )}>
+                        {item.is_active ? 'Activa' : 'Inactiva'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600">
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)} className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           )}
         </div>
-      </div>
+      </Card>
 
       <SocialSecurityCatalogFormDialog
         open={dialogOpen}
@@ -265,22 +256,22 @@ export function SocialSecurityCatalogPage({
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden max-w-md bg-white">
-          <div className="p-8 space-y-6">
-            <div className="h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center text-destructive mx-auto">
-              <Trash2 className="w-8 h-8" />
+        <AlertDialogContent className="rounded-xl border border-slate-200 bg-white shadow-2xl p-6">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="h-12 w-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center">
+              <Trash2 className="w-6 h-6" />
             </div>
-            <div className="text-center space-y-2">
-              <AlertDialogTitle className="text-2xl font-black text-slate-900 tracking-tight">¿Eliminar Registro?</AlertDialogTitle>
-              <AlertDialogDescription className="text-slate-500 font-medium">
+            <div className="space-y-2">
+              <AlertDialogTitle className="text-xl font-black text-slate-900 uppercase">¿Eliminar Registro?</AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-slate-500 font-medium">
                 Esta acción eliminará permanentemente la entidad del catálogo. Asegúrate de que no haya empleados vinculados.
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-card flex gap-3 sm:gap-0">
-            <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="flex-1 h-12 rounded-xl bg-destructive hover:bg-destructive/90 font-bold shadow-lg shadow-destructive/20">
-              ELIMINAR AHORA
+          <AlertDialogFooter className="mt-6 flex gap-2">
+            <AlertDialogCancel className="flex-1 rounded-lg border-slate-200 font-bold uppercase text-[10px] tracking-widest">CANCELAR</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="flex-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-[10px] tracking-widest shadow-none">
+              ELIMINAR
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

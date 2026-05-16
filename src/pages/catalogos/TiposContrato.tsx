@@ -451,33 +451,6 @@ export default function TiposContrato() {
                             Eliminar Registro
                           </DropdownMenuItem>
                         </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  ),
-                }))}
-              />
-              <div className="hidden md:block">
-                <div className="overflow-hidden border-t border-border/50">
-                  <Table>
-                    <TableHeader className="bg-card">
-                      <TableRow className="hover:bg-transparent border-border/50">
-                        <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground pl-8">Tipo de Contrato</TableHead>
-                        <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Código Sistema</TableHead>
-                        <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Documento Base</TableHead>
-                        <TableHead className="h-14 font-black uppercase tracking-[0.2em] text-[10px] text-muted-foreground">Estado</TableHead>
-                        <TableHead className="h-14 w-[100px] pr-8"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredData.map((item, i) => (
-                        <TableRow key={item.id} className="group hover:transition-colors border-border/50">
-                          <TableCell className="pl-8 py-4">
-                            <div className="flex flex-col gap-0.5">
-                              <p className="font-black text-foreground uppercase tracking-tight group-hover:text-primary transition-colors">{item.display_name}</p>
-                              {item.description && (
-                                <p className="text-xs text-muted-foreground font-medium line-clamp-1 max-w-xs italic">
-                                  {item.description}
-                                </p>
                               )}
                             </div>
                           </TableCell>

@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, 
   Pencil, 
   Trash2, 
   Search, 
   Settings2, 
-  Info,
   Filter,
   CheckCircle2,
   XCircle,
   FileText,
-  MessageSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +19,6 @@ import {
 } from '@/components/ui/table';
 import { useNoveltyReasons, useDeleteNoveltyReason, type NoveltyReason } from '@/hooks/useNoveltyReasons';
 import { NoveltyReasonFormDialog } from '@/components/config/NoveltyReasonFormDialog';
-import { MobileCardList } from '@/components/shared/MobileCardList';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -49,103 +45,69 @@ export default function MotivosNovedad() {
   };
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto">
-      {/* Header Premium */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }} 
-        animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-border overflow-hidden"
-      >
-        
-        
-        <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
+    <div className="min-h-screen pb-20 space-y-6 max-w-7xl mx-auto px-4 sm:px-6">
+      {/* Header Plano */}
+      <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-none">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
               <Settings2 className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Configuración de Nómina</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Configuración de Nómina</span>
             </div>
-            <div className="space-y-1">
-              <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
-                Motivos de Novedad
-              </h1>
-              <p className="text-lg text-slate-500 font-medium max-w-xl">
-                Gestiona las razones predefinidas para las novedades y ajustes de nómina.
-              </p>
-            </div>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 uppercase">
+              Motivos de Novedad
+            </h1>
+            <p className="text-slate-500 font-medium max-w-xl text-sm">
+              Gestiona las razones predefinidas para las novedades y ajustes de nómina.
+            </p>
           </div>
           
           <Button 
             onClick={() => { setEditing(null); setShowDialog(true); }} 
-            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs transition-all active:scale-95"
+            className="h-11 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-wider text-xs transition-all shadow-none"
           >
             <Plus className="w-5 h-5 mr-2" />
             NUEVO MOTIVO
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {/* Grid de Estadísticas Rápidas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Motivos Registrados</p>
-                <p className="text-4xl font-black text-slate-900 tracking-tighter">{reasons.length}</p>
+        {[
+          { label: 'Motivos Registrados', value: reasons.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Activos', value: reasons.filter(r => r.is_active).length, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Inactivos', value: reasons.filter(r => !r.is_active).length, icon: XCircle, color: 'text-slate-400', bg: 'bg-slate-50' },
+        ].map((stat, i) => (
+          <Card key={i} className="rounded-xl border border-slate-200 shadow-none bg-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                  <p className="text-3xl font-black text-slate-900 tracking-tight">{stat.value}</p>
+                </div>
+                <div className={cn("h-12 w-12 rounded-lg flex items-center justify-center", stat.bg, stat.color)}>
+                  <stat.icon className="w-6 h-6" />
+                </div>
               </div>
-              <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:rotate-12 transition-transform">
-                <FileText className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activos</p>
-                <p className="text-4xl font-black text-emerald-600 tracking-tighter">
-                  {reasons.filter(r => r.is_active).length}
-                </p>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:rotate-12 transition-transform">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inactivos</p>
-                <p className="text-4xl font-black text-slate-300 tracking-tighter">
-                  {reasons.filter(r => !r.is_active).length}
-                </p>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-card flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
-                <XCircle className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Listado */}
-      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 ">
-        <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
+      <Card className="rounded-xl border border-slate-200 shadow-none bg-white overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input 
               placeholder="Buscar motivo..." 
-              className="pl-11 h-12 rounded-2xl bg-white border-slate-200 shadow-sm focus:ring-4 focus:ring-primary/5 transition-all font-medium text-slate-600"
+              className="pl-10 h-10 rounded-lg bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-white shadow-sm font-bold text-slate-600">
+          <Button variant="outline" className="h-10 px-4 rounded-lg border-slate-200 font-bold text-slate-600 text-sm">
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </Button>
@@ -153,78 +115,68 @@ export default function MotivosNovedad() {
 
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-8 space-y-4">
+            <div className="p-6 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 w-full bg-card rounded-3xl animate-pulse" />
+                <div key={i} className="h-16 w-full bg-slate-50 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-              <div className="h-24 w-24 rounded-[2.5rem] bg-card flex items-center justify-center text-slate-200">
-                <Search className="w-12 h-12" />
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+              <div className="h-16 w-16 rounded-xl bg-slate-50 flex items-center justify-center text-slate-300">
+                <Search className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-black text-slate-900">Sin resultados</h3>
-                <p className="text-slate-500 font-medium">No se encontraron motivos que coincidan con tu búsqueda.</p>
+                <h3 className="text-lg font-bold text-slate-900">Sin resultados</h3>
+                <p className="text-slate-500 text-sm">No se encontraron motivos que coincidan con tu búsqueda.</p>
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-card">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información del Motivo</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción Detallada</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>
+                <TableHeader className="bg-slate-50">
+                  <TableRow className="hover:bg-transparent border-slate-200">
+                    <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Información del Motivo</TableHead>
+                    <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Descripción</TableHead>
+                    <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">Estado</TableHead>
+                    <TableHead className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <AnimatePresence mode="popLayout">
-                    {filtered.map((r, idx) => (
-                      <motion.tr 
-                        key={r.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-card border-slate-100 transition-colors"
-                      >
-                        <TableCell className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform text-primary font-black">
-                              {r.item_number}
-                            </div>
-                            <div>
-                              <div className="font-black text-slate-900 leading-none">{r.name}</div>
-                            </div>
+                  {filtered.map((r) => (
+                    <TableRow key={r.id} className="group hover:bg-slate-50/50 border-slate-100 transition-colors">
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-blue-600 font-black text-sm">
+                            {r.item_number}
                           </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6">
-                          <div className="text-sm font-medium text-slate-500 max-w-[400px] truncate">
-                            {r.description || 'Sin descripción adicional'}
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-center">
-                          <Badge className={cn(
-                            "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-card text-slate-400"
-                          )}>
-                            {r.is_active ? 'Activo' : 'Inactivo'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" onClick={() => { setEditing(r); setShowDialog(true); }} className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
+                          <div className="font-bold text-slate-900 text-sm">{r.name}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4">
+                        <div className="text-xs font-medium text-slate-500 max-w-[400px] truncate">
+                          {r.description || 'Sin descripción adicional'}
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-center">
+                        <Badge className={cn(
+                          "h-6 px-2.5 rounded-md border-none font-bold text-[10px] uppercase tracking-wider",
+                          r.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-400"
+                        )}>
+                          {r.is_active ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => { setEditing(r); setShowDialog(true); }} className="h-8 w-8 rounded-lg hover:bg-blue-50 hover:text-blue-600">
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="h-8 w-8 rounded-lg hover:bg-red-50 hover:text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </div>
