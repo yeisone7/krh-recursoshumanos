@@ -63,8 +63,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import sidebarLogo from '@/assets/empatiq-icono-sidebar.png';
 import empatiqTextLogo from '@/assets/empatiq-texto.png';
 
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev';
-const APP_VERSION_LABEL = APP_VERSION === 'dev' ? 'dev' : APP_VERSION.slice(0, 8);
+const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
+const BUILD_ID = import.meta.env.VITE_BUILD_ID || 'dev';
+const APP_VERSION_LABEL = BUILD_ID === 'dev' ? `${APP_VERSION}-dev` : `${APP_VERSION} (${BUILD_ID.slice(0, 7)})`;
 
 interface NavItem {
   label: string;

@@ -18,8 +18,10 @@ export interface DataAssistantResponse {
     row_count: number;
     sql?: string;
     provider?: string;
+    suggestedChart?: string;
   } | null;
   explanation: string;
+  speechText?: string;
   conversationId?: string;
 }
 
@@ -48,22 +50,25 @@ export function useSendDataQuestion() {
       question,
       conversationId,
       userName,
+      isVoice,
     }: {
       question: string;
       conversationId?: string | null;
       userName?: string;
+      isVoice?: boolean;
     }): Promise<DataAssistantResponse & { conversationId: string }> => {
       const { data, error } = await supabase.functions.invoke('ai-data-assistant', {
-        body: { question, companyId: currentCompanyId, conversationId, userName },
+        body: { question, companyId: currentCompanyId, conversationId, userName, isVoice },
       });
 
       if (error) {
-        // Try to extract the real error message from the response
-        if (data?.error) throw new Error(data.error);
-        // The Supabase client wraps non-2xx as a generic error; check for context
-        const msg = error.message || 'Error al conectar con el asistente de datos';
+        console.error("[useSendDataQuestion] Invoke error:", error);
+        // Supabase invoke error might contain the message from the body
+        const bodyError = data?.error || data?.message;
+        const msg = bodyError || error.message || 'Error al conectar con el asistente de datos';
         throw new Error(msg);
       }
+      
       if (data?.error) throw new Error(data.error);
       return data as DataAssistantResponse & { conversationId: string };
     },
