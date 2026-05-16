@@ -148,6 +148,7 @@ export default function PreLiquidacion() {
       novelty_date: n.novelty_date,
       novelty_type: n.novelty_type,
       hours: n.hours,
+      status: n.status,
     })),
     overtimeRecords,
     incapacities,

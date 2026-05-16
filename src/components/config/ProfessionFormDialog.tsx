@@ -83,13 +83,13 @@ export function ProfessionFormDialog({ open, onOpenChange, profession }: Profess
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 rounded-[2.5rem] focus:outline-none flex flex-col">
         <div className="relative flex-1 flex flex-col min-h-0">
           
           
           <DialogHeader className="relative px-8 pt-10 pb-8 border-b border-slate-100 bg-background">
             <div className="flex items-center gap-6">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-xl overflow-hidden group">
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-white border border-slate-100 overflow-hidden group">
                 <div className="absolute inset-0 bg-background group-hover:transition-colors" />
                 <Briefcase className="relative w-8 h-8 text-primary" />
               </div>
@@ -128,7 +128,7 @@ export function ProfessionFormDialog({ open, onOpenChange, profession }: Profess
                           <Input 
                             placeholder="Ej: Administrador de Empresas, Desarrollador..." 
                             {...field} 
-                            className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-bold text-slate-700"
+                            className="h-14 rounded-2xl bg-white border border-slate-200 transition-all font-bold text-slate-700"
                           />
                         </FormControl>
                         <FormMessage />
@@ -140,7 +140,7 @@ export function ProfessionFormDialog({ open, onOpenChange, profession }: Profess
                     control={form.control}
                     name="is_active"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 shadow-sm group hover:border-primary/30 transition-all">
+                      <FormItem className="flex items-center justify-between p-6 rounded-3xl bg-white border border-slate-200 group hover:border-primary/30 transition-all">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <Info className="w-4 h-4 text-primary" />
@@ -173,7 +173,7 @@ export function ProfessionFormDialog({ open, onOpenChange, profession }: Profess
                 <Button 
                   type="submit" 
                   disabled={isCreating || isUpdating} 
-                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-xs bg-primary hover:bg-primary/90 text-primary-foreground transition-all"
                 >
                   {isCreating || isUpdating ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

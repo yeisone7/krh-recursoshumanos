@@ -110,6 +110,9 @@ export async function generateLaborCertificatePdf({
   const borderHeight = borderBottom - borderYStart;
   
   doc.setDrawColor(60, 60, 60); // #3c3c3c 
+  doc.setLineWidth(1.5);
+  doc.line(0, borderYStart, pageWidth, borderYStart);
+
   doc.setLineWidth(1);
   doc.rect(margin, borderYStart, pageWidth - margin * 2, borderHeight);
   

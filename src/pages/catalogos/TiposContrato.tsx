@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X, Check, LayoutGrid, Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, Pencil, Trash2, FileText, Download, Eye, Loader2, X, Check, LayoutGrid, Clock, Calendar, CheckCircle2, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useContractTypes, type ContractTypeConfig } from '@/hooks/useContractTypes';
 import { ContractTypeFormDialog } from '@/components/config/ContractTypeFormDialog';
@@ -40,6 +40,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { renderAsync } from 'docx-preview';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const codeColors = [
   'bg-primary/10 text-primary border-primary/20',
@@ -61,7 +62,7 @@ const getCodeColor = (code: string): string => {
 type PreviewTab = Pick<ContractTypeConfig, 'id' | 'display_name' | 'template_url' | 'template_file_name'>;
 
 export default function TiposContrato() {
-  const { data, isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
+  const { data = [], isLoading, create, update, delete: deleteItem, uploadTemplate, downloadTemplate, isCreating, isUpdating } = useContractTypes();
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSignatureOpen, setIsSignatureOpen] = useState(false);
@@ -276,283 +277,289 @@ export default function TiposContrato() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-card border border-border/50 p-6 sm:p-8 shadow-xl shadow-primary/5">
-        
-        
-        
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-6">
+    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-2 sm:px-6">
+      {/* Header Premium Flat */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }} 
+        animate={{ opacity: 1, y: 0 }}
+        className="relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white border border-slate-100"
+      >
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
             <div className="relative shrink-0 group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-card border border-border/50 shadow-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <FileText className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
+              <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center rounded-[1.25rem] sm:rounded-[1.75rem] bg-primary/10 border border-primary/20 transition-all duration-300">
+                <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
               </div>
             </div>
             <div>
-              <h1 className="text-3xl font-black tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent uppercase sm:text-4xl">
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  Gestión Contractual
+                </Badge>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground uppercase lg:text-4xl">
                 Tipos de Contrato
               </h1>
-              <p className="text-muted-foreground font-medium mt-1 tracking-wide">
-                Gestión de configuraciones y plantillas legales del sistema
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.2em] mt-1">
+                Modelos de vinculación y plantillas legales
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3">
             <ContractPlaceholdersInfo />
             <Button 
               variant="outline"
               onClick={() => setIsSignatureOpen(true)} 
-              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs border-primary/20 text-primary hover:bg-primary/5 transition-all shadow-sm"
+              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-none"
             >
               Firma Legal
             </Button>
             <Button 
               onClick={handleNewClick} 
-              className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-md shadow-primary/10 hover:scale-105 transition-all active:scale-95"
+              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
             >
               <Plus className="w-4 h-4 mr-2 stroke-[3]" />
-              Nuevo Tipo
+              NUEVO TIPO
             </Button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* Stats Summary - Flat Style */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 px-2">
         {[
-          { label: 'Total Tipos', value: stats.total, icon: LayoutGrid, color: 'text-primary', bg: 'bg-primary/10' },
-          { label: 'Activos', value: stats.active, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'Con Plantilla', value: stats.withTemplate, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: 'Inactivos', value: stats.inactive, icon: X, color: 'text-destructive', bg: 'bg-destructive/10' },
-        ].map((stat, i) => (
+          { label: 'Total Tipos', value: stats.total, icon: LayoutGrid, color: 'primary' },
+          { label: 'Activos', value: stats.active, icon: CheckCircle2, color: 'success' },
+          { label: 'Con Plantilla', value: stats.withTemplate, icon: FileText, color: 'primary' },
+          { label: 'Inactivos', value: stats.inactive, icon: X, color: 'warning' },
+        ].map((stat, idx) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="group relative rounded-[2rem] bg-card border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
+            transition={{ delay: idx * 0.1 }}
+            className="group relative p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-white border border-slate-100"
           >
-            <div className="flex items-center gap-4">
-              <div className={cn("p-4 rounded-2xl transition-transform group-hover:scale-110 duration-300", stat.bg)}>
-                <stat.icon className={cn("w-6 h-6", stat.color)} />
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className={cn(
+                "p-3 rounded-xl",
+                stat.color === 'primary' ? "bg-primary/10 text-primary" :
+                stat.color === 'success' ? "bg-emerald-50 text-emerald-600" :
+                "bg-orange-50 text-orange-600"
+              )}>
+                <stat.icon className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1">{stat.label}</p>
-                <p className="text-2xl font-black">{stat.value}</p>
-              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+                {isLoading ? <Skeleton className="h-8 w-12" /> : stat.value}
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <Card className="rounded-[2.5rem] bg-card border border-border/50 shadow-xl overflow-hidden">
-        <CardHeader className="p-8 border-b border-border/50">
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-black uppercase tracking-widest flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
-                Catálogo de Tipos
-              </CardTitle>
-              <CardDescription className="font-medium tracking-wide">
-                {filteredData.length} tipo(s) de contrato configurado(s) en el sistema
-              </CardDescription>
-            </div>
-            <div className="relative w-full sm:w-80 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                placeholder="Buscar por nombre o código..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-11 pr-4 rounded-2xl bg-card border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
-              />
-            </div>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+        <div className="relative flex-1 group max-w-xl">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
+          <Input
+            placeholder="BUSCAR POR NOMBRE O CÓDIGO..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="h-12 pl-12 rounded-2xl bg-white border border-slate-200 focus-visible:ring-4 ring-primary/5 transition-all font-bold text-[10px] uppercase tracking-widest"
+          />
+        </div>
+      </div>
+
+      <Card className="rounded-[1.5rem] sm:rounded-[2.5rem] border border-slate-100 bg-white overflow-hidden">
+        <div className="p-0 min-h-0">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <div className="relative">
-                <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse" />
-              </div>
-              <p className="text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">Sincronizando catálogo...</p>
+            <div className="p-8 space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-16 w-full bg-slate-50 rounded-2xl animate-pulse" />
+              ))}
             </div>
           ) : filteredData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center px-6">
-              <div className="w-20 h-20 rounded-[2rem] bg-card flex items-center justify-center mb-6 border border-border/50">
-                <FileText className="w-10 h-10 text-muted-foreground/30" />
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+              <div className="h-20 w-20 bg-slate-50 rounded-[1.75rem] flex items-center justify-center text-slate-300">
+                <FileText className="h-10 w-10" />
               </div>
-              <h3 className="text-xl font-black uppercase tracking-widest mb-2">No se encontraron resultados</h3>
-              <p className="text-muted-foreground font-medium max-w-sm">
-                No hay tipos de contrato que coincidan con tu búsqueda actual. Intenta con otros términos.
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-xl font-black text-slate-900 uppercase">Sin resultados</h3>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
+                  {searchTerm ? 'Prueba con otro término.' : 'Comienza creando el primer tipo de contrato.'}
+                </p>
+              </div>
             </div>
           ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="min-h-0">
               <MobileCardList
-                className="md:hidden p-4 space-y-4"
-                emptyMessage="No se encontraron tipos de contrato"
-                items={filteredData.map((item) => ({
+                className="md:hidden"
+                items={filteredData.map(item => ({
                   id: item.id,
-                  title: <span className="font-black uppercase tracking-tight text-foreground">{item.display_name}</span>,
-                  subtitle: <span className="text-xs font-medium text-muted-foreground line-clamp-1">{item.description || 'Sin descripción detallada'}</span>,
-                  badge: (
-                    <div className={cn(
-                      "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shadow-sm",
-                      item.is_active 
-                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                        : "bg-card text-muted-foreground border-border"
-                    )}>
-                      <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-card -foreground")} />
-                      {item.is_active ? 'Activo' : 'Inactivo'}
-                    </div>
-                  ),
+                  title: item.display_name,
+                  subtitle: item.description || 'Sin descripción detallada',
+                  badge: <Badge className={cn("text-[8px] font-black uppercase border-none h-5 px-2 rounded-md", item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-400")}>{item.is_active ? 'Activo' : 'Inactivo'}</Badge>,
                   fields: [
-                    { label: 'CÓDIGO', value: <code className={cn("text-[10px] px-2.5 py-1 rounded-lg border-2 font-black transition-all", getCodeColor(item.contract_type))}>{item.contract_type}</code>, className: 'col-span-2' },
+                    { label: 'CÓDIGO', value: <code className={cn("text-[9px] px-2 py-0.5 rounded border font-black uppercase", getCodeColor(item.contract_type))}>{item.contract_type}</code> },
                     { 
                       label: 'PLANTILLA', 
                       value: item.template_file_name ? (
-                        <div className="flex items-center gap-2 text-primary font-bold">
-                           <FileText className="w-3.5 h-3.5" />
-                          <span className="truncate max-w-[150px]">{item.template_file_name}</span>
+                        <div className="flex items-center gap-1 text-primary font-bold text-[9px] truncate max-w-[120px]">
+                           <FileText className="w-3 h-3" /> {item.template_file_name}
                         </div>
-                      ) : <span className="text-muted-foreground/50 italic">Sin asignar</span>, 
-                      className: 'col-span-2' 
-                    },
+                      ) : <span className="text-slate-300 italic text-[9px]">Sin asignar</span>
+                    }
                   ],
                   actions: (
-                    <div className="flex gap-2">
-                      <Button onClick={() => handleEdit(item)} variant="outline" size="sm" className="flex-1 h-10 rounded-xl font-black uppercase tracking-widest text-[10px]">
-                        <Pencil className="w-3 h-3 mr-2" />
-                        Editar
+                    <div className="flex gap-2 w-full">
+                      <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl font-bold text-[9px] uppercase tracking-widest" onClick={() => handleEdit(item)}>
+                        <Pencil className="w-3 h-3 mr-2" /> Editar
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="px-3 h-10 rounded-xl">
+                          <Button variant="outline" size="sm" className="px-3 h-9 rounded-xl">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-card border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
+                        <DropdownMenuContent align="end" className="bg-white border border-slate-100 shadow-xl rounded-2xl p-2 min-w-[180px]">
                           {item.template_url && (
                             <>
-                              <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3">
-                                <Eye className="w-4 h-4 text-primary" />
-                                Vista previa
+                              <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3 uppercase text-[9px] tracking-widest">
+                                <Eye className="w-4 h-4 text-primary" /> Vista previa
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)} className="rounded-xl h-10 font-bold gap-3">
-                                <Download className="w-4 h-4 text-primary" />
-                                Descargar Plantilla
+                              <DropdownMenuItem onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)} className="rounded-xl h-10 font-bold gap-3 uppercase text-[9px] tracking-widest">
+                                <Download className="w-4 h-4 text-primary" /> Descargar
                               </DropdownMenuItem>
                             </>
                           )}
-                          <DropdownMenuItem onClick={() => setDeleteId(item.id)} className="rounded-xl h-10 font-bold gap-3 text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="w-4 h-4" />
-                            Eliminar Registro
+                          <DropdownMenuItem onClick={() => setDeleteId(item.id)} className="rounded-xl h-10 font-bold gap-3 text-red-600 focus:text-red-600 focus:bg-red-50 uppercase text-[9px] tracking-widest">
+                            <Trash2 className="w-4 h-4" /> Eliminar
                           </DropdownMenuItem>
                         </DropdownMenuContent>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <code className={cn(
-                              "text-[11px] px-3 py-1 rounded-lg border-2 font-black shadow-sm transition-all group-hover:scale-105", 
-                              getCodeColor(item.contract_type)
-                            )}>
-                              {item.contract_type}
-                            </code>
-                          </TableCell>
-                          <TableCell className="py-4">
-                            {item.template_file_name ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-9 px-3 rounded-xl font-bold gap-2 text-primary hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20"
-                                onClick={() => item.template_url && handlePreview(item)}
-                              >
-                                <FileText className="w-4 h-4 shrink-0" />
-                                <span className="truncate max-w-[140px]">
-                                  {item.template_file_name}
-                                </span>
-                              </Button>
-                            ) : (
-                              <div className="flex items-center gap-2 text-muted-foreground/40 font-bold px-3 italic">
-                                <X className="w-3.5 h-3.5" />
-                                <span className="text-[11px] uppercase tracking-widest">Sin asignar</span>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="py-4">
-                            <div className={cn(
-                              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm transition-all",
-                              item.is_active 
-                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                                : "bg-card text-muted-foreground border-border"
-                            )}>
-                              <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", item.is_active ? "bg-emerald-500" : "bg-card -foreground")} />
-                              {item.is_active ? 'Activo' : 'Inactivo'}
-                            </div>
-                          </TableCell>
-                          <TableCell className="pr-8 py-4">
-                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon" 
-                                      className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
-                                      onClick={() => handleEdit(item)}
-                                    >
-                                      <Pencil className="w-4 h-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>Editar configuración</TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                      </DropdownMenu>
+                    </div>
+                  )
+                }))}
+              />
 
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-primary/10 hover:text-primary">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="bg-card border border-border/50 shadow-2xl rounded-2xl p-2 min-w-[200px]">
-                                  {item.template_url && (
-                                    <>
-                                      <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3">
-                                        <Eye className="w-4 h-4 text-primary" />
-                                        Vista previa visual
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem 
-                                        onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}
-                                        className="rounded-xl h-10 font-bold gap-3"
-                                      >
-                                        <Download className="w-4 h-4 text-primary" />
-                                        Descargar Plantilla Original
-                                      </DropdownMenuItem>
-                                    </>
-                                  )}
-                                  <DropdownMenuItem
-                                    onClick={() => setDeleteId(item.id)}
-                                    className="rounded-xl h-10 font-bold gap-3 text-destructive focus:text-destructive focus:bg-destructive/10"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    Eliminar del Catálogo
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-slate-50/50">
+                    <TableRow className="hover:bg-transparent border-slate-100">
+                      <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400 pl-8 py-5">Nombre del Contrato</TableHead>
+                      <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400">Código</TableHead>
+                      <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400">Plantilla</TableHead>
+                      <TableHead className="font-black uppercase tracking-widest text-[10px] text-slate-400 text-center">Estado</TableHead>
+                      <TableHead className="text-right font-black uppercase tracking-widest text-[10px] text-slate-400 pr-8">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item) => (
+                      <TableRow key={item.id} className="group border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="pl-8 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-primary font-black text-sm group-hover:scale-110 transition-transform">
+                              {item.display_name.charAt(0)}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                            <div className="space-y-0.5">
+                              <p className="font-black text-slate-900 text-sm uppercase tracking-tight">{item.display_name}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {item.id.split('-')[0]}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <code className={cn("text-[10px] px-3 py-1 rounded-lg border font-black uppercase", getCodeColor(item.contract_type))}>
+                            {item.contract_type}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          {item.template_file_name ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 px-3 rounded-xl font-bold gap-2 text-primary hover:bg-primary/10 hover:text-primary transition-all border border-transparent hover:border-primary/20"
+                              onClick={() => item.template_url && handlePreview(item)}
+                            >
+                              <FileText className="w-4 h-4 shrink-0" />
+                              <span className="truncate max-w-[140px] uppercase text-[10px] tracking-tight">
+                                {item.template_file_name}
+                              </span>
+                            </Button>
+                          ) : (
+                            <span className="text-slate-300 italic text-[10px] font-bold uppercase tracking-widest pl-3">Sin asignar</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge 
+                            className={cn(
+                              "h-7 px-3 rounded-lg border-none font-black text-[9px] uppercase tracking-widest",
+                              item.is_active ? "bg-emerald-50 text-emerald-700" : "bg-slate-50 text-slate-400"
+                            )}
+                          >
+                            {item.is_active ? 'Activo' : 'Inactivo'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right pr-8">
+                          <div className="flex justify-end opacity-100 transition-all gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all active:scale-90"
+                                    onClick={() => handleEdit(item)}
+                                  >
+                                    <Pencil className="w-4 h-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-slate-900 text-white border-none rounded-lg text-[10px] font-bold uppercase tracking-widest">Editar</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="bg-white border border-slate-100 shadow-xl rounded-2xl p-2 min-w-[200px]">
+                                {item.template_url && (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handlePreview(item)} className="rounded-xl h-10 font-bold gap-3 uppercase text-[10px] tracking-widest">
+                                      <Eye className="w-4 h-4 text-primary" /> Vista previa visual
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => downloadTemplate(item.template_url!, item.template_file_name!)}
+                                      className="rounded-xl h-10 font-bold gap-3 uppercase text-[10px] tracking-widest"
+                                    >
+                                      <Download className="w-4 h-4 text-primary" /> Descargar Plantilla
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                <DropdownMenuItem
+                                  onClick={() => setDeleteId(item.id)}
+                                  className="rounded-xl h-10 font-bold gap-3 text-red-600 focus:text-red-600 focus:bg-red-50 uppercase text-[10px] tracking-widest"
+                                >
+                                  <Trash2 className="w-4 h-4" /> Eliminar Registro
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       <ContractTypeFormDialog
@@ -570,8 +577,8 @@ export default function TiposContrato() {
       />
 
       <Dialog open={!!previewItem} onOpenChange={(open) => { if (!open) closePreview(); }}>
-        <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden p-0 rounded-[2.5rem] bg-card -3xl border border-border/50 shadow-xl shadow-primary/5">
-          <DialogHeader className="shrink-0 px-8 pt-8 pb-6 border-b border-border/50 bg-gradient-to-br from-primary/10 via-transparent to-transparent">
+        <DialogContent className="flex max-h-[95dvh] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden p-0 rounded-[2.5rem] bg-white border border-slate-100">
+          <DialogHeader className="shrink-0 px-8 pt-8 pb-6 border-b border-slate-50 bg-slate-50/50">
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -579,13 +586,13 @@ export default function TiposContrato() {
                     <Eye className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <DialogTitle className="text-2xl font-black uppercase tracking-widest">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tight">
                       Visor de Plantilla
                     </DialogTitle>
-                    {previewItem && <p className="text-sm font-bold text-muted-foreground/70 tracking-wide mt-0.5">{previewItem.template_file_name}</p>}
+                    {previewItem && <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">{previewItem.template_file_name}</p>}
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={closePreview} className="rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors">
+                <Button variant="ghost" size="icon" onClick={closePreview} className="rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors">
                   <X className="w-5 h-5" />
                 </Button>
               </div>
@@ -598,13 +605,13 @@ export default function TiposContrato() {
                         <div key={tab.id} className="relative group">
                           <TabsTrigger 
                             value={tab.id} 
-                            className="h-10 px-4 rounded-xl font-bold gap-2 bg-card data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all"
+                            className="h-10 px-4 rounded-xl font-bold gap-2 bg-white border border-slate-100 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:border-primary transition-all uppercase text-[9px] tracking-widest"
                           >
                             <span className="truncate max-w-[120px]">{tab.display_name}</span>
                           </TabsTrigger>
                           <button
                             type="button"
-                            className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                            className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                             onClick={(event) => {
                               event.preventDefault();
                               event.stopPropagation();
@@ -622,17 +629,14 @@ export default function TiposContrato() {
             </div>
           </DialogHeader>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-8 bg-card scrollbar-thin scrollbar-thumb-primary/10 hover:scrollbar-thumb-primary/20 transition-colors">
+          <div className="min-h-0 flex-1 overflow-y-auto px-8 py-8 bg-slate-50/30">
             {previewKind === 'docx' ? (
-              <div className="relative min-h-[500px] rounded-3xl border-2 border-dashed border-border bg-card p-6 sm:p-10 shadow-inner">
+              <div className="relative min-h-[500px] rounded-[1.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm">
                 {(previewLoading || docxRendering) && (
-                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-card rounded-3xl">
+                  <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm rounded-[1.5rem]">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="relative">
-                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                        <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse" />
-                      </div>
-                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Procesando documento...</p>
+                      <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Procesando documento...</p>
                     </div>
                   </div>
                 )}
@@ -641,38 +645,37 @@ export default function TiposContrato() {
             ) : previewLoading ? (
               <div className="flex min-h-[500px] flex-col items-center justify-center gap-4">
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cargando archivo...</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Cargando archivo...</p>
               </div>
             ) : previewError ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
-                  <X className="w-8 h-8 text-destructive" />
+                <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+                  <X className="w-8 h-8 text-red-600" />
                 </div>
                 <h4 className="text-lg font-black uppercase tracking-widest mb-2">Error de Vista Previa</h4>
-                <p className="text-muted-foreground font-medium max-w-md">{previewError}</p>
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest max-w-md">{previewError}</p>
               </div>
             ) : previewKind === 'pdf' && previewUrl ? (
-              <div className="relative h-[65vh] rounded-3xl overflow-hidden border border-border shadow-2xl">
-                <iframe title="Vista previa de plantilla" src={previewUrl} className="h-full w-full bg-card" />
+              <div className="relative h-[65vh] rounded-[1.5rem] overflow-hidden border border-slate-200 bg-white">
+                <iframe title="Vista previa de plantilla" src={previewUrl} className="h-full w-full" />
               </div>
             ) : null}
           </div>
 
-          <DialogFooter className="shrink-0 flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/50 bg-card px-8 py-6 rounded-b-[2.5rem]">
-            <p className="text-xs font-bold text-muted-foreground tracking-wide italic">
-              * La vista previa es una representación visual aproximada.
+          <DialogFooter className="shrink-0 flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-50 bg-white px-8 py-6 rounded-b-[2.5rem]">
+            <p className="text-[9px] font-black text-slate-400 tracking-widest uppercase italic">
+              * Representación visual aproximada.
             </p>
             <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button variant="outline" onClick={closePreview} className="flex-1 sm:flex-none h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-card border-border">
-                Finalizar Vista
+              <Button variant="outline" onClick={closePreview} className="flex-1 sm:flex-none h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200">
+                Cerrar Visor
               </Button>
               {previewItem?.template_url && (
                 <Button 
                   onClick={() => downloadTemplate(previewItem.template_url!, previewItem.template_file_name || 'plantilla.docx')} 
-                  className="flex-1 sm:flex-none h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+                  className="flex-1 sm:flex-none h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
                 >
-                  <Download className="mr-2 h-4 w-4" />
-                  Descargar Archivo
+                  <Download className="mr-2 h-4 w-4" /> Descargar
                 </Button>
               )}
             </div>
@@ -681,27 +684,23 @@ export default function TiposContrato() {
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="rounded-[2.5rem] bg-card border border-border/50 shadow-xl p-8 max-w-md">
-          <AlertDialogHeader>
-            <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
-              <Trash2 className="w-8 h-8 text-destructive" />
+        <AlertDialogContent className="rounded-[1.5rem] sm:rounded-[2rem] border border-slate-100 bg-white p-6 sm:p-8">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="h-16 w-16 rounded-[1.25rem] bg-red-50 text-red-600 flex items-center justify-center">
+              <Trash2 className="w-8 h-8" />
             </div>
-            <AlertDialogTitle className="text-2xl font-black uppercase tracking-widest">
-              ¿Eliminar tipo de contrato?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-base font-medium text-muted-foreground pt-2">
-              Esta acción eliminará permanentemente la configuración de **"{filteredData.find(i => i.id === deleteId)?.display_name}"**. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
-            <AlertDialogCancel className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] border-border hover:bg-card transition-all">
-              Cancelar Operación
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete} 
-              className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] bg-destructive text-white hover:bg-destructive/90 shadow-lg shadow-destructive/20 transition-all"
-            >
-              Confirmar Eliminación
+            <div className="space-y-2">
+              <AlertDialogTitle className="text-xl font-black text-slate-900 uppercase tracking-tight">¿Eliminar Registro?</AlertDialogTitle>
+              <AlertDialogDescription className="text-[11px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                Esta acción eliminará permanentemente la configuración del tipo de contrato. <br />
+                Esta operación no se puede deshacer.
+              </AlertDialogDescription>
+            </div>
+          </div>
+          <AlertDialogFooter className="mt-8 flex flex-col sm:flex-row gap-3">
+            <AlertDialogCancel className="h-12 rounded-2xl border-slate-200 font-black uppercase text-[10px] tracking-widest flex-1">CANCELAR</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="h-12 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[10px] tracking-widest shadow-none flex-1">
+              ELIMINAR
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

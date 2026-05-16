@@ -11,6 +11,7 @@ interface PreLiquidationData {
     novelty_date: string;
     novelty_type: string;
     hours: number;
+    status: string;
   }>;
   overtimeRecords: Array<{
     employee_id: string;
@@ -153,9 +154,9 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
       }
     });
 
-    // Index manual novelties by employee
+    // Index manual novelties by employee - Only approved ones
     const noveltyByEmployee: Record<string, Array<typeof novelties[0]>> = {};
-    novelties.forEach(n => {
+    novelties.filter(n => n.status === 'aprobada').forEach(n => {
       if (!noveltyByEmployee[n.employee_id]) noveltyByEmployee[n.employee_id] = [];
       noveltyByEmployee[n.employee_id].push(n);
     });

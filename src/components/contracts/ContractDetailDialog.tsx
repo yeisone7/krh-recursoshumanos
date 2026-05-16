@@ -41,7 +41,7 @@ import { FourYearLimitGauge } from './FourYearLimitGauge';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateContractDialog } from './GenerateContractDialog';
-import { useCreateContractExtension, useApproveContract } from '@/hooks/useContracts';
+import { useCreateContractExtension, useApproveContract, useContract } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -57,7 +57,8 @@ import {
 interface ContractDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contract: Contract | null;
+  contractId: string | null;
+  contract?: Contract | null;
 }
 
 const statusConfig = {
@@ -67,16 +68,66 @@ const statusConfig = {
   terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
 
-export function ContractDetailDialog({ open, onOpenChange, contract }: ContractDetailDialogProps) {
+export function ContractDetailDialog({ open, onOpenChange, contractId, contract: initialContract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  
+  const { data: dbContract, isLoading: isDbContractLoading } = useContract(contractId || undefined);
+
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
   const { isAdmin, canView } = useAuth();
   const { data: contractTypes = [] } = useContractTypes();
   
+  // Map DB contract to UI Contract interface
+  const contract = initialContract || (dbContract ? {
+    id: dbContract.id,
+    employeeId: dbContract.employee_id,
+    employeeName: dbContract.employees ? `${dbContract.employees.first_name} ${dbContract.employees.last_name}` : 'Empleado',
+    employeeDocument: dbContract.employees?.document_number,
+    contractNumber: dbContract.contract_number,
+    contractType: (dbContract.contract_type === 'indefinido' ? 'indefinite' : 
+                   dbContract.contract_type === 'fijo' ? 'fixed' :
+                   dbContract.contract_type === 'obra_labor' ? 'work_labor' :
+                   dbContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services') as any,
+    startDate: new Date(dbContract.start_date + 'T00:00:00'),
+    originalEndDate: dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null,
+    currentEndDate: dbContract.contract_extensions?.length 
+      ? new Date([...dbContract.contract_extensions].sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())[0].end_date + 'T00:00:00')
+      : (dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null),
+    salary: Number(dbContract.salary),
+    salaryType: dbContract.salary_type === 'integral' ? 'integral' : 'monthly',
+    transportAllowance: (dbContract.transport_allowance || 0) > 0,
+    operationCenter: dbContract.employees?.operation_centers?.name || 'No asignado',
+    position: dbContract.employees?.employee_work_info?.[0]?.position_name || 'No asignada',
+    area: 'No asignada', 
+    extensions: (dbContract.contract_extensions || []).map((ext: any) => ({
+      id: ext.id,
+      extensionNumber: ext.extension_number,
+      startDate: new Date(ext.start_date + 'T00:00:00'),
+      endDate: new Date(ext.end_date + 'T00:00:00'),
+      extensionType: ext.extension_type as any,
+      createdAt: new Date(ext.created_at),
+      notes: ext.reason
+    })),
+    status: getContractStatus({
+      contractType: (dbContract.contract_type === 'indefinido' ? 'indefinite' : 'fixed') as any, 
+      currentEndDate: dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null,
+      status: dbContract.is_terminated ? 'terminated' : undefined
+    }),
+    isApproved: dbContract.is_approved || false,
+    approvedBy: dbContract.approved_by,
+    approvedAt: dbContract.approved_at ? new Date(dbContract.approved_at) : undefined,
+    createdAt: new Date(dbContract.created_at),
+    updatedAt: new Date(dbContract.updated_at),
+    documentUrl: dbContract.document_url,
+    notes: dbContract.special_clauses,
+    hasNonCompeteClause: dbContract.has_non_compete_clause || false,
+    hasConfidentialityClause: dbContract.has_confidentiality_clause || false,
+  } as Contract : null);
+
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
   
@@ -85,6 +136,17 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
     const config = contractTypes.find(ct => ct.contract_type === type);
     return config?.display_name || type;
   };
+
+  if (isDbContractLoading && open) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md p-12 flex flex-col items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-medium">Cargando detalles del contrato...</p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   if (!contract) return null;
 
@@ -557,79 +619,54 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
         contract={contract}
       />
 
-      {/* Generate Contract Document Dialog */}
-      <GenerateContractDialog
-        open={showGenerateDialog}
-        onOpenChange={setShowGenerateDialog}
-        contract={{
-          id: contract.id,
-          employee_id: contract.employeeId,
-          contract_type: contract.contractType, // Pass directly - now using dynamic types from DB
-          contract_number: contract.contractNumber || null, // Consecutivo del contrato
-          start_date: contract.startDate.toISOString(),
-          end_date: contract.currentEndDate?.toISOString() || null,
-          salary: contract.salary,
-          salary_type: contract.salaryType,
-          transport_allowance: contract.transportAllowance ? 140606 : 0,
-          trial_period_days: contract.trialPeriodDays || null,
-          work_city: null,
-          work_address: null,
-          has_non_compete_clause: contract.hasNonCompeteClause,
-          has_confidentiality_clause: contract.hasConfidentialityClause,
-          special_clauses: null,
-          employees: {
-            id: contract.employeeId,
-            first_name: contract.employeeName.split(' ')[0] || '',
-            last_name: contract.employeeName.split(' ').slice(1).join(' ') || '',
-            document_number: contract.employeeDocument || '',
-            operation_centers: contract.operationCenter ? { name: contract.operationCenter } : null,
-          },
-        }}
-      />
+      {dbContract && (
+        <GenerateContractDialog
+          open={showGenerateDialog}
+          onOpenChange={setShowGenerateDialog}
+          contract={{
+            id: dbContract.id,
+            employee_id: dbContract.employee_id,
+            contract_type: dbContract.contract_type,
+            contract_number: dbContract.contract_number || null,
+            start_date: dbContract.start_date,
+            end_date: dbContract.end_date || null,
+            salary: Number(dbContract.salary),
+            salary_type: dbContract.salary_type || 'mensual',
+            transport_allowance: Number(dbContract.transport_allowance) || 0,
+            trial_period_days: dbContract.trial_period_days || null,
+            work_city: dbContract.work_city || null,
+            work_address: dbContract.work_address || null,
+            has_non_compete_clause: dbContract.has_non_compete_clause,
+            has_confidentiality_clause: dbContract.has_confidentiality_clause,
+            special_clauses: dbContract.special_clauses,
+            employees: {
+              id: dbContract.employee_id,
+              first_name: dbContract.employees?.first_name || '',
+              middle_name: dbContract.employees?.middle_name || '',
+              last_name: dbContract.employees?.last_name || '',
+              second_last_name: dbContract.employees?.second_last_name || '',
+              document_number: dbContract.employees?.document_number || '',
+              operation_centers: dbContract.employees?.operation_centers ? { name: dbContract.employees.operation_centers.name } : null,
+            },
+          }}
+        />
+      )}
 
       {/* Edit Contract Dialog */}
-      <ContractFormDialog
-        open={showEditDialog}
-        onOpenChange={setShowEditDialog}
-        preselectedEmployeeId={contract.employeeId}
-        preselectedEmployeeName={contract.employeeName}
-        contractToEdit={{
-          id: contract.id,
-          employee_id: contract.employeeId,
-          contract_type: contract.contractType,
-          start_date: contract.startDate.toISOString().split('T')[0],
-          end_date: contract.originalEndDate?.toISOString().split('T')[0] || null,
-          salary: contract.salary,
-          salary_type: contract.salaryType === 'integral' ? 'integral' : 'mensual',
-          transport_allowance: contract.transportAllowance ? 140606 : 0,
-          other_allowances: 0,
-          trial_period_days: contract.trialPeriodDays || null,
-          trial_end_date: null,
-          work_city: null,
-          work_address: null,
-          has_non_compete_clause: contract.hasNonCompeteClause || false,
-          has_confidentiality_clause: contract.hasConfidentialityClause || false,
-          special_clauses: null,
-          work_labor_description: null,
-          document_url: contract.documentUrl || null,
-          contract_number: contract.contractNumber || null,
-          is_terminated: status === 'terminated',
-          termination_date: null,
-          termination_reason: null,
-          is_approved: contract.isApproved || false,
-          approved_by: contract.approvedBy || null,
-          approved_at: contract.approvedAt?.toISOString() || null,
-          company_id: '',
-          created_at: '',
-          updated_at: '',
-          created_by: null,
-        }}
-        onSuccess={() => {
-          // Close both dialogs and trigger refresh
-          setShowEditDialog(false);
-          onOpenChange(false);
-        }}
-      />
+      {dbContract && (
+        <ContractFormDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          preselectedEmployeeId={dbContract.employee_id}
+          preselectedEmployeeName={contract.employeeName}
+          contractToEdit={dbContract as any}
+          onSuccess={() => {
+            // Close both dialogs and trigger refresh
+            setShowEditDialog(false);
+            onOpenChange(false);
+          }}
+        />
+      )}
     </>
   );
 }

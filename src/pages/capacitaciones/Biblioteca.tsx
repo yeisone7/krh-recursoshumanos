@@ -6,7 +6,7 @@ import {
   Search, LayoutGrid, List, FolderTree, MoreVertical, Eye, PenLine, Copy,
   Link2, Trash2, Sparkles, MessageCircle, GraduationCap, RefreshCw,
   BookOpen, ClipboardCheck, Clock, Calendar, FileText, Image as ImageIcon,
-  Filter, SlidersHorizontal, Send,
+  Filter, SlidersHorizontal, Send, Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { TrainingPreviewDialog } from '@/components/training';
-import { useTrainingCourses, useDeleteCourse, useDuplicateCourse, usePublishCourse } from '@/hooks/useTraining';
+import { useTrainingCourses, useDeleteCourse, useDuplicateCourse, usePublishCourse, useShareCourse } from '@/hooks/useTraining';
+import { useCompanies } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -71,6 +74,7 @@ export default function Biblioteca() {
   const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [previewCourse, setPreviewCourse] = useState<TrainingCourse | null>(null);
+  const [shareCourse, setShareCourse] = useState<TrainingCourse | null>(null);
 
   const filtered = useMemo(() => {
     return courses.filter(c => {
@@ -99,26 +103,26 @@ export default function Biblioteca() {
   const hasActiveFilters = filterType !== 'all' || filterStatus !== 'all';
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-12 px-4 sm:px-10">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-10 py-10 border border-border/50 rounded-[2.5rem] shadow-sm mb-8">
         
         <div className="relative z-10">
-          <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-2">
+          <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[10px] px-2.5 py-1 mb-3">
             REPOSITORIO GENERAL
           </Badge>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">Biblioteca de Capacitaciones</h1>
+          <h1 className="text-4xl font-black tracking-tight text-foreground">Biblioteca de Capacitaciones</h1>
           <p className="text-muted-foreground font-medium mt-1">Repositorio completo de capacitaciones para consulta y reutilización</p>
         </div>
       </div>
 
       {/* Search + Filters + View Mode */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2.5rem] p-5 shadow-sm mb-6">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             placeholder="Buscar capacitaciones por título..."
-            className="pl-12 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm"
+            className="pl-14 h-14 rounded-2xl border-border/50 bg-background shadow-inner text-sm"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -126,7 +130,7 @@ export default function Biblioteca() {
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="h-12 px-6 rounded-xl gap-2 font-semibold">
+            <Button variant="outline" className="h-14 px-8 rounded-2xl gap-2 font-semibold text-sm">
               <Filter className="h-4 w-4" />
               Filtros
               {hasActiveFilters && (
@@ -165,19 +169,19 @@ export default function Biblioteca() {
           </PopoverContent>
         </Popover>
 
-        <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
-          <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'grid' ? 'shadow-md' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
-          <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
-          <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'list' ? 'shadow-md' : ''}`} onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
+        <div className="flex gap-1 bg-background border border-border/50 rounded-2xl p-1.5 shadow-inner shrink-0">
+          <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" className={`h-11 w-11 rounded-xl ${viewMode === 'grid' ? 'shadow-md' : ''}`} onClick={() => setViewMode('grid')}><LayoutGrid className="h-5 w-5" /></Button>
+          <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-11 w-11 rounded-xl ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-5 w-5" /></Button>
+          <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" className={`h-11 w-11 rounded-xl ${viewMode === 'list' ? 'shadow-md' : ''}`} onClick={() => setViewMode('list')}><List className="h-5 w-5" /></Button>
         </div>
       </div>
 
       {/* Count */}
-      <p className="text-sm text-muted-foreground">{filtered.length} capacitación(es) encontrada(s)</p>
+      <p className="text-sm font-medium text-muted-foreground px-2">{filtered.length} capacitación(es) encontrada(s)</p>
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
           {filtered.map((course, i) => {
             const content = course.content as TrainingCourseContent | null;
             const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
@@ -224,6 +228,7 @@ export default function Biblioteca() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => handleDuplicate(course.id)}><Copy className="h-4 w-4 mr-2" /> Duplicar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setShareCourse(course)}><Send className="h-4 w-4 mr-2 text-primary" /> Compartir con empresa</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate(`/capacitaciones/acceso/generar?courseId=${course.id}`)}><Link2 className="h-4 w-4 mr-2" /> Generar enlace</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(course.id)}><Trash2 className="h-4 w-4 mr-2" /> Eliminar</DropdownMenuItem>
                           </DropdownMenuContent>
@@ -235,24 +240,31 @@ export default function Biblioteca() {
                     <h3 className="font-bold text-base leading-snug line-clamp-2">{course.name}</h3>
 
                     {/* Meta lines */}
-                    <div className="space-y-1.5 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <BookOpen className="h-3.5 w-3.5 shrink-0" />
-                        <span>{course.category}</span>
-                        <span>•</span>
-                        <span className="capitalize">{course.level}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                    <div className="space-y-2 text-[11px] font-medium">
+                      {(() => {
+                        const colors = CATEGORY_COLORS[course.category] || CATEGORY_COLORS['Otro'];
+                        return (
+                          <div className={`flex items-center gap-2 ${colors.text}`}>
+                            <BookOpen className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                            <span>{course.category}</span>
+                            <span className="opacity-40">•</span>
+                            <span className="capitalize">{course.level}</span>
+                          </div>
+                        );
+                      })()}
+                      
+                      <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400/90">
+                        <Clock className="h-3.5 w-3.5 shrink-0 opacity-80" />
                         <span>{formatDuration(course.duration_hours)}</span>
-                        <span>•</span>
-                        <span>{MODALITY_LABELS[course.modality] || course.modality}</span>
+                        <span className="opacity-40">•</span>
+                        <span className="capitalize">{MODALITY_LABELS[course.modality] || course.modality}</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Calendar className="h-3.5 w-3.5 shrink-0 opacity-80" />
                         <span>{format(parseISO(course.created_at), 'dd/M/yyyy', { locale: es })}</span>
-                        <span>•</span>
-                        <span>v{course.version}</span>
+                        <span className="opacity-40">•</span>
+                        <span className="font-bold">v{course.version}</span>
                       </div>
                     </div>
 
@@ -316,6 +328,7 @@ export default function Biblioteca() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(course)}>Editar</DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleDuplicate(course.id)}>Duplicar</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setShareCourse(course)}>Compartir con empresa</DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(course.id)}>Eliminar</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -425,6 +438,99 @@ export default function Biblioteca() {
       )}
 
       <TrainingPreviewDialog open={!!previewCourse} onOpenChange={() => setPreviewCourse(null)} course={previewCourse} />
+      <ShareCourseDialog open={!!shareCourse} onOpenChange={(open) => !open && setShareCourse(null)} course={shareCourse} />
     </div>
+  );
+}
+
+function ShareCourseDialog({ 
+  course, 
+  open, 
+  onOpenChange 
+}: { 
+  course: TrainingCourse | null; 
+  open: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { currentCompanyId } = useAuth();
+  const { data: companies = [] } = useCompanies();
+  const shareCourse = useShareCourse();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+
+  const otherCompanies = companies.filter(c => c.id !== currentCompanyId);
+
+  const handleShare = async () => {
+    if (!course || !selectedCompanyId) return;
+    try {
+      await shareCourse.mutateAsync({ 
+        courseId: course.id, 
+        targetCompanyId: selectedCompanyId 
+      });
+      onOpenChange(false);
+    } catch (error) {
+      // toast is handled in the hook
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="rounded-[2rem] max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Send className="h-5 w-5 text-primary" />
+            Compartir Capacitación
+          </DialogTitle>
+          <DialogDescription>
+            Selecciona la empresa con la que deseas compartir "{course?.name}".
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4 space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Empresa Destino</label>
+            <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
+              <SelectTrigger className="rounded-xl h-12">
+                <SelectValue placeholder="Selecciona una empresa" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                {otherCompanies.map(company => (
+                  <SelectItem key={company.id} value={company.id} className="rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                      {company.name}
+                    </div>
+                  </SelectItem>
+                ))}
+                {otherCompanies.length === 0 && (
+                  <div className="p-2 text-center text-sm text-muted-foreground">
+                    No hay otras empresas disponibles
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+            <p className="text-xs text-primary/80 leading-relaxed">
+              <strong>Nota:</strong> Se creará una copia del curso en la empresa seleccionada. 
+              Los archivos multimedia se compartirán para evitar duplicidad de almacenamiento.
+            </p>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleShare} 
+            disabled={!selectedCompanyId || shareCourse.isPending}
+            className="rounded-xl px-8"
+          >
+            {shareCourse.isPending ? 'Compartiendo...' : 'Compartir'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

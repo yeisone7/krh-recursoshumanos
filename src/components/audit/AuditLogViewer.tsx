@@ -135,7 +135,7 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
               {severityCfg.label}
             </div>
           </TooltipTrigger>
-          <TooltipContent className="bg-slate-900 text-white border-none font-bold text-xs p-3 rounded-xl shadow-2xl">
+          <TooltipContent className="bg-primary text-white border-none font-bold text-xs p-3 rounded-xl shadow-2xl">
             {log.description ?? 'Sin descripción detallada'}
           </TooltipContent>
         </Tooltip>
@@ -208,42 +208,46 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
       <div className="space-y-6">
         <div className="flex flex-col gap-8 px-2">
           {/* Tabs Internas Estilo Premium */}
-          <div className="flex justify-center">
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all" onClick={() => handleFiltersChange({})}>
-                  <History className="w-3.5 h-3.5 mr-2" />
-                  Todo el Registro
+          <div className="flex justify-center px-2">
+            <Tabs defaultValue="all" className="w-full sm:w-auto">
+              <TabsList className="grid grid-cols-2 sm:flex h-auto p-1 gap-1">
+                <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="text-[10px] py-2 px-2">
+                  <History className="w-3.5 h-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Todo el Registro</span>
+                  <span className="sm:hidden">TODO</span>
                 </TabsTrigger>
-                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })}>
-                  <AlertCircle className="w-3.5 h-3.5 mr-2" />
-                  Eventos Críticos
+                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })} className="text-[10px] py-2 px-2">
+                  <AlertCircle className="w-3.5 h-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Eventos Críticos</span>
+                  <span className="sm:hidden">CRÍTICOS</span>
                 </TabsTrigger>
-                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })}>
-                  <User className="w-3.5 h-3.5 mr-2" />
-                  Por Usuario
+                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })} className="text-[10px] py-2 px-2">
+                  <User className="w-3.5 h-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Por Usuario</span>
+                  <span className="sm:hidden">USUARIO</span>
                 </TabsTrigger>
-                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })}>
-                  <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
-                  Exportaciones
+                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })} className="text-[10px] py-2 px-2">
+                  <FileSpreadsheet className="w-3.5 h-3.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Exportaciones</span>
+                  <span className="sm:hidden">EXP.</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div className="text-center sm:text-left">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight flex items-center justify-center sm:justify-start gap-2">
                 <History className="w-5 h-5 text-primary" />
                 Historial de Auditoría
               </h3>
-              <p className="text-xs font-medium text-slate-500 mt-1">
-                Trazabilidad completa de operaciones y cambios en el sistema
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                Trazabilidad completa de operaciones
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative group min-w-[320px]">
+            <div className="flex flex-col md:flex-row items-center gap-3">
+              <div className="relative group w-full md:min-w-[320px]">
                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
                   <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                 </div>
@@ -254,23 +258,25 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                   onChange={e => handleSearch(e.target.value)}
                 />
               </div>
-              <AuditFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                onReset={() => { setFilters({}); setPage(0); }}
-              />
-              <Button
-                className="h-12 px-6 rounded-2xl bg-[#004a80] hover:bg-[#003a66] text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95"
-                onClick={() => { /* Implementar exportación */ }}
-              >
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                EXPORTAR LOGS
-              </Button>
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <AuditFilters
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  onReset={() => { setFilters({}); setPage(0); }}
+                />
+                <Button
+                  className="h-12 px-6 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 flex-1 md:flex-none"
+                  onClick={() => { /* Implementar exportación */ }}
+                >
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                  EXPORTAR
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        <Card className="rounded-[2.5rem] bg-white border border-slate-100">
+        <Card className="rounded-3xl bg-white border border-slate-100 overflow-hidden">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-8 space-y-4">
@@ -329,10 +335,10 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
 
                 {/* Paginación Premium */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-8 py-6 bg-white border-t border-slate-100">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 sm:px-8 py-6 bg-white border-t border-slate-100">
                     <div className="flex items-center gap-4">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        MOSTRANDO <span className="text-slate-900">{page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)}</span> DE <span className="text-slate-900">{total.toLocaleString('es-CO')}</span> EVENTOS
+                      <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">
+                        MOSTRANDO <span className="text-primary">{page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)}</span> DE <span className="text-primary">{total.toLocaleString('es-CO')}</span> EVENTOS
                       </p>
                     </div>
                     

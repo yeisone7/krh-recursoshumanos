@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search } from 'lucide-react';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search, Mail, Loader2, Calendar, Settings2, Trash2, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
@@ -97,63 +98,6 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
 
-  const renderActionsMenu = (user: AdminUser) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleEditName(user)}>
-          <UserCheck className="w-4 h-4 mr-2" />
-          Editar Nombre
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleManageRoles(user)}>
-          <Shield className="w-4 h-4 mr-2" />
-          Gestionar Roles
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleManageCenters(user)}>
-          <MapPin className="w-4 h-4 mr-2" />
-          Asignar Centros
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleManageCompanies(user)}>
-          <Building2 className="w-4 h-4 mr-2" />
-          Asignar Empresas
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleLinkEmployee(user)}>
-          <Link className="w-4 h-4 mr-2" />
-          Vincular Empleado
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => handleToggleStatus(user)} disabled={user.id === currentUser?.id}>
-          {user.is_active ? (
-            <>
-              <UserMinus className="w-4 h-4 mr-2" />
-              Desactivar Usuario
-            </>
-          ) : (
-            <>
-              <UserCheck className="w-4 h-4 mr-2" />
-              Activar Usuario
-            </>
-          )}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive"
-          onClick={() => handleRemoveFromCompany(user)}
-          disabled={user.id === currentUser?.id}
-        >
-          <UserX className="w-4 h-4 mr-2" />
-          Eliminar de Empresa
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
     const q = searchQuery.toLowerCase();
@@ -192,8 +136,6 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
 
   const handleRemoveFromCompany = async (user: AdminUser) => {
     if (!currentCompanyId) return;
-    
-    // Don't allow removing yourself
     if (user.id === currentUser?.id) {
       toast.error('No puedes eliminarte a ti mismo de la empresa');
       return;
@@ -214,12 +156,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     }
 
     if (user.is_active) {
-      // Opening dialog to deactivate
       setUserToToggle(user);
       setDeactivateReason('');
       setDeactivateDialogOpen(true);
     } else {
-      // Activate directly
       confirmToggleStatus(user, true);
     }
   };
@@ -239,362 +179,374 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     }
   };
 
+  const renderActionsMenu = (user: AdminUser) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-primary hover:text-white transition-all shadow-sm">
+          <MoreHorizontal className="h-4.5 w-4.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-2xl border-slate-100 p-2 shadow-2xl">
+        <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-3 py-2">Mando Operativo</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-slate-50" />
+        <DropdownMenuItem onClick={() => handleEditName(user)} className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-primary/5 focus:text-primary cursor-pointer">
+          <Pencil className="w-4 h-4" />
+          Editar Identidad
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageRoles(user)} className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-primary/5 focus:text-primary cursor-pointer">
+          <Shield className="w-4 h-4" />
+          Privilegios
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCenters(user)} className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-primary/5 focus:text-primary cursor-pointer">
+          <MapPin className="w-4 h-4" />
+          Asignar Centros
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleManageCompanies(user)} className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-primary/5 focus:text-primary cursor-pointer">
+          <Building2 className="w-4 h-4" />
+          Multi-Empresa
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleLinkEmployee(user)} className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-primary/5 focus:text-primary cursor-pointer">
+          <Link className="w-4 h-4" />
+          Nexo Empleado
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-slate-50" />
+        <DropdownMenuItem 
+          onClick={() => handleToggleStatus(user)} 
+          disabled={user.id === currentUser?.id}
+          className={cn(
+            "rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors cursor-pointer",
+            user.is_active ? "focus:bg-red-50 focus:text-red-500" : "focus:bg-emerald-50 focus:text-emerald-500"
+          )}
+        >
+          {user.is_active ? (
+            <>
+              <UserMinus className="w-4 h-4" />
+              Bloquear Acceso
+            </>
+          ) : (
+            <>
+              <UserCheck className="w-4 h-4" />
+              Restaurar Acceso
+            </>
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="rounded-xl h-10 gap-3 font-black text-[10px] uppercase tracking-widest text-red-600 focus:bg-red-600 focus:text-white cursor-pointer"
+          onClick={() => handleRemoveFromCompany(user)}
+          disabled={user.id === currentUser?.id}
+        >
+          <Trash2 className="w-4 h-4" />
+          EXPULSAR ENTIDAD
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   if (isLoading) {
     return (
-      <>
-      <div className="space-y-3 md:hidden">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="card-elevated space-y-3 p-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-background animate-pulse" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-4 w-32 rounded bg-background animate-pulse" />
-                <div className="h-3 w-44 rounded bg-background animate-pulse" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="h-10 rounded bg-background animate-pulse" />
-              <div className="h-10 rounded bg-background animate-pulse" />
-            </div>
-          </div>
-        ))}
+      <div className="flex flex-col items-center justify-center py-32 gap-6">
+        <div className="relative">
+          <div className="h-16 w-16 rounded-2xl bg-primary/10 animate-pulse" />
+          <Loader2 className="absolute inset-0 h-16 w-16 animate-spin text-primary/40 stroke-[2.5]" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-black uppercase tracking-widest text-slate-900">Sincronizando Usuarios</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Obteniendo identidades digitales...</p>
+        </div>
       </div>
-      <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
-        <Table className="min-w-[860px]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Roles por empresa</TableHead>
-              <TableHead>Empresas</TableHead>
-              <TableHead>Centros</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[1, 2, 3].map(i => (
-              <TableRow key={i}>
-                <TableCell>
-                  <div className="h-4 bg-background rounded animate-pulse w-32" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 bg-background rounded animate-pulse w-16" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 bg-background rounded animate-pulse w-20" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 bg-background rounded animate-pulse w-24" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 bg-background rounded animate-pulse w-20" />
-                </TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      </>
     );
   }
 
   if (users.length === 0) {
     return (
-      <div className="rounded-lg border border-border p-6 text-center sm:p-12">
-        <Shield className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Sin usuarios</h3>
-        <p className="text-muted-foreground">
-          No hay usuarios asignados a esta empresa. Invita usuarios para comenzar.
-        </p>
+      <div className="flex flex-col items-center justify-center py-32 text-center px-4">
+        <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center text-slate-200 mb-6">
+          <Users className="w-10 h-10" />
+        </div>
+        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Directorio Vacío</h3>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] max-w-xs">No hay operadores asignados a esta unidad corporativa aún.</p>
       </div>
     );
   }
 
   return (
-    <>
-      {/* Search bar */}
-      <div className="relative group px-2 mb-8">
+    <div className="space-y-8">
+      {/* Search bar inside the component area */}
+      <div className="relative group px-2">
         <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
-          <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+          <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors stroke-[2.5]" />
         </div>
         <Input
-          placeholder="BUSCAR OPERADOR POR NOMBRE, EMAIL O ROL ESTRATÉGICO..."
+          placeholder="FILTRAR POR NOMBRE, EMAIL O ROL ESTRATÉGICO..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-12 pl-12 rounded-2xl bg-white/50 border-slate-200 focus:bg-white focus:border-primary focus:ring-primary/10 transition-all font-bold text-[10px] uppercase tracking-widest"
+          className="h-14 pl-14 rounded-2xl bg-white border-slate-100 focus:border-primary focus:ring-8 focus:ring-primary/5 transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
         />
       </div>
 
+      <div className="px-2">
       <MobileCardList
         className="md:hidden"
-        emptyMessage="No se encontraron usuarios"
+        emptyMessage="No se localizaron coincidencias"
         items={filteredUsers.map(user => ({
           id: user.id,
           title: (
-            <span>
-              {getUserDisplayName(user)}
-              {user.id === currentUser?.id && <span className="ml-1.5 text-xs text-muted-foreground">(Tú)</span>}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-slate-900 uppercase tracking-tight">{getUserDisplayName(user)}</span>
+              {user.id === currentUser?.id && <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">TÚ</Badge>}
+            </div>
           ),
-          subtitle: user.email || 'Sin correo registrado',
+          subtitle: user.email || 'Identidad sin correo',
           badge: (
-            <Badge
-              variant={user.is_active ? 'outline' : 'secondary'}
-              className={user.is_active ? 'bg-success-light text-success border-success/20' : 'bg-background text-muted-foreground'}
+            <Badge 
+              className={cn(
+                "font-black text-[8px] uppercase tracking-widest border-none px-2 py-0.5 rounded",
+                user.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-200 text-slate-500'
+              )}
             >
-              {user.is_active ? 'Activo' : 'Inactivo'}
+              {user.is_active ? 'ACTIVO' : 'BLOQUEADO'}
             </Badge>
+          ),
+          icon: (
+            <Avatar className="h-12 w-12 rounded-xl border-none bg-primary/5 shadow-none">
+              <AvatarImage src={user.avatar_url} />
+              <AvatarFallback className="bg-transparent text-primary font-black text-xs">{getUserInitials(user)}</AvatarFallback>
+            </Avatar>
           ),
           fields: [
             {
-              label: 'Roles',
-              value: user.custom_roles.length === 0 && user.roles.length === 0 ? (
-                <span className="text-muted-foreground italic">Sin roles</span>
-              ) : (
+              label: 'Privilegios',
+              value: (
                 <div className="flex flex-wrap gap-1">
-                  {user.custom_roles.map(role => <Badge key={role} variant="secondary" className="text-xs">{role}</Badge>)}
-                  {user.roles.map(role => (
-                    <Badge key={role} variant={ROLE_LABELS[role]?.variant || 'outline'} className="text-xs">
-                      {ROLE_LABELS[role]?.label || role}
-                    </Badge>
-                  ))}
-                </div>
-              ),
-              className: 'col-span-2',
-            },
-            {
-              label: 'Empresas',
-              value: user.companies.length === 0 ? '—' : `${user.companies.length}`,
-            },
-            {
-              label: 'Centros',
-              value: user.centers.length === 0 ? 'Todos los centros' : `${user.centers.length}`,
-            },
-          ],
-          actions: (
-            <>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={user.is_active}
-                  onCheckedChange={() => handleToggleStatus(user)}
-                  disabled={user.id === currentUser?.id || toggleStatus.isPending}
-                  className="data-[state=checked]:bg-success"
-                />
-                <span className="text-sm text-muted-foreground">Estado</span>
-              </div>
-              {renderActionsMenu(user)}
-            </>
-          ),
-          itemClassName: !user.is_active ? 'opacity-60' : undefined,
-        }))}
-      />
-
-      <div className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
-        <div className="overflow-auto max-h-[600px]">
-        <Table className="min-w-[860px]">
-          <TableHeader className="bg-background">
-            <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identidad Digital</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-[150px]">Estado Acceso</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Asignación de Roles</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Estructura Corporativa</TableHead>
-              <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Nodos de Operación</TableHead>
-              <TableHead className="w-[80px] px-8"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map(user => (
-              <TableRow key={user.id} className={cn(
-                "group hover:bg-primary/[0.02] transition-colors border-slate-50",
-                !user.is_active && "opacity-60 grayscale-[0.5]"
-              )}>
-                <TableCell className="px-8 py-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className={cn(
-                      "h-12 w-12 rounded-2xl border border-slate-100 transition-transform group-hover:scale-110",
-                      !user.is_active && "opacity-50"
-                    )}>
-                      <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} />
-                      <AvatarFallback className={cn(
-                        "font-black text-xs",
-                        user.is_active ? 'bg-primary/10 text-primary' : 'bg-background text-slate-400'
-                      )}>
-                        {getUserInitials(user)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="font-black text-slate-900 uppercase tracking-tight leading-none mb-1 flex items-center gap-2">
-                        {getUserDisplayName(user)}
-                        {user.id === currentUser?.id && (
-                          <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">TÚ</Badge>
-                        )}
-                      </div>
-                      {user.email && (
-                        <p className="text-[10px] font-bold text-slate-400 lowercase tracking-tight truncate">{user.email}</p>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-8 py-6">
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={user.is_active}
-                      onCheckedChange={() => handleToggleStatus(user)}
-                      disabled={user.id === currentUser?.id || toggleStatus.isPending}
-                      className="data-[state=checked]:bg-emerald-500 scale-90"
-                    />
-                    <Badge 
-                      variant="outline"
-                      className={cn(
-                        "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest",
-                        user.is_active 
-                          ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
-                          : 'bg-background border-slate-100 text-slate-400'
-                      )}
-                    >
-                      {user.is_active ? 'ACTIVO' : 'INACTIVO'}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell className="px-8 py-6">
-                  <div className="flex flex-wrap gap-1.5">
-                    {user.custom_roles.length === 0 && user.roles.length === 0 ? (
-                      <span className="text-[10px] font-bold text-slate-300 uppercase italic">Sin roles</span>
-                    ) : (
-                      <>
-                      {user.custom_roles.map(role => (
-                        <Badge key={role} variant="secondary" className="bg-background text-slate-600 border-none font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">
-                          {role}
-                        </Badge>
-                      ))}
+                  {user.custom_roles.length === 0 && user.roles.length === 0 ? (
+                    <span className="text-[9px] font-black text-slate-300 uppercase italic">Sin Roles</span>
+                  ) : (
+                    <>
+                      {user.custom_roles.map(role => <Badge key={role} className="bg-primary/5 text-primary border-none font-black text-[8px] px-1.5 py-0.5 rounded uppercase">{role}</Badge>)}
                       {user.roles.map(role => (
                         <Badge 
                           key={role} 
-                          variant="outline"
                           className={cn(
-                            "font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest border-primary/20",
-                            ROLE_LABELS[role]?.variant === 'default' ? 'text-primary' : 'bg-background text-slate-500'
+                            "border-none font-black text-[8px] px-1.5 py-0.5 rounded uppercase",
+                            role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-primary/5 text-primary'
                           )}
                         >
                           {ROLE_LABELS[role]?.label || role}
                         </Badge>
                       ))}
-                      </>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="px-8 py-6">
-                  <div className="flex flex-wrap gap-1.5">
-                    {user.companies.map(company => (
-                      <Badge key={company.id} variant="outline" className="bg-white border-slate-100 text-slate-500 font-bold text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest flex items-center gap-1">
-                        <Building2 className="w-3 h-3" />
-                        {company.name}
-                      </Badge>
-                    ))}
-                    {user.companies.length === 0 && <span className="text-[10px] font-bold text-slate-300 uppercase italic">Sin asignar</span>}
-                  </div>
-                </TableCell>
-                <TableCell className="px-8 py-6">
-                  <div className="flex flex-wrap gap-1.5">
-                    {user.centers.length === 0 ? (
-                      <Badge variant="outline" className="bg-emerald-50 border-emerald-100 text-emerald-600 font-black text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest">Todos los centros</Badge>
-                    ) : (
-                      user.centers.slice(0, 2).map(center => (
-                        <Badge key={center.id} variant="outline" className="bg-white border-slate-100 text-slate-500 font-bold text-[9px] px-2 py-0.5 rounded-lg uppercase tracking-widest flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {center.name}
-                        </Badge>
-                      ))
-                    )}
-                    {user.centers.length > 2 && (
-                      <Badge variant="outline" className="bg-background border-slate-200 text-slate-400 font-black text-[9px] px-2 py-0.5 rounded-lg">
-                        +{user.centers.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell className="px-8 py-6 text-right">
-                  {renderActionsMenu(user)}
-                </TableCell>
+                    </>
+                  )}
+                </div>
+              ),
+              className: 'col-span-2',
+            },
+            {
+              label: 'Nodos',
+              value: <span className="font-black text-[10px] text-slate-900">{user.centers.length || 'TODOS'}</span>,
+            }
+          ],
+          actions: (
+            <div className="flex items-center justify-between w-full mt-2 pt-4 border-t border-slate-50">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={user.is_active}
+                  onCheckedChange={() => handleToggleStatus(user)}
+                  disabled={user.id === currentUser?.id || toggleStatus.isPending}
+                  className="data-[state=checked]:bg-emerald-500 scale-90"
+                />
+                <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Control de Acceso</span>
+              </div>
+              {renderActionsMenu(user)}
+            </div>
+          ),
+          itemClassName: !user.is_active ? 'opacity-60 grayscale' : undefined,
+        }))}
+      />
+
+      <div className="hidden md:block rounded-[2.5rem] bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <div className="overflow-auto max-h-[700px] custom-scrollbar">
+          <Table>
+            <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
+              <TableRow className="hover:bg-slate-50/50 border-slate-100">
+                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identidad Digital</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[180px]">Status Acceso</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Roles & Privilegios</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ecosistema Corporativo</TableHead>
+                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-[120px]">Centros</TableHead>
+                <TableHead className="w-[100px] px-8"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user, idx) => (
+                <motion.tr 
+                  key={user.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.02 }}
+                  className={cn(
+                    "group hover:bg-primary/[0.02] transition-colors border-slate-50",
+                    !user.is_active && "bg-slate-50/50 opacity-60 grayscale-[0.3]"
+                  )}
+                >
+                  <TableCell className="px-8 py-6">
+                    <div className="flex items-center gap-5">
+                      <div className="relative h-14 w-14 shrink-0">
+                        <div className={cn(
+                          "absolute -inset-1 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity",
+                          user.is_active ? "bg-primary/20" : "bg-slate-200"
+                        )} />
+                        <Avatar className="relative h-full w-full rounded-2xl border-none bg-primary/5 shadow-none">
+                          <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} className="object-cover" />
+                          <AvatarFallback className={cn(
+                            "font-black text-sm",
+                            user.is_active ? 'bg-transparent text-primary' : 'bg-slate-100 text-slate-400'
+                          )}>
+                            {getUserInitials(user)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                      <div className="min-w-0 space-y-1">
+                        <div className="font-black text-slate-900 uppercase tracking-tight leading-none flex items-center gap-2">
+                          {getUserDisplayName(user)}
+                          {user.id === currentUser?.id && (
+                            <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">SISTEMA:TÚ</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-3 h-3 text-primary/50" />
+                          <p className="text-[10px] font-bold text-slate-400 lowercase tracking-tight truncate max-w-[200px]">{user.email || 'sin@correo.net'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-8 py-6">
+                    <div className="flex items-center gap-4">
+                      <Switch
+                        checked={user.is_active}
+                        onCheckedChange={() => handleToggleStatus(user)}
+                        disabled={user.id === currentUser?.id || toggleStatus.isPending}
+                        className="data-[state=checked]:bg-emerald-500 shadow-sm"
+                      />
+                      <Badge 
+                        variant="outline"
+                        className={cn(
+                          "font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-widest border-none shadow-sm",
+                          user.is_active 
+                            ? 'bg-emerald-500 text-white' 
+                            : 'bg-slate-200 text-slate-500'
+                        )}
+                      >
+                        {user.is_active ? 'HABILITADO' : 'SUSPENDIDO'}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-8 py-6">
+                    <div className="flex flex-wrap gap-2">
+                      {user.custom_roles.length === 0 && user.roles.length === 0 ? (
+                        <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest italic">— Sin Privilegios —</span>
+                      ) : (
+                        <>
+                          {user.custom_roles.map(role => (
+                            <Badge key={role} className="bg-primary/5 text-primary border-none font-black text-[9px] px-2.5 py-1 rounded-xl uppercase tracking-widest shadow-sm">
+                              {role}
+                            </Badge>
+                          ))}
+                          {user.roles.map(role => (
+                            <Badge 
+                              key={role} 
+                              className={cn(
+                                "border-none font-black text-[9px] px-2.5 py-1 rounded-xl uppercase tracking-widest shadow-sm",
+                                role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-primary/5 text-primary'
+                              )}
+                            >
+                              {ROLE_LABELS[role]?.label || role}
+                            </Badge>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-8 py-6">
+                    <div className="flex flex-wrap gap-2">
+                      {user.companies.map(company => (
+                        <div key={company.id} className="group/entity flex items-center gap-2 bg-slate-50 hover:bg-white border border-slate-100 hover:border-primary/20 px-3 py-1.5 rounded-xl transition-all hover:shadow-sm">
+                          <Building2 className="w-3.5 h-3.5 text-primary/60 group-hover/entity:text-primary transition-colors" />
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{company.name}</span>
+                        </div>
+                      ))}
+                      {user.companies.length === 0 && <span className="text-[10px] font-black text-slate-200 uppercase italic">Libre de Entidad</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-8 py-6 text-center">
+                    <div className="inline-flex flex-col items-center gap-1">
+                      <div className="h-10 w-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-sm transition-transform group-hover:scale-110">
+                        <MapPin className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-900 uppercase">
+                        {user.centers.length === 0 ? 'TODOS' : user.centers.length}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-8 py-6 text-right">
+                    <div className="transition-opacity">
+                      {renderActionsMenu(user)}
+                    </div>
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
+      </div>
 
-      <UserRoleDialog
-        user={selectedUser}
-        open={roleDialogOpen}
-        onOpenChange={setRoleDialogOpen}
-      />
-
-      <UserCenterDialog
-        user={selectedUser}
-        open={centerDialogOpen}
-        onOpenChange={setCenterDialogOpen}
-      />
-
-      <UserCompanyDialog
-        user={selectedUser}
-        open={companyDialogOpen}
-        onOpenChange={setCompanyDialogOpen}
-      />
-
-      <LinkEmployeeDialog
-        open={linkDialogOpen}
-        onOpenChange={setLinkDialogOpen}
-        userId={selectedUser?.id || ''}
-        userEmail={selectedUser?.email}
-      />
-
-      <UserNameEditDialog
-        user={selectedUser}
-        open={nameDialogOpen}
-        onOpenChange={setNameDialogOpen}
-      />
+      <UserRoleDialog user={selectedUser} open={roleDialogOpen} onOpenChange={setRoleDialogOpen} />
+      <UserCenterDialog user={selectedUser} open={centerDialogOpen} onOpenChange={setCenterDialogOpen} />
+      <UserCompanyDialog user={selectedUser} open={companyDialogOpen} onOpenChange={setCompanyDialogOpen} />
+      <LinkEmployeeDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} userId={selectedUser?.id || ''} userEmail={selectedUser?.email} />
+      <UserNameEditDialog user={selectedUser} open={nameDialogOpen} onOpenChange={setNameDialogOpen} />
 
       {/* Deactivation Confirmation Dialog */}
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
-        <AlertDialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] max-w-md flex-col overflow-hidden">
-          <AlertDialogHeader className="shrink-0">
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-warning" />
-              Desactivar Usuario
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              El usuario no podrá acceder al sistema mientras esté desactivado. 
-              Puedes reactivarlo en cualquier momento.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
+        <AlertDialogContent className="rounded-[2.5rem] border-slate-100 bg-white p-8 shadow-2xl">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="h-16 w-16 rounded-[1.25rem] bg-amber-50 text-amber-500 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
             <div className="space-y-2">
-              <Label htmlFor="reason">Motivo de desactivación (opcional)</Label>
-              <Textarea
-                id="reason"
-                placeholder="Ej: Licencia sin sueldo, Suspensión temporal..."
-                value={deactivateReason}
-                onChange={(e) => setDeactivateReason(e.target.value)}
-                className="resize-none"
-                rows={3}
-              />
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900">Bloqueo de Acceso</AlertDialogTitle>
+                <AlertDialogDescription className="text-[11px] font-black uppercase tracking-widest text-slate-400 leading-relaxed">
+                  El operador perderá privilegios de autenticación de forma inmediata. <br />
+                  Podrás restaurar el nexo digital en cualquier momento.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
             </div>
           </div>
+          
+          <div className="mt-6 space-y-3">
+            <Label htmlFor="reason" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Bitácora de Seguridad (Opcional)</Label>
+            <Textarea
+              id="reason"
+              placeholder="ESPECIFICA EL MOTIVO DEL BLOQUEO..."
+              value={deactivateReason}
+              onChange={(e) => setDeactivateReason(e.target.value)}
+              className="resize-none rounded-2xl border-slate-100 bg-slate-50 focus:bg-white transition-all font-bold text-xs p-4 h-24"
+            />
+          </div>
 
-          <AlertDialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="mt-8 flex flex-col sm:flex-row gap-3">
+            <AlertDialogCancel className="h-14 rounded-2xl border-slate-200 font-black uppercase text-[10px] tracking-widest flex-1">CANCELAR</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => userToToggle && confirmToggleStatus(userToToggle, false, deactivateReason)}
-              className="w-full bg-warning text-warning-foreground hover:bg-warning/90 sm:w-auto"
+              className="h-14 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] flex-1 shadow-xl shadow-primary/20"
             >
-              <UserMinus className="w-4 h-4 mr-2" />
-              Desactivar
+              <UserMinus className="w-4 h-4 mr-3" />
+              CONFIRMAR BLOQUEO
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }

@@ -84,7 +84,7 @@ export default function Empleados() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds } = useAuth();
   
   // Use infinite hook for the list view
   const { 
@@ -419,7 +419,9 @@ export default function Empleados() {
                 <SelectValue placeholder="Centro de operación" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los centros</SelectItem>
+                <SelectItem value="all">
+                  {assignedCenterIds.length > 0 ? 'Mis centros asignados' : 'Todos los centros'}
+                </SelectItem>
                 {operationCenters?.map((center) => (
                   <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
                 ))}

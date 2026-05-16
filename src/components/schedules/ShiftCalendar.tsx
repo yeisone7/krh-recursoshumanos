@@ -77,7 +77,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<{ employeeId: string; date: string } | null>(null);
 
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const { data: shifts = [] } = useShifts();
   const { data: centers = [] } = useOperationCenters();
@@ -544,7 +544,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
               <SelectValue placeholder="Centro" />
             </SelectTrigger>
             <SelectContent className="bg-background">
-              <SelectItem value="all">Todos los centros</SelectItem>
+              <SelectItem value="all">
+                {assignedCenterIds.length > 0 ? 'Mis centros asignados' : 'Todos los centros'}
+              </SelectItem>
               {centers.map((center) => (
                 <SelectItem key={center.id} value={center.id}>
                   {center.name}
