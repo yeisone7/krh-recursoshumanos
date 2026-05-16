@@ -113,13 +113,13 @@ export function useEmployeeReport() {
       const { data: workInfos } = await supabase
         .from('employee_work_info')
         .select('employee_id, position_name, hire_date')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .eq('is_current', true);
       
       const { data: socialSecurities } = await supabase
         .from('employee_social_security')
         .select('employee_id, eps, afp')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .eq('is_current', true);
       
       // Fetch areas
@@ -280,7 +280,7 @@ export function useDotationReport(startDate?: Date, endDate?: Date) {
       let query = supabase
         .from('dotation_deliveries')
         .select('*')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .order('delivery_date', { ascending: false });
       
       if (startDate) {
@@ -369,7 +369,7 @@ export function useContractExtensionsReport() {
             created_at
           )
         `)
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .neq('contract_type', 'indefinido');
       
       if (error) throw error;
@@ -474,7 +474,7 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
       const { data: workInfos } = await supabase
         .from('employee_work_info')
         .select('employee_id, position_name, operation_center_id, operation_centers(name)')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .eq('is_current', true);
       
       const workInfoMap = new Map(workInfos?.map(w => [w.employee_id, w]) || []);
@@ -495,7 +495,7 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
             end_date
           )
         `)
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .neq('contract_type', 'indefinido')
         .eq('is_terminated', false);
       

@@ -131,8 +131,8 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
 };
 
-const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
-const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'documentType', 'documentNumber'];
+const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber', 'select-education-id', 'select-profession-id'];
+const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber'];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
@@ -345,8 +345,8 @@ export default function RegistroPublico() {
             p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
             p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
             p_identification_type_id: formData.identificationTypeId || null,
-            p_education_level_id: formData.educationLevelId || null,
-            p_profession_id: formData.professionId || null,
+            p_education_level_id: formData['select-education-id'] || null,
+            p_profession_id: formData['select-profession-id'] || null,
           });
           result = data;
           
@@ -411,8 +411,8 @@ export default function RegistroPublico() {
             p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
             p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
             p_identification_type_id: formData.identificationTypeId || null,
-            p_education_level_id: formData.educationLevelId || null,
-            p_profession_id: formData.professionId || null,
+            p_education_level_id: formData['select-education-id'] || null,
+            p_profession_id: formData['select-profession-id'] || null,
             p_avatar_url: formData.avatarUrl || null,
             p_gender: formData.gender === 'masculino' ? 'M' : formData.gender === 'femenino' ? 'F' : (formData.gender ? 'O' : null),
             p_vaccines: Array.isArray(formData.vaccines) ? formData.vaccines.map(v => ({
@@ -456,8 +456,8 @@ export default function RegistroPublico() {
           p_emergency_contact_name: formData.emergencyContactName || null,
           p_emergency_contact_phone: formData.emergencyContactPhone || null,
           p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
-          p_education_level_id: formData.educationLevelId || null,
-          p_profession_id: formData.professionId || null,
+          p_education_level_id: formData['select-education-id'] || null,
+          p_profession_id: formData['select-profession-id'] || null,
           p_experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
           p_current_company: formData.currentCompany || null,
           p_current_position: formData.currentPosition || null,
@@ -977,8 +977,8 @@ export default function RegistroPublico() {
                 isDemobilized: emp.is_demobilized ? 'true' : 'false',
                 identificationTypeId: emp.identification_type_id,
                 documentType: emp.document_type,
-                educationLevelId: emp.education_level_id,
-                professionId: emp.profession_id,
+                "select-education-id": emp.education_level_id,
+                "select-profession-id": emp.profession_id,
                 avatarUrl: emp.avatar_url,
               };
 
@@ -1078,118 +1078,162 @@ export default function RegistroPublico() {
   const HeaderIcon = isEmployee ? Building : User;
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl shadow-xl border-border/50 overflow-hidden">
-        {/* Header with Logo */}
-        <div className="w-full flex flex-col items-center pt-8 pb-4 bg-background">
-          {companyLogo ? (
-            <motion.img
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              src={companyLogo}
-              alt={companyName}
-              className="max-h-24 max-w-[280px] object-contain mb-4 rounded-xl"
-            />
-          ) : (
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              <Building className="w-8 h-8 text-primary" />
-            </div>
-          )}
-          <h2 className="text-xl font-bold text-foreground">{companyName}</h2>
-        </div>
-
-        {/* Welcome image for candidates */}
-        {!isEmployee && step === 'form' && (
-          <div className="w-full border-t border-border/50">
-            <img
-              src="/images/IMAGEN_PROCESO_DE_SELECCION.png"
-              alt="Proceso de Selección"
-              className="w-full h-auto object-cover"
-            />
+    <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-4 py-12">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-2xl"
+      >
+        <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+          {/* Header with Logo */}
+          <div className="w-full flex flex-col items-center pt-10 pb-6 bg-white relative">
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary/20" />
+            {companyLogo ? (
+              <motion.img
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                src={companyLogo}
+                alt={companyName}
+                className="max-h-24 max-w-[280px] object-contain mb-6 rounded-2xl shadow-sm"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-[2rem] bg-primary/5 flex items-center justify-center mb-6 border border-primary/10">
+                <Building className="w-10 h-10 text-primary" />
+              </div>
+            )}
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">{companyName}</h2>
+            <div className="h-1 w-12 bg-primary/30 rounded-full mt-2" />
           </div>
-        )}
-        <CardHeader className="bg-primary text-primary-foreground p-6">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <HeaderIcon className="w-6 h-6" />
+
+          {/* Welcome image for candidates */}
+          {!isEmployee && step === 'form' && (
+            <div className="w-full px-8">
+              <div className="rounded-[2rem] overflow-hidden shadow-lg border border-slate-100">
+                <img
+                  src="/images/IMAGEN_PROCESO_DE_SELECCION.png"
+                  alt="Proceso de Selección"
+                  className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
+                />
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-xl">
-                {isEmployee ? 'Registro de Empleado' : 'Formulario de Registro'}
-              </CardTitle>
-              <CardDescription className="text-primary-foreground/80">
-                {companyName && `${companyName} • `}
-                {vacancyTitle ? `Vacante: ${vacancyTitle}` : isEmployee ? 'Complete su información personal' : 'Registro de candidato'}
-              </CardDescription>
+          )}
+
+          <div className="px-8 pt-8 pb-4">
+            <div className="flex items-center gap-4 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                <HeaderIcon className="w-7 h-7 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl font-black text-slate-900 leading-tight">
+                  {isEmployee ? 'REGISTRO DE EMPLEADO' : 'FORMULARIO DE REGISTRO'}
+                </h1>
+                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-0.5 truncate">
+                  {vacancyTitle ? `Vacante: ${vacancyTitle}` : isEmployee ? 'Información Personal y Laboral' : 'Postulación de Candidato'}
+                </p>
+              </div>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="p-6">
-          {step === 'loading' && (
-            <div className="flex flex-col items-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-              <p className="text-muted-foreground">Validando enlace...</p>
-            </div>
-          )}
-
-          {step === 'error' && (
-            <div className="flex flex-col items-center py-12">
-              <AlertTriangle className="w-12 h-12 text-destructive mb-3" />
-              <p className="font-medium text-lg mb-1">Enlace no válido</p>
-              <p className="text-muted-foreground text-center">{errorMsg}</p>
-            </div>
-          )}
-
-          {step === 'form' && (
-            <div className="space-y-6">
-              {prefilled && (
-                <Alert className="border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20">
-                  <Info className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-sm text-blue-700 dark:text-blue-400">
-                    Se encontró información previa asociada a este documento. Los campos han sido pre-llenados.
-                  </AlertDescription>
-                </Alert>
-              )}
-              {sections.map(section => {
-                const sectionFields = Object.keys(fieldConfig).filter(
-                  key => fieldConfig[key]?.section === section && enabledFields.includes(key)
-                );
-                if (sectionFields.length === 0) return null;
-
-                return (
-                  <div key={section}>
-                    <h3 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wide">
-                      {section}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {sectionFields.map(key => renderField(key))}
-                    </div>
+          <CardContent className="px-8 pb-10 pt-4">
+            {step === 'loading' && (
+              <div className="flex flex-col items-center py-20">
+                <div className="relative">
+                  <div className="h-16 w-16 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-primary/5" />
                   </div>
-                );
-              })}
+                </div>
+                <p className="text-slate-500 font-black text-xs uppercase tracking-widest mt-6">Validando enlace seguro...</p>
+              </div>
+            )}
 
-              <Button className="w-full" size="lg" onClick={handleSubmit} disabled={submitting}>
-                {submitting ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</>
-                ) : (
-                  <><Send className="w-4 h-4 mr-2" /> Enviar Registro</>
+            {step === 'error' && (
+              <div className="flex flex-col items-center py-16 text-center space-y-4">
+                <div className="h-20 w-20 rounded-[2rem] bg-destructive/10 flex items-center justify-center text-destructive mb-2">
+                  <AlertTriangle className="w-10 h-10" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-slate-900 tracking-tight">ENLACE NO VÁLIDO</p>
+                  <p className="text-slate-500 font-medium max-w-xs mx-auto mt-2">{errorMsg}</p>
+                </div>
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-xl border-slate-200 font-bold uppercase tracking-widest text-[10px]">
+                  Reintentar
+                </Button>
+              </div>
+            )}
+
+            {step === 'form' && (
+              <div className="space-y-10">
+                {prefilled && (
+                  <Alert className="border-none bg-blue-50/70 rounded-2xl py-4">
+                    <Info className="h-5 w-5 text-blue-600" />
+                    <AlertDescription className="text-sm text-blue-800 font-bold pl-2">
+                      Se encontró información previa. Los campos han sido auto-completados.
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </Button>
-            </div>
-          )}
 
-          {step === 'done' && (
-            <div className="flex flex-col items-center py-12">
-              <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
-              <p className="font-semibold text-xl mb-2">¡Registro Exitoso!</p>
-              <p className="text-muted-foreground text-center">
-                Tu información ha sido enviada correctamente. {isEmployee ? 'Tu empleador recibirá tu información.' : 'El equipo de selección se pondrá en contacto contigo.'}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div className="space-y-12">
+                  {sections.map(section => {
+                    const sectionFields = Object.keys(fieldConfig).filter(
+                      key => fieldConfig[key]?.section === section && enabledFields.includes(key)
+                    );
+                    if (sectionFields.length === 0) return null;
+
+                    return (
+                      <div key={section} className="space-y-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-1 bg-primary rounded-full" />
+                          <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            {section}
+                          </h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                          {sectionFields.map(key => renderField(key))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-8 border-t border-slate-100">
+                  <Button 
+                    className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-black text-lg uppercase tracking-widest transition-all active:scale-[0.98] group" 
+                    onClick={handleSubmit} 
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <><Loader2 className="w-6 h-6 mr-3 animate-spin" /> PROCESANDO...</>
+                    ) : (
+                      <><Send className="w-5 h-5 mr-3 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> ENVIAR REGISTRO</>
+                    )}
+                  </Button>
+                  <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-6">
+                    Al enviar este formulario aceptas nuestra política de tratamiento de datos
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {step === 'done' && (
+              <div className="flex flex-col items-center py-20 text-center space-y-6">
+                <div className="h-24 w-24 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-inner">
+                  <CheckCircle2 className="w-12 h-12" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-3xl font-black text-slate-900 tracking-tight uppercase">¡REGISTRO EXITOSO!</p>
+                  <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                    Tu información ha sido enviada correctamente. {isEmployee ? 'Tu empleador recibirá tu información en breve.' : 'El equipo de selección se pondrá en contacto contigo muy pronto.'}
+                  </p>
+                </div>
+                <div className="pt-4">
+                  <div className="h-1 w-16 bg-emerald-500/30 rounded-full mx-auto" />
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
-}
+};

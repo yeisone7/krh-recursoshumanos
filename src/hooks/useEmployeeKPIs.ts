@@ -99,7 +99,7 @@ export function useEmployeeKPIs() {
           operation_centers(name),
           areas(name)
         `)
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_current', true);
 
       // Calculate new hires this month
@@ -140,7 +140,7 @@ export function useEmployeeKPIs() {
           is_terminated,
           contract_extensions(end_date, extension_number)
         `)
-        .in('employee_id', activeEmployeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
         .neq('contract_type', 'indefinido');
 
@@ -170,7 +170,7 @@ export function useEmployeeKPIs() {
       const { data: certifications } = await supabase
         .from('employee_certifications')
         .select('id, employee_id, expiry_date')
-        .in('employee_id', activeEmployeeIds)
+        .eq('company_id', currentCompanyId!)
         .eq('is_valid', true)
         .not('expiry_date', 'is', null);
 
@@ -197,7 +197,7 @@ export function useEmployeeKPIs() {
       const { data: exams } = await supabase
         .from('medical_exams')
         .select('id, expiration_date')
-        .in('employee_id', activeEmployeeIds)
+        .eq('company_id', currentCompanyId!)
         .not('expiration_date', 'is', null)
         .neq('exam_type', 'egreso');
 
@@ -215,6 +215,7 @@ export function useEmployeeKPIs() {
       const { data: candidates } = await supabase
         .from('candidates')
         .select('id, status, current_step')
+        .eq('company_id', currentCompanyId!)
         .in('status', ['applied', 'in_interview', 'in_psycho_test', 'in_technical_test', 'in_medical', 'in_validation', 'selected']);
 
       const activeCandidatesCount = candidates?.length || 0;

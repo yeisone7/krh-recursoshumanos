@@ -67,7 +67,7 @@ export default function CatalogosNivelesEducativos() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background border border-border/50 overflow-hidden shadow-xl shadow-primary/5"
+        className="relative p-8 rounded-[2.5rem] bg-card border border-border/50 overflow-hidden shadow-xl shadow-primary/5"
       >
         
         
@@ -76,7 +76,7 @@ export default function CatalogosNivelesEducativos() {
           <div className="flex items-center gap-6">
             <div className="relative shrink-0 group">
               <div className="absolute -inset-1 bg-gradient-to-r from-primary to-primary-foreground rounded-[2rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-background border border-border/50 shadow-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-card border border-border/50 shadow-lg overflow-hidden group-hover:scale-105 transition-all duration-300">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <GraduationCap className="w-10 h-10 text-primary group-hover:scale-110 transition-transform duration-500" />
               </div>
@@ -105,7 +105,7 @@ export default function CatalogosNivelesEducativos() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
+          className="group relative rounded-[2rem] bg-card border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-primary/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-primary/10 transition-transform group-hover:scale-110 duration-300">
@@ -122,7 +122,7 @@ export default function CatalogosNivelesEducativos() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-emerald-500/20"
+          className="group relative rounded-[2rem] bg-card border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-emerald-500/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-emerald-500/10 transition-transform group-hover:scale-110 duration-300">
@@ -139,7 +139,7 @@ export default function CatalogosNivelesEducativos() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="group relative rounded-[2rem] bg-background border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-destructive/20"
+          className="group relative rounded-[2rem] bg-card border border-border/50 p-6 shadow-md hover:shadow-lg transition-all hover:border-destructive/20"
         >
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-2xl bg-destructive/10 transition-transform group-hover:scale-110 duration-300">
@@ -153,13 +153,13 @@ export default function CatalogosNivelesEducativos() {
         </motion.div>
       </div>
 
-      <Card className="rounded-[2.5rem] bg-background border border-border/50 shadow-xl overflow-hidden">
+      <Card className="rounded-[2.5rem] bg-card border border-border/50 shadow-xl overflow-hidden">
         <div className="p-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder="Buscar por nivel..." 
-              className="pl-11 h-12 rounded-2xl bg-background border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
+              className="pl-11 h-12 rounded-2xl bg-card border-none shadow-none focus-visible:ring-2 ring-primary/20 transition-all font-bold"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -173,7 +173,7 @@ export default function CatalogosNivelesEducativos() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-32 text-center space-y-6">
-              <div className="h-20 w-20 bg-background rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
+              <div className="h-20 w-20 bg-card rounded-[2rem] flex items-center justify-center mx-auto text-slate-200">
                 <GraduationCap className="w-10 h-10" />
               </div>
               <p className="text-slate-500 font-bold">No se encontraron niveles educativos</p>
@@ -181,7 +181,7 @@ export default function CatalogosNivelesEducativos() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-background">
+                <TableHeader className="bg-card">
                   <TableRow className="hover:bg-transparent border-border/50">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Grado Académico</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] text-center">Estado</TableHead>
@@ -200,7 +200,7 @@ export default function CatalogosNivelesEducativos() {
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-background border border-border/50 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <div className="h-12 w-12 rounded-2xl bg-card border border-border/50 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                               <BookOpen className="w-5 h-5" />
                             </div>
                             <div className="font-black text-foreground leading-none uppercase tracking-tight group-hover:text-primary transition-colors">{level.name}</div>
@@ -211,9 +211,9 @@ export default function CatalogosNivelesEducativos() {
                             "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all shadow-sm",
                             level.is_active 
                               ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
-                              : "bg-background text-muted-foreground border-border"
+                              : "bg-card text-muted-foreground border-border"
                           )}>
-                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", level.is_active ? "bg-emerald-500" : "bg-background -foreground")} />
+                            <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", level.is_active ? "bg-emerald-500" : "bg-card -foreground")} />
                             {level.is_active ? 'Activo' : 'Inactivo'}
                           </div>
                         </TableCell>
@@ -256,7 +256,7 @@ export default function CatalogosNivelesEducativos() {
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-background flex gap-3 sm:gap-0">
+          <AlertDialogFooter className="p-6 bg-card flex gap-3 sm:gap-0">
             <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete}

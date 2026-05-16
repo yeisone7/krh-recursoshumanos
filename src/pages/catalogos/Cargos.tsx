@@ -127,7 +127,7 @@ export default function CatalogosCargos() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-sm",
+              "relative overflow-hidden rounded-[2rem] border-2 bg-card p-6 transition-all duration-300 hover:shadow-sm",
               stat.border
             )}
           >
@@ -154,15 +154,15 @@ export default function CatalogosCargos() {
             placeholder="Buscar por nombre, código o área..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="h-12 pl-11 rounded-2xl bg-background border-2 border-border/50 focus-visible:ring-primary/20 transition-all shadow-sm"
+            className="h-12 pl-11 rounded-2xl bg-card border-2 border-border/50 focus-visible:ring-primary/20 transition-all shadow-sm"
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Select value={filterArea} onValueChange={setFilterArea}>
-            <SelectTrigger className="h-12 w-full lg:w-[180px] rounded-2xl bg-background border-2 border-border/50">
+            <SelectTrigger className="h-12 w-full lg:w-[180px] rounded-2xl bg-card border-2 border-border/50">
               <SelectValue placeholder="Área" />
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border-border bg-background">
+            <SelectContent className="rounded-2xl border-border bg-card">
               <SelectItem value="all">Todas las áreas</SelectItem>
               {activeAreas.map((a: any) => (
                 <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
@@ -170,7 +170,7 @@ export default function CatalogosCargos() {
             </SelectContent>
           </Select>
           
-          <div className="flex items-center gap-2 p-1 rounded-2xl bg-background border-2 border-border/50 ">
+          <div className="flex items-center gap-2 p-1 rounded-2xl bg-card border-2 border-border/50 ">
             <Button 
               size="sm" 
               variant={viewMode === 'table' ? 'default' : 'ghost'} 
@@ -191,7 +191,7 @@ export default function CatalogosCargos() {
         </div>
       </div>
 
-      <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
+      <div className="rounded-[2.5rem] border-2 border-border/50 bg-card p-8">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Cargos Disponibles</h2>
@@ -217,7 +217,7 @@ export default function CatalogosCargos() {
                 badge: (
                   <Badge
                     variant="outline"
-                    className={cn("rounded-lg border-2", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background border-muted-foreground/10')}
+                    className={cn("rounded-lg border-2", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-card border-muted-foreground/10')}
                   >
                     {pos.is_active ? 'Activo' : 'Inactivo'}
                   </Badge>
@@ -277,7 +277,7 @@ export default function CatalogosCargos() {
                           <TableCell>
                             <Badge 
                               variant="outline" 
-                              className={cn("rounded-lg border-2 transition-all", hasProfile(pos.id) ? 'bg-success/10 text-success border-success/20' : 'bg-background text-muted-foreground border-transparent')}
+                              className={cn("rounded-lg border-2 transition-all", hasProfile(pos.id) ? 'bg-success/10 text-success border-success/20' : 'bg-card text-muted-foreground border-transparent')}
                             >
                               {hasProfile(pos.id) ? '✓ Configurado' : 'Sin perfil'}
                             </Badge>
@@ -285,7 +285,7 @@ export default function CatalogosCargos() {
                           <TableCell>
                             <Badge 
                               variant="outline" 
-                              className={cn("rounded-lg border-2", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background border-transparent')}
+                              className={cn("rounded-lg border-2", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-card border-transparent')}
                             >
                               {pos.is_active ? 'Activo' : 'Inactivo'}
                             </Badge>
@@ -325,7 +325,7 @@ export default function CatalogosCargos() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        className="group relative overflow-hidden rounded-[2rem] border-2 border-border/50 bg-background p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer"
+                        className="group relative overflow-hidden rounded-[2rem] border-2 border-border/50 bg-card p-6 transition-all duration-300 hover:border-primary/30 hover:shadow-md cursor-pointer"
                         onClick={() => setProfileTarget({ id: pos.id, name: pos.name, area: pos.areas?.name })}
                       >
                         <div className="flex flex-col gap-4">
@@ -342,7 +342,7 @@ export default function CatalogosCargos() {
                             <div className="flex items-center gap-2">
                               <Badge 
                                 variant="outline" 
-                                className={cn("rounded-lg border-2 text-[10px] font-black uppercase tracking-widest", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background border-transparent')}
+                                className={cn("rounded-lg border-2 text-[10px] font-black uppercase tracking-widest", pos.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-card border-transparent')}
                               >
                                 {pos.is_active ? 'Activo' : 'Inactivo'}
                               </Badge>
@@ -382,7 +382,7 @@ export default function CatalogosCargos() {
                                 </div>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-background border border-dashed border-border/50">
+                              <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-card border border-dashed border-border/50">
                                 <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Perfil pendiente de configurar</span>
                               </div>

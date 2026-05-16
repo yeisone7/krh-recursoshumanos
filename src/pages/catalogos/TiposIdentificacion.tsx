@@ -68,7 +68,7 @@ export default function CatalogosTiposIdentificacion() {
                 badge: (
                   <Badge
                     variant="outline"
-                    className={type.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background '}
+                    className={type.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-card '}
                   >
                     {type.is_active ? 'Activa' : 'Inactiva'}
                   </Badge>
@@ -107,7 +107,7 @@ export default function CatalogosTiposIdentificacion() {
                     <TableCell>
                       <Badge 
                         variant="outline" 
-                        className={type.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-background '}
+                        className={type.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-card '}
                       >
                         {type.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>

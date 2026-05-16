@@ -249,6 +249,7 @@ function ExpiringItemsAlert({ employee }: { employee: any }) {
 
 // ── Contract Summary Card ──
 function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { employeeId: string; employeeName: string; onCreateContract?: (employeeId: string, employeeName: string) => void }) {
+  const { hasPermission } = useAuth();
   const { data: allContracts, isLoading } = useContracts();
 
   if (isLoading) return null;
@@ -290,9 +291,15 @@ function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { e
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm font-bold text-foreground">
-                    ${Number(c.salary).toLocaleString('es-CO')}
-                  </span>
+                  {hasPermission('salarios', 'view') ? (
+                    <span className="text-sm font-bold text-foreground">
+                      ${Number(c.salary).toLocaleString('es-CO')}
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-muted-foreground italic">
+                      Confidencial
+                    </span>
+                  )}
                   {daysToEnd !== null && daysToEnd <= 30 && daysToEnd >= 0 && (
                     <Badge variant="destructive" className="text-[10px] h-5 ml-2">
                       {daysToEnd}d
@@ -509,7 +516,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-sm sm:h-16 sm:w-16">
                     <AvatarImage src={employee.avatar_url || undefined} alt={employeeFullName} />
                     <AvatarFallback className="bg-primary/10 text-primary text-xl font-bold">
-                      {employee.first_name[0]}{employee.last_name[0]}
+                      {employee.first_name?.[0] || '?'}{employee.last_name?.[0] || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <button

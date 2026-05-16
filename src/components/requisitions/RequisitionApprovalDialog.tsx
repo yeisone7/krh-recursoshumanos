@@ -35,6 +35,7 @@ import { useContractTypes } from '@/hooks/useContractTypes';
 import { useVacancyPlatforms } from '@/hooks/useVacancyPlatforms';
 import { recruitmentTypeLabels, RecruitmentType } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type ApprovalStep = 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
 
@@ -163,8 +164,31 @@ export function RequisitionApprovalDialog({
     setVacancyCodes(prev => prev.map((entry, i) => i === index ? { ...entry, [field]: value } : entry));
   };
 
+  const { hasPermission } = useAuth();
+  
+  const stepPermissionMap: Record<ApprovalStep, string> = {
+    rrhh: 'req_approve_rh',
+    juridico: 'req_approve_juridica',
+    operaciones: 'req_approve_ger_op',
+    gerencia: 'req_approve_ger_adm',
+    seleccion: 'req_approve_seleccion',
+  };
+
+  const canApproveStep = hasPermission(stepPermissionMap[step], 'approve');
+  const canManageSalaries = hasPermission('salarios', 'update');
+
   const onSubmit = async () => {
     if (!requisition) return;
+    
+    if (!canApproveStep) {
+      toast.error('No tienes permisos para aprobar este paso');
+      return;
+    }
+
+    if (step === 'rrhh' && approved && !canManageSalaries) {
+      toast.error('No tienes permisos para asignar salarios');
+      return;
+    }
 
     const data: Record<string, any> = {
       [`${step}_quien_aprobo`]: defaultApproverName,

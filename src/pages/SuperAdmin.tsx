@@ -229,7 +229,7 @@ export default function SuperAdmin() {
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[2.5rem] bg-background border border-border/40 overflow-hidden"
+        className="relative p-8 rounded-[2.5rem] bg-white border border-slate-100"
       >
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-6">
@@ -278,7 +278,7 @@ export default function SuperAdmin() {
 
       <Tabs defaultValue="companies" className="space-y-8">
         <div className="flex justify-center">
-          <TabsList className="h-14 bg-background border border-border/50 p-1.5 rounded-[1.25rem] max-w-2xl w-full sm:grid sm:grid-cols-3">
+          <TabsList className="max-w-2xl w-full sm:grid sm:grid-cols-3">
             {[
               { value: 'companies', label: 'Empresas', icon: Building2 },
               { value: 'users', label: 'Usuarios', icon: Users },
@@ -287,7 +287,6 @@ export default function SuperAdmin() {
               <TabsTrigger 
                 key={tab.value}
                 value={tab.value} 
-                className="rounded-[1rem] px-6 py-2 font-black text-[10px] uppercase tracking-widest transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 <tab.icon className="w-3.5 h-3.5 mr-2" />
                 {tab.label}
@@ -575,16 +574,16 @@ export default function SuperAdmin() {
                 ),
               }))}
             />
-            <Card className="hidden md:block rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
+            <Card className="hidden md:block rounded-[2.5rem] bg-white border border-slate-100">
               <CardContent className="p-0 overflow-x-auto">
                 <Table className="min-w-[760px]">
-                  <TableHeader className="bg-background">
+                  <TableHeader>
                     <TableRow className="hover:bg-transparent border-slate-100">
-                      <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Entidad Corporativa</TableHead>
-                      <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Identificación</TableHead>
-                      <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Contacto & Canales</TableHead>
-                      <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Talento Humano</TableHead>
-                      <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fecha Alta</TableHead>
+                      <TableHead className="px-8 py-5">Entidad Corporativa</TableHead>
+                      <TableHead className="px-8 py-5">Identificación</TableHead>
+                      <TableHead className="px-8 py-5">Contacto & Canales</TableHead>
+                      <TableHead className="px-8 py-5 text-center">Talento Humano</TableHead>
+                      <TableHead className="px-8 py-5">Fecha Alta</TableHead>
                       <TableHead className="w-[100px] px-8"></TableHead>
                     </TableRow>
                   </TableHeader>

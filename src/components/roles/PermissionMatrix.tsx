@@ -296,7 +296,19 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
                         key={child.id}
                         className="grid min-w-[800px] grid-cols-[minmax(180px,1fr)_repeat(7,64px)] sm:grid-cols-[1fr_repeat(7,72px)] items-center px-4 py-2 pl-12 bg-background /10 hover:bg-background transition-colors"
                       >
-                        <span className="text-sm text-muted-foreground">{child.name}</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <span className="text-muted-foreground/40 shrink-0">↳</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-sm text-muted-foreground truncate cursor-default">
+                                {child.name}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              Submódulo de: {mod.name}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
                         <div className="flex justify-center">
                           <Checkbox
                             checked={isModuleAllChecked(child.id)}

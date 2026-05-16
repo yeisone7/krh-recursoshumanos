@@ -125,7 +125,7 @@ export default function MotivosNovedad() {
                   {reasons.filter(r => !r.is_active).length}
                 </p>
               </div>
-              <div className="h-14 w-14 rounded-2xl bg-background flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
+              <div className="h-14 w-14 rounded-2xl bg-card flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
                 <XCircle className="w-7 h-7" />
               </div>
             </div>
@@ -155,12 +155,12 @@ export default function MotivosNovedad() {
           {isLoading ? (
             <div className="p-8 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 w-full bg-background rounded-3xl animate-pulse" />
+                <div key={i} className="h-20 w-full bg-card rounded-3xl animate-pulse" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-              <div className="h-24 w-24 rounded-[2.5rem] bg-background flex items-center justify-center text-slate-200">
+              <div className="h-24 w-24 rounded-[2.5rem] bg-card flex items-center justify-center text-slate-200">
                 <Search className="w-12 h-12" />
               </div>
               <div className="space-y-1">
@@ -171,7 +171,7 @@ export default function MotivosNovedad() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-background">
+                <TableHeader className="bg-card">
                   <TableRow className="hover:bg-transparent border-none">
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información del Motivo</TableHead>
                     <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Descripción Detallada</TableHead>
@@ -187,7 +187,7 @@ export default function MotivosNovedad() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-background border-slate-100 transition-colors"
+                        className="group hover:bg-card border-slate-100 transition-colors"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-4">
@@ -207,7 +207,7 @@ export default function MotivosNovedad() {
                         <TableCell className="px-8 py-6 text-center">
                           <Badge className={cn(
                             "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-background text-slate-400"
+                            r.is_active ? "bg-emerald-50 text-emerald-600" : "bg-card text-slate-400"
                           )}>
                             {r.is_active ? 'Activo' : 'Inactivo'}
                           </Badge>

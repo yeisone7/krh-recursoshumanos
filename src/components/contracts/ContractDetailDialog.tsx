@@ -74,7 +74,7 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
   const [showEditDialog, setShowEditDialog] = useState(false);
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
-  const { isAdmin } = useAuth();
+  const { isAdmin, canView } = useAuth();
   const { data: contractTypes = [] } = useContractTypes();
   
   // Fetch termination process status
@@ -249,7 +249,9 @@ export function ContractDetailDialog({ open, onOpenChange, contract }: ContractD
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Salario</p>
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
-                    <p className="font-medium">{formatCurrency(contract.salary)}</p>
+                    <p className="font-medium">
+                      {canView('salarios') ? formatCurrency(contract.salary) : '••••••'}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-1">

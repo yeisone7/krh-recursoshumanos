@@ -93,198 +93,163 @@ export function SocialSecurityCatalogPage({
   };
 
   return (
-    <div className="min-h-screen pb-20 space-y-8 max-w-7xl mx-auto">
-      {/* Header Premium */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }} 
-        animate={{ opacity: 1, y: 0 }}
-        className="relative p-8 rounded-[3rem] bg-gradient-to-br from-primary/10 via-background to-background border border-border overflow-hidden"
-      >
-        
-        
-        <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Catálogo de Configuración</span>
+    <div className="space-y-6">
+      {/* Header Premium - Clean Sky Style */}
+      <div className="bg-card border-none shadow-sm rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-1 w-10 bg-primary rounded-full" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Catálogo de Configuración</span>
             </div>
-            <div className="space-y-1">
-              <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-none">
-                {title}
-              </h1>
-              <p className="text-lg text-slate-500 font-medium max-w-xl">
-                {description}
-              </p>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+              {title}
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed font-medium">
+              {description}
+            </p>
           </div>
           
-          <Button 
-            onClick={() => { setEditItem(null); setDialogOpen(true); }} 
-            className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-black uppercase tracking-widest text-xs transition-all active:scale-95"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            NUEVA {title.toUpperCase()}
-          </Button>
+          <div className="flex gap-2 shrink-0">
+            <Button 
+              onClick={() => { setEditItem(null); setDialogOpen(true); }} 
+              className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              NUEVA {title.toUpperCase()}
+            </Button>
+          </div>
         </div>
-      </motion.div>
-
-      {/* Grid de Estadísticas Rápidas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Registros</p>
-                <p className="text-4xl font-black text-slate-900 tracking-tighter">{data.length}</p>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:rotate-12 transition-transform">
-                <Building2 className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entidades Activas</p>
-                <p className="text-4xl font-black text-emerald-600 tracking-tighter">
-                  {data.filter(i => i.is_active).length}
-                </p>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:rotate-12 transition-transform">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-none shadow-xl shadow-slate-200/50 overflow-hidden bg-white group hover:scale-[1.02] transition-all duration-500">
-          <CardContent className="p-8">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">En Desuso</p>
-                <p className="text-4xl font-black text-slate-300 tracking-tighter">
-                  {data.filter(i => !i.is_active).length}
-                </p>
-              </div>
-              <div className="h-14 w-14 rounded-2xl bg-background flex items-center justify-center text-slate-300 group-hover:rotate-12 transition-transform">
-                <XCircle className="w-7 h-7" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Listado */}
-      <Card className="rounded-[3rem] border-none shadow-2xl shadow-slate-200/60 overflow-hidden bg-white/70 ">
-        <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/50">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      {/* Grid de Estadísticas - Clean Sky Style */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          { label: 'Total Registros', value: data.length, icon: Building2, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Entidades Activas', value: data.filter(i => i.is_active).length, icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: 'En Desuso', value: data.filter(i => !i.is_active).length, icon: XCircle, color: 'text-slate-400', bg: 'bg-slate-100' },
+        ].map((kpi, i) => (
+          <Card key={i} className="border-none shadow-sm bg-card hover:shadow-md transition-all duration-300 group rounded-2xl overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-xl ${kpi.bg} group-hover:scale-110 transition-transform shrink-0`}>
+                  <kpi.icon className={`w-6 h-6 ${kpi.color}`} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-2xl font-black tracking-tight truncate leading-none mb-1">{kpi.value}</p>
+                  <p className="text-[11px] font-bold text-foreground/80 leading-tight uppercase tracking-widest">{kpi.label}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Listado - Clean Sky Style */}
+      <div className="bg-card border-none shadow-sm rounded-2xl overflow-hidden">
+        <div className="p-4 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-md group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input 
               placeholder={`Buscar por nombre, NIT o código...`} 
-              className="pl-11 h-12 rounded-2xl bg-white border-slate-200 shadow-sm focus:ring-4 focus:ring-primary/5 transition-all font-medium text-slate-600"
+              className="pl-11 h-10 bg-background border-none rounded-xl shadow-sm focus-visible:ring-primary/20 font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-slate-200 hover:bg-white shadow-sm font-bold text-slate-600">
+          <Button variant="outline" className="h-10 px-5 rounded-xl border-border bg-background shadow-sm font-bold text-muted-foreground hover:text-primary transition-all">
             <Filter className="w-4 h-4 mr-2" />
             Filtros
           </Button>
         </div>
 
-        <CardContent className="p-0">
+        <div className="overflow-x-auto scrollbar-hide">
           {isLoading ? (
             <div className="p-8 space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-20 w-full bg-background rounded-3xl animate-pulse" />
+                <div key={i} className="h-16 w-full bg-muted/20 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : filteredData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 text-center space-y-6">
-              <div className="h-24 w-24 rounded-[2.5rem] bg-background flex items-center justify-center text-slate-200">
-                <Search className="w-12 h-12" />
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+              <div className="h-16 w-16 rounded-2xl bg-muted/20 flex items-center justify-center text-muted-foreground/30">
+                <Search className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-black text-slate-900">No hay resultados</h3>
-                <p className="text-slate-500 font-medium">{searchTerm ? 'Ajusta los términos de búsqueda' : `Inicia agregando una nueva ${title.toLowerCase()}`}</p>
+                <h3 className="text-lg font-bold text-foreground">No hay resultados</h3>
+                <p className="text-muted-foreground text-sm font-medium">{searchTerm ? 'Prueba con otros términos' : `Agrega una nueva ${title.toLowerCase()}`}</p>
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-background">
-                  <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Información Básica</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Código / NIT</TableHead>
-                    {showIPSFields && <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Ubicación</TableHead>}
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</TableHead>
-                    <TableHead className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <AnimatePresence mode="popLayout">
-                    {filteredData.map((item, idx) => (
-                      <motion.tr 
-                        key={item.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="group hover:bg-background border-slate-100 transition-colors"
-                      >
-                        <TableCell className="px-8 py-6">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Briefcase className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <div className="font-black text-slate-900 leading-none">{item.name}</div>
-                              <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Registrado el {new Date(item.created_at || '').toLocaleDateString()}</div>
-                            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="px-6 py-4">Información Básica</TableHead>
+                  <TableHead className="px-6 py-4 text-center">Código / NIT</TableHead>
+                  {showIPSFields && <TableHead className="px-6 py-4 text-center">Ubicación</TableHead>}
+                  <TableHead className="px-6 py-4 text-center">Estado</TableHead>
+                  <TableHead className="px-6 py-4 text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <AnimatePresence mode="popLayout">
+                  {filteredData.map((item, idx) => (
+                    <motion.tr 
+                      key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.03 }}
+                      className="group hover:bg-muted/10 border-border/50 transition-colors"
+                    >
+                      <TableCell className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-background border border-border shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform shrink-0">
+                            <Briefcase className="w-5 h-5" />
                           </div>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-center">
-                          <div className="space-y-1">
-                            <div className="text-xs font-black text-slate-700">{item.nit || 'Sin NIT'}</div>
-                            <Badge variant="outline" className="text-[10px] border-slate-200 font-bold px-2 rounded-md">
-                              {item.code || 'S/C'}
+                          <div className="min-w-0">
+                            <div className="font-bold text-foreground truncate">{item.name}</div>
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Ref: {item.id.split('-')[0]}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-center">
+                        <div className="space-y-1">
+                          <div className="text-xs font-bold text-foreground">{item.nit || 'Sin NIT'}</div>
+                          {item.code && (
+                            <Badge variant="outline">
+                              {item.code}
                             </Badge>
-                          </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      {showIPSFields && (
+                        <TableCell className="px-6 py-4 text-center">
+                          <div className="text-xs font-bold text-muted-foreground">{(item as CatalogIPS).city || '-'}</div>
                         </TableCell>
-                        {showIPSFields && (
-                          <TableCell className="px-8 py-6 text-center">
-                            <div className="text-xs font-bold text-slate-600">{(item as CatalogIPS).city || '-'}</div>
-                          </TableCell>
-                        )}
-                        <TableCell className="px-8 py-6 text-center">
-                          <Badge className={cn(
-                            "h-7 px-3 rounded-lg border-none font-black text-[10px] uppercase tracking-widest",
-                            item.is_active ? "bg-emerald-50 text-emerald-600" : "bg-background text-slate-400"
-                          )}>
-                            {item.is_active ? 'Activa' : 'Inactiva'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="px-8 py-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary">
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)} className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </motion.tr>
-                    ))}
-                  </AnimatePresence>
-                </TableBody>
-              </Table>
-            </div>
+                      )}
+                      <TableCell className="px-6 py-4 text-center">
+                        <Badge variant={item.is_active ? "success" : "secondary"}>
+                          {item.is_active ? 'Activa' : 'Inactiva'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteId(item.id)} className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </TableBody>
+            </Table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <SocialSecurityCatalogFormDialog
         open={dialogOpen}
@@ -312,7 +277,7 @@ export function SocialSecurityCatalogPage({
               </AlertDialogDescription>
             </div>
           </div>
-          <AlertDialogFooter className="p-6 bg-background flex gap-3 sm:gap-0">
+          <AlertDialogFooter className="p-6 bg-card flex gap-3 sm:gap-0">
             <AlertDialogCancel className="flex-1 h-12 rounded-xl font-bold border-slate-200">CANCELAR</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="flex-1 h-12 rounded-xl bg-destructive hover:bg-destructive/90 font-bold shadow-lg shadow-destructive/20">
               ELIMINAR AHORA

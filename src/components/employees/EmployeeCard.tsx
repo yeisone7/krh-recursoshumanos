@@ -9,9 +9,10 @@ import {
   Mail,
   Phone,
   ClipboardList,
-  Eye,
   RotateCcw,
   ArrowRightLeft,
+  FileBadge,
+  Eye,
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ interface EmployeeCardProps {
   onViewDocuments: (id: string) => void;
   onRehire?: (employee: any) => void;
   onTransfer?: (employee: any) => void;
+  onIssueCertificate?: (employee: any) => void;
 }
 
 export function EmployeeCard({
@@ -47,6 +49,7 @@ export function EmployeeCard({
   onViewDocuments,
   onRehire,
   onTransfer,
+  onIssueCertificate,
 }: EmployeeCardProps) {
   const navigate = useNavigate();
 
@@ -117,6 +120,12 @@ export function EmployeeCard({
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                 Documentos
               </DropdownMenuItem>
+              {onIssueCertificate && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onIssueCertificate(employee); }}>
+                  <FileBadge className="w-4 h-4 mr-2 text-primary" />
+                  Expedir Certificación
+                </DropdownMenuItem>
+              )}
               {!isRetired && onTransfer && (
                 <DropdownMenuItem 
                   onClick={(e) => { e.stopPropagation(); onTransfer(employee); }}

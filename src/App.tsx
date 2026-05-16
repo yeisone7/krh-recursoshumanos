@@ -42,6 +42,7 @@ import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import DescargosPublico from "./pages/DescargosPublico";
 import RegistroPublico from "./pages/RegistroPublico";
+import VerificarCertificado from "./pages/public/VerificarCertificado";
 import Evaluaciones from "./pages/Evaluaciones";
 import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones";
 import Organigrama from "./pages/Organigrama";
@@ -108,7 +109,12 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
         <AuthProvider>
           <AppUpdateNotifier />
           <LocationPersister />
@@ -118,6 +124,7 @@ const App = () => (
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
+            <Route path="/verificar-certificado/:token" element={<VerificarCertificado />} />
             <Route path="/install" element={<Install />} />
             <Route path="/portal" element={
               <ProtectedRoute>
@@ -153,12 +160,12 @@ const App = () => (
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
-                        <Route path="/seleccion/analitica" element={<P module="seleccion"><Suspense fallback={null}><AnaliticaSeleccion /></Suspense></P>} />
+                        <Route path="/seleccion/analitica" element={<P module="analitica_seleccion"><Suspense fallback={null}><AnaliticaSeleccion /></Suspense></P>} />
                         <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
                         <Route path="/jornadas" element={<P module="jornadas"><Jornadas /></P>} />
-                        <Route path="/nomina/analitica" element={<P module="novedades"><Suspense fallback={null}><AnaliticaNomina /></Suspense></P>} />
+                        <Route path="/nomina/analitica" element={<P module="analitica_nomina"><Suspense fallback={null}><AnaliticaNomina /></Suspense></P>} />
                         <Route path="/disciplinarios" element={<P module="disciplinarios"><Disciplinarios /></P>} />
                         <Route path="/vacaciones" element={<P module="vacaciones"><Vacaciones /></P>} />
                         <Route path="/permisos" element={<P module="permisos"><Permisos /></P>} />
@@ -173,10 +180,10 @@ const App = () => (
                         <Route path="/capacitaciones/biblioteca" element={<P module="capacitaciones"><BibliotecaCapacitaciones /></P>} />
                         <Route path="/capacitaciones/acceso/generar" element={<P module="capacitaciones"><GenerarAcceso /></P>} />
                         <Route path="/capacitaciones/evidencias" element={<P module="capacitaciones"><EvidenciasCapacitaciones /></P>} />
-                        <Route path="/capacitaciones/analiticas" element={<P module="capacitaciones"><AnaliticasCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/analiticas" element={<P module="analitica_capacitaciones"><AnaliticasCapacitaciones /></P>} />
                         <Route path="/capacitaciones/cumplimiento" element={<P module="capacitaciones"><CumplimientoCapacitaciones /></P>} />
                         <Route path="/evaluaciones" element={<P module="evaluaciones"><Evaluaciones /></P>} />
-                        <Route path="/evaluaciones/analiticas" element={<P module="evaluaciones"><AnaliticasEvaluaciones /></P>} />
+                        <Route path="/evaluaciones/analiticas" element={<P module="analitica_evaluaciones"><AnaliticasEvaluaciones /></P>} />
                         <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />
                         <Route path="/cesantias" element={<P module="cesantias"><Cesantias /></P>} />
                         <Route path="/calendario" element={<P module="calendario"><Calendario /></P>} />
@@ -204,7 +211,7 @@ const App = () => (
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/super-admin" element={<SuperAdmin />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
-                        <Route path="/auditoria" element={<P module="seguridad"><Auditoria /></P>} />
+                        <Route path="/auditoria" element={<P module="auditoria"><Auditoria /></P>} />
                         <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>

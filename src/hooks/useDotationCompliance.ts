@@ -48,6 +48,7 @@ export function useDotationCompliance() {
       const { data: profItems } = await supabase
         .from('dotation_profesiograma_items' as any)
         .select('profesiograma_id, dotation_item_type_id, quantity, is_required, dotation_item_types(id, name)')
+        .eq('company_id', currentCompanyId);
 
       if (!profItems || (profItems as any[]).length === 0) return [];
 
@@ -100,7 +101,7 @@ export function useDotationCompliance() {
       const { data: deliveries } = await supabase
         .from('dotation_deliveries')
         .select('employee_id, item_name')
-        .in('employee_id', empIds);
+        .eq('company_id', currentCompanyId);
 
       // Build a reverse map: item name -> item type IDs (from profesiograma)
       const nameToTypeIds = new Map<string, Set<string>>();
@@ -133,8 +134,8 @@ export function useDotationCompliance() {
       const positionIds = [...new Set(relevantEmployees.map(e => e.position_id))];
 
       const [{ data: centers }, { data: positions }] = await Promise.all([
-        supabase.from('operation_centers').select('id, name').in('id', centerIds),
-        supabase.from('positions').select('id, name').in('id', positionIds),
+        supabase.from('operation_centers').select('id, name').eq('company_id', currentCompanyId).in('id', centerIds),
+        supabase.from('positions').select('id, name').eq('company_id', currentCompanyId).in('id', positionIds),
       ]);
 
       const centerNameMap = new Map((centers || []).map(c => [c.id, c.name]));

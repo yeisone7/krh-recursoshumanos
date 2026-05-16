@@ -209,21 +209,21 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
         <div className="flex flex-col gap-8 px-2">
           {/* Tabs Internas Estilo Premium */}
           <div className="flex justify-center">
-            <Tabs defaultValue="all" className="inline-flex h-14 p-1.5 rounded-2xl bg-background border border-slate-200">
-              <TabsList className="bg-transparent border-none p-0">
-                <TabsTrigger value="all" onClick={() => handleFiltersChange({})} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+            <Tabs defaultValue="all">
+              <TabsList>
+                <TabsTrigger value="all" onClick={() => handleFiltersChange({})}>
                   <History className="w-3.5 h-3.5 mr-2" />
                   Todo el Registro
                 </TabsTrigger>
-                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-destructive transition-all">
+                <TabsTrigger value="critical" onClick={() => handleFiltersChange({ severity: 'critical' })}>
                   <AlertCircle className="w-3.5 h-3.5 mr-2" />
                   Eventos Críticos
                 </TabsTrigger>
-                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                <TabsTrigger value="user" onClick={() => handleFiltersChange({ user_email: user?.email })}>
                   <User className="w-3.5 h-3.5 mr-2" />
                   Por Usuario
                 </TabsTrigger>
-                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })} className="px-6 rounded-xl text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+                <TabsTrigger value="exports" onClick={() => handleFiltersChange({ action: 'export_excel' })}>
                   <FileSpreadsheet className="w-3.5 h-3.5 mr-2" />
                   Exportaciones
                 </TabsTrigger>
@@ -270,7 +270,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
           </div>
         </div>
 
-        <Card className="rounded-[2.5rem] bg-background border border-border/40 overflow-hidden">
+        <Card className="rounded-[2.5rem] bg-white border border-slate-100">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-8 space-y-4">
@@ -329,7 +329,7 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
 
                 {/* Paginación Premium */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-8 py-6 bg-background border-t border-slate-100">
+                  <div className="flex items-center justify-between px-8 py-6 bg-white border-t border-slate-100">
                     <div className="flex items-center gap-4">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         MOSTRANDO <span className="text-slate-900">{page * pageSize + 1}–{Math.min((page + 1) * pageSize, total)}</span> DE <span className="text-slate-900">{total.toLocaleString('es-CO')}</span> EVENTOS
