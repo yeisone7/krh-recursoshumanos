@@ -120,22 +120,18 @@ export function ContractTypeFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-100 shadow-2xl rounded-[3rem] focus:outline-none flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-none rounded-3xl focus:outline-none flex flex-col">
         <div className="relative flex-1 flex flex-col min-h-0">
           {/* Header Premium Flat Design */}
-          <DialogHeader className="relative px-10 pt-12 pb-10 bg-gradient-to-br from-slate-50/50 to-white border-b border-slate-100">
+          <DialogHeader className="relative px-10 pt-12 pb-10 bg-slate-50/50 border-b border-slate-200">
             <div className="flex items-center gap-6">
-              <div className="relative group">
-                <div className="absolute -inset-2 bg-primary/20 rounded-3xl blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative h-20 w-20 flex items-center justify-center rounded-[1.75rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group-hover:scale-105 transition-transform duration-500">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                  <FileStack className="relative w-9 h-9 text-primary stroke-[2.5]" />
-                </div>
+              <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 overflow-hidden">
+                <FileStack className="relative w-9 h-9 text-primary stroke-[2.5]" />
               </div>
               <div className="space-y-1.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <Badge className={cn(
-                    "font-black text-[9px] px-2.5 py-0.5 rounded-lg border-none shadow-sm uppercase tracking-[0.15em]",
+                    "font-black text-[9px] px-2.5 py-0.5 rounded-lg border-none uppercase tracking-[0.15em]",
                     editItem ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
                   )}>
                     {editItem ? 'PROTOCOLO DE EDICIÓN' : 'REGISTRO INICIAL'}
@@ -166,7 +162,7 @@ export function ContractTypeFormDialog({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <Label htmlFor="contractType" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">ID Técnico del Sistema *</Label>
-                    <div className="relative group">
+                    <div className="relative">
                       <Input
                         id="contractType"
                         value={contractType}
@@ -174,7 +170,7 @@ export function ContractTypeFormDialog({
                         placeholder="ej: término_fijo_un_año"
                         required
                         disabled={!!editItem}
-                        className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
+                        className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
                       />
                       {!editItem && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-1 rounded-lg">ID Único</div>}
                     </div>
@@ -188,7 +184,7 @@ export function ContractTypeFormDialog({
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="ej: Contrato Fijo Inferior a 1 Año"
                       required
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
+                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
                     />
                   </div>
                 </div>
@@ -200,7 +196,7 @@ export function ContractTypeFormDialog({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe los alcances, condiciones y marco legal de este tipo de vinculación..."
-                    className="min-h-[120px] rounded-[2rem] bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-bold text-slate-600 resize-none placeholder:text-slate-300 p-6 text-xs leading-relaxed"
+                    className="min-h-[120px] rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-bold text-slate-600 resize-none placeholder:text-slate-300 p-6 text-xs leading-relaxed"
                   />
                 </div>
               </div>
@@ -224,7 +220,7 @@ export function ContractTypeFormDialog({
                       value={maxDurationMonths}
                       onChange={(e) => setMaxDurationMonths(e.target.value)}
                       placeholder="∞"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-black text-slate-900 text-center"
+                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
                   <div className="space-y-3">
@@ -236,7 +232,7 @@ export function ContractTypeFormDialog({
                       value={maxExtensions}
                       onChange={(e) => setMaxExtensions(e.target.value)}
                       placeholder="∞"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-black text-slate-900 text-center"
+                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
                   <div className="space-y-3">
@@ -248,14 +244,14 @@ export function ContractTypeFormDialog({
                       value={defaultTrialDays}
                       onChange={(e) => setDefaultTrialDays(e.target.value)}
                       placeholder="60"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 transition-all font-black text-slate-900 text-center"
+                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div 
-                    className="flex items-center justify-between p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:border-primary/20 transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all cursor-pointer"
                     onClick={() => setRequiresEndDate(!requiresEndDate)}
                   >
                     <div className="space-y-1">
@@ -271,7 +267,7 @@ export function ContractTypeFormDialog({
                   </div>
                   
                   <div 
-                    className="flex items-center justify-between p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm hover:border-emerald-500/20 transition-all cursor-pointer group"
+                    className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all cursor-pointer"
                     onClick={() => setIsActive(!isActive)}
                   >
                     <div className="space-y-1">
@@ -303,7 +299,7 @@ export function ContractTypeFormDialog({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center justify-between p-6 rounded-[2rem] bg-white border border-primary/20 shadow-sm"
+                      className="flex items-center justify-between p-6 rounded-2xl bg-white border border-primary/20"
                     >
                       <div className="flex items-center gap-5 min-w-0">
                         <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-primary/5 text-primary">
@@ -342,7 +338,7 @@ export function ContractTypeFormDialog({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center justify-between p-6 rounded-[2rem] bg-emerald-500/5 border border-emerald-500/20 shadow-sm"
+                      className="flex items-center justify-between p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20"
                     >
                       <div className="flex items-center gap-5 min-w-0">
                         <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
@@ -367,14 +363,14 @@ export function ContractTypeFormDialog({
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="group relative"
+                      className="relative"
                     >
                       <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center py-12 rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-white hover:border-primary/30 hover:bg-primary/[0.02] transition-all cursor-pointer overflow-hidden group/drop shadow-sm"
+                        className="flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed border-slate-200 bg-white hover:border-primary/30 hover:bg-primary/[0.02] transition-all cursor-pointer overflow-hidden group/drop"
                       >
-                        <div className="relative mb-6 p-5 rounded-[1.5rem] bg-slate-50 border border-slate-100 group-hover/drop:scale-110 group-hover/drop:rotate-3 transition-all duration-500 shadow-sm">
-                          <Upload className="w-10 h-10 text-slate-300 group-hover/drop:text-primary transition-colors stroke-[2.5]" />
+                        <div className="relative mb-6 p-5 rounded-2xl bg-slate-50 border border-slate-200 transition-all">
+                          <Upload className="w-10 h-10 text-slate-350 stroke-[2.5]" />
                         </div>
                         <div className="text-center space-y-2">
                           <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover/drop:text-primary transition-colors">Vincular Plantilla DOCX/PDF</p>
@@ -397,7 +393,7 @@ export function ContractTypeFormDialog({
             </div>
 
             {/* Footer de Acciones Premium Flat */}
-            <div className="shrink-0 px-10 py-10 border-t border-slate-100 bg-white flex items-center justify-between gap-6 rounded-b-[3rem] shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+            <div className="shrink-0 px-10 py-10 border-t border-slate-200 bg-white flex items-center justify-between gap-6 rounded-b-3xl">
               <div className="hidden sm:flex items-center gap-3 text-slate-400">
                 <Info className="w-4 h-4" />
                 <span className="text-[9px] font-black uppercase tracking-widest italic">Campos con * son obligatorios</span>
@@ -408,14 +404,14 @@ export function ContractTypeFormDialog({
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)} 
-                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] text-slate-400 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
+                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] text-slate-450 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
                 >
                   DESCARTAR
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading || !contractType.trim() || !displayName.trim()} 
-                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-200 active:scale-95 transition-all flex-1 sm:flex-none"
+                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
