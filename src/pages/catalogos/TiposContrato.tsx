@@ -468,7 +468,9 @@ export default function TiposContrato() {
                             </div>
                             <div className="space-y-0.5">
                               <p className="font-black text-slate-900 text-sm uppercase tracking-tight">{item.display_name}</p>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ref: {item.id.split('-')[0]}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[280px]" title={item.description || undefined}>
+                                {item.description || 'Sin especificaciones legales'}
+                              </p>
                             </div>
                           </div>
                         </TableCell>
