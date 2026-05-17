@@ -49,7 +49,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<{ s
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'KRH Sistema <onboarding@resend.dev>',
+        from: 'EmpatiQ Sistema <onboarding@resend.dev>',
         to: [to],
         subject,
         html,
@@ -198,7 +198,7 @@ function generateExpiringEmailHtml(alerts: IncapacityAlert[]): string {
         </div>
         
         <p style="color: #6b7280; font-size: 12px; margin-top: 24px; text-align: center;">
-          Este es un correo automático del sistema KRH. No responda a este mensaje.
+          Este es un correo automático del sistema EmpatiQ. No responda a este mensaje.
         </p>
       </div>
     </body>
@@ -261,7 +261,7 @@ function generateRecoveryPendingEmailHtml(alerts: IncapacityAlert[]): string {
         </div>
         
         <p style="color: #6b7280; font-size: 12px; margin-top: 24px; text-align: center;">
-          Este es un correo automático del sistema KRH. No responda a este mensaje.
+          Este es un correo automático del sistema EmpatiQ. No responda a este mensaje.
         </p>
       </div>
     </body>

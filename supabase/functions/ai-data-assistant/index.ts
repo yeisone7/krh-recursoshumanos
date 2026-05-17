@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     
     if (socialPatterns.test(normalizedQ) || normalizedQ.length < 3) {
       const responses: Record<string, {text: string, voice: string}> = {
-        "hola": { text: "¡Hola! Soy tu asistente de datos de KRH. ¿En qué puedo ayudarte hoy?", voice: "¡Hola! ¿En qué puedo ayudarte hoy?" },
+        "hola": { text: "¡Hola! Soy tu asistente de datos de EmpatiQ. ¿En qué puedo ayudarte hoy?", voice: "¡Hola! ¿En qué puedo ayudarte hoy?" },
         "gracias": { text: "¡De nada! Si necesitas más ayuda con los datos de RRHH, aquí estaré.", voice: "¡De nada! Aquí estaré para lo que necesites." },
         "ok": { text: "Entendido. ¿Deseas consultar algo más?", voice: "Entendido. ¿Deseas consultar algo más?" },
         "default": { text: "¡Un gusto saludarte! ¿Tienes alguna pregunta sobre los datos de la empresa?", voice: "¡Hola! ¿En qué puedo ayudarte?" }
@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     const apiKey = aiConfig?.config_value?.openai_api_key || Deno.env.get("OPENAI_API_KEY");
 
     // 6. Generar SQL con AI
-    const systemPrompt = `Eres un ANALISTA DE DATOS EXPERTO EN RRHH para el sistema KRH.
+    const systemPrompt = `Eres un ANALISTA DE DATOS EXPERTO EN RRHH para el sistema EmpatiQ.
 Tu función es generar CONSULTAS SQL PostgreSQL precisas.
 
 # 📌 REGLAS DE NEGOCIO Y VALORES

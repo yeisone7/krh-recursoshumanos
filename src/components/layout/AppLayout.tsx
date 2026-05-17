@@ -58,7 +58,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   useEffect(() => {
     const trackedModules = ['/empleados', '/contratos', '/jornadas', '/novedades', '/requisiciones', '/seleccion', '/dotacion', '/examenes', '/alertas'];
     if (trackedModules.some((path) => location.pathname.startsWith(path))) {
-      sessionStorage.setItem('krh_last_module_path', location.pathname);
+      sessionStorage.setItem('empatiq_last_module_path', location.pathname);
     }
     if (location.pathname === '/asistente-ia') setAiPanelOpen(false);
   }, [location.pathname]);
@@ -295,7 +295,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               return;
             }
             if (isAiAssistant) {
-              navigate(sessionStorage.getItem('krh_last_module_path') || '/');
+              navigate(sessionStorage.getItem('empatiq_last_module_path') || '/');
               return;
             }
             navigate('/asistente-ia');

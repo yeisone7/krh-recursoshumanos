@@ -191,7 +191,7 @@ serve(async (req: Request): Promise<Response> => {
       for (const { email, displayName } of emailsToSend) {
         try {
           await resend.emails.send({
-            from: 'KRH <notificaciones@lovable.app>',
+            from: 'EmpatiQ <notificaciones@lovable.app>',
             to: [email],
             subject: `🔔 Requisición pendiente de aprobación - ${requisition.cargo_solicitado}`,
             html: `
@@ -249,8 +249,8 @@ serve(async (req: Request): Promise<Response> => {
                     </center>
                   </div>
                   <div class="footer">
-                    <p>Este es un mensaje automático del sistema KRH de gestión de recursos humanos.</p>
-                    <p>© ${new Date().getFullYear()} KRH - Gestión de Recursos Humanos</p>
+                    <p>Este es un mensaje automático del sistema EmpatiQ de gestión de recursos humanos.</p>
+                    <p>© ${new Date().getFullYear()} EmpatiQ - Gestión de Recursos Humanos</p>
                   </div>
                 </div>
               </body>

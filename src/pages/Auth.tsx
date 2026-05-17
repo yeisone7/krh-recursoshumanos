@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
+import { Loader2, Users, Shield, Building2, ChevronRight, ChevronDown, Sparkles, Mail, ArrowLeft, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import empatiqLogo from '@/assets/empatiq-logo-horizontal.png';
@@ -112,6 +112,17 @@ export default function Auth() {
   const [loginErrorSummary, setLoginErrorSummary] = useState<string | null>(null);
   const [isHeroLogoLoaded, setIsHeroLogoLoaded] = useState(false);
   const [isFormReady, setIsFormReady] = useState(false);
+  const [successType, setSuccessType] = useState<'register' | 'recovery' | null>(null);
+  const [successEmail, setSuccessEmail] = useState('');
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
   const loginErrorSummaryRef = useRef<HTMLDivElement>(null);
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
@@ -246,6 +257,9 @@ export default function Auth() {
       }
 
       setIsRecoverySent(true);
+      setSuccessType('recovery');
+      setSuccessEmail(data.email);
+      setCountdown(60);
       toast({ title: 'Enlace enviado', description: 'Revisa tu correo para restablecer la contraseña.' });
     } finally {
       setIsSubmitting(false);
@@ -273,11 +287,41 @@ export default function Auth() {
         return;
       }
       toast({ title: '¡Cuenta creada!', description: 'Revisa tu correo para confirmar tu cuenta.' });
-      setIsLogin(true);
+      setSuccessType('register');
+      setSuccessEmail(data.email);
+      setCountdown(60);
       loginForm.reset();
       registerForm.reset();
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (countdown > 0) return;
+    setCountdown(60);
+    try {
+      if (successType === 'register') {
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: successEmail,
+        });
+        if (error) {
+          toast({ variant: 'destructive', title: 'Error al reenviar', description: error.message });
+          return;
+        }
+      } else if (successType === 'recovery') {
+        const { error } = await supabase.auth.resetPasswordForEmail(successEmail, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) {
+          toast({ variant: 'destructive', title: 'Error al reenviar', description: error.message });
+          return;
+        }
+      }
+      toast({ title: '¡Correo reenviado!', description: 'Hemos enviado un nuevo mensaje a tu correo.' });
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Error', description: e.message || 'Error inesperado.' });
     }
   };
 
@@ -331,7 +375,7 @@ export default function Auth() {
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 border border-primary/25 text-primary text-xs lg:text-sm font-medium mb-2 lg:mb-3">
                 <Sparkles className="w-4 h-4 shrink-0" />
-                Plataforma KRH
+                Plataforma EmpatiQ
               </div>
               <h1 className="text-3xl lg:text-4xl font-bold text-foreground leading-tight tracking-tight">
                 Gestión de<br />
@@ -367,7 +411,7 @@ export default function Auth() {
           </div>
           
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} className="text-sm text-muted-foreground/70">
-            © 2025 KRH. Todos los derechos reservados Petrocasinos s.a.
+            © 2025 EmpatiQ. Todos los derechos reservados Petrocasinos s.a.
           </motion.p>
         </div>
       </div>
@@ -393,7 +437,7 @@ export default function Auth() {
               <span className="flex items-center gap-2 min-w-0">
                 <img src={empatiqIcon} alt="EmpatiQ" className="h-20 w-20 shrink-0 object-contain" />
                 <span className="min-w-0">
-                  <span className="block text-xs text-muted-foreground">Plataforma KRH</span>
+                  <span className="block text-xs text-muted-foreground">Plataforma EmpatiQ</span>
                 </span>
               </span>
               <ChevronDown className={cn("h-4 w-4 shrink-0 text-primary transition-transform", isBrandPanelOpen && "rotate-180")} aria-hidden="true" />
@@ -422,265 +466,363 @@ export default function Auth() {
           </div>
 
           <div className="bg-card border border-border p-5 shadow-xl">
-            {/* Header */}
-            <div className="text-center mb-4">
-              <div className="hidden lg:flex flex-col items-center mb-2">
-                <img src={empatiqIcon} alt="EmpatiQ" className="w-24 h-24 object-contain" />
-                
-                <span className="text-xs font-semibold text-primary/80 leading-tight text-center mt-1">Gestión de Talento Humano</span>
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={isLogin ? 'login' : 'register'}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}>
+            {successType ? (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="py-4 flex flex-col items-center"
+              >
+                {/* Glowing mail icon animation */}
+                <div className="relative flex justify-center mb-6">
+                  <div className="absolute -inset-4 bg-gradient-to-tr from-primary to-emerald-500 opacity-20 blur-xl rounded-full animate-pulse" />
+                  <motion.div
+                    initial={{ scale: 0.6, rotate: -20, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                    className="relative w-20 h-20 bg-gradient-to-tr from-primary/10 to-emerald-500/10 border border-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-inner"
+                  >
+                    <Mail className="w-10 h-10 text-primary animate-[bounce_3s_infinite]" />
+                  </motion.div>
+                </div>
 
-                  <h2 className="text-xl font-bold text-foreground">
-                    {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                  </h2>
-                  <p className="text-muted-foreground text-[10px] mt-0.5">
-                    {isRecoveryMode ?
-                    'Te enviaremos un enlace seguro a tu correo' :
-                    isLogin ?
-                      'Ingresa tus credenciales para acceder' :
-                      'Completa el formulario para registrarte'}
+                <h2 className="text-2xl font-black text-center text-foreground tracking-tight mb-2">
+                  {successType === 'register' ? '¡Verifica tu correo!' : 'Enlace enviado'}
+                </h2>
+                <p className="text-center text-muted-foreground text-sm leading-relaxed mb-6 max-w-sm">
+                  Hemos enviado un correo de {successType === 'register' ? 'confirmación' : 'recuperación'} a la dirección:{' '}
+                  <span className="block mt-1 font-semibold text-foreground bg-primary/5 border border-primary/10 py-1 px-2.5 rounded-lg inline-block text-xs select-all">
+                    {successEmail}
+                  </span>
+                </p>
+
+                {/* Email shortcut actions */}
+                <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl space-y-3 mb-6">
+                  <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
+                    Accesos directos recomendados
+                  </h4>
+                  <div className="flex gap-2.5">
+                    <a
+                      href="https://mail.google.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-355 rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+                    >
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-4 h-4 shrink-0" />
+                      <span>Gmail</span>
+                    </a>
+                    <a
+                      href="https://outlook.live.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-355 rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+                    >
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg" alt="Outlook" className="w-4 h-4 shrink-0" />
+                      <span>Outlook</span>
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center leading-normal">
+                    💡 <strong>¿No encuentras el correo?</strong> Revisa tu carpeta de <em>Correo no deseado (Spam)</em> o <em>Promociones</em>.
                   </p>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                </div>
 
-            {/* Forms */}
-            {!isFormReady ? <AuthFormSkeleton /> : isRecoveryMode ?
-            <Form {...recoveryForm}>
-                <form onSubmit={recoveryForm.handleSubmit(onRecoverySubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
-                  <FormField
-                    control={recoveryForm.control}
-                    name="email"
-                    render={({ field }) =>
-                    <FormItem>
-                      <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                    } />
-
-                  {isRecoverySent && <p className="text-xs text-muted-foreground" role="status" aria-live="polite">Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</p>}
+                {/* Resend and go back buttons */}
+                <div className="w-full space-y-3">
+                  <Button
+                    variant="ghost"
+                    onClick={handleResendEmail}
+                    disabled={countdown > 0}
+                    className={cn(
+                      "w-full h-11 rounded-2xl text-xs font-semibold transition-all border border-dashed",
+                      countdown > 0 
+                        ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-muted-foreground" 
+                        : "hover:bg-primary/5 border-primary/20 hover:border-primary/30 text-primary"
+                    )}
+                  >
+                    {countdown > 0 ? (
+                      <span>Reenviar correo en {countdown}s</span>
+                    ) : (
+                      <span>Reenviar enlace de correo</span>
+                    )}
+                  </Button>
 
                   <Button
-                    type="submit"
-                    className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
-                    disabled={isSubmitting || !recoveryForm.formState.isValid}
-                    aria-busy={isSubmitting}
-                    aria-live="polite"
+                    variant="default"
+                    onClick={() => {
+                      setSuccessType(null);
+                      setIsLogin(true);
+                      setIsRecoveryMode(false);
+                    }}
+                    className="w-full h-11 bg-primary hover:bg-primary/95 text-primary-foreground font-bold rounded-2xl shadow-lg shadow-primary/10 transition-all text-sm flex items-center justify-center gap-2"
                   >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-                    <span>{isSubmitting ? 'Enviando enlace...' : 'Enviar enlace'}</span>
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Volver al inicio de sesión</span>
                   </Button>
-                  <span className="sr-only" role="status" aria-live="polite">
-                    {isSubmitting ? 'Enviando enlace de recuperación, por favor espera.' : ''}
-                  </span>
-                </form>
-              </Form> : isLogin ?
-            <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-3">
-                  {loginErrorSummary && (
-                    <div
-                      ref={loginErrorSummaryRef}
-                      tabIndex={-1}
-                      role="alert"
-                      aria-live="assertive"
-                      className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
-                    >
-                      <p className="font-semibold">No pudimos iniciar sesión</p>
-                      <p>{loginErrorSummary}</p>
-                    </div>
-                  )}
+                </div>
+              </motion.div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <div className="hidden lg:flex flex-col items-center mb-2">
+                    <img src={empatiqIcon} alt="EmpatiQ" className="w-24 h-24 object-contain" />
+                    
+                    <span className="text-xs font-semibold text-primary/80 leading-tight text-center mt-1">Gestión de Talento Humano</span>
+                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={isLogin ? 'login' : 'register'}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}>
 
-                  <FormField
-                  control={loginForm.control}
-                  name="email"
-                  render={({ field }) =>
-                  <FormItem>
+                      <h2 className="text-xl font-bold text-foreground">
+                        {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                      </h2>
+                      <p className="text-muted-foreground text-[10px] mt-0.5">
+                        {isRecoveryMode ?
+                        'Te enviaremos un enlace seguro a tu correo' :
+                        isLogin ?
+                          'Ingresa tus credenciales para acceder' :
+                          'Completa el formulario para registrarte'}
+                      </p>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+
+                {/* Forms */}
+                {!isFormReady ? <AuthFormSkeleton /> : isRecoveryMode ?
+                <Form {...recoveryForm}>
+                    <form onSubmit={recoveryForm.handleSubmit(onRecoverySubmit)} onKeyDown={handleLoginKeyDown} className="space-y-4">
+                      <FormField
+                        control={recoveryForm.control}
+                        name="email"
+                        render={({ field }) =>
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                        } />
+
+                      {isRecoverySent && <p className="text-xs text-muted-foreground" role="status" aria-live="polite">Si el correo está registrado, recibirás un enlace para crear una nueva contraseña.</p>}
+
+                      <Button
+                        type="submit"
+                        className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
+                        disabled={isSubmitting || !recoveryForm.formState.isValid}
+                        aria-busy={isSubmitting}
+                        aria-live="polite"
+                      >
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                        <span>{isSubmitting ? 'Enviando enlace...' : 'Enviar enlace'}</span>
+                      </Button>
+                      <span className="sr-only" role="status" aria-live="polite">
+                        {isSubmitting ? 'Enviando enlace de recuperación, por favor espera.' : ''}
+                      </span>
+                    </form>
+                  </Form> : isLogin ?
+                <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} onKeyDown={handleLoginKeyDown} className="space-y-3">
+                      {loginErrorSummary && (
+                        <div
+                          ref={loginErrorSummaryRef}
+                          tabIndex={-1}
+                          role="alert"
+                          aria-live="assertive"
+                          className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive focus:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+                        >
+                          <p className="font-semibold">No pudimos iniciar sesión</p>
+                          <p>{loginErrorSummary}</p>
+                        </div>
+                      )}
+
+                      <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) =>
+                      <FormItem>
+                            <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                      } />
+
+                      <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) =>
+                      <FormItem>
+                            <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
+                            <FormControl>
+                              <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                      } />
+
+                      <div className="flex items-center justify-between text-xs">
+                        <label className="flex items-center gap-2 text-muted-foreground">
+                          <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
+                          Recordar sesión
+                        </label>
+                        <button type="button" className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
+                          setIsRecoveryMode(true);
+                          setIsRecoverySent(false);
+                          recoveryForm.setValue('email', loginForm.getValues('email'));
+                        }}>
+                          Recuperar contraseña
+                        </button>
+                      </div>
+
+                      <Button
+                        type="submit"
+                        className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
+                        disabled={isSubmitting || !loginForm.formState.isValid}
+                        aria-busy={isSubmitting}
+                        aria-live="polite"
+                      >
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                        <span>{isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}</span>
+                      </Button>
+                      <span className="sr-only" role="status" aria-live="polite">
+                        {isSubmitting ? 'Autenticando credenciales, por favor espera.' : ''}
+                      </span>
+                    </form>
+                  </Form> :
+
+                <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-2.5">
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <FormField
+                        control={registerForm.control}
+                        name="first_name"
+                        render={({ field }) =>
+                        <FormItem>
+                              <FormLabel className="text-xs font-semibold">Nombre</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Juan" autoComplete="given-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                        } />
+
+                        <FormField
+                        control={registerForm.control}
+                        name="last_name"
+                        render={({ field }) =>
+                        <FormItem>
+                              <FormLabel className="text-xs font-semibold">Apellido</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Pérez" autoComplete="family-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                        } />
+
+                      </div>
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold">Número de identificación</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="1234567890" 
+                            className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
+                            {...registerForm.register("document_number")}
+                          />
+                        </FormControl>
+                        {registerForm.formState.errors.document_number && (
+                          <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.document_number.message}</p>
+                        )}
+                      </FormItem>
+
+                      <FormItem>
                         <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
                         <FormControl>
-                          <Input type="email" placeholder="correo@ejemplo.com" autoComplete="email" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
+                          <Input 
+                            type="email" 
+                            placeholder="correo@ejemplo.com" 
+                            autoComplete="email" 
+                            className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
+                            {...registerForm.register("email")}
+                          />
                         </FormControl>
-                        <FormMessage />
+                        {registerForm.formState.errors.email && (
+                          <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.email.message}</p>
+                        )}
                       </FormItem>
-                  } />
 
-                  <FormField
-                  control={loginForm.control}
-                  name="password"
-                  render={({ field }) =>
-                  <FormItem>
-                        <FormLabel className="text-sm font-semibold">Contraseña</FormLabel>
-                        <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="current-password" className="h-10 bg-background border-border focus:bg-background transition-colors text-sm" disabled={isSubmitting} {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  } />
+                      <FormField
+                      control={registerForm.control}
+                      name="password"
+                      render={({ field }) =>
+                      <FormItem>
+                            <FormLabel className="text-xs font-semibold">Contraseña</FormLabel>
+                            <FormControl>
+                              <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                      } />
 
-                  <div className="flex items-center justify-between text-xs">
-                    <label className="flex items-center gap-2 text-muted-foreground">
-                      <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
-                      Recordar sesión
-                    </label>
-                    <button type="button" className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
-                      setIsRecoveryMode(true);
-                      setIsRecoverySent(false);
-                      recoveryForm.setValue('email', loginForm.getValues('email'));
+                      <FormField
+                      control={registerForm.control}
+                      name="confirm_password"
+                      render={({ field }) =>
+                      <FormItem>
+                            <FormLabel className="text-xs font-semibold">Confirmar contraseña</FormLabel>
+                            <FormControl>
+                              <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                      } />
+
+                      <Button type="submit" className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm" disabled={isSubmitting || !registerForm.formState.isValid}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Crear Cuenta
+                      </Button>
+                    </form>
+                  </Form>
+                }
+
+                {/* Divider */}
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                </div>
+
+                {/* Toggle */}
+                <div className="text-center py-2 px-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-slate-600 font-medium text-sm">
+                    {isRecoveryMode ? '¿Recordaste tu contraseña?' : isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
+                  </span>{' '}
+                  <button
+                    type="button"
+                    className="text-primary hover:text-primary/80 font-black text-sm hover:underline transition-all active:scale-95 ml-1"
+                    onClick={() => {
+                      if (isRecoveryMode) {
+                        setIsRecoveryMode(false);
+                        setIsLogin(true);
+                        setIsRecoverySent(false);
+                        recoveryForm.reset();
+                      } else {
+                        setIsLogin(!isLogin);
+                      }
+                      loginForm.reset();
+                      registerForm.reset();
                     }}>
-                      Recuperar contraseña
-                    </button>
-                  </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm mt-1"
-                    disabled={isSubmitting || !loginForm.formState.isValid}
-                    aria-busy={isSubmitting}
-                    aria-live="polite"
-                  >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-                    <span>{isSubmitting ? 'Ingresando...' : 'Iniciar Sesión'}</span>
-                  </Button>
-                  <span className="sr-only" role="status" aria-live="polite">
-                    {isSubmitting ? 'Autenticando credenciales, por favor espera.' : ''}
-                  </span>
-                </form>
-              </Form> :
-
-            <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-2.5">
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <FormField
-                    control={registerForm.control}
-                    name="first_name"
-                    render={({ field }) =>
-                    <FormItem>
-                          <FormLabel className="text-xs font-semibold">Nombre</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Juan" autoComplete="given-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                    } />
-
-                    <FormField
-                    control={registerForm.control}
-                    name="last_name"
-                    render={({ field }) =>
-                    <FormItem>
-                          <FormLabel className="text-xs font-semibold">Apellido</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Pérez" autoComplete="family-name" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                    } />
-
-                  </div>
-                  <FormItem>
-                    <FormLabel className="text-xs font-semibold">Número de identificación</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="1234567890" 
-                        className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
-                        {...registerForm.register("document_number")}
-                      />
-                    </FormControl>
-                    {registerForm.formState.errors.document_number && (
-                      <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.document_number.message}</p>
-                    )}
-                  </FormItem>
-
-                  <FormItem>
-                    <FormLabel className="text-sm font-semibold">Correo electrónico</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        placeholder="correo@ejemplo.com" 
-                        autoComplete="email" 
-                        className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" 
-                        {...registerForm.register("email")}
-                      />
-                    </FormControl>
-                    {registerForm.formState.errors.email && (
-                      <p className="text-[0.8rem] font-medium text-destructive">{registerForm.formState.errors.email.message}</p>
-                    )}
-                  </FormItem>
-
-                  <FormField
-                  control={registerForm.control}
-                  name="password"
-                  render={({ field }) =>
-                  <FormItem>
-                        <FormLabel className="text-xs font-semibold">Contraseña</FormLabel>
-                        <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  } />
-
-                  <FormField
-                  control={registerForm.control}
-                  name="confirm_password"
-                  render={({ field }) =>
-                  <FormItem>
-                        <FormLabel className="text-xs font-semibold">Confirmar contraseña</FormLabel>
-                        <FormControl>
-                          <PasswordInput placeholder="••••••••" autoComplete="new-password" className="h-9 bg-background border-border focus:bg-background transition-colors text-sm" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                  } />
-
-                  <Button type="submit" className="w-full h-9 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md shadow-primary/10 transition-all text-sm" disabled={isSubmitting || !registerForm.formState.isValid}>
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Crear Cuenta
-                  </Button>
-                </form>
-              </Form>
-            }
-
-            {/* Divider */}
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-            </div>
-
-            {/* Toggle */}
-            <div className="text-center py-2 px-4 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-slate-600 font-medium text-sm">
-                {isRecoveryMode ? '¿Recordaste tu contraseña?' : isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}
-              </span>{' '}
-              <button
-                type="button"
-                className="text-primary hover:text-primary/80 font-black text-sm hover:underline transition-all active:scale-95 ml-1"
-                onClick={() => {
-                  if (isRecoveryMode) {
-                    setIsRecoveryMode(false);
-                    setIsLogin(true);
-                    setIsRecoverySent(false);
-                    recoveryForm.reset();
-                  } else {
-                    setIsLogin(!isLogin);
-                  }
-                  loginForm.reset();
-                  registerForm.reset();
-                }}>
-
-                {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
-              </button>
-            </div>
+                    {isRecoveryMode ? 'Inicia sesión' : isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
 
           <p className="text-center text-xs text-muted-foreground/60 mt-6">

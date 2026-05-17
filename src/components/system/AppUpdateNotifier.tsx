@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
 const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
-const ACKNOWLEDGED_UPDATE_KEY = 'krh_acknowledged_update_version';
+const ACKNOWLEDGED_UPDATE_KEY = 'empatiq_acknowledged_update_version';
 
 // Rutas públicas donde no queremos mostrar notificaciones de actualización
 const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos'];

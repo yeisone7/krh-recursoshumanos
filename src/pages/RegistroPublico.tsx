@@ -414,7 +414,6 @@ export default function RegistroPublico() {
             p_education_level_id: formData['select-education-id'] || null,
             p_profession_id: formData['select-profession-id'] || null,
             p_avatar_url: formData.avatarUrl || null,
-            p_gender: formData.gender === 'masculino' ? 'M' : formData.gender === 'femenino' ? 'F' : (formData.gender ? 'O' : null),
             p_vaccines: Array.isArray(formData.vaccines) ? formData.vaccines.map(v => ({
               ...v,
               vaccine_type: v.vaccine_type === 'covid19' ? 'COVID' : v.vaccine_type
