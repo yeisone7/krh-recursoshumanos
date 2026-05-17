@@ -68,6 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
   const userRef = React.useRef<User | null>(null);
+  const currentCompanyIdRef = React.useRef<string | null>(null);
+
+  // Sync ref with currentCompanyId state to prevent stale closures
+  React.useEffect(() => {
+    currentCompanyIdRef.current = currentCompanyId;
+  }, [currentCompanyId]);
 
   const fetchPermissions = async (userId: string) => {
     try {
@@ -95,70 +101,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchUserData = async (userId: string) => {
-    // Fetch user roles (legacy)
-    const { data: rolesData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
+    // Execute all initial queries in parallel to drastically improve loading speed and avoid waterfalls
+    const [
+      rolesRes,
+      assignmentsRes,
+      saRes,
+      profileRes,
+      centerRes,
+      permissionsRes,
+      customRolesRes
+    ] = await Promise.all([
+      supabase.from('user_roles').select('role').eq('user_id', userId),
+      supabase.from('user_company_assignments').select('company_id, companies(id, name, nit, logo_url, horizontal_logo_url)').eq('user_id', userId),
+      supabase.from('super_admins').select('id').eq('user_id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('full_name, avatar_url').eq('id', userId).maybeSingle(),
+      supabase.from('user_center_assignments').select('operation_center_id').eq('user_id', userId),
+      supabase.rpc('get_user_permissions', { _user_id: userId }),
+      supabase.from('user_custom_roles').select('id').eq('user_id', userId).limit(1)
+    ]);
 
-    if (rolesData) {
-      setRoles(rolesData.map(r => r.role));
+    // Process roles
+    if (rolesRes.data) {
+      setRoles(rolesRes.data.map(r => r.role));
     }
 
-    const { data: assignmentsData, error: assignmentsError } = await supabase
-      .from('user_company_assignments')
-      .select('company_id, companies(id, name, nit, logo_url, horizontal_logo_url)')
-      .eq('user_id', userId);
+    // Process dynamic permissions
+    if (permissionsRes.error) {
+      console.error('Error fetching permissions:', permissionsRes.error);
+      setPermissions([]);
+    } else {
+      setPermissions((permissionsRes.data || []) as PermissionEntry[]);
+    }
+    setPermissionsLoaded(true);
 
-    if (assignmentsError) {
-      console.error('Error fetching user company assignments:', assignmentsError);
-    } else if (assignmentsData && assignmentsData.length > 0) {
-      const userCompanies = assignmentsData
-        .filter(c => c.companies)
-        .map(c => ({
-          id: c.companies!.id,
-          name: c.companies!.name,
-          nit: c.companies!.nit,
-          logo_url: c.companies!.logo_url || undefined,
-          horizontal_logo_url: (c.companies as any).horizontal_logo_url || undefined,
-        }));
-      
-      setCompanies(userCompanies);
+    const hasAnyCustomRole = (customRolesRes.data && customRolesRes.data.length > 0) || false;
+    setHasAnyRole(hasAnyCustomRole);
 
-      if (!currentCompanyId && userCompanies.length > 0) {
-        const lastCompany = localStorage.getItem(`last_company_${userId}`);
-        if (lastCompany && userCompanies.some(c => c.id === lastCompany)) {
-          setCurrentCompanyId(lastCompany);
-        } else if (userCompanies.length === 1) {
-          setCurrentCompanyId(userCompanies[0].id);
-        }
-      }
+    // Process super admin status
+    const isSA = !!saRes.data;
+    setIsSuperAdmin(isSA);
+
+    // Process profile data
+    if (profileRes.data) {
+      setProfile(profileRes.data);
     }
 
-    // Fetch dynamic permissions
-    await fetchPermissions(userId);
-
-    // Check super admin status
-    const { data: saData } = await supabase
-      .from('super_admins')
-      .select('id')
-      .eq('user_id', userId)
-      .maybeSingle();
-    setIsSuperAdmin(!!saData);
-
-    // Fetch profile data
-    const { data: profileData } = await supabase
-      .from('user_profiles')
-      .select('full_name, avatar_url')
-      .eq('id', userId)
-      .maybeSingle();
-    
-    if (profileData) {
-      setProfile(profileData);
+    // Process center assignments
+    if (centerRes.data) {
+      setAssignedCenterIds(centerRes.data.map(c => c.operation_center_id));
+    } else {
+      setAssignedCenterIds([]);
     }
 
-    // If super admin, fetch ALL companies
-    if (saData) {
+    // Process companies list atomically
+    let finalCompanies: UserCompany[] = [];
+    if (isSA) {
+      // If super admin, fetch ALL companies
       const { data: allCompanies, error: allErr } = await supabase
         .from('companies')
         .select('id, name, nit, logo_url, horizontal_logo_url')
@@ -167,33 +165,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (allErr) {
         console.error('Error fetching all companies for super admin:', allErr);
       } else if (allCompanies && allCompanies.length > 0) {
-        setCompanies(allCompanies.map(c => ({
-          ...c,
+        finalCompanies = allCompanies.map(c => ({
+          id: c.id,
+          name: c.name,
+          nit: c.nit,
           logo_url: c.logo_url || undefined,
           horizontal_logo_url: c.horizontal_logo_url || undefined
-        })));
-        
-        if (!currentCompanyId) {
-          const lastCompany = localStorage.getItem(`last_company_${userId}`);
-          if (lastCompany && allCompanies.some(c => c.id === lastCompany)) {
-            setCurrentCompanyId(lastCompany);
-          } else if (allCompanies.length === 1) {
-            setCurrentCompanyId(allCompanies[0].id);
-          }
-        }
+        }));
+      }
+    } else {
+      // Regular user: use assignments
+      if (assignmentsRes.data && assignmentsRes.data.length > 0) {
+        finalCompanies = assignmentsRes.data
+          .filter(c => c.companies)
+          .map(c => ({
+            id: c.companies!.id,
+            name: c.companies!.name,
+            nit: c.companies!.nit,
+            logo_url: c.companies!.logo_url || undefined,
+            horizontal_logo_url: (c.companies as any).horizontal_logo_url || undefined,
+          }));
       }
     }
 
-    // Fetch center assignments
-    const { data: centerData } = await supabase
-      .from('user_center_assignments')
-      .select('operation_center_id')
-      .eq('user_id', userId);
+    setCompanies(finalCompanies);
+
+    // Atomic selection of currentCompanyId to prevent visual glitching
+    // We check currentCompanyIdRef.current to avoid any stale closure reads
+    const existingCompanyId = currentCompanyIdRef.current;
     
-    if (centerData) {
-      setAssignedCenterIds(centerData.map(c => c.operation_center_id));
-    } else {
-      setAssignedCenterIds([]);
+    if (finalCompanies.length > 0) {
+      const lastCompany = localStorage.getItem(`last_company_${userId}`);
+      
+      // If we already have a valid selected company in the final list, preserve it!
+      if (existingCompanyId && finalCompanies.some(c => c.id === existingCompanyId)) {
+        setCurrentCompanyId(existingCompanyId);
+      } else if (lastCompany && finalCompanies.some(c => c.id === lastCompany)) {
+        setCurrentCompanyId(lastCompany);
+      } else if (finalCompanies.length === 1) {
+        setCurrentCompanyId(finalCompanies[0].id);
+      }
     }
   };
 
