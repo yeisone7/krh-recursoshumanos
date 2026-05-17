@@ -276,7 +276,7 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
         <Bot className="h-7 w-7" />
       </div>
       <div>
-        <p className="text-lg font-semibold">¿Qué necesitas hacer en KRH?</p>
+        <p className="text-lg font-semibold">¿Qué necesitas hacer en EmpatiQ?</p>
         <p className="mt-1 text-sm text-muted-foreground">El asistente te guía paso a paso dentro de la aplicación.</p>
       </div>
       {pageContext && (
@@ -423,7 +423,7 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Ayuda guiada sobre el uso de KRH con la IA seleccionada en Configuración.</p>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Ayuda guiada sobre el uso de EmpatiQ con la IA seleccionada en Configuración.</p>
         </div>
         <Button onClick={handleNewConversation} className="w-full gap-2 sm:w-auto">
           <MessageSquarePlus className="h-4 w-4" /> Nueva conversación

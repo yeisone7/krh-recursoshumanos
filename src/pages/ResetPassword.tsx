@@ -57,7 +57,7 @@ export default function ResetPassword() {
       <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--muted))_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
       <div className="w-full max-w-md relative z-10 bg-card border border-border p-8 shadow-xl">
         <div className="flex flex-col items-center text-center mb-6">
-          <img src={petrocasinosIcon} alt="KRH" className="w-16 h-16 object-contain" style={{ borderRadius: '10%' }} />
+          <img src={petrocasinosIcon} alt="EmpatiQ" className="w-16 h-16 object-contain" style={{ borderRadius: '10%' }} />
           <h1 className="text-xl font-bold text-foreground mt-3">Crear nueva contraseña</h1>
           <p className="text-muted-foreground text-xs mt-1">Ingresa y confirma tu nueva contraseña</p>
         </div>

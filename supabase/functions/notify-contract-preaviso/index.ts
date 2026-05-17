@@ -33,7 +33,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<{ s
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'KRH Sistema <onboarding@resend.dev>',
+        from: 'EmpatiQ Sistema <onboarding@resend.dev>',
         to: [to],
         subject,
         html,
@@ -253,13 +253,13 @@ function generateEmailHtml(contracts: ContractPreaviso[]): string {
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 24px;">
         <div style="background-color: #dbeafe; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 0 8px 8px 0;">
           <p style="margin: 0; color: #1e40af; font-size: 14px;">
-            <strong>Acción requerida:</strong> Ingrese al módulo de Contratos en KRH para registrar prórrogas pactadas o confirmar renovación automática 
+            <strong>Acción requerida:</strong> Ingrese al módulo de Contratos en EmpatiQ para registrar prórrogas pactadas o confirmar renovación automática 
             antes de que expire el plazo de 30 días.
           </p>
         </div>
         
         <p style="color: #6b7280; font-size: 12px; margin-top: 24px; text-align: center;">
-          Este es un correo automático del sistema KRH de gestión de Recursos Humanos.<br>
+          Este es un correo automático del sistema EmpatiQ de gestión de Recursos Humanos.<br>
           No responda a este mensaje.
         </p>
       </div>

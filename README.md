@@ -1,9 +1,9 @@
-# KRH - Sistema Integral de Gestión de Recursos Humanos
+# EmpatiQ - Sistema Integral de Gestión de Recursos Humanos
 
-![KRH Banner](C:\Users\YEISON\.gemini\antigravity\brain\8bb0f4af-4fbf-49ca-97a6-ac6fb19838c2\krh_banner_hero_1777499952472.png)
+![EmpatiQ Banner](C:\Users\YEISON\.gemini\antigravity\brain\8bb0f4af-4fbf-49ca-97a6-ac6fb19838c2\krh_banner_hero_1777499952472.png)
 
 ## 🌐 Resumen del Proyecto
-**KRH** es una plataforma empresarial de vanguardia diseñada para transformar la gestión de Recursos Humanos en Colombia. Enfocada en la eficiencia operativa y el cumplimiento legal, KRH integra procesos administrativos complejos con tecnología de Inteligencia Artificial para ofrecer una experiencia fluida tanto para administradores como para empleados.
+**EmpatiQ** es una plataforma empresarial de vanguardia diseñada para transformar la gestión de Recursos Humanos en Colombia. Enfocada en la eficiencia operativa y el cumplimiento legal, EmpatiQ integra procesos administrativos complejos con tecnología de Inteligencia Artificial para ofrecer una experiencia fluida tanto para administradores como para empleados.
 
 ---
 
@@ -67,13 +67,14 @@
    ```
 3. **Ejecutar en desarrollo:**
    ```bash
+   ```bash
    bun run dev
    ```
 
 ---
 
 ## 🏗️ Arquitectura de Seguridad
-KRH implementa un modelo de **Multi-tenancy** estricto:
+EmpatiQ implementa un modelo de **Multi-tenancy** estricto:
 - **Aislamiento de Datos:** Mediante Row Level Security (RLS) en Postgres.
 - **Sistema de Permisos:** Control granular por módulo (`view`, `create`, `update`, `delete`).
 - **Guards de Ruta:** Verificación jerárquica de autenticación, onboarding y empresa activa.
@@ -92,4 +93,4 @@ KRH implementa un modelo de **Multi-tenancy** estricto:
 
 ## 📄 Licencia y Créditos
 Desarrollado para la gestión integral de recursos humanos.
-**Dominio:** krh-petrocasinos.lovable.app
+**Dominio:** empatiq-petrocasinos.lovable.app

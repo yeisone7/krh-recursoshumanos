@@ -136,14 +136,14 @@ export default function Onboarding() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20">
               <Users className="h-6 w-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white">KRH</span>
+            <span className="text-2xl font-bold text-white">EmpatiQ</span>
           </div>
         </div>
         
         <div className="space-y-6">
           <div className="flex items-center gap-3 text-white">
             <Sparkles className="w-8 h-8" />
-            <h1 className="text-3xl font-bold">Bienvenido a KRH</h1>
+            <h1 className="text-3xl font-bold">Bienvenido a EmpatiQ</h1>
           </div>
           <p className="text-lg text-white/80">
             Configura tu empresa para comenzar a gestionar tus recursos humanos de manera eficiente.
@@ -181,7 +181,7 @@ export default function Onboarding() {
         </div>
         
         <p className="text-sm text-white/60">
-          © 2024 KRH. Todos los derechos reservados.
+          © 2024 EmpatiQ. Todos los derechos reservados.
         </p>
       </div>
 

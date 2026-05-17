@@ -125,10 +125,10 @@ const Install = () => {
         className="max-w-md w-full space-y-6"
       >
         <div className="text-center space-y-3">
-          <img src="/krh-install-icon.jpg" alt="KRH" className="w-20 h-20 mx-auto rounded-2xl shadow-lg" />
-          <h1 className="text-2xl font-bold text-foreground">Instalar KRH</h1>
+          <img src="/empatiq-install-icon.png" alt="EmpatiQ" className="w-20 h-20 mx-auto rounded-2xl shadow-lg" />
+          <h1 className="text-2xl font-bold text-foreground">Instalar EmpatiQ</h1>
           <p className="text-muted-foreground text-sm">
-            Agrega KRH a tu pantalla de inicio para acceder rápidamente sin abrir el navegador.
+            Agrega EmpatiQ a tu pantalla de inicio para acceder rápidamente sin abrir el navegador.
           </p>
         </div>
 
@@ -137,7 +137,7 @@ const Install = () => {
             <CardContent className="flex items-start gap-3 p-4">
               <AlertCircle className="h-6 w-6 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-2">
-                <p className="text-sm text-foreground font-medium">No es posible instalar KRH en este momento.</p>
+                <p className="text-sm text-foreground font-medium">No es posible instalar EmpatiQ en este momento.</p>
                 <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
                   {installError && <li>{installError}</li>}
                   {compatibilityIssues.map((issue) => (
@@ -171,7 +171,7 @@ const Install = () => {
             <CardContent className="flex items-center gap-3 p-4">
               <CheckCircle2 className="h-6 w-6 text-accent shrink-0" />
               <p className="text-sm text-foreground font-medium">
-                ¡KRH ya está instalada en tu dispositivo!
+                ¡EmpatiQ ya está instalada en tu dispositivo!
               </p>
             </CardContent>
           </Card>

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 type Theme = 'light' | 'dark';
-const THEME_KEY = 'krh-theme';
+const THEME_KEY = 'empatiq-theme';
 
 const getInitialTheme = (): Theme => {
   if (typeof window === 'undefined') return 'light';
@@ -28,10 +28,10 @@ export function useTheme() {
   useEffect(() => {
     const syncTheme = () => setThemeState(getInitialTheme());
     window.addEventListener('storage', syncTheme);
-    window.addEventListener('krh-theme-change', syncTheme);
+    window.addEventListener('empatiq-theme-change', syncTheme);
     return () => {
       window.removeEventListener('storage', syncTheme);
-      window.removeEventListener('krh-theme-change', syncTheme);
+      window.removeEventListener('empatiq-theme-change', syncTheme);
     };
   }, []);
 
@@ -39,7 +39,7 @@ export function useTheme() {
     setThemeState((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';
       localStorage.setItem(THEME_KEY, next);
-      window.dispatchEvent(new Event('krh-theme-change'));
+      window.dispatchEvent(new Event('empatiq-theme-change'));
       return next;
     });
   }, []);
@@ -47,7 +47,7 @@ export function useTheme() {
   const setTheme = useCallback((t: Theme) => {
     localStorage.setItem(THEME_KEY, t);
     setThemeState(t);
-    window.dispatchEvent(new Event('krh-theme-change'));
+    window.dispatchEvent(new Event('empatiq-theme-change'));
   }, []);
 
   return { theme, toggleTheme, setTheme };
