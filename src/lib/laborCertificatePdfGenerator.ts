@@ -231,11 +231,14 @@ export async function generateLaborCertificatePdf({
     doc.text(`Tiempo completo`, contentMargin + 35, y);
     y += lineHeight;
 
-    doc.setFont('times', 'bold');
-    doc.text('Asignación salarial: ', contentMargin, y);
-    doc.setFont('times', 'normal');
-    doc.text(`Salario básico mensual de ${salaryFormatted}`, contentMargin + 42, y);
-    y += lineHeight;
+    const showSalary = data.showSalary !== false;
+    if (showSalary) {
+      doc.setFont('times', 'bold');
+      doc.text('Asignación salarial: ', contentMargin, y);
+      doc.setFont('times', 'normal');
+      doc.text(`Salario básico mensual de ${salaryFormatted}`, contentMargin + 42, y);
+      y += lineHeight;
+    }
 
     doc.setFont('times', 'bold');
     doc.text('Auxilio(s) o concepto(s): ', contentMargin, y);
@@ -255,15 +258,21 @@ export async function generateLaborCertificatePdf({
     doc.text(p1, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
     y += linesP1.length * 6 + 6;
 
+    const showSalary = data.showSalary !== false;
+
     // Table settings
     doc.setFont('times', 'bold');
     doc.setFontSize(10);
     
-    const colX = {
+    const colX = showSalary ? {
       cargo: contentMargin + 2,
       contrato: contentMargin + 48,
       periodo: contentMargin + 85,
       salario: contentMargin + 135
+    } : {
+      cargo: contentMargin + 2,
+      contrato: contentMargin + 60,
+      periodo: contentMargin + 115
     };
 
     // Draw header background
@@ -277,7 +286,9 @@ export async function generateLaborCertificatePdf({
     doc.text('CARGO', colX.cargo, y + 5.5);
     doc.text('TIPO CONTRATO', colX.contrato, y + 5.5);
     doc.text('PERÍODO (INGRESO - FIN)', colX.periodo, y + 5.5);
-    doc.text('SALARIO BÁSICO', colX.salario, y + 5.5);
+    if (showSalary) {
+      doc.text('SALARIO BÁSICO', (colX as any).salario, y + 5.5);
+    }
 
     y += 8;
 
@@ -307,12 +318,16 @@ export async function generateLaborCertificatePdf({
 
       // Alternating borders/lines
       const cargoText = p.positionName.toUpperCase();
-      const truncatedCargo = cargoText.length > 22 ? cargoText.substring(0, 20) + '...' : cargoText;
+      const truncatedCargo = cargoText.length > (showSalary ? 22 : 30) 
+        ? cargoText.substring(0, showSalary ? 20 : 28) + '...' 
+        : cargoText;
 
       doc.text(truncatedCargo, colX.cargo, y + 6);
       doc.text(p.contractType, colX.contrato, y + 6);
       doc.text(`${hireFormatted} - ${termFormatted}`, colX.periodo, y + 6);
-      doc.text(salFormatted, colX.salario, y + 6);
+      if (showSalary) {
+        doc.text(salFormatted, (colX as any).salario, y + 6);
+      }
 
       y += 10;
     });

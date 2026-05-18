@@ -32,6 +32,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
 
   const [generationType, setGenerationType] = useState<'automatic' | 'manual'>('automatic');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showSalary, setShowSalary] = useState(true);
 
   // Manual period structure
   interface ManualPeriod {
@@ -50,6 +51,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
   useEffect(() => {
     if (open && employee) {
       setGenerationType('automatic');
+      setShowSalary(true);
       const salary = employee.work_info?.base_salary || 0;
       setPeriods([
         {
@@ -61,6 +63,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
         }
       ]);
     } else {
+      setShowSalary(true);
       setPeriods([
         { positionName: '', salaryAmount: '', contractType: '', startDate: '', endDate: '' }
       ]);
@@ -121,6 +124,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
         contractType: generationType === 'automatic' ? (employee.contracts?.[0]?.contract_type || 'Término Indefinido') : periods[0].contractType,
         startDate: generationType === 'automatic' ? (employee.work_info?.hire_date || '') : periods[0].startDate,
         endDate: generationType === 'automatic' ? (employee.work_info?.end_date || null) : (periods[0].endDate || null),
+        showSalary,
         periods: generationType === 'automatic'
           ? [{
               salaryAmount: employee.work_info?.base_salary || 0,
@@ -198,7 +202,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col [&>button:last-child]:hidden">
+      <DialogContent className="max-w-xl max-h-[90vh] p-0 overflow-hidden bg-white border border-slate-200 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2.5rem] focus:outline-none flex flex-col [&>button:last-child]:hidden">
         <DialogHeader className="px-8 pt-8 pb-6 border-b border-slate-100 bg-background relative">
           <Button
             variant="ghost"
@@ -267,6 +271,27 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
                   <motion.div layoutId="active-indicator" className="absolute top-0 right-0 w-12 h-12 bg-primary/10 -mr-6 -mt-6 rotate-45" />
                 )}
               </button>
+            </div>
+
+            {/* Incluir Salario Toggle */}
+            <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200 shadow-sm transition-all hover:border-slate-300">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-black uppercase tracking-wider text-slate-700">
+                  Incluir salario en la certificación
+                </Label>
+                <p className="text-[10px] text-muted-foreground">
+                  Desactívalo si deseas omitir la información del salario básico del documento.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showSalary}
+                  onChange={(e) => setShowSalary(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-primary/10 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
             </div>
 
             <AnimatePresence mode="wait">
