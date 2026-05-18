@@ -414,7 +414,7 @@ export function GenerateContractDialog({
               <div className="space-y-0.5">
                 <h5 className="text-xs font-semibold text-blue-800">Plantilla Vinculada</h5>
                 <p className="text-xs text-blue-700 leading-relaxed">
-                  Este contrato se generará usando la plantilla: <strong className="font-semibold text-blue-900 break-all">{contractTypeConfig?.template_file_name}</strong>
+                  Este contrato se generará usando la plantilla: <strong className="font-semibold text-blue-900 break-words">{contractTypeConfig?.template_file_name?.replaceAll('_', '_\u200B')}</strong>
                 </p>
               </div>
             </div>
