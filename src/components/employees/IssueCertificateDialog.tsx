@@ -173,7 +173,14 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
       const verificationUrl = `${window.location.origin}/verificar-certificado/${verificationToken}`;
       
       const signatureConfig = systemConfig?.legal_signature_config;
-      const watermarkConfig = systemConfig?.watermark_config;
+      const watermarkConfigRaw = systemConfig?.watermark_config;
+      const watermarkConfig = watermarkConfigRaw?.enabled && watermarkConfigRaw?.logo_url
+        ? {
+            url: watermarkConfigRaw.logo_url,
+            opacity: watermarkConfigRaw.opacity || 20,
+            position: watermarkConfigRaw.position || 'center'
+          }
+        : undefined;
 
       // Ensure the PDF generator receives the required params
       const doc = await generateLaborCertificatePdf({
