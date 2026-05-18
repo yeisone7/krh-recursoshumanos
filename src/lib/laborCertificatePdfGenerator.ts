@@ -145,11 +145,13 @@ export async function generateLaborCertificatePdf({
   doc.text('CERTIFICACIÓN LABORAL', pageWidth / 2, y, { align: 'center' });
   y += 15;
 
-  // 3. Render Watermark if available
-  if (watermarkConfig?.url) {
+  // 3. Render Watermark if available (fallback to custom Empatiq watermark by default)
+  const watermarkUrl = watermarkConfig?.url || '/images/empatiq-watermark.png';
+  if (watermarkUrl) {
     try {
-      const base64Img = await fetchImageAsBase64(watermarkConfig.url);
-      doc.setGState(new doc.GState({ opacity: (watermarkConfig.opacity || 20) / 100 }));
+      const base64Img = await fetchImageAsBase64(watermarkUrl);
+      const watermarkOpacity = watermarkConfig ? (watermarkConfig.opacity || 20) : 10;
+      doc.setGState(new doc.GState({ opacity: watermarkOpacity / 100 }));
       
       const watermarkSize = 120;
       let xPos = (pageWidth - watermarkSize) / 2;
