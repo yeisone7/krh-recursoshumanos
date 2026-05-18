@@ -13,6 +13,13 @@ interface GeneratorParams {
     contractType: string;
     startDate: string;
     endDate: string | null;
+    periods?: Array<{
+      salaryAmount: number;
+      positionName: string;
+      contractType: string;
+      startDate: string;
+      endDate: string | null;
+    }>;
   };
   folio: string;
   verificationUrl: string;
@@ -163,71 +170,164 @@ export async function generateLaborCertificatePdf({
   const docType = employee.document_type || '';
   const docTypeLabel = DOCUMENT_TYPE_LABELS[docType] || docType;
   const employeeName = getEmployeeFullName(employee);
-  const isCurrentlyActive = !data.endDate;
 
-  const hireDateFormatted = data.startDate
-    ? format(new Date(data.startDate + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es })
-    : 'N/A';
-  
-  const termDateFormatted = data.endDate
-      ? format(new Date(data.endDate + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es })
-      : 'la fecha';
+  // Extract periods to render (supporting old certificates where data.periods is undefined)
+  const periodsToRender = data.periods || [{
+    salaryAmount: data.salaryAmount,
+    positionName: data.positionName,
+    contractType: data.contractType,
+    startDate: data.startDate,
+    endDate: data.endDate
+  }];
 
-  const salaryFormatted = new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    minimumFractionDigits: 0,
-  }).format(data.salaryAmount);
+  const isSingle = periodsToRender.length === 1;
 
-  // Body Text Generation
   doc.text(`Fecha de expedición: ${today}`, contentMargin, y);
   y += 10;
   
   doc.text('A quien interese:', contentMargin, y);
   y += 10;
 
-  const p1 = `Por medio de la presente, ${companyName.toUpperCase()}, identificada con NIT ${companyNit}, certifica que el(la) señor(a) ${employeeName.toUpperCase()}, identificado(a) con ${docTypeLabel} No. ${employee.document_number}, labora${isCurrentlyActive ? '' : 'ó'} en esta compañía desde el ${hireDateFormatted} hasta ${termDateFormatted}.`;
-  
-  // Justified text requires string and maxWidth
-  const linesP1 = doc.splitTextToSize(p1, contentWidth);
-  doc.text(p1, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
-  y += linesP1.length * 6 + 4;
+  if (isSingle) {
+    const singlePeriod = periodsToRender[0];
+    const isCurrentlyActive = !singlePeriod.endDate;
 
-  const p2 = `Durante dicho período se desempeñó en el cargo de ${data.positionName.toUpperCase()}, adscrito al área de ${employee.department_id || 'Operaciones'}, desarrollando funciones de naturaleza operativa / administrativa.`;
-  const linesP2 = doc.splitTextToSize(p2, contentWidth);
-  doc.text(p2, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
-  y += linesP2.length * 6 + 6;
+    const hireDateFormatted = singlePeriod.startDate
+      ? format(new Date(singlePeriod.startDate + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es })
+      : 'N/A';
+    
+    const termDateFormatted = singlePeriod.endDate
+        ? format(new Date(singlePeriod.endDate + 'T12:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es })
+        : 'la fecha';
 
-  // Bullet points
-  const lineHeight = 7;
-  doc.setFont('times', 'bold');
-  doc.text('Tipo de vinculación: ', contentMargin, y);
-  doc.setFont('times', 'normal');
-  doc.text(`${data.contractType || 'N/A'}`, contentMargin + 40, y);
-  y += lineHeight;
+    const salaryFormatted = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+    }).format(singlePeriod.salaryAmount);
 
-  doc.setFont('times', 'bold');
-  doc.text('Jornada laboral: ', contentMargin, y);
-  doc.setFont('times', 'normal');
-  doc.text(`Tiempo completo`, contentMargin + 35, y);
-  y += lineHeight;
+    const p1 = `Por medio de la presente, ${companyName.toUpperCase()}, identificada con NIT ${companyNit}, certifica que el(la) señor(a) ${employeeName.toUpperCase()}, identificado(a) con ${docTypeLabel} No. ${employee.document_number}, labora${isCurrentlyActive ? '' : 'ó'} en esta compañía desde el ${hireDateFormatted} hasta ${termDateFormatted}.`;
+    
+    const linesP1 = doc.splitTextToSize(p1, contentWidth);
+    doc.text(p1, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
+    y += linesP1.length * 6 + 4;
 
-  doc.setFont('times', 'bold');
-  doc.text('Asignación salarial: ', contentMargin, y);
-  doc.setFont('times', 'normal');
-  doc.text(`Salario básico mensual de ${salaryFormatted}`, contentMargin + 42, y);
-  y += lineHeight;
+    const p2 = `Durante dicho período se desempeñó en el cargo de ${singlePeriod.positionName.toUpperCase()}, adscrito al área de ${employee.department_id || 'Operaciones'}, desarrollando funciones de naturaleza operativa / administrativa.`;
+    const linesP2 = doc.splitTextToSize(p2, contentWidth);
+    doc.text(p2, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
+    y += linesP2.length * 6 + 6;
 
-  doc.setFont('times', 'bold');
-  doc.text('Auxilio(s) o concepto(s): ', contentMargin, y);
-  doc.setFont('times', 'normal');
-  doc.text(`N/A`, contentMargin + 50, y);
-  y += lineHeight + 6;
+    // Bullet points
+    const lineHeight = 7;
+    doc.setFont('times', 'bold');
+    doc.text('Tipo de vinculación: ', contentMargin, y);
+    doc.setFont('times', 'normal');
+    doc.text(`${singlePeriod.contractType || 'N/A'}`, contentMargin + 40, y);
+    y += lineHeight;
 
-  const p3 = `A la fecha, su relación laboral se encuentra ${isCurrentlyActive ? 'vigente' : 'finalizada'}, y esta certificación se expide a solicitud del(la) interesado(a) para los fines que estime convenientes.`;
-  const linesP3 = doc.splitTextToSize(p3, contentWidth);
-  doc.text(p3, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
-  y += linesP3.length * 6 + 10;
+    doc.setFont('times', 'bold');
+    doc.text('Jornada laboral: ', contentMargin, y);
+    doc.setFont('times', 'normal');
+    doc.text(`Tiempo completo`, contentMargin + 35, y);
+    y += lineHeight;
+
+    doc.setFont('times', 'bold');
+    doc.text('Asignación salarial: ', contentMargin, y);
+    doc.setFont('times', 'normal');
+    doc.text(`Salario básico mensual de ${salaryFormatted}`, contentMargin + 42, y);
+    y += lineHeight;
+
+    doc.setFont('times', 'bold');
+    doc.text('Auxilio(s) o concepto(s): ', contentMargin, y);
+    doc.setFont('times', 'normal');
+    doc.text(`N/A`, contentMargin + 50, y);
+    y += lineHeight + 6;
+
+    const p3 = `A la fecha, su relación laboral se encuentra ${isCurrentlyActive ? 'vigente' : 'finalizada'}, y esta certificación se expide a solicitud del(la) interesado(a) para los fines que estime convenientes.`;
+    const linesP3 = doc.splitTextToSize(p3, contentWidth);
+    doc.text(p3, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
+    y += linesP3.length * 6 + 10;
+  } else {
+    // Multi-period rendering
+    const p1 = `Por medio de la presente, ${companyName.toUpperCase()}, identificada con NIT ${companyNit}, certifica que el(la) señor(a) ${employeeName.toUpperCase()}, identificado(a) con ${docTypeLabel} No. ${employee.document_number}, labora o ha laborado en nuestra compañía desempeñando los siguientes cargos y periodos de contratación:`;
+    
+    const linesP1 = doc.splitTextToSize(p1, contentWidth);
+    doc.text(p1, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
+    y += linesP1.length * 6 + 6;
+
+    // Table settings
+    doc.setFont('times', 'bold');
+    doc.setFontSize(10);
+    
+    const colX = {
+      cargo: contentMargin + 2,
+      contrato: contentMargin + 48,
+      periodo: contentMargin + 85,
+      salario: contentMargin + 135
+    };
+
+    // Draw header background
+    doc.setFillColor(240, 244, 248);
+    doc.rect(contentMargin, y, contentWidth, 8, 'F');
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.2);
+    doc.rect(contentMargin, y, contentWidth, 8, 'S');
+
+    doc.setTextColor(50, 50, 50);
+    doc.text('CARGO', colX.cargo, y + 5.5);
+    doc.text('TIPO CONTRATO', colX.contrato, y + 5.5);
+    doc.text('PERÍODO (INGRESO - FIN)', colX.periodo, y + 5.5);
+    doc.text('SALARIO BÁSICO', colX.salario, y + 5.5);
+
+    y += 8;
+
+    doc.setFont('times', 'normal');
+    doc.setTextColor(0);
+
+    periodsToRender.forEach((p: any) => {
+      const hireFormatted = p.startDate
+        ? format(new Date(p.startDate + 'T12:00:00'), "dd/MM/yyyy")
+        : 'N/A';
+      const termFormatted = p.endDate
+        ? format(new Date(p.endDate + 'T12:00:00'), "dd/MM/yyyy")
+        : 'Vigente';
+
+      const salFormatted = new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+      }).format(p.salaryAmount);
+
+      // Row background
+      doc.setFillColor(255, 255, 255);
+      doc.rect(contentMargin, y, contentWidth, 10, 'F');
+      doc.setDrawColor(220, 225, 230);
+      doc.setLineWidth(0.15);
+      doc.rect(contentMargin, y, contentWidth, 10, 'S');
+
+      // Alternating borders/lines
+      const cargoText = p.positionName.toUpperCase();
+      const truncatedCargo = cargoText.length > 22 ? cargoText.substring(0, 20) + '...' : cargoText;
+
+      doc.text(truncatedCargo, colX.cargo, y + 6);
+      doc.text(p.contractType, colX.contrato, y + 6);
+      doc.text(`${hireFormatted} - ${termFormatted}`, colX.periodo, y + 6);
+      doc.text(salFormatted, colX.salario, y + 6);
+
+      y += 10;
+    });
+
+    y += 8;
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(12);
+
+    const isCurrentlyActive = periodsToRender.some((p: any) => !p.endDate);
+    const p3 = `A la fecha, su relación laboral con la compañía se encuentra ${isCurrentlyActive ? 'vigente' : 'finalizada'}, y esta certificación se expide a solicitud del(la) interesado(a) para los fines que estime convenientes.`;
+    const linesP3 = doc.splitTextToSize(p3, contentWidth);
+    doc.text(p3, contentMargin, y, { maxWidth: contentWidth, align: 'justify' });
+    y += linesP3.length * 6 + 10;
+  }
 
   doc.text('Cordialmente,', contentMargin, y);
   y += 15;

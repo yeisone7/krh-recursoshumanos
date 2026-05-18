@@ -33,31 +33,53 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
   const [generationType, setGenerationType] = useState<'automatic' | 'manual'>('automatic');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Manual fields
-  const [salaryAmount, setSalaryAmount] = useState('');
-  const [positionName, setPositionName] = useState('');
-  const [contractType, setContractType] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // Manual period structure
+  interface ManualPeriod {
+    positionName: string;
+    salaryAmount: string;
+    contractType: string;
+    startDate: string;
+    endDate: string;
+  }
+
+  const [periods, setPeriods] = useState<ManualPeriod[]>([
+    { positionName: '', salaryAmount: '', contractType: '', startDate: '', endDate: '' }
+  ]);
 
   // Auto-fill from employee when opened
   useEffect(() => {
     if (open && employee) {
       setGenerationType('automatic');
       const salary = employee.work_info?.base_salary || 0;
-      setSalaryAmount(salary.toString());
-      setPositionName(employee.work_info?.position_name || '');
-      setContractType(employee.contracts?.[0]?.contract_type || 'Término Indefinido');
-      setStartDate(employee.work_info?.hire_date || '');
-      setEndDate(employee.work_info?.end_date || '');
+      setPeriods([
+        {
+          positionName: employee.work_info?.position_name || '',
+          salaryAmount: salary.toString(),
+          contractType: employee.contracts?.[0]?.contract_type || 'Término Indefinido',
+          startDate: employee.work_info?.hire_date || '',
+          endDate: employee.work_info?.end_date || '',
+        }
+      ]);
     } else {
-      setSalaryAmount('');
-      setPositionName('');
-      setContractType('');
-      setStartDate('');
-      setEndDate('');
+      setPeriods([
+        { positionName: '', salaryAmount: '', contractType: '', startDate: '', endDate: '' }
+      ]);
     }
   }, [open, employee]);
+
+  const handleAddPeriod = () => {
+    setPeriods([...periods, { positionName: '', salaryAmount: '', contractType: '', startDate: '', endDate: '' }]);
+  };
+
+  const handleRemovePeriod = (index: number) => {
+    setPeriods(periods.filter((_, i) => i !== index));
+  };
+
+  const handlePeriodChange = (index: number, field: keyof ManualPeriod, value: string) => {
+    const updated = [...periods];
+    updated[index] = { ...updated[index], [field]: value };
+    setPeriods(updated);
+  };
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,30 +88,54 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
     try {
       setIsGenerating(true);
 
-      const usedSalary = generationType === 'automatic' ? (employee.work_info?.base_salary || 0) : Number(salaryAmount);
-      const usedPosition = generationType === 'automatic' ? (employee.work_info?.position_name || '') : positionName;
-      const usedContractType = generationType === 'automatic' ? (employee.contracts?.[0]?.contract_type || 'Término Indefinido') : contractType;
-      const usedStartDate = generationType === 'automatic' ? (employee.work_info?.hire_date || '') : startDate;
-      const usedEndDate = generationType === 'automatic' ? (employee.work_info?.end_date || null) : (endDate || null);
-
-      if (!usedStartDate) {
-        toast({ title: 'Faltan datos', description: 'La fecha de ingreso es obligatoria.', variant: 'destructive' });
-        setIsGenerating(false);
-        return;
+      // Validate all periods if generation type is manual
+      if (generationType === 'manual') {
+        for (let i = 0; i < periods.length; i++) {
+          const p = periods[i];
+          if (!p.startDate || !p.positionName || !p.contractType || !p.salaryAmount) {
+            toast({
+              title: 'Datos incompletos',
+              description: `Por favor complete todos los campos requeridos para el Período #${i + 1}.`,
+              variant: 'destructive'
+            });
+            setIsGenerating(false);
+            return;
+          }
+        }
+      } else {
+        // Automatic mode validation
+        if (!employee.work_info?.hire_date) {
+          toast({ title: 'Faltan datos', description: 'El empleado no tiene fecha de ingreso registrada en el sistema.', variant: 'destructive' });
+          setIsGenerating(false);
+          return;
+        }
       }
 
       // Generate a new verification token
       const verificationToken = crypto.randomUUID();
 
-      // Get next consecutive for company
-      // Supabase does not have an easy way to just get a sequence value securely via JS without an RPC if it's per company.
-      // Since it's a serial column, we can just insert and let Postgres generate it, then read it back.
+      // Structure content data for backward compatibility and multi-period rendering
       const contentData = {
-        salaryAmount: usedSalary,
-        positionName: usedPosition,
-        contractType: usedContractType,
-        startDate: usedStartDate,
-        endDate: usedEndDate,
+        salaryAmount: generationType === 'automatic' ? (employee.work_info?.base_salary || 0) : Number(periods[0].salaryAmount),
+        positionName: generationType === 'automatic' ? (employee.work_info?.position_name || '') : periods[0].positionName,
+        contractType: generationType === 'automatic' ? (employee.contracts?.[0]?.contract_type || 'Término Indefinido') : periods[0].contractType,
+        startDate: generationType === 'automatic' ? (employee.work_info?.hire_date || '') : periods[0].startDate,
+        endDate: generationType === 'automatic' ? (employee.work_info?.end_date || null) : (periods[0].endDate || null),
+        periods: generationType === 'automatic'
+          ? [{
+              salaryAmount: employee.work_info?.base_salary || 0,
+              positionName: employee.work_info?.position_name || '',
+              contractType: employee.contracts?.[0]?.contract_type || 'Término Indefinido',
+              startDate: employee.work_info?.hire_date || '',
+              endDate: employee.work_info?.end_date || null,
+            }]
+          : periods.map(p => ({
+              salaryAmount: Number(p.salaryAmount),
+              positionName: p.positionName,
+              contractType: p.contractType,
+              startDate: p.startDate,
+              endDate: p.endDate || null,
+            }))
       };
 
       const { data: certRecord, error: insertError } = await supabase
@@ -229,69 +275,108 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 pt-2 overflow-hidden"
+                  className="space-y-6 pt-2 overflow-hidden"
                 >
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
-                      <Briefcase className="w-3 h-3" /> Cargo
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-black uppercase tracking-widest text-slate-400">
+                      Períodos Laborados
                     </Label>
-                    <Input
-                      value={positionName}
-                      onChange={(e) => setPositionName(e.target.value)}
-                      required
-                      className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
-                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddPeriod}
+                      className="text-xs font-bold text-primary border-primary/25 bg-white hover:bg-primary/5 rounded-xl h-9 px-4"
+                    >
+                      + Agregar Período
+                    </Button>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
-                      <DollarSign className="w-3 h-3" /> Salario Mensual
-                    </Label>
-                    <Input
-                      type="number"
-                      value={salaryAmount}
-                      onChange={(e) => setSalaryAmount(e.target.value)}
-                      required
-                      className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
-                      <Briefcase className="w-3 h-3" /> Tipo de Contrato
-                    </Label>
-                    <Input
-                      value={contractType}
-                      onChange={(e) => setContractType(e.target.value)}
-                      required
-                      className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
-                    />
-                  </div>
+                  <div className="space-y-6">
+                    {periods.map((period, index) => (
+                      <div key={index} className="bg-white rounded-[2rem] p-6 border border-slate-200 shadow-sm space-y-4 relative">
+                        {periods.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemovePeriod(index)}
+                            className="absolute right-4 top-4 h-8 w-8 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                        
+                        <div className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                          Período #{index + 1}
+                        </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3" /> Fecha de Ingreso
-                      </Label>
-                      <Input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        required
-                        className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
-                        <Calendar className="w-3 h-3" /> Fecha Fin (Opcional)
-                      </Label>
-                      <Input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-muted-foreground"
-                      />
-                    </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                              <Briefcase className="w-3 h-3" /> Cargo
+                            </Label>
+                            <Input
+                              value={period.positionName}
+                              onChange={(e) => handlePeriodChange(index, 'positionName', e.target.value)}
+                              required
+                              className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                              <DollarSign className="w-3 h-3" /> Salario Mensual
+                            </Label>
+                            <Input
+                              type="number"
+                              value={period.salaryAmount}
+                              onChange={(e) => handlePeriodChange(index, 'salaryAmount', e.target.value)}
+                              required
+                              className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                            <Briefcase className="w-3 h-3" /> Tipo de Contrato
+                          </Label>
+                          <Input
+                            value={period.contractType}
+                            onChange={(e) => handlePeriodChange(index, 'contractType', e.target.value)}
+                            required
+                            className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3" /> Fecha de Ingreso
+                            </Label>
+                            <Input
+                              type="date"
+                              value={period.startDate}
+                              onChange={(e) => handlePeriodChange(index, 'startDate', e.target.value)}
+                              required
+                              className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-1.5">
+                              <Calendar className="w-3 h-3" /> Fecha Fin (Opcional)
+                            </Label>
+                            <Input
+                              type="date"
+                              value={period.endDate}
+                              onChange={(e) => handlePeriodChange(index, 'endDate', e.target.value)}
+                              className="h-12 rounded-2xl bg-white border border-slate-200 shadow-sm focus-visible:ring-4 ring-primary/5 font-bold text-muted-foreground"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </motion.div>
               ) : (
