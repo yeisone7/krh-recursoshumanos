@@ -352,114 +352,131 @@ export function GenerateContractDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95%] sm:max-w-lg rounded-lg max-h-[95vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+      <DialogContent className="w-[95%] sm:max-w-xl rounded-xl max-h-[95vh] overflow-y-auto overflow-x-hidden p-5 sm:p-6 bg-white border border-slate-100 shadow-2xl">
+        <DialogHeader className="space-y-1">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg font-bold text-slate-900">
             <FileText className="w-5 h-5 text-primary" />
             Generar Documento de Contrato
           </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm">
+          <DialogDescription className="text-xs sm:text-sm text-slate-500">
             Genere el documento del contrato usando la plantilla configurada o en formato PDF básico.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2 sm:py-4">
+        <div className="space-y-4 py-2 sm:py-3">
           {/* Contract Summary */}
-          <div className="bg-background rounded-lg p-3 sm:p-4 space-y-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-              <div>
-                <span className="text-muted-foreground">Empleado:</span>
-                <p className="font-medium break-words">{employeeName}</p>
+          <div className="bg-slate-50/60 rounded-xl p-4 border border-slate-100/80 space-y-3">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Detalles del Contrato
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs sm:text-sm">
+              <div className="space-y-0.5">
+                <span className="text-[11px] text-slate-400 font-medium">Empleado</span>
+                <p className="font-semibold text-slate-800 break-words leading-tight">{employeeName}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Documento:</span>
-                <p className="font-medium">{contract.employees.document_number}</p>
+              <div className="space-y-0.5">
+                <span className="text-[11px] text-slate-400 font-medium">N° Documento</span>
+                <p className="font-semibold text-slate-700 leading-tight">{contract.employees.document_number}</p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Tipo de Contrato:</span>
-                <p className="font-medium break-words">{contractTypeConfig?.display_name || contract.contract_type}</p>
+              <div className="space-y-0.5">
+                <span className="text-[11px] text-slate-400 font-medium">Tipo de Contrato</span>
+                <p className="font-semibold text-primary break-words leading-tight">
+                  {contractTypeConfig?.display_name || contract.contract_type}
+                </p>
               </div>
-              <div>
-                <span className="text-muted-foreground">Fecha Inicio:</span>
-                <p className="font-medium">{format(new Date(contract.start_date), 'dd/MM/yyyy', { locale: es })}</p>
+              <div className="space-y-0.5">
+                <span className="text-[11px] text-slate-400 font-medium">Fecha de Inicio</span>
+                <p className="font-semibold text-slate-700 leading-tight">
+                  {format(new Date(contract.start_date), 'dd/MM/yyyy', { locale: es })}
+                </p>
               </div>
             </div>
           </div>
 
           {/* City Input */}
-          <div className="space-y-2">
-            <Label htmlFor="generationCity" className="text-xs sm:text-sm">Ciudad de Generación</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="generationCity" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              Ciudad de Generación
+            </Label>
             <Input
               id="generationCity"
               value={generationCity}
               onChange={(e) => setGenerationCity(e.target.value)}
-              placeholder="Bucaramanga"
-              className="w-full text-xs sm:text-sm"
+              placeholder="Ej. Bucaramanga"
+              className="w-full text-xs sm:text-sm border-slate-200 focus:border-primary focus:ring-primary rounded-lg transition-all h-10 px-3"
             />
           </div>
 
-          {/* Template Status */}
+          {/* Template Status Banner */}
           {hasTemplate ? (
-            <Alert className="py-2.5 sm:py-3 px-3 sm:px-4">
-              <FileText className="h-4 w-4" />
-              <AlertDescription className="text-xs sm:text-sm leading-relaxed">
-                Este tipo de contrato tiene una plantilla configurada: <strong className="break-all">{contractTypeConfig?.template_file_name}</strong>
-              </AlertDescription>
-            </Alert>
+            <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3">
+              <FileText className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h5 className="text-xs font-semibold text-blue-800">Plantilla Vinculada</h5>
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  Este contrato se generará usando la plantilla: <strong className="font-semibold text-blue-900 break-all">{contractTypeConfig?.template_file_name}</strong>
+                </p>
+              </div>
+            </div>
           ) : (
-            <Alert variant="destructive" className="py-2.5 sm:py-3 px-3 sm:px-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-xs sm:text-sm leading-relaxed">
-                No hay plantilla configurada para este tipo de contrato. Solo se puede generar en formato PDF básico.
-              </AlertDescription>
-            </Alert>
+            <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h5 className="text-xs font-semibold text-amber-800">Sin Plantilla Configurada</h5>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  No hay plantilla configurada para este contrato. Se generará usando el formato programático PDF básico.
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Progress Bar */}
           {isGenerating && (
-            <div className="space-y-2">
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">
+            <div className="space-y-2 pt-2">
+              <Progress value={progress} className="h-1.5 bg-slate-100" />
+              <p className="text-xs text-slate-500 text-center font-medium">
                 Generando documento... {progress}%
               </p>
             </div>
           )}
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
+        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2 mt-4 pt-4 border-t border-slate-100">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isGenerating}
-            className="w-full sm:w-auto order-3 sm:order-1 text-xs sm:text-sm"
+            className="w-full sm:w-auto order-3 sm:order-1 text-xs sm:text-sm hover:bg-slate-50 text-slate-600 transition-colors h-10"
           >
             Cancelar
           </Button>
-          <Button
-            variant="outline"
-            onClick={handleGeneratePDF}
-            disabled={isGenerating}
-            className="w-full sm:w-auto order-2 sm:order-2 text-xs sm:text-sm"
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4 mr-2" />
-            )}
-            {hasTemplate ? 'Vista Previa e Imprimir' : 'Generar PDF Básico'}
-          </Button>
-          <Button
-            onClick={handleGenerateWord}
-            disabled={isGenerating || !hasTemplate}
-            className="w-full sm:w-auto order-1 sm:order-3 text-xs sm:text-sm"
-          >
-            {isGenerating ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            Generar Word
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto order-1 sm:order-2">
+            <Button
+              variant="outline"
+              onClick={handleGeneratePDF}
+              disabled={isGenerating}
+              className="w-full sm:w-auto text-xs sm:text-sm border-primary/30 text-primary hover:bg-primary/5 transition-all h-10 px-4"
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4 mr-2" />
+              )}
+              {hasTemplate ? 'Vista Previa e Imprimir' : 'Generar PDF Básico'}
+            </Button>
+            <Button
+              onClick={handleGenerateWord}
+              disabled={isGenerating || !hasTemplate}
+              className="w-full sm:w-auto text-xs sm:text-sm bg-primary hover:bg-primary/90 text-white shadow-sm transition-all h-10 px-4 font-semibold"
+            >
+              {isGenerating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Generar Word
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
