@@ -205,13 +205,13 @@ export default function VerificarCertificado() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white rounded-[2.5rem] p-8 shadow-xl text-center border-t-8 border-rose-500"
+          className="max-w-md w-full bg-white rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 shadow-xl text-center border-t-8 border-rose-500"
         >
-          <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <XCircle className="w-10 h-10" />
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <XCircle className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 mb-2">Certificado Inválido</h1>
-          <p className="text-slate-500 mb-8 leading-relaxed">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Certificado Inválido</h1>
+          <p className="text-xs sm:text-sm text-slate-500 mb-8 leading-relaxed">
             El código de verificación proporcionado no corresponde a ningún certificado válido emitido por nuestra plataforma o ha sido revocado.
           </p>
           <Button 
@@ -231,12 +231,16 @@ export default function VerificarCertificado() {
   // Expired / Limit Reached Programmable Link States
   if (!isValid && (errorType === 'expired' || errorType === 'limit_reached')) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-12">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-3 sm:p-4 py-8 sm:py-12">
         <div className="w-full max-w-lg">
           {/* Header/Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6 sm:mb-8">
             {comp?.logo_url ? (
-              <img src={comp.logo_url} alt={comp.name} className="h-16 object-contain" />
+              <img 
+                src={comp.logo_url} 
+                alt={comp.name} 
+                className="h-16 w-auto object-contain rounded-2xl border border-slate-100/50 shadow-sm bg-white p-2.5" 
+              />
             ) : (
               <div className="h-16 flex items-center justify-center px-6 rounded-2xl bg-white shadow-sm border border-slate-100">
                 <h2 className="text-xl font-black text-slate-800">{comp.name}</h2>
@@ -248,16 +252,16 @@ export default function VerificarCertificado() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[2.5rem] shadow-2xl border border-amber-200 overflow-hidden"
+            className="bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-amber-200 overflow-hidden"
           >
             {/* Status Header */}
-            <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-8 text-center text-white relative overflow-hidden">
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-6 sm:p-8 text-center text-white relative overflow-hidden">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-              <ShieldAlert className="w-16 h-16 mx-auto mb-4 relative z-10 text-white" />
-              <h1 className="text-3xl font-black tracking-tight relative z-10">
+              <ShieldAlert className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 relative z-10 text-white" />
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight relative z-10">
                 {errorType === 'expired' ? 'Enlace Caducado' : 'Límite de Descargas'}
               </h1>
-              <p className="font-medium text-amber-100 relative z-10 mt-1">
+              <p className="text-xs sm:text-sm font-medium text-amber-100 relative z-10 mt-1">
                 {errorType === 'expired' 
                   ? 'Este enlace temporal de descarga ha superado su fecha de vigencia.' 
                   : 'Este enlace temporal ha superado el número máximo de descargas permitidas.'}
@@ -265,27 +269,27 @@ export default function VerificarCertificado() {
             </div>
 
             {/* Details Summary */}
-            <div className="p-8 space-y-6">
-              <div className="p-5 rounded-2xl bg-amber-50/50 border border-amber-100 text-center">
-                <p className="text-xs font-bold uppercase tracking-wider text-amber-800 mb-2">Información del Documento</p>
+            <div className="p-5 sm:p-8 space-y-4 sm:space-y-6">
+              <div className="p-4 sm:p-5 rounded-2xl bg-amber-50/50 border border-amber-100 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-amber-800 mb-2">Información del Documento</p>
                 <div className="space-y-1">
-                  <p className="text-sm font-bold text-slate-700">Folio: <span className="font-black text-slate-900">{folio}</span></p>
-                  <p className="text-sm text-slate-600">Expedido a: <span className="font-semibold text-slate-800">{fullName}</span></p>
-                  <p className="text-xs text-slate-500">Fecha de emisión: {format(new Date(created_at), 'dd/MM/yyyy')}</p>
+                  <p className="text-xs sm:text-sm font-bold text-slate-700">Folio: <span className="font-black text-slate-900">{folio}</span></p>
+                  <p className="text-xs sm:text-sm text-slate-600">Expedido a: <span className="font-semibold text-slate-800">{fullName}</span></p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">Fecha de emisión: {format(new Date(created_at), 'dd/MM/yyyy')}</p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <Lock className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
-                  <p className="text-xs text-slate-500 leading-relaxed">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 mt-0.5 shrink-0" />
+                  <p className="text-[11px] sm:text-xs text-slate-500 leading-relaxed">
                     Por motivos de seguridad y protección de datos personales, las certificaciones compartidas a través de enlaces programables están limitadas en su vigencia y usos.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
+                <div className="p-3 sm:p-4 rounded-xl bg-primary/5 border border-primary/10 text-center">
                   <p className="text-xs font-semibold text-slate-700">¿Necesitas descargar este documento?</p>
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-[10px] sm:text-[11px] text-slate-500 mt-1">
                     Por favor ponte en contacto con el departamento de Gestión Humana de <span className="font-bold">{comp.name}</span> para que te expidan un nuevo enlace de descarga.
                   </p>
                 </div>
@@ -293,7 +297,7 @@ export default function VerificarCertificado() {
             </div>
           </motion.div>
 
-          <p className="text-center text-xs text-slate-500 mt-8 max-w-sm mx-auto">
+          <p className="text-center text-[10px] sm:text-xs text-slate-500 mt-8 max-w-sm mx-auto">
             KRH Recursos Humanos - Plataforma Segura de Gestión Humana.
           </p>
         </div>
@@ -309,17 +313,21 @@ export default function VerificarCertificado() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-slate-50 to-primary/5 flex flex-col items-center justify-center p-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-slate-50 to-primary/5 flex flex-col items-center justify-center p-3 sm:p-4 py-8 sm:py-12">
       <div className="w-full max-w-lg">
         
         {/* Header/Logo */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex justify-center mb-8"
+          className="flex justify-center mb-6 sm:mb-8"
         >
           {comp?.logo_url ? (
-            <img src={comp.logo_url} alt={comp.name} className="h-16 object-contain" />
+            <img 
+              src={comp.logo_url} 
+              alt={comp.name} 
+              className="h-16 w-auto object-contain rounded-2xl border border-slate-100/50 shadow-sm bg-white p-2.5" 
+            />
           ) : (
             <div className="h-16 flex items-center justify-center px-6 rounded-2xl bg-white shadow-sm border border-slate-100">
               <h2 className="text-xl font-black text-slate-800">{comp.name}</h2>
@@ -331,103 +339,103 @@ export default function VerificarCertificado() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/50 overflow-hidden"
+          className="bg-white/80 backdrop-blur-xl rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl border border-white/50 overflow-hidden"
         >
           {/* Status Header */}
-          <div className="bg-emerald-500 p-8 text-center text-white relative overflow-hidden">
+          <div className="bg-emerald-500 p-6 sm:p-8 text-center text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            <ShieldCheck className="w-16 h-16 mx-auto mb-4 relative z-10" />
-            <h1 className="text-3xl font-black tracking-tight relative z-10">Documento Válido</h1>
-            <p className="font-medium text-emerald-100 relative z-10 mt-1">Este certificado es auténtico y fue expedido a través de nuestro sistema.</p>
+            <ShieldCheck className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 relative z-10" />
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight relative z-10">Documento Válido</h1>
+            <p className="text-xs sm:text-sm font-medium text-emerald-100 relative z-10 mt-1">Este certificado es auténtico y fue expedido a través de nuestro sistema.</p>
           </div>
 
           {/* Details */}
-          <div className="p-8 space-y-6">
+          <div className="p-5 sm:p-8 space-y-4 sm:space-y-6">
             
-            <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="p-3 bg-white rounded-xl shadow-sm">
-                <User className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="p-2 sm:p-3 bg-white rounded-xl shadow-sm shrink-0">
+                <User className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Empleado</p>
-                <p className="font-bold text-slate-900 leading-tight">{fullName}</p>
-                <p className="text-sm text-slate-500">{emp.document_type} {emp.document_number}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-              <div className="p-3 bg-white rounded-xl shadow-sm">
-                <Briefcase className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Cargo y Contrato</p>
-                <p className="font-bold text-slate-900 leading-tight">{content.positionName}</p>
-                <p className="text-sm text-slate-500">{content.contractType}</p>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5 sm:mb-1">Empleado</p>
+                <p className="font-bold text-slate-900 text-sm sm:text-base leading-tight truncate">{fullName}</p>
+                <p className="text-xs text-slate-500">{emp.document_type} {emp.document_number}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+              <div className="p-2 sm:p-3 bg-white rounded-xl shadow-sm shrink-0">
+                <Briefcase className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5 sm:mb-1">Cargo y Contrato</p>
+                <p className="font-bold text-slate-900 text-sm sm:text-base leading-tight truncate">{content.positionName}</p>
+                <p className="text-xs text-slate-500 truncate">{content.contractType}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="p-2 bg-white rounded-lg shadow-sm shrink-0">
                   <Calendar className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Expedición</p>
-                  <p className="font-bold text-slate-900 text-sm leading-tight">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Expedición</p>
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm leading-tight">
                     {format(new Date(created_at), 'dd/MM/yyyy')}
                   </p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
+              <div className="flex items-center gap-3 p-3 sm:p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                <div className="p-2 bg-white rounded-lg shadow-sm shrink-0">
                   <FileText className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Folio</p>
-                  <p className="font-bold text-slate-900 text-sm leading-tight">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Folio</p>
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm leading-tight truncate">
                     {folio}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="pt-6 border-t border-slate-100">
+            <div className="pt-4 sm:pt-6 border-t border-slate-100">
               <div className="flex items-center gap-3">
-                <Building2 className="w-5 h-5 text-slate-400" />
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Empresa Emisora</p>
-                  <p className="font-bold text-slate-700 text-sm">{comp.name}</p>
-                  <p className="text-xs text-slate-500">NIT: {comp.nit}</p>
+                <Building2 className="w-5 h-5 text-slate-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Empresa Emisora</p>
+                  <p className="font-bold text-slate-700 text-xs sm:text-sm truncate">{comp.name}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">NIT: {comp.nit}</p>
                 </div>
               </div>
             </div>
 
             {/* Premium Download Area */}
-            <div className="pt-6 border-t border-slate-100 space-y-3">
+            <div className="pt-4 sm:pt-6 border-t border-slate-100 space-y-3">
               <Button
                 onClick={handleDownload}
                 disabled={isDownloading}
-                className="w-full h-14 rounded-2xl font-bold text-sm tracking-wide bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-3 shadow-lg shadow-primary/20 transition-all duration-300 active:scale-[0.98]"
+                className="w-full h-12 sm:h-14 rounded-2xl font-bold text-xs sm:text-sm tracking-wide bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2 sm:gap-3 shadow-lg shadow-primary/20 transition-all duration-300 active:scale-[0.98]"
               >
                 {isDownloading ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     Generando PDF...
                   </>
                 ) : (
                   <>
-                    <Download className="w-5 h-5" />
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                     Descargar Certificado Oficial (PDF)
                   </>
                 )}
               </Button>
 
               {isProgrammable && (
-                <div className="flex flex-col items-center justify-center text-[11px] text-slate-400 space-y-1">
+                <div className="flex flex-col items-center justify-center text-[10px] sm:text-[11px] text-slate-400 space-y-1 text-center">
                   <p className="font-semibold text-slate-500">
                     Enlace de descarga programable
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                     {usesLeft !== null && (
                       <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
                         Descargas restantes: {usesLeft}
@@ -451,7 +459,7 @@ export default function VerificarCertificado() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-center text-xs text-slate-500 mt-8 max-w-sm mx-auto animate-pulse"
+          className="text-center text-[10px] sm:text-xs text-slate-500 mt-6 sm:mt-8 max-w-sm mx-auto"
         >
           Este sistema garantiza la inalterabilidad de los datos al momento de su generación.
         </motion.p>
