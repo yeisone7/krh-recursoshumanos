@@ -68,7 +68,7 @@ export async function generateLaborCertificatePdf({
   const doc = new jsPDF('p', 'mm', 'letter');
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20; // smaller margin for border
+  const margin = 10; // smaller margin for border (moved 50% closer to the edge, 20 -> 10)
   const contentMargin = 25;
   const contentWidth = pageWidth - contentMargin * 2;
   let y = 15;
@@ -81,8 +81,8 @@ export async function generateLaborCertificatePdf({
   if (logoToUse) {
     try {
       const logoBase64 = await fetchImageAsBase64(logoToUse);
-      // Horizontal logo sizing (reduced width by 10% from 60 to 54)
-      doc.addImage(logoBase64, 'PNG', contentMargin, y, 54, 20, undefined, 'FAST');
+      // Horizontal logo sizing (reduced width by 10% from 60 to 54, height reduced by 5% from 20 to 19)
+      doc.addImage(logoBase64, 'PNG', contentMargin, y, 54, 19, undefined, 'FAST');
     } catch (err) {
       console.warn("Could not load company logo", err);
     }
