@@ -131,10 +131,15 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
   
-  // Get dynamic contract type label from catalog - now type is already in db format
+  // Get dynamic contract type label from catalog - map UI type back to DB type
   const getContractTypeLabel = (type: string): string => {
-    const config = contractTypes.find(ct => ct.contract_type === type);
-    return config?.display_name || type;
+    const dbType = type === 'indefinite' ? 'indefinido' :
+                   type === 'fixed' ? 'fijo' :
+                   type === 'work_labor' ? 'obra_labor' :
+                   type === 'apprenticeship' ? 'aprendizaje' :
+                   type === 'services' ? 'servicios' : type;
+    const config = contractTypes.find(ct => ct.contract_type === dbType);
+    return config?.display_name || contractTypeLabels[type as keyof typeof contractTypeLabels] || type;
   };
 
   if (isDbContractLoading && open) {

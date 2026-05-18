@@ -23,12 +23,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useCompany } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { documentTypeLabels } from '@/types/employee';
 import {
   generateContractFromTemplate,
   generateBasicContractPDF,
   downloadDocument,
   downloadPDF,
+  generateHighFidelityPDFFromDocx,
+  showContractPrintPreview,
   ContractDocumentData,
   calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
@@ -83,10 +86,11 @@ export function GenerateContractDialog({
   const { currentCompanyId } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: systemConfig } = useSystemConfig();
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [generationCity, setGenerationCity] = useState('Bogotá D.C.');
+  const [generationCity, setGenerationCity] = useState('Bucaramanga');
 
   // Fetch employee contact info
   const { data: employeeContact } = useQuery({
@@ -152,6 +156,10 @@ export function GenerateContractDialog({
   const hasTemplate = contractTypeConfig?.template_url && contractTypeConfig.template_url.length > 0;
   const employeeName = getEmployeeName(contract.employees);
 
+  const sanitizeFilename = (name: string) => {
+    return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.-]/g, '_');
+  };
+
   const handleGenerateWord = async () => {
     if (!hasTemplate) {
       toast.error('Este tipo de contrato no tiene plantilla configurada');
@@ -171,7 +179,8 @@ export function GenerateContractDialog({
       );
       setProgress(80);
 
-      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.docx`;
+      const typeLabel = contractTypeConfig?.display_name || contract.contract_type;
+      const filename = `Contrato_${sanitizeFilename(typeLabel)}_${sanitizeFilename(contract.employees.document_number)}_${format(new Date(), 'yyyyMMdd')}.docx`;
       downloadDocument(blob, filename);
       setProgress(100);
 
@@ -199,18 +208,37 @@ export function GenerateContractDialog({
 
     try {
       const documentData = prepareDocumentData();
-      setProgress(50);
+      const typeLabel = contractTypeConfig?.display_name || contract.contract_type;
+      const filename = `Contrato_${sanitizeFilename(typeLabel)}_${sanitizeFilename(contract.employees.document_number)}_${format(new Date(), 'yyyyMMdd')}.pdf`;
 
-      const pdf = await generateBasicContractPDF(documentData);
-      setProgress(80);
+      if (hasTemplate && contractTypeConfig?.template_url) {
+        setProgress(30);
+        // Generate contract DOCX blob first
+        const docxBlob = await generateContractFromTemplate(
+          contractTypeConfig.template_url,
+          documentData
+        );
+        setProgress(70);
+        
+        // Open print preview window
+        await showContractPrintPreview(docxBlob, documentData);
+        setProgress(100);
 
-      const filename = `Contrato_${contract.contract_type}_${contract.employees.document_number}_${format(new Date(), 'yyyyMMdd')}.pdf`;
-      downloadPDF(pdf, filename);
-      setProgress(100);
+        toast.success('Vista previa abierta', {
+          description: 'Se ha abierto la vista previa de impresión en una ventana flotante.',
+        });
+      } else {
+        setProgress(50);
+        // Fallback to basic programmatic PDF
+        const pdf = await generateBasicContractPDF(documentData);
+        setProgress(80);
+        downloadPDF(pdf, filename);
+        setProgress(100);
 
-      toast.success('Contrato PDF generado exitosamente', {
-        description: `El documento se ha descargado como ${filename}`,
-      });
+        toast.success('Contrato PDF Básico generado exitosamente', {
+          description: `El documento se ha descargado como ${filename}`,
+        });
+      }
 
       setTimeout(() => {
         onOpenChange(false);
@@ -277,6 +305,9 @@ export function GenerateContractDialog({
       companyPhone: company?.phone || undefined,
       companyEmail: company?.email || undefined,
       logoUrl: company?.horizontal_logo_url || company?.logo_url,
+      representativeName: systemConfig?.legal_signature_config?.signer_name || undefined,
+      representativePosition: systemConfig?.legal_signature_config?.signer_position || undefined,
+      representativeSignatureUrl: systemConfig?.legal_signature_config?.signature_url || undefined,
 
       // Employee
       employeeFullName: employeeName,
@@ -362,7 +393,7 @@ export function GenerateContractDialog({
               id="generationCity"
               value={generationCity}
               onChange={(e) => setGenerationCity(e.target.value)}
-              placeholder="Bogotá D.C."
+              placeholder="Bucaramanga"
             />
           </div>
 
@@ -412,7 +443,7 @@ export function GenerateContractDialog({
             ) : (
               <FileDown className="w-4 h-4 mr-2" />
             )}
-            Generar PDF Básico
+            {hasTemplate ? 'Vista Previa e Imprimir' : 'Generar PDF Básico'}
           </Button>
           <Button
             onClick={handleGenerateWord}
