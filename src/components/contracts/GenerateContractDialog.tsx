@@ -352,24 +352,24 @@ export function GenerateContractDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-[95%] sm:max-w-lg rounded-lg max-h-[95vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <FileText className="w-5 h-5 text-primary" />
             Generar Documento de Contrato
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm">
             Genere el documento del contrato usando la plantilla configurada o en formato PDF básico.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-2 sm:py-4">
           {/* Contract Summary */}
-          <div className="bg-background rounded-lg p-4 space-y-2">
-            <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="bg-background rounded-lg p-3 sm:p-4 space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
               <div>
                 <span className="text-muted-foreground">Empleado:</span>
-                <p className="font-medium">{employeeName}</p>
+                <p className="font-medium break-words">{employeeName}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Documento:</span>
@@ -377,7 +377,7 @@ export function GenerateContractDialog({
               </div>
               <div>
                 <span className="text-muted-foreground">Tipo de Contrato:</span>
-                <p className="font-medium">{contractTypeConfig?.display_name || contract.contract_type}</p>
+                <p className="font-medium break-words">{contractTypeConfig?.display_name || contract.contract_type}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">Fecha Inicio:</span>
@@ -388,27 +388,28 @@ export function GenerateContractDialog({
 
           {/* City Input */}
           <div className="space-y-2">
-            <Label htmlFor="generationCity">Ciudad de Generación</Label>
+            <Label htmlFor="generationCity" className="text-xs sm:text-sm">Ciudad de Generación</Label>
             <Input
               id="generationCity"
               value={generationCity}
               onChange={(e) => setGenerationCity(e.target.value)}
               placeholder="Bucaramanga"
+              className="w-full text-xs sm:text-sm"
             />
           </div>
 
           {/* Template Status */}
           {hasTemplate ? (
-            <Alert>
+            <Alert className="py-2.5 sm:py-3 px-3 sm:px-4">
               <FileText className="h-4 w-4" />
-              <AlertDescription>
-                Este tipo de contrato tiene una plantilla configurada: <strong>{contractTypeConfig?.template_file_name}</strong>
+              <AlertDescription className="text-xs sm:text-sm leading-relaxed">
+                Este tipo de contrato tiene una plantilla configurada: <strong className="break-all">{contractTypeConfig?.template_file_name}</strong>
               </AlertDescription>
             </Alert>
           ) : (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="py-2.5 sm:py-3 px-3 sm:px-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-xs sm:text-sm leading-relaxed">
                 No hay plantilla configurada para este tipo de contrato. Solo se puede generar en formato PDF básico.
               </AlertDescription>
             </Alert>
@@ -425,11 +426,12 @@ export function GenerateContractDialog({
           )}
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isGenerating}
+            className="w-full sm:w-auto order-3 sm:order-1 text-xs sm:text-sm"
           >
             Cancelar
           </Button>
@@ -437,6 +439,7 @@ export function GenerateContractDialog({
             variant="outline"
             onClick={handleGeneratePDF}
             disabled={isGenerating}
+            className="w-full sm:w-auto order-2 sm:order-2 text-xs sm:text-sm"
           >
             {isGenerating ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -448,6 +451,7 @@ export function GenerateContractDialog({
           <Button
             onClick={handleGenerateWord}
             disabled={isGenerating || !hasTemplate}
+            className="w-full sm:w-auto order-1 sm:order-3 text-xs sm:text-sm"
           >
             {isGenerating ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
