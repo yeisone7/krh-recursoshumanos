@@ -79,27 +79,27 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
 
   // Fetch absences
   const { data: absences = [] } = useQuery({
-    queryKey: ['bulk_absences', currentCompanyId, startDate, endDate, employeeIds],
+    queryKey: ['bulk_absences', currentCompanyId, startDate, endDate],
     queryFn: async () => {
-      if (!startDate || !endDate || employeeIds.length === 0) return [];
+      if (!startDate || !endDate || !currentCompanyId) return [];
       const startStr = format(startDate, 'yyyy-MM-dd');
       const endStr = format(endDate, 'yyyy-MM-dd');
 
       const [vacations, leaves, incapacities] = await Promise.all([
         supabase.from('vacation_requests').select('employee_id, start_date, end_date')
-          .in('employee_id', employeeIds).in('status', ['aprobado', 'en_curso'])
+          .eq('company_id', currentCompanyId).in('status', ['aprobado', 'en_curso'])
           .gte('end_date', startStr).lte('start_date', endStr),
         supabase.from('leave_requests').select('employee_id, start_date, end_date')
-          .in('employee_id', employeeIds).eq('status', 'aprobado')
+          .eq('company_id', currentCompanyId).eq('status', 'aprobado')
           .gte('end_date', startStr).lte('start_date', endStr),
         supabase.from('employee_incapacities').select('employee_id, start_date, end_date')
-          .in('employee_id', employeeIds)
+          .eq('company_id', currentCompanyId)
           .gte('end_date', startStr).lte('start_date', endStr),
       ]);
 
       return [...(vacations.data || []), ...(leaves.data || []), ...(incapacities.data || [])];
     },
-    enabled: employeeIds.length > 0 && !!startDate && !!endDate,
+    enabled: employeeIds.length > 0 && !!startDate && !!endDate && !!currentCompanyId,
   });
 
   const totalDays = startDate && endDate

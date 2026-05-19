@@ -102,9 +102,9 @@ export function CycleGeneratorDialog({
 
   // Fetch absences for validation
   const { data: absences = [] } = useQuery({
-    queryKey: ['employee_absences_generator', currentCompanyId, startDate, endDate, selectedEmployeeIds],
+    queryKey: ['employee_absences_generator', currentCompanyId, startDate, endDate],
     queryFn: async () => {
-      if (!startDate || !endDate || selectedEmployeeIds.length === 0) return [];
+      if (!startDate || !endDate || !currentCompanyId) return [];
       
       const startStr = format(startDate, 'yyyy-MM-dd');
       const endStr = format(endDate, 'yyyy-MM-dd');
@@ -112,7 +112,7 @@ export function CycleGeneratorDialog({
       const { data: vacations } = await supabase
         .from('vacation_requests')
         .select('employee_id, start_date, end_date')
-        .in('employee_id', selectedEmployeeIds)
+        .eq('company_id', currentCompanyId)
         .in('status', ['aprobado', 'en_curso'])
         .gte('end_date', startStr)
         .lte('start_date', endStr);
@@ -120,7 +120,7 @@ export function CycleGeneratorDialog({
       const { data: leaves } = await supabase
         .from('leave_requests')
         .select('employee_id, start_date, end_date')
-        .in('employee_id', selectedEmployeeIds)
+        .eq('company_id', currentCompanyId)
         .eq('status', 'aprobado')
         .gte('end_date', startStr)
         .lte('start_date', endStr);
@@ -128,13 +128,13 @@ export function CycleGeneratorDialog({
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
         .select('employee_id, start_date, end_date')
-        .in('employee_id', selectedEmployeeIds)
+        .eq('company_id', currentCompanyId)
         .gte('end_date', startStr)
         .lte('start_date', endStr);
 
       return [...(vacations || []), ...(leaves || []), ...(incapacities || [])];
     },
-    enabled: selectedEmployeeIds.length > 0 && !!startDate && !!endDate,
+    enabled: selectedEmployeeIds.length > 0 && !!startDate && !!endDate && !!currentCompanyId,
   });
 
   const selectedCycle = shiftCycles.find(c => c.id === selectedCycleId);

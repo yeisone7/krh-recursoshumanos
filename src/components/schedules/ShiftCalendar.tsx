@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
@@ -63,6 +63,323 @@ interface GroupedEmployee {
 interface ShiftCalendarProps {
   centerId?: string;
 }
+
+interface CalendarCellProps {
+  employeeId: string;
+  dateStr: string;
+  day: Date;
+  sunday: boolean;
+  holiday: string | null;
+  selected: boolean;
+  absence: EmployeeAbsence | undefined;
+  shift: Shift | null | undefined;
+  assignment: EmployeeShiftAssignment | undefined;
+  hasConflict: boolean;
+  isAdminMode: boolean;
+  adminIsWorkDay: boolean;
+  adminSchedule: WorkSchedule | undefined;
+  activeShifts: Shift[];
+  onMouseDown: (employeeId: string, date: string) => void;
+  onMouseEnter: (employeeId: string, date: string) => void;
+  onMouseUp: () => void;
+  createBulkAssignments: any;
+  deleteAssignment: any;
+}
+
+const CalendarCell = memo(({
+  employeeId,
+  dateStr,
+  day,
+  sunday,
+  holiday,
+  selected,
+  absence,
+  shift,
+  assignment,
+  hasConflict,
+  isAdminMode,
+  adminIsWorkDay,
+  adminSchedule,
+  activeShifts,
+  onMouseDown,
+  onMouseEnter,
+  onMouseUp,
+  createBulkAssignments,
+  deleteAssignment,
+}: CalendarCellProps) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  return (
+    <ContextMenu onOpenChange={setIsMenuOpen}>
+      <ContextMenuTrigger>
+        <div
+          className={cn(
+            'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+            sunday && !absence && 'bg-red-50',
+            holiday && !absence && 'bg-amber-50',
+            absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
+            absence && !hasConflict && absence.type === 'leave' && 'bg-blue-50',
+            absence && !hasConflict && absence.type === 'incapacity' && 'bg-orange-50',
+            hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
+            selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
+          )}
+          onMouseDown={(e) => {
+            if (e.button === 0) {
+              onMouseDown(employeeId, dateStr);
+            }
+          }}
+          onMouseEnter={() => onMouseEnter(employeeId, dateStr)}
+          onMouseUp={onMouseUp}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
+                {/* Conflict indicator badge */}
+                {hasConflict && (
+                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
+                    <span className="text-[8px] text-destructive-foreground font-bold">!</span>
+                  </div>
+                )}
+                
+                {absence && (!shift || shift.is_rest_day) && (
+                  <div 
+                    className={cn(
+                      'h-6 rounded text-[10px] font-bold flex items-center justify-center',
+                      absence.type === 'vacation' && 'bg-green-100 text-green-700 border border-green-300',
+                      absence.type === 'leave' && 'bg-blue-100 text-blue-700 border border-blue-300',
+                      absence.type === 'incapacity' && 'bg-orange-100 text-orange-700 border border-orange-300'
+                    )}
+                  >
+                    {absence.type === 'vacation' && 'VAC'}
+                    {absence.type === 'leave' && 'PER'}
+                    {absence.type === 'incapacity' && 'INC'}
+                  </div>
+                )}
+                {shift && !shift.is_rest_day && (
+                  <div
+                    className={cn(
+                      'h-6 rounded text-[10px] font-medium flex items-center justify-center',
+                      (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-background border border-border' : 'text-white',
+                      hasConflict && 'opacity-70'
+                    )}
+                    style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
+                  >
+                    {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                {shift && shift.is_rest_day && !absence && (
+                  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
+                    D
+                  </div>
+                )}
+                {/* Admin schedule: working day */}
+                {isAdminMode && !shift && !absence && adminIsWorkDay && (
+                  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
+                    {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
+                  </div>
+                )}
+                {/* Admin rest day: show D */}
+                {isAdminMode && !shift && !absence && !adminIsWorkDay && (
+                  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
+                    D
+                  </div>
+                )}
+                {/* Empty: non-admin with no shift/absence */}
+                {!isAdminMode && !shift && !absence && <div className="h-7 sm:h-6" />}
+              </div>
+            </TooltipTrigger>
+            
+            {/* Conflict tooltip */}
+            {hasConflict && (
+              <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
+                <div className="space-y-1">
+                  <p className="font-semibold text-destructive flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Conflicto detectado
+                  </p>
+                  <p className="text-sm text-foreground">Turno: {shift.name}</p>
+                  <p className="text-sm text-foreground">Novedad: {absence.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Click derecho → Eliminar
+                  </p>
+                </div>
+              </TooltipContent>
+            )}
+            
+            {/* Absence-only tooltip */}
+            {absence && !hasConflict && (
+              <TooltipContent>
+                <p className="font-medium">{absence.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {absence.start_date} - {absence.end_date}
+                </p>
+              </TooltipContent>
+            )}
+            
+            {/* Shift-only tooltip */}
+            {shift && !absence && (
+              <TooltipContent>
+                <p>{shift.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Click derecho para opciones</p>
+              </TooltipContent>
+            )}
+            
+            {/* Admin schedule tooltip */}
+            {isAdminMode && !shift && !absence && adminIsWorkDay && adminSchedule && (
+              <TooltipContent>
+                <p className="font-medium">{adminSchedule.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {adminSchedule.start_time?.slice(0, 5)} - {adminSchedule.end_time?.slice(0, 5)}
+                </p>
+                <p className="text-xs text-muted-foreground">Descanso: {adminSchedule.break_minutes} min</p>
+              </TooltipContent>
+            )}
+
+            {/* Empty cell tooltip */}
+            {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && (
+              <TooltipContent>
+                <p className="text-xs text-muted-foreground">
+                  {isAdminMode ? 'Día de descanso (horario administrativo)' : 'Click derecho para asignar turno'}
+                </p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </div>
+      </ContextMenuTrigger>
+      
+      <ContextMenuContent className="w-48 bg-background">
+        {isMenuOpen && (
+          <>
+            {/* Assign shift (when no shift exists) */}
+            {!assignment && !absence && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Plus className="w-3 h-3" />
+                  Asignar turno
+                </div>
+                {activeShifts.map((s) => (
+                  <ContextMenuItem
+                    key={s.id}
+                    onClick={() => {
+                      createBulkAssignments.mutate([{
+                        employee_id: employeeId,
+                        shift_id: s.id,
+                        assignment_date: dateStr,
+                        source: 'manual' as const,
+                      }], {
+                        onSuccess: () => toast.success('Turno asignado'),
+                        onError: (error: any) => toast.error('Error', { description: error.message })
+                      });
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="truncate">{s.name}</span>
+                    {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                  </ContextMenuItem>
+                ))}
+              </>
+            )}
+            
+            {/* Change/Delete shift (when shift exists) */}
+            {assignment && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <Edit className="w-3 h-3" />
+                  Cambiar turno
+                </div>
+                {activeShifts.filter(s => s.id !== assignment.shift_id).map((s) => (
+                  <ContextMenuItem
+                    key={s.id}
+                    onClick={() => {
+                      createBulkAssignments.mutate([{
+                        employee_id: employeeId,
+                        shift_id: s.id,
+                        assignment_date: dateStr,
+                        source: 'manual' as const,
+                      }], {
+                        onSuccess: () => toast.success('Turno cambiado'),
+                        onError: (error: any) => toast.error('Error', { description: error.message })
+                      });
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="truncate">{s.name}</span>
+                    {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                  </ContextMenuItem>
+                ))}
+                <ContextMenuSeparator />
+                <ContextMenuItem
+                  onClick={() => {
+                    deleteAssignment.mutate(assignment.id, {
+                      onSuccess: () => toast.success('Asignación eliminada'),
+                      onError: (error: any) => toast.error('Error', { description: error.message })
+                    });
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Eliminar asignación
+                </ContextMenuItem>
+              </>
+            )}
+            
+            {/* Absence day - can only assign rest days */}
+            {absence && !assignment && (
+              <>
+                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                  Solo descansos (hay novedad)
+                </div>
+                {activeShifts.filter(s => s.is_rest_day).map((s) => (
+                  <ContextMenuItem
+                    key={s.id}
+                    onClick={() => {
+                      createBulkAssignments.mutate([{
+                        employee_id: employeeId,
+                        shift_id: s.id,
+                        assignment_date: dateStr,
+                        source: 'manual' as const,
+                      }], {
+                        onSuccess: () => toast.success('Turno asignado'),
+                        onError: (error: any) => toast.error('Error', { description: error.message })
+                      });
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
+                    <span className="truncate">{s.name}</span>
+                    <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>
+                  </ContextMenuItem>
+                ))}
+                {activeShifts.filter(s => s.is_rest_day).length === 0 && (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                    No hay turnos de descanso configurados
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+}, (prevProps, nextProps) => {
+  return prevProps.selected === nextProps.selected &&
+         prevProps.shift?.id === nextProps.shift?.id &&
+         prevProps.shift?.color === nextProps.shift?.color &&
+         prevProps.shift?.is_rest_day === nextProps.shift?.is_rest_day &&
+         prevProps.assignment?.id === nextProps.assignment?.id &&
+         prevProps.absence?.type === nextProps.absence?.type &&
+         prevProps.hasConflict === nextProps.hasConflict &&
+         prevProps.isAdminMode === nextProps.isAdminMode &&
+         prevProps.adminIsWorkDay === nextProps.adminIsWorkDay &&
+         prevProps.adminSchedule?.id === nextProps.adminSchedule?.id &&
+         prevProps.activeShifts === nextProps.activeShifts;
+});
 
 export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -154,13 +471,12 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const { data: absences = [] } = useQuery({
     queryKey: ['employee_absences', currentCompanyId, startDate, endDate],
     queryFn: async () => {
-      const employeeIds = employees.map(e => e.id);
-      if (employeeIds.length === 0) return [];
+      if (!currentCompanyId) return [];
 
       const { data: vacations } = await supabase
         .from('vacation_requests')
         .select('employee_id, start_date, end_date, status')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .in('status', ['aprobado', 'en_curso', 'completado'])
         .gte('end_date', startDate)
         .lte('start_date', endDate);
@@ -168,7 +484,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       const { data: leaves } = await supabase
         .from('leave_requests')
         .select('employee_id, start_date, end_date, status')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .eq('status', 'aprobado')
         .gte('end_date', startDate)
         .lte('start_date', endDate);
@@ -176,7 +492,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       const { data: incapacities } = await supabase
         .from('employee_incapacities')
         .select('employee_id, start_date, end_date')
-        .in('employee_id', employeeIds)
+        .eq('company_id', currentCompanyId)
         .gte('end_date', startDate)
         .lte('start_date', endDate);
 
@@ -214,7 +530,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
 
       return result;
     },
-    enabled: employees.length > 0,
+    enabled: employees.length > 0 && !!currentCompanyId,
   });
 
   // Build absences map
@@ -317,10 +633,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     return map;
   }, [assignments]);
 
-  const getShiftById = (id: string): Shift | undefined => shifts.find(s => s.id === id);
-  const isHoliday = (date: Date): string | null => holidaysMap[format(date, 'yyyy-MM-dd')] || null;
+  const getShiftById = useCallback((id: string): Shift | undefined => shifts.find(s => s.id === id), [shifts]);
+  const isHoliday = useCallback((date: Date): string | null => holidaysMap[format(date, 'yyyy-MM-dd')] || null, [holidaysMap]);
 
-  const navigatePeriod = (direction: 'prev' | 'next') => {
+  const navigatePeriod = useCallback((direction: 'prev' | 'next') => {
     if (viewMode === 'quincenal') {
       const isFirstHalf = currentMonth.getDate() <= 15;
       if (direction === 'next') {
@@ -342,9 +658,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       // Trimestral
       setCurrentMonth(addMonths(currentMonth, direction === 'next' ? 3 : -3));
     }
-  };
+  }, [viewMode, currentMonth]);
 
-  const toggleCenter = (centerId: string) => {
+  const toggleCenter = useCallback((centerId: string) => {
     setExpandedCenters(prev => {
       const next = new Set(prev);
       if (next.has(centerId)) {
@@ -354,9 +670,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       }
       return next;
     });
-  };
+  }, []);
 
-  const toggleArea = (areaKey: string) => {
+  const toggleArea = useCallback((areaKey: string) => {
     setExpandedAreas(prev => {
       const next = new Set(prev);
       if (next.has(areaKey)) {
@@ -366,16 +682,16 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       }
       return next;
     });
-  };
+  }, []);
 
   // Selection handling
-  const handleCellMouseDown = (employeeId: string, date: string) => {
+  const handleCellMouseDown = useCallback((employeeId: string, date: string) => {
     setIsSelecting(true);
     setSelectionStart({ employeeId, date });
     setSelectedCells([{ employeeId, dates: [date] }]);
-  };
+  }, []);
 
-  const handleCellMouseEnter = (employeeId: string, date: string) => {
+  const handleCellMouseEnter = useCallback((employeeId: string, date: string) => {
     if (!isSelecting || !selectionStart) return;
     if (employeeId !== selectionStart.employeeId) return;
 
@@ -390,22 +706,22 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       .map(d => format(d, 'yyyy-MM-dd'));
 
     setSelectedCells([{ employeeId, dates: selectedDates }]);
-  };
+  }, [isSelecting, selectionStart, daysInPeriod]);
 
-  const handleCellMouseUp = () => {
+  const handleCellMouseUp = useCallback(() => {
     setIsSelecting(false);
     if (selectedCells.length > 0 && selectedCells[0].dates.length > 0) {
       setShowAssignDialog(true);
     }
-  };
+  }, [selectedCells]);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelectedCells([]);
     setSelectionStart(null);
     setIsSelecting(false);
-  };
+  }, []);
 
-  const handleAssign = async () => {
+  const handleAssign = useCallback(async () => {
     if (!selectedShiftId || selectedCells.length === 0) return;
 
     const selectedShift = getShiftById(selectedShiftId);
@@ -448,13 +764,13 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     } catch (error: any) {
       toast.error('Error', { description: error.message || 'No se pudieron guardar las asignaciones' });
     }
-  };
+  }, [selectedShiftId, selectedCells, getShiftById, absencesMap, createBulkAssignments, clearSelection]);
 
-  const isCellSelected = (employeeId: string, date: string): boolean => {
+  const isCellSelected = useCallback((employeeId: string, date: string): boolean => {
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
-  };
+  }, [selectedCells]);
 
-  const activeShifts = shifts.filter(s => s.is_active);
+  const activeShifts = useMemo(() => shifts.filter(s => s.is_active), [shifts]);
   const isLoading = loadingEmployees || loadingAssignments;
 
   // Expand all by default on load
@@ -702,289 +1018,56 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                           const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
 
                           return (
-                          <div key={employee.id} className="flex border-y hover:bg-background -mt-px">
-                            <div className="w-36 sm:w-56 px-2 sm:px-3 py-1.5 sm:py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
-                              <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
-                              {isAdminMode ? (
-                                <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
-                              ) : (
-                                <RotateCcw className="w-3 h-3 text-muted-foreground shrink-0" />
-                              )}
+                            <div key={employee.id} className="flex border-y hover:bg-background -mt-px">
+                              <div className="w-36 sm:w-56 px-2 sm:px-3 py-1.5 sm:py-1 pl-5 sm:pl-9 border-r shrink-0 flex items-center gap-1.5 sticky left-0 bg-background z-10">
+                                <span className="truncate text-xs">{getEmployeeFullName(employee)}</span>
+                                {isAdminMode ? (
+                                  <Briefcase className="w-3 h-3 text-indigo-500 shrink-0" />
+                                ) : (
+                                  <RotateCcw className="w-3 h-3 text-muted-foreground shrink-0" />
+                                )}
+                              </div>
+                              {daysInPeriod.map((day) => {
+                                const dateStr = format(day, 'yyyy-MM-dd');
+                                const assignment = assignmentsMap[employee.id]?.[dateStr];
+                                const shift = assignment ? getShiftById(assignment.shift_id) : null;
+                                const holiday = isHoliday(day);
+                                const sunday = isSunday(day);
+                                const selected = isCellSelected(employee.id, dateStr);
+                                const absence = absencesMap[employee.id]?.[dateStr];
+                                
+                                // Admin mode: derive working day from work_schedule.days_of_week
+                                const adminIsWorkDay = adminSchedule?.days_of_week?.includes(day.getDay()) ?? false;
+
+                                // Conflict: work shift assigned on a day with an absence
+                                const hasConflict = shift && absence && !shift.is_rest_day;
+
+                                return (
+                                  <CalendarCell
+                                    key={dateStr}
+                                    employeeId={employee.id}
+                                    dateStr={dateStr}
+                                    day={day}
+                                    sunday={sunday}
+                                    holiday={holiday}
+                                    selected={selected}
+                                    absence={absence}
+                                    shift={shift}
+                                    assignment={assignment}
+                                    hasConflict={hasConflict}
+                                    isAdminMode={isAdminMode}
+                                    adminIsWorkDay={adminIsWorkDay}
+                                    adminSchedule={adminSchedule}
+                                    activeShifts={activeShifts}
+                                    onMouseDown={handleCellMouseDown}
+                                    onMouseEnter={handleCellMouseEnter}
+                                    onMouseUp={handleCellMouseUp}
+                                    createBulkAssignments={createBulkAssignments}
+                                    deleteAssignment={deleteAssignment}
+                                  />
+                                );
+                              })}
                             </div>
-                            {daysInPeriod.map((day) => {
-                              const dateStr = format(day, 'yyyy-MM-dd');
-                              const assignment = assignmentsMap[employee.id]?.[dateStr];
-                              const shift = assignment ? getShiftById(assignment.shift_id) : null;
-                              const holiday = isHoliday(day);
-                              const sunday = isSunday(day);
-                              const selected = isCellSelected(employee.id, dateStr);
-                              const absence = absencesMap[employee.id]?.[dateStr];
-                              
-                              // Admin mode: derive working day from work_schedule.days_of_week
-                              const adminIsWorkDay = adminSchedule?.days_of_week?.includes(day.getDay()) ?? false;
-
-                              // Conflict: work shift assigned on a day with an absence
-                              const hasConflict = shift && absence && !shift.is_rest_day;
-
-                              return (
-                                <ContextMenu key={dateStr}>
-                                  <ContextMenuTrigger>
-                                    <div
-                                      className={cn(
-                                        'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
-                                        sunday && !absence && 'bg-red-50',
-                                        holiday && !absence && 'bg-amber-50',
-                                        absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
-                                        absence && !hasConflict && absence.type === 'leave' && 'bg-blue-50',
-                                        absence && !hasConflict && absence.type === 'incapacity' && 'bg-orange-50',
-                                        hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
-                                        selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
-                                      )}
-                                      onMouseDown={(e) => {
-                                        // Only handle left click for selection
-                                        if (e.button === 0) {
-                                          handleCellMouseDown(employee.id, dateStr);
-                                        }
-                                      }}
-                                      onMouseEnter={() => handleCellMouseEnter(employee.id, dateStr)}
-                                      onMouseUp={handleCellMouseUp}
-                                    >
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
-                                              {/* Conflict indicator badge */}
-                                              {hasConflict && (
-                                                <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
-                                                  <span className="text-[8px] text-destructive-foreground font-bold">!</span>
-                                                </div>
-                                              )}
-                                              
-                                              {absence && (!shift || shift.is_rest_day) && (
-                                                <div 
-                                                  className={cn(
-                                              'h-6 rounded text-[10px] font-bold flex items-center justify-center',
-                                                    absence.type === 'vacation' && 'bg-green-100 text-green-700 border border-green-300',
-                                                    absence.type === 'leave' && 'bg-blue-100 text-blue-700 border border-blue-300',
-                                                    absence.type === 'incapacity' && 'bg-orange-100 text-orange-700 border border-orange-300'
-                                                  )}
-                                                >
-                                                  {absence.type === 'vacation' && 'VAC'}
-                                                  {absence.type === 'leave' && 'PER'}
-                                                  {absence.type === 'incapacity' && 'INC'}
-                                                </div>
-                                              )}
-                                              {shift && !shift.is_rest_day && (
-                                                <div
-                                                  className={cn(
-                                                    'h-6 rounded text-[10px] font-medium flex items-center justify-center',
-                                                    (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-background border border-border' : 'text-white',
-                                                    hasConflict && 'opacity-70'
-                                                  )}
-                                                  style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
-                                                >
-                                                  {shift.code || shift.name.slice(0, 2).toUpperCase()}
-                                                </div>
-                                              )}
-                                              {shift && shift.is_rest_day && !absence && (
-                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
-                                                  D
-                                                </div>
-                                              )}
-                                              {/* Admin schedule: working day */}
-                                              {isAdminMode && !shift && !absence && adminIsWorkDay && (
-                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
-                                                  {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
-                                                </div>
-                                              )}
-                                              {/* Admin rest day: show D */}
-                                              {isAdminMode && !shift && !absence && !adminIsWorkDay && (
-                                                <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
-                                                  D
-                                                </div>
-                                              )}
-                                              {/* Empty: non-admin with no shift/absence */}
-                                              {!isAdminMode && !shift && !absence && <div className="h-7 sm:h-6" />}
-                                            </div>
-                                          </TooltipTrigger>
-                                          
-                                          {/* Conflict tooltip */}
-                                          {hasConflict && (
-                                            <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
-                                              <div className="space-y-1">
-                                                <p className="font-semibold text-destructive flex items-center gap-1">
-                                                  <AlertTriangle className="w-3 h-3" />
-                                                  Conflicto detectado
-                                                </p>
-                                                <p className="text-sm text-foreground">Turno: {shift.name}</p>
-                                                <p className="text-sm text-foreground">Novedad: {absence.description}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                  Click derecho → Eliminar
-                                                </p>
-                                              </div>
-                                            </TooltipContent>
-                                          )}
-                                          
-                                          {/* Absence-only tooltip */}
-                                          {absence && !hasConflict && (
-                                            <TooltipContent>
-                                              <p className="font-medium">{absence.description}</p>
-                                              <p className="text-xs text-muted-foreground">
-                                                {absence.start_date} - {absence.end_date}
-                                              </p>
-                                            </TooltipContent>
-                                          )}
-                                          
-                                          {/* Shift-only tooltip */}
-                                          {shift && !absence && (
-                                            <TooltipContent>
-                                              <p>{shift.name}</p>
-                                              <p className="text-xs text-muted-foreground">
-                                                {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
-                                              </p>
-                                              <p className="text-xs text-muted-foreground mt-1">Click derecho para opciones</p>
-                                            </TooltipContent>
-                                          )}
-                                          
-                                          {/* Admin schedule tooltip */}
-                                          {isAdminMode && !shift && !absence && adminIsWorkDay && adminSchedule && (
-                                            <TooltipContent>
-                                              <p className="font-medium">{adminSchedule.name}</p>
-                                              <p className="text-xs text-muted-foreground">
-                                                {adminSchedule.start_time?.slice(0, 5)} - {adminSchedule.end_time?.slice(0, 5)}
-                                              </p>
-                                              <p className="text-xs text-muted-foreground">Descanso: {adminSchedule.break_minutes} min</p>
-                                            </TooltipContent>
-                                          )}
-
-                                          {/* Empty cell tooltip */}
-                                          {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && (
-                                            <TooltipContent>
-                                              <p className="text-xs text-muted-foreground">
-                                                {isAdminMode ? 'Día de descanso (horario administrativo)' : 'Click derecho para asignar turno'}
-                                              </p>
-                                            </TooltipContent>
-                                          )}
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </div>
-                                  </ContextMenuTrigger>
-                                  
-                                  <ContextMenuContent className="w-48 bg-background">
-                                    {/* Assign shift (when no shift exists) */}
-                                    {!assignment && !absence && (
-                                      <>
-                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                                          <Plus className="w-3 h-3" />
-                                          Asignar turno
-                                        </div>
-                                        {activeShifts.map((s) => (
-                                          <ContextMenuItem
-                                            key={s.id}
-                                            onClick={() => {
-                                              createBulkAssignments.mutate([{
-                                                employee_id: employee.id,
-                                                shift_id: s.id,
-                                                assignment_date: dateStr,
-                                                source: 'manual' as const,
-                                              }], {
-                                                onSuccess: () => toast.success('Turno asignado'),
-                                                onError: (error: any) => toast.error('Error', { description: error.message })
-                                              });
-                                            }}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                                            <span className="truncate">{s.name}</span>
-                                            {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
-                                          </ContextMenuItem>
-                                        ))}
-                                      </>
-                                    )}
-                                    
-                                    {/* Change/Delete shift (when shift exists) */}
-                                    {assignment && (
-                                      <>
-                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                                          <Edit className="w-3 h-3" />
-                                          Cambiar turno
-                                        </div>
-                                        {activeShifts.filter(s => s.id !== assignment.shift_id).map((s) => (
-                                          <ContextMenuItem
-                                            key={s.id}
-                                            onClick={() => {
-                                              createBulkAssignments.mutate([{
-                                                employee_id: employee.id,
-                                                shift_id: s.id,
-                                                assignment_date: dateStr,
-                                                source: 'manual' as const,
-                                              }], {
-                                                onSuccess: () => toast.success('Turno cambiado'),
-                                                onError: (error: any) => toast.error('Error', { description: error.message })
-                                              });
-                                            }}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                                            <span className="truncate">{s.name}</span>
-                                            {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
-                                          </ContextMenuItem>
-                                        ))}
-                                        <ContextMenuSeparator />
-                                        <ContextMenuItem
-                                          onClick={() => {
-                                            deleteAssignment.mutate(assignment.id, {
-                                              onSuccess: () => toast.success('Asignación eliminada'),
-                                              onError: (error: any) => toast.error('Error', { description: error.message })
-                                            });
-                                          }}
-                                          className="text-destructive focus:text-destructive"
-                                        >
-                                          <Trash2 className="w-4 h-4 mr-2" />
-                                          Eliminar asignación
-                                        </ContextMenuItem>
-                                      </>
-                                    )}
-                                    
-                                    {/* Absence day - can only assign rest days */}
-                                    {absence && !assignment && (
-                                      <>
-                                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                                          Solo descansos (hay novedad)
-                                        </div>
-                                        {activeShifts.filter(s => s.is_rest_day).map((s) => (
-                                          <ContextMenuItem
-                                            key={s.id}
-                                            onClick={() => {
-                                              createBulkAssignments.mutate([{
-                                                employee_id: employee.id,
-                                                shift_id: s.id,
-                                                assignment_date: dateStr,
-                                                source: 'manual' as const,
-                                              }], {
-                                                onSuccess: () => toast.success('Turno asignado'),
-                                                onError: (error: any) => toast.error('Error', { description: error.message })
-                                              });
-                                            }}
-                                            className="flex items-center gap-2"
-                                          >
-                                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
-                                            <span className="truncate">{s.name}</span>
-                                            <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>
-                                          </ContextMenuItem>
-                                        ))}
-                                        {activeShifts.filter(s => s.is_rest_day).length === 0 && (
-                                          <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
-                                            No hay turnos de descanso configurados
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </ContextMenuContent>
-                                </ContextMenu>
-                              );
-                            })}
-                          </div>
                           );
                         })}
                       </div>
