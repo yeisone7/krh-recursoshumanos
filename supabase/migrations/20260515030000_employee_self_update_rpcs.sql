@@ -227,12 +227,14 @@ BEGIN
     DELETE FROM employee_family_members WHERE employee_id = p_employee_id;
     FOR v_member IN SELECT * FROM jsonb_array_elements(p_family_members)
     LOOP
-      INSERT INTO employee_family_members (company_id, employee_id, full_name, relationship, birth_date, document_type, document_number)
+      INSERT INTO employee_family_members (company_id, employee_id, full_name, relationship, observations)
       VALUES (
         v_token_row.company_id, p_employee_id,
         v_member->>'full_name', v_member->>'relationship',
-        CASE WHEN (v_member->>'birth_date') IS NOT NULL AND (v_member->>'birth_date') != '' THEN (v_member->>'birth_date')::date ELSE NULL END,
-        (v_member->>'document_type')::document_type, v_member->>'document_number'
+        CASE WHEN (v_member->>'document_number') IS NOT NULL AND (v_member->>'document_number') != '' 
+             THEN 'Documento: ' || COALESCE(v_member->>'document_type', 'CC') || ' ' || (v_member->>'document_number') 
+             ELSE NULL 
+        END
       );
     END LOOP;
   END IF;
