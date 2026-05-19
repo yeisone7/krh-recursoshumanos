@@ -375,12 +375,20 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     const dbResults: SearchResult[] = [];
 
     try {
-      const { data: employees } = await supabase
+      const searchTerms = term.trim().split(/\s+/).filter(Boolean);
+
+      // Search employees
+      let employeesQuery = supabase
         .from('employees_v2')
         .select('id, first_name, last_name, document_number')
-        .eq('company_id', currentCompanyId)
-        .or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%,document_number.ilike.%${term}%`)
-        .limit(5);
+        .eq('company_id', currentCompanyId);
+
+      searchTerms.forEach(t => {
+        const pattern = `%${t}%`;
+        employeesQuery = employeesQuery.or(`first_name.ilike.${pattern},middle_name.ilike.${pattern},last_name.ilike.${pattern},second_last_name.ilike.${pattern},document_number.ilike.${pattern}`);
+      });
+
+      const { data: employees } = await employeesQuery.limit(5);
 
       if (employees) {
         employees.forEach((emp) => {
@@ -395,11 +403,17 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         });
       }
 
-      const { data: contracts } = await supabase
+      // Search contracts by employee name or contract number
+      let contractsQuery = supabase
         .from('contracts')
-        .select('id, contract_number, contract_type, employee_id, employees_v2!inner(first_name, last_name)')
-        .or(`contract_number.ilike.%${term}%,employees_v2.first_name.ilike.%${term}%,employees_v2.last_name.ilike.%${term}%`)
-        .limit(5);
+        .select('id, contract_number, contract_type, employee_id, employees_v2!inner(first_name, middle_name, last_name, second_last_name)');
+
+      searchTerms.forEach(t => {
+        const pattern = `%${t}%`;
+        contractsQuery = contractsQuery.or(`contract_number.ilike.${pattern},employees_v2.first_name.ilike.${pattern},employees_v2.middle_name.ilike.${pattern},employees_v2.last_name.ilike.${pattern},employees_v2.second_last_name.ilike.${pattern}`);
+      });
+
+      const { data: contracts } = await contractsQuery.limit(5);
 
       if (contracts) {
         contracts.forEach((c: any) => {
