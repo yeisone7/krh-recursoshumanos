@@ -120,8 +120,11 @@ export function useEmployeesPaginated(options: {
 
       // 1. Server-side search (Name or Document)
       if (search && search.trim() !== '') {
-        const searchPattern = `%${search.trim()}%`;
-        query = query.or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+        const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+        searchTerms.forEach(term => {
+          const searchPattern = `%${term}%`;
+          query = query.or(`first_name.ilike.${searchPattern},middle_name.ilike.${searchPattern},last_name.ilike.${searchPattern},second_last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+        });
       }
 
       // 2. Server-side filtering
@@ -194,8 +197,11 @@ export function useEmployeesInfinite(options: {
 
       // 1. Search
       if (search && search.trim() !== '') {
-        const searchPattern = `%${search.trim()}%`;
-        query = query.or(`first_name.ilike.${searchPattern},last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+        const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+        searchTerms.forEach(term => {
+          const searchPattern = `%${term}%`;
+          query = query.or(`first_name.ilike.${searchPattern},middle_name.ilike.${searchPattern},last_name.ilike.${searchPattern},second_last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
+        });
       }
 
       // 2. Filters
