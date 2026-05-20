@@ -5219,6 +5219,7 @@ export type Database = {
           expiration_date: string | null
           id: string
           observations: string | null
+          order_type: string | null
           provider: string
           restrictions: string | null
           result: Database["public"]["Enums"]["exam_result"]
@@ -5237,6 +5238,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           observations?: string | null
+          order_type?: string | null
           provider: string
           restrictions?: string | null
           result?: Database["public"]["Enums"]["exam_result"]
@@ -5255,6 +5257,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           observations?: string | null
+          order_type?: string | null
           provider?: string
           restrictions?: string | null
           result?: Database["public"]["Enums"]["exam_result"]
@@ -6787,6 +6790,7 @@ export type Database = {
           id: string
           medical_concept: string | null
           notes: string | null
+          order_type: string | null
           provider: string | null
           result: string | null
           scheduled_date: string | null
@@ -6810,6 +6814,7 @@ export type Database = {
           id?: string
           medical_concept?: string | null
           notes?: string | null
+          order_type?: string | null
           provider?: string | null
           result?: string | null
           scheduled_date?: string | null
@@ -6833,6 +6838,7 @@ export type Database = {
           id?: string
           medical_concept?: string | null
           notes?: string | null
+          order_type?: string | null
           provider?: string | null
           result?: string | null
           scheduled_date?: string | null

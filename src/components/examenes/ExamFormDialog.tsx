@@ -71,6 +71,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
       restrictions: '',
       provider: '',
       doctorName: '',
+      orderType: '',
       observations: '',
     },
   });
@@ -96,6 +97,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
         restrictions: data.restrictions || null,
         provider: data.provider,
         doctor_name: data.doctorName,
+        order_type: data.orderType || null,
         observations: data.observations || null,
       });
       
@@ -327,7 +329,7 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
                         />
                       </FormControl>
                       <FormDescription>
-                        Solo aplica si el resultado es "Apto con Restricciones"
+                        Solo aplica si el resultado es "Apto con Recomendaciones"
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -354,6 +356,28 @@ export function ExamFormDialog({ open, onOpenChange, onSubmit }: ExamFormDialogP
               </TabsContent>
 
               <TabsContent value="proveedor" className="space-y-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="orderType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Orden</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar tipo de orden" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          <SelectItem value="Ocupasalud">Ocupasalud</SelectItem>
+                          <SelectItem value="Orden Propia">Orden Propia</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="provider"

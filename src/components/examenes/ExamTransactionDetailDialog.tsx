@@ -23,7 +23,7 @@ import { generateExamOrderPdf } from '@/lib/examPdfGenerator';
 
 const resultLabels: Record<string, string> = {
   apto: 'Apto',
-  apto_restricciones: 'Apto con Restricciones',
+  apto_restricciones: 'Apto con Recomendaciones',
   no_apto: 'No Apto',
   pendiente: 'Pendiente',
 };

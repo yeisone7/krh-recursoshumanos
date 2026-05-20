@@ -26,8 +26,8 @@ const examTypeLabels: Record<string, string> = {
 
 const examResultLabels: Record<string, { label: string; color: string }> = {
   apto: { label: 'Apto', color: 'bg-success-light text-success' },
-  apto_con_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
-  apto_restricciones: { label: 'Apto con Restricciones', color: 'bg-warning-light text-warning' },
+  apto_con_restricciones: { label: 'Apto con Recomendaciones', color: 'bg-warning-light text-warning' },
+  apto_restricciones: { label: 'Apto con Recomendaciones', color: 'bg-warning-light text-warning' },
   no_apto: { label: 'No Apto', color: 'bg-destructive/10 text-destructive' },
   pendiente: { label: 'Pendiente', color: 'bg-background text-muted-foreground' },
 };

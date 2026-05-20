@@ -110,7 +110,11 @@ export function SelectionTimeline({
     const stepType = step.step_type as SelectionStepType;
     if (stepsWithConcepto.includes(stepType)) {
       if (step.result === 'apto') return 'Apto';
+      if (step.result === 'apto_restricciones') return 'Apto con Recomendaciones';
       if (step.result === 'no_apto') return 'No Apto';
+      if (step.result === 'favorable') return 'Favorable';
+      if (step.result === 'aplazado') return 'Aplazado';
+      if (step.result === 'en_tratamiento') return 'En tratamiento';
     }
     return step.result;
   };
@@ -216,9 +220,15 @@ export function SelectionTimeline({
                       {step.result && (
                         <div className="text-sm">
                           <span className="text-muted-foreground">
-                            {stepsWithConcepto.includes(stepType) ? 'Concepto:' : 'Resultado:'}
+                            {stepsWithConcepto.includes(stepType) ? 'Aptitud:' : 'Resultado:'}
                           </span>{' '}
                           <span className="font-medium">{getResultLabel(step)}</span>
+                        </div>
+                      )}
+                      {stepType === 'examenes_medicos' && (step as any).order_type && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Tipo de Orden:</span>{' '}
+                          <span className="font-medium">{(step as any).order_type}</span>
                         </div>
                       )}
                       {step.notes && (

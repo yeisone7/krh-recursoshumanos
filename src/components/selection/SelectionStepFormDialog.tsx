@@ -65,6 +65,7 @@ const stepFormSchema = z.object({
   doctorName: z.string().optional(),
   medicalConcept: z.string().optional(),
   result: z.string().optional(),
+  orderType: z.string().optional(),
 });
 
 type StepFormData = z.infer<typeof stepFormSchema>;
@@ -120,6 +121,7 @@ export function SelectionStepFormDialog({
       doctorName: (step as any)?.doctor_name || '',
       medicalConcept: (step as any)?.medical_concept || '',
       result: step?.result || '',
+      orderType: (step as any)?.order_type || '',
     },
   });
 
@@ -152,6 +154,7 @@ export function SelectionStepFormDialog({
         doctorName: (step as any)?.doctor_name || '',
         medicalConcept: (step as any)?.medical_concept || '',
         result: step?.result || '',
+        orderType: (step as any)?.order_type || '',
       });
     }
   }, [open, step, defaultStepType, profesiograma]);
@@ -182,6 +185,7 @@ export function SelectionStepFormDialog({
         stepData.provider = data.provider || null;
         stepData.doctor_name = data.doctorName || null;
         stepData.medical_concept = data.medicalConcept || null;
+        stepData.order_type = data.orderType || null;
         stepData.exam_profesiograma_items = selectedExams.length > 0
           ? selectedExams.map(id => {
               const item = profesiograma?.items?.find(i => i.exam_catalog_id === id);
@@ -331,13 +335,13 @@ export function SelectionStepFormDialog({
                   Datos del Examen Médico de Ingreso
                 </div>
 
-                {/* Concepto médico (status) */}
+                {/* Aptitud (status) */}
                 <FormField
                   control={form.control}
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Concepto</FormLabel>
+                      <FormLabel>Aptitud</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -346,8 +350,8 @@ export function SelectionStepFormDialog({
                         </FormControl>
                         <SelectContent className="bg-background">
                           <SelectItem value="pending">Pendiente</SelectItem>
-                          <SelectItem value="passed">Apto</SelectItem>
-                          <SelectItem value="failed">No Apto</SelectItem>
+                          <SelectItem value="passed">Aprobado</SelectItem>
+                          <SelectItem value="failed">No Aprobado</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -370,8 +374,34 @@ export function SelectionStepFormDialog({
                         </FormControl>
                         <SelectContent className="bg-background">
                           <SelectItem value="apto">Apto</SelectItem>
-                          <SelectItem value="apto_restricciones">Apto con Restricciones</SelectItem>
+                          <SelectItem value="apto_restricciones">Apto con Recomendaciones</SelectItem>
                           <SelectItem value="no_apto">No Apto</SelectItem>
+                          <SelectItem value="favorable">Favorable</SelectItem>
+                          <SelectItem value="aplazado">Aplazado</SelectItem>
+                          <SelectItem value="en_tratamiento">En tratamiento</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Tipo de Orden */}
+                <FormField
+                  control={form.control}
+                  name="orderType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Orden</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || ''}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar tipo de orden" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-background">
+                          <SelectItem value="Ocupasalud">Ocupasalud</SelectItem>
+                          <SelectItem value="Orden Propia">Orden Propia</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

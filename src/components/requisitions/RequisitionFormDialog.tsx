@@ -240,13 +240,12 @@ export function RequisitionFormDialog({
           Formulario para la solicitud de nuevo personal en la organización.
         </DialogDescription>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4 pt-8 pb-6 sm:px-8 sm:pt-10">
+        <div className="relative overflow-hidden bg-muted/40 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 border-b border-border">
           {/* Decorative patterns */}
           
           
           
-          {/* Pattern overlay (dots) */}
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+          {/* Pattern overlay (dots) removed */}
 
           <div className="relative flex flex-col md:flex-row items-start gap-6">
             {/* Avatar/Initial */}
@@ -844,13 +843,13 @@ export function RequisitionFormDialog({
 
                 {/* Requester Tab */}
                 <TabsContent value="requester" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-background rounded-3xl p-8 border border-dashed border-muted-foreground/30 flex flex-col items-center text-center space-y-4">
-                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
-                      <UserCheck className="w-10 h-10" />
+                  <div className="bg-background rounded-xl p-4 border border-dashed border-muted-foreground/30 flex flex-col items-center text-center space-y-2">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      <UserCheck className="w-6 h-6" />
                     </div>
-                    <div className="max-w-md space-y-2">
-                      <h4 className="text-xl font-bold text-foreground">Validación del Solicitante</h4>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                    <div className="max-w-xs space-y-0.5">
+                      <h4 className="text-sm font-bold text-foreground">Validación del Solicitante</h4>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
                         Esta información identifica quién está realizando el requerimiento de personal ante el área de recursos humanos.
                       </p>
                     </div>

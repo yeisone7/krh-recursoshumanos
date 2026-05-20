@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
 import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
@@ -457,6 +457,23 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       daysInPeriod: eachDayOfInterval({ start: monthStart, end: sixMonthsEnd }),
     };
   }, [currentMonth, viewMode]);
+
+  // Pre-calculate and memoize all date properties for the period to avoid O(N*M) calculations in render loop
+  const daysData = useMemo(() => {
+    return daysInPeriod.map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      return {
+        day,
+        dateStr,
+        sunday: isSunday(day),
+        holiday: holidaysMap[dateStr] || null,
+        dayOfWeek: day.getDay(),
+        isToday: isToday(day),
+        dayLabel: format(day, 'd'),
+        dayName: format(day, 'EEE', { locale: es }),
+      };
+    });
+  }, [daysInPeriod, holidaysMap]);
   
   const { data: assignments = [], isLoading: loadingAssignments } = useShiftAssignments({
     startDate,
@@ -533,29 +550,32 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     enabled: employees.length > 0 && !!currentCompanyId,
   });
 
-  // Build absences map
+  // Build absences map using fast lexicographical string comparison
   const absencesMap = useMemo(() => {
     const map: Record<string, Record<string, EmployeeAbsence>> = {};
+    if (absences.length === 0 || daysData.length === 0) return map;
+
     absences.forEach((a: any) => {
-      if (!map[a.employee_id]) {
-        map[a.employee_id] = {};
+      const empId = a.employee_id;
+      if (!map[empId]) {
+        map[empId] = {};
       }
-      const start = parseISO(a.start_date);
-      const end = parseISO(a.end_date);
-      daysInPeriod.forEach(day => {
-        const dateStr = format(day, 'yyyy-MM-dd');
-        if (isWithinInterval(day, { start, end })) {
-          map[a.employee_id][dateStr] = {
+      const start = a.start_date;
+      const end = a.end_date;
+      
+      daysData.forEach(({ dateStr }) => {
+        if (dateStr >= start && dateStr <= end) {
+          map[empId][dateStr] = {
             type: a.type,
-            start_date: a.start_date,
-            end_date: a.end_date,
+            start_date: start,
+            end_date: end,
             description: a.description,
           };
         }
       });
     });
     return map;
-  }, [absences, daysInPeriod]);
+  }, [absences, daysData]);
 
   // Group employees by Center -> Area with filtering
   const groupedEmployees = useMemo((): GroupedEmployee[] => {
@@ -695,18 +715,18 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     if (!isSelecting || !selectionStart) return;
     if (employeeId !== selectionStart.employeeId) return;
 
-    const startIdx = daysInPeriod.findIndex(d => format(d, 'yyyy-MM-dd') === selectionStart.date);
-    const endIdx = daysInPeriod.findIndex(d => format(d, 'yyyy-MM-dd') === date);
+    const startIdx = daysData.findIndex(d => d.dateStr === selectionStart.date);
+    const endIdx = daysData.findIndex(d => d.dateStr === date);
     
     const minIdx = Math.min(startIdx, endIdx);
     const maxIdx = Math.max(startIdx, endIdx);
     
-    const selectedDates = daysInPeriod
+    const selectedDates = daysData
       .slice(minIdx, maxIdx + 1)
-      .map(d => format(d, 'yyyy-MM-dd'));
+      .map(d => d.dateStr);
 
     setSelectedCells([{ employeeId, dates: selectedDates }]);
-  }, [isSelecting, selectionStart, daysInPeriod]);
+  }, [isSelecting, selectionStart, daysData]);
 
   const handleCellMouseUp = useCallback(() => {
     setIsSelecting(false);
@@ -773,15 +793,26 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   const activeShifts = useMemo(() => shifts.filter(s => s.is_active), [shifts]);
   const isLoading = loadingEmployees || loadingAssignments;
 
-  // Expand all by default on load
-  useMemo(() => {
-    if (groupedEmployees.length > 0 && expandedCenters.size === 0) {
-      const allCenters = new Set(groupedEmployees.map(g => g.centerId));
-      setExpandedCenters(allCenters);
-      const allAreas = new Set(groupedEmployees.flatMap(g => g.areas.map(a => `${g.centerId}-${a.areaId}`)));
-      setExpandedAreas(allAreas);
+  const isInitializedRef = useRef(false);
+
+  // Expand groups on initial load (smart default expansion)
+  useEffect(() => {
+    if (groupedEmployees.length > 0 && !isInitializedRef.current) {
+      isInitializedRef.current = true;
+      if (totalEmployees > 20) {
+        // High volume: expand only the first center and its areas
+        const firstCenter = groupedEmployees[0];
+        setExpandedCenters(new Set([firstCenter.centerId]));
+        setExpandedAreas(new Set(firstCenter.areas.map(a => `${firstCenter.centerId}-${a.areaId}`)));
+      } else {
+        // Low volume: expand all by default
+        const allCenters = new Set(groupedEmployees.map(g => g.centerId));
+        setExpandedCenters(allCenters);
+        const allAreas = new Set(groupedEmployees.flatMap(g => g.areas.map(a => `${g.centerId}-${a.areaId}`)));
+        setExpandedAreas(allAreas);
+      }
     }
-  }, [groupedEmployees]);
+  }, [groupedEmployees, totalEmployees]);
 
   const periodLabel = useMemo(() => {
     if (viewMode === 'quincenal') {
@@ -932,12 +963,7 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
               <Users className="w-3.5 h-3.5 hidden sm:block" />
               Empleado
             </div>
-            {daysInPeriod.map((day) => {
-              const dateStr = format(day, 'yyyy-MM-dd');
-              const holiday = isHoliday(day);
-              const sunday = isSunday(day);
-              const today = isToday(day);
-
+            {daysData.map(({ day, dateStr, holiday, sunday, isToday: today, dayLabel, dayName }) => {
               return (
                 <div
                   key={dateStr}
@@ -949,9 +975,9 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                   )}
                   title={holiday || undefined}
                 >
-                  <div className="font-medium">{format(day, 'EEE', { locale: es })}</div>
+                  <div className="font-medium">{dayName}</div>
                   <div className={cn('text-muted-foreground', today && 'text-primary font-bold')}>
-                    {format(day, 'd')}
+                    {dayLabel}
                   </div>
                 </div>
               );
@@ -982,8 +1008,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                         {group.areas.reduce((acc, a) => acc + (a.employees?.length || 0), 0)}
                       </Badge>
                     </div>
-                    {daysInPeriod.map((day) => (
-                      <div key={format(day, 'yyyy-MM-dd')} className="w-9 sm:w-10 border-r shrink-0" />
+                    {daysData.map(({ dateStr }) => (
+                      <div key={dateStr} className="w-9 sm:w-10 border-r shrink-0" />
                     ))}
                   </div>
 
@@ -1006,8 +1032,8 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                               {area.employees?.length || 0}
                             </Badge>
                           </div>
-                          {daysInPeriod.map((day) => (
-                            <div key={format(day, 'yyyy-MM-dd')} className="w-9 sm:w-10 border-r shrink-0" />
+                          {daysData.map(({ dateStr }) => (
+                            <div key={dateStr} className="w-9 sm:w-10 border-r shrink-0" />
                           ))}
                         </div>
 
@@ -1027,17 +1053,14 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
                                   <RotateCcw className="w-3 h-3 text-muted-foreground shrink-0" />
                                 )}
                               </div>
-                              {daysInPeriod.map((day) => {
-                                const dateStr = format(day, 'yyyy-MM-dd');
+                              {daysData.map(({ day, dateStr, holiday, sunday, dayOfWeek }) => {
                                 const assignment = assignmentsMap[employee.id]?.[dateStr];
                                 const shift = assignment ? getShiftById(assignment.shift_id) : null;
-                                const holiday = isHoliday(day);
-                                const sunday = isSunday(day);
                                 const selected = isCellSelected(employee.id, dateStr);
                                 const absence = absencesMap[employee.id]?.[dateStr];
                                 
                                 // Admin mode: derive working day from work_schedule.days_of_week
-                                const adminIsWorkDay = adminSchedule?.days_of_week?.includes(day.getDay()) ?? false;
+                                const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
 
                                 // Conflict: work shift assigned on a day with an absence
                                 const hasConflict = shift && absence && !shift.is_rest_day;

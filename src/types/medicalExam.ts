@@ -49,7 +49,7 @@ export const examTypeLabels: Record<ExamType, string> = {
 
 export const examResultLabels: Record<ExamResult, string> = {
   apto: 'Apto',
-  apto_restricciones: 'Apto con Restricciones',
+  apto_restricciones: 'Apto con Recomendaciones',
   no_apto: 'No Apto',
   pendiente: 'Pendiente',
 };
@@ -115,6 +115,7 @@ export const medicalExamFormSchema = z.object({
   restrictions: z.string().optional(),
   provider: z.string().min(1, 'El proveedor/IPS es requerido'),
   doctorName: z.string().min(1, 'El nombre del médico es requerido'),
+  orderType: z.string().optional(),
   observations: z.string().optional(),
 });
 

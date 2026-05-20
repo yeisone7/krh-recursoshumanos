@@ -828,7 +828,7 @@ export function useMedicalExamsReport() {
         .order('exam_date', { ascending: false });
       if (error) throw error;
       const typeLabels: Record<string, string> = { ingreso: 'Ingreso', periodico: 'Periódico', retiro: 'Retiro', reintegro: 'Reintegro', post_incapacidad: 'Post Incapacidad' };
-      const resultLabels: Record<string, string> = { apto: 'Apto', apto_con_restricciones: 'Apto con Restricciones', no_apto: 'No Apto' };
+      const resultLabels: Record<string, string> = { apto: 'Apto', apto_con_restricciones: 'Apto con Recomendaciones', no_apto: 'No Apto' };
       const today = new Date();
       return (data || []).map(e => {
         const emp = empMap.get(e.employee_id);

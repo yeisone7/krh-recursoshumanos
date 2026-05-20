@@ -13,7 +13,7 @@
        Reference palette: Sky blue accents with clean white surfaces */
 
     /* Core backgrounds */
-    --background: 210 40% 98%; /* #f8fafc - Light gray for the app background */
+    --background: 210 20% 96.5%; /* #f3f6f9 - Clean light grayish-blue for app background matching SentiQ */
     --foreground: 222 47% 11%;
 
     /* Cards and surfaces */
@@ -216,12 +216,19 @@
   }
 
   /* Global Table Header Override - Ensure headers are white as requested */
-  thead tr {
-    @apply bg-[#f8fafc] border-b border-slate-100;
+  thead, thead tr {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #f1f5f9 !important;
   }
   
   th {
-    @apply bg-[#f8fafc] text-slate-500 font-bold text-[10px] uppercase tracking-wider;
+    background-color: #ffffff !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    padding: 16px 20px !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
   }
 
   /* Premium Grid Container Override */
@@ -234,7 +241,7 @@
   input:not([type="checkbox"]):not([type="radio"]), 
   textarea, 
   select {
-    @apply bg-white !important;
+    @apply bg-white dark:bg-background !important;
   }
 }
 
@@ -473,4 +480,621 @@ body.app-ready #app-launch-screen {
 }
 .scrollbar-header-auto::-webkit-scrollbar {
   display: none;
+}
+
+/* ==========================================================================
+   SENTIQ FLAT DESIGN DESIGN SYSTEM OVERRIDES
+   ========================================================================== */
+
+/* 1. Reset Filters, Blurs and Backdrop Blurs */
+.blur,
+.blur-sm,
+.blur-md,
+.blur-lg,
+.blur-xl,
+.blur-2xl,
+.blur-3xl,
+[class*="blur-"],
+.backdrop-blur,
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+[class*="backdrop-blur-"] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Hide all absolute glow decorative blobs (primary, secondary, accent or emerald) */
+div.absolute.rounded-full[class*="bg-primary/"][class*="blur-"],
+div.absolute.rounded-full[class*="bg-accent/"][class*="blur-"],
+div.absolute.rounded-full[class*="bg-emerald-500/"][class*="blur-"],
+div.absolute.rounded-full[class*="bg-indigo-"],
+div.absolute.rounded-full[class*="bg-violet-"],
+div.absolute[class*="blur-"][class*="opacity-"],
+div.absolute.rounded-full.blur-3xl,
+div.absolute.rounded-full.blur-2xl,
+div.absolute.rounded-full.blur-xl,
+div.absolute[class*="blur-[120px]"],
+[class*="blur-["] {
+  display: none !important;
+}
+
+/* Remove shiny inset glows, absolute background visual decorators */
+div.absolute.-inset-1[class*="bg-gradient-to-r"][class*="blur"] {
+  display: none !important;
+}
+
+/* 2. Flatten All Gradients to Solid, Elegant Backgrounds */
+.bg-gradient-to-br,
+.bg-gradient-to-r,
+.bg-gradient-to-tr,
+.bg-gradient-to-tl,
+.bg-gradient-to-l,
+.bg-gradient-to-u,
+.bg-gradient-to-d,
+[class*="bg-gradient-to-"] {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Dialog content, modal headers and callout banners using gradient classes are forced flat white with a clean border */
+div.relative.overflow-hidden[class*="bg-gradient-"],
+.dialog-header-gradient,
+[class*="bg-gradient-to-br"][class*="from-primary/"],
+[class*="bg-gradient-to-r"][class*="from-primary/"] {
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Emerald, Amber, and status block callouts that use gradients are forced flat light gray/status background */
+[class*="bg-gradient-to-br"][class*="from-emerald-500/"],
+[class*="bg-gradient-to-r"][class*="from-emerald-500/"] {
+  background-image: none !important;
+  background-color: #f0fdf4 !important;
+  border: 1px solid #dcfce7 !important;
+}
+[class*="bg-gradient-to-br"][class*="from-amber-500/"],
+[class*="bg-gradient-to-r"][class*="from-amber-500/"] {
+  background-image: none !important;
+  background-color: #fefbeb !important;
+  border: 1px solid #fef3c7 !important;
+}
+
+/* 3. Strip Shadows and Enforce Flat Clean Borders (Flat Design) */
+.shadow-2xl,
+.shadow-xl,
+.shadow-lg,
+.shadow-md,
+.shadow-sm,
+.shadow,
+.shadow-inner,
+[class*="shadow-"] {
+  box-shadow: none !important;
+}
+
+/* KPI cards, regular cards, modals, and container elements are strictly flat with a 1px border */
+.card,
+.card-elevated,
+.kpi-card,
+.grid-container,
+.card-table-wrapper,
+[role="dialog"] {
+  box-shadow: none !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 1rem !important; /* Elegant 16px border-radius standard */
+  background-color: #ffffff !important;
+}
+
+/* Standardized Flat Cards inside UI */
+.bg-card,
+div.bg-card {
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* 4. Swtiches, Checkboxes and Active Controls */
+/* Custom styling for switch components */
+button[role="switch"] {
+  border: 1px solid #cbd5e1 !important;
+  background-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+button[role="switch"][data-state="checked"] {
+  background-color: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+}
+
+button[role="switch"] span {
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Custom styling for checkbox components */
+button[role="checkbox"] {
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  border-radius: 0.375rem !important;
+  box-shadow: none !important;
+}
+
+button[role="checkbox"][data-state="checked"] {
+  background-color: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+
+/* Buttons visual overrides to be strictly flat */
+.btn-primary,
+button.bg-primary,
+[class*="bg-primary"] {
+  box-shadow: none !important;
+}
+
+/* Badges should be flat with clear outline or background */
+.badge,
+div[class*="Badge"],
+span[class*="Badge"],
+[class*="badge"] {
+  box-shadow: none !important;
+}
+
+
+/* ==========================================================================
+   5. UNIFORM DIALOG & SHEET FORM OVERRIDES (SentiQ Style)
+   ========================================================================== */
+
+/* Force clean, flat backdrop overlay (no blurs, proper transparency) */
+div[data-state] > [class*="DialogOverlay"],
+div[data-state] > [class*="SheetOverlay"],
+.bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Modals & Dialog Content Containers */
+[role="dialog"].fixed,
+[role="dialog"] [class*="DialogContent"],
+[role="dialog"].DialogContent,
+div[class*="DialogContent"] {
+  background-color: #ffffff !important;
+  border-radius: 1.25rem !important; /* Premium 20px corners */
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
+  padding: 0 !important; /* Standardize inner layout spacing */
+  overflow: hidden !important;
+}
+
+/* Modal Headers */
+[role="dialog"] [class*="DialogHeader"],
+[role="dialog"] header,
+[role="dialog"] .px-8.py-8.bg-gradient-to-br {
+  background-image: none !important;
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 1.5rem 2rem !important; /* Balanced standard padding */
+  margin: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  text-align: left !important;
+}
+
+/* Normalise header icons bubble inside dialog */
+[role="dialog"] [class*="DialogHeader"] .rounded-xl,
+[role="dialog"] [class*="DialogHeader"] [class*="bg-primary"] {
+  background-color: #f1f5f9 !important;
+  color: #0ea5e9 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+[role="dialog"] [class*="DialogHeader"] .rounded-xl svg,
+[role="dialog"] [class*="DialogHeader"] [class*="bg-primary"] svg {
+  color: #0ea5e9 !important;
+}
+
+/* Dialog Title and Description styling */
+[role="dialog"] [class*="DialogTitle"],
+[role="dialog"] .text-2xl.font-black {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.25rem !important; /* 20px text-xl equivalent */
+  color: #1e293b !important; /* slate-800 */
+  letter-spacing: -0.02em !important;
+  margin: 0 !important;
+  text-transform: none !important;
+}
+
+[role="dialog"] [class*="DialogDescription"],
+[role="dialog"] p.text-xs.font-bold {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 0.875rem !important; /* text-sm equivalent */
+  color: #64748b !important; /* slate-500 */
+  font-weight: 400 !important;
+  margin-top: 0.25rem !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+}
+
+/* Form Body Wrappers inside Modals */
+[role="dialog"] form,
+[role="dialog"] .dialog-body,
+[role="dialog"] div.p-8.space-y-8 {
+  padding: 2rem !important;
+  background-color: #ffffff !important;
+}
+
+/* Labels Inside Forms and Dialogs */
+[role="dialog"] label,
+[role="dialog"] [class*="FormLabel"],
+[role="dialog"] .text-\[10px\].font-black {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 0.75rem !important; /* 12px (text-xs) */
+  font-weight: 600 !important; /* semibold */
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #64748b !important; /* slate-500 */
+  margin-bottom: 0.5rem !important;
+  margin-left: 0 !important;
+  display: inline-block !important;
+}
+
+/* Form inputs & dropdown triggers unifications (44px, white background, rounded-xl) */
+[role="dialog"] input:not([type="checkbox"]):not([type="radio"]),
+[role="dialog"] select,
+[role="dialog"] [class*="SelectTrigger"],
+[role="dialog"] button[role="combobox"] {
+  height: 2.75rem !important; /* 44px (h-11) */
+  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  font-size: 0.875rem !important; /* 14px (text-sm) */
+  font-weight: 400 !important;
+  box-shadow: none !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* SearchableSelect combobox button specifics */
+[role="dialog"] button[role="combobox"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+/* Textareas in forms */
+[role="dialog"] textarea {
+  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  box-shadow: none !important;
+  padding: 0.75rem 1rem !important;
+  min-height: 80px !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Active Focus outlines for inputs, selects and textareas */
+[role="dialog"] input:focus,
+[role="dialog"] select:focus,
+[role="dialog"] [class*="SelectTrigger"]:focus,
+[role="dialog"] button[role="combobox"]:focus,
+[role="dialog"] textarea:focus {
+  border-color: #0ea5e9 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1) !important;
+}
+
+/* Unified Dialog Footer */
+[role="dialog"] [class*="DialogFooter"],
+[role="dialog"] form > div.flex.justify-end,
+[role="dialog"] div.pt-4.border-t.border-border\/50 {
+  border-top: 1px solid #f1f5f9 !important;
+  padding: 1.25rem 2rem !important;
+  margin-top: 1.5rem !important;
+  margin-left: -2rem !important; /* Negative margin to span perfectly edge to edge */
+  margin-right: -2rem !important;
+  margin-bottom: -2rem !important;
+  background-color: #f8fafc !important; /* Flat light gray background */
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  border-bottom-left-radius: 1.25rem !important;
+  border-bottom-right-radius: 1.25rem !important;
+}
+
+/* Button overrides inside dialog footer */
+[role="dialog"] [class*="DialogFooter"] button,
+[role="dialog"] form > div.flex.justify-end button,
+[role="dialog"] div.pt-4.border-t button {
+  height: 2.75rem !important; /* 44px (h-11) */
+  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  padding: 0 1.5rem !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease-in-out !important;
+}
+
+/* Primary/Submit buttons */
+[role="dialog"] [class*="DialogFooter"] button[type="submit"],
+[role="dialog"] [class*="DialogFooter"] button.bg-primary,
+[role="dialog"] form > div.flex.justify-end button[type="submit"],
+[role="dialog"] div.pt-4.border-t button[type="submit"] {
+  background-color: #0ea5e9 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+[role="dialog"] [class*="DialogFooter"] button[type="submit"]:hover,
+[role="dialog"] [class*="DialogFooter"] button.bg-primary:hover,
+[role="dialog"] form > div.flex.justify-end button[type="submit"]:hover,
+[role="dialog"] div.pt-4.border-t button[type="submit"]:hover {
+  background-color: #0284c7 !important;
+}
+
+/* Cancel/Secondary buttons */
+[role="dialog"] [class*="DialogFooter"] button:not([type="submit"]):not(.bg-primary),
+[role="dialog"] form > div.flex.justify-end button:not([type="submit"]),
+[role="dialog"] div.pt-4.border-t button:not([type="submit"]) {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+[role="dialog"] [class*="DialogFooter"] button:not([type="submit"]):not(.bg-primary):hover,
+[role="dialog"] form > div.flex.justify-end button:not([type="submit"]):hover,
+[role="dialog"] div.pt-4.border-t button:not([type="submit"]):hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* Popover list options and menus dropdowns */
+[data-radix-popper-content-wrapper] [role="listbox"],
+[data-radix-popper-content-wrapper] > div,
+.PopoverContent,
+[class*="PopoverContent"],
+[class*="SelectContent"] {
+  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border: 1px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Command lists inside popovers */
+[class*="PopoverContent"] input,
+[class*="SelectContent"] input {
+  height: 2.5rem !important;
+  border-radius: 0.5rem !important;
+  border: 1px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+}
+
+/* Sidebar and Navigation Overrides */
+aside.bg-sidebar {
+  border-right: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   SIDEBAR & NAVIGATION STYLE ALIGNMENT (SentiQ Style)
+   ========================================================================== */
+
+/* 1. Parent Navigation Items and Expandable Menu Buttons */
+aside.bg-sidebar nav a > div.gap-3,
+aside.bg-sidebar nav div.cursor-pointer.gap-3 {
+  border-radius: 0.75rem !important; /* Premium 12px rounded corners */
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+  padding: 10px 14px !important; /* Generous breathing room */
+  transition: all 0.2s ease-in-out !important;
+  font-weight: 500 !important; /* Modern medium text like mockup */
+}
+
+/* Ensure nice stroke-width and transition for icons */
+aside.bg-sidebar nav a > div.gap-3 svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3 svg {
+  stroke-width: 2px !important;
+  transition: color 0.2s ease-in-out !important;
+}
+
+/* Inactive Parent Items Default State */
+aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent),
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent) {
+  color: #475569 !important; /* Steel/Slate dark gray */
+  background-color: transparent !important;
+}
+
+aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent) svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent) svg {
+  color: #64748b !important; /* Slate icon color */
+}
+
+/* Hover State for Inactive Parent Items */
+aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover {
+  background-color: #f1f5f9 !important; /* Flat soft light gray hover background */
+  color: #0f172a !important; /* Darker slate for premium hover contrast */
+}
+
+aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover svg {
+  color: #334155 !important; /* Darker slate icon on hover */
+}
+
+/* Active Parent Items (bg-sidebar-accent) */
+aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent,
+aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent {
+  background-color: #e0f2fe !important; /* Soft sky-blue active background */
+  color: #0ea5e9 !important; /* Crisp sky-blue active text */
+  font-weight: 600 !important; /* Slightly more defined active state */
+}
+
+aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent svg {
+  color: #0ea5e9 !important;
+}
+
+/* 2. Sub-menu Navigation Links (gap-2) */
+aside.bg-sidebar nav a > div.gap-2 {
+  border-radius: 0.5rem !important; /* 8px rounded corners for nested items */
+  padding: 8px 12px !important; /* More compact nested dimensions */
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Inactive Sub-menu Items Default State */
+aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) {
+  color: #475569 !important;
+  background-color: transparent !important;
+}
+
+aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) svg {
+  color: #64748b !important;
+}
+
+/* Hover State for Inactive Sub-menu Items */
+aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover svg {
+  color: #334155 !important;
+}
+
+/* Active Sub-menu Items */
+aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent {
+  background-color: #e0f2fe !important;
+  color: #0ea5e9 !important;
+  font-weight: 600 !important;
+}
+
+aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent svg {
+  color: #0ea5e9 !important;
+}
+
+/* 3. Section Labels (OPINÓMETRO, SISTEMA, etc.) */
+aside.bg-sidebar nav p,
+aside.bg-sidebar nav .text-\[10px\] {
+  color: #94a3b8 !important; /* Sleek light slate for headers */
+  font-weight: 700 !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
+  padding-left: 14px !important;
+  padding-top: 18px !important;
+  padding-bottom: 6px !important;
+  opacity: 0.85 !important;
+}
+
+/* 5. Custom Table & Grid Enhancements */
+table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  background-color: #ffffff !important;
+}
+
+/* Style all table containers to have a consistent rounded-corners flat design */
+.rounded-md:has(table),
+.rounded-lg:has(table),
+.rounded-xl:has(table),
+.rounded-2xl:has(table),
+.border:has(table),
+div[class*="border"]:has(table),
+.rounded-md:has([role="grid"]),
+.rounded-lg:has([role="grid"]),
+.border:has([role="grid"]),
+div[class*="border"]:has([role="grid"]) {
+  border-radius: 0.75rem !important; /* Premium 12px rounded corners */
+  border: 1px solid #e2e8f0 !important; /* Sleek flat border */
+  background-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Intelligent overflow to prevent square corners while preserving scrollability */
+/* If a table container does not have explicit scroll classes, default to hidden to ensure perfect corner clipping */
+div:has(table):not([class*="overflow-"]):not([class*="max-h-"]),
+div[class*="border"]:has(table):not([class*="overflow-"]):not([class*="max-h-"]) {
+  overflow: hidden !important;
+}
+
+/* If a table container has scroll/height classes, ensure it still clips but allows scrolling */
+div[class*="overflow-"]:has(table),
+div[class*="max-h-"]:has(table) {
+  overflow: auto !important; /* Keep scroll behavior */
+  border-radius: 0.75rem !important;
+}
+
+thead, thead tr {
+  background-color: #ffffff !important;
+}
+
+th, thead th {
+  background-color: #ffffff !important;
+  color: #475569 !important; /* Slate gray for header text */
+  font-weight: 600 !important; /* Semibold font weight like mockup */
+  text-transform: none !important; /* Normal capitalization */
+  font-size: 14px !important; /* Standard font size */
+  letter-spacing: normal !important;
+  padding: 16px 20px !important; /* Spacious padding */
+  border-bottom: 1px solid #f1f5f9 !important;
+  text-align: left !important;
+}
+
+/* Round the top corners of the very first header cells in the separate border model */
+thead tr:first-child th:first-child {
+  border-top-left-radius: 0.75rem !important;
+}
+thead tr:first-child th:last-child {
+  border-top-right-radius: 0.75rem !important;
+}
+
+td, tbody td {
+  border-bottom: 1px solid #f1f5f9 !important; /* Fine row separators */
+  background-color: #ffffff !important; /* All rows are white */
+  padding: 16px 20px !important; /* Standard padding matching header */
+  color: #334155 !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+}
+
+/* Remove bottom borders of the last row's cells to follow the rounded bottom curve smoothly */
+tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Round the bottom corners of the very last row's cells in the separate border model */
+tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 0.75rem !important;
+}
+tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 0.75rem !important;
+}
+
+/* Ensure no alternating row backgrounds to maintain clean mockup aesthetic */
+tbody tr, tbody tr td, tbody tr:nth-child(even) td {
+  background-color: #ffffff !important;
+}
+
+/* Subtle, flat hover effect on table rows */
+tbody tr:hover td {
+  background-color: #f8fafc !important;
 }

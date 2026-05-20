@@ -506,14 +506,25 @@ export function useConvertToEmployee() {
           .limit(1)
           .maybeSingle();
 
+        const resultMapping: Record<string, "apto" | "apto_restricciones" | "no_apto" | "pendiente"> = {
+          apto: 'apto',
+          apto_restricciones: 'apto_restricciones',
+          no_apto: 'no_apto',
+          favorable: 'apto',
+          aplazado: 'pendiente',
+          en_tratamiento: 'pendiente',
+        };
+        const mappedResult = (medicalStep?.result && resultMapping[medicalStep.result]) || 'pendiente';
+
         const examData: any = {
           employee_id: employee.id,
           exam_type: 'ingreso',
           exam_date: medicalStep?.completed_date?.split('T')[0] || hireDate,
-          result: medicalStep?.result || 'pendiente',
+          result: mappedResult,
           concept: (medicalStep as any)?.medical_concept || medicalStep?.notes || 'Examen de ingreso',
           provider: (medicalStep as any)?.provider || 'Por definir',
           doctor_name: (medicalStep as any)?.doctor_name || 'Por definir',
+          order_type: (medicalStep as any)?.order_type || null,
           created_by: user?.id,
         };
 

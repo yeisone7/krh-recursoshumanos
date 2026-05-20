@@ -446,7 +446,7 @@ export function useApprovedRequisitions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('personnel_requisitions')
-        .select('id, cargo_solicitado, cantidad_vacantes_requeridas, operation_centers(name)')
+        .select('id, cargo_solicitado, cantidad_vacantes_requeridas, rrhh_asignacion_salarial, rrhh_incluye_auxilio_transporte, operation_centers(name)')
         .eq('company_id', currentCompanyId!)
         .in('estado_requisicion', ['aprobada', 'en_seleccion'])
         .order('cargo_solicitado');
