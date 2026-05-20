@@ -6874,6 +6874,7 @@ export type Database = {
           expires_at: string
           id: string
           is_used: boolean
+          name: string | null
           target_type: string
           token: string
           updated_at: string
@@ -6888,6 +6889,7 @@ export type Database = {
           expires_at: string
           id?: string
           is_used?: boolean
+          name?: string | null
           target_type?: string
           token?: string
           updated_at?: string
@@ -6902,6 +6904,7 @@ export type Database = {
           expires_at?: string
           id?: string
           is_used?: boolean
+          name?: string | null
           target_type?: string
           token?: string
           updated_at?: string
