@@ -62,6 +62,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -467,22 +468,21 @@ export function RequisitionFormDialog({
                             <Briefcase className="w-4 h-4 text-primary" />
                             Cargo Solicitado <span className="text-orange-500">*</span>
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-11">
-                                <SelectValue placeholder="Seleccionar cargo" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="bg-background">
-                              {positions
+                          <FormControl>
+                            <SearchableSelect
+                              options={positions
                                 .filter((p) => p.is_active !== false)
-                                .map((position) => (
-                                  <SelectItem key={position.id} value={position.name}>
-                                    {position.name}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+                                .map((position) => ({
+                                  value: position.name,
+                                  label: position.name,
+                                }))}
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              placeholder="Seleccionar cargo..."
+                              searchPlaceholder="Buscar cargo..."
+                              triggerClassName="h-11"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -589,22 +589,21 @@ export function RequisitionFormDialog({
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Cargo a Reemplazar</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value || ''}>
-                              <FormControl>
-                                <SelectTrigger className="h-11 bg-background">
-                                  <SelectValue placeholder="Si aplica..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="bg-background">
-                                {positions
+                            <FormControl>
+                              <SearchableSelect
+                                options={positions
                                   .filter((p) => p.is_active !== false)
-                                  .map((position) => (
-                                    <SelectItem key={position.id} value={position.name}>
-                                      {position.name}
-                                    </SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
+                                  .map((position) => ({
+                                    value: position.name,
+                                    label: position.name,
+                                  }))}
+                                value={field.value || ''}
+                                onValueChange={field.onChange}
+                                placeholder="Si aplica..."
+                                searchPlaceholder="Buscar cargo..."
+                                triggerClassName="h-11 bg-background"
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
