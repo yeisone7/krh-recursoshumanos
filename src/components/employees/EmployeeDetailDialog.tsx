@@ -57,6 +57,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
 import { useContracts } from '@/hooks/useContracts';
@@ -154,7 +155,7 @@ function SectionCard({ title, icon: Icon, children, action }: { title: string; i
 }
 
 function computeSeniority(hireDate: string): string {
-  const hire = new Date(hireDate + 'T12:00:00');
+  const hire = parseDateOnlyOr(hireDate, new Date());
   const now = new Date();
   const years = differenceInYears(now, hire);
   const months = differenceInMonths(now, hire) % 12;
@@ -169,7 +170,12 @@ function computeSeniority(hireDate: string): string {
 }
 
 function computeAge(birthDate: string): string {
-  return `${differenceInYears(new Date(), new Date(birthDate + 'T12:00:00'))} años`;
+  return `${differenceInYears(new Date(), parseDateOnlyOr(birthDate, new Date()))} años`;
+}
+
+function formatDateOnly(value: string | null | undefined, dateFormat: string): string | null {
+  const date = parseDateOnly(value);
+  return date ? format(date, dateFormat, { locale: es }) : null;
 }
 
 // ── Expiring Items Alert ──
@@ -591,7 +597,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     {employee.work_info?.hire_date && (
                       <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        Desde {format(new Date(employee.work_info.hire_date), "MMM yyyy", { locale: es })}
+                        Desde {formatDateOnly(employee.work_info.hire_date, "MMM yyyy")}
                       </span>
                     )}
                   </div>
@@ -691,7 +697,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         <InfoItem label="Número" value={employee.document_number} />
                         <InfoItem label="Expedido en" value={employee.document_issue_city} />
                         {employee.document_issue_date && (
-                          <InfoItem label="Fecha de Expedición" value={format(new Date(employee.document_issue_date + 'T12:00:00'), 'PPP', { locale: es })} />
+                          <InfoItem label="Fecha de Expedición" value={formatDateOnly(employee.document_issue_date, 'PPP')} />
                         )}
                       </div>
                     </SectionCard>
@@ -699,7 +705,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     <SectionCard title="Información Personal" icon={User}>
                       <div className="divide-y divide-border">
                         {employee.birth_date && (
-                          <InfoItem label="Fecha de Nacimiento" value={`${format(new Date(employee.birth_date + 'T12:00:00'), 'PPP', { locale: es })} (${computeAge(employee.birth_date)})`} />
+                          <InfoItem label="Fecha de Nacimiento" value={`${formatDateOnly(employee.birth_date, 'PPP')} (${computeAge(employee.birth_date)})`} />
                         )}
                         <InfoItem label="Lugar de Nacimiento" value={
                           [employee.birth_city, employee.birth_department, employee.birth_country !== 'Colombia' ? employee.birth_country : null].filter(Boolean).join(', ') || null
@@ -806,7 +812,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                             <InfoItem label="Cargo" value={employee.work_info.position_name} />
                             <InfoItem label="Área" value={employee.areas?.name} />
                             <InfoItem label="Tipo de Vinculación" value={linkTypeLabels[employee.work_info.link_type]} />
-                            <InfoItem label="Fecha de Ingreso" value={format(new Date(employee.work_info.hire_date + 'T12:00:00'), 'PPP', { locale: es })} />
+                            <InfoItem label="Fecha de Ingreso" value={formatDateOnly(employee.work_info.hire_date, 'PPP')} />
                             <InfoItem label="Antigüedad" value={computeSeniority(employee.work_info.hire_date)} />
                             <InfoItem label="Ciudad de Trabajo" value={employee.work_info.work_city} />
                             <InfoItem label="Centro de Costos" value={employee.work_info.cost_center} />
@@ -970,7 +976,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                       )}
 
                       <SectionCard title="Vigencia" icon={Calendar}>
-                        <InfoItem label="Vigente desde" value={format(new Date(employee.time_config.start_date + 'T12:00:00'), 'PPP', { locale: es })} />
+                        <InfoItem label="Vigente desde" value={formatDateOnly(employee.time_config.start_date, 'PPP')} />
                         {employee.time_config.notes && (
                           <InfoItem label="Notas" value={employee.time_config.notes} />
                         )}

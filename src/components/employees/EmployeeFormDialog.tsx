@@ -49,6 +49,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 
 // Field to tab mapping for navigation on errors
 const fieldToTabMap: Record<string, string> = {
@@ -247,7 +248,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         documentType: currentEmployeeData.document_type as any,
         documentNumber: currentEmployeeData.document_number,
         documentIssueCity: currentEmployeeData.document_issue_city || undefined,
-        documentIssueDate: currentEmployeeData.document_issue_date ? new Date(currentEmployeeData.document_issue_date) : undefined,
+        documentIssueDate: parseDateOnly(currentEmployeeData.document_issue_date),
         firstName: currentEmployeeData.first_name,
         middleName: currentEmployeeData.middle_name || undefined,
         lastName: currentEmployeeData.last_name,
@@ -255,7 +256,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         birthCountry: currentEmployeeData.birth_country || 'Colombia',
         birthDepartment: currentEmployeeData.birth_department || undefined,
         birthCity: currentEmployeeData.birth_city || undefined,
-        birthDate: currentEmployeeData.birth_date ? new Date(currentEmployeeData.birth_date) : undefined,
+        birthDate: parseDateOnly(currentEmployeeData.birth_date),
         gender: currentEmployeeData.gender as any,
         genderIdentity: (currentEmployeeData as any).gender_identity || undefined,
         genderIdentityOther: (currentEmployeeData as any).gender_identity_other || undefined,
@@ -294,7 +295,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         positionId: currentEmployeeData.work_info?.position_id || undefined,
         positionName: currentEmployeeData.work_info?.position_name || '',
         workCity: currentEmployeeData.work_info?.work_city || undefined,
-        hireDate: currentEmployeeData.work_info?.hire_date ? new Date(currentEmployeeData.work_info.hire_date) : new Date(),
+        hireDate: parseDateOnlyOr(currentEmployeeData.work_info?.hire_date, new Date()),
         linkType: currentEmployeeData.work_info?.link_type as any || 'indefinido',
         observations: currentEmployeeData.work_info?.observations || undefined,
         
@@ -321,10 +322,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
         // K. Time Mode
         timeMode: currentEmployeeData.time_config?.time_mode || 'administrative',
-        timeModeStartDate: currentEmployeeData.time_config?.start_date ? new Date(currentEmployeeData.time_config.start_date) : new Date(),
+        timeModeStartDate: parseDateOnlyOr(currentEmployeeData.time_config?.start_date, new Date()),
         workScheduleId: currentEmployeeData.time_config?.work_schedule_id || undefined,
         shiftCycleId: currentEmployeeData.time_config?.shift_cycle_id || undefined,
-        cycleStartDate: currentEmployeeData.time_config?.cycle_start_date ? new Date(currentEmployeeData.time_config.cycle_start_date) : undefined,
+        cycleStartDate: parseDateOnly(currentEmployeeData.time_config?.cycle_start_date),
         timeModeNotes: currentEmployeeData.time_config?.notes || undefined,
 
         // L. Person Specifications
@@ -533,7 +534,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   {/* Document Section */}
                   <div className="space-y-4">
                     <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Documento de Identidad</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <FormField
                           control={form.control}
                           name="identificationTypeId"
@@ -560,7 +561,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         control={form.control}
                         name="documentNumber"
                         render={({ field }) => (
-                          <FormItem className="md:col-span-2">
+                          <FormItem>
                             <FormLabel>Número *</FormLabel>
                             <FormControl>
                               <Input placeholder="1234567890" {...field} />
@@ -582,6 +583,39 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                 placeholder="Ciudad..."
                               />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="documentIssueDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Fecha de Expedición</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                                  >
+                                    {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                <DatePickerWithDropdowns
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) => date > new Date() || date < new Date('1940-01-01')}
+                                  fromYear={1940}
+                                  toYear={new Date().getFullYear()}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
                             <FormMessage />
                           </FormItem>
                         )}

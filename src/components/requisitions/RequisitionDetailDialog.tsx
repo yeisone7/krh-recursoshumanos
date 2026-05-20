@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -110,7 +111,7 @@ export function RequisitionDetailDialog({
         return;
       }
       if (currentLider !== (requisition.lider_proceso || '')) {
-        await updateRequisition.mutateAsync({ id: requisition.id, lider_proceso: currentLider } as any);
+        await updateRequisition.mutateAsync({ id: requisition.id, lider_proceso: currentLider });
       }
       await submitRequisition.mutateAsync(requisition.id);
     }
@@ -118,7 +119,7 @@ export function RequisitionDetailDialog({
 
   const handleAutorizaChange = async (value: string) => {
     if (requisition) {
-      await updateRequisition.mutateAsync({ id: requisition.id, autoriza: value } as any);
+      await updateRequisition.mutateAsync({ id: requisition.id, autoriza: value });
     }
   };
 
@@ -194,8 +195,8 @@ export function RequisitionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl overflow-y-auto p-4 sm:p-6 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
-        <DialogHeader>
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-xl sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[calc(100vw-2rem)] sm:max-w-4xl sm:rounded-lg sm:border [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
+        <DialogHeader className="shrink-0 border-b border-border bg-background px-4 py-4 sm:px-6">
           <div className="flex flex-col items-start gap-2 pr-8 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
             <DialogTitle className="w-full text-center text-lg leading-tight sm:w-auto sm:text-left sm:text-xl">
               Detalle de Requisición
@@ -212,18 +213,34 @@ export function RequisitionDetailDialog({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="min-h-0 flex-1 space-y-4 overflow-hidden p-4 sm:p-6">
             <Skeleton className="h-24 w-full" />
             <Skeleton className="h-48 w-full" />
           </div>
         ) : requisition ? (
-          <Tabs defaultValue="timeline" className="w-full">
-            <TabsList className="grid h-10 w-full grid-cols-2 overflow-hidden">
-              <TabsTrigger value="timeline" className="h-8 min-w-0">Timeline</TabsTrigger>
-              <TabsTrigger value="details" className="h-8 min-w-0">Detalles</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="timeline" className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 border-b border-border/70 bg-muted/30 px-3 py-2 sm:px-6 sm:py-3">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl border border-border/60 bg-background p-1 shadow-sm">
+                <TabsTrigger
+                  value="timeline"
+                  className="h-10 min-w-0 gap-2 rounded-lg px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground shadow-none transition-colors data-[state=active]:bg-[#19a9e5] data-[state=active]:text-white data-[state=active]:shadow-none sm:text-[11px] sm:tracking-[0.18em]"
+                >
+                  <Calendar className="h-4 w-4 shrink-0" />
+                  <span>Timeline</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="details"
+                  className="h-10 min-w-0 gap-2 rounded-lg px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground shadow-none transition-colors data-[state=active]:bg-[#19a9e5] data-[state=active]:text-white data-[state=active]:shadow-none sm:text-[11px] sm:tracking-[0.18em]"
+                >
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span>Detalles</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="timeline" className="mt-4 space-y-4">
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="px-4 py-4 sm:px-6 sm:py-5">
+            <TabsContent value="timeline" className="mt-0 space-y-4">
               {/* Autoriza field */}
               <Card className="border-primary/20">
                 <CardContent className="p-4">
@@ -267,7 +284,7 @@ export function RequisitionDetailDialog({
                           onValueChange={(value) => {
                             setLiderProceso(value);
                             if (value !== (requisition.lider_proceso || '')) {
-                              updateRequisition.mutate({ id: requisition.id, lider_proceso: value } as any);
+                              updateRequisition.mutate({ id: requisition.id, lider_proceso: value });
                             }
                           }}
                           disabled={loadingPsychology}
@@ -435,9 +452,11 @@ export function RequisitionDetailDialog({
                 </CardContent>
               </Card>
             </TabsContent>
+              </div>
+            </ScrollArea>
           </Tabs>
         ) : (
-          <p className="text-center text-muted-foreground py-8">
+          <p className="flex min-h-0 flex-1 items-center justify-center px-4 py-8 text-center text-muted-foreground">
             No se encontró la requisición.
           </p>
         )}
@@ -446,7 +465,8 @@ export function RequisitionDetailDialog({
 
         {/* Actions */}
         {requisition && (
-          <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="shrink-0 border-t border-border bg-background px-4 py-3 sm:px-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button 
               variant="outline" 
               onClick={handleExportPDF}
@@ -492,6 +512,7 @@ export function RequisitionDetailDialog({
                 </Button>
               )}
             </div>
+          </div>
           </div>
         )}
 
