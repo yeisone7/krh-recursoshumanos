@@ -35,6 +35,7 @@ import { cn } from '@/lib/utils';
 
 import { useRequisitionWithVacancies, useSubmitRequisition, useUpdateRequisition } from '@/hooks/useRequisitions';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePsychologyUsers } from '@/hooks/usePsychologyUsers';
 import { RequisitionTimeline } from './RequisitionTimeline';
 import { RequisitionApprovalDialog } from './RequisitionApprovalDialog';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
@@ -71,6 +72,7 @@ export function RequisitionDetailDialog({
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const updateRequisition = useUpdateRequisition();
   const submitRequisition = useSubmitRequisition();
+  const { data: psychologyUsers = [], isLoading: loadingPsychology } = usePsychologyUsers();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
@@ -253,18 +255,29 @@ export function RequisitionDetailDialog({
                   <CardContent className="p-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <UserCheck className="h-5 w-5 text-primary flex-shrink-0" />
-                      <div className="flex-1 space-y-1">
-                        <Label className="text-sm font-medium">Líder del Proceso <span className="text-destructive">*</span></Label>
-                        <Input
+                      <div className="flex-1">
+                        <p className="text-sm font-medium mb-1">Líder del Proceso <span className="text-destructive">*</span></p>
+                        <Select
                           value={liderProceso}
-                          onChange={(e) => setLiderProceso(e.target.value)}
-                          onBlur={() => {
-                            if (liderProceso !== (requisition.lider_proceso || '')) {
-                              updateRequisition.mutate({ id: requisition.id, lider_proceso: liderProceso } as any);
+                          onValueChange={(value) => {
+                            setLiderProceso(value);
+                            if (value !== (requisition.lider_proceso || '')) {
+                              updateRequisition.mutate({ id: requisition.id, lider_proceso: value } as any);
                             }
                           }}
-                          placeholder="Nombre del líder del proceso"
-                        />
+                          disabled={loadingPsychology}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={loadingPsychology ? "Cargando líderes..." : "Seleccionar líder del proceso..."} />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background">
+                            {psychologyUsers.map((user) => (
+                              <SelectItem key={user.id} value={user.full_name}>
+                                {user.full_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CardContent>
