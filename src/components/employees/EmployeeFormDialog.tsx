@@ -219,6 +219,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       payrollType: 'quincenal',
       isOfficeSchedule: true,
       familyMembers: [],
+      bankName: '',
+      accountType: undefined,
+      accountNumber: '',
       accountRegistered: false,
       timeMode: 'administrative',
       timeModeStartDate: new Date(),
@@ -305,9 +308,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         ips: currentEmployeeData.social_security?.ips || undefined,
         
         // F. Bank Info
-        bankName: currentEmployeeData.bank_info?.bank_name || undefined,
-        accountType: currentEmployeeData.bank_info?.account_type as any,
-        accountNumber: currentEmployeeData.bank_info?.account_number || undefined,
+        bankName: currentEmployeeData.bank_info?.bank_name || '',
+        accountType: currentEmployeeData.bank_info?.account_type as any || undefined,
+        accountNumber: currentEmployeeData.bank_info?.account_number || '',
         accountRegistered: currentEmployeeData.bank_info?.account_registered || false,
         
         // J. Schedule
@@ -339,6 +342,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         payrollType: 'quincenal',
         isOfficeSchedule: true,
         familyMembers: [],
+        bankName: '',
+        accountType: undefined,
+        accountNumber: '',
         accountRegistered: false,
         timeMode: 'administrative',
         timeModeStartDate: new Date(),
