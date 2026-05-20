@@ -403,7 +403,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const deleteVaccination = useDeleteVaccination();
   const deleteDocument = useDeleteDocument();
   const { data: transfers } = useEmployeeTransfers(employeeId || undefined);
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, canCreate, canUpdate, canDelete, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const canManageEmployeeDocs = isAdmin || isRRHH || isSuperAdmin || canCreate('empleados') || canUpdate('empleados');
+  const canDeleteEmployeeDocs = isAdmin || isRRHH || isSuperAdmin || canDelete('empleados');
   const transferAsSource = transfers?.find(t => (t as any).source_employee_id === employeeId && (t as any).status === 'completed');
   const transferAsTarget = transfers?.find(t => (t as any).target_employee_id === employeeId && (t as any).status === 'completed');
 
@@ -1073,9 +1075,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                     title="Documentos del Empleado" 
                     icon={FileText}
                     action={
-                      <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsDocFormOpen(true)}>
-                        <Plus className="w-3.5 h-3.5 mr-1" /> Cargar
-                      </Button>
+                      canManageEmployeeDocs ? (
+                        <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsDocFormOpen(true)}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Cargar
+                        </Button>
+                      ) : undefined
                     }
                   >
                     <div className="space-y-1">
@@ -1119,9 +1123,11 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDocument(doc)} title="Abrir documento">
                                             <ExternalLink className="h-4 w-4" />
                                           </Button>
-                                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteDocument(doc.id)} title="Eliminar documento">
-                                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                                          </Button>
+                                          {canDeleteEmployeeDocs && (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteDocument(doc.id)} title="Eliminar documento">
+                                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                            </Button>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
