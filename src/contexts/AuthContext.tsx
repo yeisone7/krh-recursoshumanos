@@ -268,10 +268,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // New permission helpers
   const hasPermission = useCallback((moduleCode: string, action: string = 'view'): boolean => {
-    // Legacy admin bypass
-    if (isAdmin) return true;
+    // Legacy admin and super-admin bypass
+    if (isAdmin || isSuperAdmin) return true;
     return permissions.some(p => p.module_code === moduleCode && p.action === action);
-  }, [permissions, isAdmin]);
+  }, [permissions, isAdmin, isSuperAdmin]);
 
   const canView = useCallback((m: string) => hasPermission(m, 'view'), [hasPermission]);
   const canCreate = useCallback((m: string) => hasPermission(m, 'create'), [hasPermission]);

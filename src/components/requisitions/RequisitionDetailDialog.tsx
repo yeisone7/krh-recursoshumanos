@@ -68,7 +68,7 @@ export function RequisitionDetailDialog({
   onCreateVacancy,
 }: RequisitionDetailDialogProps) {
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
-  const { companies, currentCompanyId } = useAuth();
+  const { companies, currentCompanyId, user, hasPermission, isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const updateRequisition = useUpdateRequisition();
   const submitRequisition = useSubmitRequisition();
@@ -146,11 +146,16 @@ export function RequisitionDetailDialog({
 
   const status = requisition?.estado_requisicion as RequisitionStatus;
   const statusConfig = status ? requisitionStatusConfig[status] : null;
-  const canEdit = status === 'borrador';
-  const canSubmit = status === 'borrador';
+  const canManageDraft = !!requisition && (
+    isAdmin ||
+    isRRHH ||
+    isSuperAdmin ||
+    canUpdate('requisiciones') ||
+    requisition.created_by === user?.id
+  );
+  const canEdit = status === 'borrador' && canManageDraft;
+  const canSubmit = status === 'borrador' && canManageDraft;
   const canCreateVacancy = status === 'aprobada' || status === 'en_seleccion';
-
-  const { hasPermission } = useAuth();
   
   const getApprovalAction = () => {
     if (!requisition) return null;
