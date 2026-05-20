@@ -132,7 +132,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
 };
 
-const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber', 'select-education-id', 'select-profession-id'];
+const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber', 'educationLevelId', 'professionId'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber'];
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
@@ -346,8 +346,8 @@ export default function RegistroPublico() {
             p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
             p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
             p_identification_type_id: formData.identificationTypeId || null,
-            p_education_level_id: formData['select-education-id'] || null,
-            p_profession_id: formData['select-profession-id'] || null,
+            p_education_level_id: formData.educationLevelId || null,
+            p_profession_id: formData.professionId || null,
           });
           result = data;
           
@@ -412,8 +412,8 @@ export default function RegistroPublico() {
             p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
             p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
             p_identification_type_id: formData.identificationTypeId || null,
-            p_education_level_id: formData['select-education-id'] || null,
-            p_profession_id: formData['select-profession-id'] || null,
+            p_education_level_id: formData.educationLevelId || null,
+            p_profession_id: formData.professionId || null,
             p_avatar_url: formData.avatarUrl || null,
             p_vaccines: Array.isArray(formData.vaccines) ? formData.vaccines.map(v => ({
               ...v,
@@ -456,8 +456,8 @@ export default function RegistroPublico() {
           p_emergency_contact_name: formData.emergencyContactName || null,
           p_emergency_contact_phone: formData.emergencyContactPhone || null,
           p_emergency_contact_relationship: formData.emergencyContactRelationship || null,
-          p_education_level_id: formData['select-education-id'] || null,
-          p_profession_id: formData['select-profession-id'] || null,
+          p_education_level_id: formData.educationLevelId || null,
+          p_profession_id: formData.professionId || null,
           p_experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
           p_current_company: formData.currentCompany || null,
           p_current_position: formData.currentPosition || null,
@@ -977,8 +977,8 @@ export default function RegistroPublico() {
                 isDemobilized: emp.is_demobilized ? 'true' : 'false',
                 identificationTypeId: emp.identification_type_id,
                 documentType: emp.document_type,
-                "select-education-id": emp.education_level_id,
-                "select-profession-id": emp.profession_id,
+                educationLevelId: emp.education_level_id,
+                professionId: emp.profession_id,
                 avatarUrl: emp.avatar_url,
               };
 
