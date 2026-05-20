@@ -254,7 +254,7 @@ export function RequisitionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[calc(100vw-1rem)] max-w-5xl flex-col gap-0 overflow-hidden rounded-lg border bg-background p-0 shadow-xl sm:w-full">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-xl sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[calc(100vw-2rem)] sm:max-w-5xl sm:rounded-lg sm:border">
         <DialogTitle className="sr-only">
           {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
         </DialogTitle>
@@ -262,20 +262,20 @@ export function RequisitionFormDialog({
           Formulario para la solicitud de nuevo personal en la organización.
         </DialogDescription>
 
-        <div className="shrink-0 border-b border-border bg-background px-4 py-4 sm:px-6">
+        <div className="shrink-0 border-b border-border bg-background px-4 pb-3 pt-4 sm:px-6 sm:py-4">
           {/* Decorative patterns */}
           
           
           
           {/* Pattern overlay (dots) removed */}
 
-          <div className="relative flex items-start gap-4">
+          <div className="relative flex items-start gap-3 pr-8 sm:gap-4 sm:pr-0">
             {/* Avatar/Initial */}
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-base font-semibold text-primary">
+            <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-base font-semibold text-primary sm:flex">
               {form.watch('cargo_solicitado') ? form.watch('cargo_solicitado').substring(0, 2).toUpperCase() : 'RP'}
             </div>
 
-            <div className="min-w-0 flex-1 space-y-2 pr-8">
+            <div className="min-w-0 flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="secondary" className="rounded-md border-success/20 bg-success/10 text-success">
                   <span className="mr-1.5 h-2 w-2 rounded-full bg-success" />
@@ -286,22 +286,22 @@ export function RequisitionFormDialog({
                 </Badge>
               </div>
               
-              <h2 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
+              <h2 className="line-clamp-2 text-lg font-semibold leading-tight text-foreground sm:truncate sm:text-2xl">
                 {form.watch('cargo_solicitado') || (requisition ? 'Editar Requisición' : 'Nueva Requisición')}
               </h2>
               
-              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm font-medium text-muted-foreground">
+              <div className="flex flex-col gap-1.5 text-xs font-medium text-muted-foreground sm:flex-row sm:flex-wrap sm:gap-x-5 sm:text-sm">
                 <div className="flex min-w-0 items-center gap-2">
-                  <Building2 className="w-4 h-4 text-primary/60" />
+                  <Building2 className="h-4 w-4 shrink-0 text-primary/60" />
                   <span className="truncate">{operationCenters.find(c => c.id === form.watch('operation_center_id'))?.name || 'Centro no seleccionado'}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-primary/60" />
+                  <CalendarIcon className="h-4 w-4 shrink-0 text-primary/60" />
                   {format(form.watch('fecha_requisicion') || new Date(), "MMMM yyyy", { locale: es })}
                 </div>
                 {form.watch('area_id') && (
                   <div className="flex min-w-0 items-center gap-2">
-                    <Target className="w-4 h-4 text-primary/60" />
+                    <Target className="h-4 w-4 shrink-0 text-primary/60" />
                     <span className="truncate">{areas.find(a => a.id === form.watch('area_id'))?.name}</span>
                   </div>
                 )}
@@ -320,24 +320,25 @@ export function RequisitionFormDialog({
             }
           })}>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
-              <div className="shrink-0 border-b border-border/70 bg-muted/30 px-4 py-3 sm:px-6">
-                <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border border-border/60 bg-background p-1 shadow-sm sm:grid-cols-6">
-                  {tabItems.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      className="h-10 gap-2 rounded-lg px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground shadow-none transition-colors data-[state=active]:bg-[#19a9e5] data-[state=active]:text-white data-[state=active]:shadow-none sm:text-[10px]"
-                    >
-                      <tab.icon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="hidden font-medium sm:inline">{tab.label}</span>
-                      <span className="font-medium sm:hidden">{tab.label.slice(0, 3)}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+              <div className="shrink-0 border-b border-border/70 bg-muted/30 px-3 py-2 sm:px-6 sm:py-3">
+                <div className="-mx-1 overflow-x-auto px-1 pb-1 scrollbar-themed">
+                  <TabsList className="inline-flex h-auto min-w-full justify-start gap-1 rounded-xl border border-border/60 bg-background p-1 shadow-sm sm:grid sm:grid-cols-6">
+                    {tabItems.map((tab) => (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        className="h-10 min-w-[4.75rem] flex-1 gap-1.5 rounded-lg px-2 text-[9px] font-bold uppercase tracking-[0.08em] text-muted-foreground shadow-none transition-colors data-[state=active]:bg-[#19a9e5] data-[state=active]:text-white data-[state=active]:shadow-none sm:min-w-0 sm:gap-2 sm:text-[10px] sm:tracking-[0.16em]"
+                      >
+                        <tab.icon className="h-3.5 w-3.5 shrink-0" />
+                        <span className="font-medium">{tab.label}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
               </div>
 
               <ScrollArea className="min-h-0 flex-1">
-                <div className="px-4 py-5 sm:px-6">
+                <div className="px-4 py-4 sm:px-6 sm:py-5">
                 {/* Requisition Tab */}
                 <TabsContent value="requisition" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -590,12 +591,12 @@ export function RequisitionFormDialog({
 
                 {/* Replacement Tab */}
                 <TabsContent value="replacement" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="rounded-2xl p-6 border border-border ">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                  <div className="rounded-xl border border-border p-4 sm:rounded-2xl sm:p-6">
+                    <div className="mb-5 flex items-start gap-3 sm:mb-6 sm:items-center">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/20 text-primary">
                         <Users className="w-5 h-5" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h4 className="font-semibold text-foreground">Información de Reemplazo</h4>
                         <p className="text-xs text-muted-foreground">Complete solo si la vacante es para reemplazar a alguien.</p>
                       </div>
@@ -745,13 +746,13 @@ export function RequisitionFormDialog({
                     control={form.control}
                     name="requiere_herramienta_trabajo"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background transition-colors hover:bg-background">
-                        <div className="flex gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                      <FormItem className="flex flex-row items-center justify-between gap-3 rounded-xl border bg-background p-4 transition-colors hover:bg-background sm:gap-4 sm:rounded-2xl sm:p-5">
+                        <div className="flex min-w-0 gap-3 sm:gap-4">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                             <Wrench className="w-5 h-5" />
                           </div>
                           <div className="min-w-0 space-y-0.5">
-                            <FormLabel className="text-base font-semibold">Requiere Herramienta</FormLabel>
+                            <FormLabel className="text-sm font-semibold sm:text-base">Requiere Herramienta</FormLabel>
                             <p className="text-sm text-muted-foreground">
                               ¿Se requieren equipos o herramientas especiales?
                             </p>
@@ -772,9 +773,9 @@ export function RequisitionFormDialog({
                       control={form.control}
                       name="incluye_alimentacion"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background">
-                          <div className="flex gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success shrink-0">
+                        <FormItem className="flex flex-row items-center justify-between gap-3 rounded-xl border bg-background p-4 sm:gap-4 sm:rounded-2xl sm:p-5">
+                          <div className="flex min-w-0 gap-3 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success/10 text-success">
                               <Coffee className="w-5 h-5" />
                             </div>
                             <div className="min-w-0 space-y-0.5">
@@ -793,9 +794,9 @@ export function RequisitionFormDialog({
                       control={form.control}
                       name="incluye_desplazamiento"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between gap-4 rounded-2xl border p-5 bg-background">
-                          <div className="flex gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center text-info shrink-0">
+                        <FormItem className="flex flex-row items-center justify-between gap-3 rounded-xl border bg-background p-4 sm:gap-4 sm:rounded-2xl sm:p-5">
+                          <div className="flex min-w-0 gap-3 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-info/10 text-info">
                               <Truck className="w-5 h-5" />
                             </div>
                             <div className="min-w-0 space-y-0.5">
@@ -904,19 +905,19 @@ export function RequisitionFormDialog({
                 </div>
               </ScrollArea>
 
-              <div className="flex shrink-0 flex-col gap-3 border-t border-border bg-background px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
+              <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-background px-4 py-3 sm:flex-row sm:justify-end sm:gap-3 sm:px-6">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-10 rounded-md px-5 font-medium order-2 sm:order-1"
+                  className="order-2 h-11 w-full rounded-md px-5 font-medium sm:order-1 sm:h-10 sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="h-10 rounded-md px-6 font-semibold order-1 sm:order-2"
+                  className="order-1 h-11 w-full rounded-md px-6 font-semibold sm:order-2 sm:h-10 sm:w-auto"
                 >
                   {isLoading ? (
                     <>
