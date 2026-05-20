@@ -485,8 +485,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="relative z-10 px-4 pb-4 sm:px-6">
-                  <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-background border border-border p-1 sm:flex sm:flex-wrap shadow-sm">
+                <div className="relative z-10 px-4 pb-3 sm:px-6">
+                  <div className="-mx-1 overflow-x-auto px-1 pb-1 scrollbar-themed">
+                    <TabsList className="inline-flex h-auto min-w-max justify-start gap-1 rounded-xl border border-border/70 bg-background p-1 shadow-sm">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -496,12 +497,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         key={tab.value}
                         value={tab.value}
                         className={cn(
-                          "min-h-9 gap-1.5 px-2 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all relative sm:min-w-[90px] sm:flex-1",
+                          "relative min-h-9 w-auto min-w-[7.5rem] shrink-0 justify-center gap-1.5 rounded-lg px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:min-w-[8.75rem]",
                           hasErrors && "text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground"
                         )}
                       >
                         <tab.icon className={cn("w-3.5 h-3.5", hasErrors && "text-destructive")} />
-                        <span className="hidden sm:inline">{tab.label}</span>
+                        <span className="truncate">{tab.label}</span>
                         {hasErrors && (
                           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
                             {errorCount}
@@ -510,11 +511,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       </TabsTrigger>
                     );
                   })}
-                </TabsList>
+                    </TabsList>
+                  </div>
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6" style={{ maxHeight: 'calc(90vh - 260px)' }}>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6">
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
@@ -605,7 +607,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
                                 <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
@@ -696,7 +698,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
                                 <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
@@ -1402,7 +1404,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
                                 <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
@@ -1621,7 +1623,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 bg-background" align="start">
+                                <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
                                   <Calendar
                                     mode="single"
                                     selected={field.value}
@@ -1668,7 +1670,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background" align="start">
+                              <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={field.value}
@@ -1993,14 +1995,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               {/* Footer */}
-              <div className="flex flex-col-reverse gap-3 border-t border-border bg-background p-4 sm:flex-row sm:justify-end sm:p-6">
-                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
+              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-background px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
+                <Button type="button" variant="outline" className="h-10 w-full px-5 sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={createEmployee.isPending || updateEmployee.isPending}
-                  className="gradient-primary w-full text-primary-foreground shadow-md sm:w-auto"
+                  className="gradient-primary h-10 w-full px-5 text-primary-foreground shadow-sm sm:w-auto"
                 >
                   {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
                 </Button>

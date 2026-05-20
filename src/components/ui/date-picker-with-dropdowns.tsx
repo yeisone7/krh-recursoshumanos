@@ -62,14 +62,14 @@ function DatePickerWithDropdowns({
   };
 
   return (
-    <div className={cn("p-3 pointer-events-auto", className)}>
+    <div className={cn("w-[min(18rem,calc(100vw-2rem))] p-3 pointer-events-auto", className)}>
       {/* Year and Month Dropdowns */}
-      <div className="flex items-center justify-center gap-2 mb-4">
+      <div className="mb-3 grid grid-cols-[1fr_5.5rem] gap-2">
         <Select
           value={month.getMonth().toString()}
           onValueChange={handleMonthChange}
         >
-          <SelectTrigger className="w-[130px] h-8 text-sm">
+          <SelectTrigger className="h-9 min-w-0 text-sm">
             <SelectValue placeholder="Mes" />
           </SelectTrigger>
           <SelectContent className="bg-background max-h-[200px]">
@@ -85,7 +85,7 @@ function DatePickerWithDropdowns({
           value={month.getFullYear().toString()}
           onValueChange={handleYearChange}
         >
-          <SelectTrigger className="w-[90px] h-8 text-sm">
+          <SelectTrigger className="h-9 min-w-0 text-sm">
             <SelectValue placeholder="Año" />
           </SelectTrigger>
           <SelectContent className="bg-background max-h-[200px]">
@@ -109,8 +109,8 @@ function DatePickerWithDropdowns({
         locale={es}
         initialFocus={initialFocus}
         classNames={{
-          months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-          month: "space-y-2",
+          months: "w-full",
+          month: "w-full space-y-2",
           caption: "hidden",
           caption_label: "hidden",
           nav: "hidden",
@@ -118,11 +118,11 @@ function DatePickerWithDropdowns({
           nav_button_previous: "hidden",
           nav_button_next: "hidden",
           table: "w-full border-collapse",
-          head_row: "flex",
-          head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-          row: "flex w-full mt-2",
-          cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-          day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
+          head_row: "grid grid-cols-7",
+          head_cell: "flex h-8 items-center justify-center rounded-md text-muted-foreground font-medium text-[0.78rem]",
+          row: "grid grid-cols-7 mt-1",
+          cell: "relative flex h-9 items-center justify-center p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+          day: cn(buttonVariants({ variant: "ghost" }), "h-8 w-8 p-0 font-normal aria-selected:opacity-100"),
           day_range_end: "day-range-end",
           day_selected:
             "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
