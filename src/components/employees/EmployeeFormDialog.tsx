@@ -7,7 +7,7 @@ import { es } from 'date-fns/locale';
 import { 
   CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
   CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle,
-  RotateCcw, GraduationCap, BookOpen
+  RotateCcw, GraduationCap, BookOpen, Loader2
 } from 'lucide-react';
 
 import {
@@ -143,7 +143,7 @@ import {
   familyRelationshipOptions,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees';
+import { useCreateEmployee, useUpdateEmployee, useEmployee } from '@/hooks/useEmployees';
 import { useAreas, usePositions, useIdentificationTypes } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { CitySelect, CityDepartmentSelect } from '@/components/ui/city-department-select';
@@ -193,6 +193,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   
   const isEditMode = !!employee;
 
+  // Load full employee details when editing
+  const { data: fullEmployee, isLoading: isLoadingEmployee } = useEmployee(
+    open && employee?.id ? employee.id : undefined
+  );
+
+  const currentEmployeeData = fullEmployee || employee;
+
   // Filter active schedules and cycles
   const activeSchedules = workSchedules.filter(s => s.is_active);
   const activeCycles = shiftCycles.filter(c => c.is_active);
@@ -201,8 +208,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   // Sync avatar URL when employee changes
   useEffect(() => {
-    setAvatarUrl(employee?.avatar_url || null);
-  }, [employee]);
+    setAvatarUrl(currentEmployeeData?.avatar_url || null);
+  }, [currentEmployeeData]);
 
   const form = useForm<EmployeeFullFormData>({
     resolver: zodResolver(employeeFullFormSchema),
@@ -230,45 +237,45 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   // Reset form with employee data when editing
   useEffect(() => {
-    if (employee && open) {
+    if (currentEmployeeData && open) {
       form.reset({
         // A. Core Identity
-        identificationTypeId: employee.identification_type_id || '',
-        documentType: employee.document_type as any,
-        documentNumber: employee.document_number,
-        documentIssueCity: employee.document_issue_city || undefined,
-        documentIssueDate: employee.document_issue_date ? new Date(employee.document_issue_date) : undefined,
-        firstName: employee.first_name,
-        middleName: employee.middle_name || undefined,
-        lastName: employee.last_name,
-        secondLastName: employee.second_last_name || undefined,
-        birthCountry: employee.birth_country || 'Colombia',
-        birthDepartment: employee.birth_department || undefined,
-        birthCity: employee.birth_city || undefined,
-        birthDate: employee.birth_date ? new Date(employee.birth_date) : undefined,
-        gender: employee.gender as any,
-        genderIdentity: (employee as any).gender_identity || undefined,
-        genderIdentityOther: (employee as any).gender_identity_other || undefined,
-        bloodType: employee.blood_type as any,
-        maritalStatus: employee.marital_status as any,
-        educationLevelIds: employee.education_level_ids || [],
-        professionId: employee.profession_id || undefined,
+        identificationTypeId: currentEmployeeData.identification_type_id || '',
+        documentType: currentEmployeeData.document_type as any,
+        documentNumber: currentEmployeeData.document_number,
+        documentIssueCity: currentEmployeeData.document_issue_city || undefined,
+        documentIssueDate: currentEmployeeData.document_issue_date ? new Date(currentEmployeeData.document_issue_date) : undefined,
+        firstName: currentEmployeeData.first_name,
+        middleName: currentEmployeeData.middle_name || undefined,
+        lastName: currentEmployeeData.last_name,
+        secondLastName: currentEmployeeData.second_last_name || undefined,
+        birthCountry: currentEmployeeData.birth_country || 'Colombia',
+        birthDepartment: currentEmployeeData.birth_department || undefined,
+        birthCity: currentEmployeeData.birth_city || undefined,
+        birthDate: currentEmployeeData.birth_date ? new Date(currentEmployeeData.birth_date) : undefined,
+        gender: currentEmployeeData.gender as any,
+        genderIdentity: (currentEmployeeData as any).gender_identity || undefined,
+        genderIdentityOther: (currentEmployeeData as any).gender_identity_other || undefined,
+        bloodType: currentEmployeeData.blood_type as any,
+        maritalStatus: currentEmployeeData.marital_status as any,
+        educationLevelIds: currentEmployeeData.education_level_ids || [],
+        professionId: currentEmployeeData.profession_id || undefined,
         
         // B. Contact
-        residenceDepartment: employee.contact?.residence_department || undefined,
-        residenceCity: employee.contact?.residence_city || undefined,
-        residenceAddress: employee.contact?.residence_address || undefined,
-        residenceNeighborhood: employee.contact?.residence_neighborhood || undefined,
-        email: employee.contact?.email || undefined,
-        personalEmail: employee.contact?.personal_email || undefined,
-        phone: employee.contact?.phone || undefined,
-        mobile: employee.contact?.mobile || undefined,
-        emergencyContactName: employee.contact?.emergency_contact_name || undefined,
-        emergencyContactPhone: employee.contact?.emergency_contact_phone || undefined,
-        emergencyContactRelationship: employee.contact?.emergency_contact_relationship || undefined,
+        residenceDepartment: currentEmployeeData.contact?.residence_department || undefined,
+        residenceCity: currentEmployeeData.contact?.residence_city || undefined,
+        residenceAddress: currentEmployeeData.contact?.residence_address || undefined,
+        residenceNeighborhood: currentEmployeeData.contact?.residence_neighborhood || undefined,
+        email: currentEmployeeData.contact?.email || undefined,
+        personalEmail: currentEmployeeData.contact?.personal_email || undefined,
+        phone: currentEmployeeData.contact?.phone || undefined,
+        mobile: currentEmployeeData.contact?.mobile || undefined,
+        emergencyContactName: currentEmployeeData.contact?.emergency_contact_name || undefined,
+        emergencyContactPhone: currentEmployeeData.contact?.emergency_contact_phone || undefined,
+        emergencyContactRelationship: currentEmployeeData.contact?.emergency_contact_relationship || undefined,
         
         // C. Family
-        familyMembers: (employee.family_members || []).map(m => ({
+        familyMembers: (currentEmployeeData.family_members || []).map(m => ({
           id: m.id,
           relationship: m.relationship,
           fullName: m.full_name,
@@ -278,49 +285,54 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         })),
         
         // D. Work Info
-        operationCenterId: employee.work_info?.operation_center_id || undefined,
-        costCenter: employee.work_info?.cost_center || undefined,
-        areaId: employee.work_info?.area_id || undefined,
-        positionId: employee.work_info?.position_id || undefined,
-        positionName: employee.work_info?.position_name || '',
-        workCity: employee.work_info?.work_city || undefined,
-        hireDate: employee.work_info?.hire_date ? new Date(employee.work_info.hire_date) : new Date(),
-        linkType: employee.work_info?.link_type as any || 'indefinido',
-        observations: employee.work_info?.observations || undefined,
+        operationCenterId: currentEmployeeData.work_info?.operation_center_id || undefined,
+        costCenter: currentEmployeeData.work_info?.cost_center || undefined,
+        areaId: currentEmployeeData.work_info?.area_id || undefined,
+        positionId: currentEmployeeData.work_info?.position_id || undefined,
+        positionName: currentEmployeeData.work_info?.position_name || '',
+        workCity: currentEmployeeData.work_info?.work_city || undefined,
+        hireDate: currentEmployeeData.work_info?.hire_date ? new Date(currentEmployeeData.work_info.hire_date) : new Date(),
+        linkType: currentEmployeeData.work_info?.link_type as any || 'indefinido',
+        observations: currentEmployeeData.work_info?.observations || undefined,
         
         // E. Social Security
-        riskLevel: employee.social_security?.risk_level as any,
-        arl: employee.social_security?.arl || undefined,
-        eps: employee.social_security?.eps || undefined,
-        afp: employee.social_security?.afp || undefined,
-        ccf: employee.social_security?.ccf || undefined,
-        afc: employee.social_security?.afc || undefined,
-        ips: employee.social_security?.ips || undefined,
+        riskLevel: currentEmployeeData.social_security?.risk_level as any,
+        arl: currentEmployeeData.social_security?.arl || undefined,
+        eps: currentEmployeeData.social_security?.eps || undefined,
+        afp: currentEmployeeData.social_security?.afp || undefined,
+        ccf: currentEmployeeData.social_security?.ccf || undefined,
+        afc: currentEmployeeData.social_security?.afc || undefined,
+        ips: currentEmployeeData.social_security?.ips || undefined,
         
         // F. Bank Info
-        bankName: employee.bank_info?.bank_name || undefined,
-        accountType: employee.bank_info?.account_type as any,
-        accountNumber: employee.bank_info?.account_number || undefined,
-        accountRegistered: employee.bank_info?.account_registered || false,
+        bankName: currentEmployeeData.bank_info?.bank_name || undefined,
+        accountType: currentEmployeeData.bank_info?.account_type as any,
+        accountNumber: currentEmployeeData.bank_info?.account_number || undefined,
+        accountRegistered: currentEmployeeData.bank_info?.account_registered || false,
         
         // J. Schedule
-        payrollType: employee.schedule?.payroll_type as any || 'quincenal',
-        shiftTypeId: employee.schedule?.shift_type_id || undefined,
-        isOfficeSchedule: employee.schedule?.is_office_schedule ?? true,
-        restDay: employee.schedule?.rest_day || undefined,
+        payrollType: currentEmployeeData.schedule?.payroll_type as any || 'quincenal',
+        shiftTypeId: currentEmployeeData.schedule?.shift_type_id || undefined,
+        isOfficeSchedule: currentEmployeeData.schedule?.is_office_schedule ?? true,
+        restDay: currentEmployeeData.schedule?.rest_day || undefined,
 
-        // K. Time Mode (will be loaded from employee_time_config if exists)
-        timeMode: 'administrative',
-        timeModeStartDate: new Date(),
+        // K. Time Mode
+        timeMode: currentEmployeeData.time_config?.time_mode || 'administrative',
+        timeModeStartDate: currentEmployeeData.time_config?.start_date ? new Date(currentEmployeeData.time_config.start_date) : new Date(),
+        workScheduleId: currentEmployeeData.time_config?.work_schedule_id || undefined,
+        shiftCycleId: currentEmployeeData.time_config?.shift_cycle_id || undefined,
+        cycleStartDate: currentEmployeeData.time_config?.cycle_start_date ? new Date(currentEmployeeData.time_config.cycle_start_date) : undefined,
+        timeModeNotes: currentEmployeeData.time_config?.notes || undefined,
+
         // L. Person Specifications
-        isFirstJob: (employee as any).is_first_job || false,
-        isHeadOfHousehold: (employee as any).is_head_of_household || false,
-        disabilityType: (employee as any).disability_type || 'ninguna',
-        ethnicGroup: (employee as any).ethnic_group || 'ninguno',
-        isConflictVictim: (employee as any).is_conflict_victim || false,
-        isDemobilized: (employee as any).is_demobilized || false,
+        isFirstJob: (currentEmployeeData as any).is_first_job || false,
+        isHeadOfHousehold: (currentEmployeeData as any).is_head_of_household || false,
+        disabilityType: (currentEmployeeData as any).disability_type || 'ninguna',
+        ethnicGroup: (currentEmployeeData as any).ethnic_group || 'ninguno',
+        isConflictVictim: (currentEmployeeData as any).is_conflict_victim || false,
+        isDemobilized: (currentEmployeeData as any).is_demobilized || false,
       });
-    } else if (!employee && open) {
+    } else if (!currentEmployeeData && open) {
       form.reset({
         birthCountry: 'Colombia',
         linkType: 'indefinido',
@@ -338,7 +350,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         isDemobilized: false,
       });
     }
-  }, [employee, open, form]);
+  }, [currentEmployeeData, open, form]);
 
   const handleSubmit = async (data: EmployeeFullFormData) => {
     if (!currentCompanyId && !isEditMode) {
@@ -454,6 +466,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-foreground sm:text-xl">
                     <Building className="w-5 h-5 text-primary" />
                     {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
+                    {isEditMode && isLoadingEmployee && (
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-2" />
+                    )}
                   </DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1">
                     {isEditMode 
