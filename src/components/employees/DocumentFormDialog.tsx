@@ -43,6 +43,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreateDocument } from '@/hooks/useEmployeeHealth';
 import { useCreateCandidateDocument } from '@/hooks/useCandidates';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { employeeDocumentFolderOrder, employeeDocumentTypeLabels } from '@/types/employee';
 
 const formSchema = z.object({
@@ -81,6 +82,8 @@ export function DocumentFormDialog({
   onSuccess,
 }: DocumentFormDialogProps) {
   const { toast } = useToast();
+  const { isAdmin, isRRHH, isSuperAdmin, canCreate, canUpdate } = useAuth();
+  const canManageDocs = isAdmin || isRRHH || isSuperAdmin || canCreate('empleados') || canUpdate('empleados');
   const createEmployeeDocument = useCreateDocument();
   const createCandidateDocument = useCreateCandidateDocument();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -375,12 +378,14 @@ export function DocumentFormDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending}>
-                {(uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending) && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                Guardar
-              </Button>
+              {canManageDocs && (
+                <Button type="submit" disabled={uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending}>
+                  {(uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending) && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  Guardar
+                </Button>
+              )}
             </div>
           </form>
         </Form>
