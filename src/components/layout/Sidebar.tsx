@@ -379,13 +379,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "flex items-center gap-3 rounded-lg transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+          "flex items-center gap-3 rounded-xl transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isCollapsed
             ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
-            : "px-3 py-2",
+            : "px-4 py-2.5",
           isActive ?
-          "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
-          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+          "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
+          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
         )}>
 
           <span className={cn(
@@ -395,7 +395,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className="font-bold text-sm whitespace-nowrap overflow-hidden">
+            <span className="font-semibold text-sm whitespace-nowrap overflow-hidden">
               {item.label}
             </span>
           }
@@ -452,7 +452,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     quickAccessItems.length > 0 ? (
       <div className="pt-3">
         <SectionLabel label="Accesos rápidos" />
-        <div className={cn("gap-2", isCollapsed ? "flex flex-col" : "grid grid-cols-3")}>
+        <div className={cn("gap-1.5", isCollapsed ? "flex flex-col" : "flex flex-col mt-1.5")}>
           {quickAccessItems.map((item) => {
             const isActive = location.pathname === item.href;
             const content = (
@@ -461,18 +461,39 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   whileHover={{ 
                     backgroundColor: 'rgb(255, 247, 237)', // orange-50
                     borderColor: 'rgb(254, 215, 170)', // orange-200
+                    color: 'rgb(234, 88, 12)', // orange-600
                   }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center justify-center rounded-2xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground transition-all duration-300 hover:text-orange-600 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
-                    isCollapsed ? "mx-auto h-11 w-11 p-0 [&_svg]:size-5" : "h-16 flex-col gap-1 px-1",
-                    isActive && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm"
+                    "relative flex items-center transition-all duration-300 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    isCollapsed 
+                      ? "mx-auto h-11 w-11 justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
+                      : "h-11 flex-row gap-3 px-3.5 rounded-xl border border-sidebar-border/60 bg-[#e7f0fc]/40 dark:bg-primary/5 text-sidebar-foreground hover:shadow-sm",
+                    isActive && !isCollapsed && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm",
+                    isActive && isCollapsed && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm"
                   )}
                 >
-                  {item.icon}
-                  {!isCollapsed && <span className="max-w-full truncate text-[10px] font-extrabold leading-tight">{item.label}</span>}
+                  <span className={cn(
+                    "flex items-center justify-center shrink-0 transition-colors",
+                    isActive ? "text-orange-600" : "text-sidebar-foreground"
+                  )}>
+                    {item.icon}
+                  </span>
+                  {!isCollapsed && (
+                    <span className={cn(
+                      "text-xs font-bold leading-tight tracking-wide",
+                      isActive ? "text-orange-600" : "text-sidebar-foreground/90"
+                    )}>
+                      {item.label}
+                    </span>
+                  )}
                   {item.badge && (
-                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar">
+                    <span className={cn(
+                      "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground font-black shadow-sm",
+                      isCollapsed 
+                        ? "-right-1 -top-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar" 
+                        : "right-3.5 top-1/2 -translate-y-1/2 h-5 px-2 text-[10px]"
+                    )}>
                       {item.badge}
                     </span>
                   )}
@@ -508,13 +529,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       whileTap={{ scale: 0.98 }}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 rounded-lg transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        "flex items-center gap-3 rounded-xl transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         isCollapsed
           ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
-          : "px-3 py-2",
+          : "px-4 py-2.5",
         isAnyChildActive ?
-        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm" :
-        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
+        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
+        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
       )}>
 
         <span className={cn(
@@ -592,10 +613,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
-                      "bg-sidebar-accent text-sidebar-accent-foreground" :
-                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/70"
+                      "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
+                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
                     )}>
 
                       <span className={cn(
@@ -821,27 +842,27 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
                       className={cn(
-                        "relative flex transition-all duration-200 group overflow-hidden",
+                        "relative flex transition-all duration-200 group",
                         isCollapsed 
                           ? "mx-auto h-11 w-11 items-center justify-center rounded-lg p-0" 
-                          : "h-20 flex-col items-center justify-center gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent/30 p-2 text-center",
-                        isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-lg shadow-primary/5 ring-1 ring-primary/20",
+                          : "min-h-[92px] h-auto flex-col items-center justify-center gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2.5 px-1 text-center",
+                        isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-[0_4px_12px_rgba(14,165,233,0.08)] ring-1 ring-primary/20",
                         isActive && isCollapsed && "bg-sidebar-accent"
                       )}
                     >
                       {/* Icon Container */}
                       <div className={cn(
-                        "flex items-center justify-center shrink-0 transition-all duration-300",
+                        "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
                         isCollapsed 
                           ? "h-full w-full" 
-                          : cn("h-10 w-10 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
+                          : cn("h-9 w-9 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
                       )}>
                         {item.icon}
                       </div>
 
                       {!isCollapsed && (
                         <span className={cn(
-                          "text-[10px] font-black uppercase tracking-widest leading-tight transition-colors",
+                          "text-[9px] font-extrabold uppercase tracking-wider leading-snug transition-colors w-full px-1 max-w-full break-words",
                           isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
                         )}>
                           {item.label}
