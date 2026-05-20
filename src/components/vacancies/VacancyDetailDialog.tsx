@@ -426,15 +426,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="px-4 pt-0 flex-shrink-0 sm:px-8 border-b">
               <TabsList className="w-full h-auto flex-wrap gap-1 bg-transparent p-0 justify-start pb-1">
-                <TabsTrigger value="info" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="info" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:shadow-none transition-all">
                   <FileText className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="candidates" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="candidates" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:shadow-none transition-all">
                   <Users className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Candidatos</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all">
+                <TabsTrigger value="documents" className="h-9 flex-1 min-w-[90px] gap-2 px-3 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:shadow-none transition-all">
                   <Paperclip className="h-4 w-4 shrink-0" />
                   <span className="font-medium">Documentos</span>
                 </TabsTrigger>
