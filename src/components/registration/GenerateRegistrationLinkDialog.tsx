@@ -115,6 +115,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
   const optionalKeys = fields.filter(f => !f.required).map(f => f.key);
 
   const [selectedFields, setSelectedFields] = useState<string[]>([...requiredKeys, ...optionalKeys]);
+  const [linkName, setLinkName] = useState('');
   const [expirationDays, setExpirationDays] = useState('7');
   const [reusable, setReusable] = useState(targetType === 'employee');
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
@@ -145,6 +146,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
     try {
       const token = await createToken.mutateAsync({
         target_type: targetType,
+        name: linkName,
         vacancy_id: vacancyId,
         enabled_fields: selectedFields,
         expires_at: expirationDays === '0' 
@@ -172,6 +174,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
     setGeneratedLink(null);
     setCopied(false);
     setSelectedFields([...requiredKeys, ...optionalKeys]);
+    setLinkName('');
     setExpirationDays('7');
     onOpenChange(false);
   };
@@ -202,6 +205,20 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         {!generatedLink ? (
           <>
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="registration-link-name">Nombre del enlace</Label>
+                <Input
+                  id="registration-link-name"
+                  value={linkName}
+                  onChange={(event) => setLinkName(event.target.value)}
+                  placeholder={targetType === 'employee' ? 'Ej. Registro empleados mayo' : 'Ej. Vacante almacenista'}
+                  maxLength={80}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Opcional. Te ayuda a identificar este token en la lista.
+                </p>
+              </div>
+
               {sections.map(section => {
                 const sectionFields = fields.filter(f => f.section === section);
                 const optionalInSection = sectionFields.filter(f => !f.required);

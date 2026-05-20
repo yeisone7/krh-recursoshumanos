@@ -1,11 +1,17 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { useMemo } from 'react';
-import { Copy, Ban, Link2, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Copy, Ban, Link2, CheckCircle, Clock, XCircle, Trash2, Pencil, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { useRegistrationTokens, useDeactivateRegistrationToken, useDeleteRegistrationToken } from '@/hooks/useRegistrationTokens';
+import {
+  useRegistrationTokens,
+  useDeactivateRegistrationToken,
+  useDeleteRegistrationToken,
+  useUpdateRegistrationTokenName,
+} from '@/hooks/useRegistrationTokens';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
@@ -29,6 +35,9 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
   }, [allTokens, currentCompanyId, targetType]);
   const deactivate = useDeactivateRegistrationToken();
   const deleteToken = useDeleteRegistrationToken();
+  const updateName = useUpdateRegistrationTokenName();
+  const [editingTokenId, setEditingTokenId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState('');
 
   const getStatus = (token: typeof tokens[0]) => {
     if (token.is_used) return 'used';
@@ -53,6 +62,26 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
       toast.success('Enlace desactivado');
     } catch {
       toast.error('Error al desactivar');
+    }
+  };
+
+  const startEditing = (id: string, currentName: string | null) => {
+    setEditingTokenId(id);
+    setDraftName(currentName || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingTokenId(null);
+    setDraftName('');
+  };
+
+  const handleSaveName = async (id: string) => {
+    try {
+      await updateName.mutateAsync({ tokenId: id, name: draftName });
+      toast.success(draftName.trim() ? 'Nombre actualizado' : 'Nombre removido');
+      cancelEditing();
+    } catch {
+      toast.error('Error al guardar el nombre');
     }
   };
 
@@ -90,13 +119,15 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
         const status = getStatus(token);
         const config = statusConfig[status];
         const StatusIcon = config.icon;
+        const tokenSuffix = token.token.slice(-8);
+        const tokenName = token.name?.trim();
 
         return (
           <div
             key={token.id}
-            className="flex items-center justify-between p-3 rounded-lg border bg-card"
+            className="flex flex-col gap-3 p-3 rounded-lg border bg-card sm:flex-row sm:items-center sm:justify-between"
           >
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="w-10 h-10 rounded-md bg-background flex items-center justify-center shrink-0 overflow-hidden border">
                 {currentCompany?.logo_url ? (
                   <img src={currentCompany.logo_url} alt={currentCompany.name} className="w-full h-full object-contain" />
@@ -104,22 +135,64 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
                   <Link2 className="w-5 h-5 text-primary" />
                 )}
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium truncate">...{token.token.slice(-8)}</p>
-                  <Badge className={`text-xs ${config.className}`}>
-                    <StatusIcon className="w-3 h-3 mr-1" />
-                    {config.label}
-                  </Badge>
-                </div>
+              <div className="min-w-0 flex-1">
+                {editingTokenId === token.id ? (
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={draftName}
+                      onChange={(event) => setDraftName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') handleSaveName(token.id);
+                        if (event.key === 'Escape') cancelEditing();
+                      }}
+                      placeholder="Nombre del enlace"
+                      maxLength={80}
+                      autoFocus
+                      className="h-9"
+                    />
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSaveName(token.id)}
+                        disabled={updateName.isPending}
+                        title="Guardar nombre"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={cancelEditing} title="Cancelar">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {tokenName || `Enlace ...${tokenSuffix}`}
+                    </p>
+                    <Badge className={`text-xs shrink-0 ${config.className}`}>
+                      <StatusIcon className="w-3 h-3 mr-1" />
+                      {config.label}
+                    </Badge>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">
+                  {tokenName ? `Token ...${tokenSuffix} | ` : ''}
                   Creado {format(new Date(token.created_at), 'dd MMM yyyy HH:mm', { locale: es })}
-                  {' • '}Expira {format(new Date(token.expires_at), 'dd MMM yyyy', { locale: es })}
+                  {' | '}Expira {format(new Date(token.expires_at), 'dd MMM yyyy', { locale: es })}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1 shrink-0 self-end sm:self-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startEditing(token.id, token.name)}
+                title="Nombrar enlace"
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
               {status === 'active' && (
                 <>
                   <Button variant="ghost" size="sm" onClick={() => handleCopy(token.token)} title="Copiar enlace">

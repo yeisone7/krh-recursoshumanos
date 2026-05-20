@@ -6,6 +6,7 @@ export interface RegistrationToken {
   id: string;
   company_id: string;
   token: string;
+  name: string | null;
   target_type: 'candidate' | 'employee';
   vacancy_id: string | null;
   enabled_fields: string[];
@@ -49,6 +50,7 @@ export function useCreateRegistrationToken() {
   return useMutation({
     mutationFn: async (input: {
       target_type: 'candidate' | 'employee';
+      name?: string | null;
       vacancy_id?: string;
       enabled_fields: string[];
       expires_at: string;
@@ -60,6 +62,7 @@ export function useCreateRegistrationToken() {
         .insert({
           company_id: currentCompanyId,
           target_type: input.target_type,
+          name: input.name?.trim() || null,
           vacancy_id: input.vacancy_id || null,
           enabled_fields: input.enabled_fields as any,
           expires_at: input.expires_at,
@@ -70,6 +73,24 @@ export function useCreateRegistrationToken() {
         .single();
       if (error) throw error;
       return data as unknown as RegistrationToken;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['registration-tokens'] });
+    },
+  });
+}
+
+export function useUpdateRegistrationTokenName() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tokenId, name }: { tokenId: string; name: string | null }) => {
+      const normalizedName = name?.trim() || null;
+      const { error } = await supabase
+        .from('self_registration_tokens')
+        .update({ name: normalizedName, updated_at: new Date().toISOString() } as any)
+        .eq('id', tokenId);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['registration-tokens'] });
