@@ -122,6 +122,16 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
           p => p.is_active && p.name.toLowerCase() === selectedReq.cargo_solicitado.toLowerCase()
         );
         form.setValue('positionId', matchedPosition?.id || undefined);
+
+        // Auto-fill salary assignment from RRHH approval step
+        if (selectedReq.rrhh_asignacion_salarial) {
+          const formattedSalary = `$${selectedReq.rrhh_asignacion_salarial.toLocaleString('es-CO')}`;
+          form.setValue('salaryRangeMin', formattedSalary);
+          form.setValue('salaryRangeMax', formattedSalary);
+        }
+        if (selectedReq.rrhh_incluye_auxilio_transporte !== undefined) {
+          form.setValue('includesTransport', !!selectedReq.rrhh_incluye_auxilio_transporte);
+        }
       }
     }
   }, [selectedRequisitionId, approvedRequisitions, operationCenters, positions, form]);

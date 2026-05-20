@@ -233,13 +233,13 @@ export function CandidateDetailDialog({
 
   // Check if medical exam is approved (required for hiring)
   const hasApprovedMedicalExam = steps.some(
-    (s: any) => s.step_type === 'examenes_medicos' && s.status === 'passed' && ['apto', 'apto_restricciones'].includes(s.result)
+    (s: any) => s.step_type === 'examenes_medicos' && s.status === 'passed' && ['apto', 'apto_restricciones', 'favorable'].includes(s.result)
   );
 
   const handleConvert = async () => {
     if (!hasApprovedMedicalExam) {
       toast.error('Se requiere examen médico de ingreso aprobado', {
-        description: 'Registre la etapa de Exámenes Médicos con concepto "Apto" antes de contratar.',
+        description: 'Registre la etapa de Exámenes Médicos con concepto "Apto" o "Favorable" antes de contratar.',
       });
       return;
     }

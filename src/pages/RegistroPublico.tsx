@@ -29,6 +29,7 @@ interface TokenData {
   enabled_fields: string[];
   company_id: string;
   is_used: boolean;
+  is_reusable: boolean;
   expires_at: string;
 }
 
@@ -832,7 +833,7 @@ export default function RegistroPublico() {
       return (
         <div key={key} className="space-y-1.5 col-span-full mb-4">
           <Label>{config.label}</Label>
-          <div className="bg-card border rounded-lg p-6 flex justify-center items-center">
+          <div className="bg-card dark:bg-slate-900/40 border dark:border-slate-800 rounded-lg p-6 flex justify-center items-center">
             <AvatarUpload
               currentAvatarUrl={formData[key]}
               onAvatarChange={(url) => handleChange(key, url || '')}
@@ -849,7 +850,7 @@ export default function RegistroPublico() {
       const isVaccine = key === 'vaccines';
 
       return (
-        <div key={key} className="col-span-full space-y-3 mt-2 border border-border/50 bg-muted/20 rounded-lg p-4">
+        <div key={key} className="col-span-full space-y-3 mt-2 border border-border/50 dark:border-slate-800/80 bg-muted/20 dark:bg-slate-950/20 rounded-lg p-4">
           <div className="flex justify-between items-center mb-2">
             <Label className="text-base font-semibold">{config.label}</Label>
             <Button 
@@ -870,7 +871,7 @@ export default function RegistroPublico() {
           
           <div className="space-y-3">
             {items.map((item: any, idx: number) => (
-              <div key={idx} className="flex flex-col sm:flex-row gap-3 sm:items-end bg-background p-3 rounded-md border shadow-sm">
+              <div key={idx} className="flex flex-col sm:flex-row gap-3 sm:items-end bg-background dark:bg-slate-900/60 p-3 rounded-md border dark:border-slate-800 shadow-sm">
                 {isVaccine ? (
                   <>
                     <div className="flex-1 space-y-1.5">
@@ -927,7 +928,7 @@ export default function RegistroPublico() {
               </div>
             ))}
             {items.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4 bg-background border rounded-md">
+              <p className="text-sm text-muted-foreground text-center py-4 bg-background dark:bg-slate-900/40 border dark:border-slate-800 rounded-md">
                 No hay registros agregados.
               </p>
             )}
@@ -1077,15 +1078,15 @@ export default function RegistroPublico() {
   const HeaderIcon = isEmployee ? Building : User;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex items-center justify-center p-4 py-12">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center p-4 py-12 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-2xl"
       >
-        <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+        <Card className="border-none dark:border dark:border-slate-800/80 shadow-2xl shadow-slate-200/50 dark:shadow-none rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 transition-colors duration-300">
           {/* Header with Logo */}
-          <div className="w-full flex flex-col items-center pt-10 pb-6 bg-white relative">
+          <div className="w-full flex flex-col items-center pt-10 pb-6 bg-white dark:bg-slate-900 relative transition-colors duration-300">
             <div className="absolute top-0 left-0 w-full h-1 bg-primary/20" />
             {companyLogo ? (
               <motion.img
@@ -1093,21 +1094,21 @@ export default function RegistroPublico() {
                 animate={{ scale: 1 }}
                 src={companyLogo}
                 alt={companyName}
-                className="max-h-24 max-w-[280px] object-contain mb-6 rounded-2xl shadow-sm"
+                className="max-h-24 max-w-[280px] object-contain mb-6 rounded-2xl shadow-sm bg-white p-1"
               />
             ) : (
-              <div className="w-20 h-20 rounded-[2rem] bg-primary/5 flex items-center justify-center mb-6 border border-primary/10">
+              <div className="w-20 h-20 rounded-[2rem] bg-primary/5 flex items-center justify-center mb-6 border border-primary/10 dark:border-primary/20">
                 <Building className="w-10 h-10 text-primary" />
               </div>
             )}
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">{companyName}</h2>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-50 tracking-tight uppercase">{companyName}</h2>
             <div className="h-1 w-12 bg-primary/30 rounded-full mt-2" />
           </div>
 
           {/* Welcome image for candidates */}
           {!isEmployee && step === 'form' && (
             <div className="w-full px-8">
-              <div className="rounded-[2rem] overflow-hidden shadow-lg border border-slate-100">
+              <div className="rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 dark:border-slate-800">
                 <img
                   src="/images/IMAGEN_PROCESO_DE_SELECCION.png"
                   alt="Proceso de Selección"
@@ -1118,15 +1119,15 @@ export default function RegistroPublico() {
           )}
 
           <div className="px-8 pt-8 pb-4">
-            <div className="flex items-center gap-4 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+            <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/40 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800/60 transition-colors duration-300">
               <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
                 <HeaderIcon className="w-7 h-7 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl font-black text-slate-900 leading-tight">
+                <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 leading-tight">
                   {isEmployee ? 'REGISTRO DE EMPLEADO' : 'FORMULARIO DE REGISTRO'}
                 </h1>
-                <p className="text-slate-500 font-bold text-xs uppercase tracking-widest mt-0.5 truncate">
+                <p className="text-slate-500 dark:text-slate-400 font-bold text-xs uppercase tracking-widest mt-0.5 truncate">
                   {vacancyTitle ? `Vacante: ${vacancyTitle}` : isEmployee ? 'Información Personal y Laboral' : 'Postulación de Candidato'}
                 </p>
               </div>
@@ -1142,7 +1143,7 @@ export default function RegistroPublico() {
                     <div className="h-8 w-8 rounded-full bg-primary/5" />
                   </div>
                 </div>
-                <p className="text-slate-500 font-black text-xs uppercase tracking-widest mt-6">Validando enlace seguro...</p>
+                <p className="text-slate-500 dark:text-slate-400 font-black text-xs uppercase tracking-widest mt-6">Validando enlace seguro...</p>
               </div>
             )}
 
@@ -1152,10 +1153,10 @@ export default function RegistroPublico() {
                   <AlertTriangle className="w-10 h-10" />
                 </div>
                 <div>
-                  <p className="text-2xl font-black text-slate-900 tracking-tight">ENLACE NO VÁLIDO</p>
-                  <p className="text-slate-500 font-medium max-w-xs mx-auto mt-2">{errorMsg}</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">ENLACE NO VÁLIDO</p>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium max-w-xs mx-auto mt-2">{errorMsg}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-xl border-slate-200 font-bold uppercase tracking-widest text-[10px]">
+                <Button variant="outline" onClick={() => window.location.reload()} className="rounded-xl border-slate-200 dark:border-slate-800 font-bold uppercase tracking-widest text-[10px]">
                   Reintentar
                 </Button>
               </div>
@@ -1164,9 +1165,9 @@ export default function RegistroPublico() {
             {step === 'form' && (
               <div className="space-y-10">
                 {prefilled && (
-                  <Alert className="border-none bg-blue-50/70 rounded-2xl py-4">
-                    <Info className="h-5 w-5 text-blue-600" />
-                    <AlertDescription className="text-sm text-blue-800 font-bold pl-2">
+                  <Alert className="border-none bg-blue-50/70 dark:bg-blue-950/20 rounded-2xl py-4">
+                    <Info className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <AlertDescription className="text-sm text-blue-800 dark:text-blue-300 font-bold pl-2">
                       Se encontró información previa. Los campos han sido auto-completados.
                     </AlertDescription>
                   </Alert>
@@ -1183,7 +1184,7 @@ export default function RegistroPublico() {
                       <div key={section} className="space-y-6">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-1 bg-primary rounded-full" />
-                          <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                          <h3 className="text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
                             {section}
                           </h3>
                         </div>
@@ -1195,7 +1196,7 @@ export default function RegistroPublico() {
                   })}
                 </div>
 
-                <div className="pt-8 border-t border-slate-100">
+                <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
                   <Button 
                     className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/20 font-black text-lg uppercase tracking-widest transition-all active:scale-[0.98] group" 
                     onClick={handleSubmit} 
@@ -1207,7 +1208,7 @@ export default function RegistroPublico() {
                       <><Send className="w-5 h-5 mr-3 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" /> ENVIAR REGISTRO</>
                     )}
                   </Button>
-                  <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-6">
+                  <p className="text-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest mt-6">
                     Al enviar este formulario aceptas nuestra política de tratamiento de datos
                   </p>
                 </div>
@@ -1216,17 +1217,17 @@ export default function RegistroPublico() {
 
             {step === 'done' && (
               <div className="flex flex-col items-center py-20 text-center space-y-6">
-                <div className="h-24 w-24 rounded-[2.5rem] bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-inner">
+                <div className="h-24 w-24 rounded-[2.5rem] bg-emerald-500/10 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 shadow-inner">
                   <CheckCircle2 className="w-12 h-12" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-3xl font-black text-slate-900 tracking-tight uppercase">¡REGISTRO EXITOSO!</p>
-                  <p className="text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                  <p className="text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight uppercase">¡REGISTRO EXITOSO!</p>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto leading-relaxed">
                     Tu información ha sido enviada correctamente. {isEmployee ? 'Tu empleador recibirá tu información en breve.' : 'El equipo de selección se pondrá en contacto contigo muy pronto.'}
                   </p>
                 </div>
                 <div className="pt-4">
-                  <div className="h-1 w-16 bg-emerald-500/30 rounded-full mx-auto" />
+                  <div className="h-1 w-16 bg-emerald-500/30 dark:bg-emerald-500/10 rounded-full mx-auto" />
                 </div>
               </div>
             )}
