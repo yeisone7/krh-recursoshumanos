@@ -152,7 +152,7 @@ export function EmployeeCard({
       <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2 text-sm">
           <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center">
-            <Briefcase className="w-3.5 h-3.5 text-secondary" />
+            <Briefcase className="w-3.5 h-3.5 text-secondary-foreground" />
           </div>
           <span className="text-foreground">{employee.areas?.name || 'Sin área'}</span>
         </div>

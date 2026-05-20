@@ -63,7 +63,8 @@ export function useEmployees() {
           ),
           employee_work_info(
             id, operation_center_id, position_id, position_name, hire_date, link_type, area_id,
-            operation_centers(id, name, city)
+            operation_centers(id, name, city),
+            areas(id, name)
           )
         `)
         .eq('company_id', currentCompanyId)
@@ -79,6 +80,7 @@ export function useEmployees() {
         contact: emp.employee_contact?.[0] || null,
         work_info: emp.employee_work_info?.[0] || null,
         operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
+        areas: emp.employee_work_info?.[0]?.areas || null,
       })) as EmployeeV2WithRelations[];
     },
     enabled: !!currentCompanyId,
@@ -112,7 +114,8 @@ export function useEmployeesPaginated(options: {
           identification_types(id, name, code),
           employee_work_info!inner(
             id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
-            operation_centers(id, name, city)
+            operation_centers(id, name, city),
+            areas(id, name)
           )
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId)
@@ -155,6 +158,7 @@ export function useEmployeesPaginated(options: {
         ...emp,
         work_info: emp.employee_work_info?.[0] || null,
         operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
+        areas: emp.employee_work_info?.[0]?.areas || null,
       })) as EmployeeV2WithRelations[];
 
       return { data: transformed, count: count || 0 };
@@ -189,7 +193,8 @@ export function useEmployeesInfinite(options: {
           identification_types(id, name, code),
           employee_work_info!inner(
             id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
-            operation_centers(id, name, city)
+            operation_centers(id, name, city),
+            areas(id, name)
           )
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId)
@@ -229,6 +234,7 @@ export function useEmployeesInfinite(options: {
         ...emp,
         work_info: emp.employee_work_info?.[0] || null,
         operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
+        areas: emp.employee_work_info?.[0]?.areas || null,
       })) as EmployeeV2WithRelations[];
 
       return {
