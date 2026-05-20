@@ -422,7 +422,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             : "px-4 py-2.5",
           isActive ?
           "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
+          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
         )}>
 
           <span className={cn(
@@ -570,7 +570,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           : "px-4 py-2.5",
         isAnyChildActive ?
         "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
+        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
       )}>
 
         <span className={cn(
@@ -651,7 +651,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
                       "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 font-medium"
+                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
                     )}>
 
                       <span className={cn(
