@@ -278,6 +278,43 @@ const adminNavItems: NavItem[] = [
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 
+const getQuickAccessStyles = (label: string, isActive: boolean) => {
+  const themeColors: Record<string, {
+    activeClass: string;
+    hoverClass: string;
+    iconColorActive: string;
+    iconColorInactive: string;
+  }> = {
+    'Empleados': {
+      activeClass: 'bg-orange-50/90 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 shadow-[0_2px_8px_rgba(234,88,12,0.08)] font-bold',
+      hoverClass: 'hover:bg-orange-50/60 dark:hover:bg-orange-950/10 hover:border-orange-200/55 hover:text-orange-600 dark:hover:text-orange-400',
+      iconColorActive: 'text-orange-500 dark:text-orange-400',
+      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-orange-500'
+    },
+    'Contratos': {
+      activeClass: 'bg-blue-50/90 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 shadow-[0_2px_8px_rgba(37,99,235,0.08)] font-bold',
+      hoverClass: 'hover:bg-blue-50/60 dark:hover:bg-blue-950/10 hover:border-blue-200/55 hover:text-blue-600 dark:hover:text-blue-400',
+      iconColorActive: 'text-blue-500 dark:text-blue-400',
+      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'
+    },
+    'Alertas': {
+      activeClass: 'bg-rose-50/90 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 shadow-[0_2px_8px_rgba(225,29,72,0.08)] font-bold',
+      hoverClass: 'hover:bg-rose-50/60 dark:hover:bg-rose-950/10 hover:border-rose-200/55 hover:text-rose-600 dark:hover:text-rose-400',
+      iconColorActive: 'text-rose-500 dark:text-rose-400',
+      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-rose-500'
+    }
+  };
+
+  const defaultTheme = {
+    activeClass: 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary font-bold shadow-sm',
+    hoverClass: 'hover:bg-primary/5 hover:border-primary/25 hover:text-primary',
+    iconColorActive: 'text-primary',
+    iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-primary'
+  };
+
+  return themeColors[label] || defaultTheme;
+};
+
 
 export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
@@ -339,9 +376,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
 
   const quickAccessItems = useMemo<NavItem[]>(() => [
-    { label: 'Empleados', icon: <Users className="size-6 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
-    { label: 'Contratos', icon: <FileText className="size-6 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
-    { label: 'Alertas', icon: <Bell className="size-6 shrink-0" strokeWidth={2} />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+    { label: 'Empleados', icon: <Users className="size-5 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
+    { label: 'Contratos', icon: <FileText className="size-5 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
+    { label: 'Alertas', icon: <Bell className="size-5 shrink-0" strokeWidth={2} />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
   ].filter(canViewQuickAccessItem), [alertCount, canViewQuickAccessItem]);
 
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
@@ -395,7 +432,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className="font-semibold text-sm whitespace-nowrap overflow-hidden">
+            <span className={cn("text-sm whitespace-nowrap overflow-hidden transition-all", isActive ? "font-semibold" : "font-medium")}>
               {item.label}
             </span>
           }
@@ -452,37 +489,35 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     quickAccessItems.length > 0 ? (
       <div className="pt-3">
         <SectionLabel label="Accesos rápidos" />
-        <div className={cn("gap-1.5", isCollapsed ? "flex flex-col" : "flex flex-col mt-1.5")}>
+        <div className={cn("gap-2", isCollapsed ? "flex flex-col mt-1" : "grid grid-cols-3 mt-2 px-1")}>
           {quickAccessItems.map((item) => {
             const isActive = location.pathname === item.href;
+            const style = getQuickAccessStyles(item.label, isActive);
+            
             const content = (
               <Link key={item.href} to={item.href} onClick={handleNavClick}>
                 <motion.div
-                  whileHover={{ 
-                    backgroundColor: 'rgb(255, 247, 237)', // orange-50
-                    borderColor: 'rgb(254, 215, 170)', // orange-200
-                    color: 'rgb(234, 88, 12)', // orange-600
-                  }}
+                  whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex items-center transition-all duration-300 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex transition-all duration-300 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
-                      ? "mx-auto h-11 w-11 justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
-                      : "h-11 flex-row gap-3 px-3.5 rounded-xl border border-sidebar-border/60 bg-[#e7f0fc]/40 dark:bg-primary/5 text-sidebar-foreground hover:shadow-sm",
-                    isActive && !isCollapsed && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm",
-                    isActive && isCollapsed && "bg-orange-50 border-orange-200 text-orange-600 shadow-sm"
+                      ? "mx-auto h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
+                      : cn("h-16 flex-col items-center justify-center gap-1 rounded-2xl border text-center p-1.5", 
+                           isActive ? style.activeClass : "border-sidebar-border bg-[#e7f0fc]/15 dark:bg-primary/5 text-sidebar-foreground/80 hover:shadow-sm " + style.hoverClass
+                        )
                   )}
                 >
                   <span className={cn(
-                    "flex items-center justify-center shrink-0 transition-colors",
-                    isActive ? "text-orange-600" : "text-sidebar-foreground"
+                    "flex items-center justify-center shrink-0 transition-colors [&_svg]:size-5",
+                    isActive ? style.iconColorActive : style.iconColorInactive
                   )}>
                     {item.icon}
                   </span>
                   {!isCollapsed && (
                     <span className={cn(
-                      "text-xs font-bold leading-tight tracking-wide",
-                      isActive ? "text-orange-600" : "text-sidebar-foreground/90"
+                      "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-nowrap",
+                      isActive ? "text-inherit" : "text-sidebar-foreground/80 group-hover:text-inherit"
                     )}>
                       {item.label}
                     </span>
@@ -492,7 +527,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground font-black shadow-sm",
                       isCollapsed 
                         ? "-right-1 -top-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar" 
-                        : "right-3.5 top-1/2 -translate-y-1/2 h-5 px-2 text-[10px]"
+                        : "top-1 right-1 h-4.5 min-w-[18px] px-1 text-[9px] leading-none"
                     )}>
                       {item.badge}
                     </span>
@@ -545,7 +580,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className="font-bold text-sm whitespace-nowrap overflow-hidden flex-1">
+          <span className={cn("text-sm whitespace-nowrap overflow-hidden flex-1 transition-all", isAnyChildActive ? "font-semibold" : "font-medium")}>
             {item.label}
           </span>
         }
@@ -625,7 +660,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
                         {child.icon}
                       </span>
-                      <span className="font-bold text-sm">{child.label}</span>
+                      <span className={cn("text-sm transition-all", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
                     </motion.div>
                   </Link>);
 
@@ -845,7 +880,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                         "relative flex transition-all duration-200 group",
                         isCollapsed 
                           ? "mx-auto h-11 w-11 items-center justify-center rounded-lg p-0" 
-                          : "min-h-[92px] h-auto flex-col items-center justify-center gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2.5 px-1 text-center",
+                          : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
                         isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-[0_4px_12px_rgba(14,165,233,0.08)] ring-1 ring-primary/20",
                         isActive && isCollapsed && "bg-sidebar-accent"
                       )}
@@ -862,7 +897,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
                       {!isCollapsed && (
                         <span className={cn(
-                          "text-[9px] font-extrabold uppercase tracking-wider leading-snug transition-colors w-full px-1 max-w-full break-words",
+                          "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
                           isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
                         )}>
                           {item.label}
