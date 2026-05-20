@@ -203,10 +203,11 @@ export function DocumentFormDialog({
       clearFiles();
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'No se pudo guardar el documento';
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo guardar el documento',
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -216,8 +217,8 @@ export function DocumentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex h-[90dvh] max-h-[90dvh] w-[calc(100vw-1.5rem)] max-w-lg flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-border bg-background px-5 py-4">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-primary" />
             Cargar Documento
@@ -228,7 +229,8 @@ export function DocumentFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 scrollbar-themed">
             {/* Document Type */}
             <FormField
               control={form.control}
@@ -258,7 +260,7 @@ export function DocumentFormDialog({
             {/* File Upload */}
             <div className="space-y-2">
               <FormLabel>Archivos *</FormLabel>
-              <div className="border-2 border-dashed rounded-lg p-5 text-center hover:bg-background transition-colors">
+              <div className="rounded-lg border-2 border-dashed p-5 text-center transition-colors hover:bg-muted/40">
                 <input
                   id="file-input"
                   type="file"
@@ -278,21 +280,31 @@ export function DocumentFormDialog({
                 </label>
               </div>
               {selectedFiles.length > 0 && (
-                <div className="space-y-2 rounded-lg border bg-background p-2">
-                  {selectedFiles.map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-md bg-background p-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{file.name}</p>
-                          <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                <div className="rounded-lg border bg-muted/20">
+                  <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {selectedFiles.length} archivo{selectedFiles.length !== 1 ? 's' : ''} seleccionado{selectedFiles.length !== 1 ? 's' : ''}
+                    </span>
+                    <Button type="button" variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={clearFiles}>
+                      Limpiar
+                    </Button>
+                  </div>
+                  <div className="max-h-48 space-y-1 overflow-y-auto p-2 scrollbar-themed">
+                    {selectedFiles.map((file, index) => (
+                      <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 rounded-md bg-background p-2">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                          </div>
                         </div>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFile(index)}>
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => removeFile(index)}>
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -373,19 +385,22 @@ export function DocumentFormDialog({
                 </FormItem>
               )}
             />
+            </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex shrink-0 justify-end gap-2 border-t border-border bg-background px-5 py-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              {canManageDocs && (
-                <Button type="submit" disabled={uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending}>
-                  {(uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending) && (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  )}
-                  Guardar
-                </Button>
-              )}
+              <Button
+                type="submit"
+                disabled={!canManageDocs || uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending}
+                title={!canManageDocs ? 'No tienes permiso para guardar documentos' : undefined}
+              >
+                {(uploading || createEmployeeDocument.isPending || createCandidateDocument.isPending) && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                Guardar
+              </Button>
             </div>
           </form>
         </Form>

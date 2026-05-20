@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -19,7 +19,8 @@ import {
   Coffee,
   Tool,
   Wrench,
-  Loader2
+  Loader2,
+  type LucideIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -82,6 +83,7 @@ import {
   RequisitionReason,
   DayOfWeek,
 } from '@/types/requisition';
+import type { Shift } from '@/types/schedule';
 
 interface RequisitionFormDialogProps {
   open: boolean;
@@ -230,9 +232,29 @@ export function RequisitionFormDialog({
     { value: 'requester', label: 'Solicitante', icon: UserCheck },
   ];
 
+  const calendarClassNames = {
+    months: "w-full",
+    month: "w-full space-y-3",
+    table: "w-full border-collapse",
+    head_row: "grid grid-cols-7",
+    head_cell: "text-muted-foreground text-center text-[0.75rem] font-medium",
+    row: "grid grid-cols-7 mt-1",
+    cell: "relative flex h-9 items-center justify-center p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+    day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
+  };
+
+  const FieldLabel = ({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) => (
+    <FormLabel className="block">
+      <span className="inline-flex items-center gap-1.5 align-middle leading-none">
+        <Icon className="h-4 w-4 shrink-0 translate-y-0 text-primary" />
+        <span className="leading-none">{children}</span>
+      </span>
+    </FormLabel>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full border-none shadow-2xl">
+      <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[calc(100vw-1rem)] max-w-5xl flex-col gap-0 overflow-hidden rounded-lg border bg-background p-0 shadow-xl sm:w-full">
         <DialogTitle className="sr-only">
           {requisition ? 'Editar Requisición' : 'Nueva Requisición de Personal'}
         </DialogTitle>
@@ -240,47 +262,47 @@ export function RequisitionFormDialog({
           Formulario para la solicitud de nuevo personal en la organización.
         </DialogDescription>
 
-        <div className="relative overflow-hidden bg-muted/40 px-4 pt-8 pb-6 sm:px-8 sm:pt-10 border-b border-border">
+        <div className="shrink-0 border-b border-border bg-background px-4 py-4 sm:px-6">
           {/* Decorative patterns */}
           
           
           
           {/* Pattern overlay (dots) removed */}
 
-          <div className="relative flex flex-col md:flex-row items-start gap-6">
+          <div className="relative flex items-start gap-4">
             {/* Avatar/Initial */}
-            <div className="w-16 h-16 shrink-0 rounded-2xl bg-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner border border-border transition-transform hover:scale-105 duration-300">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-base font-semibold text-primary">
               {form.watch('cargo_solicitado') ? form.watch('cargo_solicitado').substring(0, 2).toUpperCase() : 'RP'}
             </div>
 
-            <div className="flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2 pr-8">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="bg-success/10 text-success border-success/20 animate-in fade-in slide-in-from-left-2 duration-500">
-                  <span className="w-2 h-2 rounded-full bg-success mr-1.5 animate-pulse" />
+                <Badge variant="secondary" className="rounded-md border-success/20 bg-success/10 text-success">
+                  <span className="mr-1.5 h-2 w-2 rounded-full bg-success" />
                   {requisition ? 'En Proceso' : 'Nueva'}
                 </Badge>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-medium">
+                <Badge variant="secondary" className="rounded-md border-primary/20 bg-primary/10 font-medium text-primary">
                   {requisitionReasonLabels[form.watch('motivo_solicitud') as RequisitionReason] || 'Solicitud'}
                 </Badge>
               </div>
               
-              <h2 className="text-3xl font-display font-bold text-foreground tracking-tight sm:text-4xl">
+              <h2 className="truncate text-xl font-semibold text-foreground sm:text-2xl">
                 {form.watch('cargo_solicitado') || (requisition ? 'Editar Requisición' : 'Nueva Requisición')}
               </h2>
               
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground font-medium">
-                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+              <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm font-medium text-muted-foreground">
+                <div className="flex min-w-0 items-center gap-2">
                   <Building2 className="w-4 h-4 text-primary/60" />
-                  {operationCenters.find(c => c.id === form.watch('operation_center_id'))?.name || 'Centro no seleccionado'}
+                  <span className="truncate">{operationCenters.find(c => c.id === form.watch('operation_center_id'))?.name || 'Centro no seleccionado'}</span>
                 </div>
-                <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                <div className="flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4 text-primary/60" />
                   {format(form.watch('fecha_requisicion') || new Date(), "MMMM yyyy", { locale: es })}
                 </div>
                 {form.watch('area_id') && (
-                  <div className="flex items-center gap-2 transition-colors hover:text-primary">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Target className="w-4 h-4 text-primary/60" />
-                    {areas.find(a => a.id === form.watch('area_id'))?.name}
+                    <span className="truncate">{areas.find(a => a.id === form.watch('area_id'))?.name}</span>
                   </div>
                 )}
               </div>
@@ -289,7 +311,7 @@ export function RequisitionFormDialog({
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={form.handleSubmit(onSubmit, (errors) => {
             const missingFields = Object.keys(errors).length;
             if (missingFields > 0) {
               toast.error('Campos incompletos', {
@@ -297,23 +319,25 @@ export function RequisitionFormDialog({
               });
             }
           })}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-4 pt-2 sm:px-6">
-                <TabsList className="w-full h-auto flex-wrap gap-2 bg-transparent p-0 justify-start">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
+              <div className="shrink-0 border-b border-border/70 bg-muted/30 px-4 py-3 sm:px-6">
+                <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border border-border/60 bg-background p-1 shadow-sm sm:grid-cols-6">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:shadow-none transition-all"
+                      className="h-10 gap-2 rounded-lg px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground shadow-none transition-colors data-[state=active]:bg-[#19a9e5] data-[state=active]:text-white data-[state=active]:shadow-none sm:text-[10px]"
                     >
-                      <tab.icon className="w-4 h-4" />
-                      <span className="hidden sm:inline font-medium">{tab.label}</span>
+                      <tab.icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="hidden font-medium sm:inline">{tab.label}</span>
+                      <span className="font-medium sm:hidden">{tab.label.slice(0, 3)}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
               </div>
 
-              <ScrollArea className="h-[calc(95dvh-320px)] px-4 py-4 sm:px-8 sm:py-6">
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="px-4 py-5 sm:px-6">
                 {/* Requisition Tab */}
                 <TabsContent value="requisition" className="mt-0 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
@@ -322,10 +346,9 @@ export function RequisitionFormDialog({
                       name="fecha_requisicion"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="flex items-center gap-2">
-                            <CalendarIcon className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={CalendarIcon}>
                             Fecha de Requisición <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -341,12 +364,14 @@ export function RequisitionFormDialog({
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                            <PopoverContent className="w-[min(92vw,21rem)] p-2 bg-popover" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 initialFocus
+                                className="w-full p-0 pointer-events-auto"
+                                classNames={calendarClassNames}
                               />
                             </PopoverContent>
                           </Popover>
@@ -360,10 +385,9 @@ export function RequisitionFormDialog({
                       name="fecha_ingreso_estimada"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="flex items-center gap-2">
-                            <CalendarIcon className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={CalendarIcon}>
                             Fecha Ingreso Estimada
-                          </FormLabel>
+                          </FieldLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -379,7 +403,7 @@ export function RequisitionFormDialog({
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
+                            <PopoverContent className="w-[min(92vw,21rem)] p-2 bg-popover" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -393,7 +417,8 @@ export function RequisitionFormDialog({
                                   return date < minDate;
                                 }}
                                 initialFocus
-                                className="p-3 pointer-events-auto"
+                                className="w-full p-0 pointer-events-auto"
+                                classNames={calendarClassNames}
                               />
                             </PopoverContent>
                           </Popover>
@@ -412,10 +437,9 @@ export function RequisitionFormDialog({
                       name="motivo_solicitud"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <ClipboardList className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={ClipboardList}>
                             Motivo de la Solicitud <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-11">
@@ -463,10 +487,9 @@ export function RequisitionFormDialog({
                       name="cargo_solicitado"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Briefcase className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={Briefcase}>
                             Cargo Solicitado <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <FormControl>
                             <SearchableSelect
                               options={positions
@@ -492,10 +515,9 @@ export function RequisitionFormDialog({
                       name="cantidad_vacantes_requeridas"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={Users}>
                             Cantidad de Vacantes <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -515,10 +537,9 @@ export function RequisitionFormDialog({
                       name="area_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Target className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={Target}>
                             Área <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-11">
@@ -543,10 +564,9 @@ export function RequisitionFormDialog({
                       name="operation_center_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={Building2}>
                             Centro de Operación <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-11">
@@ -641,10 +661,9 @@ export function RequisitionFormDialog({
                       name="horario_trabajo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={Clock}>
                             Horario de Trabajo
-                          </FormLabel>
+                          </FieldLabel>
                           <FormControl>
                             <Input placeholder="Ej: 6:00 AM - 2:00 PM" className="h-11" {...field} />
                           </FormControl>
@@ -658,10 +677,9 @@ export function RequisitionFormDialog({
                       name="dia_descanso_obligatorio"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="flex items-center gap-2">
-                            <CalendarIcon className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={CalendarIcon}>
                             Día de Descanso <span className="text-orange-500">*</span>
-                          </FormLabel>
+                          </FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger className="h-11">
@@ -698,10 +716,9 @@ export function RequisitionFormDialog({
                       name="turno_trabajo_id"
                       render={({ field }) => (
                         <FormItem className="sm:col-span-2">
-                          <FormLabel className="flex items-center gap-2">
-                            <ClipboardList className="w-4 h-4 text-primary" />
+                          <FieldLabel icon={ClipboardList}>
                             Turno de Trabajo
-                          </FormLabel>
+                          </FieldLabel>
                           <Select onValueChange={field.onChange} value={field.value || ''}>
                             <FormControl>
                               <SelectTrigger className="h-11">
@@ -709,9 +726,9 @@ export function RequisitionFormDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {shifts
-                                .filter((s: any) => s.is_active !== false)
-                                .map((shift: any) => (
+                              {(shifts as Shift[])
+                                .filter((shift) => shift.is_active !== false)
+                                .map((shift) => (
                                   <SelectItem key={shift.id} value={shift.id}>
                                     {shift.name}
                                   </SelectItem>
@@ -815,10 +832,9 @@ export function RequisitionFormDialog({
                     name="tipo_contrato_solicitado"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <FileEdit className="w-4 h-4 text-primary" />
+                        <FieldLabel icon={FileEdit}>
                           Tipo de Contrato Sugerido
-                        </FormLabel>
+                        </FieldLabel>
                         <Select onValueChange={field.onChange} value={field.value || ''}>
                           <FormControl>
                             <SelectTrigger className="h-11">
@@ -885,21 +901,22 @@ export function RequisitionFormDialog({
                     />
                   </div>
                 </TabsContent>
+                </div>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-4 py-4 sm:px-8 sm:py-6 bg-background /5 border-t border-border/50">
+              <div className="flex shrink-0 flex-col gap-3 border-t border-border bg-background px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-11 px-6 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-colors font-medium order-2 sm:order-1"
+                  className="h-10 rounded-md px-5 font-medium order-2 sm:order-1"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="h-11 px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-semibold order-1 sm:order-2"
+                  className="h-10 rounded-md px-6 font-semibold order-1 sm:order-2"
                 >
                   {isLoading ? (
                     <>

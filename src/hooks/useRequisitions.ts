@@ -87,6 +87,36 @@ export interface PersonnelRequisition {
   vacancies?: { id: string; position_title: string; status: string }[];
 }
 
+type SupabaseMutationError = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
+
+const getCreateRequisitionErrorDescription = (error: unknown) => {
+  const supabaseError = error as SupabaseMutationError;
+  const errorText = [
+    supabaseError?.code,
+    supabaseError?.message,
+    supabaseError?.details,
+    supabaseError?.hint,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  if (
+    supabaseError?.code === '42501' ||
+    errorText.includes('row-level security') ||
+    errorText.includes('permission denied')
+  ) {
+    return 'Tu usuario no tiene permiso para crear requisiciones en esta empresa. Verifica que tenga empresa asignada o permiso de creación.';
+  }
+
+  return 'No se pudo crear la requisición. Intenta nuevamente.';
+};
+
 export function useRequisitions() {
   const { currentCompanyId } = useAuth();
 
@@ -202,7 +232,7 @@ export function useCreateRequisition() {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'No se pudo crear la requisición.',
+        description: getCreateRequisitionErrorDescription(error),
         variant: 'destructive',
       });
       console.error('Error creating requisition:', error);
