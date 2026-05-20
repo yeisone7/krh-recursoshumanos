@@ -304,7 +304,7 @@ export function RequisitionFormDialog({
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:data-[state=active]:text-primary data-[state=active]:shadow-none transition-all"
+                      className="h-10 flex-1 min-w-[120px] gap-2 px-4 rounded-xl border border-transparent data-[state=active]:border-primary/20 data-[state=active]:shadow-none transition-all"
                     >
                       <tab.icon className="w-4 h-4" />
                       <span className="hidden sm:inline font-medium">{tab.label}</span>
