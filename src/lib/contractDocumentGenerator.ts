@@ -149,6 +149,15 @@ function numberToWords(num: number): string {
 function prepareTemplateData(data: ContractDocumentData): Record<string, string> {
   const today = data.generationDate;
   const salaryWords = capitalize(numberToWords(data.salary));
+  const salaryFormatted = formatCurrency(data.salary);
+  const salaryTypeText = data.salaryType === 'mensual' ? 'Salario Ordinario Mensual' : 'Salario Integral';
+  const payrollTypeText = data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal';
+  const durationText = data.contractDurationMonths
+    ? `${data.contractDurationMonths} meses`
+    : 'Indefinido';
+  const transportAllowanceText = data.transportAllowance && data.transportAllowanceAmount
+    ? formatCurrency(data.transportAllowanceAmount)
+    : 'No aplica';
   
   return {
     // Company
@@ -169,9 +178,11 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     
     // Employee
     EMPLEADO_NOMBRE_COMPLETO: data.employeeFullName,
+    EMPLEADO_NOMBRE: data.employeeFullName,
     EMPLEADO_NOMBRES: data.employeeFirstName,
     EMPLEADO_APELLIDOS: data.employeeLastName,
     EMPLEADO_TIPO_DOCUMENTO: data.employeeDocumentType,
+    EMPLEADO_DOCUMENTO_TIPO: data.employeeDocumentType,
     EMPLEADO_DOCUMENTO: data.employeeDocumentNumber,
     EMPLEADO_DIRECCION: data.employeeAddress || '',
     EMPLEADO_CIUDAD: data.employeeCity || '',
@@ -180,7 +191,9 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     EMPLEADO_FECHA_NACIMIENTO: data.employeeBirthDate || '',
     EMPLEADO_CARGO: data.employeePosition,
     EMPLEADO_CENTRO_OPERACION: data.employeeOperationCenter || '',
-    EMPLEADO_TIPO_NOMINA: data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal', // Default to Quincenal
+    EMPLEADO_CENTRO: data.employeeOperationCenter || '',
+    EMPLEADO_AREA: data.employeeOperationCenter || '',
+    EMPLEADO_TIPO_NOMINA: payrollTypeText, // Default to Quincenal
     
     // Contract
     CONTRATO_NUMERO: data.contractNumber || '', // Consecutivo (ej: PC-2024-0001)
@@ -191,20 +204,25 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     CONTRATO_FECHA_INICIO_LETRAS: formatDateInWords(data.startDate),
     CONTRATO_FECHA_FIN: data.endDate ? format(data.endDate, 'dd/MM/yyyy') : 'No aplica',
     CONTRATO_FECHA_FIN_LETRAS: data.endDate ? formatDateInWords(data.endDate) : 'No aplica',
-    CONTRATO_SALARIO: formatCurrency(data.salary),
+    CONTRATO_SALARIO: salaryFormatted,
     CONTRATO_SALARIO_NUMERO: data.salary.toString(),
     CONTRATO_SALARIO_LETRAS: salaryWords + ' pesos M/CTE',
-    CONTRATO_TIPO_SALARIO: data.salaryType === 'mensual' ? 'Salario Ordinario Mensual' : 'Salario Integral',
+    CONTRATO_TIPO_SALARIO: salaryTypeText,
     CONTRATO_AUXILIO_TRANSPORTE: data.transportAllowance ? 'Sí' : 'No',
-    CONTRATO_AUXILIO_TRANSPORTE_VALOR: data.transportAllowance && data.transportAllowanceAmount 
-      ? formatCurrency(data.transportAllowanceAmount) 
-      : 'No aplica',
+    CONTRATO_AUXILIO_TRANSPORTE_VALOR: transportAllowanceText,
     CONTRATO_PERIODO_PRUEBA: data.trialPeriodDays ? `${data.trialPeriodDays} días` : 'No aplica',
     CONTRATO_CIUDAD_TRABAJO: data.workCity || '',
     CONTRATO_DIRECCION_TRABAJO: data.workAddress || '',
-    CONTRATO_DURACION_MESES: data.contractDurationMonths 
-      ? `${data.contractDurationMonths} meses` 
-      : 'Indefinido',
+    CONTRATO_DURACION_MESES: durationText,
+    
+    // Friendly aliases shown in the catalog helper.
+    SALARIO: salaryFormatted,
+    SALARIO_NUMERO: data.salary.toString(),
+    SALARIO_LETRAS: salaryWords,
+    SALARIO_TIPO: salaryTypeText,
+    AUXILIO_TRANSPORTE: transportAllowanceText,
+    LUGAR_CIUDAD: data.workCity || '',
+    LUGAR_DIRECCION: data.workAddress || '',
     
     // Clauses
     CLAUSULA_NO_COMPETENCIA: data.hasNonCompeteClause ? 'Sí aplica' : 'No aplica',
@@ -214,6 +232,8 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     // Generation
     FECHA_GENERACION: format(today, 'dd/MM/yyyy'),
     FECHA_GENERACION_LETRAS: formatDateInWords(today),
+    FECHA_HOY: format(today, 'dd/MM/yyyy'),
+    FECHA_HOY_LETRAS: formatDateInWords(today),
     CIUDAD_GENERACION: data.generationCity || 'Bogotá D.C.',
     
     // Extra date formats
@@ -252,6 +272,7 @@ export async function generateContractFromTemplate(
     paragraphLoop: true,
     linebreaks: true,
     delimiters: { start: '{{', end: '}}' },
+    nullGetter: () => '',
   });
   
   // Get template data
