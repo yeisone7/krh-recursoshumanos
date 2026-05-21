@@ -137,13 +137,13 @@ export function ContractTypeFormDialog({
         </DialogDescription>
         <div className="relative flex-1 flex flex-col min-h-0">
           {/* Header Premium Flat Design */}
-          <DialogHeader className="relative px-10 pt-12 pb-10 bg-slate-50/50 border-b border-slate-200">
-            <div className="flex items-center gap-6">
-              <div className="relative h-20 w-20 flex items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 overflow-hidden">
-                <FileStack className="relative w-9 h-9 text-primary stroke-[2.5]" />
+          <DialogHeader className="relative px-6 py-6 sm:px-8 sm:py-7 bg-slate-50/50 border-b border-slate-200">
+            <div className="flex items-center gap-4">
+              <div className="relative h-14 w-14 flex items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 overflow-hidden">
+                <FileStack className="relative w-7 h-7 text-primary stroke-[2.5]" />
               </div>
-              <div className="space-y-1.5 flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+              <div className="space-y-1 flex-1 min-w-0">
+                <div className="flex items-center gap-2">
                   <Badge className={cn(
                     "font-black text-[9px] px-2.5 py-0.5 rounded-lg border-none uppercase tracking-[0.15em]",
                     editItem ? "bg-amber-500 text-white" : "bg-emerald-500 text-white"
@@ -153,28 +153,28 @@ export function ContractTypeFormDialog({
                   <div className="h-1 w-1 rounded-full bg-slate-300" />
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Configuración Maestra</span>
                 </div>
-                <DialogTitle className="text-4xl font-black tracking-tighter text-slate-900 leading-none truncate uppercase">
+                <DialogTitle className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 leading-none truncate uppercase">
                   {editItem ? 'Modificar Tipo' : 'Nuevo Tipo'}
                 </DialogTitle>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Arquitectura de contratación y plantillas legales</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Arquitectura de contratación y plantillas legales</p>
               </div>
             </div>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
-            <div className="flex-1 overflow-y-auto px-10 py-10 space-y-10 custom-scrollbar bg-slate-50/30">
+            <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 sm:py-7 space-y-7 custom-scrollbar bg-slate-50/30">
               
               {/* Sección: Identificación del Tipo */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                    <ShieldCheck className="w-4.5 h-4.5 stroke-[2.5]" />
+              <div className="space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                    <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Identidad Corporativa</h3>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
                     <Label htmlFor="contractType" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">ID Técnico del Sistema *</Label>
                     <div className="relative">
                       <Input
@@ -184,13 +184,13 @@ export function ContractTypeFormDialog({
                         placeholder="ej: término_fijo_un_año"
                         required
                         disabled={!!editItem}
-                        className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
+                        className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
                       />
                       {!editItem && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-1 rounded-lg">ID Único</div>}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label htmlFor="displayName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nombre Comercial *</Label>
                     <Input
                       id="displayName"
@@ -198,34 +198,34 @@ export function ContractTypeFormDialog({
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="ej: Contrato Fijo Inferior a 1 Año"
                       required
-                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
+                      className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <Label htmlFor="description" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Especificaciones Legales</Label>
                   <Textarea
                     id="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe los alcances, condiciones y marco legal de este tipo de vinculación..."
-                    className="min-h-[120px] rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-bold text-slate-600 resize-none placeholder:text-slate-300 p-6 text-xs leading-relaxed"
+                    className="min-h-[88px] rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-bold text-slate-600 resize-none placeholder:text-slate-300 p-4 text-xs leading-relaxed"
                   />
                 </div>
               </div>
 
               {/* Sección: Configuración Operativa */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                    <Settings2 className="w-4.5 h-4.5 stroke-[2.5]" />
+              <div className="space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                    <Settings2 className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Parámetros Operativos</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-primary" /> Meses Límite
                     </Label>
@@ -234,10 +234,10 @@ export function ContractTypeFormDialog({
                       value={maxDurationMonths}
                       onChange={(e) => setMaxDurationMonths(e.target.value)}
                       placeholder="∞"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
+                      className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
                       <Layers className="w-3.5 h-3.5 text-primary" /> Prórrogas
                     </Label>
@@ -246,10 +246,10 @@ export function ContractTypeFormDialog({
                       value={maxExtensions}
                       onChange={(e) => setMaxExtensions(e.target.value)}
                       placeholder="∞"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
+                      className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
                       <CalendarRange className="w-3.5 h-3.5 text-primary" /> Días Prueba
                     </Label>
@@ -258,13 +258,13 @@ export function ContractTypeFormDialog({
                       value={defaultTrialDays}
                       onChange={(e) => setDefaultTrialDays(e.target.value)}
                       placeholder="60"
-                      className="h-14 rounded-2xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
+                      className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 text-center"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-slate-200 transition-all">
                     <div className="space-y-1">
                       <Label htmlFor="requiresEndDate" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block">Vencimiento Fijo</Label>
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none">Requiere fecha de terminación</p>
@@ -277,7 +277,7 @@ export function ContractTypeFormDialog({
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all">
+                  <div className="flex items-center justify-between p-4 rounded-xl bg-white border border-slate-200 transition-all">
                     <div className="space-y-1">
                       <Label htmlFor="isActive" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block">Habilitado</Label>
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none">Disponible para contratación</p>
@@ -293,10 +293,10 @@ export function ContractTypeFormDialog({
               </div>
 
               {/* Sección: Plantilla Documental */}
-              <div className="space-y-8">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600">
-                    <FileText className="w-4.5 h-4.5 stroke-[2.5]" />
+              <div className="space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                    <FileText className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-900">Motor de Generación (DOCX/PDF)</h3>
                 </div>
@@ -308,11 +308,11 @@ export function ContractTypeFormDialog({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center justify-between p-6 rounded-2xl bg-white border border-primary/20"
+                      className="flex items-center justify-between p-4 rounded-xl bg-white border border-primary/20"
                     >
                       <div className="flex items-center gap-5 min-w-0">
-                        <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-primary/5 text-primary">
-                          <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
+                        <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-primary/5 text-primary">
+                          <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
                         </div>
                         <div className="min-w-0 space-y-1">
                           <p className="text-xs font-black uppercase tracking-widest text-primary truncate">{existingTemplateFileName}</p>
@@ -326,7 +326,7 @@ export function ContractTypeFormDialog({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDownloadTemplate(editItem.template_url!, existingTemplateFileName)}
-                            className="h-12 w-12 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
+                            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
                           >
                             <Download className="w-5 h-5 stroke-[2.5]" />
                           </Button>
@@ -336,7 +336,7 @@ export function ContractTypeFormDialog({
                           variant="ghost"
                           size="icon"
                           onClick={() => setExistingTemplateFileName(null)}
-                          className="h-12 w-12 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
+                          className="h-10 w-10 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
                         >
                           <X className="w-5 h-5 stroke-[2.5]" />
                         </Button>
@@ -348,11 +348,11 @@ export function ContractTypeFormDialog({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex items-center justify-between p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20"
+                      className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20"
                     >
                       <div className="flex items-center gap-5 min-w-0">
-                        <div className="h-14 w-14 flex items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
-                          <Upload className="w-7 h-7 stroke-[2.5]" />
+                        <div className="h-11 w-11 flex items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                          <Upload className="w-5 h-5 stroke-[2.5]" />
                         </div>
                         <div className="min-w-0 space-y-1">
                           <p className="text-xs font-black uppercase tracking-widest text-emerald-600 truncate">{templateFile.name}</p>
@@ -364,7 +364,7 @@ export function ContractTypeFormDialog({
                         variant="ghost"
                         size="icon"
                         onClick={handleRemoveFile}
-                        className="h-12 w-12 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
+                        className="h-10 w-10 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all"
                       >
                         <X className="w-5 h-5 stroke-[2.5]" />
                       </Button>
@@ -378,10 +378,10 @@ export function ContractTypeFormDialog({
                     >
                       <div
                         onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center py-12 rounded-2xl border-2 border-dashed border-slate-200 bg-white hover:border-primary/30 hover:bg-primary/[0.02] transition-all cursor-pointer overflow-hidden group/drop"
+                        className="flex flex-col items-center justify-center py-8 rounded-xl border-2 border-dashed border-slate-200 bg-white hover:border-primary/30 hover:bg-primary/[0.02] transition-all cursor-pointer overflow-hidden group/drop"
                       >
-                        <div className="relative mb-6 p-5 rounded-2xl bg-slate-50 border border-slate-200 transition-all">
-                          <Upload className="w-10 h-10 text-slate-350 stroke-[2.5]" />
+                        <div className="relative mb-4 p-4 rounded-xl bg-slate-50 border border-slate-200 transition-all">
+                          <Upload className="w-7 h-7 text-slate-350 stroke-[2.5]" />
                         </div>
                         <div className="text-center space-y-2">
                           <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover/drop:text-primary transition-colors">Vincular Plantilla DOCX/PDF</p>
@@ -404,25 +404,25 @@ export function ContractTypeFormDialog({
             </div>
 
             {/* Footer de Acciones Premium Flat */}
-            <div className="shrink-0 px-10 py-10 border-t border-slate-200 bg-white flex items-center justify-between gap-6 rounded-b-3xl">
-              <div className="hidden sm:flex items-center gap-3 text-slate-400">
+            <div className="shrink-0 px-6 py-5 sm:px-8 border-t border-slate-200 bg-white flex items-center justify-between gap-4 rounded-b-3xl">
+              <div className="hidden sm:flex items-center gap-2 text-slate-400">
                 <Info className="w-4 h-4" />
                 <span className="text-[9px] font-black uppercase tracking-widest italic">Campos con * son obligatorios</span>
               </div>
               
-              <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)} 
-                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] text-slate-450 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
+                  className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] text-slate-450 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
                 >
                   DESCARTAR
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading || !contractType.trim() || !displayName.trim()} 
-                  className="h-14 px-12 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all flex-1 sm:flex-none"
+                  className="h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
