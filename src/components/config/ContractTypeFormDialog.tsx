@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -44,8 +45,18 @@ export function ContractTypeFormDialog({
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [existingTemplateFileName, setExistingTemplateFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initializedFormKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!open) {
+      initializedFormKeyRef.current = null;
+      return;
+    }
+
+    const formKey = editItem?.id ?? 'new';
+    if (initializedFormKeyRef.current === formKey) return;
+    initializedFormKeyRef.current = formKey;
+
     if (editItem) {
       setContractType(editItem.contract_type || '');
       setDisplayName(editItem.display_name || '');
@@ -69,7 +80,7 @@ export function ContractTypeFormDialog({
       setExistingTemplateFileName(null);
       setTemplateFile(null);
     }
-  }, [editItem, open]);
+  }, [editItem?.id, open]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -121,6 +132,9 @@ export function ContractTypeFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90dvh] p-0 overflow-hidden bg-white border border-slate-200 shadow-none rounded-3xl focus:outline-none flex flex-col">
+        <DialogDescription className="sr-only">
+          Formulario para crear o modificar un tipo de contrato y su plantilla documental.
+        </DialogDescription>
         <div className="relative flex-1 flex flex-col min-h-0">
           {/* Header Premium Flat Design */}
           <DialogHeader className="relative px-10 pt-12 pb-10 bg-slate-50/50 border-b border-slate-200">
@@ -250,12 +264,9 @@ export function ContractTypeFormDialog({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div 
-                    className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all cursor-pointer"
-                    onClick={() => setRequiresEndDate(!requiresEndDate)}
-                  >
+                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all">
                     <div className="space-y-1">
-                      <Label htmlFor="requiresEndDate" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block pointer-events-none">Vencimiento Fijo</Label>
+                      <Label htmlFor="requiresEndDate" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block">Vencimiento Fijo</Label>
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none">Requiere fecha de terminación</p>
                     </div>
                     <Switch
@@ -266,12 +277,9 @@ export function ContractTypeFormDialog({
                     />
                   </div>
                   
-                  <div 
-                    className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all cursor-pointer"
-                    onClick={() => setIsActive(!isActive)}
-                  >
+                  <div className="flex items-center justify-between p-6 rounded-2xl bg-white border border-slate-200 transition-all">
                     <div className="space-y-1">
-                      <Label htmlFor="isActive" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block pointer-events-none">Habilitado</Label>
+                      <Label htmlFor="isActive" className="text-[10px] font-black uppercase tracking-widest text-slate-900 block">Habilitado</Label>
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter leading-none">Disponible para contratación</p>
                     </div>
                     <Switch
@@ -296,6 +304,7 @@ export function ContractTypeFormDialog({
                 <AnimatePresence mode="wait">
                   {existingTemplateFileName && !templateFile ? (
                     <motion.div
+                      key="existing-template"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -335,6 +344,7 @@ export function ContractTypeFormDialog({
                     </motion.div>
                   ) : templateFile ? (
                     <motion.div
+                      key="new-template"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -361,6 +371,7 @@ export function ContractTypeFormDialog({
                     </motion.div>
                   ) : (
                     <motion.div
+                      key="empty-template"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="relative"
