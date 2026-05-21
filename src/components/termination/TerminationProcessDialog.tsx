@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertTriangle,
-  FileText,
   CheckCircle2,
   Circle,
   Download,
@@ -76,13 +75,14 @@ import {
   useCompleteTermination,
 } from '@/hooks/useTerminations';
 import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
-import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
 import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
+import { IssueCertificateDialog } from '@/components/employees/IssueCertificateDialog';
 import { useEmployee } from '@/hooks/useEmployees';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 interface TerminationProcessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -99,8 +99,12 @@ export function TerminationProcessDialog({
   const [companyData, setCompanyData] = useState<any>(null);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [showCertificateDialog, setShowCertificateDialog] = useState(false);
+  const [laborCertificateGenerated, setLaborCertificateGenerated] = useState(false);
+  const [certificateDocumentId, setCertificateDocumentId] = useState<string | null>(null);
 
   const { data: employeeData } = useEmployee(contract.employeeId);
+  const { data: systemConfig } = useSystemConfig();
 
   const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
   const initiateTermination = useInitiateTermination();
@@ -122,6 +126,11 @@ export function TerminationProcessDialog({
       setStep('checklist');
     }
   }, [termination]);
+
+  useEffect(() => {
+    setLaborCertificateGenerated(false);
+    setCertificateDocumentId(null);
+  }, [contract.id]);
 
   // Calculate checklist if termination exists
   const checklist = termination
@@ -180,7 +189,7 @@ export function TerminationProcessDialog({
     }
   };
 
-  // Generate and download document (PDF or DOCX for preaviso)
+  // Generate and download corporate PDF documents
   const handleGenerateDocument = async (docType: TerminationDocumentType, docId: string) => {
     if (!termination || !companyData) {
       await fetchCompanyData();
@@ -189,6 +198,14 @@ export function TerminationProcessDialog({
     const company = companyData || await fetchCompanyData();
     if (!company || !termination) return;
 
+    const documentTypeLabel = employeeData?.identification_types?.name || employeeData?.document_type || contract.employeeDocumentType || 'C.C.';
+    const documentNumber = employeeData?.document_number || contract.employeeDocument || 'SIN-DOC';
+    const generatedAt = new Date();
+    const cleanDocumentNumber = documentNumber.replace(/[^\w-]/g, '').toUpperCase();
+    const documentCode = docType.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    const signerName = systemConfig?.legal_signature_config?.signer_name || 'Representante Legal';
+    const signerPosition = systemConfig?.legal_signature_config?.signer_position || 'Representante de la Empresa';
+
     const documentData: TerminationDocumentData = {
       companyName: company.name || 'Empresa',
       companyNit: company.nit || '',
@@ -196,8 +213,8 @@ export function TerminationProcessDialog({
       companyCity: 'Bucaramanga',
       companyPhone: company.phone,
       employeeFullName: contract.employeeName || 'Sin nombre',
-      employeeDocumentType: 'C.C.',
-      employeeDocumentNumber: '---',
+      employeeDocumentType: documentTypeLabel,
+      employeeDocumentNumber: documentNumber,
       employeePosition: contract.position || 'Sin cargo',
       employeeArea: contract.area || '',
       employeeOperationCenter: contract.operationCenter || '',
@@ -210,25 +227,23 @@ export function TerminationProcessDialog({
       effectiveDate: termination.effectiveDate,
       reason: termination.reason,
       resignationDate: termination.resignationDate,
-      hrManagerName: 'Director(a) de Talento Humano',
+      hrManagerName: signerName,
       hrManagerPosition: 'Líder de Talento Humano',
       documentDate: new Date(),
       documentCity: 'Bucaramanga',
     };
 
+    documentData.hrManagerPosition = signerPosition;
+    documentData.representativeSignatureUrl = systemConfig?.legal_signature_config?.signature_url || undefined;
+    documentData.folio = `RET-${format(generatedAt, 'yyyyMMdd')}-${documentCode}-${cleanDocumentNumber.slice(-8) || 'SINDOC'}`;
+    documentData.archiveNumber = `TH-RET-${cleanDocumentNumber || 'SINDOC'}-${format(generatedAt, 'yyyyMMdd')}`;
+    documentData.documentDate = generatedAt;
+
     try {
-      // Use DOCX template for preaviso, PDF for others
-      if (docType === 'preaviso') {
-        await generateAndDownloadPreaviso(documentData);
-        toast.success('Documento generado', {
-          description: 'Carta de Preaviso (DOCX) descargada correctamente.',
-        });
-      } else {
-        downloadTerminationDocument(docType, documentData);
-        toast.success('Documento generado', {
-          description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
-        });
-      }
+      await downloadTerminationDocument(docType, documentData);
+      toast.success('Documento generado', {
+        description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
+      });
       
       await markDocumentGenerated.mutateAsync({
         documentId: docId,
@@ -261,11 +276,26 @@ export function TerminationProcessDialog({
     }
   };
 
+  const handleLaborCertificateGenerated = async () => {
+    setLaborCertificateGenerated(true);
+
+    if (!certificateDocumentId) return;
+
+    await markDocumentGenerated.mutateAsync({
+      documentId: certificateDocumentId,
+      contractId: contract.id,
+      documentData: {
+        generatedFrom: 'labor_certificate_dialog',
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={handleCloseAttempt}>
-        <DialogContent className="max-w-2xl max-h-[90vh]">
-          <DialogHeader>
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl p-0 sm:h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)] lg:h-[85vh]">
+          <DialogHeader className="shrink-0 border-b bg-muted/30 px-5 py-4 sm:px-6">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" />
               Proceso de Retiro - {contract.employeeName}
@@ -277,7 +307,7 @@ export function TerminationProcessDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[60vh] pr-4">
+          <ScrollArea className="min-h-0 flex-1 px-5 py-4 sm:px-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -285,7 +315,7 @@ export function TerminationProcessDialog({
             ) : step === 'initiate' && !termination ? (
               // Step 1: Initiate termination
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleInitiate)} className="space-y-4">
+                <form id="termination-initiate-form" onSubmit={form.handleSubmit(handleInitiate)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="terminationType"
@@ -415,15 +445,6 @@ export function TerminationProcessDialog({
                     )}
                   />
 
-                  <div className="flex justify-end gap-3 pt-4">
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                      Cancelar
-                    </Button>
-                    <Button type="submit" disabled={initiateTermination.isPending}>
-                      {initiateTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Iniciar Proceso
-                    </Button>
-                  </div>
                 </form>
               </Form>
             ) : checklist ? (
@@ -442,17 +463,19 @@ export function TerminationProcessDialog({
                 <div className="space-y-3">
                   {checklist.documents.map((doc) => {
                     const terminationDoc = termination?.documents.find((d) => d.documentType === doc.type);
+                    const isLaborCertificate = doc.type === 'certificado_laboral';
+                    const isGenerated = doc.isGenerated || (isLaborCertificate && laborCertificateGenerated);
                     
                     return (
                       <div
                         key={doc.type}
                         className={cn(
                           'flex items-center justify-between p-4 rounded-lg border',
-                          doc.isGenerated ? 'bg-success-light border-success/20' : 'bg-background border-border'
+                          isGenerated ? 'bg-success-light border-success/20' : 'bg-background border-border'
                         )}
                       >
                         <div className="flex items-start gap-3">
-                          {doc.isGenerated ? (
+                          {isGenerated ? (
                             <CheckCircle2 className="w-5 h-5 text-success mt-0.5" />
                           ) : (
                             <Circle className="w-5 h-5 text-muted-foreground mt-0.5" />
@@ -466,7 +489,7 @@ export function TerminationProcessDialog({
                               {doc.type === 'preaviso' && (
                                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                                   <FileType className="w-3 h-3 mr-1" />
-                                  DOCX
+                                  PDF
                                 </Badge>
                               )}
                             </div>
@@ -475,52 +498,81 @@ export function TerminationProcessDialog({
                         </div>
 
                         <Button
-                          variant={doc.isGenerated ? 'outline' : 'default'}
+                          variant={isGenerated ? 'outline' : 'default'}
                           size="sm"
-                          onClick={() => terminationDoc && handleGenerateDocument(doc.type, terminationDoc.id)}
-                          disabled={markDocumentGenerated.isPending}
+                          onClick={() => {
+                            if (isLaborCertificate) {
+                              setCertificateDocumentId(terminationDoc?.id || null);
+                              setShowCertificateDialog(true);
+                              return;
+                            }
+
+                            if (terminationDoc) {
+                              handleGenerateDocument(doc.type, terminationDoc.id);
+                            }
+                          }}
+                          disabled={markDocumentGenerated.isPending || (isLaborCertificate && !employeeData)}
                         >
                           {doc.type === 'preaviso' ? (
                             <FileType className="w-4 h-4 mr-2" />
                           ) : (
                             <Download className="w-4 h-4 mr-2" />
                           )}
-                          {doc.isGenerated ? 'Descargar' : doc.type === 'preaviso' ? 'Generar DOCX' : 'Generar PDF'}
+                          {isGenerated ? 'Descargar' : isLaborCertificate ? 'Expedir' : 'Generar PDF'}
                         </Button>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Actions */}
-                <div className="flex justify-between pt-4 border-t">
+              </div>
+            ) : null}
+          </ScrollArea>
+
+          {!isLoading && step === 'initiate' && !termination && (
+            <div className="shrink-0 border-t bg-muted/40 px-5 py-3 sm:px-6">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" form="termination-initiate-form" disabled={initiateTermination.isPending}>
+                  {initiateTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Iniciar Proceso
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!isLoading && checklist && (
+            <div className="shrink-0 border-t bg-muted/40 px-5 py-3 sm:px-6">
+              {!checklist.canFinalize && (
+                <p className="mb-3 text-center text-sm text-warning-foreground">
+                  <AlertTriangle className="w-4 h-4 inline mr-1" />
+                  Debe generar todos los documentos requeridos para finalizar el proceso.
+                </p>
+              )}
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <Button variant="outline" onClick={handleCloseAttempt}>
                     <Save className="w-4 h-4 mr-2" />
                     Guardar y Continuar Después
                   </Button>
-                  <Button
-                    onClick={handleComplete}
-                    disabled={!checklist.canFinalize || completeTermination.isPending}
-                    className={cn(!checklist.canFinalize && 'opacity-50')}
-                  >
-                    {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {termination?.terminationType === 'traslado' ? (
-                      <><ArrowRightLeft className="w-4 h-4 mr-2" /> Finalizar y Trasladar</>
-                    ) : (
-                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalizar Proceso</>
-                    )}
-                  </Button>
                 </div>
-
-                {!checklist.canFinalize && (
-                  <p className="text-sm text-center text-warning-foreground">
-                    <AlertTriangle className="w-4 h-4 inline mr-1" />
-                    Debe generar todos los documentos requeridos para finalizar el proceso.
-                  </p>
-                )}
+                <Button
+                  onClick={handleComplete}
+                  disabled={!checklist.canFinalize || completeTermination.isPending}
+                  className={cn(!checklist.canFinalize && 'opacity-50')}
+                >
+                  {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {termination?.terminationType === 'traslado' ? (
+                    <><ArrowRightLeft className="w-4 h-4 mr-2" /> Finalizar y Trasladar</>
+                  ) : (
+                    <><CheckCircle2 className="w-4 h-4 mr-2" /> Finalizar Proceso</>
+                  )}
+                </Button>
               </div>
-            ) : null}
-          </ScrollArea>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -555,6 +607,17 @@ export function TerminationProcessDialog({
             if (!open) onOpenChange(false);
           }}
           employee={employeeData}
+        />
+      )}
+
+      {employeeData && (
+        <IssueCertificateDialog
+          open={showCertificateDialog}
+          onOpenChange={setShowCertificateDialog}
+          employee={employeeData}
+          onGenerated={() => {
+            void handleLaborCertificateGenerated();
+          }}
         />
       )}
     </>

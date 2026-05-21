@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { 
   TerminationType,
   TerminationDocumentType,
+  terminationDocumentLabels,
   terminationTypeLabels,
   TerminationDocumentData,
 } from '@/types/termination';
@@ -34,6 +35,36 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function sanitizeDocument(value: string): string {
+  return (value || 'SIN-DOC').replace(/[^\w-]/g, '').toUpperCase();
+}
+
+function getDocumentControls(data: TerminationDocumentData, documentType?: TerminationDocumentType) {
+  const docCode = (documentType || data.terminationType || 'retiro').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  const dateCode = format(data.documentDate || new Date(), 'yyyyMMdd');
+  const employeeCode = sanitizeDocument(data.employeeDocumentNumber).slice(-8) || 'SINDOC';
+  const folio = data.folio || `RET-${dateCode}-${docCode}-${employeeCode}`;
+  const archiveNumber = data.archiveNumber || `TH-RET-${employeeCode}-${dateCode}`;
+  return { folio, archiveNumber };
+}
+
+async function fetchImageAsBase64(url?: string): Promise<string | undefined> {
+  if (!url) return undefined;
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn('No se pudo cargar la firma legal', error);
+    return undefined;
+  }
+}
+
 // Base PDF configuration
 function createBasePDF(): jsPDF {
   const doc = new jsPDF({
@@ -44,6 +75,78 @@ function createBasePDF(): jsPDF {
   
   doc.setFont('helvetica');
   return doc;
+}
+
+function addCorporateShell(doc: jsPDF, data: TerminationDocumentData, documentType: TerminationDocumentType): void {
+  const pageCount = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const { folio, archiveNumber } = getDocumentControls(data, documentType);
+  const title = terminationDocumentLabels[documentType] || 'Documento de retiro';
+
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page);
+
+    doc.setFillColor(245, 248, 252);
+    doc.rect(0, 0, pageWidth, 11, 'F');
+    doc.setDrawColor(210, 222, 235);
+    doc.setLineWidth(0.3);
+    doc.line(15, 11, pageWidth - 15, 11);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(23, 78, 120);
+    doc.text(title.toUpperCase(), 15, 7);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(82, 99, 122);
+    doc.text(`Folio: ${folio}`, pageWidth - 15, 5.5, { align: 'right' });
+    doc.text(`Archivo: ${archiveNumber}`, pageWidth - 15, 9, { align: 'right' });
+
+    doc.setDrawColor(210, 222, 235);
+    doc.line(15, pageHeight - 14, pageWidth - 15, pageHeight - 14);
+    doc.setFontSize(7);
+    doc.setTextColor(104, 119, 141);
+    doc.text(`${data.companyName} | Documento generado por Gestión Humana`, 15, pageHeight - 8);
+    doc.text(`Página ${page} de ${pageCount}`, pageWidth - 15, pageHeight - 8, { align: 'right' });
+  }
+
+  doc.setTextColor(0, 0, 0);
+}
+
+function addRepresentativeSignatureBlock(
+  doc: jsPDF,
+  y: number,
+  data: TerminationDocumentData,
+  x = 25,
+  options: { width?: number; centered?: boolean } = {}
+): number {
+  const lineWidth = options.width || 60;
+  const centerX = x + lineWidth / 2;
+
+  if (data.representativeSignatureDataUrl) {
+    try {
+      doc.addImage(data.representativeSignatureDataUrl, 'PNG', x + 6, y - 19, Math.min(46, lineWidth - 12), 17, undefined, 'FAST');
+    } catch (error) {
+      console.warn('No se pudo insertar la firma legal', error);
+    }
+  }
+
+  doc.setDrawColor(60, 78, 100);
+  doc.line(x, y, x + lineWidth, y);
+  y += 5;
+  doc.setFont('helvetica', 'bold');
+  if (options.centered) doc.text(data.hrManagerName, centerX, y, { align: 'center' });
+  else doc.text(data.hrManagerName, x, y);
+  y += 4;
+  doc.setFont('helvetica', 'normal');
+  if (options.centered) doc.text(data.hrManagerPosition, centerX, y, { align: 'center' });
+  else doc.text(data.hrManagerPosition, x, y);
+  y += 4;
+  if (options.centered) doc.text(data.companyName, centerX, y, { align: 'center' });
+  else doc.text(data.companyName, x, y);
+
+  return y + 10;
 }
 
 // Add header to PDF
@@ -85,16 +188,8 @@ function addSignatureLines(doc: jsPDF, y: number, data: TerminationDocumentData,
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   
-  // Left signature (HR Manager)
-  doc.line(leftX, y, leftX + lineWidth, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, leftX + lineWidth / 2, y, { align: 'center' });
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, leftX + lineWidth / 2, y, { align: 'center' });
-  y += 4;
-  doc.text(data.companyName, leftX + lineWidth / 2, y, { align: 'center' });
+  // Left signature (company representative)
+  const representativeEndY = addRepresentativeSignatureBlock(doc, y, data, leftX, { width: lineWidth, centered: true });
   
   if (includeEmployee) {
     // Right signature (Employee)
@@ -107,7 +202,7 @@ function addSignatureLines(doc: jsPDF, y: number, data: TerminationDocumentData,
     doc.text(`C.C. ${data.employeeDocumentNumber}`, rightX + lineWidth / 2, employeeY + 13, { align: 'center' });
   }
   
-  return y + 15;
+  return representativeEndY;
 }
 
 // 01 - Terminación por Mutuo Acuerdo
@@ -230,16 +325,7 @@ Agradeciendo de antemano los servicios prestados, el buen desempeño y la labor 
   doc.text('Cordialmente,', margin, y);
   y += 20;
   
-  // Single signature
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   return doc;
 }
@@ -341,15 +427,7 @@ Finalmente, con esta carta le entregamos copia de las autoliquidaciones correspo
   doc.text('Atentamente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   y += 15;
   doc.text('Recibí: ______________________________', margin, y);
@@ -405,15 +483,7 @@ La empresa, le agradece los servicios prestados durante el tiempo que laboró pa
   doc.text('Cordialmente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   y += 15;
   doc.text('Recibí: ______________________________', margin, y);
@@ -471,15 +541,7 @@ Agradecemos el tiempo que formó parte de nuestra organización y le deseamos é
   doc.text('Cordialmente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   y += 15;
   doc.text('Recibí: ______________________________', margin, y);
@@ -537,15 +599,7 @@ Le agradecemos por sus servicios y contribuciones durante su tiempo en nuestra e
   doc.text('Atentamente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   y += 15;
   doc.text('Recibí:', margin, y);
@@ -593,15 +647,7 @@ La presente certificación se expide a solicitud del interesado el ${formatDateI
   doc.text('Cordialmente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   return doc;
 }
@@ -684,15 +730,7 @@ Fecha de terminación del contrato: ${formatDateInWords(data.effectiveDate)}`;
   doc.text('Cordialmente,', margin, y);
   y += 15;
   
-  doc.line(margin, y, margin + 60, y);
-  y += 5;
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.hrManagerName, margin, y);
-  y += 4;
-  doc.setFont('helvetica', 'normal');
-  doc.text(data.hrManagerPosition, margin, y);
-  y += 4;
-  doc.text(data.companyName, margin, y);
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
   
   return doc;
 }
@@ -788,12 +826,22 @@ export function generateTerminationDocument(
 }
 
 // Download helper
-export function downloadTerminationDocument(
+export async function downloadTerminationDocument(
   documentType: TerminationDocumentType,
   data: TerminationDocumentData,
   filename?: string
-): void {
-  const doc = generateTerminationDocument(documentType, data);
-  const defaultFilename = `${documentType}_${data.employeeDocumentNumber}_${format(new Date(), 'yyyyMMdd')}.pdf`;
+): Promise<void> {
+  const controls = getDocumentControls(data, documentType);
+  const enhancedData: TerminationDocumentData = {
+    ...data,
+    ...controls,
+    representativeSignatureDataUrl:
+      data.representativeSignatureDataUrl || await fetchImageAsBase64(data.representativeSignatureUrl),
+  };
+  const doc = generateTerminationDocument(documentType, enhancedData);
+  if (documentType !== 'retiro_cesantias') {
+    addCorporateShell(doc, enhancedData, documentType);
+  }
+  const defaultFilename = `${controls.folio}_${documentType}_${sanitizeDocument(data.employeeDocumentNumber)}.pdf`;
   doc.save(filename || defaultFilename);
 }
