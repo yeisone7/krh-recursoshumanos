@@ -123,6 +123,7 @@ export function useCreateProfesiograma() {
           .from('dotation_profesiograma_items' as any)
           .insert(
             data.items.map((item) => ({
+              company_id: currentCompanyId!,
               profesiograma_id: (prof as any).id,
               dotation_item_type_id: item.dotation_item_type_id,
               quantity: item.quantity,
@@ -143,6 +144,7 @@ export function useCreateProfesiograma() {
 
 export function useUpdateProfesiograma() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
@@ -161,6 +163,7 @@ export function useUpdateProfesiograma() {
           .from('dotation_profesiograma_items' as any)
           .insert(
             data.items.map((item) => ({
+              company_id: currentCompanyId!,
               profesiograma_id: data.id,
               dotation_item_type_id: item.dotation_item_type_id,
               quantity: item.quantity,

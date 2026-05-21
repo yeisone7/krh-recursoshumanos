@@ -30,7 +30,7 @@ interface DisciplinaryTreeViewProps {
   processes: DisciplinaryProcessWithEmployee[];
   onOpenDetail: (id: string) => void;
   onExportPdf: (e: React.MouseEvent, process: DisciplinaryProcessWithEmployee) => void;
-  onDelete: (process: DisciplinaryProcessWithEmployee) => void;
+  onDelete?: (process: DisciplinaryProcessWithEmployee) => void;
   exportingId: string | null;
 }
 
@@ -188,7 +188,7 @@ export function DisciplinaryTreeView({
                              <FileDown className="h-4 w-4 mr-2" />
                              {exportingId === process.id ? 'Generando...' : 'Exportar Informe PDF'}
                            </DropdownMenuItem>
-                           {process.status !== 'cerrado' && (
+                           {onDelete && process.status !== 'cerrado' && (
                              <DropdownMenuItem
                                className="rounded-xl font-bold text-xs uppercase p-3 text-destructive focus:text-destructive focus:bg-destructive/10"
                                onClick={(e) => {

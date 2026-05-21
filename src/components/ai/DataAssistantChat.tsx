@@ -4,7 +4,7 @@
  * Renderiza historial de mensajes, input y respuestas enriquecidas.
  */
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, AlertCircle, Lock, Mic, Volume2, VolumeX, AudioLines, Headphones } from 'lucide-react';
+import { Send, Bot, User, Loader2, AlertCircle, Lock, Mic, Volume2, VolumeX, AudioLines, PlusCircle, ShieldCheck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import {
   type ChatMessage,
   type DataAssistantResponse,
 } from '@/hooks/useDataAssistant';
+
+const MAX_QUESTION_LENGTH = 2000;
 
 // ─── Burbuja de mensaje ───────────────────────────────────────
 
@@ -72,7 +74,6 @@ function MessageBubble({ msg, onSpeak, isSpeaking }: { msg: ChatMessage, onSpeak
     </div>
   );
 }
-
 // ─── Pantalla de acceso denegado ─────────────────────────────
 
 function AccessDenied() {
@@ -331,6 +332,18 @@ export function DataAssistantChat() {
   const handleSend = async (question: string) => {
     const q = question.trim();
     if (!q || sendQuestion.isPending) return;
+    if (q.length > MAX_QUESTION_LENGTH) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: `La pregunta supera el limite de ${MAX_QUESTION_LENGTH} caracteres. Resume el alcance o divide el analisis en varias preguntas.`,
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
 
     // Limpiar input inmediatamente
     setInput('');
@@ -374,6 +387,7 @@ export function DataAssistantChat() {
         data: result.data,
         metadata: result.metadata,
         explanation: result.explanation,
+        speechText: result.speechText,
       };
 
       setMessages(prev =>
@@ -428,7 +442,6 @@ export function DataAssistantChat() {
           m.id === loadingId
             ? {
                 ...m,
-                type: 'text',
                 content: errorMessage,
                 isLoading: false,
               }
@@ -460,6 +473,27 @@ export function DataAssistantChat() {
 
   return (
     <div className="flex flex-col h-full relative">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b bg-background/95 px-4 py-2">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+          <span className="truncate">Consultas de solo lectura, filtradas por empresa y tablas autorizadas.</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 gap-1.5 text-xs"
+          onClick={() => {
+            stopAllSpeech();
+            setMessages([]);
+            setConversationId(null);
+            setInput('');
+          }}
+        >
+          <PlusCircle className="h-3.5 w-3.5" />
+          Nuevo chat
+        </Button>
+      </div>
+
       {/* Indicadores de Voz (Flotantes) - Feedback Pro */}
       {(isListening || isThinking || speakingMsgId) && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
@@ -562,6 +596,7 @@ export function DataAssistantChat() {
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
+              maxLength={MAX_QUESTION_LENGTH}
               className="resize-none min-h-[44px] max-h-32 flex-1 text-sm pr-12"
               disabled={sendQuestion.isPending}
             />
@@ -598,7 +633,7 @@ export function DataAssistantChat() {
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground/60 text-center mt-1.5">
-          Solo respondo preguntas sobre datos internos de la plataforma · Max 2000 caracteres
+          Solo respondo preguntas sobre datos internos autorizados - {input.length}/{MAX_QUESTION_LENGTH}
         </p>
       </div>
     </div>

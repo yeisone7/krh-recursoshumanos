@@ -20,7 +20,17 @@ import { InventoryAdjustDialog } from './InventoryAdjustDialog';
 import { InventoryHistoryDialog } from './InventoryHistoryDialog';
 import { toast } from 'sonner';
 
-export function DotationInventoryTab() {
+interface DotationInventoryTabProps {
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}
+
+export function DotationInventoryTab({
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: DotationInventoryTabProps) {
   const { data: inventory = [], isLoading } = useDotationInventory();
   const deleteItem = useDeleteInventoryItem();
 
@@ -108,9 +118,11 @@ export function DotationInventoryTab() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => { setEditItem(null); setIsFormOpen(true); }} className="w-full gap-2 md:w-auto">
-            <Plus className="w-4 h-4" /> Nuevo
-          </Button>
+          {canCreate && (
+            <Button onClick={() => { setEditItem(null); setIsFormOpen(true); }} className="w-full gap-2 md:w-auto">
+              <Plus className="w-4 h-4" /> Nuevo
+            </Button>
+          )}
         </div>
       </div>
 
@@ -120,7 +132,7 @@ export function DotationInventoryTab() {
           <div className="text-center py-12 text-muted-foreground">
             <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
             <p>{isLoading ? 'Cargando inventario...' : 'No hay artículos en el inventario'}</p>
-            {!isLoading && inventory.length === 0 && (
+            {!isLoading && inventory.length === 0 && canCreate && (
               <Button onClick={() => setIsFormOpen(true)} className="mt-4">
                 <Plus className="w-4 h-4 mr-2" /> Agregar Artículo
               </Button>
@@ -170,15 +182,21 @@ export function DotationInventoryTab() {
                         <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
                           <History className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
-                          <ArrowUpDown className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        {canUpdate && (
+                          <>
+                            <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
+                              <ArrowUpDown className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </>
+                        )}
+                        {canDelete && (
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -219,19 +237,25 @@ export function DotationInventoryTab() {
                       <p className="font-semibold text-foreground">{item.minimum_stock}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-1">
+                  <div className="grid grid-cols-2 gap-1">
                     <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
                       <History className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
-                      <ArrowUpDown className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
+                    {canUpdate && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
+                          <ArrowUpDown className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                    {canDelete && (
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               );

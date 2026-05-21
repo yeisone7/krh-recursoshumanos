@@ -47,6 +47,7 @@ import { DocumentSection } from '@/components/documents/DocumentSection';
 import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
 import { useCompanies } from '@/hooks/useCompanies';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DisciplinaryDetailDialogProps {
   processId: string | null;
@@ -62,6 +63,7 @@ export function DisciplinaryDetailDialog({
   const { data: process, isLoading } = useDisciplinaryProcess(processId);
   const advanceStatus = useAdvanceStatus();
   const { data: companies } = useCompanies();
+  const { isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
   
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
@@ -75,6 +77,7 @@ export function DisciplinaryDetailDialog({
   }
 
   const isClosed = process.status === 'cerrado';
+  const canManageDisciplinary = isAdmin || isRRHH || isSuperAdmin || canUpdate('disciplinarios');
   const nextStatus = canAdvanceStatus(process.status);
   const nextAction = getNextStatusAction(process.status);
 
@@ -173,7 +176,7 @@ export function DisciplinaryDetailDialog({
                 {/* TAB: General */}
                 <TabsContent value="general" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   {/* Action Banner */}
-                  {nextAction && process.status !== 'cerrado' && (
+                  {canManageDisciplinary && nextAction && process.status !== 'cerrado' && (
                     <div className="relative overflow-hidden border border-primary/20 rounded-2xl p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-start gap-4">
                         <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
@@ -252,7 +255,7 @@ export function DisciplinaryDetailDialog({
                         entityId={process.id}
                         entityType="disciplinary_opening"
                         title="Documento de Apertura"
-                        allowUpload={!isClosed}
+                        allowUpload={canManageDisciplinary && !isClosed}
                         compact
                         className="rounded-xl border-border/40"
                       />
@@ -260,7 +263,7 @@ export function DisciplinaryDetailDialog({
                         entityId={process.id}
                         entityType="disciplinary_notification"
                         title="Notificación al Empleado"
-                        allowUpload={!isClosed}
+                        allowUpload={canManageDisciplinary && !isClosed}
                         compact
                         className="rounded-xl border-border/40"
                       />
@@ -268,7 +271,7 @@ export function DisciplinaryDetailDialog({
                         entityId={process.id}
                         entityType="disciplinary_hearing"
                         title="Acta de Audiencia"
-                        allowUpload={!isClosed}
+                        allowUpload={canManageDisciplinary && !isClosed}
                         compact
                         className="rounded-xl border-border/40"
                       />
@@ -283,7 +286,7 @@ export function DisciplinaryDetailDialog({
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Material Probatorio</Label>
                       <p className="text-[10px] text-muted-foreground">Evidencias recolectadas para el caso</p>
                     </div>
-                    {!isClosed && (
+                    {canManageDisciplinary && !isClosed && (
                       <Button size="sm" onClick={() => setShowEvidenceForm(true)} className="h-9 rounded-xl gap-2 font-bold text-xs bg-primary text-primary-foreground">
                         <Plus className="h-4 w-4" /> Agregar
                       </Button>
@@ -330,7 +333,7 @@ export function DisciplinaryDetailDialog({
                       <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">Versión del Empleado</Label>
                       <p className="text-[10px] text-muted-foreground">Descargos y justificaciones presentadas</p>
                     </div>
-                    {!isClosed && (
+                    {canManageDisciplinary && !isClosed && (
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setShowTokenDialog(true)} className="h-9 rounded-xl gap-2 font-bold text-xs border-border/50 bg-background ">
                           <Link className="h-3.5 w-3.5" /> Enlace
@@ -448,7 +451,7 @@ export function DisciplinaryDetailDialog({
                           entityId={process.id}
                           entityType="disciplinary_decision"
                           title="Documento de Fallo Oficial"
-                          allowUpload={!isClosed}
+                          allowUpload={canManageDisciplinary && !isClosed}
                           compact
                           className="rounded-xl border-border/40"
                         />
@@ -461,7 +464,7 @@ export function DisciplinaryDetailDialog({
                       </div>
                       <div className="space-y-2">
                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Fallo pendiente de registro</p>
-                        {process.status === 'analisis' && !isClosed && (
+                        {canManageDisciplinary && process.status === 'analisis' && !isClosed && (
                           <Button className="h-9 rounded-xl gap-2 font-bold text-xs bg-primary text-primary-foreground" onClick={() => setShowDecisionForm(true)}>
                             Registrar Decisión
                           </Button>

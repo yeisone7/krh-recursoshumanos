@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { NotificationRulesManager } from '@/components/notifications/NotificationRulesManager';
 import { useNotificationCenter } from '@/hooks/useNotificationCenter';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -51,6 +52,7 @@ export default function CentroNotificaciones() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('alerts');
 
   const filteredNotifications = useMemo(() => {
     const term = search.toLowerCase();
@@ -167,6 +169,7 @@ export default function CentroNotificaciones() {
           <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Historial Operativo</h2>
           <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de comunicaciones y notificaciones de sistema.</p>
         </div>
+      {activeTab !== 'rules' && (
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
         <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background p-3 rounded-[2rem] border border-border/50 shadow-sm">
@@ -212,13 +215,15 @@ export default function CentroNotificaciones() {
           </div>
         </div>
       </div>
+      )}
 
-      <Tabs defaultValue="alerts" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50">
+          <TabsList className="flex h-auto max-w-full justify-start gap-2 overflow-x-auto bg-background p-1.5 rounded-[1.5rem] border border-border/50">
             {[
               { value: 'alerts', label: 'ALERTAS EN APP' },
               { value: 'deliveries', label: 'CORREOS Y ENVÍOS' },
+              ...(canManageCompanyHistory ? [{ value: 'rules', label: 'REGLAS INTELIGENTES' }] : []),
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -230,6 +235,11 @@ export default function CentroNotificaciones() {
             ))}
           </TabsList>
         </div>
+            {canManageCompanyHistory && (
+              <TabsContent value="rules" className="mt-0">
+                <NotificationRulesManager />
+              </TabsContent>
+            )}
             <TabsContent value="alerts">
               <div className="space-y-3 md:hidden">
                 {filteredNotifications.map((item) => (

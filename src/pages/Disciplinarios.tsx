@@ -54,6 +54,7 @@ import {
   DisciplinaryProcessWithEmployee,
 } from '@/types/disciplinary';
 import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Disciplinarios() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -71,6 +72,9 @@ export default function Disciplinarios() {
   const { data: companies } = useCompanies();
   const deleteProcess = useDeleteDisciplinaryProcess();
   const { log } = useAuditLogger();
+  const { isAdmin, isRRHH, isSuperAdmin, canCreate, canDelete } = useAuth();
+  const canCreateDisciplinary = isAdmin || isRRHH || isSuperAdmin || canCreate('disciplinarios');
+  const canDeleteDisciplinary = isAdmin || isRRHH || isSuperAdmin || canDelete('disciplinarios');
 
   useEffect(() => {
     const processId = searchParams.get('proceso');
@@ -257,10 +261,12 @@ export default function Disciplinarios() {
           </div>
         </div>
 
-        <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowFormDialog(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nuevo Proceso
-        </Button>
+        {canCreateDisciplinary && (
+          <Button className="h-12 w-full xl:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={() => setShowFormDialog(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Proceso
+          </Button>
+        )}
       </div>
 
       <ScrollArea className="flex-1 p-6 sm:p-10">
@@ -276,7 +282,7 @@ export default function Disciplinarios() {
               processes={filteredProcesses}
               onOpenDetail={handleOpenDetail}
               onExportPdf={handleExportPdf}
-              onDelete={setDeleteTarget}
+              onDelete={canDeleteDisciplinary ? setDeleteTarget : undefined}
               exportingId={exportingId}
             />
           ) : (

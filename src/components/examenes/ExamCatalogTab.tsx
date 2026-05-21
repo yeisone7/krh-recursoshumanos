@@ -18,7 +18,17 @@ import { Switch } from '@/components/ui/switch';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { cn } from "@/lib/utils";
 
-export function ExamCatalogTab() {
+interface ExamCatalogTabProps {
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}
+
+export function ExamCatalogTab({
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: ExamCatalogTabProps) {
   const { data: catalog = [], isLoading } = useExamCatalog();
   const deleteMutation = useDeleteExamCatalogItem();
   const updateMutation = useUpdateExamCatalogItem();
@@ -94,9 +104,11 @@ export function ExamCatalogTab() {
               className="h-11 w-full sm:w-64 pl-10 rounded-xl bg-background border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 transition-all font-medium text-sm"
             />
           </div>
-          <Button onClick={handleNew} className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all">
-            <Plus className="w-4 h-4" /> Nuevo Examen
-          </Button>
+          {canCreate && (
+            <Button onClick={handleNew} className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all">
+              <Plus className="w-4 h-4" /> Nuevo Examen
+            </Button>
+          )}
         </div>
       </div>
 
@@ -104,7 +116,9 @@ export function ExamCatalogTab() {
         <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background">
           <Stethoscope className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
           <p className="text-lg font-black tracking-tighter text-muted-foreground">No hay tipos de exámenes configurados</p>
-          <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Crear el primer examen</Button>
+          {canCreate && (
+            <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Crear el primer examen</Button>
+          )}
         </div>
       ) : (
         <div className="overflow-hidden rounded-[2rem] border border-border/50 bg-background ">
@@ -139,22 +153,27 @@ export function ExamCatalogTab() {
                       <Switch
                         checked={item.is_active}
                         onCheckedChange={() => toggleActive(item)}
+                        disabled={!canUpdate}
                         className="data-[state=checked]:bg-primary"
                       />
                     </TableCell>
                     <TableCell className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm transition-all" onClick={() => handleEdit(item)}>
-                          <Pencil className="w-4 h-4 text-primary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
-                          onClick={() => setDeleteId(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {canUpdate && (
+                          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm transition-all" onClick={() => handleEdit(item)}>
+                            <Pencil className="w-4 h-4 text-primary" />
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 transition-all"
+                            onClick={() => setDeleteId(item.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -175,12 +194,16 @@ export function ExamCatalogTab() {
               ],
               actions: (
                 <div className="flex gap-2 w-full mt-2">
-                  <Button variant="outline" size="sm" className="flex-1 rounded-xl font-black uppercase text-[9px]" onClick={() => handleEdit(item)}>
-                    <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 rounded-xl text-destructive font-black uppercase text-[9px]" onClick={() => setDeleteId(item.id)}>
-                    <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
-                  </Button>
+                  {canUpdate && (
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl font-black uppercase text-[9px]" onClick={() => handleEdit(item)}>
+                      <Pencil className="w-3.5 h-3.5 mr-2" /> Editar
+                    </Button>
+                  )}
+                  {canDelete && (
+                    <Button variant="outline" size="sm" className="flex-1 rounded-xl text-destructive font-black uppercase text-[9px]" onClick={() => setDeleteId(item.id)}>
+                      <Trash2 className="w-3.5 h-3.5 mr-2" /> Eliminar
+                    </Button>
+                  )}
                 </div>
               ),
               itemClassName: !item.is_active ? 'opacity-60 grayscale-[0.5]' : undefined,

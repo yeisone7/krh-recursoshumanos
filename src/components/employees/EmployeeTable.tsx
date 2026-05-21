@@ -9,6 +9,8 @@ import {
   Briefcase,
   MapPin,
   FileBadge,
+  UserCheck,
+  UserX,
 } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,7 @@ interface EmployeeTableProps {
   onRehire?: (employee: any) => void;
   onTransfer?: (employee: any) => void;
   onIssueCertificate?: (employee: any) => void;
+  onToggleActive?: (employee: any) => void;
 }
 
 export function EmployeeTable({
@@ -52,6 +55,7 @@ export function EmployeeTable({
   onRehire,
   onTransfer,
   onIssueCertificate,
+  onToggleActive,
 }: EmployeeTableProps) {
   const navigate = useNavigate();
 
@@ -71,8 +75,10 @@ export function EmployeeTable({
         <TableBody>
           {employees.map((employee) => {
             const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
-            const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || !employee.is_active;
+            const isLegacyRetired = !employee.is_active && employee.status === 'active';
+            const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || isLegacyRetired;
             const isEnRetiro = employee.status === 'en_retiro';
+            const isSuspended = employee.status === 'suspended' || (!employee.is_active && !isRetired);
             const hasProfesiograma = hasProfesiogramaFn(employee);
 
             return (
@@ -129,11 +135,11 @@ export function EmployeeTable({
                         ? isEnRetiro
                           ? 'bg-warning-light text-warning border-warning/20'
                           : 'bg-card text-muted-foreground border-muted-foreground/20'
-                        : employee.is_active 
+                        : !isSuspended
                           ? 'bg-success-light text-success border-success/20'
                           : 'bg-rose-light text-rose border-rose/20'
                     )}>
-                      {isEnRetiro ? 'En Retiro' : isRetired ? 'Retirado' : employee.is_active ? 'Activo' : 'Inactivo'}
+                      {isEnRetiro ? 'En Retiro' : isRetired ? 'Retirado' : isSuspended ? 'Inactivo' : 'Activo'}
                     </Badge>
                     {hasProfesiograma && (
                       <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-primary-light text-primary border-primary/20">
@@ -179,6 +185,19 @@ export function EmployeeTable({
                         {!isRetired && (
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
                             Editar
+                          </DropdownMenuItem>
+                        )}
+                        {!isRetired && onToggleActive && (
+                          <DropdownMenuItem
+                            onClick={(e) => { e.stopPropagation(); onToggleActive(employee); }}
+                            className={isSuspended ? 'text-success font-medium' : 'text-rose font-medium'}
+                          >
+                            {isSuspended ? (
+                              <UserCheck className="w-4 h-4 mr-2" />
+                            ) : (
+                              <UserX className="w-4 h-4 mr-2" />
+                            )}
+                            {isSuspended ? 'Reactivar empleado' : 'Suspender empleado'}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewContract(employee.id); }}>

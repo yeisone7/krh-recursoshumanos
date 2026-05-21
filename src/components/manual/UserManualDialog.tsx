@@ -90,6 +90,11 @@ const SECTION_ILLUSTRATIONS: Record<string, SectionIllustration> = {
     gradient: 'from-violet-500/15 to-violet-500/5',
     label: 'Control granular de acceso por módulo',
   },
+  'flujos-operativos': {
+    icons: [ClipboardList, FileCheck, CheckCircle2],
+    gradient: 'from-cyan-500/15 to-cyan-500/5',
+    label: 'Procesos clave y funciones recientes',
+  },
   modulos: {
     icons: [Layers, LayoutDashboard, Target],
     gradient: 'from-sky-500/15 to-sky-500/5',
@@ -420,6 +425,7 @@ function contentMatchesQuery(content: ManualContentItem[], q: string): boolean {
   return content.some((c) => {
     if (typeof c.data === 'string') return c.data.toLowerCase().includes(q);
     if (Array.isArray(c.data)) return c.data.some((d: any) => String(d).toLowerCase().includes(q));
+    if (c.data && typeof c.data === 'object') return JSON.stringify(c.data).toLowerCase().includes(q);
     return false;
   });
 }

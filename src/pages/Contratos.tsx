@@ -146,11 +146,12 @@ export default function Contratos() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { currentCompanyId, canView } = useAuth();
+  const { currentCompanyId, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const isMobile = useIsMobile();
   const { data: contracts, isLoading, refetch } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
   const deferredSearchQuery = useDeferredValue(searchQuery);
+  const canCreateContracts = isAdmin || isRRHH || isSuperAdmin || canCreate('contratos');
 
   // Helper to get contract type label from catalog
   const getContractTypeLabel = (type: string) => {
@@ -271,13 +272,15 @@ export default function Contratos() {
             </p>
           </div>
 
-          <div className="flex gap-2 shrink-0">
-            <Button className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95" onClick={() => setIsFormOpen(true)}>
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Nuevo Contrato</span>
-              <span className="sm:hidden">Nuevo</span>
-            </Button>
-          </div>
+          {canCreateContracts && (
+            <div className="flex gap-2 shrink-0">
+              <Button className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95" onClick={() => setIsFormOpen(true)}>
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Nuevo Contrato</span>
+                <span className="sm:hidden">Nuevo</span>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -373,7 +376,7 @@ export default function Contratos() {
                 ? 'No se encontraron contratos con los filtros seleccionados'
                 : 'Comienza agregando tu primer contrato'}
             </p>
-            {!searchQuery && typeFilter === 'all' && statusFilter === 'all' && (
+            {!searchQuery && typeFilter === 'all' && statusFilter === 'all' && canCreateContracts && (
               <Button onClick={() => setIsFormOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Contrato

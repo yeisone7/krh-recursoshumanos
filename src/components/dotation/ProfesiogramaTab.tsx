@@ -27,9 +27,18 @@ import { ProfesiogramaDetailDialog } from './ProfesiogramaDetailDialog';
 interface Props {
   centers: { id: string; name: string }[];
   positions: { id: string; name: string }[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function ProfesiogramaTab({ centers, positions }: Props) {
+export function ProfesiogramaTab({
+  centers,
+  positions,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: Props) {
   const { data: profesiogramas, isLoading } = useProfesiogramas();
   const deleteMutation = useDeleteProfesiograma();
   const { data: itemTypes = [] } = useDotationItemTypes();
@@ -228,7 +237,7 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-          {selectedIds.size > 0 && (
+          {canDelete && selectedIds.size > 0 && (
             <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)} className="col-span-2 gap-1.5 sm:col-span-1">
               <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.size})
             </Button>
@@ -236,12 +245,16 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           <Button variant="outline" size="sm" onClick={handleExport} className="gap-1.5" disabled={!profesiogramas?.length}>
             <Download className="w-4 h-4" /> Exportar
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)} className="gap-1.5">
-            <Upload className="w-4 h-4" /> Importar
-          </Button>
-          <Button onClick={handleNew} className="col-span-2 gap-2 sm:col-span-1">
-            <Plus className="w-4 h-4" /> Nuevo
-          </Button>
+          {canCreate && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setIsImportOpen(true)} className="gap-1.5">
+                <Upload className="w-4 h-4" /> Importar
+              </Button>
+              <Button onClick={handleNew} className="col-span-2 gap-2 sm:col-span-1">
+                <Plus className="w-4 h-4" /> Nuevo
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -290,12 +303,16 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
           <ClipboardList className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No hay profesiogramas configurados</p>
           <div className="grid grid-cols-1 gap-2 mt-4 sm:flex sm:justify-center">
-            <Button onClick={handleNew} className="gap-2">
-              <Plus className="w-4 h-4" /> Crear Profesiograma
-            </Button>
-            <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
-              <Upload className="w-4 h-4" /> Importar desde Excel
-            </Button>
+            {canCreate && (
+              <>
+                <Button onClick={handleNew} className="gap-2">
+                  <Plus className="w-4 h-4" /> Crear Profesiograma
+                </Button>
+                <Button variant="outline" onClick={() => setIsImportOpen(true)} className="gap-2">
+                  <Upload className="w-4 h-4" /> Importar desde Excel
+                </Button>
+              </>
+            )}
           </div>
         </div>
       ) : filteredProfesiogramas.length === 0 ? (
@@ -346,18 +363,20 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
               <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={group.items.every(p => selectedIds.has(p.id))}
-                        onCheckedChange={() => {
-                          const allSelected = group.items.every(p => selectedIds.has(p.id));
-                          const next = new Set(selectedIds);
-                          group.items.forEach(p => allSelected ? next.delete(p.id) : next.add(p.id));
-                          setSelectedIds(next);
-                        }}
-                        aria-label="Seleccionar grupo"
-                      />
-                    </TableHead>
+                    {canDelete && (
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={group.items.every(p => selectedIds.has(p.id))}
+                          onCheckedChange={() => {
+                            const allSelected = group.items.every(p => selectedIds.has(p.id));
+                            const next = new Set(selectedIds);
+                            group.items.forEach(p => allSelected ? next.delete(p.id) : next.add(p.id));
+                            setSelectedIds(next);
+                          }}
+                          aria-label="Seleccionar grupo"
+                        />
+                      </TableHead>
+                    )}
                     <TableHead>Cargo</TableHead>
                     <TableHead>Artículos</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
@@ -366,13 +385,15 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 <TableBody>
                   {group.items.map((prof) => (
                     <TableRow key={prof.id} className={selectedIds.has(prof.id) ? '' : ''}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedIds.has(prof.id)}
-                          onCheckedChange={() => toggleSelect(prof.id)}
-                          aria-label="Seleccionar"
-                        />
-                      </TableCell>
+                      {canDelete && (
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(prof.id)}
+                            onCheckedChange={() => toggleSelect(prof.id)}
+                            aria-label="Seleccionar"
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">
                         {prof.positions?.name || getPositionName(prof.position_id)}
                       </TableCell>
@@ -407,15 +428,21 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPreviewData(prof); }} title="Ver detalle">
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCloneData(prof); }} title="Clonar">
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(prof.id); }} title="Eliminar">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {canUpdate && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {canCreate && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCloneData(prof); }} title="Clonar">
+                              <Copy className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(prof.id); }} title="Eliminar">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -427,12 +454,14 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                 {group.items.map((prof) => (
                   <div key={prof.id} className={selectedIds.has(prof.id) ? 'space-y-3 p-4' : 'space-y-3 p-4'}>
                     <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={selectedIds.has(prof.id)}
-                        onCheckedChange={() => toggleSelect(prof.id)}
-                        aria-label="Seleccionar"
-                        className="mt-1"
-                      />
+                      {canDelete && (
+                        <Checkbox
+                          checked={selectedIds.has(prof.id)}
+                          onCheckedChange={() => toggleSelect(prof.id)}
+                          aria-label="Seleccionar"
+                          className="mt-1"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-foreground">{prof.positions?.name || getPositionName(prof.position_id)}</p>
                         <div className="mt-2 flex flex-wrap gap-1">
@@ -453,15 +482,21 @@ export function ProfesiogramaTab({ centers, positions }: Props) {
                       <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setPreviewData(prof)} title="Ver detalle">
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => handleEdit(prof)} title="Editar">
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setCloneData(prof)} title="Clonar">
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-full text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {canUpdate && (
+                        <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => handleEdit(prof)} title="Editar">
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canCreate && (
+                        <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setCloneData(prof)} title="Clonar">
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button variant="ghost" size="icon" className="h-9 w-full text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

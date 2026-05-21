@@ -24,9 +24,18 @@ import { ImportFromDotacionDialog } from './ImportFromDotacionDialog';
 interface Props {
   centers: { id: string; name: string }[];
   positions: { id: string; name: string }[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function ExamProfesiogramaTab({ centers, positions }: Props) {
+export function ExamProfesiogramaTab({
+  centers,
+  positions,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: Props) {
   const { data: profesiogramas, isLoading } = useExamProfesiogramas();
   const deleteMutation = useDeleteExamProfesiograma();
 
@@ -145,7 +154,7 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {selectedIds.size > 0 && (
+          {canDelete && selectedIds.size > 0 && (
             <Button 
               variant="destructive" 
               size="sm" 
@@ -155,19 +164,23 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
               <Trash2 className="w-4 h-4" /> Eliminar Seleccionados ({selectedIds.size})
             </Button>
           )}
-          <Button 
-            variant="outline" 
-            onClick={() => setIsImportOpen(true)} 
-            className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background border-border/50 hover:bg-background transition-all"
-          >
-            <Download className="w-4 h-4" /> Importar Dotaciones
-          </Button>
-          <Button 
-            onClick={handleNew} 
-            className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
-          >
-            <Plus className="w-4 h-4" /> Nuevo Requerimiento
-          </Button>
+          {canCreate && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setIsImportOpen(true)}
+                className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] bg-background border-border/50 hover:bg-background transition-all"
+              >
+                <Download className="w-4 h-4" /> Importar Dotaciones
+              </Button>
+              <Button
+                onClick={handleNew}
+                className="h-11 px-6 rounded-xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20"
+              >
+                <Plus className="w-4 h-4" /> Nuevo Requerimiento
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -199,7 +212,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
         <div className="text-center py-32 rounded-[2.5rem] border border-dashed border-border/50 bg-background">
           <ClipboardList className="w-20 h-20 mx-auto mb-6 text-muted-foreground/20" />
           <p className="text-lg font-black tracking-tighter text-muted-foreground">No hay profesiogramas configurados</p>
-          <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Configurar primer requerimiento</Button>
+          {canCreate && (
+            <Button onClick={handleNew} variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary">Configurar primer requerimiento</Button>
+          )}
         </div>
       ) : filteredProfesiogramas.length === 0 ? (
         <div className="text-center py-24">
@@ -244,18 +259,20 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-border/40 bg-background">
-                          <TableHead className="w-16 px-8">
-                            <Checkbox
-                              checked={group.items.every(p => selectedIds.has(p.id))}
-                              onCheckedChange={() => {
-                                const allSelected = group.items.every(p => selectedIds.has(p.id));
-                                const next = new Set(selectedIds);
-                                group.items.forEach(p => allSelected ? next.delete(p.id) : next.add(p.id));
-                                setSelectedIds(next);
-                              }}
-                              className="rounded-md data-[state=checked]:bg-primary"
-                            />
-                          </TableHead>
+                          {canDelete && (
+                            <TableHead className="w-16 px-8">
+                              <Checkbox
+                                checked={group.items.every(p => selectedIds.has(p.id))}
+                                onCheckedChange={() => {
+                                  const allSelected = group.items.every(p => selectedIds.has(p.id));
+                                  const next = new Set(selectedIds);
+                                  group.items.forEach(p => allSelected ? next.delete(p.id) : next.add(p.id));
+                                  setSelectedIds(next);
+                                }}
+                                className="rounded-md data-[state=checked]:bg-primary"
+                              />
+                            </TableHead>
+                          )}
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Cargo Ocupacional</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4">Procedimientos Requeridos</TableHead>
                           <TableHead className="text-[10px] font-black uppercase tracking-widest py-4 text-right px-8">Acciones</TableHead>
@@ -264,13 +281,15 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                       <TableBody>
                         {group.items.map((prof) => (
                           <TableRow key={prof.id} className={cn("group/row border-border/30 hover:bg-primary/[0.02] transition-colors", selectedIds.has(prof.id) && "bg-primary/[0.04]")}>
-                            <TableCell className="px-8 py-4">
-                              <Checkbox
-                                checked={selectedIds.has(prof.id)}
-                                onCheckedChange={() => toggleSelect(prof.id)}
-                                className="rounded-md data-[state=checked]:bg-primary"
-                              />
-                            </TableCell>
+                            {canDelete && (
+                              <TableCell className="px-8 py-4">
+                                <Checkbox
+                                  checked={selectedIds.has(prof.id)}
+                                  onCheckedChange={() => toggleSelect(prof.id)}
+                                  className="rounded-md data-[state=checked]:bg-primary"
+                                />
+                              </TableCell>
+                            )}
                             <TableCell className="font-black tracking-tight text-foreground py-4">
                               {prof.positions?.name || getPositionName(prof.position_id)}
                             </TableCell>
@@ -301,12 +320,16 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                             </TableCell>
                             <TableCell className="text-right px-8 py-4">
                               <div className="flex justify-end gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm" onClick={() => handleEdit(prof)}>
-                                  <Pencil className="w-4 h-4 text-primary" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(prof.id)}>
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {canUpdate && (
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm" onClick={() => handleEdit(prof)}>
+                                    <Pencil className="w-4 h-4 text-primary" />
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setDeleteId(prof.id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -319,7 +342,9 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                     {group.items.map((prof) => (
                       <div key={prof.id} className={cn("rounded-[2rem] border border-border/50 p-6 space-y-4 transition-all", selectedIds.has(prof.id) ? "bg-primary/[0.04] border-primary/20" : "bg-background")}>
                         <div className="flex items-start gap-4">
-                          <Checkbox checked={selectedIds.has(prof.id)} onCheckedChange={() => toggleSelect(prof.id)} className="rounded-md mt-1" />
+                          {canDelete && (
+                            <Checkbox checked={selectedIds.has(prof.id)} onCheckedChange={() => toggleSelect(prof.id)} className="rounded-md mt-1" />
+                          )}
                           <div className="flex-1 min-w-0">
                             <p className="text-lg font-black tracking-tight text-foreground">{prof.positions?.name || getPositionName(prof.position_id)}</p>
                             <div className="mt-3 flex flex-wrap gap-1.5">
@@ -332,12 +357,16 @@ export function ExamProfesiogramaTab({ centers, positions }: Props) {
                           </div>
                         </div>
                         <div className="flex gap-2 pt-2">
-                          <Button variant="outline" size="sm" className="flex-1 rounded-xl h-10 font-black uppercase tracking-widest text-[9px]" onClick={() => handleEdit(prof)}>
-                            <Pencil className="w-4 h-4 mr-2" /> Editar
-                          </Button>
-                          <Button variant="outline" size="sm" className="flex-1 rounded-xl h-10 text-destructive font-black uppercase tracking-widest text-[9px]" onClick={() => setDeleteId(prof.id)}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Eliminar
-                          </Button>
+                          {canUpdate && (
+                            <Button variant="outline" size="sm" className="flex-1 rounded-xl h-10 font-black uppercase tracking-widest text-[9px]" onClick={() => handleEdit(prof)}>
+                              <Pencil className="w-4 h-4 mr-2" /> Editar
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="outline" size="sm" className="flex-1 rounded-xl h-10 text-destructive font-black uppercase tracking-widest text-[9px]" onClick={() => setDeleteId(prof.id)}>
+                              <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                            </Button>
+                          )}
                         </div>
                       </div>
                     ))}
