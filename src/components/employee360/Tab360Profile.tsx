@@ -20,6 +20,7 @@ import { EmployeeV2WithRelations,
 } from '@/types/employee';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 interface Tab360ProfileProps {
   employee: EmployeeV2WithRelations;
@@ -40,8 +41,11 @@ function InfoRow({ label, value, icon }: { label: string; value?: string | null;
 }
 
 export function Tab360Profile({ employee }: Tab360ProfileProps) {
-  const birthDate = employee.birth_date 
-    ? format(new Date(employee.birth_date), "d 'de' MMMM, yyyy", { locale: es })
+  const parsedBirthDate = parseDateOnly(employee.birth_date);
+  const parsedDocumentIssueDate = parseDateOnly(employee.document_issue_date);
+
+  const birthDate = parsedBirthDate 
+    ? format(parsedBirthDate, "d 'de' MMMM, yyyy", { locale: es })
     : null;
 
   return (
@@ -67,8 +71,8 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
           <InfoRow label="Lugar de Expedición" value={employee.document_issue_city} />
           <InfoRow 
             label="Fecha de Expedición" 
-            value={employee.document_issue_date 
-              ? format(new Date(employee.document_issue_date), "d MMM yyyy", { locale: es })
+            value={parsedDocumentIssueDate 
+              ? format(parsedDocumentIssueDate, "d MMM yyyy", { locale: es })
               : null
             } 
           />

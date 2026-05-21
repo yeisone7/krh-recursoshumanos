@@ -746,7 +746,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       },
       {
         id: 'social_security',
-        ok: Boolean(employee.social_security?.health_provider || employee.social_security?.pension_fund),
+        ok: Boolean(employee.social_security?.eps && employee.social_security?.afp),
         label: 'Seguridad social incompleta',
         description: 'Falta EPS o fondo de pension.',
         severity: 'warning',
