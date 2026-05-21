@@ -64,7 +64,7 @@ export default function Examenes() {
   const [activeTab, setActiveTab] = useState('aplicaciones');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canUpdate, canDelete } = useAuth();
   const { data: transactions, isLoading } = useExamTransactions();
   const deleteMutation = useDeleteExamTransaction();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -72,6 +72,9 @@ export default function Examenes() {
   const { data: companies = [] } = useCompanies();
 
   const currentCompany = companies.find(c => c.id === currentCompanyId);
+  const canCreateExams = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canCreate('examenes');
+  const canUpdateExams = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canUpdate('examenes');
+  const canDeleteExams = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canDelete('examenes');
 
   const handleExportPdf = async (tx: ExamTransaction) => {
     try {
@@ -194,7 +197,7 @@ export default function Examenes() {
               </p>
             </div>
           </div>
-          {activeTab === 'aplicaciones' && (
+          {activeTab === 'aplicaciones' && canCreateExams && (
             <Button 
               onClick={() => setIsFormOpen(true)} 
               className="h-12 px-8 rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
@@ -298,7 +301,7 @@ export default function Examenes() {
                   <p className="text-lg font-black tracking-tighter text-muted-foreground">
                     {searchQuery || typeFilter !== 'all' ? 'No hay resultados para los filtros aplicados' : 'No hay aplicaciones registradas'}
                   </p>
-                  {!searchQuery && typeFilter === 'all' && (
+                  {!searchQuery && typeFilter === 'all' && canCreateExams && (
                     <Button variant="ghost" className="mt-4 font-bold text-xs uppercase tracking-widest text-primary" onClick={() => setIsFormOpen(true)}>Registrar la primera aplicación</Button>
                   )}
                 </div>
@@ -365,14 +368,16 @@ export default function Examenes() {
                                 >
                                   <FileDown className="w-4 h-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost" 
-                                  size="icon"
-                                  className="h-9 w-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
-                                  onClick={() => setDeleteConfirmId(tx.id)}
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                                {canDeleteExams && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-9 w-9 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
+                                    onClick={() => setDeleteConfirmId(tx.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -412,9 +417,11 @@ export default function Examenes() {
                           <Button variant="outline" size="sm" className="rounded-xl" onClick={() => handleExportPdf(tx)}>
                             <FileDown className="w-4 h-4" />
                           </Button>
-                          <Button variant="outline" size="sm" className="rounded-xl text-destructive" onClick={() => setDeleteConfirmId(tx.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {canDeleteExams && (
+                            <Button variant="outline" size="sm" className="rounded-xl text-destructive" onClick={() => setDeleteConfirmId(tx.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       ),
                     };
@@ -428,7 +435,7 @@ export default function Examenes() {
 
         <TabsContent value="catalogo" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="overflow-hidden rounded-[2.5rem] border border-border shadow-sm bg-background ">
-            <ExamCatalogTab />
+            <ExamCatalogTab canCreate={canCreateExams} canUpdate={canUpdateExams} canDelete={canDeleteExams} />
           </div>
         </TabsContent>
 
@@ -437,6 +444,9 @@ export default function Examenes() {
             <ExamProfesiogramaTab
               centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
               positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
+              canCreate={canCreateExams}
+              canUpdate={canUpdateExams}
+              canDelete={canDeleteExams}
             />
           </div>
         </TabsContent>

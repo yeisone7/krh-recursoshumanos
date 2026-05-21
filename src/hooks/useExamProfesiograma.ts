@@ -115,6 +115,7 @@ export function useCreateExamProfesiograma() {
           .from('exam_profesiograma_items' as any)
           .insert(
             data.items.map((item) => ({
+              company_id: currentCompanyId!,
               profesiograma_id: (prof as any).id,
               exam_catalog_id: item.exam_catalog_id,
               notes: item.notes || null,
@@ -134,6 +135,7 @@ export function useCreateExamProfesiograma() {
 
 export function useUpdateExamProfesiograma() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
@@ -150,6 +152,7 @@ export function useUpdateExamProfesiograma() {
           .from('exam_profesiograma_items' as any)
           .insert(
             data.items.map((item) => ({
+              company_id: currentCompanyId!,
               profesiograma_id: data.id,
               exam_catalog_id: item.exam_catalog_id,
               notes: item.notes || null,

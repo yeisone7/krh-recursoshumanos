@@ -8094,6 +8094,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          ai_data_assistant_enabled: boolean
           created_at: string
           email_notifications: boolean
           email_requisition_approvals: boolean | null
@@ -8111,6 +8112,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_data_assistant_enabled?: boolean
           created_at?: string
           email_notifications?: boolean
           email_requisition_approvals?: boolean | null
@@ -8128,6 +8130,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_data_assistant_enabled?: boolean
           created_at?: string
           email_notifications?: boolean
           email_requisition_approvals?: boolean | null
@@ -9271,6 +9274,7 @@ export type Database = {
         | "obra_labor"
         | "sin_justa_causa"
         | "renuncia"
+        | "traslado"
       training_modality: "presencial" | "virtual" | "mixto"
       training_status: "programado" | "en_curso" | "completado" | "cancelado"
       transfer_status: "pending" | "completed" | "cancelled"
@@ -9710,6 +9714,7 @@ export const Constants = {
         "obra_labor",
         "sin_justa_causa",
         "renuncia",
+        "traslado",
       ],
       training_modality: ["presencial", "virtual", "mixto"],
       training_status: ["programado", "en_curso", "completado", "cancelado"],

@@ -38,9 +38,19 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock } from 'lucide-react';
-import { useEmployees, useEmployeesInfinite } from '@/hooks/useEmployees';
+import { useEmployees, useEmployeesInfinite, useToggleEmployeeActive } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
@@ -70,6 +80,7 @@ export default function Empleados() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [certEmployee, setCertEmployee] = useState<any>(null);
   const [isCertOpen, setIsCertOpen] = useState(false);
+  const [toggleEmployee, setToggleEmployee] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -144,6 +155,7 @@ export default function Empleados() {
   const warningCount = certificationAlerts.filter(a => a.level === 'warning').length;
   const { data: operationCenters } = useOperationCenters();
   const { data: profesiogramas } = useProfesiogramas();
+  const toggleEmployeeActive = useToggleEmployeeActive();
 
   const profesiogramaKeys = useMemo(() => {
     if (!profesiogramas) return new Set<string>();
@@ -209,6 +221,30 @@ export default function Empleados() {
     setIsCertOpen(true);
   };
 
+  const isEmployeeSuspended = (employee: any) => {
+    if (!employee) return false;
+    const isLegacyRetired = !employee.is_active && employee.status === 'active';
+    const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || isLegacyRetired;
+    return employee.status === 'suspended' || (!employee.is_active && !isRetired);
+  };
+
+  const handleToggleEmployeeActive = async () => {
+    if (!toggleEmployee) return;
+
+    const shouldActivate = isEmployeeSuspended(toggleEmployee);
+    try {
+      await toggleEmployeeActive.mutateAsync({
+        id: toggleEmployee.id,
+        isActive: shouldActivate,
+      });
+      setToggleEmployee(null);
+      toast.success(shouldActivate ? 'Empleado reactivado' : 'Empleado suspendido');
+    } catch (error) {
+      console.error('Error toggling employee status:', error);
+      toast.error('No se pudo actualizar el estado del empleado');
+    }
+  };
+
   const handleResetFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
@@ -229,7 +265,13 @@ export default function Empleados() {
         'Número Documento': emp.document_number || '',
         'Cargo': emp.work_info?.position_name || 'N/A',
         'Centro de Operación': emp.operation_centers?.name || 'N/A',
-        'Estado': emp.is_active ? 'Activo' : 'Inactivo',
+        'Estado': emp.status === 'en_retiro'
+          ? 'En Retiro'
+          : emp.status === 'retired' || (!emp.is_active && emp.status === 'active')
+            ? 'Retirado'
+            : emp.status === 'suspended' || !emp.is_active
+              ? 'Inactivo'
+              : 'Activo',
         'Fecha de Ingreso': emp.work_info?.hire_date || '',
       }));
 
@@ -258,9 +300,9 @@ export default function Empleados() {
         position.includes(searchQuery.toLowerCase());
       
       let matchesStatus = true;
-      if (statusFilter === 'active') matchesStatus = emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
-      else if (statusFilter === 'inactive') matchesStatus = !emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro';
-      else if (statusFilter === 'retired') matchesStatus = emp.status === 'retired' || emp.status === 'en_retiro';
+      if (statusFilter === 'active') matchesStatus = emp.is_active && emp.status === 'active';
+      else if (statusFilter === 'inactive') matchesStatus = emp.status === 'suspended' || (!emp.is_active && emp.status !== 'retired' && emp.status !== 'en_retiro' && emp.status !== 'active');
+      else if (statusFilter === 'retired') matchesStatus = emp.status === 'retired' || (!emp.is_active && emp.status === 'active');
       else if (statusFilter === 'en_retiro') matchesStatus = emp.status === 'en_retiro';
       else if (statusFilter === 'new') {
         matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
@@ -275,8 +317,8 @@ export default function Empleados() {
     if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0 };
     return {
       total: employees.length,
-      active: employees.filter(e => e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
-      inactive: employees.filter(e => !e.is_active && e.status !== 'retired' && e.status !== 'en_retiro').length,
+      active: employees.filter(e => e.is_active && e.status === 'active').length,
+      inactive: employees.filter(e => e.status === 'suspended' || (!e.is_active && e.status !== 'retired' && e.status !== 'en_retiro' && e.status !== 'active')).length,
       retired: employees.filter(e => e.status === 'retired' || e.status === 'en_retiro').length,
     };
   }, [employees]);
@@ -615,6 +657,7 @@ export default function Empleados() {
                   onRehire={handleRehire}
                   onTransfer={handleTransfer}
                   onIssueCertificate={handleIssueCertificate}
+                  onToggleActive={setToggleEmployee}
                 />
               ))}
             </div>
@@ -630,6 +673,7 @@ export default function Empleados() {
                 onRehire={handleRehire}
                 onTransfer={handleTransfer}
                 onIssueCertificate={handleIssueCertificate}
+                onToggleActive={setToggleEmployee}
               />
             </div>
           )}
@@ -685,6 +729,31 @@ export default function Empleados() {
           employee={certEmployee}
         />
       )}
+
+      <AlertDialog open={!!toggleEmployee} onOpenChange={(open) => !open && setToggleEmployee(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {isEmployeeSuspended(toggleEmployee) ? 'Reactivar empleado' : 'Suspender empleado'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {isEmployeeSuspended(toggleEmployee)
+                ? `Se reactivara a ${toggleEmployee ? getEmployeeFullName(toggleEmployee) : 'este empleado'} y volvera a aparecer como activo en los procesos operativos.`
+                : `Se suspendera a ${toggleEmployee ? getEmployeeFullName(toggleEmployee) : 'este empleado'} sin marcarlo como retirado ni cerrar su contrato.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={toggleEmployeeActive.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleToggleEmployeeActive} disabled={toggleEmployeeActive.isPending}>
+              {toggleEmployeeActive.isPending
+                ? 'Procesando...'
+                : isEmployeeSuspended(toggleEmployee)
+                  ? 'Reactivar'
+                  : 'Suspender'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

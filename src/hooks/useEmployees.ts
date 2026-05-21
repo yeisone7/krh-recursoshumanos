@@ -5,6 +5,53 @@ import { format } from 'date-fns';
 import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/employee';
 import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 
+const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
+
+function getEmployeeWorkInfoSelect(centerId?: string) {
+  const joinType = centerId && centerId !== 'all' ? '!inner' : '';
+
+  return `
+          employee_work_info${joinType}(
+            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
+            operation_centers(id, name, city),
+            areas(id, name)
+          )
+        `;
+}
+
+function getDisplayWorkInfo(employee: any) {
+  const workInfoRows = employee.employee_work_info || [];
+
+  return workInfoRows.find((row: any) => row.is_current) || workInfoRows[0] || null;
+}
+
+function applyEmployeeStatusFilter(query: any, status?: string) {
+  if (!status || status === 'all') return query;
+
+  if (status === 'active') {
+    return query.eq('is_active', true).eq('status', 'active');
+  }
+
+  if (status === 'inactive') {
+    return query.eq('is_active', false).eq('status', 'suspended');
+  }
+
+  if (status === 'retired') {
+    return query.or('status.eq.retired,and(is_active.eq.false,status.eq.active)');
+  }
+
+  if (status === 'en_retiro') {
+    return query.eq('status', 'en_retiro');
+  }
+
+  if (status === 'new') {
+    const threshold = new Date(Date.now() - NEW_EMPLOYEE_WINDOW_MS).toISOString();
+    return query.gte('created_at', threshold);
+  }
+
+  return query;
+}
+
 // =====================================================
 // AUDIT HELPER
 // =====================================================
@@ -106,20 +153,17 @@ export function useEmployeesPaginated(options: {
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
 
+      const workInfoSelect = getEmployeeWorkInfoSelect(centerId);
+
       // Base query with essential fields only for better performance
       let query = supabase
         .from('employees_v2')
         .select(`
           *,
           identification_types(id, name, code),
-          employee_work_info!inner(
-            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
-            operation_centers(id, name, city),
-            areas(id, name)
-          )
+          ${workInfoSelect}
         `, { count: 'exact' })
-        .eq('company_id', currentCompanyId)
-        .eq('employee_work_info.is_current', true);
+        .eq('company_id', currentCompanyId);
 
       // 1. Server-side search (Name or Document)
       if (search && search.trim() !== '') {
@@ -135,13 +179,7 @@ export function useEmployeesPaginated(options: {
         query = query.eq('employee_work_info.operation_center_id', centerId);
       }
 
-      // Status filtering is complex because it's derived from is_active and termination_date
-      // For now, let's at least filter by is_active if requested
-      if (status === 'active') {
-        query = query.eq('is_active', true);
-      } else if (status === 'inactive') {
-        query = query.eq('is_active', false);
-      }
+      query = applyEmployeeStatusFilter(query, status);
 
       // 3. Pagination range
       const from = (page - 1) * pageSize;
@@ -154,12 +192,16 @@ export function useEmployeesPaginated(options: {
       if (error) throw error;
 
       // Transform data
-      const transformed = (data || []).map((emp: any) => ({
-        ...emp,
-        work_info: emp.employee_work_info?.[0] || null,
-        operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
-        areas: emp.employee_work_info?.[0]?.areas || null,
-      })) as EmployeeV2WithRelations[];
+      const transformed = (data || []).map((emp: any) => {
+        const workInfo = getDisplayWorkInfo(emp);
+
+        return {
+          ...emp,
+          work_info: workInfo,
+          operation_centers: workInfo?.operation_centers || null,
+          areas: workInfo?.areas || null,
+        };
+      }) as EmployeeV2WithRelations[];
 
       return { data: transformed, count: count || 0 };
     },
@@ -185,20 +227,17 @@ export function useEmployeesInfinite(options: {
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
 
+      const workInfoSelect = getEmployeeWorkInfoSelect(centerId);
+
       // Base query
       let query = supabase
         .from('employees_v2')
         .select(`
           *,
           identification_types(id, name, code),
-          employee_work_info!inner(
-            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
-            operation_centers(id, name, city),
-            areas(id, name)
-          )
+          ${workInfoSelect}
         `, { count: 'exact' })
-        .eq('company_id', currentCompanyId)
-        .eq('employee_work_info.is_current', true);
+        .eq('company_id', currentCompanyId);
 
       // 1. Search
       if (search && search.trim() !== '') {
@@ -213,11 +252,7 @@ export function useEmployeesInfinite(options: {
       if (centerId && centerId !== 'all') {
         query = query.eq('employee_work_info.operation_center_id', centerId);
       }
-      if (status === 'active') {
-        query = query.eq('is_active', true);
-      } else if (status === 'inactive') {
-        query = query.eq('is_active', false);
-      }
+      query = applyEmployeeStatusFilter(query, status);
 
       // 3. Pagination
       const from = pageParam * pageSize;
@@ -230,12 +265,16 @@ export function useEmployeesInfinite(options: {
       if (error) throw error;
 
       // Transform
-      const transformed = (data || []).map((emp: any) => ({
-        ...emp,
-        work_info: emp.employee_work_info?.[0] || null,
-        operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
-        areas: emp.employee_work_info?.[0]?.areas || null,
-      })) as EmployeeV2WithRelations[];
+      const transformed = (data || []).map((emp: any) => {
+        const workInfo = getDisplayWorkInfo(emp);
+
+        return {
+          ...emp,
+          work_info: workInfo,
+          operation_centers: workInfo?.operation_centers || null,
+          areas: workInfo?.areas || null,
+        };
+      }) as EmployeeV2WithRelations[];
 
       return {
         data: transformed,
@@ -877,7 +916,10 @@ export function useToggleEmployeeActive() {
 
       const { data, error } = await supabase
         .from('employees_v2')
-        .update({ is_active: isActive })
+        .update({
+          is_active: isActive,
+          status: isActive ? 'active' : 'suspended',
+        } as any)
         .eq('id', id)
         .select()
         .single();
@@ -892,14 +934,16 @@ export function useToggleEmployeeActive() {
         'employee_v2',
         id,
         `${data.first_name} ${data.last_name}`,
-        { is_active: !isActive },
-        { is_active: isActive }
+        { is_active: !isActive, status: isActive ? 'suspended' : 'active' },
+        { is_active: isActive, status: isActive ? 'active' : 'suspended' }
       );
 
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] });
       queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] });
     },
   });

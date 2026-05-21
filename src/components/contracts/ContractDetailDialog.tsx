@@ -78,8 +78,10 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
-  const { isAdmin, canView } = useAuth();
+  const { isAdmin, isRRHH, isSuperAdmin, canView, canUpdate } = useAuth();
   const { data: contractTypes = [] } = useContractTypes();
+  const canUpdateContracts = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
+  const canRetireContract = canUpdateContracts || canUpdate('empleados');
   
   // Map DB contract to UI Contract interface
   const contract = initialContract || (dbContract ? {
@@ -184,19 +186,20 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   };
 
   const status = getContractStatus(contract);
+  const isTerminated = status === 'terminated';
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
   const StatusIcon = statusConfig[status].icon;
-  const canAddExtension = contract.contractType !== 'indefinite' && status !== 'terminated';
+  const canAddExtension = canUpdateContracts && contract.contractType !== 'indefinite' && !isTerminated;
   
   // Check if there's a pending termination process (initiated but not completed)
   const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
   const hasCompletedTermination = terminationProcess && terminationProcess.isCompleted;
   // Show termination button if contract is not fully terminated OR if there's a pending process (but not if already completed)
-  const canTerminate = !hasCompletedTermination && (status !== 'terminated' || hasPendingTermination);
+  const canTerminate = canRetireContract && !hasCompletedTermination && (!isTerminated || hasPendingTermination);
   
   // Approval status
   const isApproved = contract.isApproved;
-  const canApprove = isAdmin && !isApproved && status !== 'terminated';
+  const canApprove = isAdmin && !isApproved && !isTerminated;
 
   const handleApproveContract = async () => {
     try {
@@ -517,6 +520,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 entityType="contract"
                 entityId={contract.id}
                 title="Documento del Contrato"
+                allowUpload={!isTerminated}
                 showVersionHistory
               />
             </div>
@@ -532,8 +536,14 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 variant="outline"
                 onClick={() => setShowGenerateDialog(true)}
                 className="gap-1"
-                disabled={!isApproved}
-                title={!isApproved ? 'El contrato debe estar aprobado para generar el documento' : undefined}
+                disabled={!isApproved || isTerminated}
+                title={
+                  isTerminated
+                    ? 'El contrato terminado no permite generar nuevos documentos'
+                    : !isApproved
+                      ? 'El contrato debe estar aprobado para generar el documento'
+                      : undefined
+                }
               >
                 <Download className="w-4 h-4" />
                 Generar Documento
@@ -541,7 +551,14 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               <Button 
                 className="gradient-primary text-primary-foreground"
                 onClick={() => setShowEditDialog(true)}
-                disabled={status === 'terminated'}
+                disabled={isTerminated || !canUpdateContracts}
+                title={
+                  isTerminated
+                    ? 'El contrato terminado no permite edición'
+                    : !canUpdateContracts
+                      ? 'No tienes permisos para editar contratos'
+                      : undefined
+                }
               >
                 Editar Contrato
               </Button>

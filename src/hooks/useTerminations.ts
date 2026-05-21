@@ -147,6 +147,15 @@ export function useInitiateTermination() {
         // Don't fail the whole process for this
       }
 
+      const { error: employeeStatusError } = await supabase
+        .from('employees_v2')
+        .update({ status: 'en_retiro' } as any)
+        .eq('id', employeeId);
+
+      if (employeeStatusError) {
+        console.error('Error updating employee status:', employeeStatusError);
+      }
+
       // Log audit event
       await supabase.from('audit_logs').insert({
         user_id: user.id,
@@ -169,6 +178,9 @@ export function useInitiateTermination() {
       queryClient.invalidateQueries({ queryKey: ['termination-process', variables.contractId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] });
       toast.success('Proceso de retiro iniciado');
     },
     onError: (error) => {
@@ -295,10 +307,10 @@ export function useCompleteTermination() {
 
       if (contractError) throw contractError;
 
-      // Update employee status in employees_v2 - set is_active to false
+      // Update employee status in employees_v2 - set as retired
       const { error: employeeError } = await supabase
         .from('employees_v2')
-        .update({ is_active: false })
+        .update({ is_active: false, status: 'retired' } as any)
         .eq('id', employeeId);
 
       if (employeeError) throw employeeError;
@@ -331,6 +343,7 @@ export function useCompleteTermination() {
             is_completed: true,
             is_terminated: true,
             employee_is_active: false,
+            employee_status: 'retired',
           },
           user_agent: navigator.userAgent,
         });
@@ -340,8 +353,12 @@ export function useCompleteTermination() {
     },
     onSuccess: ({ contractId }) => {
       queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+      queryClient.invalidateQueries({ queryKey: ['contract', contractId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] });
+      queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] });
       toast.success('Proceso de retiro completado', {
         description: 'El empleado ha sido marcado como Retirado.',
       });

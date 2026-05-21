@@ -1,14 +1,16 @@
 import { motion } from 'framer-motion';
-import { FileText, Calendar, DollarSign, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { FileText, Calendar, DollarSign, AlertTriangle, CheckCircle2, Clock, UserX } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { terminationTypeLabels, type TerminationType } from '@/types/termination';
 
 interface Tab360ContractsProps {
   contracts: any[];
+  terminations?: any[];
   isLoading: boolean;
 }
 
@@ -21,7 +23,16 @@ const contractTypeLabels: Record<string, string> = {
   temporal: 'Temporal',
 };
 
-export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) {
+function formatDate(value?: string | null): string {
+  return value ? format(new Date(`${value}T00:00:00`), "d MMM yyyy", { locale: es }) : 'Sin fecha';
+}
+
+function getTerminationTypeLabel(value?: string | null): string {
+  if (!value) return 'Sin tipo registrado';
+  return terminationTypeLabels[value as TerminationType] || value;
+}
+
+export function Tab360Contracts({ contracts, terminations = [], isLoading }: Tab360ContractsProps) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -42,7 +53,7 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
     );
   }
 
-  if (contracts.length === 0) {
+  if (contracts.length === 0 && terminations.length === 0) {
     return (
       <Card>
         <CardContent className="p-12 text-center">
@@ -59,18 +70,82 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 
+  const terminationsByContract = new Map<string, any>();
+  terminations.forEach((termination) => {
+    if (termination.contract_id) {
+      terminationsByContract.set(termination.contract_id, termination);
+    }
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-4"
     >
+      {terminations.length > 0 && (
+        <Card className="border-warning/20 bg-warning-light/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserX className="w-4 h-4 text-warning" />
+              Procesos de Retiro
+              <Badge variant="outline" className="bg-background text-muted-foreground">
+                {terminations.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {terminations.map((termination) => (
+              <div key={termination.id} className="rounded-lg border bg-background p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold">{getTerminationTypeLabel(termination.termination_type)}</p>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          termination.is_completed
+                            ? 'bg-success-light text-success border-success/20'
+                            : 'bg-warning-light text-warning-foreground border-warning/20'
+                        )}
+                      >
+                        {termination.is_completed ? 'Completado' : 'En proceso'}
+                      </Badge>
+                      {termination.contracts?.contract_number && (
+                        <span className="font-mono text-xs text-primary">
+                          {termination.contracts.contract_number}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Motivo:</span>{' '}
+                      {termination.reason || 'Sin motivo registrado'}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm md:min-w-[260px]">
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Notificación</p>
+                      <p className="font-medium">{formatDate(termination.termination_date)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase tracking-wide text-muted-foreground">Fecha efectiva</p>
+                      <p className="font-medium">{formatDate(termination.effective_date)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {contracts.map((contract, index) => {
         const isActive = !contract.is_terminated && (!contract.end_date || new Date(contract.end_date) >= new Date());
         const daysToExpire = contract.end_date 
           ? differenceInDays(new Date(contract.end_date), new Date())
           : null;
         const isExpiringSoon = daysToExpire !== null && daysToExpire > 0 && daysToExpire <= 30;
+        const termination = terminationsByContract.get(contract.id);
 
         return (
           <motion.div
@@ -200,9 +275,18 @@ export function Tab360Contracts({ contracts, isLoading }: Tab360ContractsProps) 
                         <p className="font-medium">
                           Terminado el {format(new Date(contract.termination_date), "d 'de' MMMM, yyyy", { locale: es })}
                         </p>
-                        {contract.termination_reason && (
-                          <p className="text-muted-foreground mt-1">{contract.termination_reason}</p>
-                        )}
+                        <div className="mt-2 grid gap-2 md:grid-cols-2">
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Terminación</p>
+                            <p className="font-medium">{getTerminationTypeLabel(termination?.termination_type)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground">Motivo</p>
+                            <p className="font-medium">
+                              {termination?.reason || contract.termination_reason || 'Sin motivo registrado'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

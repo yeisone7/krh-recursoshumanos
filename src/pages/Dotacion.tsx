@@ -114,7 +114,7 @@ export default function Dotacion() {
   const [activeTab, setActiveTab] = useState('entregas');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, canCreate, canUpdate, canDelete } = useAuth();
   const { data: company } = useCompany(currentCompanyId || undefined);
   const { data: transactions, isLoading } = useDotationTransactions();
   const deleteMutation = useDeleteDotationTransaction();
@@ -125,6 +125,9 @@ export default function Dotacion() {
   const updateConfig = useUpdateSystemConfig();
 
   const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
+  const canCreateDotation = isAdmin || isRRHH || isSuperAdmin || canCreate('dotacion');
+  const canUpdateDotation = isAdmin || isRRHH || isSuperAdmin || canUpdate('dotacion');
+  const canDeleteDotation = isAdmin || isRRHH || isSuperAdmin || canDelete('dotacion');
 
   // Handle deep link from dashboard alerts
   useEffect(() => {
@@ -378,23 +381,25 @@ export default function Dotacion() {
                   </Select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    className="h-12 px-6 rounded-2xl border-border font-black uppercase tracking-widest text-[11px]"
-                    onClick={() => setIsBulkOpen(true)}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    Entrega Masiva
-                  </Button>
-                  <Button
-                    className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-sm shadow-primary/5"
-                    onClick={() => setIsFormOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nueva Entrega
-                  </Button>
-                </div>
+                {canCreateDotation && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-12 px-6 rounded-2xl border-border font-black uppercase tracking-widest text-[11px]"
+                      onClick={() => setIsBulkOpen(true)}
+                    >
+                      <Users className="w-4 h-4 mr-2" />
+                      Entrega Masiva
+                    </Button>
+                    <Button
+                      className="h-12 px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-sm shadow-primary/5"
+                      onClick={() => setIsFormOpen(true)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nueva Entrega
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Alerts & Table Grid */}
@@ -498,17 +503,19 @@ export default function Dotacion() {
                                     >
                                       <FileDown className="w-5 h-5" />
                                     </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-10 w-10 rounded-xl bg-destructive/5 hover:bg-destructive text-destructive hover:text-destructive-foreground transition-all"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setDeleteConfirmId(tx.id);
-                                      }}
-                                    >
-                                      <Trash2 className="w-5 h-5" />
-                                    </Button>
+                                    {canDeleteDotation && (
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        className="h-10 w-10 rounded-xl bg-destructive/5 hover:bg-destructive text-destructive hover:text-destructive-foreground transition-all"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setDeleteConfirmId(tx.id);
+                                        }}
+                                      >
+                                        <Trash2 className="w-5 h-5" />
+                                      </Button>
+                                    )}
                                   </div>
                                 </TableCell>
                               </TableRow>
@@ -523,13 +530,20 @@ export default function Dotacion() {
             </TabsContent>
 
             <TabsContent value="inventario" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <DotationInventoryTab />
+              <DotationInventoryTab
+                canCreate={canCreateDotation}
+                canUpdate={canUpdateDotation}
+                canDelete={canDeleteDotation}
+              />
             </TabsContent>
 
             <TabsContent value="profesiograma" className="mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <ProfesiogramaTab
                 centers={operationCenters.map(c => ({ id: c.id, name: c.name }))}
                 positions={(positionsData as any[]).map((p: any) => ({ id: p.id, name: p.name }))}
+                canCreate={canCreateDotation}
+                canUpdate={canUpdateDotation}
+                canDelete={canDeleteDotation}
               />
             </TabsContent>
 
@@ -605,6 +619,7 @@ export default function Dotacion() {
                         <Switch
                           checked={config.checked}
                           onCheckedChange={config.onChange}
+                          disabled={!canUpdateDotation}
                           className="data-[state=checked]:bg-primary"
                         />
                       </div>

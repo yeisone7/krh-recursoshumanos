@@ -2,10 +2,9 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
-import { Plus, Download, Search, Clock, FileText, Pencil, Trash2, ListFilter, TrendingUp, Zap, CalendarDays, Filter, FileDown, Printer, Copy, Check, X } from 'lucide-react';
+import { Plus, Download, Search, Clock, FileText, Pencil, Trash2, ListFilter, TrendingUp, Zap, CalendarDays, Filter, FileDown, Printer, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,7 +20,6 @@ import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
-import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
@@ -155,23 +153,23 @@ export default function Novedades() {
   const noveltyTypeOptions = Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => ({ value, label }));
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+      <div className="relative shrink-0 overflow-hidden border-b border-border px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
         
         
         
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+        <div className="relative flex min-w-0 flex-col justify-between gap-6 lg:flex-row lg:items-end lg:gap-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-                <TrendingUp className="w-6 h-6" />
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="shrink-0 rounded-2xl bg-primary p-2.5 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
                   Nómina / Recargos
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Novedades Laborales</h1>
+                <h1 className="mt-1 text-2xl font-black tracking-tighter text-foreground sm:text-4xl">Novedades Laborales</h1>
               </div>
             </div>
             <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
@@ -179,9 +177,9 @@ export default function Novedades() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:max-w-[560px]">
             {stats.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border hover:border-primary/20 transition-all duration-500">
+              <div key={i} className="group relative min-w-0 overflow-hidden rounded-2xl border border-border bg-background p-4 transition-all duration-500 hover:border-primary/20 sm:rounded-[1.5rem]">
                 <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
@@ -197,12 +195,12 @@ export default function Novedades() {
       </div>
 
       {/* Surcharges Ribbon */}
-      <div className="border-b border-border px-6 py-2 overflow-hidden flex items-center gap-4">
-         <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 flex-col gap-2 overflow-hidden border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:px-6 lg:px-10">
+         <div className="flex shrink-0 items-center gap-2">
             <Zap className="w-3.5 h-3.5 text-primary" />
             <span className="text-[10px] font-black text-primary uppercase tracking-widest">Recargos Activos</span>
          </div>
-         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+         <div className="flex min-w-0 gap-1.5 overflow-x-auto no-scrollbar">
             {surcharges.map(s => (
                <Badge key={s.label} variant="outline" className="shrink-0 text-[10px] font-bold bg-background border-border px-2 py-0.5 rounded-lg">
                   {s.label}: <span className="text-primary ml-1">{s.pct}%</span>
@@ -212,9 +210,9 @@ export default function Novedades() {
       </div>
 
       {/* Grouped Filters & Actions */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
-          <div className="relative w-full sm:w-80 group">
+      <div className="sticky top-0 z-30 flex shrink-0 flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:px-6 lg:px-10 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="group relative w-full lg:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar por empleado o documento..."
@@ -224,9 +222,9 @@ export default function Novedades() {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex w-full min-w-0 flex-col gap-3 md:flex-row md:items-center lg:w-auto">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[200px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-12 w-full rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider md:w-[200px]">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Tipo Novedad" />
@@ -240,37 +238,38 @@ export default function Novedades() {
               </SelectContent>
             </Select>
 
-            <div className="flex items-center gap-2 bg-background p-1 rounded-2xl border border-border ">
+            <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-1 rounded-2xl border border-border bg-background p-1 md:w-auto md:gap-2">
               <div className="relative group">
                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-10 pl-9 w-36 bg-background rounded-xl border-none text-[11px] font-bold" />
+                <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="h-10 w-full min-w-0 rounded-xl border-none bg-background pl-9 text-[11px] font-bold md:w-36" />
               </div>
               <span className="text-muted-foreground text-xs font-bold px-1">al</span>
               <div className="relative group">
                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-10 pl-9 w-36 bg-background rounded-xl border-none text-[11px] font-bold" />
+                <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="h-10 w-full min-w-0 rounded-xl border-none bg-background pl-9 text-[11px] font-bold md:w-36" />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full xl:w-auto">
-          <Button variant="outline" className="h-12 flex-1 sm:flex-none px-6 rounded-2xl border-border bg-background font-black uppercase tracking-widest text-[11px]" onClick={handleExport}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:items-center xl:w-auto">
+          <Button variant="outline" className="h-12 min-w-0 rounded-2xl border-border bg-background px-4 font-black uppercase tracking-widest text-[11px] sm:flex-none sm:px-6" onClick={handleExport}>
             <Download className="w-4 h-4 mr-2 text-emerald-600" />
             Excel
           </Button>
-          <Button className="h-12 flex-1 sm:flex-none px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px]" onClick={() => { setEditingNovelty(null); setShowNewDialog(true); }}>
+          <Button className="h-12 min-w-0 rounded-2xl bg-primary px-4 font-black uppercase tracking-widest text-[11px] text-primary-foreground sm:flex-none sm:px-8" onClick={() => { setEditingNovelty(null); setShowNewDialog(true); }}>
             <Plus className="w-4 h-4 mr-2" />
-            Nueva Novedad
+            <span className="truncate">Nueva Novedad</span>
           </Button>
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-6 sm:p-10">
-        <div className="bg-background rounded-[2.5rem] border border-border overflow-hidden relative z-0">
+      <ScrollArea className="min-h-0 flex-1">
+        <div className="p-4 sm:p-6 lg:p-10">
+        <div className="relative z-0 min-w-0 overflow-hidden rounded-3xl border border-border bg-background sm:rounded-[2.5rem]">
           {isMobile ? (
              <PullToRefresh onRefresh={async () => { await new Promise(r => setTimeout(r, 800)); }}>
-                <div className="p-4 space-y-4 rounded-[2.5rem] overflow-hidden">
+                <div className="space-y-4 overflow-hidden rounded-3xl p-3 sm:p-4">
                   {isLoading ? (
                     <div className="grid grid-cols-1 gap-4">
                       {[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}
@@ -299,27 +298,27 @@ export default function Novedades() {
                           { label: 'Fuente', value: n.source === 'manual' ? 'Manual' : 'Auto' },
                         ],
                         actions: (
-                          <div className="flex gap-1">
+                          <div className="flex w-full flex-wrap gap-2">
                              {hasApprovePermission && n.status === 'pendiente' && (
                                <Button 
                                  size="sm" 
-                                 className="h-8 px-4 rounded-full bg-[#0ea5e9] hover:bg-[#0284c7] text-white font-black text-[10px] uppercase tracking-widest gap-2 shadow-sm border-none transition-all active:scale-95" 
+                                 className="h-8 min-w-[110px] flex-1 rounded-full border-none bg-[#0ea5e9] px-3 text-[10px] font-black uppercase tracking-widest text-white shadow-sm transition-all hover:bg-[#0284c7] active:scale-95"
                                  onClick={() => handleStatusUpdate(n.id, 'aprobada')}
                                >
                                   <Check className="w-3.5 h-3.5 stroke-[3]" />
                                   APROBAR
                                </Button>
                              )}
-                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => printNoveltyTicket(n, userName, companyLogo)}>
+                             <Button size="icon" variant="ghost" className="h-8 min-w-8 rounded-lg" onClick={() => printNoveltyTicket(n, userName, companyLogo)}>
                                 <Printer className="w-3.5 h-3.5 text-blue-600" />
                              </Button>
-                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => handleDuplicate(n)}>
+                             <Button size="icon" variant="ghost" className="h-8 min-w-8 rounded-lg" onClick={() => handleDuplicate(n)}>
                                 <Copy className="w-3.5 h-3.5 text-blue-500" />
                              </Button>
-                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => handleEdit(n)}>
+                             <Button size="icon" variant="ghost" className="h-8 min-w-8 rounded-lg" onClick={() => handleEdit(n)}>
                                 <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                              </Button>
-                             <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => handleDelete(n.id)}>
+                             <Button size="icon" variant="ghost" className="h-8 min-w-8 rounded-lg" onClick={() => handleDelete(n.id)}>
                                 <Trash2 className="w-3.5 h-3.5 text-destructive" />
                              </Button>
                           </div>
@@ -330,8 +329,8 @@ export default function Novedades() {
                 </div>
              </PullToRefresh>
           ) : (
-            <div className="overflow-hidden">
-              <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[1180px]">
               <TableHeader>
                 <TableRow className="bg-background border-none">
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] px-8 text-muted-foreground">Empleado</TableHead>
@@ -347,9 +346,9 @@ export default function Novedades() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={8} className="h-40 text-center text-muted-foreground font-bold text-xs uppercase animate-pulse">Cargando...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="h-40 text-center text-muted-foreground font-bold text-xs uppercase animate-pulse">Cargando...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="h-60 text-center"><div className="flex flex-col items-center gap-4 py-10 opacity-30"><FileText className="w-12 h-12" /><p className="font-black text-sm uppercase tracking-widest">Sin Novedades</p></div></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="h-60 text-center"><div className="flex flex-col items-center gap-4 py-10 opacity-30"><FileText className="w-12 h-12" /><p className="font-black text-sm uppercase tracking-widest">Sin Novedades</p></div></TableCell></TableRow>
                 ) : (
                   filtered.map(n => (
                     <TableRow key={n.id} className="group border-b border-border last:border-0 hover:bg-primary/[0.02] transition-colors">
@@ -412,7 +411,7 @@ export default function Novedades() {
                          </div>
                       </TableCell>
                        <TableCell className="text-right px-8">
-                         <div className="flex justify-end gap-1">
+                         <div className="flex justify-end gap-1 whitespace-nowrap">
                            {hasApprovePermission && n.status === 'pendiente' && (
                              <Button 
                                size="sm" 
@@ -448,10 +447,10 @@ export default function Novedades() {
           </div>
         )}
         </div>
+        </div>
       </ScrollArea>
 
       <NoveltyFormDialog open={showNewDialog} onOpenChange={setShowNewDialog} novelty={editingNovelty} />
     </div>
   );
 }
-

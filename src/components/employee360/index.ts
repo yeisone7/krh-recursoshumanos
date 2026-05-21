@@ -1,6 +1,8 @@
 export { Employee360Header } from './Employee360Header';
 export { Employee360KPIs } from './Employee360KPIs';
 export { Employee360Alerts } from './Employee360Alerts';
+export { Employee360ExecutiveSummary } from './Employee360ExecutiveSummary';
+export { Employee360DataQuality } from './Employee360DataQuality';
 export { Tab360Profile } from './Tab360Profile';
 export { Tab360Labor } from './Tab360Labor';
 export { Tab360Contracts } from './Tab360Contracts';
@@ -15,3 +17,4 @@ export { Tab360Disciplinary } from './Tab360Disciplinary';
 export { Tab360Documents } from './Tab360Documents';
 export { Tab360Schedules } from './Tab360Schedules';
 export { Tab360Audit } from './Tab360Audit';
+export { Tab360Timeline } from './Tab360Timeline';

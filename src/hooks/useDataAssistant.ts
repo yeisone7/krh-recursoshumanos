@@ -19,6 +19,9 @@ export interface DataAssistantResponse {
     sql?: string;
     provider?: string;
     suggestedChart?: string;
+    sourceTables?: string[];
+    warnings?: string[];
+    cappedAt?: number;
   } | null;
   explanation: string;
   speechText?: string;
@@ -32,6 +35,9 @@ export interface ChatMessage {
   response?: DataAssistantResponse;
   timestamp: Date;
   isLoading?: boolean;
+  metadata?: {
+    hideText?: boolean;
+  };
 }
 
 export interface DataConversation {

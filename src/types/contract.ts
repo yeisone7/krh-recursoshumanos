@@ -153,9 +153,11 @@ export function calculateDaysRemaining(endDate: Date | null): number | null {
 }
 
 export function getContractStatus(contract: { contractType: ContractType; currentEndDate: Date | null; status?: ContractStatus }): ContractStatus {
+  if (contract.status === 'terminated') return 'terminated';
+
   // Indefinite contracts are always active unless terminated
   if (contract.contractType === 'indefinite') {
-    return contract.status === 'terminated' ? 'terminated' : 'active';
+    return 'active';
   }
   
   if (!contract.currentEndDate) return 'active';

@@ -20,6 +20,30 @@ export interface Employee360KPIs {
   activeDisciplinaryProcesses: number;
 }
 
+export interface Employee360DataQualityIssue {
+  id: string;
+  label: string;
+  description: string;
+  severity: 'critical' | 'warning' | 'info';
+}
+
+export interface Employee360DataQuality {
+  score: number;
+  completed: number;
+  total: number;
+  issues: Employee360DataQualityIssue[];
+}
+
+export interface Employee360TimelineEvent {
+  id: string;
+  date: string;
+  type: 'contract' | 'termination' | 'vacation' | 'leave' | 'incapacity' | 'disciplinary' | 'document' | 'training';
+  title: string;
+  description?: string;
+  status?: string;
+  meta?: string;
+}
+
 export function useEmployee360(employeeId: string | undefined, activeTab: string) {
   // Core employee data (always loaded)
   const employeeQuery = useEmployee(employeeId);
@@ -40,6 +64,236 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       return data;
     },
     enabled: !!employeeId && ['contracts', 'labor'].includes(activeTab),
+  });
+
+  // Termination processes - shown in the contracts view
+  const terminationsQuery = useQuery({
+    queryKey: ['employee_360_terminations', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_terminations')
+        .select(`
+          *,
+          contracts(id, contract_number, contract_type, start_date, end_date)
+        `)
+        .eq('employee_id', employeeId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!employeeId && ['contracts', 'labor'].includes(activeTab),
+  });
+
+  const qualityContractsQuery = useQuery({
+    queryKey: ['employee_360_quality_contracts', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('id, contract_number, contract_type, start_date, end_date, is_terminated')
+        .eq('employee_id', employeeId!)
+        .order('start_date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!employeeId,
+    staleTime: 60_000,
+  });
+
+  const latestTerminationQuery = useQuery({
+    queryKey: ['employee_360_latest_termination', employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_terminations')
+        .select('id, termination_type, effective_date, reason, is_completed, created_at, contracts(contract_number)')
+        .eq('employee_id', employeeId!)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!employeeId,
+    staleTime: 60_000,
+  });
+
+  const timelineQuery = useQuery({
+    queryKey: ['employee_360_timeline', employeeId],
+    queryFn: async (): Promise<Employee360TimelineEvent[]> => {
+      const [
+        contractsRes,
+        terminationsRes,
+        vacationsRes,
+        leavesRes,
+        incapacitiesRes,
+        disciplinaryRes,
+        documentsRes,
+        trainingRes,
+      ] = await Promise.all([
+        supabase
+          .from('contracts')
+          .select('id, contract_number, contract_type, start_date, end_date, is_terminated, termination_date, termination_reason, created_at')
+          .eq('employee_id', employeeId!)
+          .order('start_date', { ascending: false })
+          .limit(30),
+        supabase
+          .from('employee_terminations')
+          .select('id, contract_id, termination_type, termination_date, effective_date, reason, is_completed, created_at, contracts(contract_number)')
+          .eq('employee_id', employeeId!)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('vacation_requests')
+          .select('id, start_date, end_date, status, days_requested, created_at')
+          .eq('employee_id', employeeId!)
+          .order('start_date', { ascending: false })
+          .limit(20),
+        supabase
+          .from('leave_requests')
+          .select('id, start_date, end_date, status, leave_type, reason, created_at')
+          .eq('employee_id', employeeId!)
+          .order('start_date', { ascending: false })
+          .limit(20),
+        supabase
+          .from('employee_incapacities')
+          .select('id, start_date, end_date, diagnosis, status, created_at')
+          .eq('employee_id', employeeId!)
+          .order('start_date', { ascending: false })
+          .limit(20),
+        supabase
+          .from('disciplinary_processes')
+          .select('*')
+          .eq('employee_id', employeeId!)
+          .order('opening_date', { ascending: false })
+          .limit(20),
+        supabase
+          .from('employee_documents')
+          .select('id, document_type, document_name, upload_date, expiry_date, is_valid, created_at')
+          .eq('employee_id', employeeId!)
+          .order('upload_date', { ascending: false })
+          .limit(20),
+        supabase
+          .from('training_completions')
+          .select('id, completed_at, status, score, course:training_courses(name)')
+          .eq('employee_id', employeeId!)
+          .order('completed_at', { ascending: false })
+          .limit(20),
+      ]);
+
+      const firstError = [
+        contractsRes.error,
+        terminationsRes.error,
+        vacationsRes.error,
+        leavesRes.error,
+        incapacitiesRes.error,
+        disciplinaryRes.error,
+        documentsRes.error,
+        trainingRes.error,
+      ].find(Boolean);
+      if (firstError) throw firstError;
+
+      const events: Employee360TimelineEvent[] = [];
+
+      for (const contract of contractsRes.data || []) {
+        events.push({
+          id: `contract-${contract.id}`,
+          date: contract.start_date,
+          type: 'contract',
+          title: `Contrato ${contract.contract_number || contract.contract_type}`,
+          description: contract.is_terminated ? 'Contrato terminado' : 'Contrato registrado',
+          status: contract.is_terminated ? 'Terminado' : 'Vigente',
+          meta: contract.end_date ? `Vigencia hasta ${contract.end_date}` : 'Sin fecha fin',
+        });
+      }
+
+      for (const termination of terminationsRes.data || []) {
+        events.push({
+          id: `termination-${termination.id}`,
+          date: termination.effective_date || termination.termination_date || termination.created_at,
+          type: 'termination',
+          title: 'Proceso de retiro',
+          description: termination.reason || 'Sin motivo registrado',
+          status: termination.is_completed ? 'Completado' : 'En proceso',
+          meta: termination.termination_type,
+        });
+      }
+
+      for (const vacation of vacationsRes.data || []) {
+        events.push({
+          id: `vacation-${vacation.id}`,
+          date: vacation.start_date,
+          type: 'vacation',
+          title: 'Vacaciones',
+          description: `${vacation.days_requested || 0} dia(s) solicitados`,
+          status: vacation.status,
+          meta: vacation.end_date ? `Hasta ${vacation.end_date}` : undefined,
+        });
+      }
+
+      for (const leave of leavesRes.data || []) {
+        events.push({
+          id: `leave-${leave.id}`,
+          date: leave.start_date,
+          type: 'leave',
+          title: 'Permiso',
+          description: leave.reason || leave.leave_type || 'Solicitud de permiso',
+          status: leave.status,
+          meta: leave.end_date ? `Hasta ${leave.end_date}` : undefined,
+        });
+      }
+
+      for (const incapacity of incapacitiesRes.data || []) {
+        events.push({
+          id: `incapacity-${incapacity.id}`,
+          date: incapacity.start_date,
+          type: 'incapacity',
+          title: 'Incapacidad',
+          description: incapacity.diagnosis || 'Sin diagnostico registrado',
+          status: incapacity.status,
+          meta: incapacity.end_date ? `Hasta ${incapacity.end_date}` : undefined,
+        });
+      }
+
+      for (const process of disciplinaryRes.data || []) {
+        events.push({
+          id: `disciplinary-${process.id}`,
+          date: process.opening_date || process.created_at,
+          type: 'disciplinary',
+          title: 'Proceso disciplinario',
+          description: process.reason || process.description || process.process_type || 'Proceso registrado',
+          status: process.status,
+          meta: process.process_number,
+        });
+      }
+
+      for (const document of documentsRes.data || []) {
+        events.push({
+          id: `document-${document.id}`,
+          date: document.upload_date || document.created_at,
+          type: 'document',
+          title: document.document_name || document.document_type || 'Documento',
+          description: document.expiry_date ? `Vence ${document.expiry_date}` : 'Documento cargado',
+          status: document.is_valid ? 'Vigente' : 'No vigente',
+        });
+      }
+
+      for (const completion of trainingRes.data || []) {
+        events.push({
+          id: `training-${completion.id}`,
+          date: completion.completed_at,
+          type: 'training',
+          title: completion.course?.name || 'Capacitacion completada',
+          description: completion.score != null ? `Puntaje ${completion.score}` : undefined,
+          status: completion.status,
+        });
+      }
+
+      return events
+        .filter((event) => Boolean(event.date))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 80);
+    },
+    enabled: !!employeeId && activeTab === 'timeline',
+    staleTime: 60_000,
   });
 
   // Vacation balances
@@ -390,7 +644,8 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
       : null;
 
     // Current contract
-    const currentContract = contractsQuery.data?.[0];
+    const currentContract = contractsQuery.data?.find((contract: any) => !contract.is_terminated)
+      || qualityContractsQuery.data?.find((contract: any) => !contract.is_terminated);
     const contractInfo = currentContract && !currentContract.is_terminated
       ? { type: currentContract.contract_type, endDate: currentContract.end_date }
       : null;
@@ -438,15 +693,107 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
     incapacitiesQuery.data,
     examsQuery.data,
     contractsQuery.data,
+    qualityContractsQuery.data,
     trainingQuery.data,
     disciplinaryQuery.data,
   ]);
+
+  const dataQuality = useMemo<Employee360DataQuality | null>(() => {
+    const employee = employeeQuery.data;
+    if (!employee) return null;
+
+    const checks: Array<{
+      id: string;
+      ok: boolean;
+      label: string;
+      description: string;
+      severity: Employee360DataQualityIssue['severity'];
+    }> = [
+      {
+        id: 'identity',
+        ok: Boolean(employee.document_number && employee.document_type && employee.document_issue_date),
+        label: 'Identidad incompleta',
+        description: 'Falta tipo, numero o fecha de expedicion del documento.',
+        severity: 'critical',
+      },
+      {
+        id: 'birth',
+        ok: Boolean(employee.birth_date && employee.birth_city && employee.birth_country),
+        label: 'Datos de nacimiento incompletos',
+        description: 'Completa fecha, ciudad y pais de nacimiento.',
+        severity: 'warning',
+      },
+      {
+        id: 'contact',
+        ok: Boolean(employee.contact?.phone || employee.contact?.email || employee.contact?.address),
+        label: 'Contacto incompleto',
+        description: 'No hay telefono, correo o direccion de contacto registrada.',
+        severity: 'warning',
+      },
+      {
+        id: 'work',
+        ok: Boolean(employee.work_info?.hire_date && employee.work_info?.position_name),
+        label: 'Informacion laboral incompleta',
+        description: 'Falta fecha de ingreso o cargo actual.',
+        severity: 'critical',
+      },
+      {
+        id: 'contract',
+        ok: Boolean(qualityContractsQuery.data?.some((contract: any) => !contract.is_terminated)),
+        label: 'Sin contrato vigente',
+        description: 'No se encontro un contrato activo para el empleado.',
+        severity: employee.is_active ? 'critical' : 'info',
+      },
+      {
+        id: 'social_security',
+        ok: Boolean(employee.social_security?.health_provider || employee.social_security?.pension_fund),
+        label: 'Seguridad social incompleta',
+        description: 'Falta EPS o fondo de pension.',
+        severity: 'warning',
+      },
+      {
+        id: 'bank',
+        ok: Boolean(employee.bank_info?.bank_name && employee.bank_info?.account_number),
+        label: 'Datos bancarios incompletos',
+        description: 'Falta banco o numero de cuenta.',
+        severity: 'warning',
+      },
+      {
+        id: 'documents',
+        ok: Boolean(employee.documents && employee.documents.length > 0),
+        label: 'Sin documentos adjuntos',
+        description: 'No hay soportes documentales cargados en el expediente.',
+        severity: 'info',
+      },
+    ];
+
+    const completed = checks.filter((check) => check.ok).length;
+    const issues = checks
+      .filter((check) => !check.ok)
+      .map(({ id, label, description, severity }) => ({ id, label, description, severity }));
+
+    return {
+      score: Math.round((completed / checks.length) * 100),
+      completed,
+      total: checks.length,
+      issues,
+    };
+  }, [employeeQuery.data, qualityContractsQuery.data]);
 
   return {
     employee: employeeQuery.data,
     isLoadingEmployee: employeeQuery.isLoading,
     contracts: contractsQuery.data || [],
     isLoadingContracts: contractsQuery.isLoading,
+    terminations: terminationsQuery.data || [],
+    isLoadingTerminations: terminationsQuery.isLoading,
+    timeline: timelineQuery.data || [],
+    isLoadingTimeline: timelineQuery.isLoading,
+    dataQuality,
+    isLoadingDataQuality: qualityContractsQuery.isLoading,
+    summaryContracts: qualityContractsQuery.data || [],
+    latestTermination: latestTerminationQuery.data || null,
+    isLoadingExecutiveSummary: qualityContractsQuery.isLoading || latestTerminationQuery.isLoading,
     vacations: { balances: vacationBalancesQuery.data || [], requests: vacationRequestsQuery.data || [] },
     isLoadingVacations: vacationBalancesQuery.isLoading || vacationRequestsQuery.isLoading,
     leaves: leavesQuery.data || [],

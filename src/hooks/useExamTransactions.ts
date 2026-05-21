@@ -129,7 +129,7 @@ export function useExamTransactions() {
 
 export function useCreateExamTransaction() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (params: {
@@ -143,6 +143,7 @@ export function useCreateExamTransaction() {
       const { data, error } = await supabase
         .from('exam_delivery_transactions' as any)
         .insert({
+          company_id: currentCompanyId!,
           employee_id: params.employee_id,
           exam_date: params.exam_date,
           exam_type: params.exam_type,
@@ -165,6 +166,7 @@ export function useCreateExamTransaction() {
 
 export function useCreateExamDeliveryItem() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (item: {
@@ -178,7 +180,7 @@ export function useCreateExamDeliveryItem() {
     }) => {
       const { data, error } = await supabase
         .from('exam_delivery_items' as any)
-        .insert(item as any)
+        .insert({ ...item, company_id: currentCompanyId! } as any)
         .select()
         .single();
 
