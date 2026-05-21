@@ -24,6 +24,7 @@ import { useCurrentPositionProfile } from '@/hooks/usePositionProfiles';
 import { generatePositionProfilePdf } from '@/lib/positionProfilePdfGenerator';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 interface Tab360LaborProps {
   employee: EmployeeV2WithRelations;
@@ -45,8 +46,9 @@ export function Tab360Labor({ employee }: Tab360LaborProps) {
   const positionId = employee.work_info?.position_id;
   const { data: profile, isLoading: loadingProfile } = useCurrentPositionProfile(positionId || undefined);
 
-  const hireDate = employee.work_info?.hire_date 
-    ? format(new Date(employee.work_info.hire_date), "d 'de' MMMM, yyyy", { locale: es })
+  const parsedHireDate = parseDateOnly(employee.work_info?.hire_date);
+  const hireDate = parsedHireDate 
+    ? format(parsedHireDate, "d 'de' MMMM, yyyy", { locale: es })
     : null;
 
   const handleExportPdf = async () => {

@@ -20,6 +20,7 @@ import { EmployeeV2WithRelations, getEmployeeFullName, linkTypeLabels } from '@/
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 interface Employee360HeaderProps {
   employee: EmployeeV2WithRelations;
@@ -31,8 +32,9 @@ export function Employee360Header({ employee }: Employee360HeaderProps) {
 
   const fullName = getEmployeeFullName(employee);
   const initials = `${employee.first_name[0]}${employee.last_name[0]}`;
-  const hireDate = employee.work_info?.hire_date 
-    ? format(new Date(employee.work_info.hire_date), "d 'de' MMMM, yyyy", { locale: es })
+  const parsedHireDate = parseDateOnly(employee.work_info?.hire_date);
+  const hireDate = parsedHireDate 
+    ? format(parsedHireDate, "d 'de' MMMM, yyyy", { locale: es })
     : null;
 
   // Access operation_centers from the composite type
