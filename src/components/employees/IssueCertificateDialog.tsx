@@ -22,9 +22,10 @@ interface IssueCertificateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   employee: any;
+  onGenerated?: () => void;
 }
 
-export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCertificateDialogProps) {
+export function IssueCertificateDialog({ open, onOpenChange, employee, onGenerated }: IssueCertificateDialogProps) {
   const { currentCompanyId, user } = useAuth();
   const { data: company } = useCompany(currentCompanyId || '');
   const { data: systemConfig } = useSystemConfig();
@@ -233,6 +234,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee }: IssueCe
       });
 
       doc.save(`Certificacion_Laboral_${getEmployeeFullName(employee).replace(/\s+/g, '_')}.pdf`);
+      onGenerated?.();
       
       toast({ title: 'Éxito', description: 'Certificado generado y descargado correctamente.' });
 

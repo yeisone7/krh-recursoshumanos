@@ -211,6 +211,10 @@ export interface TerminationDocumentData {
   // HR Manager info
   hrManagerName: string;
   hrManagerPosition: string;
+  representativeSignatureUrl?: string;
+  representativeSignatureDataUrl?: string;
+  folio?: string;
+  archiveNumber?: string;
   
   // Document date
   documentDate: Date;

@@ -346,7 +346,7 @@ export function useCreateEmployee() {
         .insert({
           company_id: currentCompanyId,
           identification_type_id: data.identificationTypeId,
-          document_type: data.documentType || null,
+          document_type: data.documentType || 'CC',
           document_number: data.documentNumber,
           document_issue_city: data.documentIssueCity || null,
           document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,
@@ -563,7 +563,7 @@ export function useUpdateEmployee() {
         .from('employees_v2')
         .update({
           identification_type_id: data.identificationTypeId,
-          document_type: data.documentType || null,
+          document_type: data.documentType || 'CC',
           document_number: data.documentNumber,
           document_issue_city: data.documentIssueCity || null,
           document_issue_date: data.documentIssueDate ? format(data.documentIssueDate, 'yyyy-MM-dd') : null,

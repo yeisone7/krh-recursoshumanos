@@ -71,14 +71,24 @@ export function useContracts() {
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
-      // Fetch contracts with related employee and work info in a single query
-      // Using !inner on employees_v2 to ensure we only get contracts for the current company's employees
-      // and checking the contract's own company_id as well
+      // Keep the list query lean; contract details still fetch the complete record on demand.
       const { data, error } = await supabase
         .from('contracts')
         .select(`
-          *,
-          contract_extensions(*),
+          id,
+          company_id,
+          employee_id,
+          contract_number,
+          contract_type,
+          start_date,
+          end_date,
+          salary,
+          salary_type,
+          is_terminated,
+          is_approved,
+          created_at,
+          updated_at,
+          contract_extensions(id, extension_number, end_date),
           employees:employees_v2!contracts_employee_id_fkey(
             id, 
             first_name, 
@@ -127,6 +137,8 @@ export function useContracts() {
       }).filter(c => c.employees !== null);
     },
     enabled: !!currentCompanyId,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 

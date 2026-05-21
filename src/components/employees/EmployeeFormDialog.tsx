@@ -54,6 +54,7 @@ import { parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 // Field to tab mapping for navigation on errors
 const fieldToTabMap: Record<string, string> = {
   // Identity tab
+  identificationTypeId: 'identity',
   documentType: 'identity',
   documentNumber: 'identity',
   documentIssueCity: 'identity',
@@ -133,6 +134,7 @@ import {
   employeeFullFormSchema,
   type EmployeeFullFormData,
   type EmployeeV2WithRelations,
+  type DocumentType,
   documentTypeLabels,
   genderLabels,
   bloodTypeLabels,
@@ -162,6 +164,29 @@ import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { AvatarUpload } from './AvatarUpload';
+
+const DOCUMENT_TYPE_VALUES = ['CC', 'CE', 'TI', 'PA', 'PEP'] as const;
+
+function resolveDocumentType(type?: { code?: string | null; name?: string | null }): DocumentType {
+  const normalize = (value?: string | null) =>
+    (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase();
+
+  const code = normalize(type?.code);
+  if ((DOCUMENT_TYPE_VALUES as readonly string[]).includes(code)) {
+    return code as DocumentType;
+  }
+
+  const name = normalize(type?.name);
+  if (name.includes('EXTRANJ')) return 'CE';
+  if (name.includes('TARJETA')) return 'TI';
+  if (name.includes('PASAPORTE')) return 'PA';
+  if (name.includes('PEP') || name.includes('PERMISO ESPECIAL')) return 'PEP';
+  return 'CC';
+}
 
 interface EmployeeFormDialogProps {
   open: boolean;
@@ -366,15 +391,21 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
     }
 
     try {
+      const selectedIdentificationType = identificationTypes.find((type) => type.id === data.identificationTypeId);
+      const dataToSave: EmployeeFullFormData = {
+        ...data,
+        documentType: data.documentType || resolveDocumentType(selectedIdentificationType),
+      };
+
       if (isEditMode && employee) {
-        await updateEmployee.mutateAsync({ id: employee.id, avatarUrl, ...data });
+        await updateEmployee.mutateAsync({ id: employee.id, avatarUrl, ...dataToSave });
         toast.success('Empleado actualizado', {
-          description: `${data.firstName} ${data.lastName} ha sido actualizado exitosamente.`,
+          description: `${dataToSave.firstName} ${dataToSave.lastName} ha sido actualizado exitosamente.`,
         });
       } else {
-        await createEmployee.mutateAsync({ ...data, avatarUrl });
+        await createEmployee.mutateAsync({ ...dataToSave, avatarUrl });
         toast.success('Empleado creado', {
-          description: `${data.firstName} ${data.lastName} ha sido registrado exitosamente.`,
+          description: `${dataToSave.firstName} ${dataToSave.lastName} ha sido registrado exitosamente.`,
         });
       }
       
@@ -543,7 +574,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           render={({ field }) => (
                             <FormItem>
                               <FormLabel>Tipo *</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              <Select
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  const selectedType = identificationTypes.find((type) => type.id === value);
+                                  form.setValue('documentType', resolveDocumentType(selectedType), {
+                                    shouldDirty: true,
+                                    shouldValidate: true,
+                                  });
+                                }}
+                                value={field.value}
+                              >
                                 <FormControl>
                                   <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
                                 </FormControl>

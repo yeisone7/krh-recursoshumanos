@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useDeferredValue } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -44,19 +44,6 @@ import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Database } from '@/integrations/supabase/types';
-
-// Helper to parse dates safely and avoid "Invalid Date" crashes
-const parseSafeDate = (dateStr: string | null | undefined): Date | null => {
-  if (!dateStr) return null;
-  try {
-    // Try to handle ISO dates or simple YYYY-MM-DD
-    const date = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00`);
-    return isNaN(date.getTime()) ? null : date;
-  } catch (e) {
-    return null;
-  }
-};
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
@@ -161,8 +148,9 @@ export default function Contratos() {
 
   const { currentCompanyId, canView } = useAuth();
   const isMobile = useIsMobile();
-  const { data: contracts, isLoading } = useContracts();
+  const { data: contracts, isLoading, refetch } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   // Helper to get contract type label from catalog
   const getContractTypeLabel = (type: string) => {
@@ -195,36 +183,55 @@ export default function Contratos() {
   // Filter contracts
   const filteredContracts = useMemo(() => {
     if (!contracts) return [];
+    const normalizedSearch = deferredSearchQuery.trim().toLowerCase();
     
     return contracts.filter((contract) => {
-      const employeeName = `${contract.employees?.first_name} ${contract.employees?.last_name}`.toLowerCase();
-      const matchesSearch = employeeName.includes(searchQuery.toLowerCase());
+      const searchableText = [
+        contract.employees?.first_name,
+        contract.employees?.middle_name,
+        contract.employees?.last_name,
+        contract.employees?.second_last_name,
+        contract.employees?.document_number,
+        contract.contract_number,
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
       const matchesType = typeFilter === 'all' || contract.contract_type === typeFilter;
       const status = getContractStatus(contract);
       const matchesStatus = statusFilter === 'all' || status === statusFilter;
       return matchesSearch && matchesType && matchesStatus;
     });
-  }, [contracts, searchQuery, typeFilter, statusFilter]);
+  }, [contracts, deferredSearchQuery, typeFilter, statusFilter]);
+
+  const {
+    visibleItems: visibleContracts,
+    hasMore,
+    sentinelRef,
+    visibleCount,
+    totalCount,
+  } = useInfiniteScroll({
+    items: filteredContracts,
+    pageSize: isMobile ? 12 : 40,
+  });
 
   // Calculate stats
   const stats = useMemo(() => {
     if (!contracts) return { total: 0, active: 0, expiring: 0, expired: 0, withExtensions: 0 };
     
-    return {
-      total: contracts.length,
-      active: contracts.filter(c => getContractStatus(c) === 'active').length,
-      expiring: contracts.filter(c => getContractStatus(c) === 'expiring').length,
-      expired: contracts.filter(c => getContractStatus(c) === 'expired').length,
-      withExtensions: contracts.filter(c => c.contract_extensions && c.contract_extensions.length > 0).length,
-    };
+    return contracts.reduce((acc, contract) => {
+      const status = getContractStatus(contract);
+      acc.total += 1;
+      if (status === 'active') acc.active += 1;
+      if (status === 'expiring') acc.expiring += 1;
+      if (status === 'expired') acc.expired += 1;
+      if (contract.contract_extensions && contract.contract_extensions.length > 0) acc.withExtensions += 1;
+      return acc;
+    }, { total: 0, active: 0, expiring: 0, expired: 0, withExtensions: 0 });
   }, [contracts]);
 
   const handleContractClick = (contractId: string) => {
     setSelectedContractId(contractId);
     setIsDetailOpen(true);
   };
-
-  const selectedContract = contracts?.find(c => c.id === selectedContractId);
 
   if (!currentCompanyId) {
     return (
@@ -342,7 +349,9 @@ export default function Contratos() {
             </Select>
 
             <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
-              <span className="text-[11px] font-bold text-primary whitespace-nowrap">{filteredContracts.length}</span>
+              <span className="text-[11px] font-bold text-primary whitespace-nowrap">
+                {visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
+              </span>
             </div>
           </div>
         </div>
@@ -373,9 +382,9 @@ export default function Contratos() {
           </div>
         ) : isMobile ? (
           <div className="p-3">
-            <PullToRefresh onRefresh={async () => { /* refetch is automatic via react-query */ await new Promise(r => setTimeout(r, 800)); }}>
+            <PullToRefresh onRefresh={async () => { await refetch(); }}>
               <div className="space-y-3">
-                {filteredContracts.map((contract, index) => {
+                {visibleContracts.map((contract, index) => {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
                   const daysRemaining = calculateDaysRemaining(effectiveEndDate);
@@ -389,7 +398,7 @@ export default function Contratos() {
                       type="button"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      transition={{ duration: 0.16, delay: Math.min(index * 0.01, 0.12) }}
                       onClick={() => handleContractClick(contract.id)}
                       className="w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all active:scale-[0.99]"
                     >
@@ -492,6 +501,11 @@ export default function Contratos() {
                     </motion.button>
                   );
                 })}
+                {hasMore && (
+                  <div ref={sentinelRef} className="flex justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                )}
               </div>
             </PullToRefresh>
           </div>
@@ -511,7 +525,7 @@ export default function Contratos() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
-                {filteredContracts.map((contract, index) => {
+                {visibleContracts.map((contract, index) => {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
                   const daysRemaining = calculateDaysRemaining(effectiveEndDate);
@@ -524,7 +538,7 @@ export default function Contratos() {
                       key={contract.id}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      transition={{ duration: 0.12, delay: Math.min(index * 0.006, 0.08) }}
                       onClick={() => handleContractClick(contract.id)}
                       className="group hover:bg-primary/[0.02] transition-colors cursor-pointer"
                     >
@@ -612,6 +626,12 @@ export default function Contratos() {
                 })}
               </tbody>
             </table>
+            {hasMore && (
+              <div ref={sentinelRef} className="flex items-center justify-center gap-2 border-t border-border py-4 text-xs font-medium text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                Cargando más contratos
+              </div>
+            )}
           </div>
         )}
       </motion.div>

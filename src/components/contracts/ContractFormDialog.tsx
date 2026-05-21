@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
@@ -238,9 +237,8 @@ export function ContractFormDialog({
 
   const tabItems = [
     { value: 'general', label: 'General', icon: FileText },
-    ...(canViewSalaries ? [{ value: 'salary', label: 'Salario', icon: DollarSign }] : []),
-    { value: 'workplace', label: 'Lugar de Trabajo', icon: Building },
-    { value: 'clauses', label: 'Cláusulas', icon: Briefcase },
+    { value: 'workplace', label: 'Ubicacion', icon: MapPin },
+    { value: 'contract', label: 'Contrato', icon: Briefcase },
   ];
 
   const isPending = createContract.isPending || updateContract.isPending;
@@ -250,7 +248,7 @@ export function ContractFormDialog({
   }, [selectedEmployeeId, employees]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[95dvh] w-[calc(100vw-1rem)] max-w-3xl p-0 overflow-hidden sm:w-full border-none shadow-2xl bg-background ">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-xl sm:h-[92dvh] sm:max-h-[92dvh] sm:w-[calc(100vw-2rem)] sm:max-w-[920px] sm:rounded-xl sm:border [&>button]:right-3 [&>button]:top-3 [&>button]:z-20 sm:[&>button]:right-4 sm:[&>button]:top-4">
         <DialogTitle className="sr-only">
           {isEditMode ? 'Editar Contrato' : 'Nuevo Contrato'}
         </DialogTitle>
@@ -258,57 +256,42 @@ export function ContractFormDialog({
           Formulario para la gestión de contratos laborales de empleados.
         </DialogDescription>
 
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-accent/10 px-6 pt-12 pb-10 sm:px-12 sm:pt-14">
-          {/* Enhanced decorative patterns */}
-          <div className="absolute top-0 right-0 -mr-24 -mt-24 w-80 h-80 rounded-full bg-primary/10 blur-[120px] pointer-events-none animate-pulse" />
-          
-          
-          <div className="relative flex flex-col md:flex-row items-center md:items-start gap-10">
-            {/* Branded Avatar */}
-            <div className="relative group shrink-0">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative w-24 h-24 rounded-2xl bg-background flex items-center justify-center text-primary font-black text-4xl shadow-xl border border-border transition-all duration-500 group-hover:scale-110 group-hover:rotate-3">
+        <div className="border-b bg-muted/30 px-5 py-4 sm:px-7 sm:py-5">
+          <div className="flex items-start gap-4 pr-8">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-sm font-bold text-primary sm:h-12 sm:w-12 sm:text-base">
                 {selectedEmployee ? getEmployeeFullName(selectedEmployee).substring(0, 2).toUpperCase() : 'CT'}
-              </div>
             </div>
 
-            <div className="flex-1 space-y-3 text-center md:text-left">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <Badge variant="outline" className="text-primary border-border py-0.5 px-3 rounded-full font-bold uppercase tracking-widest text-[9px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 animate-ping" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                   {isEditMode ? 'Edición' : 'Nueva Vinculación'}
                 </Badge>
                 {selectedContractType && (
-                  <Badge variant="outline" className="bg-success/5 text-success border-success/10 font-bold py-0.5 px-3 rounded-full text-[9px] uppercase tracking-widest">
+                  <Badge variant="outline" className="border-success/20 bg-success/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-success">
                     {contractTypes.find(ct => ct.contract_type === selectedContractType)?.display_name || selectedContractType}
                   </Badge>
                 )}
               </div>
               
-              <h2 className="text-4xl sm:text-5xl font-black text-foreground tracking-tighter leading-none">
+              <h2 className="truncate text-xl font-bold leading-tight text-foreground sm:text-2xl">
                 {selectedEmployee ? getEmployeeFullName(selectedEmployee) : (isEditMode ? 'Editar Contrato' : 'Nuevo Contrato')}
               </h2>
               
-              <div className="flex flex-wrap justify-center md:justify-start gap-x-6 gap-y-3 text-xs font-bold text-muted-foreground/80 uppercase tracking-tight">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs font-semibold text-muted-foreground">
                 {selectedEmployee && (
-                  <div className="flex items-center gap-2 group cursor-default">
-                    <div className="p-1 rounded-md bg-primary/10 group-hover:bg-primary transition-colors">
-                      <UserCheck className="w-4 h-4 group-hover:text-primary-foreground" />
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <UserCheck className="h-3.5 w-3.5 text-primary" />
                     {selectedEmployee.document_number}
                   </div>
                 )}
-                <div className="flex items-center gap-2 group cursor-default">
-                   <div className="p-1 rounded-md bg-primary/10 group-hover:bg-primary transition-colors">
-                    <CalendarIcon className="w-4 h-4 group-hover:text-primary-foreground" />
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <CalendarIcon className="h-3.5 w-3.5 text-primary" />
                   {format(new Date(), "MMMM yyyy", { locale: es })}
                 </div>
                 {form.watch('salary') && canViewSalaries && (
-                  <div className="flex items-center gap-2 group cursor-default">
-                    <div className="p-1 rounded-md bg-emerald-500/10 group-hover:bg-emerald-500 transition-colors">
-                      <DollarSign className="w-4 h-4 group-hover:text-white" />
-                    </div>
+                  <div className="flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5 text-success" />
                     ${form.watch('salary')}
                   </div>
                 )}
@@ -318,34 +301,36 @@ export function ContractFormDialog({
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="px-8 pt-4 sm:px-12">
-                <TabsList className="w-full h-12 bg-background p-1.5 rounded-2xl border border-border ">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
+              <div className="border-b bg-muted/30 px-4 py-4 sm:px-7">
+                <div className="overflow-x-auto">
+                <TabsList className="grid h-12 w-full min-w-[420px] grid-cols-3 gap-1 rounded-xl border border-border/80 bg-background p-1 shadow-none sm:min-w-0">
                   {tabItems.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="flex-1 gap-2 rounded-xl font-bold text-[11px] uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-lg transition-all"
+                      className="h-10 gap-2 rounded-lg px-3 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground shadow-none transition-colors hover:text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
                     >
-                      <tab.icon className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      <tab.icon className="h-3.5 w-3.5" />
+                      <span>{tab.label}</span>
                     </TabsTrigger>
                   ))}
                 </TabsList>
+                </div>
               </div>
 
-              <ScrollArea className="h-[calc(95dvh-400px)] px-8 py-8 sm:px-12 sm:py-10">
+              <ScrollArea className="min-h-0 flex-1 px-4 py-4 sm:px-7 sm:py-5">
                 {/* General Tab */}
-                <TabsContent value="general" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="bg-primary/[0.02] p-8 rounded-[2rem] border border-border space-y-8 shadow-inner">
-                    <div className="flex items-center gap-4 mb-2">
-                      <div className="w-12 h-12 rounded-2xl bg-primary shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground transform rotate-3">
-                        <UserCheck className="w-6 h-6" />
+                <TabsContent value="general" className="mt-0 space-y-5">
+                  <div className="space-y-5 rounded-lg border border-border bg-card p-4 sm:p-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <UserCheck className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="text-xl font-black text-foreground tracking-tight">Colaborador Destino</h4>
-                        <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest leading-none">Vinculación de Talento Humano</p>
+                        <h4 className="text-base font-bold text-foreground">Colaborador Destino</h4>
+                        <p className="text-xs font-medium text-muted-foreground">Vinculación de Talento Humano</p>
                       </div>
                     </div>
 
@@ -363,7 +348,7 @@ export function ContractFormDialog({
                                   label: `${getEmployeeFullName(emp)} - ${emp.document_number}`,
                                   disabled: hasActive && !isEditMode,
                                   suffix: hasActive ? (
-                                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter px-2 py-0 border-warning/50 text-warning bg-warning/10 ml-2 shrink-0">
+                                    <Badge variant="outline" className="ml-2 shrink-0 border-warning/50 bg-warning/10 px-2 py-0 text-[9px] font-bold uppercase tracking-wider text-warning">
                                       CONTRATO ACTIVO
                                     </Badge>
                                   ) : undefined,
@@ -371,19 +356,20 @@ export function ContractFormDialog({
                               })}
                               value={field.value}
                               onValueChange={field.onChange}
-                              className="h-14 rounded-2xl bg-background border-border font-bold text-base"
+                              className="z-[70] rounded-lg border-border bg-background p-0"
+                              triggerClassName="h-11 rounded-lg border-border bg-background font-medium"
                               placeholder="Seleccione el empleado para vincular..."
                             />
                           </FormControl>
-                          <FormMessage className="text-[10px] font-bold uppercase ml-1" />
+                          <FormMessage className="ml-1 text-xs font-medium" />
                         </FormItem>
                       )}
                     />
 
                     {selectedEmployeeId && selectedEmployeeContracts.length > 0 && (
-                      <div className="rounded-[1.5rem] border border-border bg-background p-6 space-y-4">
-                        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-widest text-primary/80">
-                          <History className="w-4 h-4" />
+                      <div className="space-y-3 rounded-lg border border-border bg-background p-4">
+                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                          <History className="h-4 w-4" />
                           Historial Contractual
                         </div>
                         <div className="space-y-3">
@@ -391,23 +377,23 @@ export function ContractFormDialog({
                             const isActive = !c.is_terminated;
                             const ctConfig = contractTypes.find(ct => ct.contract_type === c.contract_type);
                             return (
-                              <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-background rounded-2xl px-5 py-4 border border-border hover:border-primary/20 transition-colors gap-3">
+                              <div key={c.id} className="flex flex-col justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 text-xs transition-colors hover:border-primary/30 sm:flex-row sm:items-center">
                                 <div className="flex items-center gap-4">
-                                  <div className={`w-2.5 h-2.5 shrink-0 rounded-full ${isActive ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse' : 'bg-background -foreground/30'}`} />
+                                  <div className={`h-2.5 w-2.5 shrink-0 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
                                   <div className="flex flex-col">
-                                    <span className="font-black text-foreground tracking-tight uppercase">{ctConfig?.display_name || c.contract_type}</span>
-                                    <span className="text-[10px] text-muted-foreground font-mono font-bold tracking-widest">{c.contract_number || 'SIN CONSECUTIVO'}</span>
+                                    <span className="font-bold uppercase text-foreground">{ctConfig?.display_name || c.contract_type}</span>
+                                    <span className="font-mono text-[10px] font-bold text-muted-foreground">{c.contract_number || 'SIN CONSECUTIVO'}</span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-4 self-end sm:self-auto">
-                                  <span className="text-[11px] font-bold text-muted-foreground/80">
+                                  <span className="text-[11px] font-semibold text-muted-foreground">
                                     {format(new Date(c.start_date), 'dd MMM yyyy', { locale: es })}
                                     {c.end_date ? ` — ${format(new Date(c.end_date), 'dd MMM yyyy', { locale: es })}` : ' — INDEFINIDO'}
                                   </span>
                                   {isActive ? (
-                                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px] font-black tracking-widest h-6">ACTIVO</Badge>
+                                    <Badge className="h-6 border-emerald-500/20 bg-emerald-500/10 text-[9px] font-bold tracking-wider text-emerald-600">ACTIVO</Badge>
                                   ) : (
-                                    <Badge variant="outline" className="text-muted-foreground/60 border-muted-foreground/20 text-[9px] font-black tracking-widest h-6">CESADO</Badge>
+                                    <Badge variant="outline" className="h-6 border-muted-foreground/20 text-[9px] font-bold tracking-wider text-muted-foreground">CESADO</Badge>
                                   )}
                                 </div>
                               </div>
@@ -418,31 +404,31 @@ export function ContractFormDialog({
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="contractType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <Briefcase className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <Briefcase className="h-3.5 w-3.5" />
                             Tipología de Contrato <span className="text-destructive">*</span>
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-11 rounded-lg border-border bg-background font-medium">
                                 <SelectValue placeholder="Seleccionar..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background ">
+                            <SelectContent className="bg-background">
                               {contractTypes.filter(ct => ct.is_active).map((ct) => (
-                                <SelectItem key={ct.id} value={ct.contract_type} className="rounded-xl m-1.5 font-bold">
+                                <SelectItem key={ct.id} value={ct.contract_type} className="m-1 rounded-lg font-medium">
                                   {ct.display_name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          <FormMessage className="text-[10px] font-bold uppercase" />
+                          <FormMessage className="text-xs font-medium" />
                         </FormItem>
                       )}
                     />
@@ -452,8 +438,8 @@ export function ContractFormDialog({
                       name="trialPeriodDays"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <Clock className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <Clock className="h-3.5 w-3.5" />
                             Periodo de Prueba (Días)
                           </FormLabel>
                           <FormControl>
@@ -461,7 +447,7 @@ export function ContractFormDialog({
                               type="number"
                               min="0"
                               max="60"
-                              className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold"
+                              className="h-11 rounded-lg border-border bg-background font-medium"
                               placeholder="Ej: 60"
                               {...field}
                               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -477,8 +463,8 @@ export function ContractFormDialog({
                       name="startDate"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1 mb-2">
-                            <CalendarIcon className="w-3.5 h-3.5" />
+                          <FormLabel className="mb-2 ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <CalendarIcon className="h-3.5 w-3.5" />
                             Fecha de Inicio <span className="text-destructive">*</span>
                           </FormLabel>
                           <Popover>
@@ -487,7 +473,7 @@ export function ContractFormDialog({
                                 <Button
                                   variant="outline"
                                   className={cn(
-                                    'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-background border-border focus:bg-background transition-all',
+                                    'h-11 w-full rounded-lg border-border bg-background pl-4 text-left font-medium',
                                     !field.value && 'text-muted-foreground font-normal'
                                   )}
                                 >
@@ -500,7 +486,7 @@ export function ContractFormDialog({
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
+                            <PopoverContent className="w-auto rounded-lg border-border bg-background p-0 shadow-xl" align="start">
                               <DatePickerWithDropdowns
                                 selected={field.value}
                                 onSelect={field.onChange}
@@ -520,8 +506,8 @@ export function ContractFormDialog({
                         name="endDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
-                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1 mb-2">
-                              <CalendarIcon className="w-3.5 h-3.5" />
+                            <FormLabel className="mb-2 ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                              <CalendarIcon className="h-3.5 w-3.5" />
                               Fecha de Finalización <span className="text-destructive">*</span>
                             </FormLabel>
                             <Popover>
@@ -530,7 +516,7 @@ export function ContractFormDialog({
                                   <Button
                                     variant="outline"
                                     className={cn(
-                                      'w-full pl-4 text-left font-bold h-12 rounded-2xl bg-background border-border focus:bg-background transition-all',
+                                      'h-11 w-full rounded-lg border-border bg-background pl-4 text-left font-medium',
                                       !field.value && 'text-muted-foreground font-normal'
                                     )}
                                   >
@@ -543,7 +529,7 @@ export function ContractFormDialog({
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-background rounded-2xl shadow-2xl border-border " align="start">
+                              <PopoverContent className="w-auto rounded-lg border-border bg-background p-0 shadow-xl" align="start">
                                 <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
@@ -560,23 +546,20 @@ export function ContractFormDialog({
                   </div>
 
                   {selectedContractType === 'obra_labor' && (
-                    <div className="relative overflow-hidden bg-gradient-to-r from-primary/[0.05] to-transparent p-8 rounded-[2rem] border border-border ">
-                      <div className="absolute top-0 right-0 p-4 opacity-[0.05]">
-                         <Award className="w-24 h-24" />
-                      </div>
+                    <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
                       <FormField
                         control={form.control}
                         name="workLaborDescription"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                              <Award className="w-3.5 h-3.5" />
+                            <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                              <Award className="h-3.5 w-3.5" />
                               Objeto de la Obra o Labor
                             </FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Especifique el proyecto o tarea puntual que justifica este contrato temporal..."
-                                className="min-h-[140px] resize-none bg-background rounded-2xl border-border focus-visible:ring-primary/20 font-medium leading-relaxed"
+                                className="min-h-[120px] resize-none rounded-lg border-border bg-background font-medium leading-relaxed focus-visible:ring-primary/20"
                                 {...field}
                               />
                             </FormControl>
@@ -587,27 +570,28 @@ export function ContractFormDialog({
                     </div>
                   )}
                 </TabsContent>
-                <TabsContent value="salary" className="mt-0 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <TabsContent value="contract" className="mt-0 space-y-5">
+                  {canViewSalaries && (
+                    <>
+                  <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:p-5 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="salary"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <DollarSign className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <DollarSign className="h-3.5 w-3.5" />
                             Remuneración Base Mensual <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
                             <div className="relative group">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary font-black text-lg">$</span>
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-primary">$</span>
                               <Input 
                                 placeholder="3.500.000" 
-                                className="h-14 pl-10 rounded-2xl bg-background border-border focus:bg-background transition-all font-black text-xl tracking-tight" 
+                                className="h-11 rounded-lg border-border bg-background pl-9 text-base font-semibold" 
                                 {...field} 
                                 disabled={!canManageSalaries}
                               />
-                              <div className="absolute bottom-0 left-6 right-6 h-1 bg-emerald-500 scale-x-0 group-focus-within:scale-x-100 transition-transform origin-left rounded-full" />
                             </div>
                           </FormControl>
                           <FormMessage />
@@ -620,19 +604,19 @@ export function ContractFormDialog({
                       name="salaryType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <Target className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <Target className="h-3.5 w-3.5" />
                             Modalidad de Pago
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" disabled={!canManageSalaries}>
+                              <SelectTrigger className="h-11 rounded-lg border-border bg-background font-medium" disabled={!canManageSalaries}>
                                 <SelectValue placeholder="Seleccionar" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background ">
-                              <SelectItem value="monthly" className="rounded-xl m-1.5 font-bold">Sueldo Mensual Ordinario</SelectItem>
-                              <SelectItem value="integral" className="rounded-xl m-1.5 font-bold">Sueldo Mensual Integral</SelectItem>
+                            <SelectContent className="bg-background">
+                              <SelectItem value="monthly" className="m-1 rounded-lg font-medium">Sueldo Mensual Ordinario</SelectItem>
+                              <SelectItem value="integral" className="m-1 rounded-lg font-medium">Sueldo Mensual Integral</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -641,26 +625,23 @@ export function ContractFormDialog({
                     />
                   </div>
 
-                  <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/5 to-transparent p-10 rounded-[2.5rem] border border-emerald-500/10 shadow-inner group">
-                    <div className="absolute top-0 right-0 p-6 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity">
-                       <ShieldCheck className="w-32 h-32" />
-                    </div>
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-4 sm:p-5">
                     <FormField
                       control={form.control}
                       name="transportAllowance"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-6 space-y-0 relative z-10">
+                        <FormItem className="flex flex-row items-center gap-4 space-y-0">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="w-8 h-8 rounded-xl border-emerald-500/50 data-[state=checked]:bg-emerald-500 shadow-lg shadow-emerald-500/20"
+                              className="h-5 w-5 rounded-md border-emerald-500/50 data-[state=checked]:bg-emerald-500"
                               disabled={!canManageSalaries}
                             />
                           </FormControl>
                           <div className="space-y-1.5">
-                            <FormLabel className="text-xl font-black text-foreground tracking-tight">Vincular Auxilio de Transporte</FormLabel>
-                            <FormDescription className="text-xs font-bold text-emerald-600/70 uppercase tracking-widest">
+                            <FormLabel className="text-sm font-bold text-foreground">Vincular Auxilio de Transporte</FormLabel>
+                            <FormDescription className="text-xs font-medium text-emerald-700">
                                Valor Legal 2024: $140.606 COP
                             </FormDescription>
                           </div>
@@ -668,29 +649,31 @@ export function ContractFormDialog({
                       )}
                     />
                   </div>
+                    </>
+                  )}
                 </TabsContent>
 
                 {/* Workplace Tab */}
-                <TabsContent value="workplace" className="mt-0 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <TabsContent value="workplace" className="mt-0 space-y-5">
+                  <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:p-5 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="operationCenter"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <Building className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <Building className="h-3.5 w-3.5" />
                             Unidad de Operación
                           </FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold">
+                              <SelectTrigger className="h-11 rounded-lg border-border bg-background font-medium">
                                 <SelectValue placeholder="Seleccionar sede..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="bg-background ">
+                            <SelectContent className="bg-background">
                               {operationCenters.map((center) => (
-                                <SelectItem key={center.id} value={center.id} className="rounded-xl m-1.5 font-bold">
+                                <SelectItem key={center.id} value={center.id} className="m-1 rounded-lg font-medium">
                                   {center.name}
                                 </SelectItem>
                               ))}
@@ -706,8 +689,8 @@ export function ContractFormDialog({
                       name="workCity"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <Globe className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <Globe className="h-3.5 w-3.5" />
                             Ciudad de Ejecución
                           </FormLabel>
                           <FormControl>
@@ -715,7 +698,7 @@ export function ContractFormDialog({
                               value={field.value} 
                               onValueChange={(city) => field.onChange(city)}
                               placeholder="Buscar municipio..."
-                              className="h-12 rounded-2xl bg-background border-border "
+                              className="h-11 rounded-lg border-border bg-background"
                             />
                           </FormControl>
                           <FormMessage />
@@ -728,12 +711,12 @@ export function ContractFormDialog({
                       name="workAddress"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <MapPin className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <MapPin className="h-3.5 w-3.5" />
                             Dirección de Prestación de Servicios
                           </FormLabel>
                           <FormControl>
-                            <Input placeholder="Ej: Calle 100 # 15-20, Piso 5" className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-all font-bold" {...field} />
+                            <Input placeholder="Ej: Calle 100 # 15-20, Piso 5" className="h-11 rounded-lg border-border bg-background font-medium" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -741,12 +724,12 @@ export function ContractFormDialog({
                     />
                   </div>
                   
-                  <div className="p-8 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-5">
-                     <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-600">
-                        <AlertTriangle className="w-6 h-6" />
+                  <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                     <div className="rounded-lg bg-amber-500/15 p-2 text-amber-600">
+                        <AlertTriangle className="h-5 w-5" />
                      </div>
                      <div className="space-y-1">
-                        <h5 className="font-black text-amber-800 tracking-tight text-sm uppercase">Verificación de ARL</h5>
+                        <h5 className="text-sm font-bold uppercase tracking-wider text-amber-800">Verificación de ARL</h5>
                         <p className="text-[11px] font-medium text-amber-700/80 leading-relaxed italic">
                            Asegúrese de que el centro de operación y la ciudad correspondan a los registros de riesgos laborales para garantizar la cobertura total del empleado.
                         </p>
@@ -755,26 +738,26 @@ export function ContractFormDialog({
                 </TabsContent>
 
                 {/* Clauses Tab */}
-                <TabsContent value="clauses" className="mt-0 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <TabsContent value="contract" className="mt-0 space-y-5">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="hasConfidentialityClause"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-border p-8 bg-background hover:border-primary/20 transition-all group cursor-pointer">
+                        <FormItem className="flex flex-row items-center gap-4 space-y-0 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/30">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="w-7 h-7 rounded-xl border-primary/20 data-[state=checked]:bg-primary shadow-lg shadow-primary/10"
+                              className="h-5 w-5 rounded-md border-primary/30 data-[state=checked]:bg-primary"
                             />
                           </FormControl>
                           <div className="space-y-1">
-                            <FormLabel className="text-base font-black flex items-center gap-3 text-foreground tracking-tight">
-                              <ShieldCheck className="w-5 h-5 text-primary" />
+                            <FormLabel className="flex items-center gap-2 text-sm font-bold text-foreground">
+                              <ShieldCheck className="h-4 w-4 text-primary" />
                               Confidencialidad
                             </FormLabel>
-                            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">Protección IP & Datos</p>
+                            <p className="text-xs font-medium text-muted-foreground">Protección IP & Datos</p>
                           </div>
                         </FormItem>
                       )}
@@ -784,43 +767,40 @@ export function ContractFormDialog({
                       control={form.control}
                       name="hasNonCompeteClause"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-5 space-y-0 rounded-[2rem] border-2 border-border p-8 bg-background hover:border-primary/20 transition-all group cursor-pointer">
+                        <FormItem className="flex flex-row items-center gap-4 space-y-0 rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary/30">
                           <FormControl>
                             <Checkbox
                               checked={field.value}
                               onCheckedChange={field.onChange}
-                              className="w-7 h-7 rounded-xl border-primary/20 data-[state=checked]:bg-primary shadow-lg shadow-primary/10"
+                              className="h-5 w-5 rounded-md border-primary/30 data-[state=checked]:bg-primary"
                             />
                           </FormControl>
                           <div className="space-y-1">
-                            <FormLabel className="text-base font-black flex items-center gap-3 text-foreground tracking-tight">
-                              <Target className="w-5 h-5 text-primary" />
+                            <FormLabel className="flex items-center gap-2 text-sm font-bold text-foreground">
+                              <Target className="h-4 w-4 text-primary" />
                               No Competencia
                             </FormLabel>
-                            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">Restricción Post-Contrato</p>
+                            <p className="text-xs font-medium text-muted-foreground">Restricción Post-Contrato</p>
                           </div>
                         </FormItem>
                       )}
                     />
                   </div>
 
-                  <div className="bg-primary/[0.03] p-10 rounded-[2.5rem] border border-border relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                       <FileText className="w-32 h-32" />
-                    </div>
+                  <div className="rounded-lg border border-border bg-card p-4 sm:p-5">
                     <FormField
                       control={form.control}
                       name="specialClauses"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[11px] font-black uppercase tracking-widest text-primary flex items-center gap-2 ml-1">
-                            <FileText className="w-3.5 h-3.5" />
+                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                            <FileText className="h-3.5 w-3.5" />
                             Estipulaciones Contractuales Adicionales
                           </FormLabel>
                           <FormControl>
                             <Textarea
                               placeholder="Redacte aquí pactos de exclusividad, beneficios extralegales o condiciones particulares del cargo..."
-                              className="min-h-[200px] resize-none bg-background rounded-2xl border-border focus-visible:ring-primary/20 font-medium leading-relaxed"
+                              className="min-h-[160px] resize-none rounded-lg border-border bg-background font-medium leading-relaxed focus-visible:ring-primary/20"
                               {...field}
                             />
                           </FormControl>
@@ -832,19 +812,19 @@ export function ContractFormDialog({
                 </TabsContent>
               </ScrollArea>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 px-8 py-8 sm:px-12 sm:py-10 bg-background /5 border-t border-border/50">
+              <div className="flex shrink-0 flex-col gap-2 border-t bg-muted/30 px-4 py-3 sm:flex-row sm:justify-end sm:px-7">
                 <Button 
                   type="button" 
-                  variant="ghost" 
+                  variant="outline" 
                   onClick={() => onOpenChange(false)}
-                  className="h-12 px-10 rounded-2xl hover:bg-destructive/10 hover:text-destructive transition-all font-black uppercase tracking-widest text-[11px] order-2 sm:order-1"
+                  className="order-2 h-10 rounded-lg px-5 text-sm font-semibold sm:order-1"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isPending}
-                  className="h-12 px-12 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-2xl shadow-primary/30 active:scale-95 transition-all font-black uppercase tracking-widest text-[11px] order-1 sm:order-2"
+                  className="order-1 h-10 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:order-2"
                 >
                   {isPending ? (
                     <>
@@ -852,7 +832,7 @@ export function ContractFormDialog({
                       Procesando...
                     </>
                   ) : (
-                    isEditMode ? 'Guardar Cambios' : 'Finalizar Registro'
+                    isEditMode ? 'Guardar Cambios' : 'Crear Contrato'
                   )}
                 </Button>
               </div>
