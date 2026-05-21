@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, X, Download, ShieldCheck, Clock, Layers, CalendarRange, Loader2, CheckCircle2, Info, FileStack, Settings2 } from 'lucide-react';
+import { Upload, FileText, X, Download, ShieldCheck, Clock, Layers, CalendarRange, Loader2, CheckCircle2, FileStack, Settings2 } from 'lucide-react';
 import type { ContractTypeConfig } from '@/hooks/useContractTypes';
 import { cn } from '@/lib/utils';
 
@@ -404,25 +404,20 @@ export function ContractTypeFormDialog({
             </div>
 
             {/* Footer de Acciones Premium Flat */}
-            <div className="shrink-0 px-6 py-5 sm:px-8 border-t border-slate-200 bg-white flex items-center justify-between gap-4 rounded-b-3xl">
-              <div className="hidden sm:flex items-center gap-2 text-slate-400">
-                <Info className="w-4 h-4" />
-                <span className="text-[9px] font-black uppercase tracking-widest italic">Campos con * son obligatorios</span>
-              </div>
-              
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="shrink-0 px-6 py-3 sm:px-8 border-t border-slate-200 bg-white flex justify-end rounded-b-3xl">
+              <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
                 <Button 
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)} 
-                  className="h-11 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] text-slate-450 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
+                  className="h-9 px-5 rounded-lg font-black uppercase tracking-widest text-[10px] text-slate-450 hover:bg-slate-50 transition-all flex-1 sm:flex-none"
                 >
                   DESCARTAR
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading || !contractType.trim() || !displayName.trim()} 
-                  className="h-11 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all flex-1 sm:flex-none"
+                  className="h-9 px-6 rounded-lg font-black uppercase tracking-widest text-[10px] bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all flex-1 sm:flex-none"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
