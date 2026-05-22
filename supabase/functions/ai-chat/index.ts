@@ -302,13 +302,23 @@ serve(async (req) => {
 
     const activeConversationId = crypto.randomUUID();
 
-    const { data: aiConfigRow } = await adminClient
+    const { data: companyAiConfigRow } = await adminClient
       .from("system_config")
       .select("config_value")
       .eq("company_id", companyId)
       .eq("config_key", "ai_config")
       .maybeSingle();
 
+    const { data: globalAiConfigRow } = companyAiConfigRow
+      ? { data: null }
+      : await adminClient
+          .from("system_config")
+          .select("config_value")
+          .is("company_id", null)
+          .eq("config_key", "ai_config")
+          .maybeSingle();
+
+    const aiConfigRow = companyAiConfigRow || globalAiConfigRow;
     const aiConfig = (aiConfigRow?.config_value || {}) as AIConfig;
     const conversationMessages: ChatMessage[] = [
       ...history,
@@ -326,7 +336,11 @@ serve(async (req) => {
       answer = await callOpenAIDirect(aiConfig.openai_api_key, systemPrompt, conversationMessages);
     } else {
       const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
+      if (!lovableApiKey) {
+        return jsonResponse({
+          error: "No hay proveedor de IA configurado para esta empresa. Configura OpenAI o Gemini en Configuracion > IA, o define una clave global para el asistente.",
+        }, 500);
+      }
       answer = await callGateway(lovableApiKey, systemPrompt, conversationMessages);
     }
 
