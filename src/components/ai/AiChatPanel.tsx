@@ -36,6 +36,19 @@ const starterQuestions = [
 
 const CONFIRM_STEP_MESSAGE = 'Confirmo que completé este paso. Continúa con el siguiente.';
 
+const updatedStarterQuestions = [
+  'Como configuro notificaciones inteligentes por rol?',
+  'Como creo una capacitacion con IA?',
+  'Como asigno permisos especiales por rol?',
+  'Como retiro un empleado y bloqueo operaciones del contrato?',
+  'Como genero una certificacion laboral?',
+  'Como uso la consulta 360 del empleado?',
+  'Como creo una requisicion o una vacante?',
+  'Como genero enlaces de registro con nombre?',
+  'Como reviso contratos proximos a vencer?',
+  'Como uso el Asistente de Datos IA?',
+];
+
 function splitAssistantMessage(content: string) {
   const normalized = content.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   const lines = normalized.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -155,10 +168,8 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   const sendMessage = useSendAiChatMessage();
-  const lastMessage = messages[messages.length - 1];
-  const currentStepMatch = lastMessage?.role === 'assistant' ? lastMessage.content.match(/paso\s+(\d+)(?:\s+de\s+(\d+))?/i) : null;
-  const currentStepLabel = currentStepMatch ? `Paso ${currentStepMatch[1]}${currentStepMatch[2] ? ` de ${currentStepMatch[2]}` : ''}` : null;
-  const canConfirmStep = !!currentStepLabel;
+  const canConfirmStep = false;
+  const currentStepLabel = '';
   const pageContext = useMemo(() => {
     const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
@@ -172,7 +183,7 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
     [pageContext, suggestionSeed]
   );
   const visibleStarterQuestions = useMemo(
-    () => rotateItems(starterQuestions, suggestionSeed, 4),
+    () => rotateItems(updatedStarterQuestions, suggestionSeed, 4),
     [suggestionSeed]
   );
 
@@ -277,14 +288,14 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
       </div>
       <div>
         <p className="text-lg font-semibold">¿Qué necesitas hacer en EmpatiQ?</p>
-        <p className="mt-1 text-sm text-muted-foreground">El asistente te guía paso a paso dentro de la aplicación.</p>
+        <p className="mt-1 text-sm text-muted-foreground">El asistente responde de forma completa sobre el uso de la aplicacion.</p>
       </div>
       {pageContext && (
         <div className="w-full max-w-2xl rounded-lg border border-border bg-background /40 p-3 text-left">
           <p className="text-sm font-semibold">Sugerencias para {pageContext.moduleLabel}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {visibleModuleSuggestions.map((suggestion) => (
-              <Button key={suggestion} variant="secondary" size="sm" onClick={() => handleSend(`Estoy en ${pageContext.moduleLabel}. Guíame para: ${suggestion}`)}>
+              <Button key={suggestion} variant="secondary" size="sm" onClick={() => handleSend(`Estoy en ${pageContext.moduleLabel}. Explicame completo como hacer esto: ${suggestion}`)}>
                 {suggestion}
               </Button>
             ))}
@@ -423,7 +434,7 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex shrink-0 flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold text-foreground">Asistente IA</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Ayuda guiada sobre el uso de EmpatiQ con la IA seleccionada en Configuración.</p>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">Respuestas completas sobre el uso de EmpatiQ con la IA seleccionada en Configuracion.</p>
         </div>
         <Button onClick={handleNewConversation} className="w-full gap-2 sm:w-auto">
           <MessageSquarePlus className="h-4 w-4" /> Nueva conversación

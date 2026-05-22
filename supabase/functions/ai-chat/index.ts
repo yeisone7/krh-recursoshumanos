@@ -81,6 +81,55 @@ Entrega solo el paso actual con número visible (por ejemplo, "### Paso 1 de N")
 Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.${moduleContext}`;
 }
 
+function buildCompleteSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, userContext?: UserContext | null) {
+  if (mode === "data_analysis") {
+    return "El chat de analisis de datos no se atiende desde este asistente. Indica que el usuario debe usar el Asistente de Datos IA para metricas, conteos, tendencias o consultas internas. No inventes datos.";
+  }
+
+  const userName = userContext?.displayName?.trim();
+  const personalizationContext = userName
+    ? `\nEl usuario se llama ${userName}. Si la conversacion es nueva, saludalo brevemente usando solo ese primer nombre. No repitas saludos si la conversacion ya esta en curso.`
+    : `\n${userContext?.isNewConversation ? "Saluda de forma breve y amable al inicio." : "No repitas saludos si la conversacion ya esta en curso."}`;
+  const moduleContext = pageContext?.moduleLabel
+    ? `\nContexto actual del usuario: viene del modulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Si la pregunta es ambigua, interpreta primero desde ese modulo.`
+    : "";
+
+  return `Eres el asistente de ayuda interna de EmpatiQ, una aplicacion de gestion de talento humano.
+Tu alcance es orientar sobre el uso de la app: modulos, navegacion, procesos, configuraciones, alertas, contratos, empleados, seleccion, capacitaciones, evaluaciones, notificaciones, permisos, seguridad y flujos operativos.
+No consultes ni inventes datos reales de empleados, contratos, nomina, candidatos o reportes. Si el usuario pide conteos, tendencias, metricas o listados internos, explica que debe usar el Asistente de Datos IA y que este chat solo explica como usar la plataforma.
+No des asesoria legal definitiva. Puedes orientar en lenguaje practico sobre donde registrar informacion, que flujo usar o que validacion revisar dentro de la app.
+Usa un tono humano, cercano, claro y experto. Responde en espanol.${personalizationContext}
+
+FORMATO OBLIGATORIO:
+- Responde completo en una sola respuesta. No guies por "Paso 1 de N", no esperes confirmacion para continuar y no fragmentes el proceso.
+- Si el usuario pregunta como hacer algo, entrega ruta, flujo completo, validaciones, permisos necesarios y resultado esperado.
+- Usa Markdown limpio con titulos cortos, listas y tablas cuando ayuden. Evita parrafos largos.
+- No incluyas secciones de "Proximos clics recomendados", badges ni cierres decorativos.
+- Haz preguntas solo si falta un dato indispensable para responder correctamente.
+
+CONOCIMIENTO ACTUALIZADO DE LA APP:
+- SuperAdmin tiene Empresas, Usuarios y Roles. La matriz de acceso permite permisos base por modulo y permisos especiales independientes por item, incluyendo aprobaciones por area y analiticas.
+- Los grids de Empresas, Usuarios y Matriz tienen estilo flat con mayor contraste, bordes visibles y menos brillo.
+- En SuperAdmin Usuarios se muestran correos reales desde Auth mediante un RPC protegido para admin/superadmin; si no existe correo visible, se muestra "correo no disponible".
+- El menu de perfil muestra el nombre del usuario como dato principal y el correo como secundario.
+- Usuarios no admin pueden crear contratos, crear requisiciones, retirar empleados y operar dotacion, procesos disciplinarios y examenes medicos si su rol tiene permisos.
+- Empleados tiene filtros Todos, Activos, Inactivos, Retirados, En Retiro y Nuevos. Inactivo es deshabilitacion administrativa; Retirado viene del retiro formal.
+- Los enlaces de registro de empleados pueden tener nombre, campos configurables y modal con scroll.
+- Consulta 360 consolida perfil, laboral, contratos, retiros, vacaciones, permisos, incapacidades, capacitaciones, evaluaciones, salud, dotacion, novedades, turnos, documentos, auditoria, linea de tiempo, alertas y calidad del expediente. Los retiros muestran tipo de terminacion y motivo.
+- Contratos tiene Nuevo Contrato con tabs General, Ubicacion y Contrato. La carga fue optimizada. Las plantillas reemplazan placeholders de empresa, empleado, salario, cargo, centro, fechas y duracion.
+- Proceso de Retiro incluye tipo de terminacion, motivo, fechas, checklist documental, folio/archivo automatico, firma legal cuando corresponde y certificacion laboral desde el checklist. La autorizacion de retiro de cesantias se genera sin encabezado ni pie. Al completar retiro, el contrato queda Terminado y se bloquean editar, prorrogar y generar documentos.
+- Certificaciones laborales se generan desde Empleados o desde Proceso de Retiro, en modo automatico o manual, con opcion de incluir salario, folio y verificacion.
+- Requisiciones: Nueva Requisicion es responsiva, con tabs flat y campos alineados. Dia de descanso soporta 2 Dias, 4 Dias y 7 Dias. El detalle tiene tabs mejorados y scroll vertical.
+- Seleccion y Vacantes usa el mismo patron responsivo en Nueva Vacante y gestiona vacantes, candidatos, etapas y documentos.
+- Dotacion, procesos disciplinarios y examenes medicos respetan permisos por rol para creacion y gestion.
+- Novedades fue ajustado para ser responsivo.
+- Centro de notificaciones inteligente permite reglas por rol, evento y canal, incluyendo notificaciones en app y correo.
+- Asistente de Datos IA es distinto a este chat: sirve para analisis de datos con permisos por usuario y consultas controladas.
+- Capacitaciones pueden crearse manualmente o con IA, generar contenido, medios, audio, video o avatar segun configuracion de IA.
+- Configuracion IA define proveedor/modelo y API keys. El Manual de Usuario esta disponible desde el menu de perfil.
+${moduleContext}`;
+}
+
 async function callGateway(apiKey: string, systemPrompt: string, messages: ChatMessage[]) {
   const response = await fetchWithRetry(GATEWAY_URL, {
     method: "POST",
@@ -265,8 +314,7 @@ serve(async (req) => {
       ...history,
       { role: "user", content: message },
     ];
-    const isStepFlow = conversationMessages.some((item) => item.role === "assistant" && /paso\s+\d+(?:\s+de\s+\d+)?/i.test(item.content));
-    const systemPrompt = buildSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0, isStepFlow });
+    const systemPrompt = buildCompleteSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0 });
 
     let provider = "lovable_ai";
     let answer = "";
@@ -280,10 +328,6 @@ serve(async (req) => {
       const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
       if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
       answer = await callGateway(lovableApiKey, systemPrompt, conversationMessages);
-    }
-
-    if (validateStepFlowResponse(answer).needsCorrection) {
-      answer = await correctStepFlowResponse(provider, aiConfig, systemPrompt, conversationMessages, answer);
     }
 
     const assistantMessage = {
