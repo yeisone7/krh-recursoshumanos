@@ -441,65 +441,65 @@ export default function SuperAdmin() {
                 }))}
               />
 
-              <div className="hidden md:block rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
+              <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow className="hover:bg-slate-50/50 border-slate-100">
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Entidad Estratégica</TableHead>
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Identidad Fiscal</TableHead>
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Población</TableHead>
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Nómina Activa</TableHead>
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocolo de Alta</TableHead>
-                      <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Control</TableHead>
+                  <TableHeader className="bg-slate-100">
+                    <TableRow className="border-slate-200 hover:bg-slate-100">
+                      <TableHead className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Entidad Estratégica</TableHead>
+                      <TableHead className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-600">Identidad Fiscal</TableHead>
+                      <TableHead className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-600">Población</TableHead>
+                      <TableHead className="px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-600">Nómina Activa</TableHead>
+                      <TableHead className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Protocolo de Alta</TableHead>
+                      <TableHead className="px-8 py-5 text-right text-[10px] font-black uppercase tracking-widest text-slate-600">Control</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-slate-200 bg-white">
                     {filteredCompanies.map((company, idx) => (
                       <motion.tr 
                         key={company.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.02 }}
-                        className="group border-slate-50 hover:bg-primary/[0.02] transition-colors"
+                        className="group border-slate-200 transition-colors hover:bg-slate-50"
                       >
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-5">
-                            <div className="h-14 w-14 rounded-2xl bg-white border border-slate-100 flex items-center justify-center shadow-sm overflow-hidden group-hover:scale-110 transition-transform">
-                              {company.logo_url ? <img src={company.logo_url} className="w-full h-full object-contain p-2" /> : <Building2 className="w-6 h-6 text-slate-200" />}
+                            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm transition-transform group-hover:scale-105">
+                              {company.logo_url ? <img src={company.logo_url} className="h-full w-full object-contain p-2" /> : <Building2 className="h-6 w-6 text-slate-400" />}
                             </div>
                             <div className="space-y-1 min-w-0">
-                              <p className="font-black text-foreground uppercase tracking-tight truncate leading-none">{company.name}</p>
-                              <div className="flex items-center gap-2 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                <MapPin className="w-3 h-3 text-primary/50" />
+                              <p className="truncate font-black uppercase leading-none tracking-tight text-slate-950">{company.name}</p>
+                              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <MapPin className="h-3.5 w-3.5 text-primary" />
                                 <span className="truncate max-w-[180px]">{company.address || '—'}</span>
                               </div>
                             </div>
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-center">
-                          <Badge className="bg-primary text-white border-none font-black text-[9px] px-3 py-1 rounded-lg uppercase tracking-widest shadow-lg shadow-primary/10">
+                          <Badge className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-primary shadow-none hover:bg-primary/10">
                             NIT: {company.nit}
                           </Badge>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-center">
-                          <div className="inline-flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-xl transition-transform group-hover:scale-105">
-                            <Users className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-black text-foreground">{userCountMap[company.id] || 0}</span>
+                          <div className="inline-flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2">
+                            <Users className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-black text-slate-950">{userCountMap[company.id] || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-center">
-                          <div className="inline-flex items-center gap-3 bg-primary/5 px-4 py-2 rounded-xl transition-transform group-hover:scale-105">
-                            <Building2 className="w-4 h-4 text-primary" />
+                          <div className="inline-flex items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 px-4 py-2">
+                            <Building2 className="h-4 w-4 text-primary" />
                             <span className="text-sm font-black text-primary">{employeeCountMap[company.id] || 0}</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6">
                           <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 text-[10px] font-black text-foreground uppercase">
-                              <Calendar className="w-3.5 h-3.5 text-slate-300" />
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-800">
+                              <Calendar className="h-3.5 w-3.5 text-slate-500" />
                               {new Date(company.created_at).toLocaleDateString()}
                             </div>
-                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-5">REGISTRO LEGACY</span>
+                            <span className="ml-5 text-[8px] font-black uppercase tracking-widest text-slate-500">REGISTRO LEGACY</span>
                           </div>
                         </TableCell>
                         <TableCell className="px-8 py-6 text-right">
@@ -507,7 +507,7 @@ export default function SuperAdmin() {
                             variant="ghost" 
                             size="icon" 
                             onClick={() => handleEditCompany(company)}
-                            className="h-11 w-11 rounded-xl hover:bg-primary hover:text-white transition-all shadow-sm border border-transparent hover:border-primary"
+                            className="h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-all hover:border-primary hover:bg-primary hover:text-white"
                           >
                             <Edit className="w-4.5 h-4.5 stroke-[2.5]" />
                           </Button>

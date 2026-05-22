@@ -24,7 +24,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
-  const { user, companies, roles, signOut } = useAuth();
+  const { user, profile, companies, roles, signOut } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -53,7 +53,22 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const formattedDate = now.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
   const formattedTime = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  const userInitials = user?.email?.substring(0, 2).toUpperCase() || 'U';
+  const cleanText = (value?: string | null) => value?.trim() || '';
+  const userDisplayName =
+    cleanText(profile?.full_name) ||
+    cleanText(profile?.display_name) ||
+    cleanText(user?.user_metadata?.full_name) ||
+    [cleanText(user?.user_metadata?.first_name), cleanText(user?.user_metadata?.last_name)].filter(Boolean).join(' ') ||
+    cleanText(user?.user_metadata?.name) ||
+    'Usuario';
+
+  const userInitials = userDisplayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase() || 'U';
 
   const roleLabels: Record<string, string> = {
     admin: 'Administrador',
@@ -175,7 +190,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <DropdownMenuContent className="w-64" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-2">
-                  <p className="text-sm font-medium leading-none truncate">{user?.email}</p>
+                  <p className="text-sm font-medium leading-none truncate">{userDisplayName}</p>
+                  {user?.email && (
+                    <p className="text-xs text-muted-foreground leading-none truncate">{user.email}</p>
+                  )}
                   <div className="flex flex-wrap gap-1">
                     {roles.map((role) => (
                       <Badge key={role} variant="secondary" className="text-xs">

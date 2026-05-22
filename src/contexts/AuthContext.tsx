@@ -45,7 +45,7 @@ interface AuthContextType {
   canExport: (moduleCode: string) => boolean;
   hasAnyRole: boolean;
   assignedCenterIds: string[];
-  profile: { full_name: string | null; avatar_url: string | null } | null;
+  profile: { full_name: string | null; display_name: string | null; avatar_url: string | null } | null;
   refreshPermissions: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: Error | null }>;
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hasAnyRole, setHasAnyRole] = useState(true); // default true to avoid flash
   const [assignedCenterIds, setAssignedCenterIds] = useState<string[]>([]);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null; display_name: string | null; avatar_url: string | null } | null>(null);
   const userRef = React.useRef<User | null>(null);
   const currentCompanyIdRef = React.useRef<string | null>(null);
 
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('user_roles').select('role').eq('user_id', userId),
       supabase.from('user_company_assignments').select('company_id, companies(id, name, nit, logo_url, horizontal_logo_url)').eq('user_id', userId),
       supabase.from('super_admins').select('id').eq('user_id', userId).maybeSingle(),
-      supabase.from('user_profiles').select('full_name, avatar_url').eq('id', userId).maybeSingle(),
+      supabase.from('user_profiles').select('full_name, display_name, avatar_url').eq('id', userId).maybeSingle(),
       supabase.from('user_center_assignments').select('operation_center_id').eq('user_id', userId),
       supabase.rpc('get_user_permissions', { _user_id: userId }),
       supabase.from('user_custom_roles').select('id').eq('user_id', userId).limit(1)
