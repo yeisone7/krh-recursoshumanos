@@ -210,6 +210,7 @@ export function useSetRolePermissions() {
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ['role-permissions', vars.roleId] });
+      qc.invalidateQueries({ queryKey: ['user-effective-permissions'] });
       toast.success('Permisos actualizados');
       logAction.mutate({
         action: 'update',
