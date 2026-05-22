@@ -363,20 +363,20 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         }))}
       />
 
-      <div className="hidden md:block rounded-[2.5rem] bg-white border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-auto max-h-[700px] custom-scrollbar">
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+        <div className="max-h-[700px] overflow-auto custom-scrollbar">
           <Table>
-            <TableHeader className="bg-slate-50/50 sticky top-0 z-10">
-              <TableRow className="hover:bg-slate-50/50 border-slate-100">
-                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identidad Digital</TableHead>
-                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest w-[180px]">Status Acceso</TableHead>
-                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Roles & Privilegios</TableHead>
-                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ecosistema Corporativo</TableHead>
-                <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-[120px]">Centros</TableHead>
+            <TableHeader className="sticky top-0 z-10 bg-slate-100">
+              <TableRow className="border-slate-200 hover:bg-slate-100">
+                <TableHead className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Identidad Digital</TableHead>
+                <TableHead className="w-[180px] px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Status Acceso</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Roles & Privilegios</TableHead>
+                <TableHead className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600">Ecosistema Corporativo</TableHead>
+                <TableHead className="w-[120px] px-8 py-5 text-center text-[10px] font-black uppercase tracking-widest text-slate-600">Centros</TableHead>
                 <TableHead className="w-[100px] px-8"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="divide-y divide-slate-200 bg-white">
               {filteredUsers.map((user, idx) => (
                 <motion.tr 
                   key={user.id}
@@ -384,37 +384,37 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.02 }}
                   className={cn(
-                    "group hover:bg-primary/[0.02] transition-colors border-slate-50",
-                    !user.is_active && "bg-slate-50/50 opacity-60 grayscale-[0.3]"
+                    "group border-slate-200 transition-colors hover:bg-slate-50",
+                    !user.is_active && "bg-slate-100/70 opacity-75 grayscale-[0.25]"
                   )}
                 >
                   <TableCell className="px-8 py-6">
                     <div className="flex items-center gap-5">
                       <div className="relative h-14 w-14 shrink-0">
                         <div className={cn(
-                          "absolute -inset-1 rounded-2xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity",
-                          user.is_active ? "bg-primary/20" : "bg-slate-200"
+                          "absolute -inset-1 rounded-xl opacity-0 transition-opacity group-hover:opacity-100",
+                          user.is_active ? "bg-primary/10" : "bg-slate-200"
                         )} />
-                        <Avatar className="relative h-full w-full rounded-2xl border-none bg-primary/5 shadow-none">
+                        <Avatar className="relative h-full w-full rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
                           <AvatarImage src={user.avatar_url} alt={getUserDisplayName(user)} className="object-cover" />
                           <AvatarFallback className={cn(
                             "font-black text-sm",
-                            user.is_active ? 'bg-transparent text-primary' : 'bg-slate-100 text-slate-400'
+                            user.is_active ? 'bg-transparent text-primary' : 'bg-slate-100 text-slate-500'
                           )}>
                             {getUserInitials(user)}
                           </AvatarFallback>
                         </Avatar>
                       </div>
                       <div className="min-w-0 space-y-1">
-                        <div className="font-black text-slate-900 uppercase tracking-tight leading-none flex items-center gap-2">
+                        <div className="flex items-center gap-2 font-black uppercase leading-none tracking-tight text-slate-950">
                           {getUserDisplayName(user)}
                           {user.id === currentUser?.id && (
                             <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">SISTEMA:TÚ</Badge>
                           )}
                         </div>
                         <div className="flex items-center gap-2">
-                          <Mail className="w-3 h-3 text-primary/50" />
-                          <p className="text-[10px] font-bold text-slate-400 lowercase tracking-tight truncate max-w-[200px]">{user.email || 'sin@correo.net'}</p>
+                          <Mail className="h-3.5 w-3.5 text-primary" />
+                          <p className="max-w-[200px] truncate text-[10px] font-semibold lowercase tracking-tight text-slate-500">{user.email || 'correo no disponible'}</p>
                         </div>
                       </div>
                     </div>
@@ -430,10 +430,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                       <Badge 
                         variant="outline"
                         className={cn(
-                          "font-black text-[9px] px-2.5 py-1 rounded-lg uppercase tracking-widest border-none shadow-sm",
+                          "rounded-md border px-2.5 py-1 text-[9px] font-black uppercase tracking-widest shadow-none",
                           user.is_active 
-                            ? 'bg-emerald-500 text-white' 
-                            : 'bg-slate-200 text-slate-500'
+                            ? 'border-emerald-200 bg-emerald-50 text-emerald-700' 
+                            : 'border-slate-300 bg-slate-200 text-slate-600'
                         )}
                       >
                         {user.is_active ? 'HABILITADO' : 'SUSPENDIDO'}
@@ -447,7 +447,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                       ) : (
                         <>
                           {user.custom_roles.map(role => (
-                            <Badge key={role} className="bg-primary/5 text-primary border-none font-black text-[9px] px-2.5 py-1 rounded-xl uppercase tracking-widest shadow-sm">
+                            <Badge key={role} className="rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-primary shadow-none hover:bg-primary/10">
                               {role}
                             </Badge>
                           ))}
@@ -455,8 +455,8 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                             <Badge 
                               key={role} 
                               className={cn(
-                                "border-none font-black text-[9px] px-2.5 py-1 rounded-xl uppercase tracking-widest shadow-sm",
-                                role === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-primary/5 text-primary'
+                                "rounded-md border px-2.5 py-1 text-[9px] font-black uppercase tracking-widest shadow-none",
+                                role === 'admin' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-primary/20 bg-primary/10 text-primary'
                               )}
                             >
                               {ROLE_LABELS[role]?.label || role}
@@ -469,9 +469,9 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                   <TableCell className="px-8 py-6">
                     <div className="flex flex-wrap gap-2">
                       {user.companies.map(company => (
-                        <div key={company.id} className="group/entity flex items-center gap-2 bg-slate-50 hover:bg-white border border-slate-100 hover:border-primary/20 px-3 py-1.5 rounded-xl transition-all hover:shadow-sm">
-                          <Building2 className="w-3.5 h-3.5 text-primary/60 group-hover/entity:text-primary transition-colors" />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight">{company.name}</span>
+                        <div key={company.id} className="group/entity flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 transition-all hover:border-primary/30 hover:bg-white">
+                          <Building2 className="h-3.5 w-3.5 text-primary transition-colors" />
+                          <span className="text-[10px] font-black uppercase tracking-tight text-slate-700">{company.name}</span>
                         </div>
                       ))}
                       {user.companies.length === 0 && <span className="text-[10px] font-black text-slate-200 uppercase italic">Libre de Entidad</span>}
@@ -479,10 +479,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                   </TableCell>
                   <TableCell className="px-8 py-6 text-center">
                     <div className="inline-flex flex-col items-center gap-1">
-                      <div className="h-10 w-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shadow-sm transition-transform group-hover:scale-110">
-                        <MapPin className="w-4 h-4 stroke-[2.5]" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/5 text-primary shadow-none">
+                        <MapPin className="h-4 w-4 stroke-[2.5]" />
                       </div>
-                      <span className="text-[10px] font-black text-slate-900 uppercase">
+                      <span className="text-[10px] font-black uppercase text-slate-950">
                         {user.centers.length === 0 ? 'TODOS' : user.centers.length}
                       </span>
                     </div>

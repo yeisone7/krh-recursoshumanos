@@ -127,7 +127,15 @@ export function useAdminUsers() {
       );
       if (profilesError) throw profilesError;
 
-      // 7. Fetch employee links
+      // 7. Fetch auth emails through a guarded RPC. Auth emails are not exposed
+      // directly through RLS tables, so admins get them from a security definer.
+      const { data: authEmailsData, error: authEmailsError } = await supabase
+        .rpc('get_admin_user_emails' as any, { p_user_ids: userIds });
+      if (authEmailsError) {
+        console.warn('No fue posible obtener los correos de Auth para la grilla de usuarios:', authEmailsError);
+      }
+
+      // 8. Fetch employee links
       const { data: employeeLinks, error: linksError } = await batchQuery(
         userIds,
         100,
@@ -141,7 +149,7 @@ export function useAdminUsers() {
               middle_name,
               last_name, 
               second_last_name,
-              employee_contact(email)
+              employee_contact(email, personal_email)
             )
           `)
           .in('user_id', chunk)
@@ -178,6 +186,14 @@ export function useAdminUsers() {
         }
       });
 
+      // Add auth email data
+      (authEmailsData as Array<{ user_id: string; email: string | null }> | null)?.forEach(row => {
+        const user = usersMap.get(row.user_id);
+        if (user) {
+          user.email = row.email || '';
+        }
+      });
+
       // Add employee link data
       employeeLinks?.forEach(link => {
         const user = usersMap.get(link.user_id);
@@ -196,7 +212,7 @@ export function useAdminUsers() {
             const contact = Array.isArray(emp.employee_contact) 
               ? emp.employee_contact[0] 
               : emp.employee_contact;
-            user.email = contact?.email || '';
+            user.email = contact?.email || contact?.personal_email || '';
           }
         }
       });
