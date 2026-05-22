@@ -25,7 +25,7 @@ export interface AiChatMessage {
 }
 
 export function useSendAiChatMessage() {
-  const { currentCompanyId, user } = useAuth();
+  const { currentCompanyId, companies, user } = useAuth();
 
   const getUserDisplayName = async () => {
     if (!user?.id) return undefined;
@@ -59,19 +59,38 @@ export function useSendAiChatMessage() {
       pageContext?: AiChatPageContext | null;
     }) => {
       const userDisplayName = await getUserDisplayName();
+      const targetCompanyId = currentCompanyId || companies[0]?.id;
+
+      if (!targetCompanyId) {
+        throw new Error('Selecciona una empresa antes de usar el asistente IA.');
+      }
 
       const { data, error } = await supabase.functions.invoke('ai-chat', {
         body: {
           message,
           history: history.slice(-30),
           mode,
-          companyId: currentCompanyId,
+          companyId: targetCompanyId,
           pageContext,
           userDisplayName,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const functionError = error as any;
+        const context = functionError.context;
+        if (context?.json) {
+          try {
+            const body = await context.json();
+            if (body?.error) throw new Error(body.error);
+          } catch (parseError) {
+            if (parseError instanceof Error && parseError.message !== 'Unexpected end of JSON input') {
+              throw parseError;
+            }
+          }
+        }
+        throw new Error(functionError.message || 'No se pudo conectar con el asistente IA.');
+      }
       if (data?.error) throw new Error(data.error);
       return data as { conversationId: string; message: AiChatMessage; provider: string };
     },
