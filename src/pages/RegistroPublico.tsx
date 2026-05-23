@@ -138,6 +138,147 @@ const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'doc
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
+const MONTH_OPTIONS = [
+  { value: '01', label: 'Enero' },
+  { value: '02', label: 'Febrero' },
+  { value: '03', label: 'Marzo' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Mayo' },
+  { value: '06', label: 'Junio' },
+  { value: '07', label: 'Julio' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Septiembre' },
+  { value: '10', label: 'Octubre' },
+  { value: '11', label: 'Noviembre' },
+  { value: '12', label: 'Diciembre' },
+];
+
+const DATE_YEAR_OPTIONS = Array.from({ length: 101 }, (_, index) => String(new Date().getFullYear() - index));
+
+function getDaysInMonth(year?: string, month?: string) {
+  if (!year || !month) return 31;
+  return new Date(Number(year), Number(month), 0).getDate();
+}
+
+function splitIsoDate(value?: string) {
+  const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return {
+    year: match?.[1] || '',
+    month: match?.[2] || '',
+    day: match?.[3] || '',
+  };
+}
+
+function PublicDateField({
+  label,
+  value,
+  required,
+  onChange,
+}: {
+  label: string;
+  value?: string;
+  required?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const parsed = splitIsoDate(value);
+  const [day, setDay] = useState(parsed.day);
+  const [month, setMonth] = useState(parsed.month);
+  const [year, setYear] = useState(parsed.year);
+
+  useEffect(() => {
+    const next = splitIsoDate(value);
+    setDay(next.day);
+    setMonth(next.month);
+    setYear(next.year);
+  }, [value]);
+
+  const commitDate = (nextDay: string, nextMonth: string, nextYear: string) => {
+    if (nextDay && nextMonth && nextYear) {
+      onChange(`${nextYear}-${nextMonth}-${nextDay}`);
+    }
+  };
+
+  const handleDayChange = (nextDay: string) => {
+    setDay(nextDay);
+    commitDate(nextDay, month, year);
+  };
+
+  const handleMonthChange = (nextMonth: string) => {
+    const maxDay = getDaysInMonth(year, nextMonth);
+    const nextDay = day && Number(day) > maxDay ? String(maxDay).padStart(2, '0') : day;
+    setMonth(nextMonth);
+    setDay(nextDay);
+    commitDate(nextDay, nextMonth, year);
+  };
+
+  const handleYearChange = (nextYear: string) => {
+    const maxDay = getDaysInMonth(nextYear, month);
+    const nextDay = day && Number(day) > maxDay ? String(maxDay).padStart(2, '0') : day;
+    setYear(nextYear);
+    setDay(nextDay);
+    commitDate(nextDay, month, nextYear);
+  };
+
+  const clearDate = () => {
+    setDay('');
+    setMonth('');
+    setYear('');
+    onChange('');
+  };
+
+  const dayOptions = Array.from({ length: getDaysInMonth(year, month) }, (_, index) => String(index + 1).padStart(2, '0'));
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3">
+        <Label>{label}{required && <span className="text-destructive ml-1">*</span>}</Label>
+        {(day || month || year) && (
+          <button type="button" onClick={clearDate} className="text-xs font-bold text-primary hover:underline">
+            Limpiar
+          </button>
+        )}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <Select value={day} onValueChange={handleDayChange}>
+          <SelectTrigger className="h-11 rounded-xl">
+            <SelectValue placeholder="Dia" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72 bg-background">
+            {dayOptions.map((option) => (
+              <SelectItem key={option} value={option}>{option}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={month} onValueChange={handleMonthChange}>
+          <SelectTrigger className="h-11 rounded-xl">
+            <SelectValue placeholder="Mes" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72 bg-background">
+            {MONTH_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={year} onValueChange={handleYearChange}>
+          <SelectTrigger className="h-11 rounded-xl">
+            <SelectValue placeholder="Ano" />
+          </SelectTrigger>
+          <SelectContent className="max-h-72 bg-background">
+            {DATE_YEAR_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option}>{option}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <p className="text-[11px] font-medium text-muted-foreground">
+        Selecciona directamente el ano, mes y dia sin navegar el calendario mes a mes.
+      </p>
+    </div>
+  );
+}
+
 export default function RegistroPublico() {
   const [searchParams] = useSearchParams();
   const tokenParam = searchParams.get('token');
@@ -1058,6 +1199,19 @@ export default function RegistroPublico() {
         } catch { /* silent */ }
       }
     } : undefined;
+
+    if (config.type === 'date') {
+      return (
+        <div key={key}>
+          <PublicDateField
+            label={config.label}
+            value={formData[key] || ''}
+            required={isRequired}
+            onChange={(value) => handleChange(key, value)}
+          />
+        </div>
+      );
+    }
 
     return (
       <div key={key} className="space-y-1.5">
