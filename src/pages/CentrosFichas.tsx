@@ -1,21 +1,23 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Building2, 
-  Check, 
-  Users, 
-  Layers, 
-  FileText, 
-  Search, 
-  Filter, 
-  MapPin 
+import {
+  Building2,
+  CheckCircle2,
+  FileText,
+  Filter,
+  Layers,
+  MapPin,
+  Search,
+  Users,
+  X,
 } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -24,76 +26,118 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { CenterAnalyticalCard } from '@/components/centers/CenterAnalyticalCard';
+import { CenterDetailSheet } from '@/components/centers/CenterDetailSheet';
 
 export default function CentrosFichas() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [cityFilter, setCityFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [cityFilter, setCityFilter] = useState('all');
+  const [detailCenter, setDetailCenter] = useState<any | null>(null);
 
   const { currentCompanyId } = useAuth();
   const { data: centers = [], isLoading } = useOperationCenters();
 
+  const centerIds = useMemo(() => centers.map((center) => center.id), [centers]);
+
   const { data: companyTotalEmployees = 0 } = useQuery({
-    queryKey: ['company_total_employees', currentCompanyId],
+    queryKey: ['company_total_employees', currentCompanyId, centerIds],
     queryFn: async () => {
       const { count, error } = await supabase
         .from('employee_work_info')
         .select('id', { count: 'exact', head: true })
         .eq('is_current', true)
-        .in('operation_center_id', centers.map(c => c.id));
+        .in('operation_center_id', centerIds);
+
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!currentCompanyId && centers.length > 0,
+    enabled: !!currentCompanyId && centerIds.length > 0,
   });
 
   const cities = useMemo(() => {
-    const set = new Set<string>();
-    centers.forEach(c => { if (c.city) set.add(c.city); });
-    return Array.from(set).sort();
+    const citySet = new Set<string>();
+    centers.forEach((center) => {
+      if (center.city) citySet.add(center.city);
+    });
+    return Array.from(citySet).sort();
   }, [centers]);
 
   const filteredCenters = useMemo(() => {
-    let result = centers;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.code?.toLowerCase().includes(q) ||
-        c.main_client?.toLowerCase().includes(q) ||
-        c.city?.toLowerCase().includes(q) ||
-        c.manager_name?.toLowerCase().includes(q)
-      );
-    }
-    if (statusFilter !== 'all') {
-      const isActive = statusFilter === 'active';
-      result = result.filter(c => (c.is_active !== false) === isActive);
-    }
-    if (cityFilter !== 'all') {
-      result = result.filter(c => c.city === cityFilter);
-    }
-    return result;
+    const query = searchQuery.trim().toLowerCase();
+
+    return centers.filter((center) => {
+      const matchesSearch = !query || [
+        center.name,
+        center.code,
+        center.main_client,
+        center.city,
+        center.department,
+        center.manager_name,
+      ].some((value) => value?.toLowerCase().includes(query));
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        ((center.is_active !== false) === (statusFilter === 'active'));
+
+      const matchesCity = cityFilter === 'all' || center.city === cityFilter;
+
+      return matchesSearch && matchesStatus && matchesCity;
+    });
   }, [centers, searchQuery, statusFilter, cityFilter]);
 
-  const stats = useMemo(() => ([
-    { label: 'CENTROS', value: centers.length, desc: 'Sedes registradas', icon: Building2, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'ACTIVOS', value: centers.filter(c => c.is_active !== false).length, desc: 'En operación', icon: Check, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
-    { label: 'PERSONAL', value: companyTotalEmployees, desc: 'Nómina total', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'PROMEDIO', value: centers.length > 0 ? (companyTotalEmployees / centers.length).toFixed(1) : 0, desc: 'Por sede', icon: Layers, color: 'text-amber-600', bg: 'bg-amber-500/10' },
-  ]), [centers, companyTotalEmployees]);
+  const activeCenters = centers.filter((center) => center.is_active !== false).length;
+  const averageEmployees = centers.length > 0 ? companyTotalEmployees / centers.length : 0;
+  const hasFilters = searchQuery || statusFilter !== 'all' || cityFilter !== 'all';
+
+  const stats = [
+    {
+      label: 'Centros',
+      value: centers.length,
+      desc: 'Fichas registradas',
+      icon: Building2,
+      tone: 'text-sky-600 bg-sky-50 border-sky-100',
+    },
+    {
+      label: 'Activos',
+      value: activeCenters,
+      desc: 'En operación',
+      icon: CheckCircle2,
+      tone: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    },
+    {
+      label: 'Personal',
+      value: companyTotalEmployees,
+      desc: 'Asignado a centros',
+      icon: Users,
+      tone: 'text-primary bg-primary/10 border-primary/15',
+    },
+    {
+      label: 'Promedio',
+      value: averageEmployees.toFixed(1),
+      desc: 'Personas por centro',
+      icon: Layers,
+      tone: 'text-amber-600 bg-amber-50 border-amber-100',
+    },
+  ];
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setCityFilter('all');
+  };
 
   if (!currentCompanyId) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <Card className="max-w-md border-none shadow-2xl bg-background ">
-          <CardContent className="pt-10 pb-10 text-center">
-            <div className="p-4 rounded-3xl bg-primary/10 text-primary w-fit mx-auto mb-6">
-              <Building2 className="w-12 h-12" />
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <Card className="max-w-md border-border/80 shadow-sm">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Building2 className="h-6 w-6" />
             </div>
-            <p className="text-lg font-black text-foreground uppercase tracking-tight mb-2">No se encontró empresa</p>
-            <p className="text-muted-foreground text-sm font-medium">
+            <p className="text-base font-semibold text-foreground">No se encontró empresa</p>
+            <p className="mt-2 text-sm text-muted-foreground">
               No tienes una empresa asignada. Contacta al administrador para habilitar tu acceso.
             </p>
           </CardContent>
@@ -103,119 +147,145 @@ export default function CentrosFichas() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/5 px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
-        
-        
-        
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-                <FileText className="w-6 h-6" />
+    <div className="space-y-6">
+      <section className="rounded-lg border border-border/80 bg-background p-5 shadow-sm sm:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <FileText className="h-5 w-5" />
               </div>
               <div>
-                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
-                  Operación / Analítica
+                <Badge variant="outline" className="border-primary/20 bg-primary/5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  Operación
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Fichas Técnicas de Centros</h1>
+                <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                  Fichas Técnicas de Centros
+                </h1>
               </div>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
-              Monitoreo analítico y operativo de sedes, personal asignado y estados contractuales en tiempo real.
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Consulta el estado operativo de cada centro, su personal asignado, distribución por cargos,
+              turnos activos e indicadores contractuales.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
-            {stats.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500">
-                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
-                   <stat.icon className="w-3.5 h-3.5" />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:min-w-[560px]">
+            {stats.map((stat) => (
+              <div key={stat.label} className="rounded-lg border border-border/80 bg-muted/20 p-3">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {stat.label}
+                  </span>
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-md border ${stat.tone}`}>
+                    <stat.icon className="h-4 w-4" />
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
-                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
-                </div>
+                <p className="text-2xl font-bold tabular-nums text-foreground">{stat.value}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{stat.desc}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
-          <div className="relative w-full sm:w-96 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Buscar por nombre, cliente, ciudad..."
-              className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <section className="rounded-lg border border-border/80 bg-background p-4 shadow-sm">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-1 flex-col gap-3 md:flex-row">
+            <div className="relative flex-1 md:max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Buscar por centro, cliente, ciudad o responsable..."
+                className="h-11 pl-10"
+              />
+            </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-11 md:w-[170px]">
                 <div className="flex items-center gap-2">
-                  <Filter className="w-3.5 h-3.5 text-primary" />
+                  <Filter className="h-4 w-4 text-primary" />
                   <SelectValue placeholder="Estado" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border shadow-2xl">
-                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todos</SelectItem>
-                <SelectItem value="active" className="font-bold text-xs uppercase p-3">Activos</SelectItem>
-                <SelectItem value="inactive" className="font-bold text-xs uppercase p-3">Inactivos</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={cityFilter} onValueChange={setCityFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-11 md:w-[210px]">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                  <MapPin className="h-4 w-4 text-primary" />
                   <SelectValue placeholder="Ciudad" />
                 </div>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-border shadow-2xl">
-                <SelectItem value="all" className="font-bold text-xs uppercase p-3">Todas las ciudades</SelectItem>
-                {cities.map(city => (
-                  <SelectItem key={city} value={city} className="font-bold text-xs uppercase p-3">{city}</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">Todas las ciudades</SelectItem>
+                {cities.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <div className="hidden sm:flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-border ">
-              <span className="text-[10px] font-black text-primary uppercase tracking-[0.1em] whitespace-nowrap">
-                {filteredCenters.length} COINCIDENCIAS
-              </span>
-            </div>
+            {hasFilters && (
+              <Button type="button" variant="outline" className="h-11 gap-2" onClick={clearFilters}>
+                <X className="h-4 w-4" />
+                Limpiar
+              </Button>
+            )}
+          </div>
+
+          <div className="rounded-md border border-primary/15 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
+            {filteredCenters.length} de {centers.length} fichas
           </div>
         </div>
-      </div>
+      </section>
 
-      <ScrollArea className="flex-1 p-6 sm:p-10">
-        {isLoading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-[550px] w-full rounded-[2.5rem]" />
-            ))}
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {[1, 2, 3, 4].map((item) => (
+            <Skeleton key={item} className="h-[360px] rounded-lg" />
+          ))}
+        </div>
+      ) : filteredCenters.length === 0 ? (
+        <section className="rounded-lg border border-dashed border-border bg-background p-12 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <Building2 className="h-6 w-6" />
           </div>
-        ) : filteredCenters.length === 0 ? (
-          <div className="text-center py-32 opacity-30">
-            <Building2 className="w-20 h-20 mx-auto mb-6" />
-            <p className="text-xl font-black uppercase tracking-[0.2em]">No se encontraron centros</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {filteredCenters.map(center => (
-              <CenterAnalyticalCard key={center.id} center={center} companyTotalEmployees={companyTotalEmployees} />
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+          <p className="text-base font-semibold text-foreground">No se encontraron centros</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Ajusta los filtros para ampliar los resultados disponibles.
+          </p>
+          {hasFilters && (
+            <Button type="button" variant="outline" className="mt-5" onClick={clearFilters}>
+              Limpiar filtros
+            </Button>
+          )}
+        </section>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          {filteredCenters.map((center) => (
+            <CenterAnalyticalCard
+              key={center.id}
+              center={center}
+              companyTotalEmployees={companyTotalEmployees}
+              onOpenDetail={() => setDetailCenter(center)}
+            />
+          ))}
+        </div>
+      )}
+
+      <CenterDetailSheet
+        open={!!detailCenter}
+        onOpenChange={(open) => !open && setDetailCenter(null)}
+        center={detailCenter}
+      />
     </div>
   );
 }
