@@ -84,7 +84,7 @@ const prefetchPostLoginRoute = (path: string) => {
   void import('./Dashboard');
   void import('@/components/layout/AppLayout');
   void import('@/components/dashboard/AlertsPanel');
-  void import('@/components/dashboard/QuickActionsPanel');
+  void import('@/components/dashboard/BiologicalSexInfographic');
   void import('@/hooks/useEmployeeKPIs');
   void import('@/hooks/useDashboardAlerts');
 };

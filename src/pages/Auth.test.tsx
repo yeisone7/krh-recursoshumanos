@@ -35,7 +35,7 @@ vi.mock('@/integrations/supabase/client', () => ({
 vi.mock('./Dashboard', () => ({ default: () => null }));
 vi.mock('@/components/layout/AppLayout', () => ({ AppLayout: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
 vi.mock('@/components/dashboard/AlertsPanel', () => ({ AlertsPanel: () => null }));
-vi.mock('@/components/dashboard/QuickActionsPanel', () => ({ QuickActionsPanel: () => null }));
+vi.mock('@/components/dashboard/BiologicalSexInfographic', () => ({ BiologicalSexInfographic: () => null }));
 vi.mock('@/hooks/useEmployeeKPIs', () => ({ useEmployeeKPIs: () => ({ data: null, isLoading: false }) }));
 vi.mock('@/hooks/useDashboardAlerts', () => ({ useDashboardAlerts: () => ({ data: [] }) }));
 

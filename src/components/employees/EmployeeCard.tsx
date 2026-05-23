@@ -16,7 +16,6 @@ import {
   UserCheck,
   UserX,
 } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { EmployeeAvatarZoom } from '@/components/employees/EmployeeAvatarZoom';
 import { cn } from '@/lib/utils';
 import { getEmployeeFullName } from '@/types/employee';
 
@@ -62,6 +62,8 @@ export function EmployeeCard({
   const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || isLegacyRetired;
   const isEnRetiro = employee.status === 'en_retiro';
   const isSuspended = employee.status === 'suspended' || (!employee.is_active && !isRetired);
+  const employeeName = getEmployeeFullName(employee);
+  const initials = `${employee.first_name?.[0] || ''}${employee.last_name?.[0] || ''}`;
 
   return (
     <motion.div
@@ -75,12 +77,13 @@ export function EmployeeCard({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
-            <Avatar className="w-12 h-12">
-              <AvatarImage src={employee.avatar_url || undefined} alt={getEmployeeFullName(employee)} />
-              <AvatarFallback className="bg-primary-light text-primary text-lg font-semibold">
-                {employee.first_name[0]}{employee.last_name[0]}
-              </AvatarFallback>
-            </Avatar>
+            <EmployeeAvatarZoom
+              imageUrl={employee.avatar_url}
+              name={employeeName}
+              initials={initials}
+              avatarClassName="h-12 w-12"
+              fallbackClassName="bg-primary-light text-primary text-lg font-semibold"
+            />
             {isNew && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75"></span>
@@ -90,7 +93,7 @@ export function EmployeeCard({
           </div>
           <div className="min-w-0">
             <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-              {getEmployeeFullName(employee)}
+              {employeeName}
             </h3>
             <p className="text-sm text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
           </div>
