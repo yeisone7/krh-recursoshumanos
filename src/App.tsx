@@ -91,6 +91,7 @@ import { JornadasSkeleton } from "@/components/schedules/JornadasSkeleton";
 
 const AnaliticaSeleccion = lazy(() => import("./pages/AnaliticaSeleccion"));
 const AnaliticaNomina = lazy(() => import("./pages/AnaliticaNomina"));
+const AnaliticaIncapacidades = lazy(() => import("./pages/AnaliticaIncapacidades"));
 const Jornadas = lazy(() => import("./pages/Jornadas"));
 
 const queryClient = new QueryClient({
@@ -157,6 +158,7 @@ const App = () => (
                         <Route path="/empleados" element={<P module="empleados"><Empleados /></P>} />
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
                         <Route path="/incapacidades" element={<P module="incapacidades"><Incapacidades /></P>} />
+                        <Route path="/incapacidades/analitica" element={<P module="analitica_incapacidades"><Suspense fallback={null}><AnaliticaIncapacidades /></Suspense></P>} />
                         <Route path="/alertas" element={<P module="alertas"><Alertas /></P>} />
                         <Route path="/notificaciones" element={<P module="alertas"><CentroNotificaciones /></P>} />
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />

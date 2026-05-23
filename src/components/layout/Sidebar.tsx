@@ -185,6 +185,7 @@ const timeManagementNavItems: NavItem[] = [
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones', moduleCode: 'vacaciones' },
   { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos', moduleCode: 'permisos' },
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades', moduleCode: 'incapacidades' },
+  { label: 'Analítica Incapacidades', icon: <BarChart3 className="w-5 h-5" />, href: '/incapacidades/analitica', moduleCode: 'analitica_incapacidades' },
 ];
 
 const capacitacionesItem: NavItem = {

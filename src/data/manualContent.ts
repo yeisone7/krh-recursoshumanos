@@ -549,6 +549,17 @@ export const MODULE_DOCS: ModuleDoc[] = [
     dependencies: ['Novedades', 'Pre-Liquidación', 'Configuración Laboral'],
   },
   {
+    moduleCode: 'analitica_incapacidades',
+    title: 'Analitica de Incapacidades',
+    icon: 'BarChart3',
+    description: 'Panel especializado para analizar incapacidades medicas, dias acumulados, recobros, responsables legales, recurrencia, diagnosticos y tendencias de ausentismo.',
+    actions: ['Ver KPIs de incapacidades', 'Filtrar por periodo, origen y estado de recobro', 'Analizar recobros estimados vs recuperados', 'Identificar casos con seguimiento legal o reintegro', 'Consultar diagnosticos, entidades y empleados recurrentes'],
+    validations: [],
+    restrictions: ['Solo lectura; depende de la informacion registrada en Incapacidades y Empleados'],
+    alerts: ['Casos prolongados mayores a 30 dias', 'Umbrales legales de 120, 180 y 540 dias', 'Recobros pendientes o sin pago'],
+    dependencies: ['Incapacidades', 'Empleados', 'Examenes Medicos'],
+  },
+  {
     moduleCode: 'analitica_capacitaciones',
     title: 'Analítica de Capacitaciones',
     icon: 'BarChart3',
