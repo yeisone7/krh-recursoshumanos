@@ -29,8 +29,8 @@ interface TokenData {
   enabled_fields: string[];
   company_id: string;
   is_used: boolean;
-  is_reusable: boolean;
-  expires_at: string;
+  is_reusable: boolean | null;
+  expires_at: string | null;
 }
 
 // Candidate fields config
@@ -224,7 +224,7 @@ export default function RegistroPublico() {
         return;
       }
 
-      if (new Date(token.expires_at) < new Date()) {
+      if (token.expires_at && new Date(token.expires_at) < new Date()) {
         setErrorMsg('Este enlace ha expirado.');
         setStep('error');
         return;

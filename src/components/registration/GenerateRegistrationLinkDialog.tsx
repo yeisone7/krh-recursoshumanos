@@ -142,7 +142,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
         vacancy_id: vacancyId,
         enabled_fields: selectedFields,
         expires_at: expirationDays === '0'
-          ? addDays(new Date(), 365 * 10).toISOString()
+          ? null
           : addDays(new Date(), parseInt(expirationDays)).toISOString(),
         is_reusable: reusable,
       });
@@ -285,7 +285,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                         <SelectItem value="7">7 días</SelectItem>
                         <SelectItem value="15">15 días</SelectItem>
                         <SelectItem value="30">30 días</SelectItem>
-                        <SelectItem value="0">Sin expiración (10 años)</SelectItem>
+                        <SelectItem value="0">Sin expiración</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

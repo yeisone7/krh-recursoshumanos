@@ -11,8 +11,9 @@ export interface RegistrationToken {
   vacancy_id: string | null;
   enabled_fields: string[];
   is_used: boolean;
+  is_reusable: boolean | null;
   used_at: string | null;
-  expires_at: string;
+  expires_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -53,7 +54,7 @@ export function useCreateRegistrationToken() {
       name?: string | null;
       vacancy_id?: string;
       enabled_fields: string[];
-      expires_at: string;
+      expires_at: string | null;
       is_reusable?: boolean;
     }) => {
       if (!currentCompanyId) throw new Error('No company');
@@ -105,7 +106,7 @@ export function useDeactivateRegistrationToken() {
     mutationFn: async (tokenId: string) => {
       const { error } = await supabase
         .from('self_registration_tokens')
-        .update({ is_used: true, used_at: new Date().toISOString() } as any)
+        .update({ is_used: true, is_reusable: false, used_at: new Date().toISOString() } as any)
         .eq('id', tokenId);
       if (error) throw error;
     },

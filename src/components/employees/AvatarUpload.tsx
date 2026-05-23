@@ -13,7 +13,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 12 * 1024 * 1024; // 12MB
+
+const prefersNativeCameraPicker = () => {
+  if (typeof navigator === 'undefined') return false;
+  const userAgent = navigator.userAgent || '';
+  const isIPadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPhone|iPad|iPod|Android/i.test(userAgent) || isIPadOS;
+};
 
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null;
@@ -44,6 +51,7 @@ export function AvatarUpload({
   }, [currentAvatarUrl]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -62,12 +70,19 @@ export function AvatarUpload({
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     await processFile(file);
   };
 
   const processFile = async (file: File) => {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const imageExtensionPattern = /\.(jpe?g|png|webp|heic|heif)$/i;
+    const isAllowedImage =
+      ALLOWED_TYPES.includes(file.type) ||
+      file.type.startsWith('image/') ||
+      imageExtensionPattern.test(file.name);
+
+    if (!isAllowedImage) {
       toast({
         title: 'Tipo de archivo no permitido',
         description: 'Solo se permiten imágenes JPG, PNG o WebP',
@@ -79,7 +94,7 @@ export function AvatarUpload({
     if (file.size > MAX_SIZE) {
       toast({
         title: 'Imagen muy grande',
-        description: 'El tamaño máximo permitido es 5MB',
+        description: 'El tamaño máximo permitido es 12MB',
         variant: 'destructive',
       });
       return;
@@ -132,8 +147,17 @@ export function AvatarUpload({
 
   const startCamera = async () => {
     try {
+      if (!navigator.mediaDevices?.getUserMedia || prefersNativeCameraPicker()) {
+        cameraInputRef.current?.click();
+        return;
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 640, height: 480 },
+        video: {
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
       setStream(mediaStream);
       setCameraOpen(true);
@@ -146,6 +170,10 @@ export function AvatarUpload({
       }, 100);
     } catch (error: any) {
       console.error('Camera error:', error);
+      if (prefersNativeCameraPicker()) {
+        cameraInputRef.current?.click();
+        return;
+      }
       toast({
         title: 'Error de cámara',
         description: 'No se pudo acceder a la cámara. Verifica los permisos.',
@@ -153,6 +181,16 @@ export function AvatarUpload({
       });
     }
   };
+
+  useEffect(() => {
+    if (!cameraOpen || !stream || !videoRef.current) return;
+
+    const video = videoRef.current;
+    video.srcObject = stream;
+    video.play().catch((error) => {
+      console.error('Camera playback error:', error);
+    });
+  }, [cameraOpen, stream]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
@@ -170,13 +208,21 @@ export function AvatarUpload({
     const ctx = canvas.getContext('2d');
 
     if (!ctx) return;
+    if (!video.videoWidth || !video.videoHeight) {
+      toast({
+        title: 'Cámara no lista',
+        description: 'Espera un momento y vuelve a intentar capturar la foto.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Set canvas size to video size
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     // Convert to blob
     canvas.toBlob(
@@ -200,6 +246,9 @@ export function AvatarUpload({
     onAvatarChange(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (cameraInputRef.current) {
+      cameraInputRef.current.value = '';
     }
   };
 
@@ -266,7 +315,16 @@ export function AvatarUpload({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelect}
+        disabled={disabled || uploading}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
         className="hidden"
         onChange={handleFileSelect}
         disabled={disabled || uploading}

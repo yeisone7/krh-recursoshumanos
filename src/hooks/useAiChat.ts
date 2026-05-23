@@ -79,17 +79,32 @@ export function useSendAiChatMessage() {
       if (error) {
         const functionError = error as any;
         const context = functionError.context;
-        if (context?.json) {
+        const extractMessageFromText = (text?: string) => {
+          if (!text) return undefined;
           try {
-            const body = await context.json();
-            if (body?.error) throw new Error(body.error);
-          } catch (parseError) {
-            if (parseError instanceof Error && parseError.message !== 'Unexpected end of JSON input') {
-              throw parseError;
-            }
+            const body = JSON.parse(text);
+            return body?.error || body?.message;
+          } catch {
+            return text.trim() || undefined;
           }
+        };
+
+        if (typeof context?.clone === 'function') {
+          const text = await context.clone().text().catch(() => '');
+          const messageFromBody = extractMessageFromText(text);
+          if (messageFromBody) throw new Error(messageFromBody);
         }
-        throw new Error(functionError.message || 'No se pudo conectar con el asistente IA.');
+
+        if (typeof context?.json === 'function') {
+          const body = await context.json().catch(() => null);
+          if (body?.error || body?.message) throw new Error(body.error || body.message);
+        }
+
+        throw new Error(
+          functionError.message === 'Edge Function returned a non-2xx status code'
+            ? 'El asistente IA tuvo un problema al responder. Revisa la configuración del proveedor en Configuración > IA.'
+            : functionError.message || 'No se pudo conectar con el asistente IA.'
+        );
       }
       if (data?.error) throw new Error(data.error);
       return data as { conversationId: string; message: AiChatMessage; provider: string };

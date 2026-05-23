@@ -189,7 +189,16 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const isTerminated = status === 'terminated';
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
   const StatusIcon = statusConfig[status].icon;
-  const canAddExtension = canUpdateContracts && contract.contractType !== 'indefinite' && !isTerminated;
+  const isApproved = contract.isApproved;
+  const canManageExtensions = canUpdateContracts && contract.contractType !== 'indefinite' && !isTerminated;
+  const canAddExtension = canManageExtensions && isApproved && status !== 'expired' && !!contract.currentEndDate;
+  const extensionBlockedReason = !isApproved
+    ? 'El contrato debe estar aprobado para registrar una prórroga.'
+    : status === 'expired'
+      ? 'No se pueden registrar prórrogas sobre contratos vencidos.'
+      : !contract.currentEndDate
+        ? 'Define la fecha fin actual del contrato para registrar una prórroga.'
+        : null;
   
   // Check if there's a pending termination process (initiated but not completed)
   const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
@@ -198,7 +207,6 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const canTerminate = canRetireContract && !hasCompletedTermination && (!isTerminated || hasPendingTermination);
   
   // Approval status
-  const isApproved = contract.isApproved;
   const canApprove = isAdmin && !isApproved && !isTerminated;
 
   const handleApproveContract = async () => {
@@ -216,6 +224,63 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         variant: 'destructive',
       });
     }
+  };
+
+  const handleOpenExtensionForm = () => {
+    if (!canUpdateContracts) {
+      toast({
+        title: 'Sin permiso',
+        description: 'No tienes permisos para registrar prórrogas de contratos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isTerminated) {
+      toast({
+        title: 'Contrato terminado',
+        description: 'No se pueden registrar prórrogas en un contrato terminado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (contract.contractType === 'indefinite') {
+      toast({
+        title: 'Contrato indefinido',
+        description: 'Los contratos indefinidos no requieren prórrogas.',
+      });
+      return;
+    }
+
+    if (!isApproved) {
+      toast({
+        title: 'Contrato pendiente de aprobación',
+        description: 'Para registrar una prórroga, el contrato debe estar aprobado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (status === 'expired') {
+      toast({
+        title: 'Contrato vencido',
+        description: 'No se pueden registrar prórrogas sobre contratos vencidos. Revisa el estado contractual antes de continuar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!contract.currentEndDate) {
+      toast({
+        title: 'Falta fecha de fin',
+        description: 'Para crear una prórroga primero debes definir la fecha fin actual del contrato desde Editar Contrato.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setShowExtensionForm(true);
   };
 
   const formatCurrency = (value: number) => {
@@ -363,11 +428,13 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                       </Badge>
                     )}
                   </div>
-                  {canAddExtension && (
+                  {canManageExtensions && (
                     <Button
                       size="sm"
-                      onClick={() => setShowExtensionForm(true)}
+                      onClick={handleOpenExtensionForm}
                       className="gap-1"
+                      variant={canAddExtension ? 'default' : 'outline'}
+                      title={extensionBlockedReason || undefined}
                     >
                       <Plus className="w-4 h-4" />
                       Nueva Prórroga
@@ -379,16 +446,22 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   <div className="text-center py-8 bg-background rounded-lg">
                     <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
                     <p className="text-muted-foreground">No hay prórrogas registradas</p>
-                    {canAddExtension && (
+                    {canManageExtensions && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowExtensionForm(true)}
+                        onClick={handleOpenExtensionForm}
                         className="mt-3 gap-1"
+                        title={extensionBlockedReason || undefined}
                       >
                         <Plus className="w-4 h-4" />
                         Agregar primera prórroga
                       </Button>
+                    )}
+                    {canManageExtensions && extensionBlockedReason && (
+                      <p className="mx-auto mt-3 max-w-md text-xs text-muted-foreground">
+                        {extensionBlockedReason}
+                      </p>
                     )}
                   </div>
                 ) : (
