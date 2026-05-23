@@ -32,10 +32,12 @@ import {
   BarChart3,
   CalendarDays,
   FileText,
+  Gauge,
   HeartPulse,
   LineChart,
   PieChart as PieChartIcon,
   ShieldAlert,
+  Sparkles,
   Stethoscope,
   Target,
   TrendingDown,
@@ -59,6 +61,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useIncapacities } from '@/hooks/useIncapacities';
 import { cn } from '@/lib/utils';
@@ -118,6 +121,11 @@ function money(value: number | null | undefined) {
 function percent(value: number, total: number) {
   if (!total) return 0;
   return Math.round((value / total) * 100);
+}
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function getRange(period: PeriodFilter) {
@@ -335,6 +343,322 @@ function BiologicalSexInfographic({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function InfographicPanel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('rounded-lg border border-slate-200 bg-white p-4 shadow-sm', className)}>
+      {children}
+    </div>
+  );
+}
+
+function RingMetric({
+  value,
+  label,
+  detail,
+  color,
+  size = 'lg',
+}: {
+  value: number;
+  label: string;
+  detail: string;
+  color: string;
+  size?: 'md' | 'lg';
+}) {
+  const percentValue = clampPercent(value);
+  const circumference = 2 * Math.PI * 48;
+  const dash = (percentValue / 100) * circumference;
+  const dimensions = size === 'lg' ? 'h-40 w-40' : 'h-32 w-32';
+
+  return (
+    <div className="flex flex-col items-center text-center">
+      <svg viewBox="0 0 132 132" className={dimensions} aria-hidden="true">
+        <circle cx="66" cy="66" r="54" fill="#F4F6F8" stroke="#E4E8EF" strokeWidth="12" />
+        <circle
+          cx="66"
+          cy="66"
+          r="48"
+          fill="none"
+          stroke={color}
+          strokeWidth="12"
+          strokeLinecap="round"
+          strokeDasharray={`${dash} ${circumference - dash}`}
+          transform="rotate(-90 66 66)"
+        />
+        <circle cx="66" cy="66" r="34" fill="white" stroke="#D8DEE8" strokeWidth="2" />
+        <text x="66" y="64" textAnchor="middle" className="fill-slate-950 text-2xl font-black">{percentValue}%</text>
+        <text x="66" y="80" textAnchor="middle" className="fill-slate-500 text-[10px] font-black uppercase tracking-wide">indice</text>
+      </svg>
+      <p className="text-sm font-black uppercase tracking-wide text-slate-950">{label}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-500">{detail}</p>
+    </div>
+  );
+}
+
+function MiniHorizontalBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
+  const width = max > 0 ? Math.max(6, Math.round((value / max) * 100)) : 0;
+
+  return (
+    <div className="grid grid-cols-[104px_1fr_58px] items-center gap-3">
+      <span className="truncate text-xs font-black text-slate-700">{label}</span>
+      <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full" style={{ width: `${width}%`, backgroundColor: color }} />
+      </div>
+      <span className="text-right text-xs font-black text-slate-900">{integerFormatter.format(value)}</span>
+    </div>
+  );
+}
+
+function SegmentedCircle({
+  title,
+  center,
+  data,
+}: {
+  title: string;
+  center: string;
+  data: Array<{ label: string; value: number; color: string }>;
+}) {
+  const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
+  let current = 0;
+
+  return (
+    <InfographicPanel className="min-h-[338px] bg-[#FBFAF5]">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mapa circular</p>
+          <h3 className="text-lg font-black text-slate-950">{title}</h3>
+        </div>
+        <PieChartIcon className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-center">
+        <svg viewBox="0 0 220 220" className="mx-auto h-56 w-56" aria-hidden="true">
+          <circle cx="110" cy="110" r="92" fill="white" stroke="#E7EBF0" strokeWidth="18" />
+          {data.map((item) => {
+            const length = Math.max(8, (item.value / total) * 520);
+            const offset = current;
+            current += length + 10;
+            return (
+              <circle
+                key={item.label}
+                cx="110"
+                cy="110"
+                r="82"
+                fill="none"
+                stroke={item.color}
+                strokeWidth="28"
+                strokeLinecap="round"
+                strokeDasharray={`${length} 999`}
+                strokeDashoffset={-offset}
+                transform="rotate(-90 110 110)"
+              />
+            );
+          })}
+          <circle cx="110" cy="110" r="56" fill="white" stroke="#D8DEE8" strokeWidth="2" />
+          <text x="110" y="105" textAnchor="middle" className="fill-slate-950 text-2xl font-black">{center}</text>
+          <text x="110" y="123" textAnchor="middle" className="fill-slate-500 text-[10px] font-black uppercase tracking-widest">casos</text>
+        </svg>
+        <div className="space-y-3">
+          {data.map((item) => (
+            <div key={item.label} className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex min-w-0 items-center gap-2 text-xs font-black uppercase tracking-wide text-slate-700">
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="truncate">{item.label}</span>
+                </span>
+                <span className="text-sm font-black text-slate-950">{integerFormatter.format(item.value)}</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full" style={{ width: `${clampPercent((item.value / total) * 100)}%`, backgroundColor: item.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function ArrowStep({ index, label, value, color }: { index: number; label: string; value: string; color: string }) {
+  return (
+    <div className="relative min-h-[92px] overflow-hidden rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: color }}>
+      <span className="absolute -right-7 top-1/2 h-16 w-16 -translate-y-1/2 rotate-45 bg-white/20" />
+      <p className="text-3xl font-black leading-none">{String(index).padStart(2, '0')}</p>
+      <p className="mt-3 text-[10px] font-black uppercase tracking-widest opacity-80">{label}</p>
+      <p className="text-lg font-black">{value}</p>
+    </div>
+  );
+}
+
+function MonthlyInfographic({ monthly }: { monthly: Array<{ mes: string; Dias: number; Incapacidades: number }> }) {
+  const maxDays = Math.max(...monthly.map((item) => item.Dias), 1);
+  const recent = monthly.slice(-8);
+
+  return (
+    <InfographicPanel className="min-h-[338px]">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tendencia visual</p>
+          <h3 className="text-lg font-black text-slate-950">Dias por mes</h3>
+        </div>
+        <LineChart className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="flex h-52 items-end gap-3 border-b border-slate-200 px-1">
+        {recent.map((item, index) => {
+          const height = Math.max(12, Math.round((item.Dias / maxDays) * 100));
+          const color = chartColors[index % chartColors.length];
+          return (
+            <div key={item.mes} className="flex flex-1 flex-col items-center justify-end gap-2">
+              <span className="text-[10px] font-black text-slate-500">{integerFormatter.format(item.Dias)}</span>
+              <div className="w-full rounded-t-lg" style={{ height: `${height}%`, backgroundColor: color }} />
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-2 grid gap-1" style={{ gridTemplateColumns: `repeat(${Math.max(recent.length, 1)}, minmax(0, 1fr))` }}>
+        {recent.map((item) => (
+          <span key={item.mes} className="truncate text-center text-[10px] font-black uppercase text-slate-500">{item.mes}</span>
+        ))}
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function SexInfographicBlock({
+  data,
+}: {
+  data: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+}) {
+  return (
+    <InfographicPanel>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Poblacion impactada</p>
+          <h3 className="text-lg font-black text-slate-950">Sexo biologico</h3>
+        </div>
+        <Users className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        {data.map((item) => (
+          <div key={item.key} className="rounded-lg border border-slate-200 bg-[#FBFAF5] p-3 text-center">
+            <SexAvatar kind={item.key} color={item.color} />
+            <p className="mt-2 text-sm font-black uppercase text-slate-950">{item.label}</p>
+            <p className="text-xs font-bold text-slate-500">{item.percentage}% de casos</p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+              <div className="h-full rounded-full" style={{ width: `${item.percentage}%`, backgroundColor: item.color }} />
+            </div>
+            <p className="mt-2 text-xs font-black text-slate-700">{integerFormatter.format(item.cases)} casos / {integerFormatter.format(item.days)} dias</p>
+          </div>
+        ))}
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function IncapacityInfographicsTab({ analytics }: { analytics: any }) {
+  const originCircleData = [
+    { label: 'Comun', value: analytics.originData.find((item: { name: string }) => item.name === 'Comun')?.value || 0, color: palette.teal },
+    { label: 'Laboral', value: analytics.originData.find((item: { name: string }) => item.name === 'Laboral')?.value || 0, color: palette.orange },
+    { label: 'Largo plazo', value: analytics.longCases, color: palette.violet },
+    { label: 'Riesgo legal', value: analytics.legalRisk, color: palette.navy },
+  ].filter((item) => item.value > 0);
+  const recoveryMax = Math.max(...analytics.recoveryData.map((item: { value: number }) => item.value), 1);
+  const legalMax = Math.max(...analytics.legalData.map((item: { value: number }) => item.value), 1);
+  const operationalHealth = clampPercent((analytics.recoveryRate + Math.max(0, 100 - analytics.incidenceRate) + Math.max(0, 100 - percent(analytics.longCases, Math.max(analytics.total, 1)))) / 3);
+
+  return (
+    <div className="space-y-4 rounded-xl border border-slate-200 bg-[#F7F7FD] p-3 sm:p-5">
+      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr_1fr]">
+        <InfographicPanel>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Panel medico</p>
+              <h3 className="text-xl font-black text-slate-950">Resumen visual</h3>
+            </div>
+            <Sparkles className="h-5 w-5 text-slate-500" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <RingMetric value={analytics.recoveryRate} label="Recobro" detail={`${money(analytics.recovered)} recuperado`} color={palette.teal} />
+            <RingMetric value={operationalHealth} label="Control" detail={`${analytics.longCases} casos largos`} color={palette.orange} />
+          </div>
+        </InfographicPanel>
+
+        <SegmentedCircle title="Origen y alertas" center={integerFormatter.format(analytics.total)} data={originCircleData.length ? originCircleData : [{ label: 'Sin datos', value: 1, color: '#CBD5E1' }]} />
+
+        <MonthlyInfographic monthly={analytics.monthly} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ArrowStep index={1} label="Casos" value={integerFormatter.format(analytics.total)} color={palette.teal} />
+        <ArrowStep index={2} label="Dias" value={integerFormatter.format(analytics.totalDays)} color={palette.amber} />
+        <ArrowStep index={3} label="Promedio" value={`${numberFormatter.format(analytics.avgDays)} dias`} color={palette.orange} />
+        <ArrowStep index={4} label="Activos" value={integerFormatter.format(analytics.active)} color={palette.navy} />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <InfographicPanel>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Flujo administrativo</p>
+              <h3 className="text-lg font-black text-slate-950">Estado de recobro</h3>
+            </div>
+            <Banknote className="h-5 w-5 text-slate-500" />
+          </div>
+          <div className="space-y-4">
+            {analytics.recoveryData.map((item: { name: string; value: number }, index: number) => (
+              <MiniHorizontalBar key={item.name} label={item.name} value={item.value} max={recoveryMax} color={chartColors[index % chartColors.length]} />
+            ))}
+          </div>
+        </InfographicPanel>
+
+        <InfographicPanel>
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Responsabilidad legal</p>
+              <h3 className="text-lg font-black text-slate-950">Dias por pagador</h3>
+            </div>
+            <ShieldAlert className="h-5 w-5 text-slate-500" />
+          </div>
+          <div className="space-y-4">
+            {analytics.legalData.map((item: { name: string; value: number }, index: number) => (
+              <MiniHorizontalBar key={item.name} label={item.name} value={item.value} max={legalMax} color={chartColors[(index + 2) % chartColors.length]} />
+            ))}
+          </div>
+        </InfographicPanel>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <SexInfographicBlock data={analytics.sexData} />
+
+        <InfographicPanel className="bg-[#FBFAF5]">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lectura ejecutiva</p>
+              <h3 className="text-lg font-black text-slate-950">Hallazgos principales</h3>
+            </div>
+            <Target className="h-5 w-5 text-slate-500" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Diagnostico top</p>
+              <p className="mt-2 line-clamp-3 text-sm font-black text-slate-950">{analytics.insights.topDiagnosis?.name || 'Sin diagnosticos'}</p>
+              <p className="mt-2 text-xs font-bold text-slate-500">{integerFormatter.format(analytics.insights.topDiagnosis?.value || 0)} dias</p>
+            </div>
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Entidad critica</p>
+              <p className="mt-2 line-clamp-3 text-sm font-black text-slate-950">{analytics.insights.topEntity?.name || 'Sin entidad'}</p>
+              <p className="mt-2 text-xs font-bold text-slate-500">{integerFormatter.format(analytics.insights.topEntity?.value || 0)} dias</p>
+            </div>
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mes pico</p>
+              <p className="mt-2 text-2xl font-black text-slate-950">{analytics.insights.strongestMonth?.mes || 'N/A'}</p>
+              <p className="mt-2 text-xs font-bold text-slate-500">{integerFormatter.format(analytics.insights.strongestMonth?.Dias || 0)} dias</p>
+            </div>
+          </div>
+        </InfographicPanel>
+      </div>
+    </div>
   );
 }
 
@@ -601,6 +925,19 @@ export default function AnaliticaIncapacidades() {
         </div>
       </motion.div>
 
+      <Tabs defaultValue="ejecutivo" className="space-y-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:w-[470px]">
+          <TabsTrigger value="ejecutivo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+            <Gauge className="h-4 w-4" />
+            Ejecutivo
+          </TabsTrigger>
+          <TabsTrigger value="infografias" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+            <Sparkles className="h-4 w-4" />
+            Infografias
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ejecutivo" className="mt-0 space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiTile title="Casos filtrados" value={integerFormatter.format(analytics.total)} detail={`${analytics.active} activos ahora`} icon={FileText} color={palette.teal} trend={analytics.trends.cases} />
         <KpiTile title="Dias de incapacidad" value={integerFormatter.format(analytics.totalDays)} detail={`${numberFormatter.format(analytics.avgDays)} dias promedio`} icon={CalendarDays} color={palette.orange} trend={analytics.trends.days} />
@@ -813,6 +1150,12 @@ export default function AnaliticaIncapacidades() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="infografias" className="mt-0">
+          <IncapacityInfographicsTab analytics={analytics} />
+        </TabsContent>
+      </Tabs>
 
       {analytics.total === 0 && (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
