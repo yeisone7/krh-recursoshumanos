@@ -40,8 +40,8 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
   const [draftName, setDraftName] = useState('');
 
   const getStatus = (token: typeof tokens[0]) => {
-    if (token.is_used) return 'used';
-    if (new Date(token.expires_at) < new Date()) return 'expired';
+    if (token.is_used && !token.is_reusable) return 'used';
+    if (token.expires_at && new Date(token.expires_at) < new Date()) return 'expired';
     return 'active';
   };
 
@@ -179,7 +179,11 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
                 <p className="text-xs text-muted-foreground">
                   {tokenName ? `Token ...${tokenSuffix} | ` : ''}
                   Creado {format(new Date(token.created_at), 'dd MMM yyyy HH:mm', { locale: es })}
-                  {' | '}Expira {format(new Date(token.expires_at), 'dd MMM yyyy', { locale: es })}
+                  {' | '}
+                  {token.expires_at
+                    ? `Expira ${format(new Date(token.expires_at), 'dd MMM yyyy', { locale: es })}`
+                    : 'Sin expiración'}
+                  {token.is_reusable ? ' | Multiuso' : ' | Uso único'}
                 </p>
               </div>
             </div>

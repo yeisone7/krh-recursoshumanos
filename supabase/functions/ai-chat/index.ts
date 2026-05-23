@@ -29,6 +29,8 @@ interface AIConfig {
   model?: "gemini" | "openai" | string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  openai_model?: string;
 }
 
 interface ChatMessage {
@@ -159,8 +161,29 @@ async function callGateway(apiKey: string, systemPrompt: string, messages: ChatM
   return data.choices?.[0]?.message?.content?.trim() || "No pude generar una respuesta.";
 }
 
-async function callGeminiDirect(apiKey: string, systemPrompt: string, messages: ChatMessage[]) {
-  const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep the raw text below when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
+}
+
+async function callGeminiDirect(apiKey: string, systemPrompt: string, messages: ChatMessage[], preferredModel?: string) {
+  const modelCandidates = [
+    preferredModel,
+    Deno.env.get("GEMINI_CHAT_MODEL"),
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+  ].filter((model, index, list): model is string => !!model && list.indexOf(model) === index);
+
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -171,43 +194,112 @@ async function callGeminiDirect(apiKey: string, systemPrompt: string, messages: 
       systemInstruction: { parts: [{ text: systemPrompt }] },
       generationConfig: { temperature: 0.3 },
     }),
-  });
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Gemini direct error:", response.status, errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      lastError = extractProviderError(`Gemini ${model}`, response.status, errorText);
+      console.error("Gemini direct error:", response.status, model, errorText);
+      if ([400, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("").trim() || "No pude generar una respuesta.";
   }
 
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("").trim() || "No pude generar una respuesta.";
+  throw new Error(lastError || "Gemini no pudo generar una respuesta.");
 }
 
-async function callOpenAIDirect(apiKey: string, systemPrompt: string, messages: ChatMessage[]) {
-  const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+async function callOpenAIDirect(apiKey: string, systemPrompt: string, messages: ChatMessage[], preferredModel?: string) {
+  const modelCandidates = [
+    preferredModel,
+    Deno.env.get("OPENAI_CHAT_MODEL"),
+    "gpt-4o-mini",
+    "gpt-4o",
+  ].filter((model, index, list): model is string => !!model && list.indexOf(model) === index);
+
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model,
       messages: [
         { role: "system", content: systemPrompt },
         ...messages,
       ],
       temperature: 0.3,
     }),
-  });
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("OpenAI direct error:", response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, errorText);
+      console.error("OpenAI direct error:", response.status, model, errorText);
+      if ([400, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content?.trim() || "No pude generar una respuesta.";
   }
 
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || "No pude generar una respuesta.";
+  throw new Error(lastError || "OpenAI no pudo generar una respuesta.");
+}
+
+async function generateAssistantAnswer(aiConfig: AIConfig, systemPrompt: string, messages: ChatMessage[]) {
+  const providerOrder = [
+    aiConfig.model,
+    aiConfig.model === "openai" ? "gemini" : "openai",
+    "lovable_ai",
+  ].filter((provider, index, list): provider is string => !!provider && list.indexOf(provider) === index);
+
+  const failures: string[] = [];
+
+  for (const provider of providerOrder) {
+    try {
+      if (provider === "openai" && aiConfig.openai_api_key) {
+        return {
+          provider: "openai",
+          answer: await callOpenAIDirect(aiConfig.openai_api_key, systemPrompt, messages, aiConfig.openai_model),
+        };
+      }
+
+      if (provider === "gemini" && aiConfig.gemini_api_key) {
+        return {
+          provider: "gemini",
+          answer: await callGeminiDirect(aiConfig.gemini_api_key, systemPrompt, messages, aiConfig.gemini_model),
+        };
+      }
+
+      if (provider === "lovable_ai") {
+        const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+        if (!lovableApiKey) {
+          failures.push("Lovable AI no tiene clave global configurada");
+          continue;
+        }
+        return {
+          provider: "lovable_ai",
+          answer: await callGateway(lovableApiKey, systemPrompt, messages),
+        };
+      }
+    } catch (error: any) {
+      failures.push(error?.message || `Falló el proveedor ${provider}`);
+      console.error("AI provider failed:", provider, error);
+    }
+  }
+
+  throw new Error(
+    failures.length
+      ? `No pude conectar con los proveedores de IA configurados. Detalle: ${failures.join(" | ")}`
+      : "No hay proveedor de IA configurado. Configura OpenAI o Gemini en Configuracion > IA.",
+  );
 }
 
 function validateStepFlowResponse(content: string) {
@@ -326,23 +418,7 @@ serve(async (req) => {
     ];
     const systemPrompt = buildCompleteSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0 });
 
-    let provider = "lovable_ai";
-    let answer = "";
-    if (aiConfig.model === "gemini" && aiConfig.gemini_api_key) {
-      provider = "gemini";
-      answer = await callGeminiDirect(aiConfig.gemini_api_key, systemPrompt, conversationMessages);
-    } else if (aiConfig.model === "openai" && aiConfig.openai_api_key) {
-      provider = "openai";
-      answer = await callOpenAIDirect(aiConfig.openai_api_key, systemPrompt, conversationMessages);
-    } else {
-      const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!lovableApiKey) {
-        return jsonResponse({
-          error: "No hay proveedor de IA configurado para esta empresa. Configura OpenAI o Gemini en Configuracion > IA, o define una clave global para el asistente.",
-        }, 500);
-      }
-      answer = await callGateway(lovableApiKey, systemPrompt, conversationMessages);
-    }
+    const { provider, answer } = await generateAssistantAnswer(aiConfig, systemPrompt, conversationMessages);
 
     const assistantMessage = {
       id: crypto.randomUUID(),

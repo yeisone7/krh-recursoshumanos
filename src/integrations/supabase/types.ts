@@ -6871,9 +6871,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           enabled_fields: Json
-          expires_at: string
+          expires_at: string | null
           id: string
           is_used: boolean
+          is_reusable: boolean | null
           name: string | null
           target_type: string
           token: string
@@ -6886,9 +6887,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           enabled_fields?: Json
-          expires_at: string
+          expires_at?: string | null
           id?: string
           is_used?: boolean
+          is_reusable?: boolean | null
           name?: string | null
           target_type?: string
           token?: string
@@ -6901,9 +6903,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           enabled_fields?: Json
-          expires_at?: string
+          expires_at?: string | null
           id?: string
           is_used?: boolean
+          is_reusable?: boolean | null
           name?: string | null
           target_type?: string
           token?: string
