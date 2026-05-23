@@ -48,6 +48,8 @@ import {
   incapacityOriginLabels, 
   recoveryStatusLabels, 
   recoveryStatusColors,
+  getCurrentLegalStage,
+  getLegalMilestones,
   getTotalChainDays 
 } from '@/types/incapacity';
 import { IncapacityFormDialog } from './IncapacityFormDialog';
@@ -108,6 +110,8 @@ export function IncapacityDetailDialog({
     : 'Empleado';
   
   const totalChainDays = getTotalChainDays(incapacity);
+  const legalStage = getCurrentLegalStage(incapacity.origin, totalChainDays);
+  const legalMilestones = getLegalMilestones(incapacity.origin, totalChainDays);
   const today = new Date();
   const endDate = new Date(incapacity.end_date);
   const isActive = endDate >= today && new Date(incapacity.start_date) <= today;
@@ -206,6 +210,42 @@ export function IncapacityDetailDialog({
                   </Card>
                 </div>
                 
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-primary" />
+                      Seguimiento legal Colombia
+                    </CardTitle>
+                    <CardDescription>
+                      Etapa actual: {legalStage.label} - Responsable: {legalStage.responsible}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {legalMilestones.map((milestone) => (
+                      <div
+                        key={milestone.key}
+                        className={`rounded-lg border p-3 ${
+                          milestone.isReached
+                            ? 'border-warning/30 bg-warning/10'
+                            : milestone.daysRemaining <= 20
+                              ? 'border-amber-200 bg-amber-50'
+                              : 'border-border bg-background'
+                        }`}
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <p className="font-medium text-sm">{milestone.title}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{milestone.description}</p>
+                          </div>
+                          <Badge variant={milestone.isReached ? 'destructive' : 'outline'} className="w-fit shrink-0">
+                            {milestone.isReached ? 'Alcanzado' : `Faltan ${milestone.daysRemaining} dias`}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -316,7 +356,7 @@ export function IncapacityDetailDialog({
                       Distribución de Pago
                     </CardTitle>
                     <CardDescription>
-                      Cálculo según normativa colombiana (Decreto 019 de 2012)
+                      Cálculo según Decreto 780 de 2016, Decreto 1427 de 2022 y reglas por origen.
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -352,7 +392,7 @@ export function IncapacityDetailDialog({
                             <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
                               <div>
                                 <p className="font-medium">EPS - {incapacity.eps_name || 'No registrada'}</p>
-                                <p className="text-sm text-muted-foreground">{incapacity.eps_days} días al 66.67%</p>
+                                <p className="text-sm text-muted-foreground">{incapacity.eps_days} días según tramo legal aplicable</p>
                               </div>
                               <p className="text-lg font-bold">{formatCurrency(incapacity.eps_amount)}</p>
                             </div>

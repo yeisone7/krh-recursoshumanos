@@ -6,6 +6,35 @@ import { z } from 'zod';
 
 export type IncapacityOrigin = 'comun' | 'laboral';
 export type RecoveryStatus = 'pendiente' | 'radicado' | 'en_tramite' | 'aprobado' | 'rechazado' | 'pagado';
+export type IncapacityLegalStage =
+  | 'employer'
+  | 'eps_3_90'
+  | 'eps_91_180'
+  | 'afp_181_540'
+  | 'eps_541_plus'
+  | 'arl'
+  | 'uncovered';
+
+export interface IncapacityPaymentSegment {
+  stage: IncapacityLegalStage;
+  label: string;
+  responsible: 'empleador' | 'eps' | 'arl' | 'afp' | 'eps_541_plus' | 'sin_cobertura';
+  fromDay: number;
+  toDay: number;
+  days: number;
+  rate: number;
+  amount: number;
+}
+
+export interface IncapacityLegalMilestone {
+  key: 'day_120' | 'day_150' | 'day_180' | 'day_540' | 'day_541_plus';
+  day: number;
+  title: string;
+  description: string;
+  level: 'info' | 'warning' | 'critical';
+  isReached: boolean;
+  daysRemaining: number;
+}
 
 export const incapacityOriginLabels: Record<IncapacityOrigin, string> = {
   comun: 'Enfermedad Común',
@@ -160,8 +189,10 @@ export type RecoveryFormData = z.infer<typeof recoveryFormSchema>;
 
 /**
  * Calculate payment responsibility according to Colombian law:
- * - Common illness: Employer pays days 1-2 (100%), EPS pays days 3-180 (66.67%), AFP pays days 181-540 (50%)
- * - Work-related: ARL pays 100% from day 1
+ * - Common illness: Employer pays days 1-2, EPS days 3-90 at 66.67%, EPS days 91-180 at 50%.
+ * - From day 181 to 540, the pension fund may assume payment when legal conditions apply.
+ * - From day 541, EPS/adapted entity may restart payment when the Decreto 1427 de 2022 cases apply.
+ * - Work-related: ARL pays 100% from day 1.
  */
 export function calculatePaymentDistribution(
   origin: IncapacityOrigin,
@@ -173,25 +204,46 @@ export function calculatePaymentDistribution(
   epsDays: number;
   arlDays: number;
   afpDays: number;
+  epsInitialDays: number;
+  epsReducedDays: number;
+  epsAfter540Days: number;
   employerAmount: number;
   epsAmount: number;
   arlAmount: number;
   afpAmount: number;
+  epsAfter540Amount: number;
   totalAmount: number;
+  segments: IncapacityPaymentSegment[];
 } {
+  const roundMoney = (value: number) => Math.round(value * 100) / 100;
+
   if (origin === 'laboral') {
     // ARL pays 100% from day 1
-    const arlAmount = totalDays * dailyBaseSalary;
+    const arlAmount = roundMoney(totalDays * dailyBaseSalary);
     return {
       employerDays: 0,
       epsDays: 0,
       arlDays: totalDays,
       afpDays: 0,
+      epsInitialDays: 0,
+      epsReducedDays: 0,
+      epsAfter540Days: 0,
       employerAmount: 0,
       epsAmount: 0,
       arlAmount,
       afpAmount: 0,
+      epsAfter540Amount: 0,
       totalAmount: arlAmount,
+      segments: [{
+        stage: 'arl',
+        label: 'ARL - origen laboral',
+        responsible: 'arl',
+        fromDay: accumulatedDays + 1,
+        toDay: accumulatedDays + totalDays,
+        days: totalDays,
+        rate: 1,
+        amount: arlAmount,
+      }],
     };
   }
 
@@ -200,37 +252,136 @@ export function calculatePaymentDistribution(
   const endDay = accumulatedDays + totalDays;
   
   let employerDays = 0;
-  let epsDays = 0;
+  let epsInitialDays = 0;
+  let epsReducedDays = 0;
   let afpDays = 0;
+  let epsAfter540Days = 0;
   
   for (let day = startDay; day <= endDay; day++) {
     if (day <= 2) {
       employerDays++;
+    } else if (day <= 90) {
+      epsInitialDays++;
     } else if (day <= 180) {
-      epsDays++;
+      epsReducedDays++;
     } else if (day <= 540) {
       afpDays++;
+    } else {
+      epsAfter540Days++;
     }
-    // Days beyond 540 are not covered by law
   }
   
   // Calculate amounts
-  const employerAmount = employerDays * dailyBaseSalary; // 100%
-  const epsAmount = epsDays * dailyBaseSalary * 0.6667; // 66.67%
-  const afpAmount = afpDays * dailyBaseSalary * 0.5; // 50%
-  const totalAmount = employerAmount + epsAmount + afpAmount;
+  const employerAmount = roundMoney(employerDays * dailyBaseSalary); // 100%
+  const epsInitialAmount = roundMoney(epsInitialDays * dailyBaseSalary * 0.6667); // 66.67%
+  const epsReducedAmount = roundMoney(epsReducedDays * dailyBaseSalary * 0.5); // 50%
+  const afpAmount = roundMoney(afpDays * dailyBaseSalary * 0.5); // 50%
+  const epsAfter540Amount = roundMoney(epsAfter540Days * dailyBaseSalary * 0.5); // 50% by default; subject to case validation.
+  const epsAmount = roundMoney(epsInitialAmount + epsReducedAmount + epsAfter540Amount);
+  const totalAmount = roundMoney(employerAmount + epsAmount + afpAmount);
+
+  const segmentDefinitions: Array<Omit<IncapacityPaymentSegment, 'days' | 'amount'>> = [
+    { stage: 'employer', label: 'Empleador - días 1 a 2', responsible: 'empleador', fromDay: Math.max(startDay, 1), toDay: Math.min(endDay, 2), rate: 1 },
+    { stage: 'eps_3_90', label: 'EPS - días 3 a 90', responsible: 'eps', fromDay: Math.max(startDay, 3), toDay: Math.min(endDay, 90), rate: 0.6667 },
+    { stage: 'eps_91_180', label: 'EPS - días 91 a 180', responsible: 'eps', fromDay: Math.max(startDay, 91), toDay: Math.min(endDay, 180), rate: 0.5 },
+    { stage: 'afp_181_540', label: 'AFP - días 181 a 540', responsible: 'afp', fromDay: Math.max(startDay, 181), toDay: Math.min(endDay, 540), rate: 0.5 },
+    { stage: 'eps_541_plus', label: 'EPS - día 541 en adelante', responsible: 'eps_541_plus', fromDay: Math.max(startDay, 541), toDay: endDay, rate: 0.5 },
+  ];
+
+  const segments = segmentDefinitions
+    .map((segment) => {
+      const days = segment.toDay >= segment.fromDay ? segment.toDay - segment.fromDay + 1 : 0;
+      return {
+        ...segment,
+        days,
+        amount: roundMoney(days * dailyBaseSalary * segment.rate),
+      };
+    })
+    .filter((segment) => segment.days > 0);
   
   return {
     employerDays,
-    epsDays,
+    epsDays: epsInitialDays + epsReducedDays + epsAfter540Days,
     arlDays: 0,
     afpDays,
-    employerAmount: Math.round(employerAmount * 100) / 100,
-    epsAmount: Math.round(epsAmount * 100) / 100,
+    epsInitialDays,
+    epsReducedDays,
+    epsAfter540Days,
+    employerAmount,
+    epsAmount,
     arlAmount: 0,
-    afpAmount: Math.round(afpAmount * 100) / 100,
-    totalAmount: Math.round(totalAmount * 100) / 100,
+    afpAmount,
+    epsAfter540Amount,
+    totalAmount,
+    segments,
   };
+}
+
+export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: number): {
+  stage: IncapacityLegalStage;
+  label: string;
+  responsible: string;
+} {
+  if (origin === 'laboral') {
+    return { stage: 'arl', label: 'Origen laboral', responsible: 'ARL' };
+  }
+
+  if (accumulatedDays <= 2) return { stage: 'employer', label: 'Días 1 a 2', responsible: 'Empleador' };
+  if (accumulatedDays <= 90) return { stage: 'eps_3_90', label: 'Días 3 a 90', responsible: 'EPS' };
+  if (accumulatedDays <= 180) return { stage: 'eps_91_180', label: 'Días 91 a 180', responsible: 'EPS' };
+  if (accumulatedDays <= 540) return { stage: 'afp_181_540', label: 'Días 181 a 540', responsible: 'AFP' };
+  return { stage: 'eps_541_plus', label: 'Día 541 en adelante', responsible: 'EPS / entidad adaptada' };
+}
+
+export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: number): IncapacityLegalMilestone[] {
+  if (origin === 'laboral') {
+    return [{
+      key: 'day_120',
+      day: 1,
+      title: 'Validar reporte laboral',
+      description: 'Confirme FURAT/FUREL, ARL responsable y calificación de origen cuando aplique.',
+      level: 'warning',
+      isReached: true,
+      daysRemaining: 0,
+    }];
+  }
+
+  const definitions: Array<Omit<IncapacityLegalMilestone, 'isReached' | 'daysRemaining'>> = [
+    {
+      key: 'day_120',
+      day: 120,
+      title: 'Concepto de rehabilitación',
+      description: 'La EPS debe expedir concepto de rehabilitación antes del día 120.',
+      level: accumulatedDays >= 120 ? 'critical' : accumulatedDays >= 105 ? 'warning' : 'info',
+    },
+    {
+      key: 'day_150',
+      day: 150,
+      title: 'Seguimiento ante AFP',
+      description: 'Revise envío del concepto y preparación para reconocimiento después del día 180.',
+      level: accumulatedDays >= 150 ? 'critical' : accumulatedDays >= 135 ? 'warning' : 'info',
+    },
+    {
+      key: 'day_180',
+      day: 180,
+      title: 'Cambio de responsable económico',
+      description: 'Desde el día 181, valide responsabilidad de AFP según concepto de rehabilitación.',
+      level: accumulatedDays >= 180 ? 'critical' : accumulatedDays >= 165 ? 'warning' : 'info',
+    },
+    {
+      key: 'day_540',
+      day: 540,
+      title: 'Umbral de 540 días',
+      description: 'Revise calificación, concepto desfavorable o causales para pago EPS desde el día 541.',
+      level: accumulatedDays >= 540 ? 'critical' : accumulatedDays >= 510 ? 'warning' : 'info',
+    },
+  ];
+
+  return definitions.map((milestone) => ({
+    ...milestone,
+    isReached: accumulatedDays >= milestone.day,
+    daysRemaining: milestone.day - accumulatedDays,
+  }));
 }
 
 /**

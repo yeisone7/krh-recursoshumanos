@@ -6,6 +6,7 @@ import { es } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import {
+  getCurrentLegalStage,
   incapacityOriginLabels,
   recoveryStatusLabels,
 } from '@/types/incapacity';
@@ -23,6 +24,8 @@ interface IncapacityExportRow {
   'Origen': string;
   'Fecha Inicio': string;
   'Fecha Fin': string;
+  'Etapa Legal': string;
+  'Responsable Legal Estimado': string;
   'Días Totales': number;
   'Diagnóstico': string;
   'Código CIE-10': string;
@@ -98,6 +101,7 @@ export function useIncapacityExport() {
       const excelData: IncapacityExportRow[] = data.map((inc: any) => {
         const originKey = inc.origin as keyof typeof incapacityOriginLabels;
         const statusKey = inc.recovery_status as keyof typeof recoveryStatusLabels;
+        const legalStage = getCurrentLegalStage(inc.origin, inc.total_days || 0);
         
         return {
           'Empleado': `${inc.employee?.first_name || ''} ${inc.employee?.last_name || ''}`,
@@ -105,6 +109,8 @@ export function useIncapacityExport() {
           'Origen': incapacityOriginLabels[originKey] || inc.origin,
           'Fecha Inicio': format(new Date(inc.start_date), 'dd/MM/yyyy'),
           'Fecha Fin': format(new Date(inc.end_date), 'dd/MM/yyyy'),
+          'Etapa Legal': legalStage.label,
+          'Responsable Legal Estimado': legalStage.responsible,
           'Días Totales': inc.total_days || 0,
           'Diagnóstico': inc.diagnosis || '',
           'Código CIE-10': inc.cie10_code || '',
@@ -205,6 +211,8 @@ export function useIncapacityExport() {
         { wch: 20 }, // Origen
         { wch: 12 }, // Fecha Inicio
         { wch: 12 }, // Fecha Fin
+        { wch: 20 }, // Etapa Legal
+        { wch: 24 }, // Responsable Legal Estimado
         { wch: 12 }, // Días Totales
         { wch: 40 }, // Diagnóstico
         { wch: 12 }, // CIE-10
