@@ -135,6 +135,7 @@ export interface IncapacityWithEmployee extends EmployeeIncapacity {
     first_name: string;
     last_name: string;
     document_number: string;
+    gender?: string | null;
   };
   extensions?: EmployeeIncapacity[];
 }

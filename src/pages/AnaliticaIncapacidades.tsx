@@ -282,6 +282,62 @@ function InsightCard({ color, title, value, detail }: { color: string; title: st
   );
 }
 
+function SexAvatar({ kind, color }: { kind: 'M' | 'F' | 'sin_dato'; color: string }) {
+  const isFemale = kind === 'F';
+  const isUnknown = kind === 'sin_dato';
+
+  return (
+    <svg viewBox="0 0 88 88" className="h-16 w-16" aria-hidden="true">
+      <circle cx="44" cy="28" r="16" fill={`${color}2B`} stroke={color} strokeWidth="4" />
+      {isFemale && <path d="M22 63c5-14 12-21 22-21s17 7 22 21c-9 8-35 8-44 0Z" fill={`${color}35`} stroke={color} strokeWidth="4" strokeLinejoin="round" />}
+      {!isFemale && !isUnknown && <path d="M19 66c4-15 13-23 25-23s21 8 25 23c-11 7-39 7-50 0Z" fill={`${color}35`} stroke={color} strokeWidth="4" strokeLinejoin="round" />}
+      {isUnknown && <path d="M19 66c4-15 13-23 25-23s21 8 25 23c-11 7-39 7-50 0Z" fill="#E5E7EB" stroke={color} strokeWidth="4" strokeLinejoin="round" />}
+      {isFemale && <path d="M28 27c4-13 28-13 32 0 2 7 6 14 10 18-10 2-42 2-52 0 4-4 8-11 10-18Z" fill={color} opacity="0.72" />}
+      {!isFemale && !isUnknown && <path d="M28 22c7-10 25-12 34 0-1 6-4 11-8 14-5-6-13-8-24-5-2-3-3-6-2-9Z" fill={color} opacity="0.72" />}
+      {isUnknown && <text x="44" y="34" textAnchor="middle" className="fill-slate-500 text-2xl font-black">?</text>}
+    </svg>
+  );
+}
+
+function BiologicalSexInfographic({
+  data,
+}: {
+  data: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+}) {
+  return (
+    <Card className="overflow-hidden rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm">
+      <CardContent className="p-4">
+        <div className="mb-4 flex items-center gap-2">
+          <Users className="h-4 w-4 text-slate-700" />
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Sexo biologico</h3>
+            <p className="text-xs font-medium text-slate-500">Distribucion por casos filtrados</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+          {data.map((item) => (
+            <div key={item.key} className="rounded-lg border border-slate-200 bg-white p-3 text-center">
+              <div className="mx-auto flex h-20 items-center justify-center">
+                <SexAvatar kind={item.key} color={item.color} />
+              </div>
+              <div className="mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: item.color }}>
+                {item.percentage}%
+              </div>
+              <p className="mt-2 text-sm font-black uppercase tracking-wide text-slate-950">{item.label}</p>
+              <p className="text-xs font-semibold text-slate-500">{integerFormatter.format(item.cases)} casos</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-600">
+                <span className="rounded-md bg-slate-50 px-2 py-1">{integerFormatter.format(item.employees)} emp.</span>
+                <span className="rounded-md bg-slate-50 px-2 py-1">{integerFormatter.format(item.days)} dias</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AnaliticaIncapacidades() {
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
@@ -295,6 +351,7 @@ export default function AnaliticaIncapacidades() {
     const today = new Date();
     const all = flattenIncapacities(incapacityRoots);
     const activeEmployees = employees.filter((employee) => employee.is_active && employee.status !== 'retired').length;
+    const employeeById = new Map(employees.map((employee) => [employee.id, employee]));
 
     const matchesStaticFilters = (item: FlatIncapacity) => (
       (origin === 'all' || item.origin === origin) &&
@@ -378,6 +435,29 @@ export default function AnaliticaIncapacidades() {
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
     const employeeData = groupBy(filtered, (item) => item.employeeName, (item) => item.total_days || 0).slice(0, 8);
     const entityData = groupBy(filtered, (item) => item.origin === 'laboral' ? item.arl_name || 'ARL no registrada' : item.eps_name || 'EPS no registrada', (item) => item.total_days || 0).slice(0, 8);
+    const sexSeed: Record<'F' | 'M' | 'sin_dato', { key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employeeIds: Set<string> }> = {
+      F: { key: 'F', label: 'Femenino', color: palette.orange, cases: 0, days: 0, employeeIds: new Set<string>() },
+      M: { key: 'M', label: 'Masculino', color: palette.teal, cases: 0, days: 0, employeeIds: new Set<string>() },
+      sin_dato: { key: 'sin_dato', label: 'Sin dato', color: palette.navy, cases: 0, days: 0, employeeIds: new Set<string>() },
+    };
+
+    filtered.forEach((item) => {
+      const gender = item.employee?.gender || employeeById.get(item.employee_id)?.gender;
+      const key = gender === 'F' || gender === 'M' ? gender : 'sin_dato';
+      sexSeed[key].cases += 1;
+      sexSeed[key].days += item.total_days || 0;
+      sexSeed[key].employeeIds.add(item.employee_id);
+    });
+
+    const sexData = Object.values(sexSeed).map((item) => ({
+      key: item.key,
+      label: item.label,
+      color: item.color,
+      cases: item.cases,
+      days: item.days,
+      employees: item.employeeIds.size,
+      percentage: percent(item.cases, filtered.length),
+    }));
 
     const scatterData = filtered
       .filter((item) => item.total_days > 0)
@@ -421,6 +501,7 @@ export default function AnaliticaIncapacidades() {
       diagnosisData,
       employeeData,
       entityData,
+      sexData,
       scatterData,
       weekdayData,
       trends: {
@@ -548,7 +629,9 @@ export default function AnaliticaIncapacidades() {
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4 xl:grid-cols-3">
+        <BiologicalSexInfographic data={analytics.sexData} />
+
         <ChartPanel title="Tendencia mensual" subtitle="Casos y dias acumulados" icon={LineChart}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.monthly} margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
