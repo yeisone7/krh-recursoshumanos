@@ -174,31 +174,34 @@ export function ExtensionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <Plus className="w-5 h-5 text-primary" />
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-none flex-col gap-0 overflow-hidden rounded-none border-0 bg-background p-0 shadow-xl sm:h-auto sm:max-h-[92dvh] sm:w-[calc(100vw-2rem)] sm:max-w-2xl sm:rounded-xl sm:border [&>button]:right-3 [&>button]:top-3 sm:[&>button]:right-4 sm:[&>button]:top-4">
+        <DialogHeader className="shrink-0 border-b bg-muted/30 px-5 py-4 pr-12 sm:px-6 sm:py-5">
+          <DialogTitle className="font-display text-lg sm:text-xl flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Plus className="w-5 h-5" />
+            </span>
             Nueva Prórroga
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="pl-[52px] text-sm">
             Prórroga #{extensionNumber} para el contrato de <strong>{employeeName}</strong>
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:px-6 sm:py-5">
             {/* Current contract info */}
-            <div className="bg-background p-4 rounded-lg space-y-2">
-              <div className="flex items-center justify-between text-sm">
+            <div className="rounded-xl border bg-muted/35 p-3 sm:p-4 space-y-2">
+              <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">Vigencia actual:</span>
-                <span className="font-medium">{format(currentEndDate, 'PPP', { locale: es })}</span>
+                <span className="text-right font-medium">{format(currentEndDate, 'PPP', { locale: es })}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-muted-foreground">Número de prórroga:</span>
                 <span className="font-medium text-primary">#{extensionNumber}</span>
               </div>
               {contractType === 'fijo' && (
-                <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-muted-foreground">Duración total acumulada:</span>
                   <span className="font-medium">{legalStatus.totalDurationYears.toFixed(1)} años</span>
                 </div>
@@ -207,7 +210,7 @@ export function ExtensionFormDialog({
 
             {/* Colombian Labor Law Info */}
             {contractType === 'fijo' && (
-              <Alert variant="default" className="border-primary/20">
+              <Alert variant="default" className="border-primary/20 bg-primary/5">
                 <Scale className="h-4 w-4" />
                 <AlertTitle>Ley Colombiana (Art. 46 CST)</AlertTitle>
                 <AlertDescription className="text-sm space-y-1">
@@ -239,7 +242,7 @@ export function ExtensionFormDialog({
                   <FormLabel>Tipo de Prórroga *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-auto min-h-12 py-2">
                         <SelectValue placeholder="Seleccione el tipo de prórroga" />
                       </SelectTrigger>
                     </FormControl>
@@ -399,7 +402,7 @@ export function ExtensionFormDialog({
                   <FormControl>
                     <Textarea
                       placeholder="Notas sobre esta prórroga..."
-                      className="min-h-[80px]"
+                      className="min-h-[76px]"
                       {...field}
                     />
                   </FormControl>
@@ -417,13 +420,15 @@ export function ExtensionFormDialog({
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            </div>
+
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t bg-muted/30 px-5 py-3 sm:flex-row sm:justify-end sm:px-6">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
               <Button 
                 type="submit" 
-                className="gradient-primary text-primary-foreground"
+                className="gradient-primary text-primary-foreground w-full sm:w-auto"
                 disabled={!validationResult.isValid}
               >
                 Registrar Prórroga
