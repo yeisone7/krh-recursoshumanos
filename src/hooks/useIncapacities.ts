@@ -35,7 +35,7 @@ export function useIncapacities() {
         .from('employee_incapacities')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number)
+          employee:employees_v2(id, first_name, last_name, document_number, gender)
         `)
         .eq('company_id', currentCompanyId!)
         .order('start_date', { ascending: false });
@@ -81,7 +81,7 @@ export function useIncapacity(id: string | undefined) {
         .from('employee_incapacities')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number)
+          employee:employees_v2(id, first_name, last_name, document_number, gender)
         `)
         .eq('id', id!)
         .single();
