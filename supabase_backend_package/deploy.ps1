@@ -1,14 +1,21 @@
 $ErrorActionPreference = "Stop"
 
-$env:SUPABASE_PROJECT_REF="qmfyecdeiupgscegxbmo"
-$env:SUPABASE_ACCESS_TOKEN="REMOVED_SUPABASE_ACCESS_TOKEN"
-$env:SUPABASE_DB_PASSWORD="REMOVED_SUPABASE_DB_PASSWORD"
+$required = @(
+  "SUPABASE_PROJECT_REF",
+  "SUPABASE_ACCESS_TOKEN",
+  "SUPABASE_DB_PASSWORD",
+  "SUPABASE_ANON_KEY",
+  "SUPABASE_SERVICE_ROLE_KEY"
+)
+
+foreach ($name in $required) {
+  if (-not [Environment]::GetEnvironmentVariable($name)) {
+    throw "Missing required environment variable: $name"
+  }
+}
+
 $env:SUPABASE_URL="https://$($env:SUPABASE_PROJECT_REF).supabase.co"
-$env:SUPABASE_ANON_KEY="REVOKED_PUBLIC_ANON_KEY"
-$env:SUPABASE_SERVICE_ROLE_KEY="REMOVED_SUPABASE_SERVICE_ROLE_KEY"
 $env:SUPABASE_PUBLISHABLE_KEY=$env:SUPABASE_ANON_KEY
-$env:LOVABLE_API_KEY="dummy"
-$env:RESEND_API_KEY="REMOVED_RESEND_API_KEY"
 
 Write-Host "Logging in..."
 npx supabase login --token $env:SUPABASE_ACCESS_TOKEN

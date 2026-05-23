@@ -16,27 +16,30 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.notify-requisition-approver]
-verify_jwt = false
+verify_jwt = true
 
 [functions.extract-pdf]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-training]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-training-video]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-training-audio]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-training-media]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-training-avatar]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-candidate-thanks]
+verify_jwt = true
+
+[functions.get-session-info]
 verify_jwt = false
 
 [functions.ai-chat]

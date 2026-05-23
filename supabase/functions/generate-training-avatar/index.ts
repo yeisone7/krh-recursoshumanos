@@ -5,6 +5,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+async function requireTrainingPermission(req: Request, supabase: any, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: 'companyId is required' };
+
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+  if (!authHeader.startsWith('Bearer ')) throw { status: 401, message: 'No autorizado' };
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const { data: userData, error: userError } = await authClient.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) throw { status: 401, message: 'No autorizado' };
+
+  const { data: systemRole } = await supabase
+    .from('user_custom_roles')
+    .select('id, custom_roles!inner(is_system,is_active)')
+    .eq('user_id', userId)
+    .eq('custom_roles.is_system', true)
+    .eq('custom_roles.is_active', true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: hasPermission } = await supabase.rpc('check_user_permission', {
+    _user_id: userId,
+    _module_code: 'capacitaciones',
+    _action: 'create',
+  });
+
+  if (!isSystemRole) {
+    const { data: assignment } = await supabase
+      .from('user_company_assignments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('company_id', companyId)
+      .maybeSingle();
+
+    if (!assignment || !hasPermission) {
+      throw { status: 403, message: 'No tienes permiso para generar video avatar en esta empresa.' };
+    }
+  }
+
+  return userId;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -17,6 +61,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const requestUserId = await requireTrainingPermission(req, supabase, companyId);
 
     // Get HeyGen API key from system_config
     const { data: configData } = await supabase
@@ -169,7 +214,7 @@ Deno.serve(async (req) => {
 
         // Insert media record
         const authHeader = req.headers.get('authorization');
-        let createdBy: string | null = null;
+        let createdBy: string | null = requestUserId;
         if (authHeader) {
           const token = authHeader.replace('Bearer ', '');
           const { data: { user } } = await supabase.auth.getUser(token);
@@ -212,9 +257,10 @@ Deno.serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error in generate-training-avatar:', error);
+    const status = error?.status || 500;
     return new Response(
       JSON.stringify({ error: error.message || 'Error interno' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

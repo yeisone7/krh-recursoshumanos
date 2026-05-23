@@ -16,6 +16,51 @@ interface AIConfig {
   openai_api_key?: string;
 }
 
+async function requireTrainingPermission(req: Request, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: "companyId is required" };
+
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) throw { status: 401, message: "No autorizado" };
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
+  const { data: userData, error: userError } = await authClient.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) throw { status: 401, message: "No autorizado" };
+
+  const { data: systemRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(is_system,is_active)")
+    .eq("user_id", userId)
+    .eq("custom_roles.is_system", true)
+    .eq("custom_roles.is_active", true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: hasPermission } = await adminClient.rpc("check_user_permission", {
+    _user_id: userId,
+    _module_code: "capacitaciones",
+    _action: "create",
+  });
+
+  if (!isSystemRole) {
+    const { data: assignment } = await adminClient
+      .from("user_company_assignments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (!assignment || !hasPermission) {
+      throw { status: 403, message: "No tienes permiso para generar capacitaciones en esta empresa." };
+    }
+  }
+}
+
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   if (!companyId) return {};
   try {
@@ -190,6 +235,7 @@ serve(async (req) => {
 
   try {
     const { title, type, area, audience, level, objective, legalFramework, riskLevel, duration, language, pdfText, additionalContext, companyId } = await req.json();
+    await requireTrainingPermission(req, companyId);
 
     if (!title) {
       return new Response(
