@@ -5,7 +5,7 @@ import { AlertsPanel } from '@/components/dashboard/AlertsPanel';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { VacanciesOverview } from '@/components/dashboard/VacanciesOverview';
 import { ActiveTerminationsPanel } from '@/components/dashboard/ActiveTerminationsPanel';
-import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+import { BiologicalSexInfographic } from '@/components/dashboard/BiologicalSexInfographic';
 import { PendingActivationPanel } from '@/components/dashboard/PendingActivationPanel';
 import { useEmployeeKPIs } from '@/hooks/useEmployeeKPIs';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
@@ -31,7 +31,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground mt-1">Resumen general de recursos humanos.</p>
       </motion.div>
 
-      {/* Main Layout: KPIs Left, Quick Actions Right */}
+      {/* Main Layout: KPIs Left, Biological Sex Infographic Right */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - KPI Cards */}
         <div className="lg:col-span-2 space-y-4">
@@ -149,9 +149,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right Column - Quick Actions */}
+        {/* Right Column - Biological Sex Infographic */}
         <div className="hidden lg:block lg:col-span-1">
-          <QuickActionsPanel />
+          <BiologicalSexInfographic kpis={kpis} isLoading={kpisLoading} />
         </div>
       </div>
 

@@ -12,7 +12,6 @@ import {
   UserCheck,
   UserX,
 } from 'lucide-react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -29,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { EmployeeAvatarZoom } from '@/components/employees/EmployeeAvatarZoom';
 import { cn } from '@/lib/utils';
 import { getEmployeeFullName } from '@/types/employee';
 
@@ -80,6 +80,8 @@ export function EmployeeTable({
             const isEnRetiro = employee.status === 'en_retiro';
             const isSuspended = employee.status === 'suspended' || (!employee.is_active && !isRetired);
             const hasProfesiograma = hasProfesiogramaFn(employee);
+            const employeeName = getEmployeeFullName(employee);
+            const initials = `${employee.first_name?.[0] || ''}${employee.last_name?.[0] || ''}`;
 
             return (
               <TableRow 
@@ -90,12 +92,13 @@ export function EmployeeTable({
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="w-10 h-10 border border-border">
-                        <AvatarImage src={employee.avatar_url || undefined} alt={getEmployeeFullName(employee)} />
-                        <AvatarFallback className="bg-primary-light text-primary text-sm font-semibold">
-                          {employee.first_name[0]}{employee.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <EmployeeAvatarZoom
+                        imageUrl={employee.avatar_url}
+                        name={employeeName}
+                        initials={initials}
+                        avatarClassName="h-10 w-10 border border-border"
+                        fallbackClassName="bg-primary-light text-primary text-sm font-semibold"
+                      />
                       {isNew && (
                         <span className="absolute -top-1 -right-1 flex h-3 w-3">
                           <span className="relative inline-flex rounded-full h-3 w-3 bg-warning text-[6px] font-bold text-warning-foreground items-center justify-center">N</span>
@@ -104,7 +107,7 @@ export function EmployeeTable({
                     </div>
                     <div className="flex flex-col">
                       <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {getEmployeeFullName(employee)}
+                        {employeeName}
                       </span>
                       <span className="text-xs text-muted-foreground">C.C: {employee.document_number || 'N/A'}</span>
                     </div>

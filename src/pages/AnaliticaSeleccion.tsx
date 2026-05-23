@@ -39,6 +39,7 @@ import {
   Gauge,
   Info,
   PauseCircle,
+  Sparkles,
   Target,
   TrendingDown,
   TrendingUp,
@@ -59,6 +60,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
@@ -143,6 +145,11 @@ function formatStatus(value: string | null | undefined) {
 function percent(value: number, total: number) {
   if (!total) return 0;
   return Math.round((value / total) * 100);
+}
+
+function clampPercent(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 function bucketDays(days: number) {
@@ -307,6 +314,289 @@ function KpiCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+const infographicPalette = {
+  teal: '#10A5BC',
+  green: '#78B80F',
+  orange: '#FF9900',
+  coral: '#F35B4F',
+  navy: '#263147',
+  slate: '#7A8797',
+  aqua: '#45D1C5',
+};
+
+function InfographicPanel({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('rounded-lg border border-slate-200 bg-white p-4 shadow-sm', className)}>
+      {children}
+    </div>
+  );
+}
+
+function CircularProcessInfographic({ analytics }: { analytics: any }) {
+  const stages = [
+    { label: 'Planear', value: analytics.kpis.activeRequisitions, color: infographicPalette.teal, icon: Briefcase },
+    { label: 'Publicar', value: analytics.kpis.activeVacancies, color: infographicPalette.green, icon: Target },
+    { label: 'Atraer', value: analytics.kpis.candidates, color: infographicPalette.navy, icon: Users },
+    { label: 'Evaluar', value: analytics.kpis.inProcessCandidates, color: infographicPalette.orange, icon: Gauge },
+    { label: 'Vincular', value: analytics.kpis.hiredCandidates, color: infographicPalette.coral, icon: UserCheck },
+  ];
+  const total = Math.max(...stages.map((stage) => stage.value), 1);
+
+  return (
+    <InfographicPanel className="bg-[#F7FBFB]">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ciclo de talento</p>
+          <h3 className="text-xl font-black text-slate-950">Proceso de seleccion</h3>
+        </div>
+        <Sparkles className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[250px_1fr] lg:items-center">
+        <div className="relative mx-auto h-64 w-64">
+          <div className="absolute inset-8 rounded-full border-[18px] border-slate-100 bg-white shadow-inner" />
+          <div className="absolute inset-[74px] flex flex-col items-center justify-center rounded-full bg-white text-center shadow-sm">
+            <p className="text-3xl font-black text-slate-950">{analytics.kpis.advanceRate}%</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">avance</p>
+          </div>
+          {stages.map((stage, index) => {
+            const angle = (index / stages.length) * Math.PI * 2 - Math.PI / 2;
+            const x = Math.cos(angle) * 96 + 128;
+            const y = Math.sin(angle) * 96 + 128;
+            const Icon = stage.icon;
+            return (
+              <div
+                key={stage.label}
+                className="absolute flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full text-white shadow-sm"
+                style={{ left: x, top: y, backgroundColor: stage.color }}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="mt-1 text-xs font-black">{stage.value}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="space-y-3">
+          {stages.map((stage) => {
+            const Icon = stage.icon;
+            return (
+              <div key={stage.label} className="grid grid-cols-[42px_1fr_52px] items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full text-white" style={{ backgroundColor: stage.color }}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-slate-900">{stage.label}</p>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${clampPercent((stage.value / total) * 100)}%`, backgroundColor: stage.color }} />
+                  </div>
+                </div>
+                <span className="text-right text-lg font-black text-slate-950">{stage.value}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function FunnelStepsInfographic({ analytics }: { analytics: any }) {
+  const maxValue = Math.max(...analytics.recruitmentFunnel.map((item: any) => item.value), 1);
+
+  return (
+    <InfographicPanel>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Ruta del candidato</p>
+          <h3 className="text-lg font-black text-slate-950">Embudo visual</h3>
+        </div>
+        <TrendingUp className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="space-y-3">
+        {analytics.recruitmentFunnel.map((item: any, index: number) => {
+          const color = Object.values(infographicPalette)[index % Object.values(infographicPalette).length];
+          return (
+            <div key={item.name} className="grid grid-cols-[42px_1fr_64px] items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-black text-white" style={{ backgroundColor: color }}>
+                {index + 1}
+              </span>
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-800">{item.name}</span>
+                  <span className="text-[11px] font-bold text-slate-500">{item.stepPercent}% etapa</span>
+                </div>
+                <div className="mt-1.5 h-5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(5, (item.value / maxValue) * 100)}%`, backgroundColor: color }} />
+                </div>
+              </div>
+              <span className="text-right text-lg font-black text-slate-950">{item.value}</span>
+            </div>
+          );
+        })}
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function SourceInfographic({ analytics }: { analytics: any }) {
+  const sources = analytics.sourceConversion.slice(0, 5);
+  const maxApplied = Math.max(...sources.map((item: any) => item.aplicado), 1);
+
+  return (
+    <InfographicPanel className="bg-[#FBFAF5]">
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Atraccion</p>
+          <h3 className="text-lg font-black text-slate-950">Fuentes y conversion</h3>
+        </div>
+        <Users className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="space-y-3">
+        {sources.length > 0 ? sources.map((source: any, index: number) => {
+          const color = [infographicPalette.teal, infographicPalette.orange, infographicPalette.green, infographicPalette.coral, infographicPalette.navy][index % 5];
+          return (
+            <div key={source.source} className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="truncate text-xs font-black uppercase tracking-wide text-slate-900">{source.source}</p>
+                <span className="rounded-full px-2.5 py-1 text-[10px] font-black text-white" style={{ backgroundColor: color }}>
+                  {source.contratadoPct}%
+                </span>
+              </div>
+              <div className="grid grid-cols-[1fr_74px] items-center gap-3">
+                <div className="h-4 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(6, (source.aplicado / maxApplied) * 100)}%`, backgroundColor: color }} />
+                </div>
+                <span className="text-right text-xs font-black text-slate-700">{source.aplicado} aplic.</span>
+              </div>
+            </div>
+          );
+        }) : (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
+            Sin fuentes registradas
+          </div>
+        )}
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function PeopleStatusInfographic({ analytics }: { analytics: any }) {
+  const total = Math.max(analytics.kpis.candidates, 1);
+  const selected = analytics.kpis.hiredCandidates + analytics.kpis.inProcessCandidates;
+  const discarded = analytics.kpis.discardedCandidates;
+  const withdrawn = analytics.kpis.withdrawnCandidates;
+  const blocks = Array.from({ length: 50 }, (_, index) => {
+    const position = Math.ceil(((index + 1) / 50) * total);
+    if (position <= analytics.kpis.hiredCandidates) return infographicPalette.green;
+    if (position <= selected) return infographicPalette.teal;
+    if (position <= selected + discarded) return infographicPalette.coral;
+    if (position <= selected + discarded + withdrawn) return infographicPalette.orange;
+    return '#D8DEE8';
+  });
+
+  return (
+    <InfographicPanel>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mapa poblacional</p>
+          <h3 className="text-lg font-black text-slate-950">Estado de candidatos</h3>
+        </div>
+        <UserCheck className="h-5 w-5 text-slate-500" />
+      </div>
+      <div className="grid grid-cols-10 gap-2">
+        {blocks.map((color, index) => (
+          <span key={index} className="h-7 rounded-full" style={{ backgroundColor: color }} />
+        ))}
+      </div>
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+        {[
+          { label: 'Contratados', value: analytics.kpis.hiredCandidates, color: infographicPalette.green },
+          { label: 'En proceso', value: analytics.kpis.inProcessCandidates, color: infographicPalette.teal },
+          { label: 'Descartados', value: analytics.kpis.discardedCandidates, color: infographicPalette.coral },
+          { label: 'Desistidos', value: analytics.kpis.withdrawnCandidates, color: infographicPalette.orange },
+        ].map((item) => (
+          <div key={item.label} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-xs font-bold">
+            <span className="flex items-center gap-2 text-slate-600">
+              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+              {item.label}
+            </span>
+            <span className="text-slate-950">{item.value} / {percent(item.value, total)}%</span>
+          </div>
+        ))}
+      </div>
+    </InfographicPanel>
+  );
+}
+
+function KpiRibbon({ analytics }: { analytics: any }) {
+  const items = [
+    { label: 'Requisiciones', value: analytics.kpis.requisitions, color: infographicPalette.teal },
+    { label: 'Vacantes', value: analytics.kpis.vacancies, color: infographicPalette.green },
+    { label: 'Candidatos', value: analytics.kpis.candidates, color: infographicPalette.orange },
+    { label: 'Seleccion', value: `${analytics.kpis.selectionRate}%`, color: infographicPalette.coral },
+    { label: 'Cobertura', value: `${analytics.kpis.avgTimeToFill}d`, color: infographicPalette.navy },
+  ];
+
+  return (
+    <div className="grid gap-3 md:grid-cols-5">
+      {items.map((item, index) => (
+        <div key={item.label} className="relative min-h-[96px] overflow-hidden rounded-lg p-4 text-white shadow-sm" style={{ backgroundColor: item.color }}>
+          <span className="absolute -right-8 top-1/2 h-20 w-20 -translate-y-1/2 rotate-45 bg-white/20" />
+          <p className="text-3xl font-black leading-none">{String(index + 1).padStart(2, '0')}</p>
+          <p className="mt-3 text-[10px] font-black uppercase tracking-widest opacity-80">{item.label}</p>
+          <p className="text-xl font-black">{item.value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SelectionInfographicsTab({ analytics }: { analytics: any }) {
+  return (
+    <div className="space-y-4 rounded-xl border border-slate-200 bg-[#F7F7FD] p-3 sm:p-5">
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <CircularProcessInfographic analytics={analytics} />
+        <FunnelStepsInfographic analytics={analytics} />
+      </div>
+
+      <KpiRibbon analytics={analytics} />
+
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <SourceInfographic analytics={analytics} />
+        <PeopleStatusInfographic analytics={analytics} />
+      </div>
+
+      <InfographicPanel className="bg-[#F7FBFB]">
+        <div className="grid gap-5 xl:grid-cols-[230px_1fr] xl:items-center">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lectura ejecutiva</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">Prioridades del proceso</h3>
+            <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-500">
+              Vista compacta para revisar atraccion, avance, cobertura y puntos de perdida del embudo.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pipeline</p>
+              <p className="mt-2 text-2xl font-black text-slate-950">{numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">candidatos por vacante</p>
+            </div>
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pico aperturas</p>
+              <p className="mt-2 text-lg font-black text-slate-950">{analytics.peakWeeklyOpenings.period || 'N/A'}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{analytics.peakWeeklyOpenings.aperturas || 0} aperturas</p>
+            </div>
+            <div className="rounded-lg bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mayor demora</p>
+              <p className="mt-2 text-lg font-black text-slate-950">{analytics.peakMonthlyCoverage.period || 'N/A'}</p>
+              <p className="mt-1 text-xs font-bold text-slate-500">{analytics.peakMonthlyCoverage.cobertura || 0} dias</p>
+            </div>
+          </div>
+        </div>
+      </InfographicPanel>
+    </div>
   );
 }
 
@@ -801,6 +1091,19 @@ export default function AnaliticaSeleccion() {
         </CardContent>
       </Card>
 
+      <Tabs defaultValue="ejecutivo" className="space-y-6">
+        <TabsList className="grid h-auto w-full grid-cols-2 rounded-lg border border-slate-200 bg-slate-50 p-1 sm:w-[460px]">
+          <TabsTrigger value="ejecutivo" className="gap-2 rounded-md py-2.5 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <BarChart3 className="h-4 w-4" />
+            Ejecutivo
+          </TabsTrigger>
+          <TabsTrigger value="infografias" className="gap-2 rounded-md py-2.5 text-xs font-black uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <Sparkles className="h-4 w-4" />
+            Infografias
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ejecutivo" className="mt-0 space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral"
           info={{ calc: 'Se cuentan todas las solicitudes de personal que no han sido canceladas, rechazadas ni cerradas.', ejemplo: 'Si hay 10 solicitudes y 2 fueron canceladas, el indicador muestra 8.', note: 'Refleja cuántas necesidades de personal están pendientes de resolver.' }} />
@@ -1308,6 +1611,13 @@ export default function AnaliticaSeleccion() {
           </div>
         </CardContent>
       </Card>
+
+        </TabsContent>
+
+        <TabsContent value="infografias" className="mt-0">
+          <SelectionInfographicsTab analytics={analytics} />
+        </TabsContent>
+      </Tabs>
 
       {/* ── Metrics Dictionary Modal ── */}
       <Dialog open={showMetricsDict} onOpenChange={setShowMetricsDict}>
