@@ -30,9 +30,20 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    const userId = userData?.user?.id;
+    if (userError || !userId) {
+      return new Response(
+        JSON.stringify({ error: 'No autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     const resend = resendApiKey ? new Resend(resendApiKey) : null;
     
     const { requisitionId, currentStep, requisitionTitle }: NotifyRequest = await req.json();
@@ -56,6 +67,32 @@ serve(async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ error: 'Requisition not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: systemRole } = await supabase
+      .from('user_custom_roles')
+      .select('id, custom_roles!inner(is_system,is_active)')
+      .eq('user_id', userId)
+      .eq('custom_roles.is_system', true)
+      .eq('custom_roles.is_active', true)
+      .limit(1);
+    const { data: hasPermission } = await supabase.rpc('check_user_permission', {
+      _user_id: userId,
+      _module_code: 'requisiciones',
+      _action: 'update',
+    });
+    const { data: assignment } = await supabase
+      .from('user_company_assignments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('company_id', requisition.company_id)
+      .maybeSingle();
+
+    if (!systemRole?.length && (!assignment || !hasPermission)) {
+      return new Response(
+        JSON.stringify({ error: 'No tienes permiso para notificar esta requisicion.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

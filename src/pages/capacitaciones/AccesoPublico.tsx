@@ -65,14 +65,12 @@ export default function AccesoPublico() {
 
   const validateToken = async (token: string) => {
     try {
-      const { data, error } = await supabase
-        .from('training_access_tokens')
-        .select('*, course:training_courses(*)')
-        .eq('token', token)
-        .eq('is_active', true)
-        .single();
+      const { data: validation, error } = await (supabase as any).rpc('validate_training_access_token', {
+        p_token: token,
+      });
+      const data = validation?.token;
 
-      if (error || !data) {
+      if (error || !validation?.valid || !data) {
         setErrorMsg('El enlace de acceso no es válido o ha sido desactivado.');
         setStep('error');
         return;
@@ -184,27 +182,17 @@ export default function AccesoPublico() {
     setSubmitting(true);
 
     try {
-      const { error: completionError } = await supabase
-        .from('training_completions')
-        .insert({
-          company_id: tokenData.company_id,
-          course_id: course!.id,
-          token_id: tokenData.id,
-          employee_id: employeeId,
-          operator_name: operatorName,
-          operator_cedula: operatorCedula || null,
-          signature_data: dataUrl,
-          quiz_score: quizScore,
-          ip_address: null,
-          user_agent: navigator.userAgent,
-        } as any);
+      const { error: completionError } = await (supabase as any).rpc('complete_training_access', {
+        p_token: tokenParam,
+        p_employee_id: employeeId,
+        p_operator_name: operatorName,
+        p_operator_cedula: operatorCedula || null,
+        p_signature_data: dataUrl,
+        p_quiz_score: quizScore,
+        p_user_agent: navigator.userAgent,
+      });
 
       if (completionError) throw completionError;
-
-      await supabase
-        .from('training_access_tokens')
-        .update({ uses_count: (tokenData.uses_count || 0) + 1 })
-        .eq('id', tokenData.id);
 
       setStep('done');
     } catch (err) {

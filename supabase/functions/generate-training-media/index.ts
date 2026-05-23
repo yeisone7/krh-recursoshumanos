@@ -16,6 +16,51 @@ interface AIConfig {
   openai_api_key?: string;
 }
 
+async function requireTrainingPermission(req: Request, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: "companyId is required" };
+
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) throw { status: 401, message: "No autorizado" };
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
+  const { data: userData, error: userError } = await authClient.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) throw { status: 401, message: "No autorizado" };
+
+  const { data: systemRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(is_system,is_active)")
+    .eq("user_id", userId)
+    .eq("custom_roles.is_system", true)
+    .eq("custom_roles.is_active", true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: hasPermission } = await adminClient.rpc("check_user_permission", {
+    _user_id: userId,
+    _module_code: "capacitaciones",
+    _action: "create",
+  });
+
+  if (!isSystemRole) {
+    const { data: assignment } = await adminClient
+      .from("user_company_assignments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (!assignment || !hasPermission) {
+      throw { status: 403, message: "No tienes permiso para generar medios de capacitación en esta empresa." };
+    }
+  }
+}
+
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   console.log("getAIConfig called for companyId:", companyId);
   if (!companyId) return {};
@@ -187,6 +232,7 @@ serve(async (req) => {
     
     console.log("Request body received:", JSON.stringify(body));
     const { type, title, content, puntosClave, courseId, skipUpload, companyId } = body;
+    await requireTrainingPermission(req, companyId);
 
     if (!type || !title) {
       console.error("Missing required fields:", { type, title });
@@ -198,7 +244,7 @@ serve(async (req) => {
 
     console.log("Processing request for type:", type, "title:", title);
     const aiConfig = await getAIConfig(companyId);
-    console.log("AI Config loaded:", JSON.stringify(aiConfig));
+    console.log("AI Config loaded:", { model: aiConfig.model, hasGemini: !!aiConfig.gemini_api_key, hasOpenAI: !!aiConfig.openai_api_key });
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
     const spanishTextRule = "Idioma obligatorio: español latinoamericano. Si la imagen incluye texto, títulos, etiquetas, rótulos, ramas, iconos con palabras o secciones, TODO debe estar escrito únicamente en español, sin palabras en inglés. Revisa ortografía y tildes en español.";
     let prompt = "";
@@ -322,12 +368,13 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error("generate-training-media error:", error);
+    const status = error?.status || 200;
     const message = error?.message || (error instanceof Error ? error.message : "Error generating media");
     
-    // Return 200 but with error inside to bypass Supabase client masking
+    // Provider errors remain 200 to preserve the existing frontend handling. Auth errors use their status.
     return new Response(
       JSON.stringify({ error: message, details: error?.toString() }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

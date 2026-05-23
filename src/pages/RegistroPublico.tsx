@@ -204,19 +204,17 @@ export default function RegistroPublico() {
 
   const validateToken = async () => {
     try {
-      const { data, error } = await supabase
-        .from('self_registration_tokens')
-        .select('*')
-        .eq('token', tokenParam!)
-        .single();
+      const { data, error } = await (supabase as any).rpc('validate_registration_token', {
+        p_token: tokenParam!,
+      });
 
-      if (error || !data) {
+      if (error || !data?.valid || !data?.token) {
         setErrorMsg('El enlace no es válido.');
         setStep('error');
         return;
       }
 
-      const token = data as unknown as TokenData;
+      const token = data.token as TokenData;
 
       if (token.is_used && !token.is_reusable) {
         setErrorMsg('Este enlace ya fue utilizado.');

@@ -168,9 +168,12 @@ export default function CrearCapacitacion() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Sesion requerida para procesar PDF');
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-pdf`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+        headers: { Authorization: `Bearer ${accessToken}` },
         body: formData,
       });
       if (!response.ok) throw new Error('Error extracting PDF');

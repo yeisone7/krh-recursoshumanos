@@ -110,6 +110,42 @@ async function getRequestUserId(req: Request): Promise<string> {
   return userId;
 }
 
+async function requireTrainingPermission(userId: string, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: "companyId is required" };
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, serviceKey);
+
+  const { data: systemRole } = await supabase
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(is_system,is_active)")
+    .eq("user_id", userId)
+    .eq("custom_roles.is_system", true)
+    .eq("custom_roles.is_active", true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: hasPermission } = await supabase.rpc("check_user_permission", {
+    _user_id: userId,
+    _module_code: "capacitaciones",
+    _action: "create",
+  });
+
+  if (!isSystemRole) {
+    const { data: assignment } = await supabase
+      .from("user_company_assignments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (!assignment || !hasPermission) {
+      throw { status: 403, message: "No tienes permiso para generar storyboard en esta empresa." };
+    }
+  }
+}
+
 // --- Text generation (script) ---
 
 async function generateScriptGeminiDirect(apiKey: string, prompt: string): Promise<string> {
@@ -243,6 +279,7 @@ serve(async (req) => {
     }
 
     const requestUserId = await getRequestUserId(req);
+    await requireTrainingPermission(requestUserId, companyId);
 
     const aiConfig = await getAIConfig(companyId);
     const provider = aiConfig.model || "gateway";
