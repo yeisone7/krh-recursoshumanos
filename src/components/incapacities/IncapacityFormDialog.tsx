@@ -530,8 +530,10 @@ export function IncapacityFormDialog({
                     <p><strong>Origen Común:</strong></p>
                     <ul className="list-disc list-inside ml-2">
                       <li>Días 1-2: Empleador (100%)</li>
-                      <li>Días 3-180: EPS (66.67%)</li>
-                      <li>Días 181-540: AFP (50%)</li>
+                      <li>Días 3-90: EPS (66.67%)</li>
+                      <li>Días 91-180: EPS (50%)</li>
+                      <li>Días 181-540: AFP (50%, sujeto a concepto de rehabilitación)</li>
+                      <li>Día 541 en adelante: EPS si se configuran las causales del Decreto 1427 de 2022</li>
                     </ul>
                     <p className="mt-2"><strong>Origen Laboral:</strong></p>
                     <ul className="list-disc list-inside ml-2">

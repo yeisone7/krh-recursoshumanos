@@ -12,7 +12,13 @@ import type {
   IncapacityOrigin,
   RecoveryStatus 
 } from '@/types/incapacity';
-import { calculatePaymentDistribution, getAccumulatedDays, requiresReintegrationExam } from '@/types/incapacity';
+import {
+  calculatePaymentDistribution,
+  getAccumulatedDays,
+  getLegalMilestones,
+  getTotalChainDays,
+  requiresReintegrationExam,
+} from '@/types/incapacity';
 import { calculateExpirationDate, PERIODIC_EXAM_VALIDITY_MONTHS } from '@/types/medicalExam';
 
 // =====================================================
@@ -466,7 +472,7 @@ export function useDeleteIncapacity() {
 
 export interface IncapacityAlert {
   id: string;
-  type: 'extension_pending' | 'recovery_pending' | 'reintegration_exam';
+  type: 'extension_pending' | 'recovery_pending' | 'reintegration_exam' | 'legal_milestone';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -493,8 +499,26 @@ export function useIncapacityAlerts() {
       
       const alerts: IncapacityAlert[] = [];
       const today = new Date();
+      const allIncapacities = (data as unknown as IncapacityWithEmployee[]) || [];
+      const roots = new Map<string, IncapacityWithEmployee>();
+
+      for (const inc of allIncapacities) {
+        if (!inc.is_extension || !inc.parent_incapacity_id) {
+          roots.set(inc.id, { ...inc, extensions: [] });
+        }
+      }
+
+      for (const inc of allIncapacities) {
+        if (inc.is_extension && inc.parent_incapacity_id) {
+          const parent = roots.get(inc.parent_incapacity_id);
+          if (parent) {
+            parent.extensions = parent.extensions || [];
+            parent.extensions.push(inc);
+          }
+        }
+      }
       
-      for (const inc of (data as unknown as IncapacityWithEmployee[])) {
+      for (const inc of allIncapacities) {
         const endDate = new Date(inc.end_date);
         const daysUntilEnd = differenceInDays(endDate, today);
         const employeeName = inc.employee 
@@ -539,6 +563,37 @@ export function useIncapacityAlerts() {
             description: `${employeeName} requiere examen de reintegro antes de retornar. La incapacidad ${daysToEnd <= 0 ? 'ya finalizó' : `finaliza en ${daysToEnd} día(s)`}.`,
             daysRemaining: daysToEnd,
             incapacity: inc,
+          });
+        }
+      }
+
+      for (const root of roots.values()) {
+        const chainDays = getTotalChainDays(root);
+        const latestEndDate = [root, ...(root.extensions || [])]
+          .map((inc) => new Date(inc.end_date))
+          .sort((a, b) => b.getTime() - a.getTime())[0];
+        const daysSinceLatestEnd = differenceInDays(today, latestEndDate);
+        const employeeName = root.employee
+          ? `${root.employee.first_name} ${root.employee.last_name}`
+          : 'Empleado';
+
+        if (root.origin !== 'comun' || daysSinceLatestEnd > 45) continue;
+
+        for (const milestone of getLegalMilestones(root.origin, chainDays)) {
+          const shouldAlert =
+            (milestone.daysRemaining >= 0 && milestone.daysRemaining <= 20) ||
+            (milestone.isReached && chainDays - milestone.day <= 20);
+
+          if (!shouldAlert) continue;
+
+          alerts.push({
+            id: `legal-${milestone.key}-${root.id}`,
+            type: 'legal_milestone',
+            level: milestone.level,
+            title: milestone.title,
+            description: `${employeeName}: ${milestone.description} Días acumulados: ${chainDays}.`,
+            daysRemaining: milestone.daysRemaining,
+            incapacity: root,
           });
         }
       }
