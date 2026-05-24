@@ -250,46 +250,65 @@ export default function Alertas() {
       {/* KPI Tiles */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Críticas', value: stats.criticalCount, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
-          { label: 'Advertencias', value: stats.warningCount, icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
-          { label: 'Informativas', value: stats.infoCount, icon: Bell, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
-          { label: 'Total Activas', value: stats.totalActive, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={cn(
-              "relative overflow-hidden rounded-xl border bg-background p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
-              stat.border
-            )}
-          >
-            <div className="relative z-10 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
-                <h2 className="mt-1 text-3xl font-black tracking-tight text-foreground">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : stat.value}
-                </h2>
-                <p className="mt-2 line-clamp-2 text-xs font-semibold leading-snug text-muted-foreground">
-                  {stat.color === 'text-destructive'
-                    ? `${alertHighlights.overdueCount} vencidas / ${alertHighlights.nextSevenCount} en 7 días`
-                    : stat.color === 'text-warning'
-                      ? 'Entre 8 y 15 dias para vencer'
-                      : stat.color === 'text-info'
-                        ? 'Seguimiento preventivo activo'
-                        : alertHighlights.dueTodayCount > 0
-                          ? `${alertHighlights.dueTodayCount} vencen hoy`
-                          : alertHighlights.nearestLabel}
-                </p>
+          { label: 'Críticas', value: stats.criticalCount, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/25', accent: 'bg-destructive', status: 'Atención inmediata', detail: `${alertHighlights.overdueCount} vencidas / ${alertHighlights.nextSevenCount} en 7 días` },
+          { label: 'Advertencias', value: stats.warningCount, icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/25', accent: 'bg-warning', status: 'Seguimiento próximo', detail: 'Entre 8 y 15 días para vencer' },
+          { label: 'Informativas', value: stats.infoCount, icon: Bell, color: 'text-info', bg: 'bg-info/10', border: 'border-info/25', accent: 'bg-info', status: 'Control preventivo', detail: 'Seguimiento preventivo activo' },
+          { label: 'Total Activas', value: stats.totalActive, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10', border: 'border-success/25', accent: 'bg-success', status: 'Radar general', detail: alertHighlights.dueTodayCount > 0 ? `${alertHighlights.dueTodayCount} vencen hoy` : alertHighlights.nearestLabel },
+        ].map((stat, i) => {
+          const percent = stats.totalActive > 0
+            ? Math.min(100, Math.round((Number(stat.value) / stats.totalActive) * 100))
+            : 0;
+
+          return (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              className={cn(
+                "group relative overflow-hidden rounded-2xl border bg-background p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
+                stat.border
+              )}
+            >
+              <div className={cn("absolute inset-x-0 top-0 h-1.5", stat.accent)} />
+              <div className={cn("absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-40 blur-2xl", stat.bg)} />
+
+              <div className="relative z-10 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
+                  <div className="mt-2 flex items-end gap-2">
+                    <h2 className="text-4xl font-black leading-none tracking-tight text-foreground">
+                      {isLoading ? <Loader2 className="h-7 w-7 animate-spin text-primary" /> : stat.value}
+                    </h2>
+                    <span className={cn("mb-1 rounded-full px-2 py-0.5 text-[10px] font-black", stat.bg, stat.color)}>
+                      {percent}%
+                    </span>
+                  </div>
+                </div>
+                <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl shadow-inner", stat.bg)}>
+                  <stat.icon className={cn("h-5 w-5", stat.color)} />
+                </div>
               </div>
-              <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-inner", stat.bg)}>
-                <stat.icon className={cn("h-5 w-5", stat.color)} />
+
+              <div className="relative z-10 mt-4">
+                <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className={cn("h-full rounded-full transition-all duration-500", stat.accent)}
+                    style={{ width: `${percent}%` }}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider", stat.bg, stat.color)}>
+                    {stat.status}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs font-bold text-muted-foreground">
+                    {stat.detail}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className={cn("absolute bottom-0 left-0 right-0 h-1", stat.bg)} />
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Advanced Filters */}

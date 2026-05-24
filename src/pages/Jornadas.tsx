@@ -178,7 +178,7 @@ export default function Jornadas() {
           </Button>
         </div>
         <div className="flex-1 bg-white rounded-2xl border border-border p-4 overflow-hidden">
-          <ShiftCalendar />
+          <ShiftCalendar containedScroll />
         </div>
       </div>
     );
