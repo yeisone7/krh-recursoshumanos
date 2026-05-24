@@ -78,6 +78,12 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
   const Icon = typeIcons[alert.type];
   const styles = levelStyles[alert.level];
   const isExpired = alert.daysRemaining < 0;
+  const dueLabel = isExpired
+    ? `Vencido hace ${Math.abs(alert.daysRemaining)} días`
+    : alert.daysRemaining === 0
+      ? 'Vence hoy'
+      : `Vence en ${alert.daysRemaining} días`;
+  const levelLabel = alert.level === 'critical' ? 'Crítica' : alert.level === 'warning' ? 'Advertencia' : 'Informativa';
 
   return (
     <motion.div
@@ -87,58 +93,63 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
       className="group relative"
     >
       <div className={cn(
-        "relative flex flex-col gap-4 rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 group-hover:shadow-[0_10px_30px_rgba(0,0,0,0.03)]",
-        styles.border,
-        "group-hover:border-primary/20"
+        "relative overflow-hidden rounded-xl border bg-background p-4 shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:p-5",
+        styles.border
       )}>
-        {/* Decorative background icon */}
-        <div className="absolute right-6 top-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none transform rotate-12 scale-150">
-          <Icon className="h-20 w-20" />
-        </div>
+        <div className={cn(
+          "absolute inset-y-0 left-0 w-1",
+          alert.level === 'critical' ? 'bg-destructive' : alert.level === 'warning' ? 'bg-warning' : 'bg-info'
+        )} />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-5 relative z-10">
+        <div className="relative z-10 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="flex min-w-0 gap-4">
           <div className={cn(
-            "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner",
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg shadow-inner",
             styles.bg
           )}>
-            <Icon className={cn("w-7 h-7", styles.icon)} />
+            <Icon className={cn("h-5 w-5", styles.icon)} />
           </div>
           
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <h3 className="text-lg font-black tracking-tight text-foreground uppercase leading-tight">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <h3 className="line-clamp-2 text-base font-black leading-tight text-foreground sm:text-lg">
                 {alert.title}
               </h3>
-              <Badge variant="outline" className={cn("rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px]", styles.badge)}>
+              <Badge variant="outline" title={levelLabel} className={cn("rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider", styles.badge)}>
                 {isExpired ? `Vencido hace ${Math.abs(alert.daysRemaining)} días` : `En ${alert.daysRemaining} días`}
               </Badge>
-              <Badge variant="secondary" className="rounded-lg px-2 py-0.5 font-black uppercase tracking-tighter text-[10px] bg-background">
+              <Badge variant="secondary" className="rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                 {typeLabels[alert.type]}
               </Badge>
             </div>
             
-            <p className="text-sm font-medium text-muted-foreground leading-relaxed">
-              <span className="font-black text-foreground uppercase tracking-tight mr-2">{alert.entityName}</span>
+            <p className="mt-1 text-sm font-medium leading-relaxed text-muted-foreground">
+              <span className="font-bold text-foreground">{alert.entityName}</span>
               <span className="opacity-60">•</span>
-              <span className="ml-2">{alert.description}</span>
+              <span className="ml-2 text-muted-foreground">{alert.description}</span>
             </p>
 
             {alert.eventDate && (
-              <div className="mt-2 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+              <div className="mt-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 <Clock className="h-3 w-3" />
                 Fecha evento: {new Date(alert.eventDate).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })}
               </div>
             )}
           </div>
 
-          <div className="flex shrink-0">
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-[150px_auto] lg:grid-cols-1 xl:grid-cols-[150px_auto]">
+            <div className={cn("rounded-lg border px-4 py-3 text-center", styles.bg, styles.border)}>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Vencimiento</p>
+              <p className={cn("mt-1 text-sm font-black", styles.icon)}>{dueLabel}</p>
+            </div>
             <Button 
               variant="outline" 
-              size="lg" 
-              className="h-12 px-6 rounded-xl border-2 font-black uppercase tracking-widest text-[10px] gap-2 transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary group/btn"
+              className="h-12 rounded-lg px-5 text-[10px] font-black uppercase tracking-widest transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground"
               onClick={() => onNavigate(alert.navigateTo || '/')}
             >
-              <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+              <ExternalLink className="h-3.5 w-3.5" />
               Gestionar
             </Button>
           </div>
@@ -185,6 +196,23 @@ export default function Alertas() {
     return filtered;
   }, [alerts, searchTerm, typeFilter, activeTab]);
 
+  const alertHighlights = useMemo(() => {
+    const source = alerts || [];
+    const overdueCount = source.filter((alert) => alert.daysRemaining < 0).length;
+    const dueTodayCount = source.filter((alert) => alert.daysRemaining === 0).length;
+    const nextSevenCount = source.filter((alert) => alert.daysRemaining >= 0 && alert.daysRemaining <= 7).length;
+    const nearestAlert = source
+      .filter((alert) => alert.daysRemaining >= 0)
+      .sort((a, b) => a.daysRemaining - b.daysRemaining)[0];
+
+    return {
+      overdueCount,
+      dueTodayCount,
+      nextSevenCount,
+      nearestLabel: nearestAlert ? `${nearestAlert.entityName} / ${nearestAlert.daysRemaining} días` : 'Sin vencimientos próximos',
+    };
+  }, [alerts]);
+
   const handleNavigate = (path: string) => {
     navigate(path);
   };
@@ -220,7 +248,7 @@ export default function Alertas() {
       </div>
 
       {/* KPI Tiles */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Críticas', value: stats.criticalCount, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
           { label: 'Advertencias', value: stats.warningCount, icon: Clock, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
@@ -233,22 +261,32 @@ export default function Alertas() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
             className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-md",
+              "relative overflow-hidden rounded-xl border bg-background p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
               stat.border
             )}
           >
-            <div className="flex items-center justify-between relative z-10">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-                <h2 className="text-3xl font-black tracking-tight text-foreground">
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{stat.label}</p>
+                <h2 className="mt-1 text-3xl font-black tracking-tight text-foreground">
                   {isLoading ? <Loader2 className="h-6 w-6 animate-spin text-primary" /> : stat.value}
                 </h2>
+                <p className="mt-2 line-clamp-2 text-xs font-semibold leading-snug text-muted-foreground">
+                  {stat.color === 'text-destructive'
+                    ? `${alertHighlights.overdueCount} vencidas / ${alertHighlights.nextSevenCount} en 7 días`
+                    : stat.color === 'text-warning'
+                      ? 'Entre 8 y 15 dias para vencer'
+                      : stat.color === 'text-info'
+                        ? 'Seguimiento preventivo activo'
+                        : alertHighlights.dueTodayCount > 0
+                          ? `${alertHighlights.dueTodayCount} vencen hoy`
+                          : alertHighlights.nearestLabel}
+                </p>
               </div>
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center shadow-inner", stat.bg)}>
-                <stat.icon className={cn("h-6 w-6", stat.color)} />
+              <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg shadow-inner", stat.bg)}>
+                <stat.icon className={cn("h-5 w-5", stat.color)} />
               </div>
             </div>
-            {/* Decorative sparkline-like line */}
             <div className={cn("absolute bottom-0 left-0 right-0 h-1", stat.bg)} />
           </motion.div>
         ))}
@@ -295,22 +333,26 @@ export default function Alertas() {
 
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50">
+        <div className="mb-6 overflow-x-auto pb-1">
+          <TabsList className="grid h-auto min-w-[520px] grid-cols-4 gap-1 rounded-xl border border-border/70 bg-slate-50 p-1 shadow-sm md:min-w-0 md:w-[640px]">
             {[
-              { value: 'all', label: 'TODAS' },
-              { value: 'critical', label: 'CRÍTICAS', count: stats.criticalCount },
-              { value: 'warning', label: 'ADVERTENCIAS' },
-              { value: 'info', label: 'INFORMATIVAS' },
+              { value: 'all', label: 'TODAS', icon: Bell },
+              { value: 'critical', label: 'CRÍTICAS', icon: AlertTriangle, count: stats.criticalCount },
+              { value: 'warning', label: 'ADVERTENCIAS', icon: Clock },
+              { value: 'info', label: 'INFORMATIVAS', icon: CheckCircle },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all whitespace-nowrap relative"
+                className="relative gap-2 rounded-lg px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-muted-foreground shadow-none transition-all data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
               >
+                {(() => {
+                  const TabIcon = tab.icon;
+                  return <TabIcon className="h-3.5 w-3.5" />;
+                })()}
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className="ml-2 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[8px] text-destructive-foreground">
+                  <span className="ml-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-destructive px-1 text-[8px] text-destructive-foreground">
                     {tab.count}
                   </span>
                 )}
