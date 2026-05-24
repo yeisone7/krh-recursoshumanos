@@ -27,7 +27,9 @@ import {
 import {
   Activity,
   AlertTriangle,
+  BadgePercent,
   BarChart3,
+  Briefcase,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -35,10 +37,15 @@ import {
   Filter,
   Gauge,
   Moon,
+  PieChart as PieChartIcon,
   RotateCcw,
+  ShieldCheck,
+  Sparkles,
+  Target,
   TrendingDown,
   TrendingUp,
   Users,
+  Workflow,
   Zap,
 } from 'lucide-react';
 
@@ -51,6 +58,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useContracts } from '@/hooks/useContracts';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -205,6 +213,355 @@ function KpiCard({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function PayrollInfographics({
+  analytics,
+  centerLabel,
+  periodLabelText,
+}: {
+  analytics: any;
+  centerLabel: string;
+  periodLabelText: string;
+}) {
+  const kpis = analytics.kpis || {};
+  const plannedHours = Math.max(1, Number(kpis.plannedHours || 0));
+  const coverage = Math.min(100, Math.max(0, Number(kpis.coverage || 0)));
+  const overtimeRate = Math.min(100, Math.max(0, Number(kpis.overtimeRate || 0)));
+  const absenceRate = Math.min(100, Math.max(0, percent(Number(kpis.absenceHours || 0), plannedHours)));
+  const pressureScore = Math.min(100, Math.round(((100 - coverage) * 0.35) + (overtimeRate * 1.35) + (absenceRate * 1.15)));
+  const topTypes = (analytics.impactRankingByType || []).slice(0, 4);
+  const topCenters = (analytics.impactRankingByCenter || []).slice(0, 4);
+  const monthTrend = (analytics.monthlyTrend || []).slice(-5);
+  const jornadaModes = (analytics.jornadaBreakdown || []).slice(0, 3);
+  const heatmap = (analytics.heatmap || []).slice(-28);
+  const insights = (analytics.insights || []).slice(0, 3);
+  const alerts = (analytics.automaticAlerts || []).slice(0, 3);
+  const maxCenterImpact = Math.max(1, ...topCenters.map((item: any) => Number(item.impact || 0)));
+  const maxMonthNovelties = Math.max(1, ...monthTrend.map((item: any) => Number(item.novedades || 0)));
+  const totalModeImpact = Math.max(1, jornadaModes.reduce((sum: number, item: any) => sum + Number(item.impacto || 0), 0));
+  const palette = ['#0ea5e9', '#ec4899', '#f97316', '#7c3aed', '#10b981'];
+  const overtimeEnd = Math.min(100, coverage + Math.max(4, overtimeRate));
+  const absenceEnd = Math.min(100, overtimeEnd + Math.max(4, absenceRate));
+  const sourceTotal = Math.max(1, (analytics.sourceMix || []).reduce((sum: number, item: any) => sum + Number(item.value || 0), 0));
+  const noveltySourceTotal = Math.max(1, (analytics.noveltySourceMix || []).reduce((sum: number, item: any) => sum + Number(item.value || 0), 0));
+
+  const executiveSignals = [
+    {
+      label: 'Cobertura',
+      value: `${coverage}%`,
+      detail: `${integerFormatter.format(Number(kpis.assignedWorkDays || 0))} jornadas asignadas`,
+      icon: ShieldCheck,
+      color: '#0ea5e9',
+    },
+    {
+      label: 'Presion',
+      value: `${pressureScore}%`,
+      detail: 'Indice combinado de riesgo operativo',
+      icon: Gauge,
+      color: '#f97316',
+    },
+    {
+      label: 'Impacto',
+      value: currencyFormatter.format(Number(kpis.estimatedImpact || 0)),
+      detail: `${integerFormatter.format(Number(kpis.totalNovelties || 0))} novedades liquidadas`,
+      icon: BadgePercent,
+      color: '#ec4899',
+    },
+    {
+      label: 'Personas',
+      value: integerFormatter.format(Number(kpis.impactedEmployees || 0)),
+      detail: 'Empleados con afectacion en el periodo',
+      icon: Users,
+      color: '#7c3aed',
+    },
+  ];
+
+  return (
+    <div className="space-y-5">
+      <Card className="overflow-hidden border-border/80 bg-white">
+        <CardContent className="p-0">
+          <div className="grid gap-0 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="relative min-h-[440px] overflow-hidden bg-slate-50 p-5 sm:p-7">
+              <div className="relative z-10 max-w-xl space-y-3">
+                <Badge variant="outline" className="bg-primary-light text-primary border-primary/20">
+                  <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Infografia de Nomina
+                </Badge>
+                <div>
+                  <h2 className="text-2xl font-black leading-tight text-slate-950 sm:text-4xl">Radiografia operativa del periodo</h2>
+                  <p className="mt-2 text-sm font-medium text-slate-600">{centerLabel} · {periodLabelText}</p>
+                </div>
+              </div>
+
+              <div className="relative mx-auto mt-8 h-[310px] max-w-[560px]">
+                <div className="absolute left-[18%] top-0 h-56 w-56 rounded-full bg-cyan-500 p-7 text-white shadow-xl sm:h-64 sm:w-64">
+                  <Target className="mb-5 h-10 w-10" />
+                  <p className="text-4xl font-black">{coverage}%</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Cobertura</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Mide que tanto la programacion cubre la carga laboral registrada.</p>
+                </div>
+                <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-blue-700 p-7 text-white shadow-xl sm:h-64 sm:w-64">
+                  <Briefcase className="mb-5 h-10 w-10" />
+                  <p className="text-4xl font-black">{integerFormatter.format(Number(kpis.totalNovelties || 0))}</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Novedades</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Volumen real que afecta nomina, jornada y control del periodo.</p>
+                </div>
+                <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-sky-500 p-7 text-white shadow-xl sm:h-64 sm:w-64">
+                  <PieChartIcon className="mb-5 h-10 w-10" />
+                  <p className="text-2xl font-black">{currencyFormatter.format(Number(kpis.estimatedImpact || 0))}</p>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Impacto</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Estimacion monetaria segun salario, tipo y horas reportadas.</p>
+                </div>
+                <div className="absolute left-1/2 top-1/2 flex h-32 w-32 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-slate-200 bg-white text-center shadow-xl">
+                  <span className="text-5xl font-black text-slate-900">3</span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">lecturas clave</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 border-t border-border/70 bg-white p-5 sm:p-7 xl:border-l xl:border-t-0">
+              {executiveSignals.map((signal) => {
+                const Icon = signal.icon;
+                return (
+                  <div key={signal.label} className="flex items-center gap-4 rounded-xl border border-border/80 bg-slate-50 p-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white shadow-sm" style={{ backgroundColor: signal.color }}>
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{signal.label}</p>
+                      <p className="mt-1 text-xl font-black text-slate-950">{signal.value}</p>
+                      <p className="text-xs font-medium text-slate-600">{signal.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Gauge className="h-5 w-5 text-primary" /> Semaforo ejecutivo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 sm:grid-cols-[220px_1fr]">
+            <div className="mx-auto flex h-52 w-52 items-center justify-center rounded-full p-4 shadow-inner" style={{ background: `conic-gradient(#0ea5e9 0 ${coverage}%, #f97316 ${coverage}% ${overtimeEnd}%, #ef4444 ${overtimeEnd}% ${absenceEnd}%, #e2e8f0 ${absenceEnd}% 100%)` }}>
+              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full bg-white text-center shadow-sm">
+                <span className="text-4xl font-black text-slate-950">{pressureScore}%</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">presion</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Cobertura de jornada', value: coverage, color: '#0ea5e9' },
+                { label: 'Tasa horas extra', value: overtimeRate, color: '#f97316' },
+                { label: 'Ausentismo por horas', value: absenceRate, color: '#ef4444' },
+              ].map((item) => (
+                <div key={item.label} className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-bold text-slate-700">{item.label}</span>
+                    <span className="font-black text-slate-950">{item.value}%</span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(4, item.value)}%`, backgroundColor: item.color }} />
+                  </div>
+                </div>
+              ))}
+              <div className="rounded-xl border border-border/80 bg-slate-50 p-3 text-sm text-slate-700">
+                <span className="font-black text-slate-950">Lectura:</span> una presion alta combina baja cobertura, horas extra y ausencias; sirve para priorizar ajustes de turnos y novedades.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Workflow className="h-5 w-5 text-primary" /> Flujo de prioridades por novedad
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(topTypes.length ? topTypes : [{ name: 'Sin novedades', volumen: 0, impacto: 0, horas: 0, prioridad: 'Baja' }]).map((item: any, index: number) => (
+              <div key={`${item.name}-${index}`} className="grid gap-3 rounded-xl border border-border/80 bg-slate-50 p-3 sm:grid-cols-[72px_1fr_auto] sm:items-center">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl text-xl font-black text-white shadow-sm" style={{ backgroundColor: palette[index % palette.length] }}>
+                  {String(index + 1).padStart(2, '0')}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-black text-slate-950">{item.name}</p>
+                    <Badge variant="outline" className="bg-white">{item.prioridad || 'Prioridad'}</Badge>
+                  </div>
+                  <p className="text-xs font-medium text-slate-600">{numberFormatter.format(Number(item.horas || 0))} horas · {integerFormatter.format(Number(item.empleados || 0))} empleados impactados</p>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(6, percent(Number(item.impacto || 0), Math.max(1, Number(topTypes[0]?.impacto || 1))))}%`, backgroundColor: palette[index % palette.length] }} />
+                  </div>
+                </div>
+                <p className="text-right text-sm font-black text-slate-950">{currencyFormatter.format(Number(item.impacto || 0))}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-5 w-5 text-primary" /> Tendencia compacta del periodo
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-5">
+            {(monthTrend.length ? monthTrend : [{ periodo: 'Sin datos', novedades: 0, montoEstimado: 0, empleadosImpactados: 0 }]).map((month: any, index: number) => (
+              <div key={`${month.periodo}-${index}`} className="rounded-xl border border-border/80 bg-slate-50 p-3">
+                <div className="flex h-32 items-end justify-center gap-2">
+                  <div className="w-7 rounded-t-xl bg-sky-500" style={{ height: `${Math.max(10, percent(Number(month.novedades || 0), maxMonthNovelties))}%` }} />
+                  <div className="w-7 rounded-t-xl bg-pink-500" style={{ height: `${Math.max(10, percent(Number(month.empleadosImpactados || 0), Math.max(1, Number(kpis.impactedEmployees || 1))))}%` }} />
+                </div>
+                <p className="mt-3 text-center text-xs font-black uppercase text-slate-700">{month.periodo}</p>
+                <p className="text-center text-[11px] font-medium text-slate-500">{integerFormatter.format(Number(month.novedades || 0))} nov. · {currencyFormatter.format(Number(month.montoEstimado || 0))}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <PieChartIcon className="h-5 w-5 text-primary" /> Mezcla de jornada
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(jornadaModes.length ? jornadaModes : [{ jornada: 'Sin clasificar', impacto: 0, empleados: 0 }]).map((mode: any, index: number) => (
+              <div key={`${mode.jornada}-${index}`} className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-black text-white" style={{ backgroundColor: palette[index % palette.length] }}>
+                  {percent(Number(mode.impacto || 0), totalModeImpact)}%
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-slate-950">{mode.jornada}</p>
+                  <p className="text-xs text-slate-500">{integerFormatter.format(Number(mode.empleados || 0))} empleados · {currencyFormatter.format(Number(mode.impacto || 0))}</p>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="h-5 w-5 text-primary" /> Centros con mayor impacto
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(topCenters.length ? topCenters : [{ name: 'Sin centro', impacto: 0, volumen: 0, empleados: 0 }]).map((center: any, index: number) => (
+              <div key={`${center.name}-${index}`} className="rounded-xl border border-border/80 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-slate-950">{center.name}</p>
+                    <p className="text-xs text-slate-500">{integerFormatter.format(Number(center.volumen || 0))} novedades · {integerFormatter.format(Number(center.empleados || 0))} empleados</p>
+                  </div>
+                  <p className="text-sm font-black text-slate-950">{currencyFormatter.format(Number(center.impacto || 0))}</p>
+                </div>
+                <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full" style={{ width: `${Math.max(6, percent(Number(center.impacto || 0), maxCenterImpact))}%`, backgroundColor: palette[index % palette.length] }} />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Activity className="h-5 w-5 text-primary" /> Lecturas automaticas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {(insights.length ? insights : [{ title: 'Sin hallazgos', value: 'Estable', detail: 'No hay desviaciones relevantes con los filtros actuales.' }]).map((insight: any, index: number) => (
+              <div key={`${insight.title}-${index}`} className="rounded-xl border border-border/80 bg-slate-50 p-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black text-white" style={{ backgroundColor: palette[index % palette.length] }}>{index + 1}</div>
+                  <div>
+                    <p className="text-sm font-black text-slate-950">{insight.title}: {insight.value}</p>
+                    <p className="text-xs font-medium text-slate-600">{insight.detail}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {alerts.map((alert: any, index: number) => (
+              <div key={`${alert.id}-${index}`} className="rounded-xl border border-warning/30 bg-warning-light/40 p-3">
+                <p className="text-sm font-black text-slate-950">{alert.tipo}</p>
+                <p className="text-xs font-medium text-slate-600">{alert.periodo} · {alert.valor}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Workflow className="h-5 w-5 text-primary" /> Origen de datos
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">Programacion</p>
+              {(analytics.sourceMix || []).map((source: any, index: number) => (
+                <div key={`${source.name}-${index}`} className="mb-2 grid grid-cols-[92px_1fr_48px] items-center gap-2 text-xs">
+                  <span className="truncate font-bold text-slate-700">{source.name}</span>
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(5, percent(Number(source.value || 0), sourceTotal))}%`, backgroundColor: palette[index % palette.length] }} />
+                  </div>
+                  <span className="text-right font-black">{percent(Number(source.value || 0), sourceTotal)}%</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">Novedades</p>
+              {(analytics.noveltySourceMix || []).map((source: any, index: number) => (
+                <div key={`${source.name}-${index}`} className="mb-2 grid grid-cols-[92px_1fr_48px] items-center gap-2 text-xs">
+                  <span className="truncate font-bold text-slate-700">{source.name}</span>
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(5, percent(Number(source.value || 0), noveltySourceTotal))}%`, backgroundColor: palette[(index + 2) % palette.length] }} />
+                  </div>
+                  <span className="text-right font-black">{percent(Number(source.value || 0), noveltySourceTotal)}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CalendarDays className="h-5 w-5 text-primary" /> Mapa visual de intensidad reciente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2">
+              {(heatmap.length ? heatmap : Array.from({ length: 14 }, (_, index) => ({ fecha: `D${index + 1}`, intensidad: 0, asignaciones: 0, novedades: 0 }))).map((day: any, index: number) => {
+                const intensity = Number(day.intensidad || 0);
+                const color = intensity >= 75 ? '#ef4444' : intensity >= 45 ? '#f97316' : intensity >= 20 ? '#0ea5e9' : '#cbd5e1';
+                return (
+                  <div key={`${day.fecha}-${index}`} className="min-h-[72px] rounded-xl border border-border/80 bg-slate-50 p-2">
+                    <div className="h-4 rounded-full" style={{ width: `${Math.max(18, intensity)}%`, backgroundColor: color }} />
+                    <p className="mt-2 text-xs font-black text-slate-950">{day.fecha}</p>
+                    <p className="text-[11px] font-medium text-slate-500">{intensity}% · {integerFormatter.format(Number(day.novedades || 0))} nov.</p>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
 
@@ -639,6 +996,9 @@ export default function AnaliticaNomina() {
     };
   }, [assignments, centerAlertThresholds, centerNameMap, comparisonAssignments, comparisonMode, employeeCenterMap, filteredComparisonNovelties, filteredConfigs, filteredNovelties, payrollConfig?.daily_hours, salaryByEmployee, severityThreshold, shiftCycles, shifts, startDate, endDate, typeAlertThresholds, volumeThreshold, workSchedules]);
 
+  const selectedCenterLabel = centerFilter === 'all' ? 'Todos los centros' : centerNameMap.get(centerFilter) || 'Centro seleccionado';
+  const selectedPeriodLabel = `${asDate(startDate) ? format(asDate(startDate) as Date, 'dd MMM yyyy', { locale: es }) : 'Sin inicio'} - ${asDate(endDate) ? format(asDate(endDate) as Date, 'dd MMM yyyy', { locale: es }) : 'Sin fin'}`;
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -767,6 +1127,19 @@ export default function AnaliticaNomina() {
         </CardContent>
       </Card>
 
+      <Tabs defaultValue="indicadores" className="space-y-4 sm:space-y-6">
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="grid h-auto min-w-[360px] grid-cols-2 gap-1 rounded-xl border border-border/70 bg-slate-50 p-1 shadow-sm sm:w-[520px]">
+            <TabsTrigger value="indicadores" className="gap-2 rounded-lg py-2.5 text-xs font-black uppercase tracking-[0.12em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <BarChart3 className="h-4 w-4" /> Indicadores
+            </TabsTrigger>
+            <TabsTrigger value="infografias" className="gap-2 rounded-lg py-2.5 text-xs font-black uppercase tracking-[0.12em] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Sparkles className="h-4 w-4" /> Infografias
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="indicadores" className="space-y-4 sm:space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Novedades mensuales" value={analytics.kpis.totalNovelties} detail="Total en el rango filtrado" icon={BarChart3} trend="neutral" />
         <KpiCard title="Horas por jornada" value={numberFormatter.format(analytics.kpis.hoursPerWorkday)} detail="Horas de novedades / jornadas" icon={Clock} trend={analytics.kpis.hoursPerWorkday <= 1 ? 'up' : 'down'} />
@@ -1241,6 +1614,12 @@ export default function AnaliticaNomina() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="infografias" className="space-y-4 sm:space-y-6">
+          <PayrollInfographics analytics={analytics} centerLabel={selectedCenterLabel} periodLabelText={selectedPeriodLabel} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
