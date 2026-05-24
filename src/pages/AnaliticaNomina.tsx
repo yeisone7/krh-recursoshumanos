@@ -246,6 +246,10 @@ function PayrollInfographics({
   const absenceEnd = Math.min(100, overtimeEnd + Math.max(4, absenceRate));
   const sourceTotal = Math.max(1, (analytics.sourceMix || []).reduce((sum: number, item: any) => sum + Number(item.value || 0), 0));
   const noveltySourceTotal = Math.max(1, (analytics.noveltySourceMix || []).reduce((sum: number, item: any) => sum + Number(item.value || 0), 0));
+  const maxTypeVolume = Math.max(1, ...topTypes.map((item: any) => Number(item.volumen || 0)));
+  const maxTypeHours = Math.max(1, ...topTypes.map((item: any) => Number(item.horas || 0)));
+  const sourceMix = analytics.sourceMix || [];
+  const noveltyMix = analytics.noveltySourceMix || [];
 
   const executiveSignals = [
     {
@@ -275,6 +279,72 @@ function PayrollInfographics({
       detail: 'Empleados con afectacion en el periodo',
       icon: Users,
       color: '#7c3aed',
+    },
+  ];
+
+  const commandControls = [
+    {
+      title: 'Horas programadas',
+      value: integerFormatter.format(Number(kpis.plannedHours || 0)),
+      detail: 'Carga base del periodo',
+      pct: Math.min(100, percent(Number(kpis.plannedHours || 0), Number(kpis.plannedHours || 0) + Number(kpis.noveltyHours || 0))),
+      icon: Clock,
+      color: '#0ea5e9',
+    },
+    {
+      title: 'Horas novedad',
+      value: numberFormatter.format(Number(kpis.noveltyHours || 0)),
+      detail: 'Eventos que afectan nomina',
+      pct: Math.min(100, percent(Number(kpis.noveltyHours || 0), plannedHours)),
+      icon: Activity,
+      color: '#ec4899',
+    },
+    {
+      title: 'Horas extra',
+      value: numberFormatter.format(Number(kpis.overtimeHours || 0)),
+      detail: 'Presion adicional',
+      pct: overtimeRate,
+      icon: Zap,
+      color: '#f97316',
+    },
+    {
+      title: 'Ausencias',
+      value: numberFormatter.format(Number(kpis.absenceHours || 0)),
+      detail: 'Incapacidades, permisos y vacaciones',
+      pct: absenceRate,
+      icon: AlertTriangle,
+      color: '#ef4444',
+    },
+  ];
+
+  const flowControls = [
+    {
+      title: 'Planear',
+      metric: `${coverage}%`,
+      detail: 'Cobertura de jornadas',
+      color: '#0ea5e9',
+      icon: CalendarDays,
+    },
+    {
+      title: 'Detectar',
+      metric: integerFormatter.format(Number(kpis.totalNovelties || 0)),
+      detail: 'Novedades encontradas',
+      color: '#ec4899',
+      icon: Target,
+    },
+    {
+      title: 'Priorizar',
+      metric: topTypes[0]?.name || 'Sin novedades',
+      detail: 'Mayor foco por impacto',
+      color: '#7c3aed',
+      icon: Workflow,
+    },
+    {
+      title: 'Controlar',
+      metric: `${pressureScore}%`,
+      detail: 'Presion operativa',
+      color: '#f97316',
+      icon: Gauge,
     },
   ];
 
@@ -340,6 +410,175 @@ function PayrollInfographics({
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-5 w-5 text-primary" /> Centro de mando visual
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {commandControls.map((control) => {
+              const Icon = control.icon;
+              const ring = Math.max(3, Math.min(100, control.pct));
+              return (
+                <div key={control.title} className="relative overflow-hidden rounded-2xl border border-border/80 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{control.title}</p>
+                      <p className="mt-2 text-2xl font-black text-slate-950">{control.value}</p>
+                      <p className="mt-1 text-xs font-semibold text-slate-600">{control.detail}</p>
+                    </div>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm" style={{ backgroundColor: control.color }}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full p-1" style={{ background: `conic-gradient(${control.color} 0 ${ring}%, #e2e8f0 ${ring}% 100%)` }}>
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xs font-black text-slate-950">{Math.round(ring)}%</div>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="h-3 overflow-hidden rounded-full bg-white">
+                        <div className="h-full rounded-full" style={{ width: `${ring}%`, backgroundColor: control.color }} />
+                      </div>
+                      <p className="mt-2 text-[11px] font-bold text-slate-500">Lectura porcentual sobre la carga filtrada</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BadgePercent className="h-5 w-5 text-primary" /> Panel de mezcla
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {(sourceMix.length ? sourceMix : [{ name: 'Sin programacion', value: 0 }]).slice(0, 4).map((source: any, index: number) => (
+                <div key={`program-${source.name}-${index}`} className="rounded-2xl border border-border/80 bg-slate-50 p-3 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full text-sm font-black text-white" style={{ backgroundColor: palette[index % palette.length] }}>
+                    {percent(Number(source.value || 0), sourceTotal)}%
+                  </div>
+                  <p className="mt-2 truncate text-xs font-black uppercase text-slate-700">{source.name}</p>
+                  <p className="text-[11px] font-medium text-slate-500">Programacion</p>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {(noveltyMix.length ? noveltyMix : [{ name: 'Sin novedades', value: 0 }]).slice(0, 4).map((source: any, index: number) => (
+                <div key={`novelty-${source.name}-${index}`} className="grid grid-cols-[32px_1fr_44px] items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-white" style={{ backgroundColor: palette[(index + 2) % palette.length] }}>{index + 1}</div>
+                  <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full" style={{ width: `${Math.max(5, percent(Number(source.value || 0), noveltySourceTotal))}%`, backgroundColor: palette[(index + 2) % palette.length] }} />
+                  </div>
+                  <span className="text-right text-xs font-black text-slate-950">{percent(Number(source.value || 0), noveltySourceTotal)}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Workflow className="h-5 w-5 text-primary" /> Ruta visual de control de nomina
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-4">
+            {flowControls.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.title} className="relative overflow-hidden rounded-2xl border border-border/80 bg-slate-50 p-4">
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full text-sm font-black text-white shadow-sm" style={{ backgroundColor: step.color }}>
+                      {String(index + 1).padStart(2, '0')}
+                    </div>
+                    <Icon className="h-7 w-7" style={{ color: step.color }} />
+                  </div>
+                  <p className="text-sm font-black uppercase tracking-[0.12em] text-slate-500">{step.title}</p>
+                  <p className="mt-2 min-h-[36px] text-xl font-black leading-tight text-slate-950">{step.metric}</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-600">{step.detail}</p>
+                  <div className="mt-4 h-1.5 rounded-full" style={{ backgroundColor: step.color }} />
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <PieChartIcon className="h-5 w-5 text-primary" /> Variables criticas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            {(topTypes.length ? topTypes : [{ name: 'Sin novedades', volumen: 0, horas: 0, impacto: 0 }]).map((item: any, index: number) => (
+              <div key={`variable-${item.name}-${index}`} className="rounded-2xl border border-border/80 bg-slate-50 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-black text-white" style={{ backgroundColor: palette[index % palette.length] }}>
+                    {String.fromCharCode(65 + index)}
+                  </div>
+                  <Badge variant="outline" className="bg-white">{integerFormatter.format(Number(item.volumen || 0))} casos</Badge>
+                </div>
+                <p className="min-h-[38px] text-sm font-black leading-tight text-slate-950">{item.name}</p>
+                <div className="mt-3 space-y-2">
+                  <div className="grid grid-cols-[60px_1fr_44px] items-center gap-2 text-[11px] font-bold text-slate-600">
+                    <span>Volumen</span>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-white">
+                      <div className="h-full rounded-full" style={{ width: `${Math.max(5, percent(Number(item.volumen || 0), maxTypeVolume))}%`, backgroundColor: palette[index % palette.length] }} />
+                    </div>
+                    <span className="text-right">{percent(Number(item.volumen || 0), maxTypeVolume)}%</span>
+                  </div>
+                  <div className="grid grid-cols-[60px_1fr_44px] items-center gap-2 text-[11px] font-bold text-slate-600">
+                    <span>Horas</span>
+                    <div className="h-2.5 overflow-hidden rounded-full bg-white">
+                      <div className="h-full rounded-full" style={{ width: `${Math.max(5, percent(Number(item.horas || 0), maxTypeHours))}%`, backgroundColor: palette[(index + 1) % palette.length] }} />
+                    </div>
+                    <span className="text-right">{numberFormatter.format(Number(item.horas || 0))}</span>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs font-black text-slate-950">{currencyFormatter.format(Number(item.impacto || 0))}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="h-5 w-5 text-primary" /> Comparativo de centros
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2">
+              {(topCenters.length ? topCenters : [{ name: 'Sin centro', impacto: 0, volumen: 0, empleados: 0 }]).map((center: any, index: number) => (
+                <div key={`tile-center-${center.name}-${index}`} className="grid grid-cols-[54px_1fr] gap-3 rounded-2xl border border-border/80 bg-slate-50 p-3">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full text-lg font-black text-white" style={{ backgroundColor: palette[index % palette.length] }}>
+                    {index + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-slate-950">{center.name}</p>
+                    <p className="text-xs font-medium text-slate-500">{integerFormatter.format(Number(center.volumen || 0))} novedades · {integerFormatter.format(Number(center.empleados || 0))} emp.</p>
+                    <div className="mt-2 h-3 overflow-hidden rounded-full bg-white">
+                      <div className="h-full rounded-full" style={{ width: `${Math.max(6, percent(Number(center.impacto || 0), maxCenterImpact))}%`, backgroundColor: palette[index % palette.length] }} />
+                    </div>
+                    <p className="mt-2 text-xs font-black text-slate-950">{currencyFormatter.format(Number(center.impacto || 0))}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="overflow-hidden">
