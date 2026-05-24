@@ -62,6 +62,7 @@ interface GroupedEmployee {
 
 interface ShiftCalendarProps {
   centerId?: string;
+  containedScroll?: boolean;
 }
 
 interface CalendarCellProps {
@@ -381,7 +382,7 @@ const CalendarCell = memo(({
          prevProps.activeShifts === nextProps.activeShifts;
 });
 
-export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
+export function ShiftCalendar({ centerId: propCenterId, containedScroll = false }: ShiftCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('quincenal');
   const [selectedCenterId, setSelectedCenterId] = useState<string>(propCenterId || 'all');
@@ -825,6 +826,16 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
     return `${format(currentMonth, 'MMM')} - ${format(addMonths(currentMonth, 2), 'MMM yyyy', { locale: es })}`;
   }, [viewMode, startDate, endDate, currentMonth]);
 
+  const handleCalendarWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (containedScroll || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+
+    const parentViewport = e.currentTarget.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (!parentViewport) return;
+
+    e.preventDefault();
+    parentViewport.scrollTop += e.deltaY;
+  }, [containedScroll]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -835,7 +846,10 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 gap-2 overflow-hidden">
+    <div className={cn(
+      "flex flex-col gap-2",
+      containedScroll ? "flex-1 min-h-0 overflow-hidden" : "min-h-0 overflow-visible"
+    )}>
       {/* Header Controls */}
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 sm:flex sm:items-center sm:justify-between">
@@ -955,7 +969,15 @@ export function ShiftCalendar({ centerId: propCenterId }: ShiftCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg overflow-auto flex-1 min-h-[260px] sm:min-h-0 overscroll-contain">
+      <div
+        className={cn(
+          "border rounded-lg min-h-[260px]",
+          containedScroll
+            ? "flex-1 overflow-auto sm:min-h-0 overscroll-auto"
+            : "overflow-x-auto overflow-y-hidden overscroll-x-contain"
+        )}
+        onWheel={handleCalendarWheel}
+      >
         <div className="min-w-max">
           {/* Days Header */}
           <div className="flex bg-background sticky top-0 z-10">
