@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { 
   Bell, Search, Filter, AlertTriangle, Clock, FileText, 
   Stethoscope, Package, CheckCircle, Award, Palmtree, 
-  HeartPulse, Landmark, ExternalLink, Loader2, Warehouse
+  HeartPulse, Landmark, ExternalLink, Loader2, Warehouse,
+  BarChart3, PieChart, Activity, Gauge, ShieldAlert, TrendingUp, Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -159,6 +160,268 @@ function AlertCard({ alert, onNavigate }: { alert: UnifiedAlert; onNavigate: (pa
   );
 }
 
+function AlertInfographics({ alerts, stats }: { alerts: UnifiedAlert[]; stats: ReturnType<typeof useAlertStats> }) {
+  const data = useMemo(() => {
+    const total = alerts.length;
+    const levelCounts = {
+      critical: alerts.filter((alert) => alert.level === 'critical').length,
+      warning: alerts.filter((alert) => alert.level === 'warning').length,
+      info: alerts.filter((alert) => alert.level === 'info').length,
+    };
+    const overdue = alerts.filter((alert) => alert.daysRemaining < 0).length;
+    const today = alerts.filter((alert) => alert.daysRemaining === 0).length;
+    const next7 = alerts.filter((alert) => alert.daysRemaining > 0 && alert.daysRemaining <= 7).length;
+    const next15 = alerts.filter((alert) => alert.daysRemaining > 7 && alert.daysRemaining <= 15).length;
+    const next30 = alerts.filter((alert) => alert.daysRemaining > 15 && alert.daysRemaining <= 30).length;
+    const pressure = total > 0
+      ? Math.min(100, Math.round(((levelCounts.critical * 1.4 + levelCounts.warning * 0.8 + overdue * 1.8 + today) / Math.max(total, 1)) * 45))
+      : 0;
+
+    const typeDistribution = Object.entries(
+      alerts.reduce<Record<string, number>>((acc, alert) => {
+        const label = typeLabels[alert.type] || alert.type;
+        acc[label] = (acc[label] || 0) + 1;
+        return acc;
+      }, {})
+    )
+      .map(([label, value]) => ({
+        label,
+        value,
+        percent: total > 0 ? Math.round((value / total) * 100) : 0,
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    const nearest = [...alerts]
+      .sort((a, b) => a.daysRemaining - b.daysRemaining)
+      .slice(0, 5);
+
+    return {
+      total,
+      levelCounts,
+      overdue,
+      today,
+      next7,
+      next15,
+      next30,
+      pressure,
+      typeDistribution,
+      nearest,
+    };
+  }, [alerts]);
+
+  const severityItems = [
+    { label: 'Críticas', value: data.levelCounts.critical, color: 'bg-[#ef4444]', text: 'text-[#ef4444]' },
+    { label: 'Advertencias', value: data.levelCounts.warning, color: 'bg-[#f59e0b]', text: 'text-[#f59e0b]' },
+    { label: 'Informativas', value: data.levelCounts.info, color: 'bg-[#0ea5e9]', text: 'text-[#0ea5e9]' },
+  ];
+  const timingItems = [
+    { label: 'Vencidas', value: data.overdue, color: 'bg-[#ef4444]' },
+    { label: 'Hoy', value: data.today, color: 'bg-[#f97316]' },
+    { label: '1-7 días', value: data.next7, color: 'bg-[#f59e0b]' },
+    { label: '8-15 días', value: data.next15, color: 'bg-[#22c55e]' },
+    { label: '16-30 días', value: data.next30, color: 'bg-[#0ea5e9]' },
+  ];
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+  const criticalDash = data.total > 0 ? (data.levelCounts.critical / data.total) * circumference : 0;
+  const warningDash = data.total > 0 ? (data.levelCounts.warning / data.total) * circumference : 0;
+  const infoDash = data.total > 0 ? (data.levelCounts.info / data.total) * circumference : 0;
+
+  if (data.total === 0) {
+    return (
+      <div className="rounded-2xl border border-border bg-background p-8 text-center">
+        <CheckCircle className="mx-auto mb-3 h-12 w-12 text-success" />
+        <h3 className="text-lg font-black text-foreground">Sin alertas activas</h3>
+        <p className="mt-1 text-sm font-medium text-muted-foreground">No hay datos pendientes para construir la infografía.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="relative overflow-hidden rounded-2xl border border-border bg-background p-5 shadow-sm">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <Badge className="rounded-md bg-primary px-2 py-1 text-[10px] font-black uppercase tracking-widest text-primary-foreground">Mapa ejecutivo</Badge>
+              <h3 className="mt-3 text-2xl font-black tracking-tight text-foreground">Radar de vencimientos</h3>
+              <p className="text-sm font-medium text-muted-foreground">Concentración real por criticidad y horizonte operativo.</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <PieChart className="h-6 w-6" />
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
+            <div className="relative mx-auto h-56 w-56">
+              <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="12" />
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="#ef4444" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${criticalDash} ${circumference}`} />
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="#f59e0b" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${warningDash} ${circumference}`} strokeDashoffset={-criticalDash} />
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="#0ea5e9" strokeWidth="12" strokeLinecap="round" strokeDasharray={`${infoDash} ${circumference}`} strokeDashoffset={-(criticalDash + warningDash)} />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-5xl font-black leading-none text-foreground">{data.total}</span>
+                <span className="mt-1 text-[10px] font-black uppercase tracking-widest text-muted-foreground">alertas activas</span>
+              </div>
+            </div>
+
+            <div className="grid content-center gap-3">
+              {severityItems.map((item, index) => {
+                const percent = data.total > 0 ? Math.round((item.value / data.total) * 100) : 0;
+                return (
+                  <div key={item.label} className="grid grid-cols-[36px_1fr_auto] items-center gap-3 rounded-xl border border-border bg-slate-50/60 p-3">
+                    <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg text-sm font-black text-white", item.color)}>
+                      {index + 1}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <span className="text-xs font-black uppercase tracking-widest text-foreground">{item.label}</span>
+                        <span className={cn("text-xs font-black", item.text)}>{percent}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-background">
+                        <div className={cn("h-full rounded-full", item.color)} style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                    <span className="text-2xl font-black text-foreground">{item.value}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="overflow-hidden rounded-2xl border border-border bg-slate-950 p-5 text-white shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">Índice de presión</p>
+                <h3 className="mt-2 text-5xl font-black leading-none">{data.pressure}%</h3>
+              </div>
+              <Gauge className="h-10 w-10 text-cyan-300" />
+            </div>
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-cyan-400" style={{ width: `${data.pressure}%` }} />
+            </div>
+            <p className="mt-4 text-sm font-semibold leading-relaxed text-slate-300">
+              {data.overdue + data.today > 0
+                ? `${data.overdue + data.today} alerta(s) requieren gestión inmediata.`
+                : 'No hay vencimientos para hoy ni vencidos.'}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-border bg-background p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Horizonte</p>
+                <h3 className="text-lg font-black text-foreground">Cuándo actuar</h3>
+              </div>
+              <Activity className="h-6 w-6 text-primary" />
+            </div>
+            <div className="space-y-3">
+              {timingItems.map((item) => {
+                const percent = data.total > 0 ? Math.round((item.value / data.total) * 100) : 0;
+                return (
+                  <div key={item.label} className="grid grid-cols-[72px_1fr_38px] items-center gap-3">
+                    <span className="text-xs font-black text-muted-foreground">{item.label}</span>
+                    <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                      <div className={cn("h-full rounded-full", item.color)} style={{ width: `${percent}%` }} />
+                    </div>
+                    <span className="text-right text-sm font-black text-foreground">{item.value}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+        <div className="rounded-2xl border border-border bg-background p-5 shadow-sm">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Módulos con más alertas</p>
+              <h3 className="text-xl font-black text-foreground">Distribución por tipo</h3>
+            </div>
+            <BarChart3 className="h-6 w-6 text-primary" />
+          </div>
+          <div className="space-y-3">
+            {data.typeDistribution.slice(0, 6).map((item, index) => (
+              <div key={item.label} className="grid grid-cols-[32px_1fr_auto] items-center gap-3">
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black text-white",
+                  index % 4 === 0 && "bg-[#0ea5e9]",
+                  index % 4 === 1 && "bg-[#8b5cf6]",
+                  index % 4 === 2 && "bg-[#f97316]",
+                  index % 4 === 3 && "bg-[#10b981]"
+                )}>
+                  {index + 1}
+                </div>
+                <div className="min-w-0">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="truncate text-xs font-black uppercase tracking-wider text-foreground">{item.label}</span>
+                    <span className="text-xs font-black text-muted-foreground">{item.percent}%</span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${item.percent}%` }} />
+                  </div>
+                </div>
+                <span className="text-lg font-black text-foreground">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-background p-5 shadow-sm">
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Prioridad operativa</p>
+              <h3 className="text-xl font-black text-foreground">Próximas gestiones</h3>
+            </div>
+            <ShieldAlert className="h-6 w-6 text-primary" />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {data.nearest.map((alert, index) => {
+              const styles = levelStyles[alert.level];
+              return (
+                <div key={alert.id} className={cn("relative overflow-hidden rounded-xl border p-4", styles.border, styles.bg)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">#{index + 1} {typeLabels[alert.type]}</span>
+                      <h4 className="mt-1 line-clamp-2 text-sm font-black text-foreground">{alert.entityName}</h4>
+                      <p className="mt-1 line-clamp-2 text-xs font-semibold text-muted-foreground">{alert.title}</p>
+                    </div>
+                    <Badge className={cn("shrink-0 rounded-md px-2 py-1 text-[10px] font-black", styles.badge)}>
+                      {alert.daysRemaining < 0 ? `${Math.abs(alert.daysRemaining)}d vencida` : `${alert.daysRemaining}d`}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-4">
+        {[
+          { label: 'Total radar', value: stats.totalActive, icon: Sparkles, color: 'text-primary', bg: 'bg-primary/10' },
+          { label: 'Vencidas', value: data.overdue, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+          { label: 'Vencen hoy', value: data.today, icon: Clock, color: 'text-warning', bg: 'bg-warning/10' },
+          { label: 'Próximas 7 días', value: data.next7, icon: TrendingUp, color: 'text-info', bg: 'bg-info/10' },
+        ].map((item) => (
+          <div key={item.label} className="rounded-2xl border border-border bg-background p-5 shadow-sm">
+            <div className={cn("mb-4 flex h-11 w-11 items-center justify-center rounded-xl", item.bg)}>
+              <item.icon className={cn("h-5 w-5", item.color)} />
+            </div>
+            <p className="text-3xl font-black leading-none text-foreground">{item.value}</p>
+            <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">{item.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Alertas() {
   const navigate = useNavigate();
   const { data: alerts, isLoading, error } = useUnifiedAlerts();
@@ -189,12 +452,14 @@ export default function Alertas() {
     }
     
     // Filter by level (tab)
-    if (activeTab !== 'all') {
+    if (activeTab !== 'all' && activeTab !== 'infographics') {
       filtered = filtered.filter(a => a.level === activeTab);
     }
     
     return filtered;
   }, [alerts, searchTerm, typeFilter, activeTab]);
+
+  const filteredStats = useAlertStats(filteredAlerts);
 
   const alertHighlights = useMemo(() => {
     const source = alerts || [];
@@ -226,18 +491,18 @@ export default function Alertas() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
+    <div className="flex h-full min-h-0 flex-col space-y-4 sm:space-y-5">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-md shadow-primary/10">
-            <Bell className="h-8 w-8 text-primary-foreground" />
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent px-5 py-4 shadow-sm sm:px-7 sm:py-5">
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/10 sm:h-14 sm:w-14">
+            <Bell className="h-6 w-6 text-primary-foreground sm:h-7 sm:w-7" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase">
+            <h1 className="text-xl font-black uppercase tracking-tight text-foreground sm:text-3xl">
               Centro de <span className="text-primary">Alertas</span>
             </h1>
-            <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
+            <p className="mt-1 max-w-2xl text-sm font-medium leading-snug text-muted-foreground sm:text-base">
               Monitoreo centralizado de vencimientos y eventos críticos. Mantén el control total sobre los hitos operativos de tu organización.
             </p>
           </div>
@@ -353,12 +618,13 @@ export default function Alertas() {
       {/* Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="mb-6 overflow-x-auto pb-1">
-          <TabsList className="grid h-auto min-w-[520px] grid-cols-4 gap-1 rounded-xl border border-border/70 bg-slate-50 p-1 shadow-sm md:min-w-0 md:w-[640px]">
+          <TabsList className="grid h-auto min-w-[680px] grid-cols-5 gap-1 rounded-xl border border-border/70 bg-slate-50 p-1 shadow-sm md:min-w-0 md:w-[820px]">
             {[
               { value: 'all', label: 'TODAS', icon: Bell },
               { value: 'critical', label: 'CRÍTICAS', icon: AlertTriangle, count: stats.criticalCount },
               { value: 'warning', label: 'ADVERTENCIAS', icon: Clock },
               { value: 'info', label: 'INFORMATIVAS', icon: CheckCircle },
+              { value: 'infographics', label: 'INFOGRAFÍAS', icon: BarChart3 },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -385,6 +651,8 @@ export default function Alertas() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
+          ) : activeTab === 'infographics' ? (
+            <AlertInfographics alerts={filteredAlerts} stats={filteredStats} />
           ) : filteredAlerts.length === 0 ? (
             <div className="text-center py-12">
               <CheckCircle className="w-12 h-12 text-success mx-auto mb-3" />
