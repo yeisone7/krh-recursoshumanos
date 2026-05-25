@@ -85,16 +85,16 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg flex flex-col gap-0 p-0">
+      <SheetContent className="flex w-full max-w-full flex-col gap-0 p-0 sm:max-w-lg">
         {/* Header */}
-        <SheetHeader className="px-6 py-5 border-b">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
+        <SheetHeader className="border-b px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="shrink-0 rounded-lg bg-primary/10 p-2">
               <Activity className="w-5 h-5 text-primary" />
             </div>
-            <div>
+            <div className="min-w-0">
               <SheetTitle className="text-base">Detalle del Evento</SheetTitle>
-              <SheetDescription className="text-xs">
+              <SheetDescription className="text-xs leading-relaxed">
                 {format(new Date(log.created_at), "dd 'de' MMMM 'de' yyyy 'a las' HH:mm:ss", { locale: es })}
               </SheetDescription>
             </div>
@@ -113,7 +113,7 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
         </SheetHeader>
 
         <ScrollArea className="flex-1">
-          <div className="px-6 py-5 space-y-6">
+          <div className="space-y-6 px-4 py-5 sm:px-6">
 
             {/* Descripción */}
             {log.description && (
