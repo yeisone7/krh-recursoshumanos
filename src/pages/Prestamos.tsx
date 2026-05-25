@@ -168,21 +168,21 @@ export default function Prestamos() {
       </div>
 
       <Tabs defaultValue="listado" className="space-y-4">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto sm:flex-wrap">
-          <TabsTrigger value="listado" className="min-h-10 px-2 text-xs sm:text-sm">
-            <Receipt className="w-4 h-4 mr-1.5 sm:mr-2" />
+        <TabsList className="h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
+          <TabsTrigger value="listado" className="h-10 min-w-[118px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <Receipt className="h-4 w-4 shrink-0" />
             Listado
           </TabsTrigger>
-          <TabsTrigger value="dashboard" className="min-h-10 px-2 text-xs sm:text-sm">
-            <BarChart3 className="w-4 h-4 mr-1.5 sm:mr-2" />
+          <TabsTrigger value="dashboard" className="h-10 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <BarChart3 className="h-4 w-4 shrink-0" />
             Dashboard
           </TabsTrigger>
-          <TabsTrigger value="calendario" className="min-h-10 px-2 text-xs sm:text-sm">
-            <CreditCard className="w-4 h-4 mr-1.5 sm:mr-2" />
+          <TabsTrigger value="calendario" className="h-10 min-w-[130px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <CreditCard className="h-4 w-4 shrink-0" />
             Calendario
           </TabsTrigger>
-          <TabsTrigger value="riesgo" className="min-h-10 px-2 text-xs sm:text-sm">
-            <AlertTriangle className="w-4 h-4 mr-1.5 sm:mr-2" />
+          <TabsTrigger value="riesgo" className="h-10 min-w-[118px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
             Scoring
           </TabsTrigger>
         </TabsList>

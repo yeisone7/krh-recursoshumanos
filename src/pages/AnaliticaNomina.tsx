@@ -353,7 +353,7 @@ function PayrollInfographics({
       <Card className="overflow-hidden border-border/80 bg-white">
         <CardContent className="p-0">
           <div className="grid gap-0 xl:grid-cols-[1.05fr_0.95fr]">
-            <div className="relative min-h-[440px] overflow-hidden bg-slate-50 p-5 sm:p-7">
+            <div className="relative overflow-hidden bg-slate-50 p-5 sm:p-7">
               <div className="relative z-10 max-w-xl space-y-3">
                 <Badge variant="outline" className="bg-primary-light text-primary border-primary/20">
                   <Sparkles className="mr-1.5 h-3.5 w-3.5" /> Infografia de Nomina
@@ -364,28 +364,72 @@ function PayrollInfographics({
                 </div>
               </div>
 
-              <div className="relative mx-auto mt-8 h-[310px] max-w-[560px]">
-                <div className="absolute left-[18%] top-0 h-56 w-56 rounded-full bg-cyan-500 p-7 text-white shadow-xl sm:h-64 sm:w-64">
-                  <Target className="mb-5 h-10 w-10" />
-                  <p className="text-4xl font-black">{coverage}%</p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Cobertura</p>
-                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Mide que tanto la programacion cubre la carga laboral registrada.</p>
+              <div className="mt-7 grid gap-3 lg:hidden">
+                {[
+                  {
+                    label: 'Cobertura',
+                    value: `${coverage}%`,
+                    detail: 'Mide que tanto la programacion cubre la carga laboral registrada.',
+                    icon: Target,
+                    color: '#06b6d4',
+                  },
+                  {
+                    label: 'Novedades',
+                    value: integerFormatter.format(Number(kpis.totalNovelties || 0)),
+                    detail: 'Volumen real que afecta nomina, jornada y control del periodo.',
+                    icon: Briefcase,
+                    color: '#1d4ed8',
+                  },
+                  {
+                    label: 'Impacto',
+                    value: currencyFormatter.format(Number(kpis.estimatedImpact || 0)),
+                    detail: 'Estimacion monetaria segun salario, tipo y horas reportadas.',
+                    icon: PieChartIcon,
+                    color: '#0ea5e9',
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="grid grid-cols-[54px_1fr] items-center gap-3 rounded-2xl p-4 text-white shadow-sm" style={{ backgroundColor: item.color }}>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15">
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="break-words text-2xl font-black leading-tight">{item.value}</p>
+                        <p className="mt-1 text-[11px] font-black uppercase tracking-[0.18em] text-white/90">{item.label}</p>
+                        <p className="mt-2 text-xs font-semibold leading-relaxed text-white/85">{item.detail}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-2xl font-black text-white">3</span>
+                  <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-600">lecturas clave organizadas</span>
                 </div>
-                <div className="absolute bottom-0 left-0 h-56 w-56 rounded-full bg-blue-700 p-7 text-white shadow-xl sm:h-64 sm:w-64">
-                  <Briefcase className="mb-5 h-10 w-10" />
-                  <p className="text-4xl font-black">{integerFormatter.format(Number(kpis.totalNovelties || 0))}</p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Novedades</p>
-                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Volumen real que afecta nomina, jornada y control del periodo.</p>
+              </div>
+
+              <div className="relative mx-auto mt-8 hidden h-[430px] max-w-[720px] lg:block">
+                <div className="absolute left-1/2 top-0 flex h-72 w-72 -translate-x-1/2 flex-col justify-center rounded-full bg-cyan-500 px-10 py-9 text-white shadow-xl">
+                  <Target className="mb-4 h-9 w-9 shrink-0" />
+                  <p className="text-4xl font-black leading-none">{coverage}%</p>
+                  <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em]">Cobertura</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-semibold leading-relaxed text-white/85">Mide que tanto la programacion cubre la carga laboral registrada.</p>
                 </div>
-                <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-sky-500 p-7 text-white shadow-xl sm:h-64 sm:w-64">
-                  <PieChartIcon className="mb-5 h-10 w-10" />
-                  <p className="text-2xl font-black">{currencyFormatter.format(Number(kpis.estimatedImpact || 0))}</p>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.18em]">Impacto</p>
-                  <p className="mt-3 max-w-[13rem] text-xs font-medium text-white/85">Estimacion monetaria segun salario, tipo y horas reportadas.</p>
+                <div className="absolute bottom-0 left-4 flex h-72 w-72 flex-col justify-center rounded-full bg-blue-700 px-10 py-9 text-white shadow-xl">
+                  <Briefcase className="mb-4 h-9 w-9 shrink-0" />
+                  <p className="text-4xl font-black leading-none">{integerFormatter.format(Number(kpis.totalNovelties || 0))}</p>
+                  <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em]">Novedades</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-semibold leading-relaxed text-white/85">Volumen real que afecta nomina, jornada y control del periodo.</p>
                 </div>
-                <div className="absolute left-1/2 top-1/2 flex h-32 w-32 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-slate-200 bg-white text-center shadow-xl">
-                  <span className="text-5xl font-black text-slate-900">3</span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">lecturas clave</span>
+                <div className="absolute bottom-0 right-4 flex h-72 w-72 flex-col justify-center rounded-full bg-sky-500 px-10 py-9 text-white shadow-xl">
+                  <PieChartIcon className="mb-4 h-9 w-9 shrink-0" />
+                  <p className="max-w-[13rem] break-words text-2xl font-black leading-tight">{currencyFormatter.format(Number(kpis.estimatedImpact || 0))}</p>
+                  <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em]">Impacto</p>
+                  <p className="mt-3 max-w-[13rem] text-xs font-semibold leading-relaxed text-white/85">Estimacion monetaria segun salario, tipo y horas reportadas.</p>
+                </div>
+                <div className="absolute left-1/2 top-[52%] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-slate-200 bg-white text-center shadow-xl">
+                  <span className="text-5xl font-black leading-none text-slate-900">3</span>
+                  <span className="mt-2 max-w-[6rem] text-[10px] font-black uppercase leading-tight tracking-[0.16em] text-slate-500">lecturas clave</span>
                 </div>
               </div>
             </div>

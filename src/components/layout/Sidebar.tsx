@@ -54,6 +54,7 @@ import {
   ClipboardCheck,
   Globe,
   Bot,
+  Workflow,
   ExternalLink,
   History } from
 'lucide-react';
@@ -261,11 +262,14 @@ const toolsNavItemsBase: NavItem[] = [
   { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes', moduleCode: 'reportes' },
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama', moduleCode: 'organigrama' },
   { label: 'Asistente IA', icon: <Bot className="w-5 h-5" />, href: '/asistente-ia', moduleCode: 'asistente_ia' },
+  { label: 'Automatizaciones', icon: <Workflow className="w-5 h-5" />, href: '/automatizaciones', moduleCode: 'automatizaciones' },
+  { label: 'Cumplimiento', icon: <ShieldCheck className="w-5 h-5" />, href: '/cumplimiento-laboral', moduleCode: 'cumplimiento_laboral' },
 ];
 
 const payrollNavItems: NavItem[] = [
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
+  { label: 'PILA / UGPP', icon: <Landmark className="w-5 h-5" />, href: '/pila-ugpp', moduleCode: 'pila_ugpp' },
   { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'analitica_nomina' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion', moduleCode: 'pre_liquidacion' },
   { label: 'Préstamos', icon: <BanknoteIcon className="w-5 h-5" />, href: '/prestamos', moduleCode: 'prestamos' },

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Loader2, Stethoscope } from 'lucide-react';
+import { CalendarIcon, DollarSign, Loader2, Stethoscope, User } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
@@ -185,14 +185,17 @@ export function IncapacityFormDialog({
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-background rounded-2xl mb-6">
-                  <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                <TabsList className="mb-6 h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide">
+                  <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                    <User className="h-4 w-4 shrink-0" />
                     General
                   </TabsTrigger>
-                  <TabsTrigger value="clinical" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                  <TabsTrigger value="clinical" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                    <Stethoscope className="h-4 w-4 shrink-0" />
                     Clínico
                   </TabsTrigger>
-                  <TabsTrigger value="payment" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
+                  <TabsTrigger value="payment" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
+                    <DollarSign className="h-4 w-4 shrink-0" />
                     Pago
                   </TabsTrigger>
                 </TabsList>
