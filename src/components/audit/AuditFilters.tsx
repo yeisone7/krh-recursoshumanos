@@ -86,7 +86,7 @@ export function AuditFilters({ filters, onFiltersChange, onReset }: AuditFilters
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 relative">
+        <Button variant="outline" size="sm" className="relative h-12 w-full gap-2 rounded-2xl border-slate-200 font-black uppercase tracking-widest md:w-auto">
           <SlidersHorizontal className="w-4 h-4" />
           Filtros
           {activeCount > 0 && (
@@ -100,15 +100,15 @@ export function AuditFilters({ filters, onFiltersChange, onReset }: AuditFilters
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="right" className="w-full sm:max-w-sm">
+      <SheetContent side="right" className="flex w-full flex-col overflow-hidden p-0 sm:max-w-sm">
         <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
+          <SheetTitle className="flex items-center gap-2 px-6 pt-6">
             <SlidersHorizontal className="w-4 h-4" />
             Filtros Avanzados
           </SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-5 px-1">
+        <div className="mt-6 flex-1 space-y-5 overflow-y-auto px-6 pb-6">
 
           {/* Búsqueda libre */}
           <div className="space-y-1.5">
@@ -191,7 +191,7 @@ export function AuditFilters({ filters, onFiltersChange, onReset }: AuditFilters
                     : 'Seleccionar fecha'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-[calc(100vw-2rem)] max-w-[22rem] p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={filters.startDate}
@@ -214,7 +214,7 @@ export function AuditFilters({ filters, onFiltersChange, onReset }: AuditFilters
                     : 'Seleccionar fecha'}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-[calc(100vw-2rem)] max-w-[22rem] p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={filters.endDate}
