@@ -160,12 +160,12 @@ export function IncapacityDetailDialog({
           
           <div className="px-8 py-6 min-h-0">
             <Tabs defaultValue="general" className="w-full">
-              <TabsList className="flex h-14 w-full justify-start overflow-x-auto p-1 bg-background rounded-2xl mb-6 custom-scrollbar">
-                <TabsTrigger value="general" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">General</TabsTrigger>
-                <TabsTrigger value="payment" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Pagos</TabsTrigger>
-                <TabsTrigger value="recovery" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Recobro</TabsTrigger>
-                <TabsTrigger value="documents" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Documentos</TabsTrigger>
-                <TabsTrigger value="history" className="shrink-0 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] uppercase tracking-widest transition-all">Historial</TabsTrigger>
+              <TabsList className="mb-6 h-12 w-full justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide">
+                <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><FileText className="h-4 w-4 shrink-0" />General</TabsTrigger>
+                <TabsTrigger value="payment" className="h-10 min-w-[104px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><DollarSign className="h-4 w-4 shrink-0" />Pagos</TabsTrigger>
+                <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
+                <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
+                <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
               </TabsList>
               
               {/* General Tab */}

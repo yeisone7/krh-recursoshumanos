@@ -205,9 +205,9 @@ export default function Permisos() {
       {/* Tabs Premium */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-background rounded-2xl">
-            <TabsTrigger value="solicitudes" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2 relative">
-              <List className="h-4 w-4 hidden sm:block" />
+          <TabsList className="h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
+            <TabsTrigger value="solicitudes" className="relative h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <List className="h-4 w-4 shrink-0" />
               Solicitudes
               {pendingCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full text-[9px] flex items-center justify-center font-bold">
@@ -215,16 +215,16 @@ export default function Permisos() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="calendario" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <Calendar className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="calendario" className="h-10 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <Calendar className="h-4 w-4 shrink-0" />
               Calendario
             </TabsTrigger>
-            <TabsTrigger value="alertas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <Filter className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="alertas" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <Filter className="h-4 w-4 shrink-0" />
               Alertas
             </TabsTrigger>
-            <TabsTrigger value="configuracion" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <Settings className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="configuracion" className="h-10 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <Settings className="h-4 w-4 shrink-0" />
               Configurar
             </TabsTrigger>
           </TabsList>

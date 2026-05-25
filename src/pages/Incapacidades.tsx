@@ -235,9 +235,9 @@ export default function Incapacidades() {
       </div>
       
       {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-6 xl:grid-cols-[minmax(340px,0.95fr)_minmax(0,3fr)]">
         {/* Alerts Panel */}
-        <div className="lg:col-span-1">
+        <div className="min-w-0">
           <IncapacityAlertsPanel 
             onIncapacityClick={handleOpenDetail}
             maxItems={8}
@@ -245,7 +245,7 @@ export default function Incapacidades() {
         </div>
         
         {/* Table */}
-        <div className="lg:col-span-3">
+        <div className="min-w-0">
           <Card className="rounded-[2rem] border-none shadow-sm bg-background">
             <CardHeader className="p-6 border-b border-border/50">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">

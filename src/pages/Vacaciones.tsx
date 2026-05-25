@@ -200,21 +200,21 @@ export default function Vacaciones() {
       {/* Main Content with Tabs */}
       <Tabs defaultValue="requests" className="space-y-6">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="grid h-14 w-full sm:w-auto grid-cols-4 p-1 bg-background rounded-2xl">
-            <TabsTrigger value="requests" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <FileText className="h-4 w-4 hidden sm:block" />
+          <TabsList className="h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
+            <TabsTrigger value="requests" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <FileText className="h-4 w-4 shrink-0" />
               Lista
             </TabsTrigger>
-            <TabsTrigger value="balances" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <Users className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="balances" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <Users className="h-4 w-4 shrink-0" />
               Saldos
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <Calendar className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="calendar" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <Calendar className="h-4 w-4 shrink-0" />
               Mes
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest transition-all gap-2">
-              <AlertTriangle className="h-4 w-4 hidden sm:block" />
+            <TabsTrigger value="alerts" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
               Avisos
             </TabsTrigger>
           </TabsList>

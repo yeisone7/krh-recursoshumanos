@@ -66,6 +66,9 @@ import Descuentos from "./pages/Descuentos";
 import Install from "./pages/Install";
 import Catalogos from "./pages/Catalogos";
 import Auditoria from "./pages/Auditoria";
+import Automatizaciones from "./pages/Automatizaciones";
+import CumplimientoLaboral from "./pages/CumplimientoLaboral";
+import PilaUgpp from "./pages/PilaUgpp";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -194,6 +197,9 @@ const App = () => (
                         <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
                         <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
                         <Route path="/asistente-ia" element={<P module="asistente_ia"><AsistenteIA /></P>} />
+                        <Route path="/automatizaciones" element={<P module="automatizaciones"><Automatizaciones /></P>} />
+                        <Route path="/cumplimiento-laboral" element={<P module="cumplimiento_laboral"><CumplimientoLaboral /></P>} />
+                        <Route path="/pila-ugpp" element={<P module="pila_ugpp"><PilaUgpp /></P>} />
                         <Route path="/catalogos" element={<P module="catalogos"><Catalogos /></P>} />
                         <Route path="/catalogos/areas" element={<P module="catalogos"><CatalogosAreas /></P>} />
                         <Route path="/catalogos/cargos" element={<P module="catalogos"><CatalogosCargos /></P>} />

@@ -94,16 +94,56 @@ export function IncapacityAlertsPanel({
     );
   }
   
+  const alertsList = (
+    <div className={compact ? 'space-y-3 p-3' : 'space-y-3 p-4'}>
+      {displayAlerts.map((alert) => (
+        <div
+          key={alert.id}
+          className={`min-w-0 rounded-2xl border p-4 transition-all hover:shadow-md ${onIncapacityClick ? 'cursor-pointer' : ''} ${getAlertColor(alert.level)}`}
+          onClick={() => onIncapacityClick?.(alert.incapacity.id)}
+        >
+          <div className="flex min-w-0 flex-col gap-3">
+            <div className="flex min-w-0 items-start gap-3">
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background shadow-sm">
+                {getAlertIcon(alert.type)}
+              </div>
+              <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex min-w-0 flex-wrap items-start gap-2">
+                  <p className="min-w-0 flex-1 break-words text-sm font-black leading-snug tracking-tight">
+                    {alert.title}
+                  </p>
+                  <div className="shrink-0 [&_.inline-flex]:max-w-full [&_.inline-flex]:whitespace-normal [&_.inline-flex]:text-[10px] [&_.inline-flex]:font-black [&_.inline-flex]:uppercase">
+                    {getLevelBadge(alert.level)}
+                  </div>
+                </div>
+                <p className="mt-1 break-words text-xs font-medium leading-relaxed opacity-80">
+                  {alert.description}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between rounded-xl bg-background/70 px-3 py-2 text-left text-[10px] font-black uppercase tracking-wider opacity-90 transition hover:bg-background"
+            >
+              Ver detalle
+              <ChevronRight className="h-4 w-4 shrink-0" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <Card className="rounded-[2rem] border-border/50 shadow-lg overflow-hidden">
-      <CardHeader className={compact ? 'pb-2 bg-background' : 'bg-background border-b border-border/50 pb-4'}>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-base flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+    <Card className="min-w-0 overflow-hidden rounded-[1.5rem] border-border/60 shadow-sm">
+      <CardHeader className={compact ? 'bg-background pb-2' : 'border-b border-border/50 bg-background pb-4'}>
+        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <CardTitle className="flex min-w-0 items-center gap-2 text-base leading-tight">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Stethoscope className="h-4 w-4" />
               </div>
-              Alertas de Incapacidades
+              <span className="min-w-0 break-words">Alertas de Incapacidades</span>
             </CardTitle>
             {!compact && (
               <CardDescription className="mt-1 font-medium">
@@ -113,40 +153,12 @@ export function IncapacityAlertsPanel({
             )}
           </div>
           {criticalCount > 0 && (
-            <Badge variant="destructive" className="rounded-xl px-2 py-1 font-bold">{criticalCount}</Badge>
+            <Badge variant="destructive" className="w-fit shrink-0 rounded-xl px-2 py-1 font-bold">{criticalCount}</Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className={compact ? 'h-48' : 'h-64'}>
-          <div className="p-4 space-y-3">
-            {displayAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-md ${getAlertColor(alert.level)}`}
-                onClick={() => onIncapacityClick?.(alert.incapacity.id)}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-xl bg-background flex items-center justify-center shrink-0 shadow-sm mt-0.5">
-                      {getAlertIcon(alert.type)}
-                    </div>
-                    <div className="flex-1 min-w-0 pt-1">
-                      <p className="font-bold text-sm tracking-tight">{alert.title}</p>
-                      <p className="text-xs opacity-80 mt-1 line-clamp-2 leading-relaxed">
-                        {alert.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    {getLevelBadge(alert.level)}
-                    <ChevronRight className="h-4 w-4 opacity-50" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
+        {compact ? <ScrollArea className="h-56">{alertsList}</ScrollArea> : alertsList}
         
         {totalAlerts > maxItems && (
           <div className="p-4 border-t border-border/50 bg-background /10">
