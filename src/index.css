@@ -1098,3 +1098,275 @@ tbody tr, tbody tr td, tbody tr:nth-child(even) td {
 tbody tr:hover td {
   background-color: #f8fafc !important;
 }
+
+/* ==========================================================================
+   DARK MODE SURFACE NORMALIZATION
+   --------------------------------------------------------------------------
+   Many feature screens use hardcoded light utility classes because the app was
+   originally tuned for a flat white theme. This final layer intentionally wins
+   over those light-only overrides so cards, tables, dialogs and controls keep
+   the same flat language without glowing white in dark mode.
+   ========================================================================== */
+html.dark {
+  --dark-page: #06111f;
+  --dark-surface: #0b1626;
+  --dark-surface-raised: #0f1b2d;
+  --dark-surface-soft: #132238;
+  --dark-border: #233149;
+  --dark-text: #e8eef8;
+  --dark-text-muted: #9fb0c7;
+  --dark-text-soft: #71839f;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: var(--dark-page) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark main,
+html.dark [class*="min-h-screen"],
+html.dark [class*="bg-background"] {
+  background-color: hsl(var(--background)) !important;
+}
+
+html.dark .card,
+html.dark .card-elevated,
+html.dark .kpi-card,
+html.dark .grid-container,
+html.dark .card-table-wrapper,
+html.dark .bg-card,
+html.dark div.bg-card,
+html.dark [class~="bg-card"],
+html.dark [class~="bg-white"],
+html.dark [class*="bg-white/"],
+html.dark [class~="bg-slate-50"],
+html.dark [class~="bg-slate-100"],
+html.dark [class~="bg-gray-50"],
+html.dark [class~="bg-gray-100"],
+html.dark [class~="bg-zinc-50"],
+html.dark [class~="bg-zinc-100"],
+html.dark [class~="bg-neutral-50"],
+html.dark [class~="bg-neutral-100"] {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark [class~="bg-slate-200"],
+html.dark [class~="bg-slate-300"],
+html.dark [class~="bg-gray-200"],
+html.dark [class~="bg-gray-300"],
+html.dark [class~="bg-muted"],
+html.dark [class*="bg-muted/"] {
+  background-color: var(--dark-surface-soft) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark [class~="border-white"],
+html.dark [class*="border-white/"],
+html.dark [class~="border-slate-50"],
+html.dark [class~="border-slate-100"],
+html.dark [class~="border-slate-200"],
+html.dark [class~="border-gray-100"],
+html.dark [class~="border-gray-200"],
+html.dark [class*="border-border"],
+html.dark [class*="border-slate-"] {
+  border-color: var(--dark-border) !important;
+}
+
+html.dark [class~="text-slate-950"],
+html.dark [class~="text-slate-900"],
+html.dark [class~="text-slate-800"],
+html.dark [class~="text-gray-950"],
+html.dark [class~="text-gray-900"],
+html.dark [class~="text-gray-800"],
+html.dark [class~="text-foreground"] {
+  color: var(--dark-text) !important;
+}
+
+html.dark [class~="text-slate-700"],
+html.dark [class~="text-slate-600"],
+html.dark [class~="text-slate-500"],
+html.dark [class~="text-gray-700"],
+html.dark [class~="text-gray-600"],
+html.dark [class~="text-gray-500"],
+html.dark [class~="text-muted-foreground"] {
+  color: var(--dark-text-muted) !important;
+}
+
+html.dark [class~="text-slate-400"],
+html.dark [class~="text-slate-300"],
+html.dark [class~="text-gray-400"],
+html.dark [class~="text-gray-300"] {
+  color: var(--dark-text-soft) !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select,
+html.dark button[role="combobox"],
+html.dark [class*="SelectTrigger"],
+html.dark [class*="PopoverContent"],
+html.dark [class*="SelectContent"],
+html.dark [data-radix-popper-content-wrapper] [role="listbox"],
+html.dark [data-radix-popper-content-wrapper] > div {
+  background-color: var(--dark-surface-raised) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--dark-text-soft) !important;
+}
+
+html.dark table,
+html.dark thead,
+html.dark thead tr,
+html.dark th,
+html.dark thead th,
+html.dark td,
+html.dark tbody td,
+html.dark tbody tr,
+html.dark tbody tr td,
+html.dark tbody tr:nth-child(even) td,
+html.dark div:has(table),
+html.dark div[class*="border"]:has(table),
+html.dark div[class*="border"]:has([role="grid"]) {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+}
+
+html.dark th,
+html.dark thead th {
+  color: var(--dark-text-muted) !important;
+  border-bottom-color: var(--dark-border) !important;
+}
+
+html.dark td,
+html.dark tbody td {
+  color: var(--dark-text) !important;
+  border-bottom-color: var(--dark-border) !important;
+}
+
+html.dark tbody tr:hover td {
+  background-color: var(--dark-surface-soft) !important;
+}
+
+html.dark [role="dialog"].fixed,
+html.dark [role="dialog"],
+html.dark [role="dialog"] [class*="DialogContent"],
+html.dark [role="dialog"].DialogContent,
+html.dark div[class*="DialogContent"],
+html.dark [class*="SheetContent"] {
+  background-color: var(--dark-surface) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark [role="dialog"] [class*="DialogHeader"],
+html.dark [role="dialog"] header,
+html.dark [role="dialog"] .px-8.py-8.bg-gradient-to-br,
+html.dark div.relative.overflow-hidden[class*="bg-gradient-"],
+html.dark .dialog-header-gradient,
+html.dark [class*="bg-gradient-to-br"][class*="from-primary/"],
+html.dark [class*="bg-gradient-to-r"][class*="from-primary/"] {
+  background-color: var(--dark-surface-raised) !important;
+  border-color: var(--dark-border) !important;
+}
+
+html.dark [role="dialog"] form,
+html.dark [role="dialog"] .dialog-body,
+html.dark [role="dialog"] div.p-8.space-y-8 {
+  background-color: var(--dark-surface) !important;
+}
+
+html.dark [role="dialog"] [class*="DialogTitle"],
+html.dark [role="dialog"] .text-2xl.font-black {
+  color: var(--dark-text) !important;
+}
+
+html.dark [role="dialog"] [class*="DialogDescription"],
+html.dark [role="dialog"] p.text-xs.font-bold,
+html.dark [role="dialog"] label,
+html.dark [role="dialog"] [class*="FormLabel"],
+html.dark [role="dialog"] .text-\[10px\].font-black {
+  color: var(--dark-text-muted) !important;
+}
+
+html.dark [role="dialog"] [class*="DialogFooter"],
+html.dark [role="dialog"] form > div.flex.justify-end,
+html.dark [role="dialog"] div.pt-4.border-t.border-border\/50 {
+  background-color: var(--dark-surface-raised) !important;
+  border-color: var(--dark-border) !important;
+}
+
+html.dark [role="dialog"] [class*="DialogFooter"] button:not([type="submit"]):not(.bg-primary),
+html.dark [role="dialog"] form > div.flex.justify-end button:not([type="submit"]),
+html.dark [role="dialog"] div.pt-4.border-t button:not([type="submit"]) {
+  background-color: var(--dark-surface-soft) !important;
+  border-color: var(--dark-border) !important;
+  color: var(--dark-text) !important;
+}
+
+html.dark aside.bg-sidebar {
+  background-color: hsl(var(--sidebar-background)) !important;
+  border-right-color: hsl(var(--sidebar-border)) !important;
+}
+
+html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent),
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent),
+html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) {
+  color: hsl(var(--sidebar-foreground)) !important;
+  background-color: transparent !important;
+}
+
+html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover,
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover,
+html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover {
+  background-color: hsl(var(--sidebar-accent)) !important;
+  color: hsl(var(--sidebar-accent-foreground)) !important;
+}
+
+html.dark aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent,
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent,
+html.dark aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent {
+  background-color: hsl(var(--sidebar-accent)) !important;
+  color: hsl(var(--sidebar-accent-foreground)) !important;
+}
+
+html.dark [class~="bg-red-50"],
+html.dark [class~="bg-rose-50"] {
+  background-color: rgb(127 29 29 / 0.24) !important;
+  border-color: rgb(248 113 113 / 0.35) !important;
+}
+
+html.dark [class~="bg-amber-50"],
+html.dark [class~="bg-yellow-50"],
+html.dark [class~="bg-orange-50"] {
+  background-color: rgb(120 53 15 / 0.24) !important;
+  border-color: rgb(251 191 36 / 0.35) !important;
+}
+
+html.dark [class~="bg-emerald-50"],
+html.dark [class~="bg-green-50"] {
+  background-color: rgb(6 78 59 / 0.24) !important;
+  border-color: rgb(52 211 153 / 0.35) !important;
+}
+
+html.dark [class~="bg-sky-50"],
+html.dark [class~="bg-blue-50"],
+html.dark [class~="bg-cyan-50"] {
+  background-color: rgb(8 47 73 / 0.32) !important;
+  border-color: rgb(56 189 248 / 0.32) !important;
+}
+
+html.dark [class~="bg-violet-50"],
+html.dark [class~="bg-purple-50"],
+html.dark [class~="bg-indigo-50"] {
+  background-color: rgb(76 29 149 / 0.26) !important;
+  border-color: rgb(167 139 250 / 0.32) !important;
+}
