@@ -424,6 +424,29 @@ export default function RegistroPublico() {
       return val.length === 1 ? val : null;
     };
 
+    const getRpcErrorMessage = (error: any, fallback: string) =>
+      error?.message || error?.details || error?.hint || fallback;
+
+    const resolveExistingEmployeeId = async () => {
+      if (!isEmployee || !tokenParam || !formData.documentNumber?.trim()) return null;
+
+      const { data, error } = await supabase.rpc('get_employee_by_token_and_document', {
+        p_token: tokenParam,
+        p_document_number: formData.documentNumber.trim(),
+      });
+
+      if (error) {
+        throw new Error(getRpcErrorMessage(error, 'No se pudo validar el empleado'));
+      }
+
+      const lookup = data as any;
+      if (lookup?.success === false) {
+        throw new Error(lookup.error || 'No se pudo validar el empleado');
+      }
+
+      return lookup?.found ? lookup.employee?.id || null : null;
+    };
+
     setSubmitting(true);
     try {
       let result: any;
@@ -432,7 +455,14 @@ export default function RegistroPublico() {
         let employeeId = formData.employeeId;
 
         if (!employeeId) {
-          const { data } = await supabase.rpc('submit_employee_registration', {
+          employeeId = await resolveExistingEmployeeId();
+          if (employeeId) {
+            setFormData(prev => ({ ...prev, employeeId }));
+          }
+        }
+
+        if (!employeeId) {
+          const { data, error } = await supabase.rpc('submit_employee_registration', {
             p_token: tokenParam!,
             p_first_name: formData.firstName || '',
             p_last_name: formData.lastName || '',
@@ -488,6 +518,9 @@ export default function RegistroPublico() {
             p_education_level_id: formData.educationLevelId || null,
             p_profession_id: formData.professionId || null,
           });
+          if (error) {
+            throw new Error(getRpcErrorMessage(error, 'Error al crear el empleado'));
+          }
           result = data;
           
           if ((result as any)?.success && (result as any)?.employee_id) {
@@ -497,7 +530,7 @@ export default function RegistroPublico() {
         
         if (employeeId && ((result as any)?.success !== false || formData.employeeId)) {
           // If we have an employeeId (either existing or just created), update with full info
-          const { data } = await supabase.rpc('update_employee_from_registration', {
+          const { data, error } = await supabase.rpc('update_employee_from_registration', {
             p_token: tokenParam!,
             p_employee_id: employeeId,
             p_first_name: formData.firstName || '',
@@ -564,6 +597,9 @@ export default function RegistroPublico() {
               document_number: m.document_number || ''
             })) : []
           } as any);
+          if (error) {
+            throw new Error(getRpcErrorMessage(error, 'Error al actualizar el empleado'));
+          }
           result = data;
         }
       } else {
@@ -571,7 +607,7 @@ export default function RegistroPublico() {
           ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) 
           : null;
 
-        const { data } = await supabase.rpc('submit_candidate_registration', {
+        const { data, error } = await supabase.rpc('submit_candidate_registration', {
           p_token: tokenParam!,
           p_first_name: formData.firstName || '',
           p_last_name: formData.lastName || '',
@@ -610,6 +646,9 @@ export default function RegistroPublico() {
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
           p_identification_type_id: formData.identificationTypeId || null,
         });
+        if (error) {
+          throw new Error(getRpcErrorMessage(error, 'Error al crear el candidato'));
+        }
         result = data;
       }
 
@@ -620,6 +659,7 @@ export default function RegistroPublico() {
 
       setStep('done');
     } catch (err: any) {
+      console.error('Registration submit error:', err);
       toast.error(err.message || 'Error al enviar el registro');
     } finally {
       setSubmitting(false);

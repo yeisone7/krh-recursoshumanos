@@ -60,6 +60,16 @@ const riskIcons: Record<string, React.ReactNode> = {
   critico: <Shield className="h-5 w-5 text-red-700" />,
 };
 
+const isExternalLinkMedia = (item: TrainingMedia) => (item.metadata as any)?.is_external_link === true;
+
+const mediaKindLabel: Record<string, string> = {
+  imagen: 'Imagen Explicativa',
+  mapa_mental: 'Mapa Mental',
+  infografia: 'Infografía',
+  audio: 'Audio Narrado',
+  video: 'Video complementario',
+};
+
 /* Read-only media card for preview */
 function MediaReadOnlyCard({ icon, title, description, items }: {
   icon: React.ReactNode;
@@ -125,6 +135,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
   const [activeTab, setActiveTab] = useState('general');
   const [generatingMedia, setGeneratingMedia] = useState<Record<string, boolean>>({});
   const [uploadingMedia, setUploadingMedia] = useState<Record<string, boolean>>({});
+  const [addingLink, setAddingLink] = useState<Record<string, boolean>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
@@ -266,6 +277,45 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       toast.error(err?.message || `Error al subir ${rules.label}`);
     } finally {
       setUploadingMedia(prev => ({ ...prev, [kind]: false }));
+    }
+  };
+
+  const handleAddMediaLink = async (kind: 'imagen' | 'mapa_mental' | 'infografia' | 'audio' | 'video', url: string, title?: string) => {
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      toast.error('Ingresa un link válido.');
+      return;
+    }
+
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+      toast.error('El link debe iniciar con http:// o https://');
+      return;
+    }
+
+    const label = mediaKindLabel[kind] || 'Recurso externo';
+    setAddingLink(prev => ({ ...prev, [kind]: true }));
+    try {
+      await createMedia.mutateAsync({
+        courseId: course.id,
+        type: 'documento',
+        title: title || `${label} - link externo`,
+        description: `Link externo (${label})`,
+        fileUrl: parsedUrl.toString(),
+        fileSize: 0,
+        metadata: {
+          is_external_link: true,
+          link_kind: kind,
+          link_label: label,
+          original_url: parsedUrl.toString(),
+        },
+      });
+      toast.success('Link agregado a la capacitación');
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al guardar el link');
+    } finally {
+      setAddingLink(prev => ({ ...prev, [kind]: false }));
     }
   };
 
@@ -571,25 +621,29 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         icon={<ImageIcon className="h-5 w-5 text-muted-foreground" />}
                         title="Imagen Explicativa"
                         description="Genera una imagen visual que represente el tema de la capacitación"
-                        items={media.filter(m => m.title === 'Imagen Explicativa')}
+                        items={media.filter(m => m.title === 'Imagen Explicativa' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'imagen'))}
                         isGenerating={!!generatingMedia.imagen}
                         onGenerate={() => handleGenerateMedia('imagen')}
                         onDelete={handleDeleteMedia}
                         uploadAccept="image/*"
                         isUploading={!!uploadingMedia.imagen}
                         onUpload={(file) => handleUploadMedia('imagen', file)}
+                        isAddingLink={!!addingLink.imagen}
+                        onAddLink={(url, title) => handleAddMediaLink('imagen', url, title)}
                       />
                       <MediaTypeCard
                         icon={<Network className="h-5 w-5 text-muted-foreground" />}
                         title="Mapa Mental"
                         description="Crea un mapa mental con los conceptos clave organizados visualmente"
-                        items={media.filter(m => m.title === 'Mapa Mental')}
+                        items={media.filter(m => m.title === 'Mapa Mental' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'mapa_mental'))}
                         isGenerating={!!generatingMedia.mapa_mental}
                         onGenerate={() => handleGenerateMedia('mapa_mental')}
                         onDelete={handleDeleteMedia}
                         uploadAccept="image/*"
                         isUploading={!!uploadingMedia.mapa_mental}
                         onUpload={(file) => handleUploadMedia('mapa_mental', file)}
+                        isAddingLink={!!addingLink.mapa_mental}
+                        onAddLink={(url, title) => handleAddMediaLink('mapa_mental', url, title)}
                       />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -597,25 +651,29 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         icon={<LayoutPanelTop className="h-5 w-5 text-muted-foreground" />}
                         title="Infografía"
                         description="Diseña una infografía profesional con los puntos principales"
-                        items={media.filter(m => m.title === 'Infografía')}
+                        items={media.filter(m => m.title === 'Infografía' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'infografia'))}
                         isGenerating={!!generatingMedia.infografia}
                         onGenerate={() => handleGenerateMedia('infografia')}
                         onDelete={handleDeleteMedia}
                         uploadAccept="image/*"
                         isUploading={!!uploadingMedia.infografia}
                         onUpload={(file) => handleUploadMedia('infografia', file)}
+                        isAddingLink={!!addingLink.infografia}
+                        onAddLink={(url, title) => handleAddMediaLink('infografia', url, title)}
                       />
                       <MediaTypeCard
                         icon={<Mic className="h-5 w-5 text-muted-foreground" />}
                         title="Audio Narrado"
                         description="Genera una narración tipo podcast del contenido (requiere API key de OpenAI)"
-                        items={media.filter(m => m.title === 'Audio Narrado')}
+                        items={media.filter(m => m.title === 'Audio Narrado' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'audio'))}
                         isGenerating={!!generatingMedia.audio}
                         onGenerate={handleGenerateAudio}
                         onDelete={handleDeleteMedia}
                         uploadAccept="audio/*"
                         isUploading={!!uploadingMedia.audio}
                         onUpload={(file) => handleUploadMedia('audio', file)}
+                        isAddingLink={!!addingLink.audio}
+                        onAddLink={(url, title) => handleAddMediaLink('audio', url, title)}
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Duración:</span>
@@ -636,13 +694,15 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       icon={<Video className="h-5 w-5 text-muted-foreground" />}
                       title="Storyboard"
                       description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
-                      items={media.filter(m => m.type === 'video')}
+                      items={media.filter(m => m.type === 'video' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'video'))}
                       isGenerating={false}
                       onGenerate={() => {}}
                       onDelete={handleDeleteMedia}
                       uploadAccept="video/*"
                       isUploading={!!uploadingMedia.video}
                       onUpload={(file) => handleUploadMedia('video', file)}
+                      isAddingLink={!!addingLink.video}
+                      onAddLink={(url, title) => handleAddMediaLink('video', url, title)}
                     />
                   </>
                 ) : (
@@ -714,6 +774,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                   // y que no son el avatar.
                   const storyboardScenes = media.filter(m => 
                     m.type === 'video' && 
+                    !isExternalLinkMedia(m) &&
                     !(m.metadata as any)?.is_avatar && 
                     (m.title?.toLowerCase().includes('escena') || m.description)
                   );
@@ -748,6 +809,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                 {(() => {
                   const manualVideos = media.filter(m => 
                     m.type === 'video' && 
+                    !isExternalLinkMedia(m) &&
                     !(m.metadata as any)?.is_avatar && 
                     !(m.title?.toLowerCase().includes('escena') || m.description)
                   );
