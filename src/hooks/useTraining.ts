@@ -762,6 +762,7 @@ export function useCreateTrainingMedia() {
       fileUrl: string;
       fileSize?: number;
       duration?: number;
+      metadata?: Record<string, unknown>;
     }) => {
       if (!user) throw new Error('Not authenticated');
 
@@ -776,6 +777,7 @@ export function useCreateTrainingMedia() {
           file_url: data.fileUrl,
           file_size: data.fileSize || null,
           duration: data.duration || null,
+          metadata: (data.metadata || {}) as any,
           created_by: user.id,
         })
         .select()

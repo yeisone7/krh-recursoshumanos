@@ -14,7 +14,8 @@ import { StoryboardViewer } from '@/components/training/StoryboardViewer';
 import { ImageLightbox } from '@/components/training/ImageLightbox';
 import {
   GraduationCap, Clock, BookOpen, CheckCircle2, AlertTriangle,
-  Loader2, MapPin, Calendar, User, FileText, ShieldCheck, Maximize
+  Loader2, MapPin, Calendar, User, FileText, ShieldCheck, Maximize,
+  ExternalLink
 } from 'lucide-react';
 import type { TrainingCourse, TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
 import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
@@ -29,6 +30,7 @@ interface MediaItem {
   title: string;
   description: string | null;
   file_url: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 export default function AccesoPublico() {
@@ -114,7 +116,7 @@ export default function AccesoPublico() {
       // Fetch media for this course
       const { data: mediaData } = await supabase
         .from('training_media')
-        .select('id, type, title, description, file_url')
+        .select('id, type, title, description, file_url, metadata')
         .eq('course_id', data.course_id)
         .order('created_at');
       if (mediaData) setMedia(mediaData);
@@ -205,15 +207,17 @@ export default function AccesoPublico() {
   };
 
   const content = course?.content as TrainingCourseContent | null;
-  const images = media.filter(m => m.type === 'imagen' || m.type === 'infografia');
-  const audios = media.filter(m => m.type === 'audio');
+  const externalLinks = media.filter(m => (m.metadata as any)?.is_external_link === true || m.type === 'documento');
+  const playableMedia = media.filter(m => !externalLinks.some(link => link.id === m.id));
+  const images = playableMedia.filter(m => m.type === 'imagen' || m.type === 'infografia');
+  const audios = playableMedia.filter(m => m.type === 'audio');
   
   // Videos filtering
-  const avatarVideos = media.filter(m => m.type === 'video' && m.title === 'Avatar Presentador');
+  const avatarVideos = playableMedia.filter(m => m.type === 'video' && m.title === 'Avatar Presentador');
   // Storyboard videos are usually those with a specific title format or just not the ones we want to show as standalone
   // For now, let's assume any video that is NOT the avatar and NOT a storyboard scene is "complementary"
   // Actually, let's show ALL videos that are not the avatar in a dedicated section if they are not being used in the storyboard
-  const complementaryVideos = media.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador');
+  const complementaryVideos = playableMedia.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador');
   
   const todayStr = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es });
 
@@ -529,7 +533,7 @@ export default function AccesoPublico() {
               // Por ahora, si un video tiene una descripción larga o título de 'Escena', lo tratamos como storyboard.
               // Pero para ser seguros y evitar duplicidad/errores, si hay videos complementarios, el storyboard 
               // solo debería activarse si hay una intención clara.
-              const storyboardScenes = media.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador' && (m.title?.toLowerCase().includes('escena') || m.description));
+              const storyboardScenes = playableMedia.filter(m => m.type === 'video' && m.title !== 'Avatar Presentador' && (m.title?.toLowerCase().includes('escena') || m.description));
               
               if (storyboardScenes.length === 0) return null;
               
@@ -592,6 +596,33 @@ export default function AccesoPublico() {
                     <div key={item.id} className="rounded-2xl overflow-hidden border border-border/50 bg-black shadow-xl">
                       <video controls className="w-full max-h-[500px]" src={item.file_url} preload="metadata" />
                     </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {externalLinks.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ExternalLink className="h-5 w-5 text-primary" /> Materiales externos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {externalLinks.map((item) => (
+                    <a
+                      key={item.id}
+                      href={item.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-border/50 bg-background p-4 transition-colors hover:bg-muted/40"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold">{item.title}</p>
+                        {item.description && <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>}
+                      </div>
+                      <ExternalLink className="h-4 w-4 shrink-0 text-primary" />
+                    </a>
                   ))}
                 </CardContent>
               </Card>
