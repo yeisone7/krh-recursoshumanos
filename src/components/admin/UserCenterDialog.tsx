@@ -70,16 +70,16 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-2rem)] flex-col overflow-hidden sm:max-w-md">
-        <DialogHeader className="shrink-0">
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="shrink-0 border-b border-border/60 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
           <DialogTitle>Asignar Centros de Operación</DialogTitle>
           <DialogDescription>
             Usuario: <span className="font-medium">{user?.id.slice(0, 8)}...</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pr-1">
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-5 py-4 sm:px-6">
+          <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap gap-2">
               <span className="text-sm text-muted-foreground">Centros actuales:</span>
               {user?.centers.length === 0 && (
@@ -108,7 +108,7 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg mb-4">
+          <div className="shrink-0 bg-blue-50 border border-blue-100 p-3 rounded-lg">
             <p className="text-[11px] text-blue-700 leading-tight">
               <strong>Nota:</strong> Si no seleccionas ningún centro específico, el sistema asignará automáticamente <strong>TODOS</strong> los centros disponibles al usuario.
             </p>
@@ -122,8 +122,8 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
             </div>
           ) : (
             <div className={cn(
-              "max-h-[40dvh] overflow-y-auto pr-1 transition-opacity",
-              selectedCenters.length === 0 && "opacity-50 pointer-events-none"
+              "min-h-0 flex-1 overflow-y-auto pr-1 transition-opacity",
+              selectedCenters.length === 0 && "opacity-60"
             )}>
               <div className="space-y-3">
                 {centers.map(center => (
@@ -155,7 +155,7 @@ export function UserCenterDialog({ user, open, onOpenChange }: UserCenterDialogP
           )}
         </div>
 
-        <DialogFooter className="shrink-0 flex-col-reverse gap-2 sm:flex-row sm:gap-0">
+        <DialogFooter className="shrink-0 border-t border-border/60 px-5 py-4 sm:flex-row sm:gap-0 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
