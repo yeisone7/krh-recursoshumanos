@@ -1013,8 +1013,8 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
     userEmail ||
     'Usuario';
   const primaryRole = roles[0] ? roleLabels[roles[0]] || roles[0] : 'Usuario';
-  const canSwitchCompany = roles.includes('admin') || isSuperAdmin;
   const hasMultipleCompanies = companies && companies.length > 1;
+  const canSwitchCompany = hasMultipleCompanies;
   const handleNavigate = (path: string) => {
     navigate(path);
     if (onNavigate) onNavigate();
