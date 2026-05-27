@@ -579,11 +579,8 @@ export function ContractFormDialog({
                       name="salary"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="ml-1 flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase leading-tight tracking-wide text-primary sm:text-[11px]">
-                            <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                            <span className="min-w-0 break-words">
-                              Remuneración Base Mensual <span className="text-destructive">*</span>
-                            </span>
+                          <FormLabel className="ml-1 block text-[10px] font-bold uppercase leading-tight tracking-wide text-primary sm:text-[11px]">
+                            Remuneración Base Mensual <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
                             <div className="relative group">
