@@ -78,7 +78,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
-  const { isAdmin, isRRHH, isSuperAdmin, canView, canUpdate } = useAuth();
+  const { isAdmin, isRRHH, isSuperAdmin, canView, canUpdate, canApprove: canApproveModule } = useAuth();
   const { data: contractTypes = [] } = useContractTypes();
   const canUpdateContracts = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
@@ -207,7 +207,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const canTerminate = canRetireContract && !hasCompletedTermination && (!isTerminated || hasPendingTermination);
   
   // Approval status
-  const canApprove = isAdmin && !isApproved && !isTerminated;
+  const canApproveContract = (isAdmin || isSuperAdmin || canApproveModule('contratos')) && !isApproved && !isTerminated;
 
   const handleApproveContract = async () => {
     try {
@@ -666,7 +666,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   </Button>
                 )}
               </div>
-              {canApprove && (
+              {canApproveContract && (
                 <Button
                   variant="outline"
                   size="sm"
