@@ -29,7 +29,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Select,
   SelectContent,
@@ -1664,14 +1663,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
-                                  <Calendar
-                                    mode="single"
+                                <PopoverContent
+                                  className="z-[70] w-auto max-w-[calc(100vw-2rem)] overflow-visible p-0 bg-background"
+                                  align="start"
+                                  collisionPadding={16}
+                                >
+                                  <DatePickerWithDropdowns
                                     selected={field.value}
                                     onSelect={field.onChange}
                                     initialFocus
-                                    locale={es}
-                                    className="pointer-events-auto"
+                                    fromYear={1950}
+                                    toYear={new Date().getFullYear() + 5}
                                   />
                                 </PopoverContent>
                               </Popover>
@@ -1711,14 +1713,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                                   </Button>
                                 </FormControl>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-hidden p-0 bg-background" align="start">
-                                <Calendar
-                                  mode="single"
+                              <PopoverContent
+                                className="z-[70] w-auto max-w-[calc(100vw-2rem)] overflow-visible p-0 bg-background"
+                                align="start"
+                                collisionPadding={16}
+                              >
+                                <DatePickerWithDropdowns
                                   selected={field.value}
                                   onSelect={field.onChange}
                                   initialFocus
-                                  locale={es}
-                                  className="pointer-events-auto"
+                                  fromYear={1950}
+                                  toYear={new Date().getFullYear() + 5}
                                 />
                               </PopoverContent>
                             </Popover>
