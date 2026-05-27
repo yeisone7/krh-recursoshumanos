@@ -573,15 +573,17 @@ export function ContractFormDialog({
                 <TabsContent value="contract" className="mt-0 space-y-5">
                   {canViewSalaries && (
                     <>
-                  <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:p-5 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 rounded-lg border border-border bg-card p-4 sm:p-5 lg:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="salary"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
-                            <DollarSign className="h-3.5 w-3.5" />
-                            Remuneración Base Mensual <span className="text-destructive">*</span>
+                          <FormLabel className="ml-1 flex min-w-0 items-center gap-1.5 text-[10px] font-bold uppercase leading-tight tracking-wide text-primary sm:text-[11px]">
+                            <DollarSign className="h-3.5 w-3.5 shrink-0" />
+                            <span className="min-w-0 break-words">
+                              Remuneración Base Mensual <span className="text-destructive">*</span>
+                            </span>
                           </FormLabel>
                           <FormControl>
                             <div className="relative group">
