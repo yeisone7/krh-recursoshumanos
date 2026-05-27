@@ -16,12 +16,13 @@ import { toast } from 'sonner';
 import type { TrainingCourseContent } from '@/types/training';
 
 const STEPS = [{ label: 'Parámetros' }, { label: 'Contenido' }, { label: 'Evaluación' }];
-const TIPOS = ['Charla 5 min', 'Calidad', 'HSEQ', 'Reinducción', 'Refuerzo', 'Emergencias', 'Auditoría', 'Otro'];
-const AREAS = ['Producción', 'Calidad', 'Seguridad', 'HSEQ', 'Administrativo', 'Logística', 'Mantenimiento', 'Otro'];
-const PUBLICOS = ['Operarios', 'Supervisores', 'Administrativos', 'Nuevos ingresos', 'Todo el personal', 'Otro'];
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado'];
 const OBJETIVOS = ['Sensibilización', 'Cumplimiento', 'Corrección de hallazgo', 'Formación inicial', 'Actualización', 'Otro'];
-const MARCOS_LEGALES = ['ISO 9001', 'ISO 14000', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
+
+const TRAINING_TIPOS = ['Charla 5 min', 'Calidad', 'HSEQ', 'Reinducci\u00f3n', 'Refuerzo', 'Emergencias', 'Auditor\u00eda', 'Inducci\u00f3n', 'Capacitaci\u00f3n', 'Entrenamiento Grupal', 'Otro'];
+const TRAINING_AREAS = ['Talento Humano', 'Bienestar y Desarrollo', 'Jur\u00eddica y Relacionamiento Laboral', 'SGI', 'SST', 'Ambiental', 'Seguridad Alimentaria', 'Contabilidad', 'PESV', 'Otro'];
+const TRAINING_PUBLICOS = ['Centros de Operaci\u00f3n', 'Supervisores', 'T\u00e9cnicos', 'Administrativos', 'Fincas', 'Transversal (Todo el personal)'];
+const TRAINING_MARCOS_LEGALES = ['ISO 9001', 'ISO 14001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
 
 export default function CrearManual() {
   const navigate = useNavigate();
@@ -66,8 +67,19 @@ export default function CrearManual() {
       setTipo(existingCourse.category);
       setDescripcion(existingCourse.description || '');
       setNivel(existingCourse.level || 'Básico');
+      const savedArea = existingCourse.target_audience || '';
+      if (TRAINING_AREAS.includes(savedArea)) {
+        setArea(savedArea);
+      } else if (savedArea) {
+        setArea('Otro');
+        setAreaOtra(savedArea);
+      }
+      const savedPublico = existingCourse.audience || '';
+      if (TRAINING_PUBLICOS.includes(savedPublico)) {
+        setPublico(savedPublico);
+      }
       setObjetivo(existingCourse.objective || '');
-      setMarcoLegal(existingCourse.legal_framework || '');
+      setMarcoLegal(existingCourse.legal_framework === 'ISO 14000' ? 'ISO 14001' : existingCourse.legal_framework || '');
       setRiesgo(existingCourse.risk_level || 'medio');
       setDuracion(existingCourse.duration_hours);
       setModalidad(existingCourse.modality);
@@ -85,6 +97,7 @@ export default function CrearManual() {
         durationHours: duracion, isMandatory: obligatorio, requiresCertification: certificacion,
         validityMonths: vigencia, level: nivel.toLowerCase(),
         audience: publico === 'Otro' ? publicoOtro : publico,
+        targetAudience: area === 'Otro' ? areaOtra : area,
         objective: objetivo === 'Otro' ? objetivoOtro : objetivo,
         legalFramework: marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal,
         riskLevel: riesgo, content, status,
@@ -147,20 +160,19 @@ export default function CrearManual() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5"><LayoutGrid className="h-4 w-4" /> Tipo de Capacitación *</Label>
-                  <Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Selecciona el tipo" /></SelectTrigger><SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+                  <Select value={tipo} onValueChange={setTipo}><SelectTrigger><SelectValue placeholder="Selecciona el tipo" /></SelectTrigger><SelectContent>{TRAINING_TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
                   {tipo === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={tipoOtro} onChange={e => setTipoOtro(e.target.value)} />}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4" /> Área *</Label>
-                  <Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger><SelectContent>{AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>
+                  <Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Selecciona el área" /></SelectTrigger><SelectContent>{TRAINING_AREAS.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent></Select>
                   {area === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={areaOtra} onChange={e => setAreaOtra(e.target.value)} />}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Público Objetivo *</Label>
-                  <Select value={publico} onValueChange={setPublico}><SelectTrigger><SelectValue placeholder="Selecciona el público" /></SelectTrigger><SelectContent>{PUBLICOS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
-                  {publico === 'Otro' && <Input className="mt-2" placeholder="Especifique" value={publicoOtro} onChange={e => setPublicoOtro(e.target.value)} />}
+                  <Select value={publico} onValueChange={setPublico}><SelectTrigger><SelectValue placeholder="Selecciona el público" /></SelectTrigger><SelectContent>{TRAINING_PUBLICOS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5"><CircleDot className="h-4 w-4" /> Nivel *</Label>
@@ -175,7 +187,7 @@ export default function CrearManual() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="flex items-center gap-1.5"><Scale className="h-4 w-4" /> Norma / Marco Legal *</Label>
-                  <Select value={marcoLegal} onValueChange={setMarcoLegal}><SelectTrigger><SelectValue placeholder="Selecciona la norma" /></SelectTrigger><SelectContent>{MARCOS_LEGALES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
+                  <Select value={marcoLegal} onValueChange={setMarcoLegal}><SelectTrigger><SelectValue placeholder="Selecciona la norma" /></SelectTrigger><SelectContent>{TRAINING_MARCOS_LEGALES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
                   {marcoLegal === 'Otro' && <Input className="mt-2" placeholder="Especifique la norma" value={marcoLegalOtro} onChange={e => setMarcoLegalOtro(e.target.value)} />}
                 </div>
               </div>
