@@ -16,7 +16,7 @@ import {
   Legend,
 } from 'recharts';
 import ReactMarkdown from 'react-markdown';
-import { Download, Info } from 'lucide-react';
+import { Download, Info, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { DataAssistantResponse } from '@/hooks/useDataAssistant';
@@ -199,18 +199,35 @@ export function ResponseRenderer({ response, showSQL = false }: ResponseRenderer
       )}
 
       {metadata && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] text-muted-foreground">
-          <Info className="h-3 w-3" />
-          <span>{metadata.row_count.toLocaleString('es-CO')} resultado{metadata.row_count === 1 ? '' : 's'}</span>
-          {metadata.sourceTables?.slice(0, 4).map(table => (
-            <Badge key={table} variant="outline" className="h-5 px-1.5 text-[9px] font-medium">
-              {table}
-            </Badge>
-          ))}
-          {metadata.cappedAt && metadata.row_count >= metadata.cappedAt && (
-            <Badge variant="secondary" className="h-5 px-1.5 text-[9px]">
-              limite {metadata.cappedAt}
-            </Badge>
+        <div className="space-y-1.5 pt-1 text-[10px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Info className="h-3 w-3" />
+            <span>{metadata.row_count.toLocaleString('es-CO')} resultado{metadata.row_count === 1 ? '' : 's'}</span>
+            {metadata.sourceTables?.slice(0, 4).map(table => (
+              <Badge key={table} variant="outline" className="h-5 px-1.5 text-[9px] font-medium">
+                {table}
+              </Badge>
+            ))}
+            {metadata.cappedAt && metadata.row_count >= metadata.cappedAt && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-[9px]">
+                limite {metadata.cappedAt}
+              </Badge>
+            )}
+          </div>
+
+          {metadata.sourceSummary && (
+            <p className="leading-snug">{metadata.sourceSummary}</p>
+          )}
+
+          {metadata.suggestedQuestions && metadata.suggestedQuestions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Sparkles className="h-3 w-3" />
+              {metadata.suggestedQuestions.slice(0, 3).map(question => (
+                <Badge key={question} variant="secondary" className="h-5 px-1.5 text-[9px] font-medium">
+                  {question}
+                </Badge>
+              ))}
+            </div>
           )}
         </div>
       )}
