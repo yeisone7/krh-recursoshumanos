@@ -37,6 +37,7 @@ const ALLOWED_TABLES = new Set([
   "personnel_requisitions",
   "vacancies",
   "candidates",
+  "selection_steps",
   "payroll_novelties",
   "payroll_receipts",
   "overtime_records",
@@ -365,6 +366,7 @@ RELACIONES FRECUENTES:
 - contracts c -> employee_terminations et: c.id = et.contract_id
 - personnel_requisitions r -> operation_centers oc: r.operation_center_id = oc.id
 - vacancies v -> candidates ca: v.id = ca.vacancy_id
+- candidates ca -> selection_steps ss: ca.id = ss.candidate_id
 
 REGLAS DE NEGOCIO:
 - Empleado activo: employees_v2.is_active = true.
@@ -375,6 +377,13 @@ REGLAS DE NEGOCIO:
 - Antigüedad: AGE(CURRENT_DATE, fecha de ingreso disponible).
 - Salario base actual: contratos no terminados del empleado.
 - Género: 'M' masculino, 'F' femenino.
+
+- Vacantes abiertas: vacancies.status IN ('open', 'in_process').
+- Etapa actual de candidato: usa candidates.current_step cuando solo necesites la etapa vigente. Si necesitas detalle de pasos, usa selection_steps.step_type, selection_steps.step_order y selection_steps.status.
+- Para vacantes y candidatos usa siempre las tablas reales vacancies, candidates y selection_steps. No inventes vistas o tablas como open_vacancies, candidates_per_stage, active_vacancies ni candidate_stages; si necesitas organizar la consulta, esos nombres pueden ser CTEs, no tablas reales.
+- Campos clave de vacancies: id, company_id, position_title, status, open_date, target_close_date, operation_center_id, positions_count.
+- Campos clave de candidates: id, company_id, vacancy_id, first_name, last_name, status, current_step, application_date, is_selected.
+- Campos clave de selection_steps: id, company_id, candidate_id, step_type, step_order, status, completed_date, scheduled_date, score, result.
 
 Si la pregunta no se puede responder con estas tablas, genera una consulta segura que devuelva cero filas con una columna mensaje.`;
 
@@ -483,13 +492,27 @@ function validateSql(rawSql: string, companyId: string): QueryValidation {
 
 function extractReferencedTables(sql: string) {
   const tables = new Set<string>();
+  const cteNames = extractCteNames(sql);
   const re = /\b(?:from|join)\s+((?:public\.)?(?:"[^"]+"|[a-zA-Z_][a-zA-Z0-9_]*))/gi;
   let match: RegExpExecArray | null;
   while ((match = re.exec(sql)) !== null) {
     const table = match[1].replace(/^public\./i, "").replace(/"/g, "").toLowerCase();
-    if (table !== "select") tables.add(table);
+    if (table !== "select" && !cteNames.has(table)) tables.add(table);
   }
   return Array.from(tables);
+}
+
+function extractCteNames(sql: string) {
+  const names = new Set<string>();
+  if (!/^\s*with\b/i.test(sql)) return names;
+
+  const re = /(?:\bwith|,)\s+("?[a-zA-Z_][a-zA-Z0-9_]*"?)\s+as\s*\(/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(sql)) !== null) {
+    names.add(match[1].replace(/"/g, "").toLowerCase());
+  }
+
+  return names;
 }
 
 function enforceLimit(sql: string) {
