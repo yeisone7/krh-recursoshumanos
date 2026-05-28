@@ -583,11 +583,10 @@ export function ContractFormDialog({
                             Remuneración Base Mensual <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
-                            <div className="relative group">
-                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base font-bold text-primary">$</span>
+                            <div className="relative">
                               <Input 
                                 placeholder="3.500.000" 
-                                className="h-11 rounded-lg border-border bg-background pl-9 text-base font-semibold" 
+                                className="h-11 rounded-lg border-border bg-background text-base font-semibold" 
                                 {...field} 
                                 disabled={!canManageSalaries}
                               />
