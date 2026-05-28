@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
+import { addMonths, differenceInMonths, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, FileText, Building, DollarSign, Briefcase, AlertTriangle, History, Loader2, Globe, Target, ShieldCheck, Award, Clock, UserCheck, MapPin } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -147,6 +147,15 @@ export function ContractFormDialog({
         contractType: contractToEdit.contract_type,
         startDate: new Date(contractToEdit.start_date + 'T00:00:00'),
         endDate: contractToEdit.end_date ? new Date(contractToEdit.end_date + 'T00:00:00') : undefined,
+        durationMonths: contractToEdit.end_date
+          ? Math.max(
+              1,
+              differenceInMonths(
+                new Date(contractToEdit.end_date + 'T00:00:00'),
+                new Date(contractToEdit.start_date + 'T00:00:00')
+              )
+            )
+          : undefined,
         salary: contractToEdit.salary.toString(),
         salaryType: contractToEdit.salary_type === 'integral' ? 'integral' : 'monthly',
         transportAllowance: (contractToEdit.transport_allowance || 0) > 0,
@@ -179,11 +188,41 @@ export function ContractFormDialog({
   }, [open, contractToEdit, preselectedEmployeeId, prefilledData, form]);
 
   const selectedContractType = form.watch('contractType');
+  const selectedStartDate = form.watch('startDate');
+  const selectedDurationMonths = form.watch('durationMonths');
   const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
   const needsEndDate = contractTypeConfig?.requires_end_date ?? false;
 
+  useEffect(() => {
+    if (!selectedContractType) return;
+
+    if (!needsEndDate) {
+      form.setValue('durationMonths', undefined);
+      form.setValue('endDate', undefined);
+      return;
+    }
+
+    if (selectedStartDate && selectedDurationMonths && selectedDurationMonths > 0) {
+      form.setValue('endDate', addMonths(selectedStartDate, selectedDurationMonths), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [form, needsEndDate, selectedDurationMonths, selectedStartDate]);
+
   const handleSubmit = async (data: ContractFormData) => {
     try {
+      if (needsEndDate && (!data.durationMonths || !data.endDate)) {
+        form.setError('durationMonths', {
+          type: 'manual',
+          message: 'Ingrese la duración para calcular la fecha de finalización',
+        });
+        toast.error('Duración requerida', {
+          description: 'Ingrese el número de meses que dura el contrato.',
+        });
+        return;
+      }
+
       // Parse salary to number
       const salaryNumber = parseFloat(data.salary.replace(/[^0-9.-]+/g, ''));
       
@@ -503,6 +542,36 @@ export function ContractFormDialog({
                     {needsEndDate && (
                       <FormField
                         control={form.control}
+                        name="durationMonths"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="ml-1 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
+                              <Clock className="h-3.5 w-3.5" />
+                              Duración (meses) <span className="text-destructive">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="1"
+                                step="1"
+                                className="h-11 rounded-lg border-border bg-background font-medium"
+                                placeholder="Ej: 6"
+                                value={field.value ?? ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  field.onChange(value === '' ? undefined : parseInt(value, 10));
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {needsEndDate && (
+                      <FormField
+                        control={form.control}
                         name="endDate"
                         render={({ field }) => (
                           <FormItem className="flex flex-col">
@@ -514,9 +583,11 @@ export function ContractFormDialog({
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
+                                    type="button"
                                     variant="outline"
+                                    disabled
                                     className={cn(
-                                      'h-11 w-full rounded-lg border-border bg-background pl-4 text-left font-medium',
+                                      'h-11 w-full rounded-lg border-border bg-muted/40 pl-4 text-left font-medium disabled:cursor-default disabled:opacity-100',
                                       !field.value && 'text-muted-foreground font-normal'
                                     )}
                                   >
