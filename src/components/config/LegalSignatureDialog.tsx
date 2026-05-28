@@ -13,6 +13,7 @@ import { Upload, X, ShieldCheck, CheckCircle2, Loader2, User, Briefcase } from '
 import { supabase } from '@/integrations/supabase/client';
 import { useSystemConfig, useUpdateSystemConfig } from '@/hooks/useSystemConfig';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LegalSignatureConfig {
   signature_url: string;
@@ -26,6 +27,7 @@ interface LegalSignatureDialogProps {
 }
 
 export function LegalSignatureDialog({ open, onOpenChange }: LegalSignatureDialogProps) {
+  const { currentCompanyId } = useAuth();
   const { data: config } = useSystemConfig();
   const { mutateAsync: updateConfig } = useUpdateSystemConfig();
   const { toast } = useToast();
@@ -87,11 +89,14 @@ export function LegalSignatureDialog({ open, onOpenChange }: LegalSignatureDialo
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}_${Date.now()}.${fileExt}`;
-        const filePath = `signatures/${fileName}`;
+        const filePath = `legal-signatures/${currentCompanyId || 'global'}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('training-media') // Using existing public bucket
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            upsert: true,
+            contentType: file.type || 'image/png',
+          });
 
         if (uploadError) throw uploadError;
 
@@ -122,7 +127,8 @@ export function LegalSignatureDialog({ open, onOpenChange }: LegalSignatureDialo
       onOpenChange(false);
     } catch (error) {
       console.error(error);
-      toast({ title: 'Error', description: 'No se pudo guardar la configuración.', variant: 'destructive' });
+      const message = error instanceof Error ? error.message : 'No se pudo guardar la configuración.';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsUploading(false);
     }
