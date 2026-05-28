@@ -122,6 +122,7 @@ export function DataAssistantChat() {
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsCacheRef = useRef<Map<string, Blob>>(new Map());
   const { user } = useAuth();
   const { data: userProfile } = useQuery({
     queryKey: ['ai-user-profile', user?.id],
@@ -227,19 +228,60 @@ export function DataAssistantChat() {
   };
 
   // ─── Configuración de Lectura (TTS) ───
+  const formatNumberForSpeech = (value: string) => {
+    const num = Number(value.replace(/\./g, '').replace(',', '.'));
+    if (!Number.isFinite(num)) return value;
+    return new Intl.NumberFormat('es-CO').format(num);
+  };
+
   const cleanTextForSpeech = (text: string) => {
     return text
-      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F3FB}-\u{1F3FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Quitar emojis
-      .replace(/```[\s\S]*?```/g, '') // Quitar bloques de código
-      .replace(/`.*?`/g, '') // Quitar código en línea
-      .replace(/\*\*(.*?)\*\*/g, '$1') // Quitar negritas
-      .replace(/\*(.*?)\*/g, '$1') // Quitar cursivas
-      .replace(/#+\s/g, '') // Quitar encabezados
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Quitar links (dejar solo el texto)
-      .replace(/[|\\-]/g, ' ') // Quitar barras y guiones de tablas
-      .replace(/\s+/g, ' ') // Normalizar espacios
+      .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F3FB}-\u{1F3FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`.*?`/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/#+\s/g, '')
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/[|\\]/g, ' ')
+      .replace(/\bRRHH\b/gi, 'recursos humanos')
+      .replace(/\bIA\b/gi, 'inteligencia artificial')
+      .replace(/(\d+)\s?%/g, (_m, p1) => `${formatNumberForSpeech(p1)} por ciento`)
+      .replace(/\$/g, ' pesos ')
+      .replace(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/g, '$1 de $2 de $3')
+      .replace(/\s+/g, ' ')
       .trim();
   };
+
+  const splitSpeechChunks = (text: string) => {
+    const sentenceChunks = text
+      .split(/(?<=[\.\!\?;:])\s+/)
+      .map(chunk => chunk.trim())
+      .filter(Boolean);
+
+    const chunks: string[] = [];
+    sentenceChunks.forEach(sentence => {
+      if (sentence.length <= 260) {
+        chunks.push(sentence);
+        return;
+      }
+      const parts = sentence.split(/,\s+/).map(part => part.trim()).filter(Boolean);
+      let buffer = '';
+      parts.forEach(part => {
+        if (!buffer) buffer = part;
+        else if ((buffer + ', ' + part).length <= 260) buffer += `, ${part}`;
+        else {
+          chunks.push(buffer);
+          buffer = part;
+        }
+      });
+      if (buffer) chunks.push(buffer);
+    });
+
+    return chunks.slice(0, 20);
+  };
+
+  const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const stopAllSpeech = () => {
     window.speechSynthesis.cancel();
@@ -263,13 +305,11 @@ export function DataAssistantChat() {
   }, []);
 
   const handleSpeak = async (text: string, msgId: string, onEnd?: () => void) => {
-    // Si ya estamos hablando este mensaje, lo detenemos
     if (speakingMsgId === msgId) {
       stopAllSpeech();
       return;
     }
 
-    // Parar cualquier cosa previa antes de empezar una nueva
     window.speechSynthesis.cancel();
     if (audioRef.current) {
       audioRef.current.pause();
@@ -278,45 +318,56 @@ export function DataAssistantChat() {
 
     const cleanedText = cleanTextForSpeech(text);
     if (!cleanedText) return;
+    const chunks = splitSpeechChunks(cleanedText);
+    if (!chunks.length) return;
 
     setSpeakingMsgId(msgId);
 
     try {
-      // 1. Intentar usar OpenAI TTS (Voz Natural Pro)
-      const { data, error } = await supabase.functions.invoke('ai-text-to-speech', {
-        body: { text: cleanedText, voice: 'shimmer' }
-      });
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const cacheKey = `${msgId}:${i}`;
+        let audioBlob = ttsCacheRef.current.get(cacheKey) || null;
 
-      if (error) throw error;
+        if (!audioBlob) {
+          const { data, error } = await supabase.functions.invoke('ai-text-to-speech', {
+            body: { text: chunk, voice: 'nova', model: 'tts-1-hd', speed: 0.98 },
+          });
+          if (error) throw error;
+          if (!data) continue;
+          audioBlob = data as Blob;
+          ttsCacheRef.current.set(cacheKey, audioBlob);
+        }
 
-      if (data) {
-        const audioUrl = URL.createObjectURL(data);
+        const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        
-        audio.onended = () => {
-          setSpeakingMsgId(null);
-          if (onEnd) onEnd();
-          URL.revokeObjectURL(audioUrl);
-        };
 
-        audio.onerror = () => {
-          console.error("Audio playback error");
-          setSpeakingMsgId(null);
-          if (onEnd) onEnd();
-        };
+        await new Promise<void>((resolve, reject) => {
+          audio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            resolve();
+          };
+          audio.onerror = () => {
+            URL.revokeObjectURL(audioUrl);
+            reject(new Error('Audio playback error'));
+          };
+          audio.play().catch(reject);
+        });
 
-        await audio.play();
-        return;
+        if (i < chunks.length - 1) await wait(180);
       }
+
+      setSpeakingMsgId(null);
+      if (onEnd) onEnd();
+      return;
     } catch (err) {
       console.warn('[TTS] Fallback a voz nativa:', err);
-      
-      // 2. Fallback a voz nativa (Browser)
+
       const utterance = new SpeechSynthesisUtterance(cleanedText);
       const voices = window.speechSynthesis.getVoices();
-      
-      const femaleVoice = 
+
+      const femaleVoice =
         voices.find(v => v.lang.startsWith('es') && (v.name.includes('Helena') || v.name.includes('Sabina') || v.name.includes('Laura') || v.name.includes('Luciana') || v.name.includes('Google') && !v.name.includes('Male'))) ||
         voices.find(v => v.lang.startsWith('es') && (v.name.includes('Female') || v.name.includes('Mujer'))) ||
         voices.find(v => v.name.includes('Google') && (v.lang.startsWith('es-ES') || v.lang.startsWith('es-419'))) ||
@@ -326,6 +377,9 @@ export function DataAssistantChat() {
 
       if (femaleVoice) utterance.voice = femaleVoice;
       else utterance.lang = 'es-CO';
+
+      utterance.rate = 0.95;
+      utterance.pitch = 1.02;
 
       utterance.onend = () => {
         setSpeakingMsgId(null);
@@ -683,3 +737,6 @@ export function DataAssistantChat() {
     </div>
   );
 }
+
+
+

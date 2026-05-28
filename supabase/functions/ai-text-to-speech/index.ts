@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { text, voice = 'alloy' } = await req.json();
+    const { text, voice = 'nova', model = 'tts-1-hd', speed = 0.98 } = await req.json();
     
     if (!text) {
       return new Response(JSON.stringify({ error: 'El texto es obligatorio' }), { 
@@ -51,9 +51,10 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "tts-1",
+        model,
         input: text,
-        voice: voice, // alloy, echo, fable, onyx, nova, shimmer
+        voice, // alloy, echo, fable, onyx, nova, shimmer
+        speed,
       }),
     });
 
