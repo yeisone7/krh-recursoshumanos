@@ -35,6 +35,7 @@ export const contractFormSchema = z.object({
   startDate: z.date({
     required_error: 'Seleccione la fecha de inicio',
   }),
+  durationMonths: z.coerce.number().int().min(1, 'La duración debe ser de al menos 1 mes').optional(),
   endDate: z.date().optional(),
   
   // Salary and compensation
