@@ -248,15 +248,16 @@ export function RequisitionApprovalDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-4 sm:p-6 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
-        <DialogHeader>
+      <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-0 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
+        <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
           <DialogTitle className="pr-8 text-lg leading-tight sm:pr-0">{stepTitles[step]}</DialogTitle>
           <DialogDescription className="break-words pr-8 sm:pr-0">
             Requisición: {requisition.cargo_solicitado} ({requisition.cantidad_vacantes_requeridas} vacantes)
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+          <div className="space-y-4">
 
           {/* Step-specific fields */}
           {step === 'operaciones' && (
@@ -547,7 +548,10 @@ export function RequisitionApprovalDialog({
             <Switch checked={approved} onCheckedChange={setApproved} />
           </div>
 
-          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+          </div>
+        </div>
+        <div className="shrink-0 border-t bg-background px-4 py-3 sm:px-6">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
