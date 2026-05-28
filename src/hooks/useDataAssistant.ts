@@ -20,6 +20,9 @@ export interface DataAssistantResponse {
     provider?: string;
     suggestedChart?: string;
     sourceTables?: string[];
+    sourceSummary?: string;
+    suggestedQuestions?: string[];
+    intent?: string;
     warnings?: string[];
     cappedAt?: number;
   } | null;
