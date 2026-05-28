@@ -110,7 +110,7 @@ const fieldToTabMap: Record<string, string> = {
   accountRegistered: 'bank',
   // Schedule tab
   payrollType: 'schedule',
-  shiftTypeId: 'schedule',
+  shiftTypeId: 'timemode',
   isOfficeSchedule: 'schedule',
   restDay: 'schedule',
   // TimeMode tab
@@ -159,6 +159,7 @@ import {
 } from '@/hooks/useSocialSecurityCatalogs';
 import { useBanksCatalog } from '@/hooks/useBanksCatalog';
 import { useWorkSchedules, useShiftCycles } from '@/hooks/useSchedules';
+import { useShiftTypes } from '@/hooks/useShifts';
 import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
 import { MultiSelect } from '@/components/ui/multi-select';
@@ -210,6 +211,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: ipsOptions = [] } = useIPSCatalog();
   const { data: workSchedules = [] } = useWorkSchedules();
   const { data: shiftCycles = [] } = useShiftCycles();
+  const { data: shiftTypes = [] } = useShiftTypes();
   const { data: educationLevels = [] } = useEducationLevels();
   const { data: professions = [] } = useProfessions();
   const { data: bankOptions = [] } = useBanksCatalog();
@@ -228,6 +230,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   // Filter active schedules and cycles
   const activeSchedules = workSchedules.filter(s => s.is_active);
   const activeCycles = shiftCycles.filter(c => c.is_active);
+  const activeShiftTypes = shiftTypes.filter((s: any) => s.is_active !== false);
   const activeEducationLevels = educationLevels.filter(level => level.is_active);
   const activeProfessions = professions.filter(prof => prof.is_active);
 
@@ -1604,6 +1607,42 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
                     {selectedTimeMode === 'shift' && (
                       <>
+                        <FormField
+                          control={form.control}
+                          name="shiftTypeId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Turno de Trabajo</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value || ''}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Seleccione turno (ej. Turno 10x5)" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="bg-background">
+                                  {activeShiftTypes.length === 0 ? (
+                                    <div className="p-2 text-sm text-muted-foreground text-center">
+                                      No hay turnos activos. Cree uno primero en Jornadas.
+                                    </div>
+                                  ) : (
+                                    activeShiftTypes
+                                      .filter((shift: any) => !!shift.id)
+                                      .map((shift: any) => (
+                                        <SelectItem key={shift.id} value={shift.id}>
+                                          <span>{shift.name}</span>
+                                          {shift.code && (
+                                            <span className="text-muted-foreground ml-2">({shift.code})</span>
+                                          )}
+                                        </SelectItem>
+                                      ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
                         <FormField
                           control={form.control}
                           name="shiftCycleId"
