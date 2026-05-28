@@ -15,8 +15,17 @@ const SUGGESTIONS = [
   { icon: Clock, text: 'Empleados que estan actualmente en vacaciones o permiso', category: 'Ausentismo' },
   { icon: TrendingUp, text: 'Promedio salarial comparando hombres vs mujeres', category: 'Analitica' },
   { icon: Stethoscope, text: 'Examenes medicos proximos a vencer por centro', category: 'Salud' },
-  { icon: Package, text: 'Dotaciones pendientes por entregar segun profesiograma', category: 'Dotacion' },
+  { icon: Package, text: 'Dotaciones vencidas o proximas a vencer', category: 'Dotacion' },
   { icon: FileText, text: 'Requisiciones pendientes de aprobacion por centro', category: 'Requisiciones' },
+];
+
+const ANALYSIS_GUIDE = [
+  { title: 'Empleados', items: ['activos por centro', 'por area o cargo', 'antiguedad'] },
+  { title: 'Contratos', items: ['por vencer', 'vencidos', 'vigentes por tipo'] },
+  { title: 'Seleccion', items: ['vacantes abiertas', 'candidatos por etapa', 'dias abiertas'] },
+  { title: 'Ausentismo', items: ['incapacidades', 'vacaciones actuales', 'permisos'] },
+  { title: 'Cumplimiento', items: ['capacitaciones', 'documentos', 'examenes medicos'] },
+  { title: 'Alertas', items: ['top centros', 'pendientes', 'vencimientos'] },
 ];
 
 interface SuggestedQuestionsProps {
@@ -52,6 +61,32 @@ export function SuggestedQuestions({ onSelect }: SuggestedQuestionsProps) {
             </div>
           </button>
         ))}
+      </div>
+
+      <div className="w-full max-w-3xl border-t pt-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Qué puedo analizar
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {ANALYSIS_GUIDE.map(section => (
+            <div key={section.title} className="rounded-lg border bg-background p-3">
+              <p className="text-xs font-semibold text-foreground">{section.title}</p>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {section.items.map(item => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => onSelect(`${section.title}: ${item}`)}
+                    className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

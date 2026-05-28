@@ -14,6 +14,7 @@ import { ResponseRenderer } from './ResponseRenderer';
 import { SuggestedQuestions } from './SuggestedQuestions';
 import {
   useSendDataQuestion,
+  useSendDataFeedback,
   useDataAssistantPermission,
   type ChatMessage,
   type DataAssistantResponse,
@@ -23,7 +24,19 @@ const MAX_QUESTION_LENGTH = 2000;
 
 // ─── Burbuja de mensaje ───────────────────────────────────────
 
-function MessageBubble({ msg, onSpeak, isSpeaking }: { msg: ChatMessage, onSpeak: (text: string) => void, isSpeaking: boolean }) {
+function MessageBubble({
+  msg,
+  onSpeak,
+  isSpeaking,
+  onSuggestedQuestion,
+  onFeedback,
+}: {
+  msg: ChatMessage;
+  onSpeak: (text: string) => void;
+  isSpeaking: boolean;
+  onSuggestedQuestion: (question: string) => void;
+  onFeedback: (msgId: string, rating: 'positive' | 'negative') => void;
+}) {
   const isUser = msg.role === 'user';
 
   return (
@@ -60,7 +73,12 @@ function MessageBubble({ msg, onSpeak, isSpeaking }: { msg: ChatMessage, onSpeak
           </div>
         ) : msg.response ? (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <ResponseRenderer response={msg.response} showSQL={false} />
+            <ResponseRenderer
+              response={msg.response}
+              showSQL={false}
+              onSuggestedQuestion={onSuggestedQuestion}
+              onFeedback={(rating) => onFeedback(msg.id, rating)}
+            />
           </div>
         ) : (
           <p className="leading-relaxed">{msg.content}</p>
@@ -137,6 +155,7 @@ export function DataAssistantChat() {
 
   const { data: hasPermission, isLoading: checkingPerm } = useDataAssistantPermission();
   const sendQuestion = useSendDataQuestion();
+  const sendFeedback = useSendDataFeedback();
 
   // ─── Configuración de Voz (STT) ───
   useEffect(() => {
@@ -451,6 +470,29 @@ export function DataAssistantChat() {
     }
   };
 
+  const handleFeedback = (msgId: string, rating: 'positive' | 'negative') => {
+    if (!conversationId) return;
+
+    setMessages(prev =>
+      prev.map(m =>
+        m.id === msgId && m.response
+          ? {
+              ...m,
+              response: {
+                ...m.response,
+                metadata: {
+                  ...(m.response.metadata ?? { row_count: 0 }),
+                  feedback: rating,
+                },
+              },
+            }
+          : m
+      )
+    );
+
+    sendFeedback.mutate({ conversationId, rating });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -552,6 +594,8 @@ export function DataAssistantChat() {
               msg={msg} 
               onSpeak={(text) => handleSpeak(text, msg.id)}
               isSpeaking={speakingMsgId === msg.id}
+              onSuggestedQuestion={handleSend}
+              onFeedback={handleFeedback}
             />
           ))
         )}
