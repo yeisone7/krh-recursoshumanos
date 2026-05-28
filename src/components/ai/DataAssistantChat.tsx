@@ -22,10 +22,20 @@ import {
 
 const MAX_QUESTION_LENGTH = 2000;
 type VoiceStyle = 'executiva' | 'neutra' | 'cercana';
+type VoiceName = 'alloy' | 'echo' | 'fable' | 'nova' | 'onyx' | 'shimmer';
+
+const VOICE_OPTIONS: Array<{ value: VoiceName; label: string }> = [
+  { value: 'nova', label: 'Nova' },
+  { value: 'shimmer', label: 'Shimmer' },
+  { value: 'fable', label: 'Fable' },
+  { value: 'alloy', label: 'Alloy' },
+  { value: 'echo', label: 'Echo' },
+  { value: 'onyx', label: 'Onyx' },
+];
 
 const VOICE_STYLES: Record<VoiceStyle, {
   label: string;
-  voice: 'nova' | 'shimmer';
+  voice: VoiceName;
   model: 'tts-1-hd' | 'tts-1';
   speed: number;
   pauseMs: number;
@@ -162,6 +172,13 @@ export function DataAssistantChat() {
     if (saved === 'cercana' || saved === 'neutra' || saved === 'ejecutiva') return saved;
     return 'ejecutiva';
   });
+  const [selectedVoice, setSelectedVoice] = useState<VoiceName>(() => {
+    const saved = localStorage.getItem('data-assistant-voice-name');
+    if (saved === 'alloy' || saved === 'echo' || saved === 'fable' || saved === 'nova' || saved === 'onyx' || saved === 'shimmer') {
+      return saved;
+    }
+    return 'nova';
+  });
   const [isThinking, setIsThinking] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -206,6 +223,10 @@ export function DataAssistantChat() {
   useEffect(() => {
     localStorage.setItem('data-assistant-voice-style', voiceStyle);
   }, [voiceStyle]);
+
+  useEffect(() => {
+    localStorage.setItem('data-assistant-voice-name', selectedVoice);
+  }, [selectedVoice]);
 
   // ─── Configuración de Voz (STT) ───
   useEffect(() => {
@@ -380,7 +401,7 @@ export function DataAssistantChat() {
 
         if (!audioBlob) {
           const { data, error } = await supabase.functions.invoke('ai-text-to-speech', {
-            body: { text: chunk, voice: voiceProfile.voice, model: voiceProfile.model, speed: voiceProfile.speed },
+            body: { text: chunk, voice: selectedVoice, model: voiceProfile.model, speed: voiceProfile.speed },
           });
           if (error) throw error;
           if (!data) continue;
@@ -634,6 +655,18 @@ export function DataAssistantChat() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <div className="flex items-center gap-1">
+            <select
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value as VoiceName)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              title="Seleccionar voz"
+            >
+              {VOICE_OPTIONS.map((voice) => (
+                <option key={voice.value} value={voice.value}>
+                  {voice.label}
+                </option>
+              ))}
+            </select>
             {(Object.keys(VOICE_STYLES) as VoiceStyle[]).map((style) => (
               <Button
                 key={style}
