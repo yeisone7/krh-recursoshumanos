@@ -73,12 +73,15 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [previewOpenedBeforeApprove, setPreviewOpenedBeforeApprove] = useState(false);
   
   const { data: dbContract, isLoading: isDbContractLoading } = useContract(contractId || undefined);
 
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
   const { isAdmin, isRRHH, isSuperAdmin, canView, canUpdate, canApprove: canApproveModule } = useAuth();
+  const canViewContractCompensation = canView('salarios') || canView('compensaciones');
   const { data: contractTypes = [] } = useContractTypes();
   const canUpdateContracts = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
@@ -224,6 +227,11 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         variant: 'destructive',
       });
     }
+  };
+
+  const handleOpenPreviewBeforeApprove = () => {
+    setPreviewOpenedBeforeApprove(true);
+    setShowGenerateDialog(true);
   };
 
   const handleOpenExtensionForm = () => {
@@ -385,7 +393,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
                     <p className="font-medium">
-                      {canView('salarios') ? formatCurrency(contract.salary) : '••••••'}
+                      {canViewContractCompensation ? formatCurrency(contract.salary) : '••••••'}
                     </p>
                   </div>
                 </div>
@@ -671,7 +679,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   variant="outline"
                   size="sm"
                   className="border-success/50 text-success hover:bg-success hover:text-success-foreground"
-                  onClick={handleApproveContract}
+                  onClick={() => setShowApproveDialog(true)}
                   disabled={approveContract.isPending}
                 >
                   {approveContract.isPending ? (
@@ -713,6 +721,57 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         onOpenChange={setShowTerminationDialog}
         contract={contract}
       />
+
+      <Dialog
+        open={showApproveDialog}
+        onOpenChange={(value) => {
+          setShowApproveDialog(value);
+          if (!value) setPreviewOpenedBeforeApprove(false);
+        }}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Aprobar Contrato</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Antes de aprobar, revisa la vista preliminar del contrato para validar contenido, cláusulas y datos del empleado.
+          </p>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowApproveDialog(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleOpenPreviewBeforeApprove}
+            >
+              Vista preliminar
+            </Button>
+            <Button
+              type="button"
+              className="gradient-primary text-primary-foreground"
+              onClick={async () => {
+                await handleApproveContract();
+                setShowApproveDialog(false);
+                setPreviewOpenedBeforeApprove(false);
+              }}
+              disabled={approveContract.isPending || !previewOpenedBeforeApprove}
+              title={!previewOpenedBeforeApprove ? 'Primero abre la vista preliminar' : undefined}
+            >
+              {approveContract.isPending ? (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+              )}
+              Confirmar Aprobación
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {dbContract && (
         <GenerateContractDialog
