@@ -69,6 +69,7 @@ export function LegalSignatureDialog({ open, onOpenChange }: LegalSignatureDialo
     setFile(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
+    setSignatureUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -181,20 +182,31 @@ export function LegalSignatureDialog({ open, onOpenChange }: LegalSignatureDialo
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="relative group rounded-3xl border-2 border-border overflow-hidden bg-white flex items-center justify-center p-4 min-h-[150px]"
+                    className="relative rounded-3xl border-2 border-border overflow-hidden bg-white p-4"
                   >
-                    <img 
-                      src={previewUrl || signatureUrl || ''} 
-                      alt="Firma" 
-                      className="max-w-full max-h-[120px] object-contain mix-blend-multiply" 
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="flex items-center justify-center min-h-[150px]">
+                      <img
+                        src={previewUrl || signatureUrl || ''}
+                        alt="Firma"
+                        className="max-w-full max-h-[120px] object-contain mix-blend-multiply"
+                      />
+                    </div>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-xl h-10 px-4"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Cambiar
+                      </Button>
                       <Button
                         type="button"
                         variant="destructive"
                         size="icon"
                         onClick={handleRemoveFile}
-                        className="rounded-xl h-10 w-10 shadow-xl"
+                        className="rounded-xl h-10 w-10"
                       >
                         <X className="w-4 h-4" />
                       </Button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ import {
   Loader2,
   ShieldCheck,
   UserCheck,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,6 +43,8 @@ import { RequisitionTimeline } from './RequisitionTimeline';
 import { RequisitionApprovalDialog } from './RequisitionApprovalDialog';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import { useToast } from '@/hooks/use-toast';
+import { useVacancyPlatforms } from '@/hooks/useVacancyPlatforms';
+import { supabase } from '@/integrations/supabase/client';
 import {
   requisitionStatusLabels,
   requisitionStatusConfig,
@@ -61,6 +65,14 @@ interface RequisitionDetailDialogProps {
   onCreateVacancy?: () => void;
 }
 
+interface VacancyCodeEntry {
+  id?: string;
+  platformId: string;
+  code: string;
+  fechaCreacion: string;
+  fechaCierre: string;
+}
+
 export function RequisitionDetailDialog({
   open,
   onOpenChange,
@@ -70,15 +82,34 @@ export function RequisitionDetailDialog({
 }: RequisitionDetailDialogProps) {
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
   const { companies, currentCompanyId, user, hasPermission, isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
+  const queryClient = useQueryClient();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const updateRequisition = useUpdateRequisition();
   const submitRequisition = useSubmitRequisition();
   const { data: psychologyUsers = [], isLoading: loadingPsychology } = usePsychologyUsers();
+  const { data: platforms = [] } = useVacancyPlatforms();
   const { toast } = useToast();
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalStep, setApprovalStep] = useState<'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [newVacancyCodes, setNewVacancyCodes] = useState<VacancyCodeEntry[]>([]);
+
+  const { data: vacancyCodes = [], isLoading: loadingVacancyCodes } = useQuery({
+    queryKey: ['requisition-vacancy-codes', requisitionId],
+    queryFn: async () => {
+      if (!requisitionId) return [];
+      const { data, error } = await supabase
+        .from('requisition_vacancy_codes')
+        .select('id, platform_id, codigo_vacante_externa, fecha_creacion, fecha_cierre, entidad_origen')
+        .eq('requisition_id', requisitionId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!requisitionId,
+  });
 
   useEffect(() => {
     if (requisition?.lider_proceso) {
@@ -87,6 +118,12 @@ export function RequisitionDetailDialog({
       setLiderProceso('');
     }
   }, [requisition?.lider_proceso]);
+
+  useEffect(() => {
+    if (!open) {
+      setNewVacancyCodes([]);
+    }
+  }, [open]);
 
   if (!requisitionId) return null;
 
@@ -157,6 +194,90 @@ export function RequisitionDetailDialog({
   const canEdit = status === 'borrador' && canManageDraft;
   const canSubmit = status === 'borrador' && canManageDraft;
   const canCreateVacancy = status === 'aprobada' || status === 'en_seleccion';
+  const canManageVacancyCodes = hasPermission('req_approve_seleccion', 'approve') || isAdmin || isRRHH || isSuperAdmin || canUpdate('requisiciones');
+  const activePlatforms = platforms.filter((p) => p.is_active);
+
+  const addVacancyCodeDraft = () => {
+    setNewVacancyCodes((prev) => [
+      ...prev,
+      { platformId: '', code: '', fechaCreacion: '', fechaCierre: '' },
+    ]);
+  };
+
+  const removeVacancyCodeDraft = (index: number) => {
+    setNewVacancyCodes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateVacancyCodeDraft = (index: number, field: keyof VacancyCodeEntry, value: string) => {
+    setNewVacancyCodes((prev) => prev.map((entry, i) => (i === index ? { ...entry, [field]: value } : entry)));
+  };
+
+  const saveVacancyCodes = async () => {
+    if (!requisition?.id) return;
+    const validCodes = newVacancyCodes.filter((vc) => vc.platformId && vc.code.trim());
+
+    if (validCodes.length === 0) {
+      toast({
+        title: 'Sin cambios',
+        description: 'Agrega al menos un código con plataforma y valor.',
+      });
+      return;
+    }
+
+    const invalidDates = validCodes.some((vc) => vc.fechaCreacion && vc.fechaCierre && vc.fechaCierre < vc.fechaCreacion);
+    if (invalidDates) {
+      toast({
+        title: 'Fechas inválidas',
+        description: 'La fecha de cierre no puede ser anterior a la fecha de creación.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const payload = validCodes.map((vc) => ({
+      requisition_id: requisition.id,
+      platform_id: vc.platformId,
+      codigo_vacante_externa: vc.code.trim(),
+      entidad_origen: platforms.find((p) => p.id === vc.platformId)?.name || '',
+      fecha_creacion: vc.fechaCreacion || null,
+      fecha_cierre: vc.fechaCierre || null,
+    }));
+
+    const { error } = await (supabase as any).from('requisition_vacancy_codes').insert(payload);
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudieron guardar los códigos de vacante.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ['requisition-vacancy-codes', requisitionId] });
+    setNewVacancyCodes([]);
+    toast({
+      title: 'Guardado',
+      description: 'Códigos de vacante agregados correctamente.',
+    });
+  };
+
+  const removeExistingVacancyCode = async (codeId: string) => {
+    const { error } = await supabase.from('requisition_vacancy_codes').delete().eq('id', codeId);
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar el código de vacante.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ['requisition-vacancy-codes', requisitionId] });
+    toast({
+      title: 'Eliminado',
+      description: 'Código de vacante eliminado.',
+    });
+  };
   
   const getApprovalAction = () => {
     if (!requisition) return null;
@@ -449,6 +570,121 @@ export function RequisitionDetailDialog({
                     <p className="text-sm text-muted-foreground">Cargo</p>
                     <p className="font-medium">{requisition.cargo_solicitante || 'No especificado'}</p>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <CardTitle className="text-base">Códigos de la Vacante</CardTitle>
+                    {canManageVacancyCodes && (
+                      <Button type="button" variant="outline" size="sm" onClick={addVacancyCodeDraft}>
+                        <Plus className="mr-1 h-4 w-4" />
+                        Agregar
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {loadingVacancyCodes ? (
+                    <p className="text-sm text-muted-foreground">Cargando códigos...</p>
+                  ) : vacancyCodes.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin códigos de vacante agregados.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {vacancyCodes.map((entry: any) => (
+                        <div key={entry.id} className="rounded-lg border p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="space-y-1 text-sm">
+                              <p className="font-semibold">{entry.codigo_vacante_externa}</p>
+                              <p className="text-muted-foreground">{entry.entidad_origen || 'Plataforma no definida'}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {entry.fecha_creacion ? `Creación: ${entry.fecha_creacion}` : 'Creación: -'} | {entry.fecha_cierre ? `Cierre: ${entry.fecha_cierre}` : 'Cierre: -'}
+                              </p>
+                            </div>
+                            {canManageVacancyCodes && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => removeExistingVacancyCode(entry.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {newVacancyCodes.map((entry, index) => (
+                    <div key={`new-${index}`} className="space-y-2 rounded-lg border border-border p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nuevo código</p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          onClick={() => removeVacancyCodeDraft(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <Select value={entry.platformId} onValueChange={(val) => updateVacancyCodeDraft(index, 'platformId', val)}>
+                          <SelectTrigger className="h-9 text-sm">
+                            <SelectValue placeholder="Plataforma" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-background">
+                            {activePlatforms.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          className="h-9 text-sm"
+                          placeholder="Código"
+                          value={entry.code}
+                          onChange={(e) => updateVacancyCodeDraft(index, 'code', e.target.value)}
+                        />
+                        <Input
+                          type="date"
+                          className="h-9 text-sm"
+                          value={entry.fechaCreacion}
+                          onChange={(e) => updateVacancyCodeDraft(index, 'fechaCreacion', e.target.value)}
+                        />
+                        <Input
+                          type="date"
+                          className={cn('h-9 text-sm', entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && 'border-destructive')}
+                          value={entry.fechaCierre}
+                          min={entry.fechaCreacion || undefined}
+                          onChange={(e) => updateVacancyCodeDraft(index, 'fechaCierre', e.target.value)}
+                        />
+                      </div>
+                      {entry.fechaCreacion && entry.fechaCierre && entry.fechaCierre < entry.fechaCreacion && (
+                        <p className="text-[11px] text-destructive">La fecha de cierre no puede ser anterior a la de creación.</p>
+                      )}
+                    </div>
+                  ))}
+
+                  {canManageVacancyCodes && newVacancyCodes.length > 0 && (
+                    <div className="flex justify-end">
+                      <Button type="button" onClick={saveVacancyCodes}>
+                        Guardar códigos
+                      </Button>
+                    </div>
+                  )}
+
+                  {activePlatforms.length === 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      No hay plataformas configuradas. Agrégalas desde el catálogo de Plataformas de Publicación.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
