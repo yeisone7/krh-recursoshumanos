@@ -159,7 +159,7 @@ import {
 } from '@/hooks/useSocialSecurityCatalogs';
 import { useBanksCatalog } from '@/hooks/useBanksCatalog';
 import { useWorkSchedules, useShiftCycles } from '@/hooks/useSchedules';
-import { useShiftTypes } from '@/hooks/useShifts';
+import { useShifts } from '@/hooks/useSchedules';
 import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
 import { MultiSelect } from '@/components/ui/multi-select';
@@ -211,7 +211,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   const { data: ipsOptions = [] } = useIPSCatalog();
   const { data: workSchedules = [] } = useWorkSchedules();
   const { data: shiftCycles = [] } = useShiftCycles();
-  const { data: shiftTypes = [] } = useShiftTypes();
+  const { data: shifts = [] } = useShifts();
   const { data: educationLevels = [] } = useEducationLevels();
   const { data: professions = [] } = useProfessions();
   const { data: bankOptions = [] } = useBanksCatalog();
@@ -230,7 +230,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   // Filter active schedules and cycles
   const activeSchedules = workSchedules.filter(s => s.is_active);
   const activeCycles = shiftCycles.filter(c => c.is_active);
-  const activeShiftTypes = shiftTypes.filter((s: any) => s.is_active !== false);
+  const activeShiftTypes = shifts.filter((s: any) => s.is_active !== false);
   const activeEducationLevels = educationLevels.filter(level => level.is_active);
   const activeProfessions = professions.filter(prof => prof.is_active);
 

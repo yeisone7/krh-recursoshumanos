@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { addMonths, differenceInMonths, format } from 'date-fns';
+import { addDays, addMonths, differenceInMonths, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, FileText, Building, DollarSign, Briefcase, AlertTriangle, History, Loader2, Globe, Target, ShieldCheck, Award, Clock, UserCheck, MapPin } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -151,7 +151,7 @@ export function ContractFormDialog({
           ? Math.max(
               1,
               differenceInMonths(
-                new Date(contractToEdit.end_date + 'T00:00:00'),
+                addDays(new Date(contractToEdit.end_date + 'T00:00:00'), 1),
                 new Date(contractToEdit.start_date + 'T00:00:00')
               )
             )
@@ -203,7 +203,7 @@ export function ContractFormDialog({
     }
 
     if (selectedStartDate && selectedDurationMonths && selectedDurationMonths > 0) {
-      form.setValue('endDate', addMonths(selectedStartDate, selectedDurationMonths), {
+      form.setValue('endDate', addDays(addMonths(selectedStartDate, selectedDurationMonths), -1), {
         shouldDirty: true,
         shouldValidate: true,
       });
