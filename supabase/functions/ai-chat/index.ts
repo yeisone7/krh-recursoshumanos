@@ -38,6 +38,292 @@ interface ChatMessage {
   content: string;
 }
 
+interface AppModuleKnowledge {
+  moduleCode: string;
+  title: string;
+  route?: string;
+  keywords: string[];
+  actions: string[];
+  restrictions: string[];
+  usageNotes?: string[];
+}
+
+const APP_MODULE_KNOWLEDGE: AppModuleKnowledge[] = [
+  {
+    moduleCode: "empleados",
+    title: "Empleados",
+    route: "/empleados",
+    keywords: ["empleado", "empleados", "hoja de vida", "documentos", "certificacion", "certificación", "registro", "360"],
+    actions: [
+      "Crear nuevo empleado y editar datos personales, contacto, familia, laboral, modalidad, seguridad social, banco y nomina.",
+      "Subir documentos por carpetas: Hoja de Vida, Certificados Laborales y Academicos, Proceso de Seleccion, Certificados de Residencia, Afiliaciones, Examenes Ocupacionales, Carne de Vacunas, Consulta de Antecedentes, Dotacion, Contratos y Otro si, Certificados Bancarios, Documentos de Retiro, Inducciones y Cursos, Licencia y Cursos.",
+      "Generar enlaces de auto-registro con nombre y campos configurables.",
+      "Acceder a Consulta 360 del empleado.",
+    ],
+    restrictions: [
+      "No se puede eliminar un empleado con contratos activos.",
+      "El numero de documento no se puede duplicar.",
+      "Un empleado retirado conserva su historial para consulta y reportes.",
+    ],
+    usageNotes: [
+      "Filtros principales: Todos, Activos, Inactivos, Retirados, En Retiro y Nuevos.",
+      "Inactivo es deshabilitacion administrativa; Retirado viene del proceso formal de retiro.",
+    ],
+  },
+  {
+    moduleCode: "empleado_360",
+    title: "Consulta 360 del Empleado",
+    route: "/empleados/:id/360",
+    keywords: ["360", "consulta 360", "perfil 360", "documentos 360", "linea de tiempo", "expediente"],
+    actions: [
+      "Consultar perfil, informacion laboral, contratos, retiros, vacaciones, permisos, incapacidades, capacitaciones, evaluaciones, salud, dotacion, novedades, turnos, documentos, auditoria, linea de tiempo, alertas y calidad del expediente.",
+      "Revisar documentos por carpetas desplegables similares a la carga de documentos del empleado.",
+      "Abrir o descargar documentos del expediente cuando el usuario tenga acceso.",
+    ],
+    restrictions: [
+      "La vista 360 consolida informacion; los cambios operativos se hacen desde el modulo correspondiente.",
+      "La visibilidad depende de los permisos asignados al rol del usuario.",
+    ],
+  },
+  {
+    moduleCode: "contratos",
+    title: "Contratos",
+    route: "/contratos",
+    keywords: ["contrato", "contratos", "vigencia", "duracion", "duración", "prorroga", "prórroga", "aprobacion", "aprobación", "retiro", "certificacion laboral"],
+    actions: [
+      "Crear contrato desde Nuevo Contrato con pestanas General, Ubicacion y Contrato.",
+      "Registrar fecha de inicio y duracion en meses; la fecha de finalizacion se calcula como fecha de inicio mas duracion.",
+      "Ver en el grid la vigencia con fecha de inicio, duracion del contrato y fecha final efectiva.",
+      "Registrar prorrogas, aprobar contratos, generar documento de contrato, iniciar o continuar proceso de retiro y expedir certificacion laboral desde retiro.",
+    ],
+    restrictions: [
+      "Solo debe existir un contrato activo por empleado.",
+      "Cuando el retiro queda completado, se bloquean editar contrato, nueva prorroga y generacion de nuevos documentos contractuales.",
+      "Los permisos especiales como Aprobar Contratos dependen del rol.",
+    ],
+    usageNotes: [
+      "La vigencia efectiva considera prorrogas; si no hay fecha final, se muestra Indefinido.",
+      "El campo de remuneracion base mensual no usa icono de moneda dentro del input para evitar solapamientos.",
+    ],
+  },
+  {
+    moduleCode: "retiros",
+    title: "Proceso de Retiro",
+    route: "/contratos",
+    keywords: ["retiro", "terminacion", "terminación", "cesantias", "cesantías", "liquidacion", "liquidación", "folio", "archivo"],
+    actions: [
+      "Iniciar retiro desde el detalle de un contrato vigente o con retiro pendiente.",
+      "Registrar tipo de terminacion, motivo, fechas, checklist documental, folio y numero de archivo.",
+      "Generar documentos de retiro y certificacion laboral desde el checklist.",
+    ],
+    restrictions: [
+      "Solo se puede iniciar retiro sobre contratos vigentes o con retiro pendiente.",
+      "Al completar retiro, el contrato queda Terminado y se bloquean operaciones contractuales posteriores.",
+    ],
+  },
+  {
+    moduleCode: "requisiciones",
+    title: "Requisiciones de Personal",
+    route: "/requisiciones",
+    keywords: ["requisicion", "requisición", "solicitud de personal", "vacante", "aprobacion requisicion"],
+    actions: [
+      "Crear requisicion desde modal por pestanas: solicitud, posicion, reemplazo, condiciones, beneficios y solicitante.",
+      "Aprobar o rechazar requisicion segun flujo configurado.",
+      "Ver detalle, linea de tiempo y exportar requisicion en PDF.",
+    ],
+    restrictions: [
+      "Requiere aprobacion segun el flujo configurado.",
+      "No se debe modificar una requisicion ya aprobada salvo flujo permitido.",
+    ],
+    usageNotes: ["Dia de descanso soporta 2 Dias, 4 Dias y 7 Dias."],
+  },
+  {
+    moduleCode: "seleccion",
+    title: "Seleccion y Vacantes",
+    route: "/seleccion",
+    keywords: ["seleccion", "selección", "vacante", "candidato", "entrevista", "etapa"],
+    actions: [
+      "Crear vacante desde modal responsivo.",
+      "Registrar candidatos manualmente o mediante enlace publico.",
+      "Avanzar candidatos por etapas, registrar resultados y vincular candidato seleccionado como empleado.",
+    ],
+    restrictions: [
+      "Solo vacantes activas permiten agregar candidatos.",
+      "Un candidato solo debe ser seleccionado una vez por vacante.",
+    ],
+  },
+  {
+    moduleCode: "capacitaciones",
+    title: "Capacitaciones",
+    route: "/capacitaciones",
+    keywords: ["capacitacion", "capacitación", "curso", "induccion", "inducción", "entrenamiento", "evaluacion capacitacion", "iso"],
+    actions: [
+      "Crear capacitacion manual o con IA.",
+      "Gestionar biblioteca, sesiones, asistencia con firma, evidencias, evaluaciones, enlaces de acceso publico, cumplimiento y analiticas.",
+      "Configurar tipo de capacitacion, area, publico objetivo y norma.",
+    ],
+    restrictions: [
+      "El acceso publico requiere enlace generado.",
+      "Las evaluaciones solo se pueden responder una vez por sesion.",
+    ],
+    usageNotes: [
+      "Tipos recientes: Induccion, Capacitacion y Entrenamiento Grupal.",
+      "Norma ISO 14001 reemplaza ISO 14000.",
+    ],
+  },
+  {
+    moduleCode: "seguridad",
+    title: "Seguridad y Roles",
+    route: "/seguridad",
+    keywords: ["seguridad", "roles", "permisos", "usuario", "asignar centros", "aprobar contratos", "matriz"],
+    actions: [
+      "Gestionar usuarios, invitar usuarios, asignar roles, vincular empleados y activar o desactivar usuarios.",
+      "Crear roles con permisos por modulo y permisos especiales independientes por item.",
+      "Asignar empresas y centros permitidos a usuarios.",
+    ],
+    restrictions: [
+      "Solo usuarios con permiso de seguridad pueden gestionar usuarios y roles.",
+      "El rol Administrador no se debe eliminar ni desactivar.",
+      "No se puede eliminar un rol asignado a usuarios activos.",
+    ],
+    usageNotes: [
+      "La matriz de acceso distingue permisos base del modulo y permisos especiales como aprobaciones.",
+      "SuperAdmin tiene Empresas, Usuarios y Roles.",
+    ],
+  },
+  {
+    moduleCode: "alertas",
+    title: "Centro de Alertas y Notificaciones",
+    route: "/alertas",
+    keywords: ["alertas", "notificaciones", "correo", "vencimientos", "reglas", "centro de notificaciones"],
+    actions: [
+      "Ver alertas activas, filtrar por tipo y prioridad, marcar como leida y navegar al modulo relacionado.",
+      "Configurar reglas de notificacion por rol, evento y canal.",
+    ],
+    restrictions: [
+      "Las alertas se generan automaticamente; no se crean manualmente desde el centro de alertas.",
+      "Los destinatarios dependen de reglas, roles y configuracion de empresa.",
+    ],
+  },
+  {
+    moduleCode: "dotacion",
+    title: "Dotacion",
+    route: "/dotacion",
+    keywords: ["dotacion", "dotación", "inventario", "profesiograma", "entrega", "acta"],
+    actions: [
+      "Registrar entrega de dotacion.",
+      "Gestionar catalogo de articulos, profesiograma, cumplimiento, inventario y movimientos.",
+      "Exportar acta de entrega en PDF.",
+    ],
+    restrictions: [
+      "Solo empleados activos pueden recibir dotacion.",
+      "El inventario no puede quedar en negativo.",
+    ],
+  },
+  {
+    moduleCode: "examenes",
+    title: "Examenes Medicos",
+    route: "/examenes",
+    keywords: ["examen", "examenes", "médico", "medico", "profesiograma", "orden medica", "apto"],
+    actions: [
+      "Registrar aplicacion de examenes.",
+      "Gestionar catalogo de examenes y profesiograma.",
+      "Ver detalle con resultados y generar orden o acta en PDF.",
+    ],
+    restrictions: [
+      "Solo empleados activos.",
+      "Los examenes con concepto No Apto generan alertas.",
+    ],
+  },
+  {
+    moduleCode: "novedades",
+    title: "Novedades de Nomina",
+    route: "/novedades",
+    keywords: ["novedad", "novedades", "nomina", "nómina", "periodo", "aprobacion novedad"],
+    actions: [
+      "Registrar, editar o eliminar novedades segun estado.",
+      "Filtrar por periodo, empleado y tipo.",
+      "Aprobar novedades pendientes cuando el rol lo permite, duplicar novedades recurrentes, imprimir comprobante o exportar a Excel.",
+    ],
+    restrictions: [
+      "No se pueden modificar novedades de periodos cerrados.",
+      "Las novedades aprobadas no se deben eliminar.",
+    ],
+  },
+  {
+    moduleCode: "asistente_ia",
+    title: "Asistente IA",
+    route: "/asistente-ia",
+    keywords: ["asistente", "ia", "datos", "analisis", "análisis", "chat"],
+    actions: [
+      "Usar Asistente de Ayuda para orientacion sobre uso de la app.",
+      "Usar Analisis de Datos para metricas, conteos, tendencias y consultas internas controladas.",
+      "Administrar acceso al asistente desde Configuracion > IA cuando aplique.",
+    ],
+    restrictions: [
+      "El Asistente de Ayuda no reemplaza validaciones legales ni consulta datos internos reales.",
+      "El Asistente de Datos requiere permiso por usuario y respeta el contexto de empresa.",
+    ],
+  },
+  {
+    moduleCode: "configuracion",
+    title: "Configuracion",
+    route: "/configuracion",
+    keywords: ["configuracion", "configuración", "ia", "api key", "firma", "parametros", "parámetros"],
+    actions: [
+      "Editar parametros generales.",
+      "Configurar firma legal para documentos.",
+      "Configurar dias de alerta de procesos de retiro.",
+      "Administrar acceso y proveedores del asistente IA.",
+    ],
+    restrictions: ["Las configuraciones sensibles requieren permisos administrativos."],
+  },
+];
+
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "");
+}
+
+function buildAppUsageKnowledge(pageContext?: PageContext | null, userMessage = "") {
+  const normalizedMessage = normalizeText(userMessage);
+  const selected = new Map<string, AppModuleKnowledge>();
+
+  for (const module of APP_MODULE_KNOWLEDGE) {
+    if (pageContext?.module && module.moduleCode === pageContext.module) {
+      selected.set(module.moduleCode, module);
+      continue;
+    }
+    if (pageContext?.pathname && module.route && pageContext.pathname.startsWith(module.route.replace("/:id", ""))) {
+      selected.set(module.moduleCode, module);
+      continue;
+    }
+    if (module.keywords.some((keyword) => normalizedMessage.includes(normalizeText(keyword)))) {
+      selected.set(module.moduleCode, module);
+    }
+  }
+
+  for (const moduleCode of ["empleados", "contratos", "seguridad", "asistente_ia"]) {
+    const module = APP_MODULE_KNOWLEDGE.find((item) => item.moduleCode === moduleCode);
+    if (module) selected.set(module.moduleCode, module);
+  }
+
+  return [...selected.values()]
+    .slice(0, 8)
+    .map((module) => {
+      const lines = [
+        `- ${module.title}${module.route ? ` (${module.route})` : ""}`,
+        `  Acciones reales: ${module.actions.join(" | ")}`,
+        `  Restricciones reales: ${module.restrictions.join(" | ")}`,
+      ];
+      if (module.usageNotes?.length) lines.push(`  Notas de uso: ${module.usageNotes.join(" | ")}`);
+      return lines.join("\n");
+    })
+    .join("\n");
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -83,7 +369,7 @@ Entrega solo el paso actual con número visible (por ejemplo, "### Paso 1 de N")
 Responde en español, con pasos claros, concisos y formato Markdown cuando ayude.${moduleContext}`;
 }
 
-function buildCompleteSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, userContext?: UserContext | null) {
+function buildCompleteSystemPrompt(mode: ChatMode, pageContext?: PageContext | null, userContext?: UserContext | null, userMessage = "") {
   if (mode === "data_analysis") {
     return "El chat de analisis de datos no se atiende desde este asistente. Indica que el usuario debe usar el Asistente de Datos IA para metricas, conteos, tendencias o consultas internas. No inventes datos.";
   }
@@ -95,12 +381,22 @@ function buildCompleteSystemPrompt(mode: ChatMode, pageContext?: PageContext | n
   const moduleContext = pageContext?.moduleLabel
     ? `\nContexto actual del usuario: viene del modulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Si la pregunta es ambigua, interpreta primero desde ese modulo.`
     : "";
+  const appUsageKnowledge = buildAppUsageKnowledge(pageContext, userMessage);
 
   return `Eres el asistente de ayuda interna de EmpatiQ, una aplicacion de gestion de talento humano.
 Tu alcance es orientar sobre el uso de la app: modulos, navegacion, procesos, configuraciones, alertas, contratos, empleados, seleccion, capacitaciones, evaluaciones, notificaciones, permisos, seguridad y flujos operativos.
 No consultes ni inventes datos reales de empleados, contratos, nomina, candidatos o reportes. Si el usuario pide conteos, tendencias, metricas o listados internos, explica que debe usar el Asistente de Datos IA y que este chat solo explica como usar la plataforma.
 No des asesoria legal definitiva. Puedes orientar en lenguaje practico sobre donde registrar informacion, que flujo usar o que validacion revisar dentro de la app.
 Usa un tono humano, cercano, claro y experto. Responde en espanol.${personalizationContext}
+
+FUENTE DE VERDAD SOBRE USO REAL DE LA APP:
+- Usa primero la ficha de conocimiento estructurado incluida abajo. Esta ficha representa el comportamiento real de EmpatiQ en esta version.
+- Si una pregunta menciona un modulo, ruta, permiso, accion, restriccion o flujo incluido en la ficha, responde con esos nombres y reglas.
+- Si algo no aparece en la ficha ni en el contexto de la conversacion, dilo claramente y sugiere revisar el modulo correspondiente o el Manual de Usuario desde el menu de perfil.
+- Distingue siempre entre "Asistente de Ayuda" (uso de la app) y "Asistente de Datos IA" (metricas, conteos, tendencias y datos internos).
+
+FICHA DE CONOCIMIENTO RELEVANTE:
+${appUsageKnowledge || "- No se detecto modulo especifico; responde con conocimiento general de navegacion y permisos de EmpatiQ."}
 
 FORMATO OBLIGATORIO:
 - Responde completo en una sola respuesta. No guies por "Paso 1 de N", no esperes confirmacion para continuar y no fragmentes el proceso.
@@ -416,7 +712,7 @@ serve(async (req) => {
       ...history,
       { role: "user", content: message },
     ];
-    const systemPrompt = buildCompleteSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0 });
+    const systemPrompt = buildCompleteSystemPrompt(mode, pageContext, { displayName: userDisplayName, isNewConversation: history.length === 0 }, message);
 
     const { provider, answer } = await generateAssistantAnswer(aiConfig, systemPrompt, conversationMessages);
 
