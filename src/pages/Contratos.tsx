@@ -505,7 +505,10 @@ export default function Contratos() {
                             <div>
                               <p className="text-xs text-muted-foreground">Vigencia</p>
                               <p className="mt-0.5 font-medium text-foreground">{effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}</p>
-                              <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">{durationLabel}</p>
+                              <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                                <Clock className="h-3 w-3 text-primary/60" />
+                                {durationLabel}
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Salario</p>
@@ -611,7 +614,8 @@ export default function Contratos() {
                             <Calendar className="w-3.5 h-3.5 text-primary/60" />
                             {new Date(contract.start_date).toLocaleDateString('es-CO')}
                           </div>
-                          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                            <Clock className="h-3 w-3 text-primary/60" />
                             {durationLabel}
                           </p>
                           <p className="text-[11px] font-medium text-foreground/60">
