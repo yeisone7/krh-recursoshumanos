@@ -177,6 +177,7 @@ export default function Contratos() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const { currentCompanyId, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const canViewContractCompensation = canView('salarios') || canView('compensaciones');
   const isMobile = useIsMobile();
   const { data: contracts, isLoading, refetch } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
@@ -513,7 +514,7 @@ export default function Contratos() {
                             <div>
                               <p className="text-xs text-muted-foreground">Salario</p>
                               <p className="mt-0.5 font-medium text-foreground">
-                                {canView('salarios') ? formatCurrency(Number(contract.salary)) : '••••••'}
+                                {canViewContractCompensation ? formatCurrency(Number(contract.salary)) : '••••••'}
                               </p>
                             </div>
                             <div>
@@ -626,7 +627,7 @@ export default function Contratos() {
                       <td className="p-4 hidden md:table-cell">
                         <div className="space-y-0.5">
                           <span className="text-sm font-bold text-foreground">
-                            {canView('salarios') ? formatCurrency(Number(contract.salary)) : '••••••'}
+                            {canViewContractCompensation ? formatCurrency(Number(contract.salary)) : '••••••'}
                           </span>
                           {extensionsCount > 0 && (
                             <p className="text-[10px] font-bold text-accent uppercase flex items-center gap-1">

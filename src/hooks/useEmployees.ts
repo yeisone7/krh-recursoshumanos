@@ -52,6 +52,24 @@ function applyEmployeeStatusFilter(query: any, status?: string) {
   return query;
 }
 
+async function resolveValidShiftTypeId(shiftTypeId?: string | null, companyId?: string | null) {
+  if (!shiftTypeId || !companyId) return null;
+
+  const { data, error } = await supabase
+    .from('shift_types')
+    .select('id')
+    .eq('id', shiftTypeId)
+    .eq('company_id', companyId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('No se pudo validar shift_type_id, se guardará null:', error.message);
+    return null;
+  }
+
+  return data?.id ?? null;
+}
+
 // =====================================================
 // AUDIT HELPER
 // =====================================================
@@ -378,6 +396,7 @@ export function useCreateEmployee() {
       if (!currentCompanyId || !user) {
         throw new Error('No hay empresa o usuario activo');
       }
+      const validShiftTypeId = await resolveValidShiftTypeId(data.shiftTypeId, currentCompanyId);
 
       // 1. Create core employee
       const { data: employee, error: empError } = await supabase
@@ -511,7 +530,7 @@ export function useCreateEmployee() {
           employee_id: employeeId,
           company_id: currentCompanyId!,
           payroll_type: data.payrollType || 'quincenal',
-          shift_type_id: data.shiftTypeId || null,
+          shift_type_id: validShiftTypeId,
           is_office_schedule: data.isOfficeSchedule ?? true,
           rest_day: data.restDay || null,
           is_current: true,
@@ -596,6 +615,7 @@ export function useUpdateEmployee() {
   return useMutation({
     mutationFn: async ({ id, avatarUrl, ...data }: EmployeeFullFormData & { id: string; avatarUrl?: string | null }) => {
       if (!user) throw new Error('No hay usuario activo');
+      const validShiftTypeId = await resolveValidShiftTypeId(data.shiftTypeId, currentCompanyId);
 
       // 1. Update core employee
       const { data: employee, error: empError } = await supabase
@@ -818,7 +838,7 @@ export function useUpdateEmployee() {
           supabase.from('employee_schedule')
             .update({
               payroll_type: data.payrollType || 'quincenal',
-              shift_type_id: data.shiftTypeId || null,
+              shift_type_id: validShiftTypeId,
               is_office_schedule: data.isOfficeSchedule ?? true,
               rest_day: data.restDay || null,
             })
@@ -830,7 +850,7 @@ export function useUpdateEmployee() {
             employee_id: id,
             company_id: currentCompanyId!,
             payroll_type: data.payrollType || 'quincenal',
-            shift_type_id: data.shiftTypeId || null,
+            shift_type_id: validShiftTypeId,
             is_office_schedule: data.isOfficeSchedule ?? true,
             rest_day: data.restDay || null,
             is_current: true,
