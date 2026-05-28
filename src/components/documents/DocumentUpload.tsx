@@ -94,7 +94,8 @@ export function DocumentUpload({
       onUploadComplete?.();
     } catch (error) {
       setUploadProgress(0);
-      toast.error('Error al subir el documento');
+      const message = error instanceof Error ? error.message : 'Error al subir el documento';
+      toast.error(message);
       console.error('Upload error:', error);
     }
   };
