@@ -23,6 +23,7 @@ export interface DataAssistantResponse {
     sourceSummary?: string;
     suggestedQuestions?: string[];
     intent?: string;
+    feedback?: 'positive' | 'negative';
     warnings?: string[];
     cappedAt?: number;
   } | null;
@@ -41,6 +42,34 @@ export interface ChatMessage {
   metadata?: {
     hideText?: boolean;
   };
+}
+
+export function useSendDataFeedback() {
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      conversationId,
+      rating,
+      comment,
+    }: {
+      conversationId: string;
+      rating: 'positive' | 'negative';
+      comment?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke('ai-data-assistant', {
+        body: {
+          companyId: currentCompanyId,
+          conversationId,
+          feedback: { rating, comment },
+        },
+      });
+
+      if (error) throw new Error(data?.error || data?.message || error.message || 'No se pudo registrar el feedback');
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+  });
 }
 
 export interface DataConversation {

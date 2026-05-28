@@ -15,6 +15,12 @@ type PreparedSql = {
   suggestedQuestions: string[];
 };
 
+type ClarificationResponse = {
+  explanation: string;
+  speechText: string;
+  suggestedQuestions: string[];
+};
+
 const MAX_QUESTION_LENGTH = 2000;
 const MAX_RESULT_LIMIT = 100;
 const DEFAULT_RESULT_LIMIT = 50;
@@ -63,6 +69,35 @@ const DATA_DICTIONARY = [
     businessRules: "entrega vencida usa dotation_deliveries.expiration_date < CURRENT_DATE",
   },
 ];
+
+const COLUMN_SCHEMA: Record<string, Set<string>> = {
+  employees_v2: new Set(["id", "company_id", "first_name", "middle_name", "last_name", "second_last_name", "document_number", "document_type", "birth_date", "gender", "is_active", "created_at", "updated_at"]),
+  employee_work_info: new Set(["id", "company_id", "employee_id", "operation_center_id", "area_id", "position_id", "position_name", "hire_date", "is_current", "valid_from", "valid_to", "termination_date", "work_city", "cost_center"]),
+  operation_centers: new Set(["id", "company_id", "name", "code", "city", "department", "is_active", "main_client", "manager_name", "created_at", "updated_at"]),
+  areas: new Set(["id", "company_id", "name", "code", "is_active", "parent_id", "manager_id", "created_at", "updated_at"]),
+  positions: new Set(["id", "company_id", "name", "code", "is_active", "area_id", "created_at", "updated_at"]),
+  contracts: new Set(["id", "company_id", "employee_id", "contract_number", "contract_type", "salary", "salary_type", "start_date", "end_date", "is_terminated", "is_approved", "termination_date", "termination_reason", "created_at", "updated_at"]),
+  employee_terminations: new Set(["id", "company_id", "employee_id", "contract_id", "termination_type", "termination_date", "effective_date", "resignation_date", "reason", "is_completed", "completed_at", "created_at", "updated_at"]),
+  personnel_requisitions: new Set(["id", "company_id", "operation_center_id", "cargo_solicitado", "solicitante_nombre", "estado_requisicion", "fecha_requisicion", "fecha_ingreso_estimada", "cantidad_vacantes_requeridas", "motivo_solicitud", "created_at", "updated_at"]),
+  vacancies: new Set(["id", "company_id", "position_title", "status", "open_date", "target_close_date", "actual_close_date", "operation_center_id", "positions_count", "priority", "requisition_id", "created_at", "updated_at"]),
+  candidates: new Set(["id", "company_id", "vacancy_id", "first_name", "last_name", "status", "current_step", "application_date", "is_selected", "final_score", "source", "created_at", "updated_at"]),
+  selection_steps: new Set(["id", "company_id", "candidate_id", "step_type", "step_order", "status", "scheduled_date", "completed_date", "score", "result", "created_at", "updated_at"]),
+  employee_incapacities: new Set(["id", "company_id", "employee_id", "diagnosis", "cie10_code", "origin", "start_date", "end_date", "total_days", "total_amount", "recovery_status", "created_at", "updated_at"]),
+  leave_requests: new Set(["id", "company_id", "employee_id", "leave_type", "status", "start_date", "end_date", "total_days", "total_hours", "reason", "requested_at", "created_at", "updated_at"]),
+  vacation_requests: new Set(["id", "company_id", "employee_id", "request_type", "status", "start_date", "end_date", "business_days", "calendar_days", "remaining_days", "created_at", "updated_at"]),
+  training_courses: new Set(["id", "company_id", "name", "category", "status", "is_active", "is_mandatory", "duration_hours", "target_audience", "audience", "validity_months", "created_at", "updated_at"]),
+  training_sessions: new Set(["id", "company_id", "course_id", "status", "start_date", "end_date", "instructor_name", "location", "max_participants", "created_at", "updated_at"]),
+  training_completions: new Set(["id", "company_id", "course_id", "employee_id", "completed_at", "operator_name", "operator_cedula", "quiz_score", "created_at"]),
+  employee_documents: new Set(["id", "company_id", "employee_id", "document_type", "document_name", "file_name", "expiry_date", "is_valid", "upload_date", "created_at", "updated_at"]),
+  medical_exams: new Set(["id", "company_id", "employee_id", "exam_type", "exam_date", "expiration_date", "provider", "doctor_name", "concept", "result", "created_at", "updated_at"]),
+  dotation_deliveries: new Set(["id", "company_id", "employee_id", "item_name", "item_type", "quantity", "delivery_date", "expiration_date", "size", "created_at", "updated_at"]),
+  dotation_inventory: new Set(["id", "company_id", "item_name", "item_type", "current_stock", "minimum_stock", "size", "created_at", "updated_at"]),
+  dotation_inventory_movements: new Set(["id", "company_id", "inventory_id", "movement_type", "quantity", "movement_date", "created_at", "updated_at"]),
+  performance_evaluations: new Set(["id", "company_id", "employee_id", "cycle_id", "evaluation_type", "status", "overall_score", "overall_rating", "submitted_at", "reviewed_at", "created_at", "updated_at"]),
+  evaluation_scores: new Set(["id", "company_id", "evaluation_id", "criteria_id", "score", "comments", "created_at"]),
+  payroll_novelties: new Set(["id", "company_id", "employee_id", "novelty_type", "amount", "period", "status", "created_at", "updated_at"]),
+  overtime_records: new Set(["id", "company_id", "employee_id", "overtime_type", "status", "work_date", "total_hours", "total_value", "payroll_period", "created_at", "updated_at"]),
+};
 
 const ALLOWED_TABLES = new Set([
   "employees_v2",
@@ -155,16 +190,31 @@ Deno.serve(async (req) => {
     const companyId = String(body.companyId ?? "").trim();
     const conversationId = typeof body.conversationId === "string" ? body.conversationId : null;
     const userName = typeof body.userName === "string" ? body.userName : "Usuario";
+    const feedback = typeof body.feedback === "object" && body.feedback ? body.feedback : null;
 
     if (!companyId || !isValidUUID(companyId)) return jsonResponse({ error: "Falta companyId válido" }, 400);
-    if (!question) return jsonResponse({ error: "La pregunta no puede estar vacía" }, 400);
-    if (question.length > MAX_QUESTION_LENGTH) {
+    if (!question && !feedback) return jsonResponse({ error: "La pregunta no puede estar vacía" }, 400);
+    if (question && question.length > MAX_QUESTION_LENGTH) {
       return jsonResponse({ error: `La pregunta supera el máximo de ${MAX_QUESTION_LENGTH} caracteres.` }, 400);
     }
 
     const access = await validateUserAccess(supabaseClient, user.id, companyId);
     if (!access.companyAllowed) return jsonResponse({ error: "No tienes acceso a la empresa seleccionada." }, 403);
     if (!access.aiAllowed) return jsonResponse({ error: "El Asistente de Datos IA no está habilitado para tu usuario." }, 403);
+
+    if (feedback) {
+      if (!conversationId || !isValidUUID(conversationId)) return jsonResponse({ error: "Falta conversationId valido para registrar feedback." }, 400);
+      const rating = String(feedback.rating ?? "");
+      if (rating !== "positive" && rating !== "negative") return jsonResponse({ error: "Feedback invalido." }, 400);
+      await persistAssistantFeedback(supabaseClient, {
+        conversationId,
+        companyId,
+        userId: user.id,
+        rating,
+        comment: typeof feedback.comment === "string" ? feedback.comment.slice(0, 500) : null,
+      });
+      return jsonResponse({ ok: true });
+    }
 
     const effectiveConvId = await resolveConversationId(supabaseClient, {
       conversationId,
@@ -186,6 +236,31 @@ Deno.serve(async (req) => {
       return jsonResponse({ ...text, type: "text", data: null, metadata: { row_count: 0 }, conversationId: effectiveConvId });
     }
 
+    const clarification = buildClarificationResponse(question);
+    if (clarification) {
+      await persistConversationTurn(supabaseClient, {
+        conversationId: effectiveConvId,
+        companyId,
+        userId: user.id,
+        question,
+        answer: clarification.explanation,
+        metadata: { kind: "clarification", suggested_questions: clarification.suggestedQuestions },
+      });
+      return jsonResponse({
+        explanation: clarification.explanation,
+        speechText: clarification.speechText,
+        type: "text",
+        data: null,
+        metadata: {
+          row_count: 0,
+          provider: "clarification",
+          suggestedQuestions: clarification.suggestedQuestions,
+          intent: "needs_clarification",
+        },
+        conversationId: effectiveConvId,
+      });
+    }
+
     const apiKey = await getOpenAiApiKey(supabaseClient);
     if (!apiKey) return jsonResponse({ error: "No hay una API key de OpenAI configurada para el asistente." }, 500);
 
@@ -195,7 +270,7 @@ Deno.serve(async (req) => {
     const validation = validateSql(sql, companyId);
 
     if (!validation.ok || !validation.sql) {
-      const explanation = validation.warning || "No pude generar una consulta segura para esa pregunta. Intenta reformularla con un módulo, período o métrica más específica.";
+      const explanation = buildBlockedQueryExplanation(validation.warning);
       await persistConversationTurn(supabaseClient, {
         conversationId: effectiveConvId,
         companyId,
@@ -390,6 +465,49 @@ async function persistConversationTurn(
   if (error) console.error("[ai-data-assistant] persist error:", error.message);
 }
 
+async function persistAssistantFeedback(
+  supabaseClient: any,
+  params: {
+    conversationId: string;
+    companyId: string;
+    userId: string;
+    rating: "positive" | "negative";
+    comment: string | null;
+  },
+) {
+  const { data: message, error: readError } = await supabaseClient
+    .from("ai_chat_messages")
+    .select("id, metadata")
+    .eq("conversation_id", params.conversationId)
+    .eq("company_id", params.companyId)
+    .eq("user_id", params.userId)
+    .eq("role", "assistant")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (readError) throw readError;
+  if (!message?.id) throw new Error("No se encontro mensaje del asistente para registrar feedback.");
+
+  const metadata = typeof message.metadata === "object" && message.metadata ? message.metadata : {};
+  const { error: updateError } = await supabaseClient
+    .from("ai_chat_messages")
+    .update({
+      metadata: {
+        ...metadata,
+        feedback: {
+          rating: params.rating,
+          comment: params.comment,
+          submitted_at: new Date().toISOString(),
+        },
+      },
+    })
+    .eq("id", message.id)
+    .eq("user_id", params.userId);
+
+  if (updateError) throw updateError;
+}
+
 async function getConversationHistory(supabaseClient: any, conversationId: string) {
   const { data } = await supabaseClient
     .from("ai_chat_messages")
@@ -416,6 +534,40 @@ async function getOpenAiApiKey(supabaseClient: any) {
 function buildPreparedSql(question: string, companyId: string): PreparedSql | null {
   const q = normalizeQuestion(question);
 
+  if (hasAny(q, ["listado", "listar", "detalle"]) && hasAll(q, ["empleado", "activo"])) {
+    return {
+      intent: "active_employees_detail",
+      sourceSummary: "Fuente: employees_v2, employee_work_info, operation_centers y areas. Filtro: empresa actual, empleados activos e informacion laboral vigente.",
+      suggestedQuestions: [
+        "Empleados activos por centro de operacion",
+        "Empleados activos por area",
+        "Empleados activos por cargo",
+      ],
+      sql: `
+SELECT
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  e.document_number AS documento,
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  COALESCE(a.name, 'Sin area') AS area,
+  COALESCE(w.position_name, 'Sin cargo') AS cargo_actual
+FROM employees_v2 e
+LEFT JOIN employee_work_info w
+  ON w.employee_id = e.id
+  AND w.company_id = '${companyId}'
+  AND w.is_current = true
+LEFT JOIN operation_centers oc
+  ON oc.id = w.operation_center_id
+  AND oc.company_id = '${companyId}'
+LEFT JOIN areas a
+  ON a.id = w.area_id
+  AND a.company_id = '${companyId}'
+WHERE e.company_id = '${companyId}'
+  AND e.is_active = true
+ORDER BY empleado ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
   if (hasAll(q, ["vacante", "abierta", "candidato", "etapa"])) {
     return {
       intent: "vacancies_open_candidates_by_stage",
@@ -438,6 +590,32 @@ WHERE v.company_id = '${companyId}'
   AND v.status IN ('open', 'in_process')
 GROUP BY v.position_title, COALESCE(ca.current_step::text, 'sin_etapa')
 ORDER BY v.position_title ASC, cantidad_candidatos DESC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["vacante", "vacantes"]) && hasAny(q, ["abierta", "abiertas"]) && hasAny(q, ["centro", "operacion", "operación"])) {
+    return {
+      intent: "open_vacancies_by_operation_center",
+      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process.",
+      suggestedQuestions: [
+        "Vacantes abiertas y candidatos por etapa",
+        "Vacantes abiertas por mas de 30 dias",
+        "Candidatos seleccionados por vacante",
+      ],
+      sql: `
+SELECT
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  COUNT(v.id)::int AS vacantes_abiertas,
+  SUM(v.positions_count)::int AS cupos_requeridos
+FROM vacancies v
+LEFT JOIN operation_centers oc
+  ON oc.id = v.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE v.company_id = '${companyId}'
+  AND v.status IN ('open', 'in_process')
+GROUP BY COALESCE(oc.name, 'Sin centro')
+ORDER BY vacantes_abiertas DESC, cupos_requeridos DESC
 LIMIT ${DEFAULT_RESULT_LIMIT}`,
     };
   }
@@ -547,6 +725,422 @@ LIMIT ${DEFAULT_RESULT_LIMIT}`,
     };
   }
 
+  if (hasAny(q, ["capacitacion", "capacitaciones", "curso", "cursos"]) && hasAny(q, ["tomados", "tomadas", "mas", "ranking"])) {
+    return {
+      intent: "most_completed_training_courses",
+      sourceSummary: "Fuente: training_courses y training_completions. Filtro: empresa actual; ranking por completados.",
+      suggestedQuestions: [
+        "Cursos activos sin completados",
+        "Puntaje promedio por curso",
+        "Capacitaciones completadas este mes",
+      ],
+      sql: `
+SELECT
+  tc.name AS capacitacion,
+  COUNT(tcomp.id)::int AS completados,
+  ROUND(AVG(tcomp.quiz_score)::numeric, 2) AS puntaje_promedio
+FROM training_courses tc
+LEFT JOIN training_completions tcomp
+  ON tcomp.course_id = tc.id
+  AND tcomp.company_id = '${companyId}'
+WHERE tc.company_id = '${companyId}'
+GROUP BY tc.name
+ORDER BY completados DESC, capacitacion ASC
+LIMIT 10`,
+    };
+  }
+
+  if (hasAny(q, ["rotacion", "retiros"]) && hasAny(q, ["mensual", "mes", "meses", "comparar", "comparativo"])) {
+    return {
+      intent: "monthly_turnover_approximation",
+      sourceSummary: "Fuente: employee_terminations y employees_v2. Filtro: empresa actual; tasa aproximada con retiros completados sobre empleados activos actuales mas retiros del mes.",
+      suggestedQuestions: [
+        "Retiros completados por tipo",
+        "Retiros completados por mes",
+        "Top centros con mas retiros completados",
+      ],
+      sql: `
+WITH monthly_terminations AS (
+  SELECT
+    date_trunc('month', et.effective_date)::date AS mes,
+    COUNT(*)::int AS retiros
+  FROM employee_terminations et
+  WHERE et.company_id = '${companyId}'
+    AND et.is_completed = true
+    AND et.effective_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '11 months'
+  GROUP BY date_trunc('month', et.effective_date)::date
+),
+active_headcount AS (
+  SELECT COUNT(*)::numeric AS empleados_activos
+  FROM employees_v2 e
+  WHERE e.company_id = '${companyId}'
+    AND e.is_active = true
+)
+SELECT
+  mt.mes,
+  mt.retiros,
+  ah.empleados_activos::int AS empleados_activos_actuales,
+  ROUND((mt.retiros::numeric / NULLIF(ah.empleados_activos + mt.retiros, 0)) * 100, 2) AS tasa_rotacion_aproximada
+FROM monthly_terminations mt
+CROSS JOIN active_headcount ah
+ORDER BY mt.mes DESC
+LIMIT 12`,
+    };
+  }
+
+  if (hasAny(q, ["incapacidad", "incapacidades", "ausentismo"]) && hasAny(q, ["diagnostico", "diagnóstico", "centro"])) {
+    return {
+      intent: "incapacities_by_diagnosis_center",
+      sourceSummary: "Fuente: employee_incapacities, employees_v2, employee_work_info y operation_centers. Filtro: empresa actual e incapacidades registradas.",
+      suggestedQuestions: [
+        "Incapacidades por origen",
+        "Dias de incapacidad por centro",
+        "Incapacidades con reintegro requerido",
+      ],
+      sql: `
+SELECT
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  ei.diagnosis AS diagnostico,
+  COUNT(*)::int AS incapacidades,
+  SUM(ei.total_days)::int AS dias_totales
+FROM employee_incapacities ei
+JOIN employees_v2 e
+  ON e.id = ei.employee_id
+  AND e.company_id = '${companyId}'
+LEFT JOIN employee_work_info w
+  ON w.employee_id = e.id
+  AND w.company_id = '${companyId}'
+  AND w.is_current = true
+LEFT JOIN operation_centers oc
+  ON oc.id = w.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE ei.company_id = '${companyId}'
+GROUP BY COALESCE(oc.name, 'Sin centro'), ei.diagnosis
+ORDER BY dias_totales DESC, incapacidades DESC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["contrato", "contratos"]) && hasAny(q, ["vencido", "vencidos"])) {
+    return {
+      intent: "expired_active_contracts",
+      sourceSummary: "Fuente: contracts y employees_v2. Filtro: empresa actual, contratos no terminados con fecha final anterior a hoy.",
+      suggestedQuestions: [
+        "Contratos que vencen en los proximos 30 dias",
+        "Contratos vigentes por tipo",
+        "Contratos pendientes por aprobar",
+      ],
+      sql: `
+SELECT
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  c.contract_type AS tipo_contrato,
+  c.start_date AS fecha_inicio,
+  c.end_date AS fecha_fin,
+  (CURRENT_DATE - c.end_date)::int AS dias_vencido
+FROM contracts c
+JOIN employees_v2 e
+  ON e.id = c.employee_id
+  AND e.company_id = '${companyId}'
+WHERE c.company_id = '${companyId}'
+  AND COALESCE(c.is_terminated, false) = false
+  AND c.end_date IS NOT NULL
+  AND c.end_date < CURRENT_DATE
+ORDER BY c.end_date ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["dotacion", "dotaciones"]) && hasAny(q, ["vencida", "vencidas", "vencido", "vencidos", "proxima", "proximas", "proximo", "proximos"])) {
+    return {
+      intent: "dotation_expiring_or_expired",
+      sourceSummary: "Fuente: dotation_deliveries y employees_v2. Filtro: empresa actual, dotaciones vencidas o con vencimiento en los proximos 30 dias.",
+      suggestedQuestions: [
+        "Dotaciones vencidas por empleado",
+        "Dotaciones proximas a vencer por tipo",
+        "Entregas de dotacion por centro",
+      ],
+      sql: `
+SELECT
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  dd.item_name AS elemento,
+  dd.item_type::text AS tipo_elemento,
+  dd.delivery_date AS fecha_entrega,
+  dd.expiration_date AS fecha_vencimiento,
+  CASE WHEN dd.expiration_date < CURRENT_DATE THEN 'vencida' ELSE 'proxima_a_vencer' END AS estado
+FROM dotation_deliveries dd
+JOIN employees_v2 e
+  ON e.id = dd.employee_id
+  AND e.company_id = '${companyId}'
+WHERE dd.company_id = '${companyId}'
+  AND dd.expiration_date <= CURRENT_DATE + INTERVAL '30 days'
+ORDER BY dd.expiration_date ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["documento", "documentos"]) && hasAny(q, ["vencido", "vencidos", "vencida", "vencidas", "faltante", "faltantes"])) {
+    return {
+      intent: "employee_documents_expired_or_invalid",
+      sourceSummary: "Fuente: employee_documents y employees_v2. Filtro: empresa actual, documentos vencidos o marcados como no validos.",
+      suggestedQuestions: [
+        "Documentos vencidos por empleado",
+        "Documentos no validos por tipo",
+        "Documentos proximos a vencer",
+      ],
+      sql: `
+SELECT
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  ed.document_type::text AS tipo_documento,
+  COALESCE(ed.document_name, ed.file_name, 'Sin nombre') AS documento,
+  ed.expiry_date AS fecha_vencimiento,
+  ed.is_valid AS valido
+FROM employee_documents ed
+JOIN employees_v2 e
+  ON e.id = ed.employee_id
+  AND e.company_id = '${companyId}'
+WHERE ed.company_id = '${companyId}'
+  AND (ed.is_valid = false OR (ed.expiry_date IS NOT NULL AND ed.expiry_date < CURRENT_DATE))
+ORDER BY ed.expiry_date ASC NULLS LAST
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["examen", "examenes", "médico", "medico", "medicos"]) && hasAny(q, ["vencen", "vencer", "vencido", "vencidos", "proximo", "proximos"])) {
+    return {
+      intent: "medical_exams_expiring",
+      sourceSummary: "Fuente: medical_exams, employees_v2, employee_work_info y operation_centers. Filtro: empresa actual, examenes con vencimiento en los proximos 30 dias o vencidos.",
+      suggestedQuestions: [
+        "Examenes medicos vencidos por centro",
+        "Examenes medicos proximos a vencer",
+        "Conceptos medicos por resultado",
+      ],
+      sql: `
+SELECT
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  me.exam_type::text AS tipo_examen,
+  me.expiration_date AS fecha_vencimiento,
+  me.result::text AS resultado
+FROM medical_exams me
+JOIN employees_v2 e
+  ON e.id = me.employee_id
+  AND e.company_id = '${companyId}'
+LEFT JOIN employee_work_info w
+  ON w.employee_id = e.id
+  AND w.company_id = '${companyId}'
+  AND w.is_current = true
+LEFT JOIN operation_centers oc
+  ON oc.id = w.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE me.company_id = '${companyId}'
+  AND me.expiration_date IS NOT NULL
+  AND me.expiration_date <= CURRENT_DATE + INTERVAL '30 days'
+ORDER BY me.expiration_date ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["requisicion", "requisiciones"]) && hasAny(q, ["pendiente", "pendientes", "estado", "aprobacion", "aprobación"])) {
+    return {
+      intent: "requisitions_by_status",
+      sourceSummary: "Fuente: personnel_requisitions y operation_centers. Filtro: empresa actual; agrupa requisiciones por estado y centro.",
+      suggestedQuestions: [
+        "Requisiciones pendientes de aprobacion por centro",
+        "Requisiciones aprobadas este mes",
+        "Requisiciones por cargo solicitado",
+      ],
+      sql: `
+SELECT
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  pr.estado_requisicion::text AS estado,
+  COUNT(*)::int AS requisiciones
+FROM personnel_requisitions pr
+LEFT JOIN operation_centers oc
+  ON oc.id = pr.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE pr.company_id = '${companyId}'
+GROUP BY COALESCE(oc.name, 'Sin centro'), pr.estado_requisicion::text
+ORDER BY requisiciones DESC, centro_operacion ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["vacante", "vacantes"]) && hasAny(q, ["dias", "antigua", "antiguas", "abierta", "abiertas"])) {
+    return {
+      intent: "open_vacancies_age_ranking",
+      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process; calcula dias abiertas.",
+      suggestedQuestions: [
+        "Vacantes abiertas y candidatos por etapa",
+        "Vacantes abiertas por centro de operacion",
+        "Vacantes abiertas por mas de 30 dias",
+      ],
+      sql: `
+SELECT
+  v.position_title AS vacante,
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  v.status::text AS estado,
+  v.open_date AS fecha_apertura,
+  (CURRENT_DATE - v.open_date)::int AS dias_abierta
+FROM vacancies v
+LEFT JOIN operation_centers oc
+  ON oc.id = v.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE v.company_id = '${companyId}'
+  AND v.status IN ('open', 'in_process')
+ORDER BY dias_abierta DESC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["salario", "salarios", "nomina", "nómina", "costo"]) && hasAny(q, ["centro", "operacion", "operación"])) {
+    return {
+      intent: "salary_cost_by_operation_center",
+      sourceSummary: "Fuente: contracts, employees_v2, employee_work_info y operation_centers. Filtro: empresa actual, empleados activos y contratos no terminados.",
+      suggestedQuestions: [
+        "Costo total de salarios base por centro de operacion",
+        "Salario promedio por cargo",
+        "Contratos vigentes por tipo",
+      ],
+      sql: `
+SELECT
+  COALESCE(oc.name, 'Sin centro') AS centro_operacion,
+  COUNT(DISTINCT e.id)::int AS empleados,
+  SUM(c.salary)::numeric AS salario_base_total,
+  ROUND(AVG(c.salary)::numeric, 2) AS salario_base_promedio
+FROM contracts c
+JOIN employees_v2 e
+  ON e.id = c.employee_id
+  AND e.company_id = '${companyId}'
+  AND e.is_active = true
+LEFT JOIN employee_work_info w
+  ON w.employee_id = e.id
+  AND w.company_id = '${companyId}'
+  AND w.is_current = true
+LEFT JOIN operation_centers oc
+  ON oc.id = w.operation_center_id
+  AND oc.company_id = '${companyId}'
+WHERE c.company_id = '${companyId}'
+  AND COALESCE(c.is_terminated, false) = false
+GROUP BY COALESCE(oc.name, 'Sin centro')
+ORDER BY salario_base_total DESC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["salario", "salarios", "salarial"]) && hasAny(q, ["hombres", "mujeres", "genero", "género", "sexo"])) {
+    return {
+      intent: "salary_average_by_gender",
+      sourceSummary: "Fuente: contracts y employees_v2. Filtro: empresa actual, empleados activos y contratos no terminados; genero segun employees_v2.gender.",
+      suggestedQuestions: [
+        "Promedio salarial comparando hombres vs mujeres",
+        "Costo total de salarios base por centro de operacion",
+        "Salario promedio por cargo",
+      ],
+      sql: `
+SELECT
+  COALESCE(e.gender::text, 'sin_genero') AS genero,
+  COUNT(DISTINCT e.id)::int AS empleados,
+  ROUND(AVG(c.salary)::numeric, 2) AS salario_promedio,
+  MIN(c.salary)::numeric AS salario_minimo,
+  MAX(c.salary)::numeric AS salario_maximo
+FROM contracts c
+JOIN employees_v2 e
+  ON e.id = c.employee_id
+  AND e.company_id = '${companyId}'
+  AND e.is_active = true
+WHERE c.company_id = '${companyId}'
+  AND COALESCE(c.is_terminated, false) = false
+GROUP BY COALESCE(e.gender::text, 'sin_genero')
+ORDER BY salario_promedio DESC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
+  if (hasAny(q, ["desempeno", "desempeño", "evaluacion", "evaluaciones"]) && hasAny(q, ["cargo", "ranking", "promedio", "mejor"])) {
+    return {
+      intent: "performance_score_by_position",
+      sourceSummary: "Fuente: performance_evaluations, employees_v2 y employee_work_info. Filtro: empresa actual y evaluaciones con puntaje general.",
+      suggestedQuestions: [
+        "Ranking de cargos por desempeno promedio",
+        "Evaluaciones pendientes por estado",
+        "Promedio de desempeno por centro",
+      ],
+      sql: `
+SELECT
+  COALESCE(w.position_name, 'Sin cargo') AS cargo,
+  COUNT(pe.id)::int AS evaluaciones,
+  ROUND(AVG(pe.overall_score)::numeric, 2) AS desempeno_promedio
+FROM performance_evaluations pe
+JOIN employees_v2 e
+  ON e.id = pe.employee_id
+  AND e.company_id = '${companyId}'
+LEFT JOIN employee_work_info w
+  ON w.employee_id = e.id
+  AND w.company_id = '${companyId}'
+  AND w.is_current = true
+WHERE pe.company_id = '${companyId}'
+  AND pe.overall_score IS NOT NULL
+GROUP BY COALESCE(w.position_name, 'Sin cargo')
+ORDER BY desempeno_promedio DESC, evaluaciones DESC
+LIMIT 5`,
+    };
+  }
+
+  if (hasAny(q, ["vacaciones", "permiso", "permisos"]) && hasAny(q, ["actualmente", "curso", "hoy"])) {
+    return {
+      intent: "employees_currently_absent",
+      sourceSummary: "Fuente: vacation_requests, leave_requests y employees_v2. Filtro: empresa actual, solicitudes aprobadas/en curso que cubren la fecha actual.",
+      suggestedQuestions: [
+        "Empleados actualmente en vacaciones o permiso",
+        "Permisos aprobados por tipo",
+        "Vacaciones en curso por centro",
+      ],
+      sql: `
+WITH current_vacations AS (
+  SELECT
+    vr.company_id,
+    vr.employee_id,
+    'vacaciones' AS tipo_ausencia,
+    vr.status::text AS estado,
+    vr.start_date,
+    vr.end_date
+  FROM vacation_requests vr
+  WHERE vr.company_id = '${companyId}'
+    AND vr.status IN ('aprobado', 'en_curso')
+    AND CURRENT_DATE BETWEEN vr.start_date AND vr.end_date
+),
+current_leaves AS (
+  SELECT
+    lr.company_id,
+    lr.employee_id,
+    lr.leave_type::text AS tipo_ausencia,
+    lr.status::text AS estado,
+    lr.start_date,
+    lr.end_date
+  FROM leave_requests lr
+  WHERE lr.company_id = '${companyId}'
+    AND lr.status = 'aprobado'
+    AND CURRENT_DATE BETWEEN lr.start_date AND lr.end_date
+)
+SELECT
+  CONCAT(e.first_name, ' ', e.last_name) AS empleado,
+  absences.tipo_ausencia,
+  absences.estado,
+  absences.start_date AS fecha_inicio,
+  absences.end_date AS fecha_fin
+FROM (
+  SELECT * FROM current_vacations
+  UNION ALL
+  SELECT * FROM current_leaves
+) absences
+JOIN employees_v2 e
+  ON e.id = absences.employee_id
+  AND e.company_id = '${companyId}'
+ORDER BY absences.end_date ASC
+LIMIT ${DEFAULT_RESULT_LIMIT}`,
+    };
+  }
+
   return null;
 }
 
@@ -564,6 +1158,50 @@ function normalizeQuestion(value: string) {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function buildClarificationResponse(question: string): ClarificationResponse | null {
+  const q = normalizeQuestion(question);
+  const hasDomain = hasAny(q, [
+    "empleado",
+    "contrato",
+    "vacante",
+    "candidato",
+    "retiro",
+    "incapacidad",
+    "ausentismo",
+    "dotacion",
+    "capacitacion",
+    "documento",
+    "examen",
+    "requisicion",
+    "nomina",
+    "salario",
+    "evaluacion",
+  ]);
+
+  if (!hasDomain && hasAny(q, ["vencido", "vencidos", "vencen", "pendiente", "pendientes", "proximo", "proximos", "estado"])) {
+    const suggestedQuestions = [
+      "Contratos vencidos no terminados",
+      "Documentos vencidos por empleado",
+      "Dotaciones proximas a vencer",
+    ];
+    return {
+      explanation: "Necesito acotar un poco la consulta para no mezclar metricas. ¿Te refieres a contratos, documentos, dotacion, examenes, capacitaciones o requisiciones?",
+      speechText: "Necesito acotar la consulta. ¿Te refieres a contratos, documentos, dotacion, examenes o capacitaciones?",
+      suggestedQuestions,
+    };
+  }
+
+  if (q.length < 10 && hasAny(q, ["cuantos", "mostrar", "muestrame", "listar", "total"])) {
+    return {
+      explanation: "La pregunta esta muy abierta. Indica el modulo y la metrica que quieres revisar, por ejemplo empleados activos, contratos por vencer o vacantes abiertas.",
+      speechText: "La pregunta esta muy abierta. Indica el modulo y la metrica que quieres revisar.",
+      suggestedQuestions: DEFAULT_SUGGESTED_QUESTIONS,
+    };
+  }
+
+  return null;
 }
 
 function hasAll(value: string, terms: string[]) {
@@ -733,8 +1371,44 @@ function validateSql(rawSql: string, companyId: string): QueryValidation {
     return { ok: false, warning: `La consulta intenta acceder a tablas no permitidas: ${unauthorized.join(", ")}.` };
   }
 
+  const columnWarning = validateReferencedColumns(sql);
+  if (columnWarning) return { ok: false, warning: columnWarning };
+
   sql = enforceLimit(sql);
   return { ok: true, sql, tables: Array.from(new Set(tables)) };
+}
+
+function validateReferencedColumns(sql: string) {
+  const aliasMap = extractTableAliases(sql);
+  const re = /\b([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(sql)) !== null) {
+    const alias = match[1].toLowerCase();
+    const column = match[2].toLowerCase();
+    const table = aliasMap.get(alias);
+    if (!table) continue;
+    const columns = COLUMN_SCHEMA[table];
+    if (columns && !columns.has(column)) {
+      return `La consulta referencia una columna no reconocida: ${alias}.${column} en ${table}.`;
+    }
+  }
+  return null;
+}
+
+function extractTableAliases(sql: string) {
+  const aliasMap = new Map<string, string>();
+  const cteNames = extractCteNames(sql);
+  const reserved = new Set(["on", "where", "left", "right", "inner", "full", "cross", "join", "group", "order", "limit"]);
+  const re = /\b(?:from|join)\s+((?:public\.)?(?:"[^"]+"|[a-zA-Z_][a-zA-Z0-9_]*))(?:\s+(?:as\s+)?([a-zA-Z_][a-zA-Z0-9_]*))?/gi;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(sql)) !== null) {
+    const table = match[1].replace(/^public\./i, "").replace(/"/g, "").toLowerCase();
+    if (cteNames.has(table)) continue;
+    const alias = (match[2] || table).toLowerCase();
+    if (!reserved.has(alias)) aliasMap.set(alias, table);
+    aliasMap.set(table, table);
+  }
+  return aliasMap;
 }
 
 function extractReferencedTables(sql: string) {

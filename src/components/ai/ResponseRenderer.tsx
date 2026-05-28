@@ -16,7 +16,7 @@ import {
   Legend,
 } from 'recharts';
 import ReactMarkdown from 'react-markdown';
-import { Download, Info, Sparkles } from 'lucide-react';
+import { Download, Info, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { DataAssistantResponse } from '@/hooks/useDataAssistant';
@@ -179,9 +179,11 @@ function DataChart({ data }: { data: Record<string, unknown>[] }) {
 interface ResponseRendererProps {
   response: DataAssistantResponse;
   showSQL?: boolean;
+  onSuggestedQuestion?: (question: string) => void;
+  onFeedback?: (rating: 'positive' | 'negative') => void;
 }
 
-export function ResponseRenderer({ response, showSQL = false }: ResponseRendererProps) {
+export function ResponseRenderer({ response, showSQL = false, onSuggestedQuestion, onFeedback }: ResponseRendererProps) {
   const { type, data, explanation, metadata } = response;
 
   return (
@@ -223,10 +225,42 @@ export function ResponseRenderer({ response, showSQL = false }: ResponseRenderer
             <div className="flex flex-wrap items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
               {metadata.suggestedQuestions.slice(0, 3).map(question => (
-                <Badge key={question} variant="secondary" className="h-5 px-1.5 text-[9px] font-medium">
-                  {question}
-                </Badge>
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => onSuggestedQuestion?.(question)}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  disabled={!onSuggestedQuestion}
+                >
+                  <Badge variant="secondary" className="h-5 cursor-pointer px-1.5 text-[9px] font-medium hover:bg-primary/10">
+                    {question}
+                  </Badge>
+                </button>
               ))}
+            </div>
+          )}
+
+          {onFeedback && (
+            <div className="flex items-center gap-1.5 pt-1">
+              <span>¿Fue util?</span>
+              <Button
+                type="button"
+                variant={metadata.feedback === 'positive' ? 'default' : 'outline'}
+                size="icon"
+                className="h-6 w-6 rounded-full"
+                onClick={() => onFeedback('positive')}
+              >
+                <ThumbsUp className="h-3 w-3" />
+              </Button>
+              <Button
+                type="button"
+                variant={metadata.feedback === 'negative' ? 'default' : 'outline'}
+                size="icon"
+                className="h-6 w-6 rounded-full"
+                onClick={() => onFeedback('negative')}
+              >
+                <ThumbsDown className="h-3 w-3" />
+              </Button>
             </div>
           )}
         </div>
