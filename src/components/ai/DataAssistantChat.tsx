@@ -21,6 +21,36 @@ import {
 } from '@/hooks/useDataAssistant';
 
 const MAX_QUESTION_LENGTH = 2000;
+type VoiceStyle = 'executiva' | 'cercana';
+
+const VOICE_STYLES: Record<VoiceStyle, {
+  label: string;
+  voice: 'nova' | 'shimmer';
+  model: 'tts-1-hd' | 'tts-1';
+  speed: number;
+  pauseMs: number;
+  fallbackRate: number;
+  fallbackPitch: number;
+}> = {
+  ejecutiva: {
+    label: 'Ejecutiva',
+    voice: 'nova',
+    model: 'tts-1-hd',
+    speed: 0.96,
+    pauseMs: 220,
+    fallbackRate: 0.93,
+    fallbackPitch: 0.98,
+  },
+  cercana: {
+    label: 'Cercana',
+    voice: 'shimmer',
+    model: 'tts-1-hd',
+    speed: 1.0,
+    pauseMs: 150,
+    fallbackRate: 0.98,
+    fallbackPitch: 1.04,
+  },
+};
 
 // ─── Burbuja de mensaje ───────────────────────────────────────
 
@@ -118,6 +148,10 @@ export function DataAssistantChat() {
   const [input, setInput] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isHandsFree, setIsHandsFree] = useState(false);
+  const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>(() => {
+    const saved = localStorage.getItem('data-assistant-voice-style');
+    return saved === 'cercana' ? 'cercana' : 'ejecutiva';
+  });
   const [isThinking, setIsThinking] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -157,6 +191,11 @@ export function DataAssistantChat() {
   const { data: hasPermission, isLoading: checkingPerm } = useDataAssistantPermission();
   const sendQuestion = useSendDataQuestion();
   const sendFeedback = useSendDataFeedback();
+  const voiceProfile = VOICE_STYLES[voiceStyle];
+
+  useEffect(() => {
+    localStorage.setItem('data-assistant-voice-style', voiceStyle);
+  }, [voiceStyle]);
 
   // ─── Configuración de Voz (STT) ───
   useEffect(() => {
@@ -331,7 +370,7 @@ export function DataAssistantChat() {
 
         if (!audioBlob) {
           const { data, error } = await supabase.functions.invoke('ai-text-to-speech', {
-            body: { text: chunk, voice: 'nova', model: 'tts-1-hd', speed: 0.98 },
+            body: { text: chunk, voice: voiceProfile.voice, model: voiceProfile.model, speed: voiceProfile.speed },
           });
           if (error) throw error;
           if (!data) continue;
@@ -355,7 +394,7 @@ export function DataAssistantChat() {
           audio.play().catch(reject);
         });
 
-        if (i < chunks.length - 1) await wait(180);
+        if (i < chunks.length - 1) await wait(voiceProfile.pauseMs);
       }
 
       setSpeakingMsgId(null);
@@ -378,8 +417,8 @@ export function DataAssistantChat() {
       if (femaleVoice) utterance.voice = femaleVoice;
       else utterance.lang = 'es-CO';
 
-      utterance.rate = 0.95;
-      utterance.pitch = 1.02;
+      utterance.rate = voiceProfile.fallbackRate;
+      utterance.pitch = voiceProfile.fallbackPitch;
 
       utterance.onend = () => {
         setSpeakingMsgId(null);
@@ -574,20 +613,31 @@ export function DataAssistantChat() {
           <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
           <span className="truncate">Consultas de solo lectura, filtradas por empresa y tablas autorizadas.</span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 shrink-0 gap-1.5 text-xs"
-          onClick={() => {
-            stopAllSpeech();
-            setMessages([]);
-            setConversationId(null);
-            setInput('');
-          }}
-        >
-          <PlusCircle className="h-3.5 w-3.5" />
-          Nuevo chat
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => setVoiceStyle(prev => (prev === 'ejecutiva' ? 'cercana' : 'ejecutiva'))}
+            title="Cambiar estilo de voz"
+          >
+            Voz: {voiceProfile.label}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => {
+              stopAllSpeech();
+              setMessages([]);
+              setConversationId(null);
+              setInput('');
+            }}
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            Nuevo chat
+          </Button>
+        </div>
       </div>
 
       {/* Indicadores de Voz (Flotantes) - Feedback Pro */}
