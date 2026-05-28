@@ -176,8 +176,12 @@ export default function Contratos() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { currentCompanyId, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
-  const canViewContractCompensation = canView('salarios') || canView('compensaciones');
+  const { currentCompanyId, hasPermission, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const canViewContractCompensation =
+    canView('salarios') ||
+    hasPermission('salarios', 'view') ||
+    canView('compensaciones') ||
+    hasPermission('compensaciones', 'view');
   const isMobile = useIsMobile();
   const { data: contracts, isLoading, refetch } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
