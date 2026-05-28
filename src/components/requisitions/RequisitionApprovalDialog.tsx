@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
@@ -387,6 +388,29 @@ export function RequisitionApprovalDialog({
                       mode="single"
                       selected={fechaInicioProceso}
                       onSelect={setFechaInicioProceso}
+                      locale={es}
+                      captionLayout="dropdown-buttons"
+                      fromYear={1990}
+                      toYear={new Date().getFullYear() + 10}
+                      className="rounded-md border"
+                      classNames={{
+                        months: 'flex flex-col',
+                        month: 'space-y-3 p-3',
+                        caption: 'flex justify-center pt-1 relative items-center gap-2',
+                        caption_label: 'text-sm font-medium',
+                        nav: 'space-x-1 flex items-center',
+                        nav_button: 'h-8 w-8 bg-transparent p-0 opacity-60 hover:opacity-100',
+                        table: 'w-full border-collapse space-y-1',
+                        head_row: 'flex',
+                        head_cell: 'w-9 rounded-md text-[0.78rem] font-medium text-muted-foreground',
+                        row: 'flex w-full mt-1',
+                        cell: 'h-9 w-9 p-0 text-center text-sm relative',
+                        day: 'h-9 w-9 p-0 font-normal',
+                        day_selected: 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
+                        day_today: 'bg-accent text-accent-foreground',
+                        day_outside: 'text-muted-foreground opacity-40',
+                        day_disabled: 'text-muted-foreground opacity-40',
+                      }}
                       initialFocus
                     />
                   </PopoverContent>
