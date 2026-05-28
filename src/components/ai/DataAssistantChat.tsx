@@ -21,7 +21,7 @@ import {
 } from '@/hooks/useDataAssistant';
 
 const MAX_QUESTION_LENGTH = 2000;
-type VoiceStyle = 'executiva' | 'cercana';
+type VoiceStyle = 'executiva' | 'neutra' | 'cercana';
 
 const VOICE_STYLES: Record<VoiceStyle, {
   label: string;
@@ -40,6 +40,15 @@ const VOICE_STYLES: Record<VoiceStyle, {
     pauseMs: 220,
     fallbackRate: 0.93,
     fallbackPitch: 0.98,
+  },
+  neutra: {
+    label: 'Neutra',
+    voice: 'nova',
+    model: 'tts-1-hd',
+    speed: 0.99,
+    pauseMs: 180,
+    fallbackRate: 0.96,
+    fallbackPitch: 1.0,
   },
   cercana: {
     label: 'Cercana',
@@ -150,7 +159,8 @@ export function DataAssistantChat() {
   const [isHandsFree, setIsHandsFree] = useState(false);
   const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>(() => {
     const saved = localStorage.getItem('data-assistant-voice-style');
-    return saved === 'cercana' ? 'cercana' : 'ejecutiva';
+    if (saved === 'cercana' || saved === 'neutra' || saved === 'ejecutiva') return saved;
+    return 'ejecutiva';
   });
   const [isThinking, setIsThinking] = useState(false);
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
@@ -586,6 +596,15 @@ export function DataAssistantChat() {
     sendFeedback.mutate({ conversationId, rating });
   };
 
+  const playVoicePreview = async (style: VoiceStyle) => {
+    const previousStyle = voiceStyle;
+    const previewText = 'Hola, este es un ejemplo de voz para el asistente de analisis de datos.';
+    setVoiceStyle(style);
+    await wait(0);
+    await handleSpeak(previewText, `voice-preview-${style}`);
+    setVoiceStyle(previousStyle);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -614,15 +633,29 @@ export function DataAssistantChat() {
           <span className="truncate">Consultas de solo lectura, filtradas por empresa y tablas autorizadas.</span>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={() => setVoiceStyle(prev => (prev === 'ejecutiva' ? 'cercana' : 'ejecutiva'))}
-            title="Cambiar estilo de voz"
-          >
-            Voz: {voiceProfile.label}
-          </Button>
+          <div className="flex items-center gap-1">
+            {(Object.keys(VOICE_STYLES) as VoiceStyle[]).map((style) => (
+              <Button
+                key={style}
+                variant={voiceStyle === style ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={() => setVoiceStyle(style)}
+                title={`Usar voz ${VOICE_STYLES[style].label}`}
+              >
+                {VOICE_STYLES[style].label}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              onClick={() => playVoicePreview(voiceStyle)}
+              title="Probar estilo seleccionado"
+            >
+              Probar
+            </Button>
+          </div>
           <Button
             variant="outline"
             size="sm"
