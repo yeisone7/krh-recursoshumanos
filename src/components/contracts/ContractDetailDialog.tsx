@@ -80,8 +80,12 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
-  const { isAdmin, isRRHH, isSuperAdmin, canView, canUpdate, canApprove: canApproveModule } = useAuth();
-  const canViewContractCompensation = canView('salarios') || canView('compensaciones');
+  const { isAdmin, isRRHH, isSuperAdmin, hasPermission, canView, canUpdate, canApprove: canApproveModule } = useAuth();
+  const canViewContractCompensation =
+    canView('salarios') ||
+    hasPermission('salarios', 'view') ||
+    canView('compensaciones') ||
+    hasPermission('compensaciones', 'view');
   const { data: contractTypes = [] } = useContractTypes();
   const canUpdateContracts = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
