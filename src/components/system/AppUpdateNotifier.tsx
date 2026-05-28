@@ -8,6 +8,7 @@ import { useLocation } from 'react-router-dom';
 const VERSION_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const UPDATE_TOAST_ID = 'app-update-available';
 const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
+const CURRENT_BUILD_ID = import.meta.env.VITE_BUILD_ID;
 const ACKNOWLEDGED_UPDATE_KEY = 'empatiq_acknowledged_update_version';
 
 // Rutas públicas donde no queremos mostrar notificaciones de actualización
@@ -15,6 +16,7 @@ const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos'];
 
 type VersionResponse = {
   version?: string;
+  buildId?: string;
 };
 
 export function AppUpdateNotifier() {
@@ -65,19 +67,22 @@ function AppUpdateNotifierContent() {
 
         const data = (await response.json()) as VersionResponse;
         const latestVersion = data.version;
+        const latestBuildId = data.buildId;
+        const latestDeploymentKey = latestBuildId || latestVersion;
+        const currentDeploymentKey = CURRENT_BUILD_ID || CURRENT_APP_VERSION;
 
         // Caso 1: Ya estamos en la versión más reciente
-        if (!isMounted || !latestVersion || latestVersion === CURRENT_APP_VERSION) {
+        if (!isMounted || !latestDeploymentKey || latestDeploymentKey === currentDeploymentKey) {
           // Si ya estábamos en la versión más reciente, nos aseguramos de limpiar 
           // cualquier rastro de reconocimiento de versiones antiguas
-          if (latestVersion === CURRENT_APP_VERSION) {
+          if (latestDeploymentKey === currentDeploymentKey) {
             localStorage.removeItem(ACKNOWLEDGED_UPDATE_KEY);
           }
           return;
         }
 
         // Caso 2: El usuario ya reconoció esta versión específica y decidió ignorarla por ahora
-        if (localStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === latestVersion) return;
+        if (localStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === latestDeploymentKey) return;
 
         // Evitar múltiples toasts
         updateNotifiedRef.current = true;
@@ -90,13 +95,13 @@ function AppUpdateNotifierContent() {
             label: 'Actualizar',
             onClick: () => {
               // Guardamos en localStorage para persistencia real
-              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
+              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestDeploymentKey);
               toast.dismiss(UPDATE_TOAST_ID);
               
               // Pequeño delay para que el usuario vea el feedback del click
               setTimeout(() => {
                 const url = new URL(window.location.href);
-                url.searchParams.set('refresh', latestVersion.slice(0, 8));
+                url.searchParams.set('refresh', latestDeploymentKey.slice(0, 8));
                 window.location.replace(url.toString());
               }, 100);
             },
@@ -106,7 +111,7 @@ function AppUpdateNotifierContent() {
             onClick: () => {
               // Si el usuario da a "Más tarde", marcamos como reconocida para que 
               // no vuelva a aparecer en esta versión.
-              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestVersion);
+              localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestDeploymentKey);
               toast.dismiss(UPDATE_TOAST_ID);
             }
           }
