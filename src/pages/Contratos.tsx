@@ -100,6 +100,36 @@ function calculateDaysRemaining(endDate: string | null): number | null {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
+function parseContractDate(date: string): Date {
+  return new Date(date.includes('T') ? date : `${date}T00:00:00`);
+}
+
+function getContractDurationLabel(startDate: string, endDate: string | null): string {
+  if (!endDate) return 'Duración indefinida';
+
+  const start = parseContractDate(startDate);
+  const end = parseContractDate(endDate);
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end < start) {
+    return 'Duración no disponible';
+  }
+
+  let months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth());
+
+  if (end.getDate() < start.getDate()) {
+    months -= 1;
+  }
+
+  if (months >= 1) {
+    return `${months} ${months === 1 ? 'mes' : 'meses'}`;
+  }
+
+  const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+  return `${days} ${days === 1 ? 'día' : 'días'}`;
+}
+
 function getEffectiveEndDate(contract: { 
   end_date: string | null; 
   contract_extensions?: Array<{ end_date: string; extension_number?: number }>;
@@ -391,6 +421,7 @@ export default function Contratos() {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
                   const daysRemaining = calculateDaysRemaining(effectiveEndDate);
+                  const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
                   const StatusIcon = statusConfig[status].icon;
                   const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
                   const extensionsCount = contract.contract_extensions?.length || 0;
@@ -474,6 +505,7 @@ export default function Contratos() {
                             <div>
                               <p className="text-xs text-muted-foreground">Vigencia</p>
                               <p className="mt-0.5 font-medium text-foreground">{effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}</p>
+                              <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">{durationLabel}</p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Salario</p>
@@ -532,6 +564,7 @@ export default function Contratos() {
                   const status = getContractStatus(contract);
                   const effectiveEndDate = getEffectiveEndDate(contract);
                   const daysRemaining = calculateDaysRemaining(effectiveEndDate);
+                  const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
                   const StatusIcon = statusConfig[status].icon;
                   const extensionsCount = contract.contract_extensions?.length || 0;
                   const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
@@ -578,6 +611,9 @@ export default function Contratos() {
                             <Calendar className="w-3.5 h-3.5 text-primary/60" />
                             {new Date(contract.start_date).toLocaleDateString('es-CO')}
                           </div>
+                          <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+                            {durationLabel}
+                          </p>
                           <p className="text-[11px] font-medium text-foreground/60">
                             → {effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}
                           </p>
