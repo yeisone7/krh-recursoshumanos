@@ -230,6 +230,7 @@ export function RequisitionApprovalDialog({
           .insert(
             validCodes.map(vc => ({
               requisition_id: requisition.id,
+              company_id: requisition.company_id,
               platform_id: vc.platformId,
               codigo_vacante_externa: vc.code.trim(),
               entidad_origen: platforms.find(p => p.id === vc.platformId)?.name || '',

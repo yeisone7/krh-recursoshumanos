@@ -236,6 +236,7 @@ export function RequisitionDetailDialog({
 
     const payload = validCodes.map((vc) => ({
       requisition_id: requisition.id,
+      company_id: requisition.company_id,
       platform_id: vc.platformId,
       codigo_vacante_externa: vc.code.trim(),
       entidad_origen: platforms.find((p) => p.id === vc.platformId)?.name || '',
@@ -247,7 +248,7 @@ export function RequisitionDetailDialog({
     if (error) {
       toast({
         title: 'Error',
-        description: 'No se pudieron guardar los códigos de vacante.',
+        description: error.message || 'No se pudieron guardar los códigos de vacante.',
         variant: 'destructive',
       });
       return;
