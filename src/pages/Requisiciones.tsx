@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
-  TrendingUp, Briefcase, Filter, ChevronRight
+  TrendingUp, Briefcase, Filter, ChevronRight, Trash2, AlertTriangle
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,11 +16,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
-import { useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
+import { useDeleteRequisition, useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import {
@@ -42,9 +52,11 @@ export default function Requisiciones() {
   const [editRequisition, setEditRequisition] = useState<PersonnelRequisition | null>(null);
   const [approvalStep, setApprovalStep] = useState<'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PersonnelRequisition | null>(null);
 
   const { data: requisitions = [], isLoading } = useRequisitions();
-  const { companies, currentCompanyId } = useAuth();
+  const deleteRequisition = useDeleteRequisition();
+  const { companies, currentCompanyId, hasPermission } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const { toast } = useToast();
 
@@ -87,7 +99,22 @@ export default function Requisiciones() {
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
-  const { hasPermission } = useAuth();
+  const canDeleteRequisitions = hasPermission('requisiciones', 'delete');
+
+  const requestDelete = (req: PersonnelRequisition, event?: React.MouseEvent) => {
+    event?.stopPropagation();
+    setDeleteTarget(req);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteRequisition.mutateAsync(deleteTarget.id);
+    if (selectedId === deleteTarget.id) {
+      setShowDetail(false);
+      setSelectedId(null);
+    }
+    setDeleteTarget(null);
+  };
 
   const getCurrentApprovalStep = (req: PersonnelRequisition) => {
     const status = req.estado_requisicion;
@@ -280,6 +307,11 @@ export default function Requisiciones() {
                             <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-primary hover:bg-primary hover:text-white transition-all" onClick={(e) => handleExportPDF(req, e)}>
                               {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                             </Button>
+                            {canDeleteRequisitions && (
+                              <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all" onClick={(e) => requestDelete(req, e)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                             <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
                               <ChevronRight className="w-5 h-5" />
                             </Button>
@@ -405,6 +437,16 @@ export default function Requisiciones() {
                                   </TooltipTrigger>
                                   <TooltipContent className="rounded-xl font-bold">Ver detalle</TooltipContent>
                                 </Tooltip>
+                                {canDeleteRequisitions && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all" onClick={(e) => requestDelete(req, e)}>
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="rounded-xl font-bold">Eliminar requisiciÃ³n</TooltipContent>
+                                  </Tooltip>
+                                )}
                                 {step && (
                                   <Button size="sm" className="h-10 rounded-xl px-4 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10 hover:scale-105 active:scale-95 transition-all" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
                                     <CheckCircle className="w-4 h-4 mr-2" />
@@ -426,8 +468,38 @@ export default function Requisiciones() {
       </ScrollArea>
 
       <RequisitionFormDialog open={showForm} onOpenChange={setShowForm} requisition={editRequisition} />
-      <RequisitionDetailDialog open={showDetail} onOpenChange={setShowDetail} requisitionId={selectedId} onEdit={() => { setShowDetail(false); const r = requisitions.find(x => x.id === selectedId); if (r) { setEditRequisition(r); setShowForm(true); }}} />
+      <RequisitionDetailDialog open={showDetail} onOpenChange={setShowDetail} requisitionId={selectedId} onRequestDelete={(req) => requestDelete(req as PersonnelRequisition)} onEdit={() => { setShowDetail(false); const r = requisitions.find(x => x.id === selectedId); if (r) { setEditRequisition(r); setShowForm(true); }}} />
       {approvalStep && selectedId && <RequisitionApprovalDialog open={!!approvalStep} onOpenChange={() => setApprovalStep(null)} requisition={requisitions.find(r => r.id === selectedId) || null} step={approvalStep} />}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="z-[80] max-w-[calc(100vw-2rem)] rounded-[2rem] border border-destructive/20 sm:max-w-lg">
+          <AlertDialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle>Eliminar requisiciÃ³n</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Esta acciÃ³n eliminarÃ¡ permanentemente la requisiciÃ³n
+                {deleteTarget ? ` "${deleteTarget.cargo_solicitado}" solicitada por ${deleteTarget.solicitante_nombre}` : ''}.
+              </span>
+              <span className="block font-semibold text-destructive">
+                No se puede deshacer. Si la requisiciÃ³n tiene vacantes u otros registros vinculados, la base de datos puede impedir la eliminaciÃ³n para proteger la trazabilidad.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+            <AlertDialogCancel disabled={deleteRequisition.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteRequisition.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteRequisition.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

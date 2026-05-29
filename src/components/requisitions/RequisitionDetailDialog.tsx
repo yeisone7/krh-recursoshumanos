@@ -63,6 +63,7 @@ interface RequisitionDetailDialogProps {
   requisitionId: string | null;
   onEdit?: () => void;
   onCreateVacancy?: () => void;
+  onRequestDelete?: (requisition: NonNullable<ReturnType<typeof useRequisitionWithVacancies>['data']>) => void;
 }
 
 interface VacancyCodeEntry {
@@ -79,6 +80,7 @@ export function RequisitionDetailDialog({
   requisitionId,
   onEdit,
   onCreateVacancy,
+  onRequestDelete,
 }: RequisitionDetailDialogProps) {
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
   const { companies, currentCompanyId, user, hasPermission, isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
@@ -194,6 +196,7 @@ export function RequisitionDetailDialog({
   const canEdit = status === 'borrador' && canManageDraft;
   const canSubmit = status === 'borrador' && canManageDraft;
   const canCreateVacancy = status === 'aprobada' || status === 'en_seleccion';
+  const canDeleteRequisition = hasPermission('requisiciones', 'delete');
   const canManageVacancyCodes = hasPermission('req_approve_seleccion', 'approve') || isAdmin || isRRHH || isSuperAdmin || canUpdate('requisiciones');
   const activePlatforms = platforms.filter((p) => p.is_active);
 
@@ -727,6 +730,12 @@ export function RequisitionDetailDialog({
                 <Button variant="outline" onClick={onEdit}>
                   <Edit className="w-4 h-4 mr-2" />
                   Editar
+                </Button>
+              )}
+              {canDeleteRequisition && onRequestDelete && (
+                <Button variant="destructive" onClick={() => onRequestDelete(requisition)}>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Eliminar
                 </Button>
               )}
               {canSubmit && (
