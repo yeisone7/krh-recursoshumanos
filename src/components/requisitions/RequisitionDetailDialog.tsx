@@ -92,7 +92,7 @@ export function RequisitionDetailDialog({
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
-  const [approvalStep, setApprovalStep] = useState<'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [approvalStep, setApprovalStep] = useState<'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
   const [newVacancyCodes, setNewVacancyCodes] = useState<VacancyCodeEntry[]>([]);
 
   const { data: vacancyCodes = [], isLoading: loadingVacancyCodes } = useQuery({
@@ -284,6 +284,11 @@ export function RequisitionDetailDialog({
     if (!requisition) return null;
     
     switch (status) {
+      case 'en_coordinadores':
+        if (hasPermission('req_approve_coordinadores', 'approve')) {
+          return { step: 'coordinadores' as const, label: 'Aprobar Coordinadores' };
+        }
+        break;
       case 'en_rrhh':
         if (hasPermission('req_approve_rh', 'approve')) {
           return { step: 'rrhh' as const, label: 'Aprobar RRHH' };

@@ -7,6 +7,7 @@ import {
   Scale,
   Crown,
   UserSearch,
+  UserCheck,
   Check,
   X,
   Clock,
@@ -29,6 +30,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Scale,
   Crown,
   UserSearch,
+  UserCheck,
   Briefcase,
 };
 
@@ -59,6 +61,24 @@ function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | 
         cargo: requisition.cargo_solicitado,
         cantidad: requisition.cantidad_vacantes_requeridas,
         motivo: requisition.motivo_solicitud,
+      },
+    },
+    {
+      key: 'coordinadores',
+      title: 'Coordinadores',
+      icon: UserCheck,
+      status: requisition.coordinadores_aprobado === true
+        ? 'approved'
+        : requisition.coordinadores_aprobado === false
+          ? 'rejected'
+          : estado === 'en_coordinadores'
+            ? 'current'
+            : 'pending',
+      date: requisition.coordinadores_fecha_aprobacion,
+      approver: requisition.coordinadores_quien_aprobo,
+      observations: requisition.coordinadores_observaciones,
+      extraData: {
+        preview: true,
       },
     },
     {

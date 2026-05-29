@@ -31,6 +31,7 @@ export const autorizaLabels: Record<AutorizaType, string> = {
 export type RequisitionStatus = 
   | 'borrador' 
   | 'enviada' 
+  | 'en_coordinadores'
   | 'en_operaciones' 
   | 'en_rrhh'
   | 'en_juridico' 
@@ -76,6 +77,7 @@ export const recruitmentTypeLabels: Record<RecruitmentType, string> = {
 export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
   borrador: 'Borrador',
   enviada: 'Enviada',
+  en_coordinadores: 'En Coordinadores',
   en_operaciones: 'En Operaciones',
   en_rrhh: 'En RRHH',
   en_juridico: 'En Jurídico',
@@ -90,6 +92,7 @@ export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
 export const requisitionStatusConfig: Record<RequisitionStatus, { bg: string; text: string; border: string }> = {
   borrador: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
   enviada: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
+  en_coordinadores: { bg: 'bg-sky-500/10', text: 'text-sky-700', border: 'border-sky-500/20' },
   en_rrhh: { bg: 'bg-rose/10', text: 'text-rose', border: 'border-rose/20' },
   en_juridico: { bg: 'bg-violet/10', text: 'text-violet', border: 'border-violet/20' },
   en_operaciones: { bg: 'bg-tertiary/10', text: 'text-tertiary', border: 'border-tertiary/20' },
@@ -120,6 +123,17 @@ export const requisitionTimelineSteps: TimelineStep[] = [
     description: 'Requisición inicial del personal',
     icon: 'FileText',
     statusField: 'estado_requisicion',
+  },
+  {
+    key: 'coordinadores',
+    title: 'Coordinadores',
+    description: 'Aprobacion previa de coordinadores',
+    icon: 'UserCheck',
+    statusField: 'coordinadores_aprobado',
+    approvedField: 'coordinadores_aprobado',
+    dateField: 'coordinadores_fecha_aprobacion',
+    approverField: 'coordinadores_quien_aprobo',
+    observationsField: 'coordinadores_observaciones',
   },
   {
     key: 'rrhh',
@@ -239,6 +253,11 @@ export const rrhhApprovalSchema = z.object({
   rrhh_aprobado: z.boolean(),
 });
 
+export const coordinadoresApprovalSchema = z.object({
+  coordinadores_observaciones: z.string().optional(),
+  coordinadores_aprobado: z.boolean(),
+});
+
 export const juridicoApprovalSchema = z.object({
   juridico_tipo_contrato: z.string().optional(),
   juridico_duracion: z.string().optional(),
@@ -259,6 +278,7 @@ export const gerenciaApprovalSchema = z.object({
 });
 
 export type OperacionesApprovalData = z.infer<typeof operacionesApprovalSchema>;
+export type CoordinadoresApprovalData = z.infer<typeof coordinadoresApprovalSchema>;
 export type RRHHApprovalData = z.infer<typeof rrhhApprovalSchema>;
 export type JuridicoApprovalData = z.infer<typeof juridicoApprovalSchema>;
 export type SeleccionApprovalData = z.infer<typeof seleccionApprovalSchema>;

@@ -325,6 +325,7 @@ export async function generateRequisitionPDF(
   y += 3;
 
   const approvals = [
+    { title: 'Coordinadores', approved: req.coordinadores_aprobado, who: req.coordinadores_quien_aprobo, date: req.coordinadores_fecha_aprobacion },
     { title: 'RRHH',       approved: req.rrhh_aprobado,       who: req.rrhh_quien_aprobo,       date: req.rrhh_fecha_aprobacion },
     { title: 'Jurídico',   approved: req.juridico_aprobado,   who: req.juridico_quien_aprobo,   date: req.juridico_fecha_aprobacion },
     { title: 'Operaciones',approved: req.operaciones_aprobado,who: req.operaciones_quien_aprobo, date: req.operaciones_fecha_aprobacion },

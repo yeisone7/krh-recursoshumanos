@@ -40,7 +40,7 @@ export default function Requisiciones() {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editRequisition, setEditRequisition] = useState<PersonnelRequisition | null>(null);
-  const [approvalStep, setApprovalStep] = useState<'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [approvalStep, setApprovalStep] = useState<'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
 
   const { data: requisitions = [], isLoading } = useRequisitions();
@@ -72,7 +72,7 @@ export default function Requisiciones() {
   const stats = useMemo(() => ({
     total: requisitions.length,
     borrador: requisitions.filter(r => r.estado_requisicion === 'borrador').length,
-    enProceso: requisitions.filter(r => ['en_operaciones', 'en_rrhh', 'en_juridico', 'en_gerencia', 'en_seleccion'].includes(r.estado_requisicion)).length,
+    enProceso: requisitions.filter(r => ['en_coordinadores', 'en_operaciones', 'en_rrhh', 'en_juridico', 'en_gerencia', 'en_seleccion'].includes(r.estado_requisicion)).length,
     aprobadas: requisitions.filter(r => r.estado_requisicion === 'aprobada').length,
   }), [requisitions]);
 
@@ -92,6 +92,7 @@ export default function Requisiciones() {
   const getCurrentApprovalStep = (req: PersonnelRequisition) => {
     const status = req.estado_requisicion;
     
+    if (status === 'en_coordinadores' && hasPermission('req_approve_coordinadores', 'approve')) return 'coordinadores';
     if (status === 'en_rrhh' && hasPermission('req_approve_rh', 'approve')) return 'rrhh';
     if (status === 'en_juridico' && hasPermission('req_approve_juridica', 'approve')) return 'juridico';
     if (status === 'en_operaciones' && hasPermission('req_approve_ger_op', 'approve')) return 'operaciones';
@@ -103,6 +104,7 @@ export default function Requisiciones() {
 
   const getApprovalProgress = (req: PersonnelRequisition) => {
     const allSteps = [
+      { key: 'coordinadores', label: 'CO', approved: req.coordinadores_aprobado },
       { key: 'rrhh', label: 'RH', approved: req.rrhh_aprobado },
       { key: 'juridico', label: 'JU', approved: req.juridico_aprobado },
       { key: 'operaciones', label: 'OP', approved: req.operaciones_aprobado },
@@ -365,7 +367,7 @@ export default function Requisiciones() {
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" className="text-xs bg-popover/90 border-primary/20 p-3 rounded-xl shadow-lg">
-                                        <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
+                                        <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'coordinadores' ? 'Coordinadores' : s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
                                         <p className={cn('font-bold', s.approved === true ? 'text-emerald-500' : s.approved === false ? 'text-red-500' : 'text-muted-foreground')}>
                                           {s.approved === true ? '✓ APROBADO' : s.approved === false ? '✗ RECHAZADO' : '○ PENDIENTE'}
                                         </p>
