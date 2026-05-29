@@ -312,7 +312,7 @@ export function NotificationRulesManager() {
 
       <Card className="rounded-2xl border-border/70 shadow-sm">
         <CardContent className="p-0">
-          <div className="hidden grid-cols-[minmax(260px,1fr)_120px_360px] items-center gap-4 border-b bg-muted/30 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground lg:grid">
+          <div className="hidden grid-cols-[minmax(280px,1fr)_112px_minmax(390px,440px)] items-center gap-4 border-b bg-muted/30 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground xl:grid">
             <span>Evento</span>
             <span>Estado</span>
             <span>Canales</span>
@@ -323,7 +323,7 @@ export function NotificationRulesManager() {
               const isActive = rule?.is_active ?? false;
 
               return (
-                <div key={event.key} className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(260px,1fr)_120px_360px] lg:items-center">
+                <div key={event.key} className="grid gap-4 px-5 py-4 xl:grid-cols-[minmax(280px,1fr)_112px_minmax(390px,440px)] xl:items-center">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-black text-foreground">{event.label}</h3>
@@ -334,8 +334,8 @@ export function NotificationRulesManager() {
                     <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{event.description}</p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 lg:border-0 lg:bg-transparent lg:p-0">
-                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground lg:hidden">Estado</span>
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 xl:justify-center xl:border-0 xl:bg-transparent xl:p-0">
+                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground xl:hidden">Estado</span>
                     <div className="flex items-center gap-2">
                       <Switch
                         checked={isActive}
@@ -356,24 +356,31 @@ export function NotificationRulesManager() {
                         <label
                           key={channel.key}
                           className={cn(
-                            'flex min-h-[74px] cursor-pointer items-center gap-3 rounded-2xl border p-3 transition-colors',
+                            'grid min-h-[96px] cursor-pointer grid-rows-[1fr_auto] gap-3 rounded-2xl border p-3 transition-colors',
                             isActive
                               ? 'border-border/70 bg-background hover:border-primary/40'
                               : 'border-border/50 bg-muted/20 text-muted-foreground'
                           )}
                         >
-                          <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', checked && isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
-                            <Icon className="h-4 w-4" />
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', checked && isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black leading-tight">{channel.label}</p>
+                              <p className="truncate text-[11px] leading-tight text-muted-foreground">{channel.description}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-black">{channel.label}</p>
-                            <p className="truncate text-[11px] text-muted-foreground">{channel.description}</p>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={cn('text-[10px] font-black uppercase tracking-widest', checked && isActive ? 'text-primary' : 'text-muted-foreground')}>
+                              {checked && isActive ? 'Activo' : 'Off'}
+                            </span>
+                            <Switch
+                              checked={checked && isActive}
+                              disabled={!isActive || upsertRule.isPending || !effectiveRoleId}
+                              onCheckedChange={(value) => handleToggleChannel(event, channel.key, value)}
+                            />
                           </div>
-                          <Switch
-                            checked={checked && isActive}
-                            disabled={!isActive || upsertRule.isPending || !effectiveRoleId}
-                            onCheckedChange={(value) => handleToggleChannel(event, channel.key, value)}
-                          />
                         </label>
                       );
                     })}

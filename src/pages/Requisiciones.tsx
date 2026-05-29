@@ -323,16 +323,16 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              <div className="hidden xl:block rounded-[2.5rem] border border-border shadow-md bg-background ">
-                <Table className="w-full table-fixed">
+              <div className="hidden overflow-x-auto rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
+                <Table className="min-w-[1320px] table-fixed">
                   <TableHeader>
                     <TableRow className="bg-background border-b border-border hover:bg-background">
-                      <TableHead className="px-4 h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[25%]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[10%]">Fecha</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[22%]">Flujo de Aprobación</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[12%]">Estado</TableHead>
-                      <TableHead className="px-4 h-16 text-right font-black text-[10px] uppercase tracking-[0.2em] w-[13%]">Acciones</TableHead>
+                      <TableHead className="h-16 w-[300px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-16 w-[130px] font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
+                      <TableHead className="h-16 w-[245px] font-black text-[10px] uppercase tracking-[0.2em]">Flujo de Aprobación</TableHead>
+                      <TableHead className="h-16 w-[145px] font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="h-16 w-[280px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -380,7 +380,7 @@ export default function Requisiciones() {
                           </TableCell>
                           <TableCell>
                             <TooltipProvider>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex min-w-[220px] items-center justify-center gap-1.5">
                                 {progress.map((s, idx) => (
                                   <div key={s.key} className="flex items-center">
                                     <Tooltip>
@@ -419,7 +419,7 @@ export default function Requisiciones() {
                             </Badge>
                           </TableCell>
                           <TableCell className="px-4 text-right">
-                            <div className="flex justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                            <div className="flex min-w-[252px] flex-wrap items-center justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -448,7 +448,7 @@ export default function Requisiciones() {
                                   </Tooltip>
                                 )}
                                 {step && (
-                                  <Button size="sm" className="h-10 rounded-xl px-4 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10 hover:scale-105 active:scale-95 transition-all" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
+                                  <Button size="sm" className="h-10 w-[132px] shrink-0 rounded-xl bg-primary px-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-md shadow-primary/10 transition-all hover:scale-105 active:scale-95" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
                                     <CheckCircle className="w-4 h-4 mr-2" />
                                     Gestionar
                                   </Button>
