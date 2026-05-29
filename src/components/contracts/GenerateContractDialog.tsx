@@ -35,6 +35,7 @@ import {
   ContractDocumentData,
   calculateMonthsDifference,
 } from '@/lib/contractDocumentGenerator';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 interface ContractData {
   id: string;
@@ -266,11 +267,7 @@ export function GenerateContractDialog({
 
     // Validate and parse start date
     if (contract.start_date && contract.start_date.trim() !== '') {
-      // Handle both ISO format and simple date format
-      const dateStr = contract.start_date.includes('T') 
-        ? contract.start_date 
-        : contract.start_date + 'T00:00:00';
-      startDate = new Date(dateStr);
+      startDate = parseDateOnly(contract.start_date) ?? new Date(contract.start_date);
       if (isNaN(startDate.getTime())) {
         throw new Error('Fecha de inicio inválida');
       }
@@ -280,11 +277,7 @@ export function GenerateContractDialog({
 
     // Validate and parse end date if present
     if (contract.end_date && contract.end_date.trim() !== '') {
-      // Handle both ISO format and simple date format
-      const dateStr = contract.end_date.includes('T') 
-        ? contract.end_date 
-        : contract.end_date + 'T00:00:00';
-      endDate = new Date(dateStr);
+      endDate = parseDateOnly(contract.end_date) ?? new Date(contract.end_date);
       if (isNaN(endDate.getTime())) {
         endDate = null; // Invalid end date, treat as null
       } else {
@@ -387,7 +380,7 @@ export function GenerateContractDialog({
               <div className="space-y-0.5">
                 <span className="text-[11px] text-slate-400 font-medium">Fecha de Inicio</span>
                 <p className="font-semibold text-slate-700 leading-tight">
-                  {format(new Date(contract.start_date), 'dd/MM/yyyy', { locale: es })}
+                  {format(parseDateOnly(contract.start_date) ?? new Date(contract.start_date), 'dd/MM/yyyy', { locale: es })}
                 </p>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { renderAsync } from 'docx-preview';
 import html2canvas from 'html2canvas';
 import DOMPurify from 'dompurify';
+import { calculateInclusiveMonthSpan } from '@/lib/dateOnly';
 
 // Contract document data interface
 export interface ContractDocumentData {
@@ -64,8 +65,7 @@ export interface ContractDocumentData {
 
 // Helper to calculate months between two dates
 export function calculateMonthsDifference(startDate: Date, endDate: Date): number {
-  const months = (endDate.getFullYear() - startDate.getFullYear()) * 12;
-  return months + endDate.getMonth() - startDate.getMonth();
+  return calculateInclusiveMonthSpan(startDate, endDate);
 }
 
 // Helper to format currency
