@@ -12,3 +12,18 @@ export function parseDateOnly(value: string | null | undefined): Date | undefine
 export function parseDateOnlyOr(value: string | null | undefined, fallback: Date): Date {
   return parseDateOnly(value) ?? fallback;
 }
+
+export function calculateInclusiveMonthSpan(startDate: Date, endDate: Date): number {
+  const exclusiveEndDate = new Date(endDate);
+  exclusiveEndDate.setDate(exclusiveEndDate.getDate() + 1);
+
+  let months =
+    (exclusiveEndDate.getFullYear() - startDate.getFullYear()) * 12 +
+    (exclusiveEndDate.getMonth() - startDate.getMonth());
+
+  if (exclusiveEndDate.getDate() < startDate.getDate()) {
+    months -= 1;
+  }
+
+  return Math.max(0, months);
+}

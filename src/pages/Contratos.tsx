@@ -44,6 +44,7 @@ import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
+import { calculateInclusiveMonthSpan, parseDateOnly } from '@/lib/dateOnly';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
@@ -68,7 +69,7 @@ function getContractStatus(contract: {
   let effectiveEndDate = contract.end_date;
   if (contract.contract_extensions && contract.contract_extensions.length > 0) {
     const sortedExtensions = [...contract.contract_extensions].sort(
-      (a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime()
+      (a, b) => (parseDateOnly(b.end_date)?.getTime() ?? 0) - (parseDateOnly(a.end_date)?.getTime() ?? 0)
     );
     effectiveEndDate = sortedExtensions[0].end_date;
   }
@@ -77,7 +78,7 @@ function getContractStatus(contract: {
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const endDate = new Date(effectiveEndDate);
+  const endDate = parseDateOnly(effectiveEndDate) ?? new Date(effectiveEndDate);
   endDate.setHours(0, 0, 0, 0);
   
   const diffTime = endDate.getTime() - today.getTime();
@@ -93,7 +94,7 @@ function calculateDaysRemaining(endDate: string | null): number | null {
   
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const end = new Date(endDate);
+  const end = parseDateOnly(endDate) ?? new Date(endDate);
   end.setHours(0, 0, 0, 0);
   
   const diffTime = end.getTime() - today.getTime();
@@ -101,7 +102,12 @@ function calculateDaysRemaining(endDate: string | null): number | null {
 }
 
 function parseContractDate(date: string): Date {
-  return new Date(date.includes('T') ? date : `${date}T00:00:00`);
+  return parseDateOnly(date) ?? new Date(date);
+}
+
+function formatContractDate(date: string | null): string {
+  if (!date) return 'Indefinido';
+  return parseContractDate(date).toLocaleDateString('es-CO');
 }
 
 function getContractDurationLabel(startDate: string, endDate: string | null): string {
@@ -114,13 +120,7 @@ function getContractDurationLabel(startDate: string, endDate: string | null): st
     return 'Duración no disponible';
   }
 
-  let months =
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth());
-
-  if (end.getDate() < start.getDate()) {
-    months -= 1;
-  }
+  const months = calculateInclusiveMonthSpan(start, end);
 
   if (months >= 1) {
     return `${months} ${months === 1 ? 'mes' : 'meses'}`;
@@ -142,7 +142,7 @@ function getEffectiveEndDate(contract: {
         return b.extension_number - a.extension_number;
       }
       // Fallback to date comparison
-      return new Date(b.end_date).getTime() - new Date(a.end_date).getTime();
+      return (parseDateOnly(b.end_date)?.getTime() ?? 0) - (parseDateOnly(a.end_date)?.getTime() ?? 0);
     });
     return sortedExtensions[0].end_date;
   }
@@ -505,11 +505,11 @@ export default function Contratos() {
                           <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                             <div>
                               <p className="text-xs text-muted-foreground">Inicio</p>
-                              <p className="mt-0.5 font-medium text-foreground">{new Date(contract.start_date).toLocaleDateString('es-CO')}</p>
+                              <p className="mt-0.5 font-medium text-foreground">{formatContractDate(contract.start_date)}</p>
                             </div>
                             <div>
                               <p className="text-xs text-muted-foreground">Vigencia</p>
-                              <p className="mt-0.5 font-medium text-foreground">{effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}</p>
+                              <p className="mt-0.5 font-medium text-foreground">{formatContractDate(effectiveEndDate)}</p>
                               <p className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
                                 <Clock className="h-3 w-3 text-primary/60" />
                                 {durationLabel}
@@ -617,14 +617,14 @@ export default function Contratos() {
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5 text-primary/60" />
-                            {new Date(contract.start_date).toLocaleDateString('es-CO')}
+                            {formatContractDate(contract.start_date)}
                           </div>
                           <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
                             <Clock className="h-3 w-3 text-primary/60" />
                             {durationLabel}
                           </p>
                           <p className="text-[11px] font-medium text-foreground/60">
-                            → {effectiveEndDate ? new Date(effectiveEndDate).toLocaleDateString('es-CO') : 'Indefinido'}
+                            → {formatContractDate(effectiveEndDate)}
                           </p>
                         </div>
                       </td>
