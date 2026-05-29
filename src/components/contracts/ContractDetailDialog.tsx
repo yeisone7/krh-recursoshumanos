@@ -746,16 +746,11 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   Aprobar contrato
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                  Revisa primero la vista preliminar para validar contenido, clÃ¡usulas y datos del empleado.
+                  Revisa primero la vista preliminar para validar contenido, clausulas y datos del empleado.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
-          <div className="hidden">
-          <p className="text-sm text-muted-foreground">
-            Antes de aprobar, revisa la vista preliminar del contrato para validar contenido, cláusulas y datos del empleado.
-          </p>
-          </div>
           <div className="space-y-4 px-5 py-5 sm:px-6">
             <div className={cn(
               'flex items-start gap-3 rounded-2xl border p-4',
@@ -774,8 +769,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 </p>
                 <p className="mt-1 text-xs font-medium leading-relaxed opacity-80">
                   {previewOpenedBeforeApprove
-                    ? 'Ya puedes confirmar la aprobaciÃ³n del contrato.'
-                    : 'La confirmaciÃ³n se habilita despuÃ©s de abrir la vista preliminar.'}
+                    ? 'Ya puedes confirmar la aprobacion del contrato.'
+                    : 'La confirmacion se habilita despues de abrir la vista preliminar.'}
                 </p>
               </div>
             </div>
