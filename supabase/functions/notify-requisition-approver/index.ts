@@ -14,9 +14,10 @@ interface NotifyRequest {
 }
 
 // Map current status to the next approver role
-const statusToNextRole: Record<string, { role: string; stepLabel: string }> = {
-  'en_operaciones': { role: 'operaciones', stepLabel: 'Operaciones' },
-  'en_rrhh': { role: 'rrhh', stepLabel: 'Recursos Humanos' },
+const statusToNextRole: Record<string, { role: string; permissionModule?: string; stepLabel: string }> = {
+  'en_coordinadores': { role: 'admin', permissionModule: 'req_approve_coordinadores', stepLabel: 'Coordinadores' },
+  'en_operaciones': { role: 'operaciones', permissionModule: 'req_approve_ger_op', stepLabel: 'Operaciones' },
+  'en_rrhh': { role: 'rrhh', permissionModule: 'req_approve_rh', stepLabel: 'Recursos Humanos' },
   'en_juridico': { role: 'admin', stepLabel: 'Jurídico' },
   'en_gerencia': { role: 'admin', stepLabel: 'Gerencia' },
   'en_seleccion': { role: 'rrhh', stepLabel: 'Selección' },
@@ -106,7 +107,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Find users with the appropriate role in this company
+    // Find users with the legacy role and, when configured, the custom approval permission.
     const { data: usersWithRole, error: usersError } = await supabase
       .from('user_roles')
       .select('user_id')
@@ -117,8 +118,30 @@ serve(async (req: Request): Promise<Response> => {
       throw usersError;
     }
 
-    if (!usersWithRole || usersWithRole.length === 0) {
-      console.log(`No users found with role ${nextApprover.role}`);
+    let permissionUserIds: string[] = [];
+    if (nextApprover.permissionModule) {
+      const { data: usersWithPermission, error: permissionUsersError } = await supabase
+        .from('user_custom_roles')
+        .select('user_id, custom_roles!inner(role_permissions!inner(permissions!inner(modules!inner(code), action)))')
+        .eq('custom_roles.is_active', true)
+        .eq('custom_roles.role_permissions.permissions.modules.code', nextApprover.permissionModule)
+        .eq('custom_roles.role_permissions.permissions.action', 'approve');
+
+      if (permissionUsersError) {
+        console.error('Error fetching users with approval permission:', permissionUsersError);
+        throw permissionUsersError;
+      }
+
+      permissionUserIds = (usersWithPermission || []).map(u => u.user_id);
+    }
+
+    const userIds = Array.from(new Set([
+      ...(usersWithRole || []).map(u => u.user_id),
+      ...permissionUserIds,
+    ]));
+
+    if (userIds.length === 0) {
+      console.log(`No users found for ${nextApprover.stepLabel}`);
       return new Response(
         JSON.stringify({ message: 'No users to notify for this role' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -126,7 +149,6 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Filter users that belong to this company
-    const userIds = usersWithRole.map(u => u.user_id);
     const { data: companyUsers, error: companyUsersError } = await supabase
       .from('user_company_assignments')
       .select('user_id')

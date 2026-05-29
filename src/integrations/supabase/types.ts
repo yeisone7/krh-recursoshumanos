@@ -6176,6 +6176,11 @@ export type Database = {
           cargo_solicitado: string
           cargo_solicitante: string | null
           company_id: string
+          coordinadores_aprobado: boolean | null
+          coordinadores_aprobador_id: string | null
+          coordinadores_fecha_aprobacion: string | null
+          coordinadores_observaciones: string | null
+          coordinadores_quien_aprobo: string | null
           created_at: string
           created_by: string | null
           dia_descanso_obligatorio:
@@ -6249,6 +6254,11 @@ export type Database = {
           cargo_solicitado: string
           cargo_solicitante?: string | null
           company_id: string
+          coordinadores_aprobado?: boolean | null
+          coordinadores_aprobador_id?: string | null
+          coordinadores_fecha_aprobacion?: string | null
+          coordinadores_observaciones?: string | null
+          coordinadores_quien_aprobo?: string | null
           created_at?: string
           created_by?: string | null
           dia_descanso_obligatorio?:
@@ -6322,6 +6332,11 @@ export type Database = {
           cargo_solicitado?: string
           cargo_solicitante?: string | null
           company_id?: string
+          coordinadores_aprobado?: boolean | null
+          coordinadores_aprobador_id?: string | null
+          coordinadores_fecha_aprobacion?: string | null
+          coordinadores_observaciones?: string | null
+          coordinadores_quien_aprobo?: string | null
           created_at?: string
           created_by?: string | null
           dia_descanso_obligatorio?:
@@ -9231,6 +9246,7 @@ export type Database = {
       requisition_status:
         | "borrador"
         | "enviada"
+        | "en_coordinadores"
         | "en_operaciones"
         | "en_rrhh"
         | "en_juridico"
@@ -9666,6 +9682,7 @@ export const Constants = {
       requisition_status: [
         "borrador",
         "enviada",
+        "en_coordinadores",
         "en_operaciones",
         "en_rrhh",
         "en_juridico",

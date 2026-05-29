@@ -38,7 +38,7 @@ import { recruitmentTypeLabels, RecruitmentType } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type ApprovalStep = 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
+type ApprovalStep = 'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
 
 interface VacancyCodeEntry {
   platformId: string;
@@ -55,6 +55,7 @@ interface RequisitionApprovalDialogProps {
 }
 
 const stepTitles: Record<ApprovalStep, string> = {
+  coordinadores: 'Aprobacion Coordinadores',
   operaciones: 'Aprobación de Operaciones',
   rrhh: 'Aprobación de RRHH',
   juridico: 'Aprobación de Jurídico',
@@ -136,6 +137,8 @@ export function RequisitionApprovalDialog({
     if (!approved) return true;
 
     switch (step) {
+      case 'coordinadores':
+        return true;
       case 'operaciones':
         return true;
       case 'rrhh':
@@ -168,6 +171,7 @@ export function RequisitionApprovalDialog({
   const { hasPermission } = useAuth();
   
   const stepPermissionMap: Record<ApprovalStep, string> = {
+    coordinadores: 'req_approve_coordinadores',
     rrhh: 'req_approve_rh',
     juridico: 'req_approve_juridica',
     operaciones: 'req_approve_ger_op',
@@ -198,6 +202,8 @@ export function RequisitionApprovalDialog({
 
     if (step === 'operaciones') {
       data.operaciones_aprobado_salario = salarioAprobado;
+    } else if (step === 'coordinadores') {
+      data.coordinadores_observaciones = observations || null;
     } else if (step === 'rrhh') {
       data.rrhh_asignacion_salarial = asignacionSalarial;
       data.rrhh_incluye_auxilio_transporte = incluyeAuxilioTransporte;
@@ -260,6 +266,64 @@ export function RequisitionApprovalDialog({
 
         <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           <div className="space-y-4">
+
+          {step === 'coordinadores' && (
+            <div className="space-y-4 rounded-lg border bg-muted/20 p-4">
+              <div>
+                <p className="text-sm font-semibold">Preview de la requisicion</p>
+                <p className="text-sm text-muted-foreground">
+                  Revisa la solicitud completa antes de registrar la decision.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Cargo solicitado</p>
+                  <p className="font-semibold">{requisition.cargo_solicitado}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Vacantes</p>
+                  <p className="font-semibold">{requisition.cantidad_vacantes_requeridas}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Solicitante</p>
+                  <p className="font-semibold">{requisition.solicitante_nombre}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Cargo solicitante</p>
+                  <p className="font-semibold">{requisition.cargo_solicitante || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Area</p>
+                  <p className="font-semibold">{requisition.areas?.name || 'No especificada'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Centro de operacion</p>
+                  <p className="font-semibold">{requisition.operation_centers?.name || 'No especificado'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Fecha estimada de ingreso</p>
+                  <p className="font-semibold">{requisition.fecha_ingreso_estimada || 'No especificada'}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Horario</p>
+                  <p className="font-semibold">{requisition.horario_trabajo || 'No especificado'}</p>
+                </div>
+              </div>
+              {(requisition.cargo_a_reemplazar || requisition.persona_a_reemplazar || requisition.observaciones_motivo_solicitud) && (
+                <div className="space-y-2 border-t pt-3 text-sm">
+                  {requisition.cargo_a_reemplazar && (
+                    <p><span className="font-semibold">Cargo a reemplazar:</span> {requisition.cargo_a_reemplazar}</p>
+                  )}
+                  {requisition.persona_a_reemplazar && (
+                    <p><span className="font-semibold">Persona a reemplazar:</span> {requisition.persona_a_reemplazar}</p>
+                  )}
+                  {requisition.observaciones_motivo_solicitud && (
+                    <p><span className="font-semibold">Observaciones:</span> {requisition.observaciones_motivo_solicitud}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Step-specific fields */}
           {step === 'operaciones' && (

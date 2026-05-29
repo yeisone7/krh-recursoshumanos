@@ -30,6 +30,12 @@ export interface PersonnelRequisition {
   solicitante_id: string | null;
   solicitante_nombre: string;
   cargo_solicitante: string | null;
+  // Coordinadores
+  coordinadores_aprobado: boolean | null;
+  coordinadores_quien_aprobo: string | null;
+  coordinadores_aprobador_id: string | null;
+  coordinadores_fecha_aprobacion: string | null;
+  coordinadores_observaciones: string | null;
   // Operaciones
   operaciones_aprobado: boolean | null;
   operaciones_aprobado_salario: boolean | null;
@@ -289,7 +295,7 @@ export function useApproveRequisitionStep() {
       data,
     }: {
       id: string;
-      step: 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
+      step: 'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
       approved: boolean;
       data?: Record<string, any>;
     }) => {
@@ -318,6 +324,7 @@ export function useApproveRequisitionStep() {
       let statusMap: Record<string, string>;
       if (autoriza === 'gerencia_administrativa') {
         statusMap = {
+          coordinadores: approved ? 'en_rrhh' : 'rechazada',
           rrhh: approved ? 'en_juridico' : 'rechazada',
           juridico: approved ? 'en_gerencia' : 'rechazada',
           gerencia: approved ? 'en_seleccion' : 'rechazada',
@@ -325,6 +332,7 @@ export function useApproveRequisitionStep() {
         };
       } else if (autoriza === 'gerencia_operaciones') {
         statusMap = {
+          coordinadores: approved ? 'en_rrhh' : 'rechazada',
           rrhh: approved ? 'en_juridico' : 'rechazada',
           juridico: approved ? 'en_operaciones' : 'rechazada',
           operaciones: approved ? 'en_seleccion' : 'rechazada',
@@ -332,6 +340,7 @@ export function useApproveRequisitionStep() {
         };
       } else {
         statusMap = {
+          coordinadores: approved ? 'en_rrhh' : 'rechazada',
           rrhh: approved ? 'en_juridico' : 'rechazada',
           juridico: approved ? 'en_operaciones' : 'rechazada',
           operaciones: approved ? 'en_gerencia' : 'rechazada',
@@ -405,10 +414,10 @@ export function useSubmitRequisition() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // First step is now RRHH
+      // First approval step is Coordinadores, then the normal RRHH flow continues.
       const { data, error } = await supabase
         .from('personnel_requisitions')
-        .update({ estado_requisicion: 'en_rrhh' } as any)
+        .update({ estado_requisicion: 'en_coordinadores' } as any)
         .eq('id', id)
         .select()
         .single();
