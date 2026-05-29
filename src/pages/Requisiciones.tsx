@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
-  TrendingUp, Briefcase, Filter, ChevronRight, Trash2, AlertTriangle
+  TrendingUp, Briefcase, Filter, ChevronRight, Trash2, AlertTriangle, MoreHorizontal
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -324,7 +325,7 @@ export default function Requisiciones() {
               </div>
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
-                <div className="max-h-[calc(100vh-22rem)] min-h-[360px] overflow-auto overscroll-contain rounded-[2.5rem] [scrollbar-gutter:stable]">
+                <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
                   <Table className="w-full min-w-[940px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
@@ -420,40 +421,36 @@ export default function Requisiciones() {
                             </Badge>
                           </TableCell>
                           <TableCell className="px-2 text-right">
-                            <div className="flex w-[64px] flex-wrap items-center justify-end gap-1 transition-all duration-300" onClick={e => e.stopPropagation()}>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" aria-label="Exportar PDF" className="h-8 w-8 rounded-lg hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
-                                      {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="rounded-xl font-bold">Exportar PDF</TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" aria-label="Ver detalle" className="h-8 w-8 rounded-lg bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
-                                      <Eye className="w-5 h-5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent className="rounded-xl font-bold">Ver detalle</TooltipContent>
-                                </Tooltip>
-                                {canDeleteRequisitions && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button size="icon" variant="ghost" aria-label="Eliminar requisición" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all" onClick={(e) => requestDelete(req, e)}>
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="rounded-xl font-bold">Eliminar requisiciÃ³n</TooltipContent>
-                                  </Tooltip>
-                                )}
-                                {step && (
-                                  <Button size="icon" aria-label="Gestionar aprobación" className="h-8 w-8 shrink-0 rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/10 transition-all hover:scale-105 active:scale-95" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
-                                    <CheckCircle className="w-4 h-4" />
+                            <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button size="icon" variant="ghost" aria-label="Acciones de requisición" className="h-9 w-9 rounded-xl bg-background hover:bg-primary hover:text-primary-foreground">
+                                    <MoreHorizontal className="h-5 w-5" />
                                   </Button>
-                                )}
-                              </TooltipProvider>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-52 rounded-2xl border-border p-2 shadow-2xl">
+                                  <DropdownMenuItem onClick={() => openDetail(req.id)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3">
+                                    <Eye className="h-4 w-4 mr-3" />
+                                    Ver detalle
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(event) => handleExportPDF(req, event as unknown as React.MouseEvent)} disabled={exportingId === req.id} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3">
+                                    {exportingId === req.id ? <Loader2 className="h-4 w-4 mr-3 animate-spin" /> : <FileDown className="h-4 w-4 mr-3" />}
+                                    Exportar PDF
+                                  </DropdownMenuItem>
+                                  {step && (
+                                    <DropdownMenuItem onClick={() => { setSelectedId(req.id); setApprovalStep(step); }} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-primary">
+                                      <CheckCircle className="h-4 w-4 mr-3" />
+                                      Gestionar
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canDeleteRequisitions && (
+                                    <DropdownMenuItem onClick={(event) => requestDelete(req, event as unknown as React.MouseEvent)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-destructive">
+                                      <Trash2 className="h-4 w-4 mr-3" />
+                                      Eliminar
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </TableCell>
                         </TableRow>
