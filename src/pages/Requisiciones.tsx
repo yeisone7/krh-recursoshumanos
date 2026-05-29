@@ -323,9 +323,10 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              <div className="hidden overflow-x-auto rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
-                <Table className="min-w-[1320px] table-fixed">
-                  <TableHeader>
+              <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
+                <div className="max-h-[calc(100vh-22rem)] min-h-[360px] overflow-auto overscroll-contain rounded-[2.5rem]">
+                  <Table className="w-[1320px] min-w-[1320px] table-fixed">
+                    <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
                       <TableHead className="h-16 w-[300px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
                       <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
@@ -334,8 +335,8 @@ export default function Requisiciones() {
                       <TableHead className="h-16 w-[145px] font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
                       <TableHead className="h-16 w-[280px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                    </TableHeader>
+                    <TableBody>
                     {filtered.map(req => {
                       const status = req.estado_requisicion as RequisitionStatus;
                       const cfg = requisitionStatusConfig[status];
@@ -459,8 +460,9 @@ export default function Requisiciones() {
                         </TableRow>
                       );
                     })}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </>
           )}
