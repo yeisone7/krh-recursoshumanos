@@ -25,6 +25,8 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -733,17 +735,56 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
           if (!value) setPreviewOpenedBeforeApprove(false);
         }}
       >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Aprobar Contrato</DialogTitle>
+        <DialogContent className="max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[1.75rem] border border-primary/10 p-0 shadow-2xl sm:max-w-xl">
+          <DialogHeader className="space-y-0 border-b border-border/60 bg-muted/25 px-5 py-5 sm:px-6">
+            <div className="flex items-start gap-4 pr-8">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-xl font-black tracking-tight text-foreground">
+                  Aprobar contrato
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  Revisa primero la vista preliminar para validar contenido, clÃ¡usulas y datos del empleado.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
+          <div className="hidden">
           <p className="text-sm text-muted-foreground">
             Antes de aprobar, revisa la vista preliminar del contrato para validar contenido, cláusulas y datos del empleado.
           </p>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
+          </div>
+          <div className="space-y-4 px-5 py-5 sm:px-6">
+            <div className={cn(
+              'flex items-start gap-3 rounded-2xl border p-4',
+              previewOpenedBeforeApprove
+                ? 'border-success/25 bg-success/10 text-success'
+                : 'border-warning/25 bg-warning/10 text-warning-foreground'
+            )}>
+              {previewOpenedBeforeApprove ? (
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+              ) : (
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-black">
+                  {previewOpenedBeforeApprove ? 'Vista preliminar revisada' : 'Vista preliminar requerida'}
+                </p>
+                <p className="mt-1 text-xs font-medium leading-relaxed opacity-80">
+                  {previewOpenedBeforeApprove
+                    ? 'Ya puedes confirmar la aprobaciÃ³n del contrato.'
+                    : 'La confirmaciÃ³n se habilita despuÃ©s de abrir la vista preliminar.'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="grid grid-cols-1 gap-2 border-t border-border/60 bg-background px-5 py-4 sm:grid-cols-[1fr_1fr_1.35fr] sm:px-6">
             <Button
               type="button"
               variant="outline"
+              className="h-11 rounded-xl font-bold"
               onClick={() => setShowApproveDialog(false)}
             >
               Cancelar
@@ -751,13 +792,14 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
             <Button
               type="button"
               variant="outline"
+              className="h-11 rounded-xl font-bold"
               onClick={handleOpenPreviewBeforeApprove}
             >
               Vista preliminar
             </Button>
             <Button
               type="button"
-              className="gradient-primary text-primary-foreground"
+              className="h-11 rounded-xl bg-primary text-primary-foreground font-black shadow-md shadow-primary/15 hover:bg-primary/90"
               onClick={async () => {
                 await handleApproveContract();
                 setShowApproveDialog(false);
@@ -767,13 +809,13 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               title={!previewOpenedBeforeApprove ? 'Primero abre la vista preliminar' : undefined}
             >
               {approveContract.isPending ? (
-                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                <CheckCircle2 className="mr-2 h-4 w-4" />
               )}
               Confirmar Aprobación
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
