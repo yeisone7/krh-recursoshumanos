@@ -325,15 +325,15 @@ export default function Requisiciones() {
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
                 <div className="max-h-[calc(100vh-22rem)] min-h-[360px] overflow-auto overscroll-contain rounded-[2.5rem] [scrollbar-gutter:stable]">
-                  <Table className="w-[1320px] min-w-[1320px] table-fixed">
+                  <Table className="w-full min-w-[940px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
-                      <TableHead className="h-16 w-[300px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-16 w-[130px] font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
-                      <TableHead className="h-16 w-[245px] font-black text-[10px] uppercase tracking-[0.2em]">Flujo de Aprobación</TableHead>
-                      <TableHead className="sticky right-[280px] z-30 h-16 w-[145px] bg-background font-black text-[10px] uppercase tracking-[0.2em] shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.45)]">Estado</TableHead>
-                      <TableHead className="sticky right-0 z-30 h-16 w-[280px] bg-background px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                      <TableHead className="h-16 w-[270px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-16 w-[180px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-16 w-[110px] font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
+                      <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
+                      <TableHead className="h-16 w-[90px] font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="h-16 w-[70px] px-2 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -381,7 +381,7 @@ export default function Requisiciones() {
                           </TableCell>
                           <TableCell>
                             <TooltipProvider>
-                              <div className="flex min-w-[220px] items-center justify-center gap-1.5">
+                              <div className="flex min-w-0 items-center justify-center gap-1">
                                 {progress.map((s, idx) => (
                                   <div key={s.key} className="flex items-center">
                                     <Tooltip>
@@ -389,7 +389,7 @@ export default function Requisiciones() {
                                         <button
                                           type="button"
                                           className={cn(
-                                            'w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-300 border-2',
+                                            'w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-black transition-all duration-300 border-2 shrink-0',
                                             s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/10',
                                             s.approved === false && 'bg-red-500 text-white border-red-400 shadow-md shadow-red-500/10',
                                             s.approved === null && 'bg-background text-muted-foreground border-border hover:border-primary/30'
@@ -414,17 +414,17 @@ export default function Requisiciones() {
                               </div>
                             </TooltipProvider>
                           </TableCell>
-                          <TableCell className="sticky right-[280px] z-10 bg-background shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.45)] group-hover:bg-primary/[0.02]">
-                            <Badge variant="outline" className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                          <TableCell>
+                            <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[82px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
                               {requisitionStatusLabels[status]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="sticky right-0 z-10 bg-background px-4 text-right group-hover:bg-primary/[0.02]">
-                            <div className="flex min-w-[252px] flex-wrap items-center justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
+                          <TableCell className="px-2 text-right">
+                            <div className="flex w-[64px] flex-wrap items-center justify-end gap-1 transition-all duration-300" onClick={e => e.stopPropagation()}>
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
+                                    <Button size="icon" variant="ghost" aria-label="Exportar PDF" className="h-8 w-8 rounded-lg hover:bg-primary text-primary hover:text-white shadow-sm transition-all" onClick={(e) => handleExportPDF(req, e)} disabled={exportingId === req.id}>
                                       {exportingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                                     </Button>
                                   </TooltipTrigger>
@@ -432,7 +432,7 @@ export default function Requisiciones() {
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
+                                    <Button size="icon" variant="ghost" aria-label="Ver detalle" className="h-8 w-8 rounded-lg bg-background hover:bg-foreground hover:text-background transition-all" onClick={() => openDetail(req.id)}>
                                       <Eye className="w-5 h-5" />
                                     </Button>
                                   </TooltipTrigger>
@@ -441,7 +441,7 @@ export default function Requisiciones() {
                                 {canDeleteRequisitions && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all" onClick={(e) => requestDelete(req, e)}>
+                                      <Button size="icon" variant="ghost" aria-label="Eliminar requisición" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive hover:text-destructive-foreground transition-all" onClick={(e) => requestDelete(req, e)}>
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
                                     </TooltipTrigger>
@@ -449,9 +449,8 @@ export default function Requisiciones() {
                                   </Tooltip>
                                 )}
                                 {step && (
-                                  <Button size="sm" className="h-10 w-[132px] shrink-0 rounded-xl bg-primary px-3 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-md shadow-primary/10 transition-all hover:scale-105 active:scale-95" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Gestionar
+                                  <Button size="icon" aria-label="Gestionar aprobación" className="h-8 w-8 shrink-0 rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/10 transition-all hover:scale-105 active:scale-95" onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}>
+                                    <CheckCircle className="w-4 h-4" />
                                   </Button>
                                 )}
                               </TooltipProvider>
