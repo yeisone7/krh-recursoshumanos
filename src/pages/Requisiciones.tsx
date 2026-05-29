@@ -324,7 +324,7 @@ export default function Requisiciones() {
               </div>
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
-                <div className="max-h-[calc(100vh-22rem)] min-h-[360px] overflow-auto overscroll-contain rounded-[2.5rem]">
+                <div className="max-h-[calc(100vh-22rem)] min-h-[360px] overflow-auto overscroll-contain rounded-[2.5rem] [scrollbar-gutter:stable]">
                   <Table className="w-[1320px] min-w-[1320px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
@@ -332,8 +332,8 @@ export default function Requisiciones() {
                       <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
                       <TableHead className="h-16 w-[130px] font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
                       <TableHead className="h-16 w-[245px] font-black text-[10px] uppercase tracking-[0.2em]">Flujo de Aprobación</TableHead>
-                      <TableHead className="h-16 w-[145px] font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="h-16 w-[280px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
+                      <TableHead className="sticky right-[280px] z-30 h-16 w-[145px] bg-background font-black text-[10px] uppercase tracking-[0.2em] shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.45)]">Estado</TableHead>
+                      <TableHead className="sticky right-0 z-30 h-16 w-[280px] bg-background px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acciones</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -414,12 +414,12 @@ export default function Requisiciones() {
                               </div>
                             </TooltipProvider>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="sticky right-[280px] z-10 bg-background shadow-[-12px_0_18px_-18px_rgba(15,23,42,0.45)] group-hover:bg-primary/[0.02]">
                             <Badge variant="outline" className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
                               {requisitionStatusLabels[status]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="px-4 text-right">
+                          <TableCell className="sticky right-0 z-10 bg-background px-4 text-right group-hover:bg-primary/[0.02]">
                             <div className="flex min-w-[252px] flex-wrap items-center justify-end gap-2 transition-all duration-300" onClick={e => e.stopPropagation()}>
                               <TooltipProvider>
                                 <Tooltip>
