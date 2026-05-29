@@ -116,6 +116,24 @@ export function useNotificationCenter() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notification-center'] }),
   });
 
+  const markAsAttended = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const now = new Date().toISOString();
+      const { error } = await supabase
+        .from('notifications')
+        .update({
+          is_read: true,
+          read_at: now,
+          is_attended: true,
+          attended_at: now,
+          attended_by: user?.id || null,
+        } as any)
+        .eq('id', notificationId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notification-center'] }),
+  });
+
   const deleteNotification = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -135,6 +153,7 @@ export function useNotificationCenter() {
     isLoading: notificationsQuery.isLoading || deliveryLogsQuery.isLoading || usersQuery.isLoading,
     error: notificationsQuery.error || deliveryLogsQuery.error || usersQuery.error,
     markAsRead: markAsRead.mutateAsync,
+    markAsAttended: markAsAttended.mutateAsync,
     deleteNotification: deleteNotification.mutateAsync,
     refetch: () => {
       notificationsQuery.refetch();

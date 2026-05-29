@@ -25,6 +25,7 @@ const QUICK_MODULE_CODES = [
   'requisiciones',
   'capacitaciones',
   'alertas',
+  'motor_notificaciones',
 ];
 
 const ACTIONS = ['view', 'create', 'update', 'delete', 'approve', 'export'] as const;

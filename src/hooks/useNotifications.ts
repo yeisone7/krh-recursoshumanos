@@ -15,8 +15,14 @@ export interface Notification {
   entity_type: string | null;
   entity_id: string | null;
   action_url: string | null;
+  event_key?: string | null;
+  priority?: string | null;
   is_read: boolean;
   read_at: string | null;
+  is_attended?: boolean;
+  attended_at?: string | null;
+  attended_by?: string | null;
+  attention_note?: string | null;
   created_at: string;
 }
 

@@ -10,7 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { NotificationEngineManager } from '@/components/notifications/NotificationEngineManager';
 import { NotificationRulesManager } from '@/components/notifications/NotificationRulesManager';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationCenter } from '@/hooks/useNotificationCenter';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -37,6 +39,7 @@ function formatDate(value: string) {
 }
 
 export default function CentroNotificaciones() {
+  const { hasPermission } = useAuth();
   const {
     notifications,
     deliveryLogs,
@@ -45,6 +48,7 @@ export default function CentroNotificaciones() {
     isLoading,
     error,
     markAsRead,
+    markAsAttended,
     deleteNotification,
     refetch,
   } = useNotificationCenter();
@@ -53,6 +57,7 @@ export default function CentroNotificaciones() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('alerts');
+  const canViewEngine = hasPermission('motor_notificaciones', 'view') || hasPermission('motor_notificaciones', 'update');
 
   const filteredNotifications = useMemo(() => {
     const term = search.toLowerCase();
@@ -60,7 +65,11 @@ export default function CentroNotificaciones() {
       const matchesSearch = !term || [item.title, item.message, item.category, userDisplayMap[item.user_id]]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(term));
-      const matchesStatus = statusFilter === 'all' || (statusFilter === 'read' ? item.is_read : !item.is_read);
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'read' && item.is_read) ||
+        (statusFilter === 'unread' && !item.is_read) ||
+        (statusFilter === 'attended' && item.is_attended);
       return matchesSearch && matchesStatus;
     });
   }, [notifications, search, statusFilter, userDisplayMap]);
@@ -80,6 +89,7 @@ export default function CentroNotificaciones() {
   const stats = useMemo(() => ({
     totalNotifications: notifications.length,
     unread: notifications.filter((item) => !item.is_read).length,
+    attended: notifications.filter((item) => item.is_attended).length,
     emails: deliveryLogs.filter((item) => item.channel === 'email').length,
     failed: deliveryLogs.filter((item) => ['failed', 'error', 'dlq'].includes(item.status)).length,
   }), [notifications, deliveryLogs]);
@@ -92,6 +102,11 @@ export default function CentroNotificaciones() {
   const handleDelete = async (id: string) => {
     await deleteNotification(id);
     toast.success('Notificación eliminada');
+  };
+
+  const handleMarkAttended = async (id: string) => {
+    await markAsAttended(id);
+    toast.success('Alerta marcada como atendida');
   };
 
   if (error) {
@@ -136,7 +151,7 @@ export default function CentroNotificaciones() {
         {[
           { label: 'Total Alertas', value: stats.totalNotifications, icon: Bell, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
           { label: 'Sin Leer', value: stats.unread, icon: Users, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
-          { label: 'Correos', value: stats.emails, icon: Mail, color: 'text-info', bg: 'bg-info/10', border: 'border-info/20' },
+          { label: 'Atendidas', value: stats.attended, icon: Check, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
           { label: 'Fallidos', value: stats.failed, icon: Mail, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
         ].map((stat, i) => (
           <motion.div
@@ -169,7 +184,7 @@ export default function CentroNotificaciones() {
           <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Historial Operativo</h2>
           <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de comunicaciones y notificaciones de sistema.</p>
         </div>
-      {activeTab !== 'rules' && (
+      {activeTab !== 'rules' && activeTab !== 'engine' && (
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
         <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background p-3 rounded-[2rem] border border-border/50 shadow-sm">
@@ -193,6 +208,7 @@ export default function CentroNotificaciones() {
                 <SelectItem value="all">TODOS</SelectItem>
                 <SelectItem value="unread">SIN LEER</SelectItem>
                 <SelectItem value="read">LEÍDAS</SelectItem>
+                <SelectItem value="attended">ATENDIDAS</SelectItem>
                 <SelectItem value="sent">ENVIADO</SelectItem>
                 <SelectItem value="pending">PENDIENTE</SelectItem>
                 <SelectItem value="failed">FALLIDO</SelectItem>
@@ -224,6 +240,7 @@ export default function CentroNotificaciones() {
               { value: 'alerts', label: 'ALERTAS EN APP' },
               { value: 'deliveries', label: 'CORREOS Y ENVÍOS' },
               ...(canManageCompanyHistory ? [{ value: 'rules', label: 'REGLAS INTELIGENTES' }] : []),
+              ...(canViewEngine ? [{ value: 'engine', label: 'MOTOR EMPRESARIAL' }] : []),
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -240,6 +257,11 @@ export default function CentroNotificaciones() {
                 <NotificationRulesManager />
               </TabsContent>
             )}
+            {canViewEngine && (
+              <TabsContent value="engine" className="mt-0">
+                <NotificationEngineManager />
+              </TabsContent>
+            )}
             <TabsContent value="alerts">
               <div className="space-y-3 md:hidden">
                 {filteredNotifications.map((item) => (
@@ -251,12 +273,14 @@ export default function CentroNotificaciones() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">{typeLabels[item.type] || item.type}</Badge>
+                      <Badge variant={item.is_attended ? 'default' : 'outline'}>{item.is_attended ? 'Atendida' : 'Pendiente'}</Badge>
                       <Badge variant={item.is_read ? 'secondary' : 'default'}>{item.is_read ? 'Leída' : 'Sin leer'}</Badge>
                     </div>
                     <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                       <span>{formatDate(item.created_at)}</span>
                       <div className="flex gap-2">
                         {!item.is_read && <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkRead(item.id)}><Check className="h-4 w-4" /> Leer</Button>}
+                        {!item.is_attended && <Button variant="outline" size="sm" className="flex-1" onClick={() => handleMarkAttended(item.id)}><Check className="h-4 w-4" /> Atendida</Button>}
                         <Button variant="outline" size="sm" className="flex-1 text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /> Eliminar</Button>
                       </div>
                     </div>
@@ -272,11 +296,15 @@ export default function CentroNotificaciones() {
                     <TableRow key={item.id}>
                       <TableCell>{userDisplayMap[item.user_id] || item.user_id}</TableCell>
                       <TableCell><p className="font-medium">{item.title}</p><p className="text-sm text-muted-foreground line-clamp-1">{item.message}</p></TableCell>
-                      <TableCell><Badge variant="outline">{typeLabels[item.type] || item.type}</Badge></TableCell>
+                      <TableCell className="space-x-1">
+                        <Badge variant="outline">{typeLabels[item.type] || item.type}</Badge>
+                        <Badge variant={item.is_attended ? 'default' : 'outline'}>{item.is_attended ? 'Atendida' : 'Pendiente'}</Badge>
+                      </TableCell>
                       <TableCell><Badge variant={item.is_read ? 'secondary' : 'default'}>{item.is_read ? 'Leída' : 'Sin leer'}</Badge></TableCell>
                       <TableCell>{formatDate(item.created_at)}</TableCell>
                       <TableCell className="text-right space-x-1">
                         {!item.is_read && <Button variant="ghost" size="icon" onClick={() => handleMarkRead(item.id)}><Check className="h-4 w-4" /></Button>}
+                        {!item.is_attended && <Button variant="ghost" size="icon" onClick={() => handleMarkAttended(item.id)} title="Marcar como atendida"><Check className="h-4 w-4" /></Button>}
                         <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(item.id)}><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
