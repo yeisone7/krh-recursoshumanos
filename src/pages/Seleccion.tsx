@@ -44,6 +44,7 @@ import { cn } from '@/lib/utils';
 import { useVacancies } from '@/hooks/useVacancies';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
@@ -73,6 +74,8 @@ export default function Seleccion() {
   const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
   const { data: candidates = [] } = useCandidates();
   const { data: operationCenters = [] } = useOperationCenters();
+  const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate } = useAuth();
+  const canCreateVacancy = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canCreate('seleccion');
 
   // Stats
   const stats = useMemo(() => {
@@ -267,10 +270,12 @@ export default function Seleccion() {
           </div>
         </div>
 
-        <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => setShowVacancyForm(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nueva Vacante
-        </Button>
+        {canCreateVacancy && (
+          <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => setShowVacancyForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Nueva Vacante
+          </Button>
+        )}
       </div>
 
       <ScrollArea className="flex-1 p-6 sm:p-10">
