@@ -129,7 +129,7 @@ export function DiversityGoalsConfig() {
             ))}
           </div>
 
-          <div className="p-10 rounded-[3rem] bg-slate-900 text-white shadow-2xl relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-[3rem] border border-primary/20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-10 text-white shadow-2xl">
             <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none scale-150">
               <Target className="w-48 h-48" />
             </div>
@@ -147,9 +147,9 @@ export function DiversityGoalsConfig() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-8 p-6 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-8 rounded-[2rem] border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black text-primary uppercase tracking-widest block text-center sm:text-right">Umbral de Cumplimiento</Label>
+                  <Label className="block text-center text-[9px] font-black uppercase tracking-widest text-cyan-200 sm:text-right">Umbral de Cumplimiento</Label>
                   <div className="flex items-center gap-3">
                     <Input
                       type="number"
@@ -157,9 +157,9 @@ export function DiversityGoalsConfig() {
                       max={100}
                       value={goals.notify_threshold_pct}
                       onChange={(e) => setGoals(g => ({ ...g, notify_threshold_pct: parseFloat(e.target.value) || 80 }))}
-                      className="h-11 w-24 rounded-xl bg-white/10 border-white/10 text-white font-black text-center text-xs focus-visible:ring-primary/50 shadow-inner"
+                      className="h-11 w-24 rounded-xl border-white/30 bg-white text-center text-xs font-black text-slate-900 shadow-inner focus-visible:ring-primary/50"
                     />
-                    <span className="text-[10px] font-black text-white/40">%</span>
+                    <span className="text-[10px] font-black text-white/70">%</span>
                   </div>
                 </div>
                 <div className="hidden sm:block h-12 w-px bg-white/10" />
