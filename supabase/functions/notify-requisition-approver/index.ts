@@ -78,11 +78,26 @@ serve(async (req: Request): Promise<Response> => {
       .eq('custom_roles.is_system', true)
       .eq('custom_roles.is_active', true)
       .limit(1);
-    const { data: hasPermission } = await supabase.rpc('check_user_permission', {
-      _user_id: userId,
-      _module_code: 'requisiciones',
-      _action: 'update',
-    });
+    const permissionChecks = [
+      { module: 'requisiciones', action: 'create' },
+      { module: 'requisiciones', action: 'update' },
+      { module: 'req_approve_coordinadores', action: 'approve' },
+      { module: 'req_approve_rh', action: 'approve' },
+      { module: 'req_approve_juridica', action: 'approve' },
+      { module: 'req_approve_ger_op', action: 'approve' },
+      { module: 'req_approve_ger_adm', action: 'approve' },
+      { module: 'req_approve_seleccion', action: 'approve' },
+    ];
+    const permissionResults = await Promise.all(
+      permissionChecks.map(({ module, action }) =>
+        supabase.rpc('check_user_permission', {
+          _user_id: userId,
+          _module_code: module,
+          _action: action,
+        })
+      )
+    );
+    const hasPermission = permissionResults.some(({ data }) => data === true);
     const { data: assignment } = await supabase
       .from('user_company_assignments')
       .select('id')

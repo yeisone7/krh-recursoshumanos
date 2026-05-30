@@ -83,7 +83,7 @@ export function RequisitionDetailDialog({
   onRequestDelete,
 }: RequisitionDetailDialogProps) {
   const { data: requisition, isLoading } = useRequisitionWithVacancies(requisitionId || undefined);
-  const { companies, currentCompanyId, user, hasPermission, isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
+  const { companies, currentCompanyId, user, hasPermission, isAdmin, isRRHH, isSuperAdmin, canCreate, canUpdate } = useAuth();
   const queryClient = useQueryClient();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const updateRequisition = useUpdateRequisition();
@@ -190,7 +190,9 @@ export function RequisitionDetailDialog({
     isAdmin ||
     isRRHH ||
     isSuperAdmin ||
+    canCreate('requisiciones') ||
     canUpdate('requisiciones') ||
+    hasPermission('req_approve_coordinadores', 'approve') ||
     requisition.created_by === user?.id
   );
   const canEdit = status === 'borrador' && canManageDraft;

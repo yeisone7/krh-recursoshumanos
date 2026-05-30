@@ -100,9 +100,9 @@ type SupabaseMutationError = {
   hint?: string;
 };
 
-const getCreateRequisitionErrorDescription = (error: unknown) => {
+const getSupabaseErrorText = (error: unknown) => {
   const supabaseError = error as SupabaseMutationError;
-  const errorText = [
+  return [
     supabaseError?.code,
     supabaseError?.message,
     supabaseError?.details,
@@ -111,6 +111,11 @@ const getCreateRequisitionErrorDescription = (error: unknown) => {
     .filter(Boolean)
     .join(' ')
     .toLowerCase();
+};
+
+const getCreateRequisitionErrorDescription = (error: unknown) => {
+  const supabaseError = error as SupabaseMutationError;
+  const errorText = getSupabaseErrorText(error);
 
   if (
     supabaseError?.code === '42501' ||
@@ -121,6 +126,31 @@ const getCreateRequisitionErrorDescription = (error: unknown) => {
   }
 
   return 'No se pudo crear la requisición. Intenta nuevamente.';
+};
+
+const getSubmitRequisitionErrorDescription = (error: unknown) => {
+  const supabaseError = error as SupabaseMutationError;
+  const errorText = getSupabaseErrorText(error);
+
+  if (
+    errorText.includes('en_coordinadores') ||
+    errorText.includes('coordinadores') ||
+    errorText.includes('invalid input value for enum') ||
+    errorText.includes('column')
+  ) {
+    return 'La base de datos no tiene activo el paso de AprobaciÃ³n Coordinadores. Aplica la migraciÃ³n del flujo de requisiciones.';
+  }
+
+  if (
+    supabaseError?.code === '42501' ||
+    errorText.includes('row-level security') ||
+    errorText.includes('permission denied') ||
+    errorText.includes('violates row-level security')
+  ) {
+    return 'Tu usuario no tiene permiso para enviar esta requisiciÃ³n. Verifica que tenga permiso de crear/actualizar requisiciones o sea el solicitante del borrador.';
+  }
+
+  return 'No se pudo enviar la requisiciÃ³n.';
 };
 
 export function useRequisitions() {
@@ -423,6 +453,19 @@ export function useSubmitRequisition() {
         .single();
 
       if (error) throw error;
+
+      try {
+        await supabase.functions.invoke('notify-requisition-approver', {
+          body: {
+            requisitionId: id,
+            currentStep: 'en_coordinadores',
+            requisitionTitle: data?.cargo_solicitado || 'Requisicion',
+          },
+        });
+      } catch (notifyError) {
+        console.error('Error notifying coordinator approver:', notifyError);
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -437,7 +480,7 @@ export function useSubmitRequisition() {
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'No se pudo enviar la requisición.',
+        description: getSubmitRequisitionErrorDescription(error),
         variant: 'destructive',
       });
       console.error('Error submitting requisition:', error);
