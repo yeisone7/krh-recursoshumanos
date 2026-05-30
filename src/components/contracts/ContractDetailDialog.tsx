@@ -613,16 +613,17 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
             </div>
           </ScrollArea>
 
-          <div className="px-6 py-4 border-t border-border bg-background flex flex-col gap-3 flex-shrink-0">
+          <div className="px-4 py-2 border-t border-border bg-background flex flex-col gap-2 flex-shrink-0 sm:px-5 sm:py-2.5">
             {/* Primary actions row */}
-            <div className="flex flex-wrap gap-2 justify-end">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <div className="flex flex-wrap gap-1.5 justify-end">
+              <Button size="sm" variant="outline" className="h-9 rounded-xl px-4" onClick={() => onOpenChange(false)}>
                 Cerrar
               </Button>
               <Button 
+                size="sm"
                 variant="outline"
                 onClick={() => setShowGenerateDialog(true)}
-                className="gap-1"
+                className="h-9 rounded-xl gap-1 px-4"
                 disabled={!isApproved || isTerminated}
                 title={
                   isTerminated
@@ -632,11 +633,12 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                       : undefined
                 }
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-3.5 h-3.5" />
                 Generar Documento
               </Button>
               <Button 
-                className="gradient-primary text-primary-foreground"
+                size="sm"
+                className="h-9 rounded-xl px-4 gradient-primary text-primary-foreground"
                 onClick={() => setShowEditDialog(true)}
                 disabled={isTerminated || !canUpdateContracts}
                 title={
@@ -651,13 +653,14 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               </Button>
             </div>
             {/* Secondary actions row */}
-            <div className="flex flex-wrap gap-2 justify-between items-center">
-              <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5 justify-between items-center">
+              <div className="flex gap-1.5">
                 {canTerminate && (
                   <Button
                     variant="outline"
                     size="sm"
                     className={cn(
+                      "h-9 rounded-xl px-4",
                       hasPendingTermination 
                         ? "border-warning/50 text-warning-foreground hover:bg-warning hover:text-warning-foreground"
                         : "border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
@@ -684,7 +687,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-success/50 text-success hover:bg-success hover:text-success-foreground"
+                  className="h-9 rounded-xl px-4 border-success/50 text-success hover:bg-success hover:text-success-foreground"
                   onClick={() => setShowApproveDialog(true)}
                   disabled={approveContract.isPending}
                 >

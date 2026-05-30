@@ -465,7 +465,7 @@ export default function SuperAdmin() {
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-5">
                             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-sm transition-transform group-hover:scale-105">
-                              {company.logo_url ? <img src={company.logo_url} className="h-full w-full object-contain p-2" /> : <Building2 className="h-6 w-6 text-slate-400" />}
+                              {company.logo_url ? <img src={company.logo_url} className="h-full w-full rounded-[inherit] object-cover" /> : <Building2 className="h-6 w-6 text-slate-400" />}
                             </div>
                             <div className="space-y-1 min-w-0">
                               <p className="truncate font-black uppercase leading-none tracking-tight text-slate-950">{company.name}</p>
