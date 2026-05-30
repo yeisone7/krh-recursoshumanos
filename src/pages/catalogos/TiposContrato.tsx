@@ -280,18 +280,18 @@ export default function TiposContrato() {
   };
 
   return (
-    <div className="space-y-6 sm:space-y-8 max-w-7xl mx-auto px-2 sm:px-6">
+    <div className="space-y-4 sm:space-y-5 max-w-7xl mx-auto px-2 sm:px-6">
       {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-6 sm:p-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white border border-slate-100"
+        className="relative p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[2rem] bg-white border border-slate-100"
       >
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
             <div className="relative shrink-0 group">
-              <div className="relative h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center rounded-[1.25rem] sm:rounded-[1.75rem] bg-primary/10 border border-primary/20 transition-all duration-300">
-                <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
+              <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center rounded-[1rem] bg-primary/10 border border-primary/20 transition-all duration-300">
+                <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
               </div>
             </div>
             <div>
@@ -300,10 +300,10 @@ export default function TiposContrato() {
                   Gestión Contractual
                 </Badge>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground uppercase lg:text-4xl">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground uppercase lg:text-3xl">
                 Tipos de Contrato
               </h1>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.2em] mt-1">
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.18em] mt-1">
                 Modelos de vinculación y plantillas legales
               </p>
             </div>
@@ -314,15 +314,15 @@ export default function TiposContrato() {
             <Button 
               variant="outline"
               onClick={() => setIsSignatureOpen(true)} 
-              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-none"
+              className="h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-none"
             >
               Firma Legal
             </Button>
             <Button 
               onClick={handleNewClick} 
-              className="h-12 px-8 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
+              className="h-10 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
             >
-              <Plus className="w-4 h-4 mr-2 stroke-[3]" />
+              <Plus className="w-3.5 h-3.5 mr-2 stroke-[3]" />
               NUEVO TIPO
             </Button>
           </div>
@@ -330,7 +330,7 @@ export default function TiposContrato() {
       </motion.div>
 
       {/* Stats Summary - Flat Style */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 px-2">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 px-1 sm:px-0">
         {[
           { label: 'Total Tipos', value: stats.total, icon: LayoutGrid, color: 'primary' },
           { label: 'Activos', value: stats.active, icon: CheckCircle2, color: 'success' },
@@ -342,38 +342,38 @@ export default function TiposContrato() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="group relative p-4 sm:p-6 rounded-[1.5rem] sm:rounded-[2rem] bg-white border border-slate-100"
+            className="group relative p-3 sm:p-4 rounded-[1rem] sm:rounded-[1.25rem] bg-white border border-slate-100"
           >
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center justify-between mb-2">
               <div className={cn(
-                "p-3 rounded-xl",
+                "p-2 rounded-lg",
                 stat.color === 'primary' ? "bg-primary/10 text-primary" :
                 stat.color === 'success' ? "bg-emerald-50 text-emerald-600" :
                 "bg-orange-50 text-orange-600"
               )}>
-                <stat.icon className="w-5 h-5" />
+                <stat.icon className="w-4 h-4" />
               </div>
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-none">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
                 {isLoading ? <Skeleton className="h-8 w-12" /> : stat.value}
               </h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-        <div className="relative flex-1 group max-w-xl">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-1 sm:px-0">
+        <div className="relative flex-1 group max-w-2xl">
+          <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
             <Search className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           </div>
           <Input
             placeholder="BUSCAR POR NOMBRE O CÓDIGO..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="h-12 pl-12 rounded-2xl bg-white border border-slate-200 focus-visible:ring-4 ring-primary/5 transition-all font-bold text-[10px] uppercase tracking-widest"
+            className="h-10 pl-10 rounded-xl bg-white border border-slate-200 focus-visible:ring-4 ring-primary/5 transition-all font-bold text-[10px] uppercase tracking-widest"
           />
         </div>
       </div>
