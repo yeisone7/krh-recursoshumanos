@@ -328,14 +328,13 @@ export default function Requisiciones() {
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
-                  <Table className="w-full min-w-[1160px] table-fixed">
+                  <Table className="w-full min-w-[1040px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
                       <TableHead className="h-14 w-[320px] px-5 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-14 w-[220px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-14 w-[130px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
-                      <TableHead className="h-14 w-[250px] px-4 text-center font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
-                      <TableHead className="h-14 w-[140px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="h-14 w-[290px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-14 w-[240px] px-4 text-center font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
+                      <TableHead className="h-14 w-[150px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
                       <TableHead className="h-14 w-[180px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
@@ -369,17 +368,14 @@ export default function Requisiciones() {
                                 <Building2 className="w-3.5 h-3.5 text-primary/60" />
                                 <span className="text-[11px] font-black tracking-tight text-foreground/80 truncate">{req.operation_centers?.name || '-'}</span>
                               </div>
-                              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-border px-2 py-0">
-                                {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell className="px-4 py-4">
-                            <div className="flex flex-col">
-                               <span className="text-[11px] font-bold text-foreground/80">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-background border-border px-2 py-0">
+                                  {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
+                                </Badge>
+                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/5 text-primary border-primary/20 px-2 py-0">
                                   {format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
-                               </span>
-                               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Fecha Solicitud</span>
+                                </Badge>
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-4">
