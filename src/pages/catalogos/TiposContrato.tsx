@@ -280,47 +280,47 @@ export default function TiposContrato() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-5 max-w-7xl mx-auto px-2 sm:px-6">
+    <div className="space-y-3 sm:space-y-4 max-w-7xl mx-auto px-2 sm:px-6">
       {/* Header Premium Flat */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }}
-        className="relative p-4 sm:p-5 rounded-[1.25rem] sm:rounded-[2rem] bg-white border border-slate-100"
+        className="relative p-3 sm:p-4 rounded-[1rem] sm:rounded-[1.5rem] bg-white border border-slate-100"
       >
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4">
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-2.5 sm:gap-3">
             <div className="relative shrink-0 group">
-              <div className="relative h-12 w-12 sm:h-14 sm:w-14 flex items-center justify-center rounded-[1rem] bg-primary/10 border border-primary/20 transition-all duration-300">
-                <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
+              <div className="relative h-10 w-10 sm:h-11 sm:w-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 transition-all duration-300">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
             </div>
             <div>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full uppercase tracking-widest">
+              <div className="flex items-center justify-center sm:justify-start gap-2 mb-0.5">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black text-[8px] px-2 py-0 rounded-full uppercase tracking-widest">
                   Gestión Contractual
                 </Badge>
               </div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground uppercase lg:text-3xl">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-black tracking-tight text-foreground uppercase leading-tight">
                 Tipos de Contrato
               </h1>
-              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.18em] mt-1">
+              <p className="text-[8px] sm:text-[9px] font-bold text-muted-foreground uppercase tracking-widest sm:tracking-[0.16em]">
                 Modelos de vinculación y plantillas legales
               </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3">
-            <ContractPlaceholdersInfo />
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
+            <ContractPlaceholdersInfo className="h-9 px-3 rounded-lg font-black uppercase tracking-widest text-[10px]" />
             <Button 
               variant="outline"
               onClick={() => setIsSignatureOpen(true)} 
-              className="h-10 px-4 rounded-xl font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-none"
+              className="h-9 px-3 rounded-lg font-black uppercase tracking-widest text-[10px] border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-none"
             >
               Firma Legal
             </Button>
             <Button 
               onClick={handleNewClick} 
-              className="h-10 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
+              className="h-9 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all"
             >
               <Plus className="w-3.5 h-3.5 mr-2 stroke-[3]" />
               NUEVO TIPO
@@ -330,7 +330,7 @@ export default function TiposContrato() {
       </motion.div>
 
       {/* Stats Summary - Flat Style */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 px-1 sm:px-0">
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4 px-1 sm:px-0">
         {[
           { label: 'Total Tipos', value: stats.total, icon: LayoutGrid, color: 'primary' },
           { label: 'Activos', value: stats.active, icon: CheckCircle2, color: 'success' },
@@ -342,23 +342,23 @@ export default function TiposContrato() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="group relative p-3 sm:p-4 rounded-[1rem] sm:rounded-[1.25rem] bg-white border border-slate-100"
+            className="group relative rounded-xl bg-white border border-slate-100 px-3 py-2.5 sm:px-4 sm:py-3"
           >
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
               <div className={cn(
-                "p-2 rounded-lg",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
                 stat.color === 'primary' ? "bg-primary/10 text-primary" :
                 stat.color === 'success' ? "bg-emerald-50 text-emerald-600" :
                 "bg-orange-50 text-orange-600"
               )}>
                 <stat.icon className="w-4 h-4" />
               </div>
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-none">
-                {isLoading ? <Skeleton className="h-8 w-12" /> : stat.value}
-              </h3>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+              <div className="min-w-0">
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-none">
+                  {isLoading ? <Skeleton className="h-6 w-10" /> : stat.value}
+                </h3>
+                <p className="mt-0.5 truncate text-[8px] sm:text-[9px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
+              </div>
             </div>
           </motion.div>
         ))}
