@@ -99,19 +99,19 @@ export function DiversityGoalsConfig() {
       </CardHeader>
       
       {goals.enabled && (
-        <CardContent className="p-8 space-y-12">
+        <CardContent className="space-y-12 bg-slate-50/35 p-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {goalFields.map(f => (
-              <div key={f.key} className="group relative p-8 rounded-[2.5rem] bg-white border border-slate-100 transition-all duration-500 hover:border-primary/20 hover:shadow-xl hover:shadow-primary/5">
+              <div key={f.key} className="group relative rounded-[2.5rem] border border-slate-200 bg-slate-50 p-8 transition-all duration-500 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5">
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center justify-between">
-                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl grayscale group-hover:grayscale-0 transition-all">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-xl shadow-sm grayscale group-hover:grayscale-0 transition-all">
                       {f.icon}
                     </div>
-                    <Badge variant="outline" className="font-black text-[8px] rounded-lg border-slate-100 text-primary uppercase px-2 py-1">OBJETIVO</Badge>
+                    <Badge variant="outline" className="rounded-lg border-primary/30 bg-primary/10 px-2 py-1 text-[8px] font-black uppercase text-primary">OBJETIVO</Badge>
                   </div>
                   <div className="space-y-3">
-                    <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block px-1">{f.label}</Label>
+                    <Label className="inline-flex rounded-lg bg-slate-200/70 px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-700">{f.label}</Label>
                     <div className="relative">
                       <Input
                         type="number"
@@ -119,9 +119,9 @@ export function DiversityGoalsConfig() {
                         max={100}
                         value={goals[f.key]}
                         onChange={(e) => setGoals(g => ({ ...g, [f.key]: parseFloat(e.target.value) || 0 }))}
-                        className="h-12 rounded-xl bg-slate-50 border-none shadow-inner focus-visible:ring-2 ring-primary/20 font-black text-xs text-slate-900 px-6 transition-all"
+                        className="h-12 rounded-xl border border-slate-200 bg-white px-6 text-xs font-black text-slate-900 shadow-sm ring-primary/20 transition-all focus-visible:ring-2"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300">%</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-500">%</span>
                     </div>
                   </div>
                 </div>
