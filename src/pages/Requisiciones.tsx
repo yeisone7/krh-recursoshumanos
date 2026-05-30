@@ -162,38 +162,40 @@ export default function Requisiciones() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+      <div className="relative shrink-0 overflow-hidden px-5 py-4 sm:px-8 sm:py-5 border-b border-border ">
         
         
         
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-                <FileText className="w-6 h-6" />
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
-                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
+                <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[8px] px-2 py-0">
                   Módulo de Selección
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Requisiciones de Personal</h1>
+                <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tighter leading-tight">Requisiciones de Personal</h1>
               </div>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
+            <p className="text-xs font-medium text-muted-foreground max-w-xl leading-snug">
               Gestiona y aprueba las solicitudes de nuevo talento humano para tu operación de manera eficiente.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:min-w-[560px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
-                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
-                   <stat.icon className="w-3.5 h-3.5" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
-                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
-                  <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+              <div key={i} className="group relative overflow-hidden rounded-xl bg-background border border-border px-3 py-2.5 shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${stat.bg} ${stat.color}`}>
+                    <stat.icon className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[8px] sm:text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
+                    <p className={`mt-0.5 text-lg sm:text-xl font-black tracking-tighter leading-none ${stat.color}`}>{stat.value}</p>
+                    <p className="mt-0.5 text-[8px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -202,13 +204,13 @@ export default function Requisiciones() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+      <div className="sticky top-0 z-30 px-5 py-3 sm:px-8 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 flex-1">
           <div className="relative w-full sm:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               placeholder="Buscar por cargo, solicitante..."
-              className="w-full pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
+              className="w-full pl-10 h-10 rounded-xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -221,16 +223,16 @@ export default function Requisiciones() {
               onValueChange={setStatusFilter}
               placeholder="Filtrar por estado"
               searchPlaceholder="Buscar estado..."
-              triggerClassName="h-12 w-full sm:w-[220px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider"
+              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
-            <div className="flex items-center px-4 h-12 bg-primary/10 rounded-2xl border border-border shrink-0">
+            <div className="flex items-center px-4 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
               <span className="text-sm font-black text-primary">{filtered.length}</span>
             </div>
           </div>
         </div>
 
-        <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" />
+        <Button className="h-10 w-full lg:w-auto px-6 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
+          <Plus className="w-3.5 h-3.5 mr-2" />
           Nueva Requisición
         </Button>
       </div>
