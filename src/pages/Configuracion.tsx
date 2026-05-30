@@ -624,9 +624,9 @@ export default function Configuracion() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-8 space-y-12">
+            <CardContent className="p-8 space-y-12 bg-slate-50/35">
               <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 px-1 flex items-center gap-2">
                   <Mail className="h-4 w-4 text-primary" /> Destinatarios del Canal de Alerta
                 </Label>
                 <div className="relative group">
@@ -634,13 +634,13 @@ export default function Configuracion() {
                     value={alertRecipients}
                     onChange={(e) => setAlertRecipients(e.target.value)}
                     placeholder="ADMIN@EMPRESA.COM&#10;RH@EMPRESA.COM"
-                    className="min-h-40 rounded-3xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-bold text-xs uppercase tracking-widest p-8 leading-relaxed shadow-inner"
+                    className="min-h-40 rounded-3xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-bold text-xs uppercase tracking-widest p-8 leading-relaxed shadow-sm"
                   />
-                  <div className="absolute top-6 right-6 h-10 w-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-300">
+                  <div className="absolute top-6 right-6 h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500">
                     <Info className="w-5 h-5" />
                   </div>
                 </div>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
                   <Check className="w-3 h-3 text-emerald-500" />
                   Define los correos separándolos con saltos de línea para el sistema de broadcast.
                 </p>
@@ -653,34 +653,34 @@ export default function Configuracion() {
                   { id: 'dotacion', label: 'Entrega Dotación', icon: Shirt, color: 'text-amber-500', bg: 'bg-amber-50', info: alertDotationInfo, setInfo: setAlertDotationInfo, warn: alertDotationWarning, setWarn: setAlertDotationWarning, crit: alertDotationCritical, setCrit: setAlertDotationCritical },
                   { id: 'retiros', label: 'Procesos de Retiro', icon: History, color: 'text-red-500', bg: 'bg-red-50', warn: alertTerminationWarning, setWarn: setAlertTerminationWarning, crit: alertTerminationCritical, setCrit: setAlertTerminationCritical },
                 ].map((item) => (
-                  <div key={item.id} className="p-6 rounded-3xl bg-white border border-slate-100 hover:border-primary/20 transition-all group shadow-sm">
+                  <div key={item.id} className="p-6 rounded-3xl bg-slate-50 border border-slate-200 hover:border-primary/30 transition-all group shadow-sm">
                     <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110", item.bg, item.color)}>
                       <item.icon className="w-6 h-6 stroke-[2.5]" />
                     </div>
-                    <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900 mb-6">{item.label}</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-800 mb-6">{item.label}</h4>
                     
                     <div className="space-y-5">
                       {item.info !== undefined && (
                         <div className="space-y-2">
-                          <Label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Fase Info</Label>
+                          <Label className="inline-flex rounded-lg bg-slate-200/70 px-2 py-1 text-[9px] font-black text-slate-700 uppercase tracking-widest">Fase Info</Label>
                           <div className="relative">
-                            <Input type="number" className="h-10 rounded-xl bg-slate-50 border-none font-black text-xs px-4" value={item.info} onChange={(e) => item.setInfo?.(parseInt(e.target.value) || 0)} />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-300">DÍAS</span>
+                            <Input type="number" className="h-10 rounded-xl bg-white border border-slate-200 font-black text-xs px-4 text-slate-800" value={item.info} onChange={(e) => item.setInfo?.(parseInt(e.target.value) || 0)} />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-500">DÍAS</span>
                           </div>
                         </div>
                       )}
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black text-orange-500 uppercase tracking-widest ml-1">Fase Alerta</Label>
+                        <Label className="inline-flex rounded-lg bg-orange-100 px-2 py-1 text-[9px] font-black text-orange-700 uppercase tracking-widest">Fase Alerta</Label>
                         <div className="relative">
-                          <Input type="number" className="h-10 rounded-xl bg-orange-50/50 border-none font-black text-xs px-4 text-orange-600" value={item.warn} onChange={(e) => item.setWarn(parseInt(e.target.value) || 0)} />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-orange-300">DÍAS</span>
+                          <Input type="number" className="h-10 rounded-xl bg-white border border-orange-200 font-black text-xs px-4 text-orange-700" value={item.warn} onChange={(e) => item.setWarn(parseInt(e.target.value) || 0)} />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-orange-500">DÍAS</span>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[9px] font-black text-red-500 uppercase tracking-widest ml-1">Fase Crítica</Label>
+                        <Label className="inline-flex rounded-lg bg-red-100 px-2 py-1 text-[9px] font-black text-red-700 uppercase tracking-widest">Fase Crítica</Label>
                         <div className="relative">
-                          <Input type="number" className="h-10 rounded-xl bg-red-50/50 border-none font-black text-xs px-4 text-red-600" value={item.crit} onChange={(e) => item.setCrit(parseInt(e.target.value) || 0)} />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-red-300">DÍAS</span>
+                          <Input type="number" className="h-10 rounded-xl bg-white border border-red-200 font-black text-xs px-4 text-red-700" value={item.crit} onChange={(e) => item.setCrit(parseInt(e.target.value) || 0)} />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[8px] font-black text-red-500">DÍAS</span>
                         </div>
                       </div>
                     </div>
@@ -869,3 +869,4 @@ export default function Configuracion() {
     </div>
   );
 }
+

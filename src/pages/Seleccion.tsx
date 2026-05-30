@@ -183,15 +183,15 @@ export default function Seleccion() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Premium Header */}
-      <div className="relative shrink-0 overflow-hidden px-6 py-8 sm:px-10 sm:py-10 border-b border-border ">
+      <div className="relative shrink-0 overflow-hidden border-b border-border px-5 py-6 sm:px-7 sm:py-7">
         
         
         
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4">
+        <div className="relative flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
-                <Users className="w-6 h-6" />
+              <div className="p-2 rounded-2xl bg-primary shadow-md shadow-primary/10 text-primary-foreground transform -rotate-3 transition-transform hover:rotate-0 duration-300">
+                <Users className="w-5 h-5" />
               </div>
               <div>
                 <Badge variant="outline" className="text-primary border-border font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0">
@@ -205,15 +205,15 @@ export default function Seleccion() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:min-w-[550px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 lg:min-w-[500px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden p-4 rounded-[1.5rem] bg-background border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
-                <div className={`absolute top-2 right-2 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
+              <div key={i} className="group relative overflow-hidden p-3 rounded-2xl bg-background border border-border shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
+                <div className={`absolute top-2 right-2 p-1 rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3.5 h-3.5" />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
-                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                  <p className={`text-xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
                   <p className="text-[9px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
                 </div>
               </div>
@@ -223,13 +223,13 @@ export default function Seleccion() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-3 flex-1">
+      <div className="sticky top-0 z-30 px-5 py-3 sm:px-7 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 flex-1">
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar vacantes por cargo o área..."
-              className="pl-11 h-12 rounded-2xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
+              className="pl-10 h-10 rounded-xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -237,7 +237,7 @@ export default function Seleccion() {
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[160px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-10 w-full sm:w-[160px] rounded-xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Estado" />
@@ -253,7 +253,7 @@ export default function Seleccion() {
             </Select>
 
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="h-12 w-full sm:w-[180px] rounded-2xl bg-background border-border font-bold text-xs uppercase tracking-wider">
+              <SelectTrigger className="h-10 w-full sm:w-[180px] rounded-xl bg-background border-border font-bold text-xs uppercase tracking-wider">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-3.5 h-3.5 text-primary" />
                   <SelectValue placeholder="Centro" />
@@ -272,14 +272,14 @@ export default function Seleccion() {
         </div>
 
         {canCreateVacancy && (
-          <Button className="h-12 w-full lg:w-auto px-8 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => setShowVacancyForm(true)}>
+          <Button className="h-10 w-full lg:w-auto px-7 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-md shadow-primary/10" onClick={() => setShowVacancyForm(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Nueva Vacante
           </Button>
         )}
       </div>
 
-      <ScrollArea className="flex-1 p-6 sm:p-10">
+      <ScrollArea className="flex-1 px-5 py-4 sm:px-7 sm:py-6">
         <div className="max-w-full mx-auto w-full">
           {loadingVacancies ? (
             <div className="space-y-4">
