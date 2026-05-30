@@ -328,15 +328,15 @@ export default function Requisiciones() {
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
-                  <Table className="w-full min-w-[940px] table-fixed">
+                  <Table className="w-full min-w-[1160px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
-                      <TableHead className="h-16 w-[270px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-16 w-[180px] font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-16 w-[110px] font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
-                      <TableHead className="h-16 w-[220px] font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
-                      <TableHead className="h-16 w-[90px] font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="h-16 w-[70px] px-2 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
+                      <TableHead className="h-14 w-[320px] px-5 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-14 w-[220px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-14 w-[130px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Fecha</TableHead>
+                      <TableHead className="h-14 w-[250px] px-4 text-center font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
+                      <TableHead className="h-14 w-[140px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="h-14 w-[180px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -347,9 +347,9 @@ export default function Requisiciones() {
                       const progress = getApprovalProgress(req);
                       return (
                         <TableRow key={req.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
-                          <TableCell className="px-4 py-5">
+                          <TableCell className="px-5 py-4">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
+                              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
                                 <FileText className="w-5 h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -363,7 +363,7 @@ export default function Requisiciones() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-4">
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-2">
                                 <Building2 className="w-3.5 h-3.5 text-primary/60" />
@@ -374,7 +374,7 @@ export default function Requisiciones() {
                               </Badge>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-4">
                             <div className="flex flex-col">
                                <span className="text-[11px] font-bold text-foreground/80">
                                   {format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
@@ -382,7 +382,7 @@ export default function Requisiciones() {
                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Fecha Solicitud</span>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-4">
                             <TooltipProvider>
                               <div className="flex min-w-0 items-center justify-center gap-1">
                                 {progress.map((s, idx) => (
@@ -417,13 +417,24 @@ export default function Requisiciones() {
                               </div>
                             </TooltipProvider>
                           </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[82px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                          <TableCell className="px-4 py-4">
+                            <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
                               {requisitionStatusLabels[status]}
                             </Badge>
                           </TableCell>
-                          <TableCell className="px-2 text-right">
-                            <div className="flex justify-end" onClick={e => e.stopPropagation()}>
+                          <TableCell className="px-4 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                              {step && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-9 rounded-xl border-primary/20 bg-primary/5 px-3 text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground"
+                                  onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}
+                                >
+                                  <CheckCircle className="mr-2 h-3.5 w-3.5" />
+                                  Gestionar
+                                </Button>
+                              )}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button size="icon" variant="ghost" aria-label="Acciones de requisición" className="h-9 w-9 rounded-xl bg-background hover:bg-primary hover:text-primary-foreground">
@@ -439,12 +450,6 @@ export default function Requisiciones() {
                                     {exportingId === req.id ? <Loader2 className="h-4 w-4 mr-3 animate-spin" /> : <FileDown className="h-4 w-4 mr-3" />}
                                     Exportar PDF
                                   </DropdownMenuItem>
-                                  {step && (
-                                    <DropdownMenuItem onClick={() => { setSelectedId(req.id); setApprovalStep(step); }} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-primary">
-                                      <CheckCircle className="h-4 w-4 mr-3" />
-                                      Gestionar
-                                    </DropdownMenuItem>
-                                  )}
                                   {canDeleteRequisitions && (
                                     <DropdownMenuItem onClick={(event) => requestDelete(req, event as unknown as React.MouseEvent)} className="rounded-xl font-bold text-xs uppercase tracking-wider p-3 text-destructive">
                                       <Trash2 className="h-4 w-4 mr-3" />
