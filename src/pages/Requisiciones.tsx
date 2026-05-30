@@ -237,7 +237,7 @@ export default function Requisiciones() {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-6 sm:px-5 sm:py-8">
+      <ScrollArea className="flex-1 px-1.5 py-6 sm:px-2.5 sm:py-8">
         <div className="max-w-full mx-auto w-full">
           {isLoading ? (
             <div className="space-y-4">
