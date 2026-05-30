@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -292,7 +293,7 @@ export default function Cesantias() {
                           <TableCell className="px-6 py-4">
                              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                                <Calendar className="w-3.5 h-3.5" />
-                               {format(new Date(deposit.due_date), 'dd MMM yyyy', { locale: es })}
+                               {formatDateOnly(deposit.due_date, 'dd MMM yyyy', { locale: es })}
                              </div>
                           </TableCell>
                           <TableCell className="px-6 py-4">{getStatusBadge(deposit.status, deposit.is_late)}</TableCell>
@@ -322,7 +323,7 @@ export default function Cesantias() {
                       { label: 'Valor cesantías', value: formatCurrency(deposit.cesantias_amount), className: 'col-span-2' },
                       { label: 'Salario base', value: formatCurrency(deposit.base_salary) },
                       { label: 'Días', value: deposit.days_worked },
-                      { label: 'Fecha límite', value: format(new Date(deposit.due_date), 'dd MMM yyyy', { locale: es }) },
+                      { label: 'Fecha límite', value: formatDateOnly(deposit.due_date, 'dd MMM yyyy', { locale: es }) },
                     ],
                     actions: (
                       <Button size="sm" variant="outline" className="w-full rounded-xl font-bold uppercase tracking-widest text-[10px]" onClick={() => { setSelectedDeposit(deposit); setShowDepositForm(true); }}>
@@ -414,7 +415,7 @@ export default function Cesantias() {
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                              <Calendar className="w-3.5 h-3.5" />
-                             {format(new Date(interest.due_date), 'dd MMM yyyy', { locale: es })}
+                             {formatDateOnly(interest.due_date, 'dd MMM yyyy', { locale: es })}
                            </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -449,7 +450,7 @@ export default function Cesantias() {
                     fields: [
                       { label: 'Valor intereses', value: formatCurrency(interest.interest_amount), className: 'col-span-2' },
                       { label: 'Saldo cesantías', value: formatCurrency(interest.cesantias_balance) },
-                      { label: 'Fecha límite', value: format(new Date(interest.due_date), 'dd MMM yyyy', { locale: es }) },
+                      { label: 'Fecha límite', value: formatDateOnly(interest.due_date, 'dd MMM yyyy', { locale: es }) },
                     ],
                     actions: (
                       <Button size="sm" variant="outline" className="w-full rounded-xl font-bold uppercase tracking-widest text-[10px] text-violet" onClick={() => { setSelectedInterest(interest); setShowInterestForm(true); }}>
@@ -525,7 +526,7 @@ export default function Cesantias() {
                         <TableCell className="px-6 py-4">
                            <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                              <Calendar className="w-3.5 h-3.5" />
-                             {format(new Date(withdrawal.request_date), 'dd MMM yyyy', { locale: es })}
+                             {formatDateOnly(withdrawal.request_date, 'dd MMM yyyy', { locale: es })}
                            </div>
                         </TableCell>
                         <TableCell className="px-6 py-4">
@@ -566,7 +567,7 @@ export default function Cesantias() {
                     fields: [
                       { label: 'Solicitado', value: formatCurrency(withdrawal.amount_requested), className: 'col-span-2' },
                       { label: 'Aprobado', value: withdrawal.amount_approved ? formatCurrency(withdrawal.amount_approved) : '-' },
-                      { label: 'Solicitud', value: format(new Date(withdrawal.request_date), 'dd MMM yyyy', { locale: es }) },
+                      { label: 'Solicitud', value: formatDateOnly(withdrawal.request_date, 'dd MMM yyyy', { locale: es }) },
                       { label: 'Motivo', value: withdrawalReasonLabels[withdrawal.withdrawal_reason], className: 'col-span-2' },
                     ],
                     actions: (

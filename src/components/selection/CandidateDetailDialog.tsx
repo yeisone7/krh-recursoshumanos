@@ -3,6 +3,7 @@ import { ThankYouPreviewDialog } from './ThankYouPreviewDialog';
 import { useCandidateBackground } from '@/hooks/useCandidateBackground';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   User,
   Mail,
@@ -421,7 +422,7 @@ export function CandidateDetailDialog({
                       <div className="space-y-1">
                         <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Nacimiento</p>
                         <p className="font-medium">
-                          {format(new Date(candidate.birth_date), 'dd MMM yyyy', { locale: es })}
+                          {formatDateOnly(candidate.birth_date, 'dd MMM yyyy', { locale: es })}
                         </p>
                       </div>
                     )}
@@ -636,7 +637,7 @@ export function CandidateDetailDialog({
                     <div className="space-y-1">
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Postulación</p>
                       <p className="font-medium">
-                        {format(new Date(candidate.application_date), 'dd MMM yyyy', { locale: es })}
+                        {formatDateOnly(candidate.application_date, 'dd MMM yyyy', { locale: es })}
                       </p>
                     </div>
                     {candidate.source && (
@@ -782,7 +783,7 @@ export function CandidateDetailDialog({
                                                 variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} 
                                                 className="text-[10px] h-5"
                                               >
-                                                Vence: {format(new Date(doc.expiry_date), 'dd MMM yyyy', { locale: es })}
+                                                Vence: {formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}
                                               </Badge>
                                             )}
                                             <div className="flex items-center gap-1">
@@ -929,7 +930,7 @@ export function CandidateDetailDialog({
                               <p className="text-xs text-muted-foreground">
                                 {doc.document_type && <Badge variant="secondary" className="text-xs mr-2">{doc.document_type}</Badge>}
                                 {formatFileSize(doc.file_size)}
-                                {doc.upload_date && ` • ${format(new Date(doc.upload_date), 'dd MMM yyyy', { locale: es })}`}
+                                {doc.upload_date && ` • ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`}
                               </p>
                             </div>
                           </div>

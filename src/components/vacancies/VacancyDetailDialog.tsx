@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, todayDateOnlyString } from '@/lib/dateOnly';
 import {
   Briefcase,
   Users,
@@ -252,7 +253,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       await updateVacancy.mutateAsync({
         id: vacancy.id,
         status: newStatus,
-        actual_close_date: newStatus === 'closed' ? new Date().toISOString().split('T')[0] : null,
+        actual_close_date: newStatus === 'closed' ? todayDateOnlyString() : null,
       });
       toast.success('Estado actualizado');
     } catch (error) {
@@ -271,7 +272,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       await updateVacancy.mutateAsync({
         id: vacancy.id,
         status: 'cancelled',
-        actual_close_date: new Date().toISOString().split('T')[0],
+        actual_close_date: todayDateOnlyString(),
         // @ts-ignore - these are new columns
         cancellation_reason: cancellationReason,
         cancelled_by: user?.id,
@@ -409,7 +410,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                 </div>
                 <div className="flex items-center gap-2 transition-colors hover:text-primary">
                   <Calendar className="w-4 h-4 text-primary/60" />
-                  Abierta desde {format(new Date(vacancy.open_date), "dd MMM yyyy", { locale: es })}
+                  Abierta desde {formatDateOnly(vacancy.open_date, "dd MMM yyyy", { locale: es })}
                 </div>
                 {vacancy.department_area && (
                   <div className="flex items-center gap-2 transition-colors hover:text-primary">
@@ -568,7 +569,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Apertura</p>
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
-                      <p className="font-medium">{format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es })}</p>
+                      <p className="font-medium">{formatDateOnly(vacancy.open_date, 'dd MMM yyyy', { locale: es })}</p>
                     </div>
                   </div>
                   {vacancy.target_close_date && (
@@ -576,7 +577,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       <p className="text-xs text-muted-foreground uppercase tracking-wide">Cierre Objetivo</p>
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
-                        <p className="font-medium">{format(new Date(vacancy.target_close_date), 'dd MMM yyyy', { locale: es })}</p>
+                        <p className="font-medium">{formatDateOnly(vacancy.target_close_date, 'dd MMM yyyy', { locale: es })}</p>
                       </div>
                     </div>
                   )}

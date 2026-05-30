@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useState, useCallback, useMemo } from 'react';
 import { 
   Shirt, Plus, Edit2, Trash2, Loader2, Check, X, 
@@ -171,7 +172,7 @@ export default function CatalogosTiposDotacion() {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Tipos de Dotación');
-    XLSX.writeFile(wb, `tipos_dotacion_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `tipos_dotacion_${todayDateOnlyString()}.xlsx`);
     toast.success('Excel exportado');
   };
 
@@ -187,7 +188,7 @@ export default function CatalogosTiposDotacion() {
     const doc = new jsPDF({ orientation: 'landscape' });
     doc.text('Catálogo de Tipos de Dotación', 14, 18);
     // Basic PDF table generation...
-    doc.save(`tipos_dotacion_${new Date().toISOString().slice(0, 10)}.pdf`);
+    doc.save(`tipos_dotacion_${todayDateOnlyString()}.pdf`);
     toast.success('PDF exportado');
   };
 

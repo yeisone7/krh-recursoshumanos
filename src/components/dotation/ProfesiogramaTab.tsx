@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useState, useMemo } from 'react';
 import { ClipboardList, Plus, Pencil, Trash2, Loader2, Copy, Download, Upload, Search, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -214,7 +215,7 @@ export function ProfesiogramaTab({
     const wsTemplate = XLSX.utils.json_to_sheet(templateRows);
     XLSX.utils.book_append_sheet(wb, wsTemplate, 'Plantilla Importación');
 
-    XLSX.writeFile(wb, `profesiogramas_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(wb, `profesiogramas_${todayDateOnlyString()}.xlsx`);
     toast.success('Archivo exportado exitosamente');
   };
 

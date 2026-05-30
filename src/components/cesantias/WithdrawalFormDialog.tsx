@@ -12,6 +12,7 @@ import { ArrowRightLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasWithdrawal, useUpdateCesantiasWithdrawal } from '@/hooks/useCesantias';
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { withdrawalReasonLabels, withdrawalStatusLabels } from '@/types/cesantias';
 import type { CesantiasWithdrawal, CesantiasWithdrawalReason } from '@/types/cesantias';
 
@@ -52,7 +53,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
     resolver: zodResolver(formSchema),
     defaultValues: {
       employee_id: '',
-      request_date: new Date().toISOString().split('T')[0],
+      request_date: todayDateOnlyString(),
       withdrawal_reason: 'vivienda',
       amount_requested: 0,
       fund_name: '',
@@ -82,7 +83,7 @@ export function WithdrawalFormDialog({ open, onOpenChange, withdrawal }: Withdra
     } else {
       form.reset({
         employee_id: '',
-        request_date: new Date().toISOString().split('T')[0],
+        request_date: todayDateOnlyString(),
         withdrawal_reason: 'vivienda',
         amount_requested: 0,
         fund_name: '',

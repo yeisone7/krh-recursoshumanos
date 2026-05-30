@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInDays, addDays, isBefore, isAfter } from 'date-fns';
 import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
@@ -405,7 +406,7 @@ export function useCreateReintegrationExam() {
   return useMutation({
     mutationFn: async ({ incapacity }: { incapacity: IncapacityWithEmployee }) => {
       // Calculate expected return date (end_date + 1)
-      const returnDate = new Date(incapacity.end_date);
+      const returnDate = parseDateOnlyOr(incapacity.end_date, new Date());
       returnDate.setDate(returnDate.getDate() + 1);
       
       const examData = {
@@ -519,7 +520,7 @@ export function useIncapacityAlerts() {
       }
       
       for (const inc of allIncapacities) {
-        const endDate = new Date(inc.end_date);
+        const endDate = parseDateOnlyOr(inc.end_date, today);
         const daysUntilEnd = differenceInDays(endDate, today);
         const employeeName = inc.employee 
           ? `${inc.employee.first_name} ${inc.employee.last_name}`
@@ -570,7 +571,7 @@ export function useIncapacityAlerts() {
       for (const root of roots.values()) {
         const chainDays = getTotalChainDays(root);
         const latestEndDate = [root, ...(root.extensions || [])]
-          .map((inc) => new Date(inc.end_date))
+          .map((inc) => parseDateOnlyOr(inc.end_date, new Date()))
           .sort((a, b) => b.getTime() - a.getTime())[0];
         const daysSinceLatestEnd = differenceInDays(today, latestEndDate);
         const employeeName = root.employee
@@ -647,20 +648,20 @@ export function useIncapacityStats() {
       
       // Active incapacities (currently ongoing)
       const totalActive = incapacities.filter(inc => {
-        const start = new Date(inc.start_date);
-        const end = new Date(inc.end_date);
+        const start = parseDateOnlyOr(inc.start_date, today);
+        const end = parseDateOnlyOr(inc.end_date, today);
         return isBefore(start, today) && isAfter(end, today);
       }).length;
       
       // This month's incapacities
       const thisMonth = incapacities.filter(inc => {
-        const start = new Date(inc.start_date);
+        const start = parseDateOnlyOr(inc.start_date, today);
         return isAfter(start, startOfMonth);
       });
       
       // Pending recovery
       const pendingRecovery = incapacities.filter(inc => 
-        inc.recovery_status === 'pendiente' && isBefore(new Date(inc.end_date), today)
+        inc.recovery_status === 'pendiente' && isBefore(parseDateOnlyOr(inc.end_date, today), today)
       );
       
       // By origin

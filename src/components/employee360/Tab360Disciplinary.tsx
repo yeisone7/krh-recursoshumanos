@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 
 interface Tab360DisciplinaryProps {
@@ -131,7 +132,7 @@ export function Tab360Disciplinary({ disciplinary, isLoading }: Tab360Disciplina
                     <div className="text-right text-sm text-muted-foreground">
                       <p>Apertura:</p>
                       <p className="font-medium">
-                        {format(new Date(process.opening_date), "d MMM yyyy", { locale: es })}
+                        {formatDateOnly(process.opening_date, "d MMM yyyy", { locale: es })}
                       </p>
                     </div>
                   </div>

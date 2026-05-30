@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { ArrowRightLeft, Building2, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import {
   Dialog,
@@ -48,7 +49,7 @@ export function TransferEmployeeDialog({ open, onOpenChange, employee }: Transfe
         sourceEmployeeId: employee.id,
         sourceCompanyId: employee.company_id,
         targetCompanyId,
-        transferDate: new Date().toISOString().split('T')[0],
+        transferDate: todayDateOnlyString(),
         notes: notes || undefined,
       });
       setStep('done');

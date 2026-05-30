@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { 
   useWorkSchedules, 
   useShiftCycles, 
@@ -124,8 +125,8 @@ export function EmployeeTimeConfigDialog({
         mode: data.mode as EmployeeTimeMode,
         work_schedule_id: data.mode === 'administrative' ? data.work_schedule_id : undefined,
         shift_cycle_id: data.mode === 'shift' ? data.shift_cycle_id : undefined,
-        cycle_start_date: data.cycle_start_date?.toISOString().split('T')[0],
-        start_date: data.start_date.toISOString().split('T')[0],
+        cycle_start_date: data.cycle_start_date ? toDateOnlyString(data.cycle_start_date) : undefined,
+        start_date: toDateOnlyString(data.start_date),
         notes: data.notes,
       });
       toast.success('Configuración de tiempo asignada');

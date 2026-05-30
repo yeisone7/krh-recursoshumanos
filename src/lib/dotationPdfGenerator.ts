@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 interface DeliveryForPdf {
   id: string;
@@ -86,7 +87,7 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   doc.setFont('helvetica', 'normal');
   doc.text(`${companyName} — NIT: ${companyNit}`, pageW / 2, y, { align: 'center' });
   y += 4;
-  doc.text(`Fecha: ${format(new Date(first.delivery_date), 'PPP', { locale: es })}`, pageW / 2, y, { align: 'center' });
+  doc.text(`Fecha: ${formatDateOnly(first.delivery_date, 'PPP', { locale: es })}`, pageW / 2, y, { align: 'center' });
   y += 10;
 
   // Line separator
@@ -122,8 +123,8 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   // Right column: dates
   const rightX = pageW / 2 + 15;
   let rightY = infoStartY;
-  const deliveryDate = first.delivery_date ? format(new Date(first.delivery_date), 'dd/MM/yyyy') : '';
-  const expirationDate = first.expiration_date ? format(new Date(first.expiration_date), 'dd/MM/yyyy') : '';
+  const deliveryDate = first.delivery_date ? formatDateOnly(first.delivery_date, 'dd/MM/yyyy') : '';
+  const expirationDate = first.expiration_date ? formatDateOnly(first.expiration_date, 'dd/MM/yyyy') : '';
   doc.setFont('helvetica', 'bold');
   doc.text('Fecha de Entrega:', rightX, rightY);
   doc.setFont('helvetica', 'normal');
@@ -244,5 +245,5 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
   doc.setTextColor(150, 150, 150);
   doc.text(`Generado el ${format(new Date(), 'PPP', { locale: es })} — ${companyName}`, pageW / 2, footerY, { align: 'center' });
 
-  doc.save(`Acta_Entrega_Dotacion_${employee.document_number}_${format(new Date(first.delivery_date), 'yyyyMMdd')}.pdf`);
+  doc.save(`Acta_Entrega_Dotacion_${employee.document_number}_${formatDateOnly(first.delivery_date, 'yyyyMMdd')}.pdf`);
 }

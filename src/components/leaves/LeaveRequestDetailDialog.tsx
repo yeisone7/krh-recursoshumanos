@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { 
   Calendar, 
   Clock, 
@@ -219,7 +220,7 @@ export function LeaveRequestDetailDialog({
               <div>
                 <p className="text-sm text-muted-foreground">Fecha de Inicio</p>
                 <p className="font-medium">
-                  {format(new Date(request.start_date), 'PPP', { locale: es })}
+                  {formatDateOnly(request.start_date, 'PPP', { locale: es })}
                 </p>
               </div>
             </div>
@@ -228,7 +229,7 @@ export function LeaveRequestDetailDialog({
               <div>
                 <p className="text-sm text-muted-foreground">Fecha de Fin</p>
                 <p className="font-medium">
-                  {format(new Date(request.end_date), 'PPP', { locale: es })}
+                  {formatDateOnly(request.end_date, 'PPP', { locale: es })}
                 </p>
               </div>
             </div>

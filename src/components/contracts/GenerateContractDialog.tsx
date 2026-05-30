@@ -79,6 +79,11 @@ function getEmployeeName(emp: ContractData['employees']): string {
     .join(' ');
 }
 
+function getLocalGenerationDate(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
+}
+
 export function GenerateContractDialog({
   open,
   onOpenChange,
@@ -131,14 +136,14 @@ export function GenerateContractDialog({
     enabled: open && !!contract?.employee_id,
   });
 
-  // Fetch employee schedule info (for payroll type)
+  // Fetch employee schedule info (for payroll type and rest day)
   const { data: employeeSchedule } = useQuery({
     queryKey: ['employee-schedule', contract?.employee_id],
     queryFn: async () => {
       if (!contract?.employee_id) return null;
       const { data, error } = await supabase
         .from('employee_schedule')
-        .select('payroll_type')
+        .select('payroll_type, rest_day')
         .eq('employee_id', contract.employee_id)
         .eq('is_current', true)
         .maybeSingle();
@@ -315,6 +320,7 @@ export function GenerateContractDialog({
       employeePosition: position,
       employeeOperationCenter: operationCenter,
       employeePayrollType: employeeSchedule?.payroll_type || 'quincenal', // Default to quincenal if no schedule record
+      employeeRestDay: employeeSchedule?.rest_day || undefined,
 
       // Contract
       contractNumber: contract.contract_number || undefined, // Consecutivo (ej: PC-2024-0001)
@@ -338,7 +344,7 @@ export function GenerateContractDialog({
       specialClauses: contract.special_clauses || undefined,
 
       // Generation
-      generationDate: new Date(),
+      generationDate: getLocalGenerationDate(),
       generationCity: generationCity,
     };
   };

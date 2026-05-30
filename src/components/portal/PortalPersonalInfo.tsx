@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, MapPin, Phone, Mail, Heart, Building2, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import type { EmployeeV2WithRelations } from '@/types/employee';
 import { 
   genderLabels, 
@@ -80,7 +81,7 @@ export function PortalPersonalInfo({ employee }: PortalPersonalInfoProps) {
             <InfoRow label="Número de Documento" value={employee.document_number} />
             <InfoRow 
               label="Fecha de Nacimiento" 
-              value={employee.birth_date ? format(new Date(employee.birth_date), 'PPP', { locale: es }) : '-'} 
+              value={employee.birth_date ? formatDateOnly(employee.birth_date, 'PPP', { locale: es }) : '-'} 
             />
             <InfoRow 
               label="Sexo biológico" 

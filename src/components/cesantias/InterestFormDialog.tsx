@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasInterest, useUpdateCesantiasInterest } from '@/hooks/useCesantias';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import type { CesantiasInterestPayment } from '@/types/cesantias';
 
 const formSchema = z.object({
@@ -109,8 +110,8 @@ export function InterestFormDialog({ open, onOpenChange, interest }: InterestFor
       let lateDays = 0;
 
       if (data.payment_date && data.due_date) {
-        const due = new Date(data.due_date);
-        const pay = new Date(data.payment_date);
+        const due = parseDateOnlyOr(data.due_date, new Date());
+        const pay = parseDateOnlyOr(data.payment_date, new Date());
         if (pay > due) {
           isLate = true;
           lateDays = differenceInDays(pay, due);

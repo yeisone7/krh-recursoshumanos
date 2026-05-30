@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 
 interface Tab360TimeOffProps {
@@ -63,13 +64,13 @@ function RequestCard({ request, type }: { request: any; type: 'vacation' | 'leav
         <div>
           <p className="text-muted-foreground">Desde</p>
           <p className="font-medium">
-            {format(new Date(request.start_date), "d MMM yyyy", { locale: es })}
+            {formatDateOnly(request.start_date, "d MMM yyyy", { locale: es })}
           </p>
         </div>
         <div>
           <p className="text-muted-foreground">Hasta</p>
           <p className="font-medium">
-            {format(new Date(request.end_date), "d MMM yyyy", { locale: es })}
+            {formatDateOnly(request.end_date, "d MMM yyyy", { locale: es })}
           </p>
         </div>
         <div>

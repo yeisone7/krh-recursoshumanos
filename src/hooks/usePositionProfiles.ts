@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,7 +77,7 @@ export function useCreatePositionProfile() {
           elaborated_by: data.elaborated_by,
           reviewed_by: data.reviewed_by,
           approved_by: data.approved_by,
-          effective_date: data.effective_date || new Date().toISOString().split('T')[0],
+          effective_date: data.effective_date || todayDateOnlyString(),
           created_by: user?.id,
         })
         .select()
@@ -115,7 +116,7 @@ export function useUpdatePositionProfile() {
           elaborated_by: data.elaborated_by,
           reviewed_by: data.reviewed_by,
           approved_by: data.approved_by,
-          effective_date: data.effective_date || new Date().toISOString().split('T')[0],
+          effective_date: data.effective_date || todayDateOnlyString(),
         })
         .eq('id', profileId)
         .select()

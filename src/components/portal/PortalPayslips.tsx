@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Wallet, Download, FileText, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PayrollReceipt {
@@ -70,8 +71,8 @@ export function PortalPayslips({ receipts, isLoading }: PortalPayslipsProps) {
                   <div>
                     <p className="font-medium">{receipt.period_label}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(receipt.period_start), 'dd MMM', { locale: es })} -{' '}
-                      {format(new Date(receipt.period_end), 'dd MMM yyyy', { locale: es })}
+                      {formatDateOnly(receipt.period_start, 'dd MMM', { locale: es })} -{' '}
+                      {formatDateOnly(receipt.period_end, 'dd MMM yyyy', { locale: es })}
                     </p>
                   </div>
                 </div>

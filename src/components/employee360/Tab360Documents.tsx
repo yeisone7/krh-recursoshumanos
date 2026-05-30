@@ -22,6 +22,7 @@ import {
 } from '@/types/employee';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -125,7 +126,7 @@ function DocumentTreeItem({ doc }: { doc: any }) {
             </span>
             <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              {format(new Date(doc.upload_date), 'PP', { locale: es })}
+              {formatDateOnly(doc.upload_date, 'PP', { locale: es })}
               {doc.file_size ? <span>| {formatFileSize(doc.file_size)}</span> : null}
             </span>
             {doc.observations && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{doc.observations}</p>}
@@ -135,7 +136,7 @@ function DocumentTreeItem({ doc }: { doc: any }) {
         <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
           {doc.expiry_date && (
             <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-              Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
+              Vence: {formatDateOnly(doc.expiry_date, 'PP', { locale: es })}
             </Badge>
           )}
           {doc.file_url && (

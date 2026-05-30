@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 /**
  * ResponseRenderer.tsx
  * Renderiza la respuesta del AI Data Assistant según su tipo:
@@ -70,7 +71,7 @@ function downloadCsv(data: Record<string, unknown>[]) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `analisis_datos_${new Date().toISOString().slice(0, 10)}.csv`;
+  link.download = `analisis_datos_${todayDateOnlyString()}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

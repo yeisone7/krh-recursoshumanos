@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ExamOrderData {
@@ -160,7 +161,7 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   drawField('No. Documento', data.candidate.document_number, pageW / 2, 28);
   y += 6;
 
-  drawField('Fecha Nacimiento', data.candidate.birth_date ? format(new Date(data.candidate.birth_date), 'dd/MM/yyyy') : null, marginL + 2, 32);
+  drawField('Fecha Nacimiento', data.candidate.birth_date ? formatDateOnly(data.candidate.birth_date, 'dd/MM/yyyy') : null, marginL + 2, 32);
   drawField('Sexo', genderLabels[data.candidate.gender || ''] || data.candidate.gender, pageW / 2, 12);
   y += 6;
 
@@ -197,7 +198,7 @@ export async function generateExamOrderPdf(data: ExamOrderData) {
   y += 6;
 
   if (data.step.scheduled_date) {
-    drawField('Fecha Programada', format(new Date(data.step.scheduled_date), 'dd/MM/yyyy'), marginL + 2, 32);
+    drawField('Fecha Programada', formatDateOnly(data.step.scheduled_date, 'dd/MM/yyyy'), marginL + 2, 32);
     y += 6;
   }
   y += 4;

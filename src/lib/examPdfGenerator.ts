@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import type { ExamTransaction } from '@/hooks/useExamTransactions';
 import { examTypeLabels } from '@/types/medicalExam';
 import type { ExamType } from '@/types/medicalExam';
@@ -74,7 +75,7 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   doc.setFont('helvetica', 'normal');
   doc.text(`${companyName} — NIT: ${companyNit}`, pageW / 2, y, { align: 'center' });
   y += 4;
-  doc.text(`Fecha: ${format(new Date(transaction.exam_date), 'PPP', { locale: es })}`, pageW / 2, y, { align: 'center' });
+  doc.text(`Fecha: ${formatDateOnly(transaction.exam_date, 'PPP', { locale: es })}`, pageW / 2, y, { align: 'center' });
   y += 10;
 
   // Separator
@@ -245,5 +246,5 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
   doc.setTextColor(150, 150, 150);
   doc.text(`Generado el ${format(new Date(), 'PPP', { locale: es })} — ${companyName}`, pageW / 2, footerY, { align: 'center' });
 
-  doc.save(`Orden_Examenes_${employee.document_number}_${format(new Date(transaction.exam_date), 'yyyyMMdd')}.pdf`);
+  doc.save(`Orden_Examenes_${employee.document_number}_${formatDateOnly(transaction.exam_date, 'yyyyMMdd')}.pdf`);
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { 
   CalendarDays, 
   Plus, 
@@ -293,7 +294,7 @@ export default function Festivos() {
                   items={filteredHolidays.map(item => ({
                     id: item.id,
                     title: item.name,
-                    subtitle: format(new Date(item.holiday_date + 'T00:00:00'), 'EEEE, d de MMMM', { locale: es }),
+                    subtitle: formatDateOnly(item.holiday_date + 'T00:00:00', 'EEEE, d de MMMM', { locale: es }),
                     badge: <Badge variant="outline" className={cn("text-[8px] font-black uppercase border-none h-6 px-3 rounded-lg", item.is_national ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-700")}>{item.is_national ? 'Nacional' : 'Corporativo'}</Badge>,
                     fields: [
                       { 
@@ -337,15 +338,15 @@ export default function Festivos() {
                             <div className="flex items-center gap-5">
                               <div className="h-16 w-16 rounded-2xl bg-white border border-slate-100 flex flex-col items-center justify-center leading-none group-hover:scale-110 transition-transform">
                                 <span className="text-[10px] font-black text-slate-300 uppercase tracking-tighter mb-1">
-                                  {format(new Date(holiday.holiday_date + 'T00:00:00'), 'MMM', { locale: es })}
+                                  {formatDateOnly(holiday.holiday_date + 'T00:00:00', 'MMM', { locale: es })}
                                 </span>
                                 <span className="text-2xl font-black text-primary tracking-tighter">
-                                  {format(new Date(holiday.holiday_date + 'T00:00:00'), 'dd')}
+                                  {formatDateOnly(holiday.holiday_date + 'T00:00:00', 'dd')}
                                 </span>
                               </div>
                               <div className="space-y-1">
                                 <p className="font-black text-slate-900 text-sm uppercase tracking-tight capitalize">
-                                  {format(new Date(holiday.holiday_date + 'T00:00:00'), 'EEEE', { locale: es })}
+                                  {formatDateOnly(holiday.holiday_date + 'T00:00:00', 'EEEE', { locale: es })}
                                 </p>
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{selectedYear}</p>
                               </div>

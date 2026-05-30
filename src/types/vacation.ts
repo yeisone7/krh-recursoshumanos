@@ -1,3 +1,4 @@
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { Database } from '@/integrations/supabase/types';
 
 // Database types
@@ -152,7 +153,7 @@ export const ALL_COLOMBIAN_HOLIDAYS = [
  * Check if a date is a Colombian holiday
  */
 export function isColombianHoliday(date: Date): boolean {
-  const dateString = date.toISOString().split('T')[0];
+  const dateString = toDateOnlyString(date);
   return ALL_COLOMBIAN_HOLIDAYS.includes(dateString);
 }
 
@@ -171,7 +172,7 @@ export function isBusinessDay(date: Date, holidaysSet?: Set<string>): boolean {
   if (isSunday(date)) return false;
   
   if (holidaysSet) {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toDateOnlyString(date);
     return !holidaysSet.has(dateStr);
   }
   

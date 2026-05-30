@@ -15,6 +15,7 @@ import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
@@ -255,7 +256,7 @@ export default function DescargosPublico() {
                 <p className="font-medium flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {processInfo?.fault_date
-                    ? format(new Date(processInfo.fault_date), 'dd/MM/yyyy')
+                    ? formatDateOnly(processInfo.fault_date, 'dd/MM/yyyy')
                     : '-'}
                 </p>
               </div>

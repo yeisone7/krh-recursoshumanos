@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Building2,
   ChevronDown,
@@ -152,7 +153,7 @@ export function DisciplinaryTreeView({
                     <div className="flex flex-col min-w-[100px]">
                       <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Fecha Falta</span>
                       <span className="text-[11px] font-bold text-muted-foreground">
-                        {format(new Date(process.fault_date), 'dd MMM yyyy', { locale: es })}
+                        {formatDateOnly(process.fault_date, 'dd MMM yyyy', { locale: es })}
                       </span>
                     </div>
                   </div>

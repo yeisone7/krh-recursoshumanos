@@ -6,6 +6,7 @@ import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Plus,
   Search,
@@ -320,7 +321,7 @@ export default function Incapacidades() {
                       fields: [
                         { label: 'Días', value: `${inc.total_days} días` },
                         { label: 'Origen', value: inc.origin === 'laboral' ? 'Laboral' : 'Común' },
-                        { label: 'Período', value: `${format(new Date(inc.start_date), 'dd/MM')} - ${format(new Date(inc.end_date), 'dd/MM')}` },
+                        { label: 'Período', value: `${formatDateOnly(inc.start_date, 'dd/MM')} - ${formatDateOnly(inc.end_date, 'dd/MM')}` },
                         { label: 'Valor', value: formatCurrency(inc.total_amount) },
                       ],
                       onClick: () => handleOpenDetail(inc.id),
@@ -366,10 +367,10 @@ export default function Incapacidades() {
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           <p className="text-sm">
-                            {format(new Date(inc.start_date), 'dd/MM/yyyy')}
+                            {formatDateOnly(inc.start_date, 'dd/MM/yyyy')}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            al {format(new Date(inc.end_date), 'dd/MM/yyyy')}
+                            al {formatDateOnly(inc.end_date, 'dd/MM/yyyy')}
                           </p>
                         </TableCell>
                         <TableCell>

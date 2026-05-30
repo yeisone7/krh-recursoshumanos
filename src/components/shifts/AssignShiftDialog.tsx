@@ -35,6 +35,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useShiftTypes, useCreateEmployeeShift } from '@/hooks/useShifts';
@@ -91,8 +92,8 @@ export function AssignShiftDialog({
       await createEmployeeShift.mutateAsync({
         employee_id: data.employee_id,
         shift_type_id: data.shift_type_id,
-        effective_from: data.effective_from.toISOString().split('T')[0],
-        effective_to: data.effective_to?.toISOString().split('T')[0],
+        effective_from: toDateOnlyString(data.effective_from),
+        effective_to: data.effective_to ? toDateOnlyString(data.effective_to) : undefined,
         notes: data.notes,
       });
       toast.success('Jornada asignada exitosamente');

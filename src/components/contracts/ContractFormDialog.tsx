@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { addDays, addMonths, differenceInMonths, format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { CalendarIcon, FileText, Building, DollarSign, Briefcase, AlertTriangle, History, Loader2, Globe, Target, ShieldCheck, Award, Clock, UserCheck, MapPin } from 'lucide-react';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 
@@ -426,8 +427,8 @@ export function ContractFormDialog({
                                 </div>
                                 <div className="flex items-center gap-4 self-end sm:self-auto">
                                   <span className="text-[11px] font-semibold text-muted-foreground">
-                                    {format(new Date(c.start_date), 'dd MMM yyyy', { locale: es })}
-                                    {c.end_date ? ` — ${format(new Date(c.end_date), 'dd MMM yyyy', { locale: es })}` : ' — INDEFINIDO'}
+                                    {formatDateOnly(c.start_date, 'dd MMM yyyy', { locale: es })}
+                                    {c.end_date ? ` — ${formatDateOnly(c.end_date, 'dd MMM yyyy', { locale: es })}` : ' — INDEFINIDO'}
                                   </span>
                                   {isActive ? (
                                     <Badge className="h-6 border-emerald-500/20 bg-emerald-500/10 text-[9px] font-bold tracking-wider text-emerald-600">ACTIVO</Badge>

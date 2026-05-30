@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { CalendarIcon, AlertTriangle, Info, Plane, User, Calendar as CalendarLucide, FileText } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
@@ -326,7 +327,7 @@ export function VacationFormDialog({ open, onOpenChange, editData }: VacationFor
                                     <SelectItem key={balance.id} value={balance.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
                                       <div className="flex flex-col">
                                         <span className="font-medium">
-                                          {format(new Date(balance.period_start), 'MMM yyyy', { locale: es })} - {format(new Date(balance.period_end), 'MMM yyyy', { locale: es })}
+                                          {formatDateOnly(balance.period_start, 'MMM yyyy', { locale: es })} - {formatDateOnly(balance.period_end, 'MMM yyyy', { locale: es })}
                                         </span>
                                         <span className="text-[10px] text-primary font-bold opacity-80">Disponibles: {balance.days_pending} días</span>
                                       </div>

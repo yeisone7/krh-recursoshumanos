@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Stethoscope, Plus, Search, Eye, Calendar, Loader2,
   ClipboardList, ShieldCheck, Trash2, CheckCircle, AlertTriangle, XCircle, Clock,
@@ -347,7 +348,7 @@ export default function Examenes() {
                             <TableCell className="px-6 py-4">
                               <div className="flex items-center gap-2 text-sm font-bold text-foreground">
                                 <Calendar className="w-4 h-4 text-primary/40" />
-                                {format(new Date(tx.exam_date), 'dd MMM yyyy', { locale: es })}
+                                {formatDateOnly(tx.exam_date, 'dd MMM yyyy', { locale: es })}
                               </div>
                             </TableCell>
                             <TableCell className="px-6 py-4 text-right">
@@ -407,7 +408,7 @@ export default function Examenes() {
                       fields: [
                         { label: 'Exámenes', value: itemsSummary, className: 'col-span-2' },
                         { label: 'Cantidad', value: `${tx.items.length} exámenes` },
-                        { label: 'Fecha', value: format(new Date(tx.exam_date), 'dd/MM/yyyy') },
+                        { label: 'Fecha', value: formatDateOnly(tx.exam_date, 'dd/MM/yyyy') },
                       ],
                       actions: (
                         <div className="grid grid-cols-3 gap-2 w-full mt-2">

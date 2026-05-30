@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -196,7 +197,7 @@ export function ContractTerminationDialog({
               <AlertDescription className="text-success/80">
                 El empleado tiene un examen de egreso del{' '}
                 <strong>
-                  {format(new Date(exitExamInfo.exam!.exam_date), 'dd MMM yyyy', { locale: es })}
+                  {formatDateOnly(exitExamInfo.exam!.exam_date, 'dd MMM yyyy', { locale: es })}
                 </strong>{' '}
                 con resultado: <strong>{getExamResultLabel(exitExamInfo.exam!.result)}</strong>
               </AlertDescription>

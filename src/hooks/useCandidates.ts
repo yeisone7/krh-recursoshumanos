@@ -1,3 +1,4 @@
+import { toDateOnlyString, todayDateOnlyString } from '@/lib/dateOnly';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -341,7 +342,7 @@ export function useConvertToEmployee() {
       if (fetchError) throw fetchError;
 
       const vacancy = candidate.vacancies as any;
-      const hireDate = startDate || new Date().toISOString().split('T')[0];
+      const hireDate = startDate || todayDateOnlyString();
 
       // Step 1: Create employee in new normalized model (employees_v2)
       const employeePayload: any = {
@@ -481,7 +482,7 @@ export function useConvertToEmployee() {
       if (contractData.trial_period_days > 0) {
         const trialEnd = new Date(hireDate);
         trialEnd.setDate(trialEnd.getDate() + contractData.trial_period_days);
-        contractData.trial_end_date = trialEnd.toISOString().split('T')[0];
+        contractData.trial_end_date = toDateOnlyString(trialEnd);
       }
 
       const { data: contract, error: contractError } = await supabase
@@ -775,7 +776,7 @@ export function useCreateCandidateDocument() {
           file_name: data.fileName || null,
           file_size: data.fileSize || null,
           mime_type: data.mimeType || null,
-          expiry_date: data.expiryDate ? data.expiryDate.toISOString().split('T')[0] : null,
+          expiry_date: data.expiryDate ? toDateOnlyString(data.expiryDate) : null,
           observations: data.observations || null,
           uploaded_by: user?.id || null,
         })

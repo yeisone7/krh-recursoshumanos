@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { 
   Calendar, 
   User, 
@@ -107,8 +108,8 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
     if (!interruptionDate || !interruptionReason) return;
     
     const remaining = calculateRemainingDays(
-      new Date(request.start_date),
-      new Date(request.end_date),
+      parseDateOnlyOr(request.start_date, new Date()),
+      parseDateOnlyOr(request.end_date, new Date()),
       interruptionDate
     );
 
@@ -185,7 +186,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                   <span className="text-sm text-muted-foreground">Fecha inicio</span>
                 </div>
                 <p className="font-medium">
-                  {format(new Date(request.start_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                  {formatDateOnly(request.start_date, "dd 'de' MMMM, yyyy", { locale: es })}
                 </p>
               </div>
               <div className="rounded-lg border p-4">
@@ -194,7 +195,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                   <span className="text-sm text-muted-foreground">Fecha fin</span>
                 </div>
                 <p className="font-medium">
-                  {format(new Date(request.end_date), "dd 'de' MMMM, yyyy", { locale: es })}
+                  {formatDateOnly(request.end_date, "dd 'de' MMMM, yyyy", { locale: es })}
                 </p>
               </div>
             </div>
@@ -255,7 +256,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                     <span className="text-sm font-medium text-orange-600">Vacaciones Interrumpidas</span>
                   </div>
                   <p className="text-sm">
-                    Fecha: {request.interruption_date && format(new Date(request.interruption_date), 'dd/MM/yyyy', { locale: es })}
+                    Fecha: {request.interruption_date && formatDateOnly(request.interruption_date, 'dd/MM/yyyy', { locale: es })}
                   </p>
                   <p className="text-sm mt-1">Motivo: {request.interruption_reason}</p>
                   <p className="text-sm mt-2 font-medium">
@@ -330,8 +331,8 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                       <span className="text-sm font-medium text-blue-600">Vacaciones Reprogramadas</span>
                     </div>
                     <p className="text-sm">
-                      {format(new Date(request.resume_start_date), 'dd/MM/yyyy', { locale: es })} - {' '}
-                      {request.resume_end_date && format(new Date(request.resume_end_date), 'dd/MM/yyyy', { locale: es })}
+                      {formatDateOnly(request.resume_start_date, 'dd/MM/yyyy', { locale: es })} - {' '}
+                      {request.resume_end_date && formatDateOnly(request.resume_end_date, 'dd/MM/yyyy', { locale: es })}
                     </p>
                   </div>
                 )}
@@ -380,8 +381,8 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                       Días restantes a reprogramar: {' '}
                       <span className="font-bold text-primary">
                         {calculateRemainingDays(
-                          new Date(request.start_date),
-                          new Date(request.end_date),
+                          parseDateOnlyOr(request.start_date, new Date()),
+                          parseDateOnlyOr(request.end_date, new Date()),
                           interruptionDate
                         )}
                       </span>

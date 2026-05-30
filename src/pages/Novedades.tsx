@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { Plus, Download, Search, Clock, FileText, Pencil, Trash2, ListFilter, TrendingUp, Zap, CalendarDays, Filter, FileDown, Printer, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,7 +285,7 @@ export default function Novedades() {
                       items={filtered.map(n => ({
                         id: n.id,
                         title: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : 'N/A',
-                        subtitle: format(new Date(n.novelty_date), 'dd MMM yyyy', { locale: es }),
+                        subtitle: formatDateOnly(n.novelty_date, 'dd MMM yyyy', { locale: es }),
                         badge: (
                           <Badge variant="outline" className="border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
                             {NOVELTY_TYPE_LABELS[n.novelty_type]?.split(' ')[0] || n.novelty_type}
@@ -367,7 +368,7 @@ export default function Novedades() {
                          </div>
                       </TableCell>
                       <TableCell className="text-center font-bold text-xs text-muted-foreground">
-                         {format(new Date(n.novelty_date), 'dd MMM, yyyy', { locale: es })}
+                         {formatDateOnly(n.novelty_date, 'dd MMM, yyyy', { locale: es })}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-border ">

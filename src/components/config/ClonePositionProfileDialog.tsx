@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -51,7 +52,7 @@ export function ClonePositionProfileDialog({ open, onOpenChange, sourceProfile, 
           elaborated_by: sourceProfile.elaborated_by || '',
           reviewed_by: sourceProfile.reviewed_by || '',
           approved_by: sourceProfile.approved_by || '',
-          effective_date: new Date().toISOString().split('T')[0],
+          effective_date: todayDateOnlyString(),
         },
         nextVersion,
       });

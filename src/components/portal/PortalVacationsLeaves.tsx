@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { CalendarDays, Plane, FileCheck, AlertCircle, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { PortalVacationRequestForm } from './PortalVacationRequestForm';
 import { PortalLeaveRequestForm } from './PortalLeaveRequestForm';
 
@@ -128,9 +129,9 @@ export function PortalVacationsLeaves({
                   <div>
                     <p className="font-medium text-sm capitalize">{req.request_type}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(req.start_date), 'PPP', { locale: es })}
+                      {formatDateOnly(req.start_date, 'PPP', { locale: es })}
                       {req.end_date !== req.start_date && (
-                        <> - {format(new Date(req.end_date), 'PPP', { locale: es })}</>
+                        <> - {formatDateOnly(req.end_date, 'PPP', { locale: es })}</>
                       )}
                     </p>
                   </div>
@@ -183,9 +184,9 @@ export function PortalVacationsLeaves({
                         {request.leave_type_config?.display_name || 'Permiso'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(request.start_date), 'PPP', { locale: es })}
+                        {formatDateOnly(request.start_date, 'PPP', { locale: es })}
                         {request.end_date !== request.start_date && (
-                          <> - {format(new Date(request.end_date), 'PPP', { locale: es })}</>
+                          <> - {formatDateOnly(request.end_date, 'PPP', { locale: es })}</>
                         )}
                       </p>
                     </div>

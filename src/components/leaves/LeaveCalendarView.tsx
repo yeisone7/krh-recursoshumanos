@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -32,8 +33,8 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
 
   const getRequestsForDay = (day: Date) => {
     return activeRequests.filter(request => {
-      const start = new Date(request.start_date);
-      const end = new Date(request.end_date);
+      const start = parseDateOnlyOr(request.start_date, new Date());
+      const end = parseDateOnlyOr(request.end_date, new Date());
       return day >= start && day <= end;
     });
   };

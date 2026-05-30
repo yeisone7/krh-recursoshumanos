@@ -40,6 +40,7 @@ const placeholderCategories: { title: string; items: PlaceholderInfo[] }[] = [
       { key: '{{EMPLEADO_AREA}}', description: 'Área o departamento', example: 'Tecnología' },
       { key: '{{EMPLEADO_CENTRO}}', description: 'Centro de operación', example: 'Sede Principal' },
       { key: '{{EMPLEADO_TIPO_NOMINA}}', description: 'Tipo de nómina', example: 'Quincenal' },
+      { key: '{{DIA_DESCANSO}}', description: 'Día de descanso del empleado', example: 'Domingo' },
     ],
   },
   {

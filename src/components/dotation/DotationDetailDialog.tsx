@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2 } from 'lucide-react';
@@ -258,7 +259,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                 <span>•</span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {hasValidDate ? format(new Date(transaction.delivery_date), 'dd MMM yyyy', { locale: es }) : '—'}
+                  {hasValidDate ? formatDateOnly(transaction.delivery_date, 'dd MMM yyyy', { locale: es }) : '—'}
                 </span>
               </div>
             </div>
@@ -299,7 +300,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                   <div className="flex items-center justify-between gap-3 sm:justify-end sm:shrink-0">
                     {hasExpDate && (
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest hidden sm:inline">
-                        Vence: {format(new Date(item.expiration_date), 'dd/MM/yy')}
+                        Vence: {formatDateOnly(item.expiration_date, 'dd/MM/yy')}
                       </span>
                     )}
                     <Badge variant="outline" className={cn('h-7 rounded-lg gap-1.5 text-[9px] font-bold uppercase tracking-widest border-0 shadow-sm', itemSc.bg, itemSc.text)}>

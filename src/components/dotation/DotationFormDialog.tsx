@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { CalendarIcon, Package, User, FileText, CheckSquare, Square, Plus, Trash2, Sparkles, History, AlertTriangle, PenTool } from 'lucide-react';
 
 import {
@@ -375,11 +376,11 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                               <TableRow key={d.id} className="hover:bg-background transition-colors">
                                 <TableCell className="py-3 px-4 font-medium text-xs">{d.item_name}</TableCell>
                                 <TableCell className="py-3 px-4 text-xs text-muted-foreground">
-                                  {format(new Date(d.delivery_date), 'dd/MM/yy')}
+                                  {formatDateOnly(d.delivery_date, 'dd/MM/yy')}
                                 </TableCell>
                                 <TableCell className="py-3 px-4 text-right">
                                   <Badge variant="outline" className="text-[10px] rounded-full border-border/50">
-                                    {format(new Date(d.expiration_date), 'dd/MM/yy')}
+                                    {formatDateOnly(d.expiration_date, 'dd/MM/yy')}
                                   </Badge>
                                 </TableCell>
                               </TableRow>

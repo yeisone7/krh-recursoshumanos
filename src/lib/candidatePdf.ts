@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 
 interface CandidateForPdf {
@@ -166,7 +167,7 @@ export async function generateCandidatePdf(candidate: CandidateForPdf) {
     'Fecha Expedición',
     candidate.document_issue_date ? format(new Date(candidate.document_issue_date), 'dd/MM/yyyy') : null,
     'Fecha Nacimiento',
-    candidate.birth_date ? format(new Date(candidate.birth_date), 'dd/MM/yyyy') : null,
+    candidate.birth_date ? formatDateOnly(candidate.birth_date, 'dd/MM/yyyy') : null,
   );
   drawTwoCol('Sexo Biológico', genderMap[candidate.gender || ''] || candidate.gender, 'Estado Civil', maritalMap[candidate.marital_status || ''] || candidate.marital_status);
   drawTwoCol('Tipo Sangre', candidate.blood_type, 'Grupo Étnico', candidate.ethnic_group);
@@ -271,7 +272,7 @@ export async function generateCandidatePdf(candidate: CandidateForPdf) {
       doc.text(stepTypeLabel[s.step_type] || s.step_type, sCols[0], y + 4);
       doc.text(stepStatusLabel[s.status] || s.status, sCols[1], y + 4);
       doc.text(s.score != null ? `${s.score}%` : '-', sCols[2], y + 4);
-      doc.text(s.completed_date ? format(new Date(s.completed_date), 'dd/MM/yy') : '-', sCols[3], y + 4);
+      doc.text(s.completed_date ? formatDateOnly(s.completed_date, 'dd/MM/yy') : '-', sCols[3], y + 4);
       y += 6;
     }
   }

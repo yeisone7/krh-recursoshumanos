@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 
 interface Tab360DotationProps {
@@ -156,7 +157,7 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
                         <Badge variant="outline" className={cn('text-xs', status.className)}>{status.label}</Badge>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? format(new Date(delivery.delivery_date), "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
+                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? formatDateOnly(delivery.delivery_date, "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
                         <span>{items.length} artículo(s)</span>
                         {delivery.delivered_by && <span>Entregó: {delivery.delivered_by}</span>}
                       </div>
@@ -183,7 +184,7 @@ export function Tab360Dotation({ dotation, isLoading }: Tab360DotationProps) {
                             {item.item_description && <p className="text-sm text-muted-foreground">{item.item_description}</p>}
                           </div>
                           <div className="space-y-1 text-sm sm:text-right">
-                            <p><span className="text-muted-foreground">Vence: </span><span className={cn(isExpired && 'font-medium text-destructive', isExpiringSoon && 'font-medium text-warning')}>{format(new Date(item.expiration_date), "d MMM yyyy", { locale: es })}</span></p>
+                            <p><span className="text-muted-foreground">Vence: </span><span className={cn(isExpired && 'font-medium text-destructive', isExpiringSoon && 'font-medium text-warning')}>{formatDateOnly(item.expiration_date, "d MMM yyyy", { locale: es })}</span></p>
                             {!isExpired && <p className="text-xs text-muted-foreground">{daysToExpire} días restantes</p>}
                           </div>
                         </div>

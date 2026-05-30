@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ const defaultForm: PositionProfileFormData = {
   elaborated_by: '',
   reviewed_by: '',
   approved_by: '',
-  effective_date: new Date().toISOString().split('T')[0],
+  effective_date: todayDateOnlyString(),
 };
 
 export function PositionProfileFormDialog({ open, onOpenChange, positionId, positionName, existingData, mode = 'create' }: Props) {
@@ -71,7 +72,7 @@ export function PositionProfileFormDialog({ open, onOpenChange, positionId, posi
         elaborated_by: existingData.elaborated_by || '',
         reviewed_by: existingData.reviewed_by || '',
         approved_by: existingData.approved_by || '',
-        effective_date: existingData.effective_date || new Date().toISOString().split('T')[0],
+        effective_date: existingData.effective_date || todayDateOnlyString(),
       });
     } else {
       setForm(defaultForm);

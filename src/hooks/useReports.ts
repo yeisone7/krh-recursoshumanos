@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInMonths, differenceInDays } from 'date-fns';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 
 export interface EmployeeReportRow {
   documento: string;
@@ -142,7 +143,7 @@ export function useEmployeeReport() {
           cargo: workInfo?.position_name || '-',
           area: '-',
           centro: '-',
-          fecha_ingreso: workInfo?.hire_date ? format(new Date(workInfo.hire_date), 'dd/MM/yyyy') : '-',
+          fecha_ingreso: workInfo?.hire_date ? formatDateOnly(workInfo.hire_date, 'dd/MM/yyyy') : '-',
           tipo_contrato: '-',
           salario: 0,
           eps: socialSec?.eps || '-',
@@ -188,8 +189,8 @@ export function useIncapacityReport(startDate?: Date, endDate?: Date) {
         documento: inc.employees_v2.document_number,
         diagnostico: inc.diagnosis,
         origen: inc.origin === 'comun' ? 'Común' : inc.origin === 'laboral' ? 'Laboral' : 'Accidente',
-        fecha_inicio: format(new Date(inc.start_date), 'dd/MM/yyyy'),
-        fecha_fin: format(new Date(inc.end_date), 'dd/MM/yyyy'),
+        fecha_inicio: formatDateOnly(inc.start_date, 'dd/MM/yyyy'),
+        fecha_fin: formatDateOnly(inc.end_date, 'dd/MM/yyyy'),
         dias_totales: inc.total_days,
         estado_recobro: inc.recovery_status === 'pendiente' ? 'Pendiente' : 
                         inc.recovery_status === 'radicado' ? 'Radicado' : 
@@ -244,8 +245,8 @@ export function useCesantiasReport(year?: number) {
           año: dep.year,
           fondo: dep.fund_name,
           monto_cesantias: Number(dep.cesantias_amount),
-          fecha_limite: format(new Date(dep.due_date), 'dd/MM/yyyy'),
-          fecha_deposito: dep.deposit_date ? format(new Date(dep.deposit_date), 'dd/MM/yyyy') : 'Pendiente',
+          fecha_limite: formatDateOnly(dep.due_date, 'dd/MM/yyyy'),
+          fecha_deposito: dep.deposit_date ? formatDateOnly(dep.deposit_date, 'dd/MM/yyyy') : 'Pendiente',
           estado: dep.status === 'depositado' ? 'Depositado' : 
                   dep.status === 'calculado' ? 'Calculado' : 
                   dep.is_late ? 'Extemporáneo' : 'Pendiente',
@@ -298,7 +299,7 @@ export function useDotationReport(startDate?: Date, endDate?: Date) {
       
       return (data || []).map(dot => {
         const employee = employeesMap.get(dot.employee_id);
-        const expDate = new Date(dot.expiration_date);
+        const expDate = parseDateOnlyOr(dot.expiration_date, new Date());
         const daysToExpire = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         
         let estado = 'Vigente';
@@ -313,7 +314,7 @@ export function useDotationReport(startDate?: Date, endDate?: Date) {
           tipo: dot.item_type,
           cantidad: dot.quantity,
           talla: dot.size || '-',
-          fecha_entrega: format(new Date(dot.delivery_date), 'dd/MM/yyyy'),
+          fecha_entrega: formatDateOnly(dot.delivery_date, 'dd/MM/yyyy'),
           fecha_vencimiento: format(expDate, 'dd/MM/yyyy'),
           estado,
         };
@@ -385,7 +386,7 @@ export function useContractExtensionsReport() {
         const employee = employeesMap.get(contract.employee_id);
         if (!employee) continue;
         
-        const contractStart = new Date(contract.start_date);
+        const contractStart = parseDateOnlyOr(contract.start_date, new Date());
         
         // Sort extensions by number
         const sortedExtensions = [...contract.contract_extensions].sort(
@@ -393,8 +394,8 @@ export function useContractExtensionsReport() {
         );
         
         for (const ext of sortedExtensions) {
-          const extStart = new Date(ext.start_date);
-          const extEnd = new Date(ext.end_date);
+          const extStart = parseDateOnlyOr(ext.start_date, new Date());
+          const extEnd = parseDateOnlyOr(ext.end_date, new Date());
           const days = differenceInDays(extEnd, extStart);
           
           // Calculate accumulated time from contract start to extension end
@@ -512,14 +513,14 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
         const workInfo = workInfoMap.get(contract.employee_id);
         
         // Determine effective end date (last extension or contract end date)
-        let effectiveEndDate = contract.end_date ? new Date(contract.end_date) : null;
+        let effectiveEndDate = contract.end_date ? parseDateOnlyOr(contract.end_date, new Date()) : null;
         let currentExtensionNumber = 0;
         
         if (contract.contract_extensions?.length) {
           const sortedExtensions = [...contract.contract_extensions].sort(
             (a, b) => b.extension_number - a.extension_number
           );
-          effectiveEndDate = new Date(sortedExtensions[0].end_date);
+          effectiveEndDate = parseDateOnlyOr(sortedExtensions[0].end_date, new Date());
           currentExtensionNumber = sortedExtensions[0].extension_number;
         }
         
@@ -547,7 +548,7 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
           cargo: workInfo?.position_name || '-',
           centro: (workInfo?.operation_centers as any)?.name || '-',
           tipo_contrato: contractTypeLabels[contract.contract_type] || contract.contract_type,
-          fecha_inicio: format(new Date(contract.start_date), 'dd/MM/yyyy'),
+          fecha_inicio: formatDateOnly(contract.start_date, 'dd/MM/yyyy'),
           fecha_vencimiento: format(effectiveEndDate, 'dd/MM/yyyy'),
           dias_restantes: daysRemaining,
           prorroga_actual: currentExtensionNumber,
@@ -597,8 +598,8 @@ export function useVacationReport(startDate?: Date, endDate?: Date) {
         empleado: `${v.employees_v2.first_name} ${v.employees_v2.last_name}`,
         documento: v.employees_v2.document_number,
         tipo: typeLabels[v.request_type] || v.request_type,
-        fecha_inicio: format(new Date(v.start_date), 'dd/MM/yyyy'),
-        fecha_fin: format(new Date(v.end_date), 'dd/MM/yyyy'),
+        fecha_inicio: formatDateOnly(v.start_date, 'dd/MM/yyyy'),
+        fecha_fin: formatDateOnly(v.end_date, 'dd/MM/yyyy'),
         dias_habiles: v.business_days,
         estado: statusLabels[v.status] || v.status,
       }));
@@ -647,8 +648,8 @@ export function useLeavesReport(startDate?: Date, endDate?: Date) {
         documento: l.employees_v2.document_number,
         tipo_permiso: typeLabels[l.leave_type] || l.leave_type,
         motivo: l.reason || '-',
-        fecha_inicio: format(new Date(l.start_date), 'dd/MM/yyyy'),
-        fecha_fin: format(new Date(l.end_date), 'dd/MM/yyyy'),
+        fecha_inicio: formatDateOnly(l.start_date, 'dd/MM/yyyy'),
+        fecha_fin: formatDateOnly(l.end_date, 'dd/MM/yyyy'),
         dias: l.total_days,
         estado: statusLabels[l.status] || l.status,
       }));
@@ -694,7 +695,7 @@ export function useOvertimeReport(startDate?: Date, endDate?: Date) {
       return (data || []).map(o => ({
         empleado: `${o.employees_v2.first_name} ${o.employees_v2.last_name}`,
         documento: o.employees_v2.document_number,
-        fecha: format(new Date(o.work_date), 'dd/MM/yyyy'),
+        fecha: formatDateOnly(o.work_date, 'dd/MM/yyyy'),
         tipo: typeLabels[o.overtime_type] || o.overtime_type,
         horas: o.total_hours,
         recargo: o.surcharge_percentage,
@@ -736,8 +737,8 @@ export function useTrainingReport() {
         curso: (t.course as any)?.name || '-',
         codigo: t.session_code || '-',
         instructor: t.instructor_name || '-',
-        fecha_inicio: format(new Date(t.start_date), 'dd/MM/yyyy'),
-        fecha_fin: format(new Date(t.end_date), 'dd/MM/yyyy'),
+        fecha_inicio: formatDateOnly(t.start_date, 'dd/MM/yyyy'),
+        fecha_fin: formatDateOnly(t.end_date, 'dd/MM/yyyy'),
         ubicacion: t.location || '-',
         cupo_max: t.max_participants || 0,
         estado: statusLabels[t.status] || t.status,
@@ -781,8 +782,8 @@ export function useDisciplinaryReport() {
         empleado: `${d.employees_v2.first_name} ${d.employees_v2.last_name}`,
         documento: d.employees_v2.document_number,
         tipo_falta: faultLabels[d.fault_type] || d.fault_type,
-        fecha_falta: format(new Date(d.fault_date), 'dd/MM/yyyy'),
-        fecha_apertura: format(new Date(d.opening_date), 'dd/MM/yyyy'),
+        fecha_falta: formatDateOnly(d.fault_date, 'dd/MM/yyyy'),
+        fecha_apertura: formatDateOnly(d.opening_date, 'dd/MM/yyyy'),
         sancion: d.sanction_type ? (sanctionLabels[d.sanction_type] || d.sanction_type) : 'Pendiente',
         dias_sancion: d.sanction_days || 0,
         estado: statusLabels[d.status] || d.status,
@@ -834,7 +835,7 @@ export function useMedicalExamsReport() {
         const emp = empMap.get(e.employee_id);
         let estado = 'Vigente';
         if (e.expiration_date) {
-          const exp = new Date(e.expiration_date);
+          const exp = parseDateOnlyOr(e.expiration_date, new Date());
           const daysToExp = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           if (daysToExp < 0) estado = 'Vencido';
           else if (daysToExp <= 30) estado = 'Por Vencer';
@@ -843,12 +844,12 @@ export function useMedicalExamsReport() {
           empleado: emp ? `${emp.first_name} ${emp.last_name}` : '-',
           documento: emp?.document_number || '-',
           tipo_examen: typeLabels[e.exam_type] || e.exam_type,
-          fecha_examen: format(new Date(e.exam_date), 'dd/MM/yyyy'),
+          fecha_examen: formatDateOnly(e.exam_date, 'dd/MM/yyyy'),
           proveedor: e.provider,
           medico: e.doctor_name,
           concepto: e.concept,
           resultado: resultLabels[e.result] || e.result,
-          vencimiento: e.expiration_date ? format(new Date(e.expiration_date), 'dd/MM/yyyy') : 'N/A',
+          vencimiento: e.expiration_date ? formatDateOnly(e.expiration_date, 'dd/MM/yyyy') : 'N/A',
           estado,
         };
       });
