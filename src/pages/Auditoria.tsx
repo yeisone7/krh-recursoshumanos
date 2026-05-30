@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -65,7 +66,7 @@ export default function Auditoria() {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Auditoria');
-    XLSX.writeFile(workbook, `auditoria_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    XLSX.writeFile(workbook, `auditoria_${todayDateOnlyString()}.xlsx`);
     logExport(currentCompanyId, 'auditoria', 'excel', 'Exportacion del registro de auditoria');
   };
 

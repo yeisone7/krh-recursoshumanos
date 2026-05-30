@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { FileText, Download, Eye, Calendar, FileWarning } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { employeeDocumentTypeLabels } from '@/types/employee';
@@ -128,10 +129,10 @@ export function PortalDocuments({ documents, isLoading }: PortalDocumentsProps) 
                       </p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
-                        {format(new Date(doc.upload_date), 'PPP', { locale: es })}
+                        {formatDateOnly(doc.upload_date, 'PPP', { locale: es })}
                         {doc.expiry_date && (
                           <Badge variant="outline" className="text-xs">
-                            Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
+                            Vence: {formatDateOnly(doc.expiry_date, 'PP', { locale: es })}
                           </Badge>
                         )}
                       </div>

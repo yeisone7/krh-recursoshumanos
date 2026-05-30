@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Stethoscope, Calendar, FileText, CheckCircle, AlertTriangle, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, FileDown, Loader2 } from 'lucide-react';
@@ -198,7 +199,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                   </p>
                   <span className="text-muted-foreground/30">·</span>
                   <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-1.5">
-                    <Calendar className="w-3 h-3" /> {format(new Date(transaction.exam_date), 'dd MMM yyyy', { locale: es })}
+                    <Calendar className="w-3 h-3" /> {formatDateOnly(transaction.exam_date, 'dd MMM yyyy', { locale: es })}
                   </p>
                 </div>
               </div>
@@ -234,7 +235,7 @@ export function ExamTransactionDetailDialog({ open, onOpenChange, transaction }:
                         {item.expiration_date && (
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
                             <Calendar className="w-3 h-3 text-primary/40" />
-                            Vence: {format(new Date(item.expiration_date), 'dd MMM yyyy', { locale: es })}
+                            Vence: {formatDateOnly(item.expiration_date, 'dd MMM yyyy', { locale: es })}
                           </p>
                         )}
                       </div>

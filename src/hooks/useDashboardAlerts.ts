@@ -1,3 +1,4 @@
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -55,7 +56,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
       const alerts: DashboardAlert[] = [];
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const toDateString = (date: Date) => date.toISOString().slice(0, 10);
+      const toDateString = (date: Date) => toDateOnlyString(date);
       const addDays = (days: number) => {
         const date = new Date(today);
         date.setDate(date.getDate() + days);

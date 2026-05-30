@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { 
   Calendar, 
   Clock, 
@@ -145,7 +146,7 @@ export function OvertimeDetailDialog({
               <div>
                 <p className="text-sm text-muted-foreground">Fecha</p>
                 <p className="font-medium">
-                  {format(new Date(record.work_date), 'PPP', { locale: es })}
+                  {formatDateOnly(record.work_date, 'PPP', { locale: es })}
                 </p>
               </div>
             </div>

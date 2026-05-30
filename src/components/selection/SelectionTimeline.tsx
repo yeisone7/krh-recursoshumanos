@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { toast } from 'sonner';
 import {
   CheckCircle2,
@@ -190,7 +191,7 @@ export function SelectionTimeline({
                         </p>
                         {step.scheduled_date && (
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(step.scheduled_date), 'PPP', { locale: es })}
+                            {formatDateOnly(step.scheduled_date, 'PPP', { locale: es })}
                           </p>
                         )}
                       </div>
@@ -239,7 +240,7 @@ export function SelectionTimeline({
                       )}
                       {step.completed_date && (
                         <div className="text-sm text-muted-foreground">
-                          Completado: {format(new Date(step.completed_date), 'PPP', { locale: es })}
+                          Completado: {formatDateOnly(step.completed_date, 'PPP', { locale: es })}
                         </div>
                       )}
 

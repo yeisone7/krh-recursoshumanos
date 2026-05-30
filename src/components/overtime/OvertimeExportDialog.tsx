@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { CalendarIcon, Download, FileSpreadsheet } from 'lucide-react';
 import {
   Dialog,
@@ -83,7 +84,7 @@ export function OvertimeExportDialog({ open, onOpenChange }: OvertimeExportDialo
       const exportData = result.records.map((r: any) => ({
         'Documento': r.employees_v2?.document_number || '',
         'Empleado': r.employees_v2 ? `${r.employees_v2.first_name} ${r.employees_v2.last_name}` : '',
-        'Fecha': format(new Date(r.work_date), 'dd/MM/yyyy'),
+        'Fecha': formatDateOnly(r.work_date, 'dd/MM/yyyy'),
         'Hora Inicio': r.start_time.slice(0, 5),
         'Hora Fin': r.end_time.slice(0, 5),
         'Horas': r.total_hours,

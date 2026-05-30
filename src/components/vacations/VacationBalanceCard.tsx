@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { Calendar, AlertTriangle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -16,7 +17,7 @@ export function VacationBalanceCard({ balance, alertThreshold = 30, onClick }: V
   const usedPercentage = ((Number(balance.days_taken) + Number(balance.days_compensated)) / Number(balance.days_accrued)) * 100;
   const isExcessiveAccumulation = Number(balance.days_pending) > alertThreshold;
   
-  const periodLabel = `${format(new Date(balance.period_start), 'dd/MM/yyyy', { locale: es })} - ${format(new Date(balance.period_end), 'dd/MM/yyyy', { locale: es })}`;
+  const periodLabel = `${formatDateOnly(balance.period_start, 'dd/MM/yyyy', { locale: es })} - ${formatDateOnly(balance.period_end, 'dd/MM/yyyy', { locale: es })}`;
   
   const employeeName = balance.employee 
     ? `${balance.employee.first_name} ${balance.employee.last_name}`
@@ -89,7 +90,7 @@ export function VacationBalanceCard({ balance, alertThreshold = 30, onClick }: V
           {/* Expiration warning */}
           {balance.accumulation_expires && (
             <p className="text-xs text-orange-600 text-center">
-              ⚠️ Vence: {format(new Date(balance.accumulation_expires), 'dd/MM/yyyy', { locale: es })}
+              ⚠️ Vence: {formatDateOnly(balance.accumulation_expires, 'dd/MM/yyyy', { locale: es })}
             </p>
           )}
         </div>

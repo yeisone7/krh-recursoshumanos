@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { User, Calendar, Clock, FileText, MessageSquare, Briefcase } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -173,7 +174,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-4 h-4 text-primary/60" />
-                  {form.novelty_date ? format(new Date(`${form.novelty_date}T12:00:00`), 'MMMM yyyy', { locale: es }) : 'Mes sin definir'}
+                  {form.novelty_date ? formatDateOnly(`${form.novelty_date}T12:00:00`, 'MMMM yyyy', { locale: es }) : 'Mes sin definir'}
                 </div>
               </div>
             </div>

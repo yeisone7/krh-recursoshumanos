@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { motion } from 'framer-motion';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -278,7 +279,7 @@ export default function Empleados() {
       const ws = XLSX.utils.json_to_sheet(dataToExport);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Empleados');
-      XLSX.writeFile(wb, `Empleados_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `Empleados_${todayDateOnlyString()}.xlsx`);
       toast.success('Archivo exportado correctamente');
     } catch (error) {
       console.error('Error exporting to Excel:', error);

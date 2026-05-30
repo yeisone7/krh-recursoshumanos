@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 import { useUpdateRecoveryStatus } from '@/hooks/useIncapacities';
 import { 
@@ -72,10 +73,10 @@ export function RecoveryFormDialog({
     if (incapacity) {
       form.reset({
         recovery_status: incapacity.recovery_status,
-        filing_date: incapacity.filing_date ? new Date(incapacity.filing_date) : undefined,
+        filing_date: parseDateOnly(incapacity.filing_date),
         filing_number: incapacity.filing_number || '',
-        expected_payment_date: incapacity.expected_payment_date ? new Date(incapacity.expected_payment_date) : undefined,
-        actual_payment_date: incapacity.actual_payment_date ? new Date(incapacity.actual_payment_date) : undefined,
+        expected_payment_date: parseDateOnly(incapacity.expected_payment_date),
+        actual_payment_date: parseDateOnly(incapacity.actual_payment_date),
         recovered_amount: incapacity.recovered_amount || 0,
         recovery_notes: incapacity.recovery_notes || '',
       });

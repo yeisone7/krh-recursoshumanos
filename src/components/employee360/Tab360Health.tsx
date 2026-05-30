@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { EmployeeV2WithRelations, certificationTypeLabels, vaccineTypeLabels } from '@/types/employee';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 
 interface Tab360HealthProps {
@@ -98,7 +99,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                               <Badge variant="secondary">{items.length} examen(es)</Badge>
                             </div>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? format(new Date(exam.exam_date), "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{hasValidDate ? formatDateOnly(exam.exam_date, "d MMM yyyy", { locale: es }) : 'Sin fecha'}</span>
                               {exam.provider && <span>Proveedor: {exam.provider}</span>}
                               {exam.doctor_name && <span>Médico: {exam.doctor_name}</span>}
                             </div>
@@ -128,7 +129,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                                   )}
                                 </div>
                                 <div className="space-y-2 text-sm sm:text-right">
-                                  {hasExpiration && <p><span className="text-muted-foreground">Vence: </span>{format(new Date(item.expiration_date), "d MMM yyyy", { locale: es })}</p>}
+                                  {hasExpiration && <p><span className="text-muted-foreground">Vence: </span>{formatDateOnly(item.expiration_date, "d MMM yyyy", { locale: es })}</p>}
                                   {item.document_url && (
                                     <a href={item.document_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
                                       <FileText className="h-3 w-3" /> Documento
@@ -213,7 +214,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                             {cert.issue_date && (
                               <p className="text-sm">
                                 <span className="text-muted-foreground">Emisión: </span>
-                                {format(new Date(cert.issue_date), "d MMM yyyy", { locale: es })}
+                                {formatDateOnly(cert.issue_date, "d MMM yyyy", { locale: es })}
                               </p>
                             )}
                             {cert.expiry_date && (
@@ -223,7 +224,7 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                                   isExpired && 'text-destructive font-medium',
                                   isExpiringSoon && 'text-warning font-medium'
                                 )}>
-                                  {format(new Date(cert.expiry_date), "d MMM yyyy", { locale: es })}
+                                  {formatDateOnly(cert.expiry_date, "d MMM yyyy", { locale: es })}
                                 </span>
                               </p>
                             )}
@@ -279,12 +280,12 @@ export function Tab360Health({ employee, exams, isLoading }: Tab360HealthProps) 
                         <div className="space-y-1 text-left md:text-right">
                           <p className="text-sm">
                             <span className="text-muted-foreground">Aplicación: </span>
-                            {format(new Date(vac.application_date), "d MMM yyyy", { locale: es })}
+                            {formatDateOnly(vac.application_date, "d MMM yyyy", { locale: es })}
                           </p>
                           {vac.next_dose_date && (
                             <p className="text-sm">
                               <span className="text-muted-foreground">Próxima dosis: </span>
-                              {format(new Date(vac.next_dose_date), "d MMM yyyy", { locale: es })}
+                              {formatDateOnly(vac.next_dose_date, "d MMM yyyy", { locale: es })}
                             </p>
                           )}
                         </div>

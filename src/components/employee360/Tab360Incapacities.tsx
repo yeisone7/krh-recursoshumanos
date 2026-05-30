@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 
 interface Tab360IncapacitiesProps {
@@ -180,7 +181,7 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
                         <div className="flex items-center gap-1">
                           <Calendar className="w-4 h-4 text-muted-foreground" />
                           <span>
-                            {format(new Date(inc.start_date), "d MMM", { locale: es })} - {format(new Date(inc.end_date), "d MMM yyyy", { locale: es })}
+                            {formatDateOnly(inc.start_date, "d MMM", { locale: es })} - {formatDateOnly(inc.end_date, "d MMM yyyy", { locale: es })}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import type { CandidateBackground } from '@/hooks/useCandidateBackground';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 interface CandidateBackgroundAlertsProps {
   background: CandidateBackground | null;
@@ -60,7 +61,7 @@ export function CandidateBackgroundAlerts({ background, loading, compact }: Cand
                   </Badge>
                   <span className="text-muted-foreground">
                     Falta {faultLabels[dp.fault_type] || dp.fault_type} • {statusLabels[dp.status] || dp.status}
-                    {dp.opening_date && ` • ${format(new Date(dp.opening_date), 'dd/MM/yyyy')}`}
+                    {dp.opening_date && ` • ${formatDateOnly(dp.opening_date, 'dd/MM/yyyy')}`}
                   </span>
                 </div>
               ))}
@@ -83,12 +84,12 @@ export function CandidateBackgroundAlerts({ background, loading, compact }: Cand
             </Badge>
             {background.was_employee.hire_date && (
               <span className="ml-1">
-                • Ingreso: {format(new Date(background.was_employee.hire_date), 'dd/MM/yyyy')}
+                • Ingreso: {formatDateOnly(background.was_employee.hire_date, 'dd/MM/yyyy')}
               </span>
             )}
             {background.was_employee.termination_date && (
               <span>
-                • Retiro: {format(new Date(background.was_employee.termination_date), 'dd/MM/yyyy')}
+                • Retiro: {formatDateOnly(background.was_employee.termination_date, 'dd/MM/yyyy')}
               </span>
             )}
           </AlertDescription>
@@ -111,7 +112,7 @@ export function CandidateBackgroundAlerts({ background, loading, compact }: Cand
                     {c.status === 'applied' ? 'Aplicó' : c.status === 'selected' ? 'Seleccionado' : c.status === 'not_selected' ? 'No seleccionado' : c.status}
                   </Badge>
                   <span className="text-muted-foreground">
-                    {format(new Date(c.application_date), 'dd/MM/yyyy')}
+                    {formatDateOnly(c.application_date, 'dd/MM/yyyy')}
                   </span>
                 </div>
               ))}

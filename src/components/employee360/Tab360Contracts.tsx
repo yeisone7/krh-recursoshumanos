@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 import { terminationTypeLabels, type TerminationType } from '@/types/termination';
 
@@ -204,7 +205,7 @@ export function Tab360Contracts({ contracts, terminations = [], isLoading }: Tab
                       <Calendar className="w-3 h-3" /> Inicio
                     </p>
                     <p className="font-medium">
-                      {format(new Date(contract.start_date), "d MMM yyyy", { locale: es })}
+                      {formatDateOnly(contract.start_date, "d MMM yyyy", { locale: es })}
                     </p>
                   </div>
                   <div>
@@ -213,7 +214,7 @@ export function Tab360Contracts({ contracts, terminations = [], isLoading }: Tab
                     </p>
                     <p className="font-medium">
                       {contract.end_date 
-                        ? format(new Date(contract.end_date), "d MMM yyyy", { locale: es })
+                        ? formatDateOnly(contract.end_date, "d MMM yyyy", { locale: es })
                         : 'Indefinido'
                       }
                     </p>
@@ -252,9 +253,9 @@ export function Tab360Contracts({ contracts, terminations = [], isLoading }: Tab
                             className="text-sm flex items-center justify-between p-2 rounded bg-background"
                           >
                             <span>
-                              Prórroga #{ext.extension_number} ({extensionTypeLabel}): {format(new Date(ext.start_date), "d MMM yyyy", { locale: es })} 
+                              Prórroga #{ext.extension_number} ({extensionTypeLabel}): {formatDateOnly(ext.start_date, "d MMM yyyy", { locale: es })} 
                               {' → '}
-                              {format(new Date(ext.end_date), "d MMM yyyy", { locale: es })}
+                              {formatDateOnly(ext.end_date, "d MMM yyyy", { locale: es })}
                             </span>
                             {ext.new_salary && (
                               <Badge variant="outline">{formatCurrency(ext.new_salary)}</Badge>
@@ -273,7 +274,7 @@ export function Tab360Contracts({ contracts, terminations = [], isLoading }: Tab
                       <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">
-                          Terminado el {format(new Date(contract.termination_date), "d 'de' MMMM, yyyy", { locale: es })}
+                          Terminado el {formatDateOnly(contract.termination_date, "d 'de' MMMM, yyyy", { locale: es })}
                         </p>
                         <div className="mt-2 grid gap-2 md:grid-cols-2">
                           <div>

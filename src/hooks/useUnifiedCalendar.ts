@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, addDays, subDays } from 'date-fns';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 
 export type CalendarEventType = 'vacation' | 'leave' | 'incapacity' | 'contract' | 'training';
 
@@ -83,8 +84,8 @@ export function useUnifiedCalendar(
               type: 'vacation',
               title: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               description: `Vacaciones (${v.business_days} días)`,
-              startDate: new Date(v.start_date),
-              endDate: new Date(v.end_date),
+              startDate: parseDateOnlyOr(v.start_date, new Date()),
+              endDate: parseDateOnlyOr(v.end_date, new Date()),
               employeeId: employee?.id,
               employeeName: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               status: v.status,
@@ -129,8 +130,8 @@ export function useUnifiedCalendar(
               type: 'leave',
               title: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               description: leaveTypeLabels[l.leave_type] || l.leave_type,
-              startDate: new Date(l.start_date),
-              endDate: new Date(l.end_date),
+              startDate: parseDateOnlyOr(l.start_date, new Date()),
+              endDate: parseDateOnlyOr(l.end_date, new Date()),
               employeeId: employee?.id,
               employeeName: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               status: l.status,
@@ -163,8 +164,8 @@ export function useUnifiedCalendar(
               type: 'incapacity',
               title: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               description: `${i.origin === 'laboral' ? 'Laboral' : 'Común'} - ${i.diagnosis}`,
-              startDate: new Date(i.start_date),
-              endDate: new Date(i.end_date),
+              startDate: parseDateOnlyOr(i.start_date, new Date()),
+              endDate: parseDateOnlyOr(i.end_date, new Date()),
               employeeId: employee?.id,
               employeeName: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               color: style.color,
@@ -217,8 +218,8 @@ export function useUnifiedCalendar(
               type: 'contract',
               title: `Vence: ${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               description: `Contrato ${contractTypeLabels[c.contract_type] || c.contract_type}`,
-              startDate: new Date(c.end_date),
-              endDate: new Date(c.end_date),
+              startDate: parseDateOnlyOr(c.end_date, new Date()),
+              endDate: parseDateOnlyOr(c.end_date, new Date()),
               employeeId: employee?.id,
               employeeName: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
               color: style.color,
@@ -251,8 +252,8 @@ export function useUnifiedCalendar(
               type: 'training',
               title: course?.name || 'Capacitación',
               description: t.instructor_name ? `Instructor: ${t.instructor_name}` : (t.location || 'Sin ubicación'),
-              startDate: new Date(t.start_date),
-              endDate: new Date(t.end_date),
+              startDate: parseDateOnlyOr(t.start_date, new Date()),
+              endDate: parseDateOnlyOr(t.end_date, new Date()),
               status: t.status,
               color: style.color,
               bgColor: style.bgColor,

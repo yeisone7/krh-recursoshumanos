@@ -1,3 +1,4 @@
+import { todayDateOnlyString } from '@/lib/dateOnly';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -260,7 +261,7 @@ export function useCreateComplianceEvidence() {
           ...input,
           company_id: currentCompanyId,
           uploaded_by: user?.id,
-          evidence_date: input.evidence_date || new Date().toISOString().slice(0, 10),
+          evidence_date: input.evidence_date || todayDateOnlyString(),
         })
         .select()
         .single();

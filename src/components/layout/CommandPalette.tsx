@@ -15,6 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { format, differenceInYears } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 interface SearchResult {
   id: string;
@@ -186,12 +187,12 @@ function ContractPreviewCard({ data }: { data: ContractPreview }) {
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Inicio</span>
-          <span className="font-medium text-foreground">{format(new Date(data.start_date), 'dd MMM yyyy', { locale: es })}</span>
+          <span className="font-medium text-foreground">{formatDateOnly(data.start_date, 'dd MMM yyyy', { locale: es })}</span>
         </div>
         {data.end_date && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">Fin</span>
-            <span className="font-medium text-foreground">{format(new Date(data.end_date), 'dd MMM yyyy', { locale: es })}</span>
+            <span className="font-medium text-foreground">{formatDateOnly(data.end_date, 'dd MMM yyyy', { locale: es })}</span>
           </div>
         )}
         <div className="flex justify-between">

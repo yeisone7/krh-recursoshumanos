@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isWithinInterval, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -76,8 +77,8 @@ export function VacationCalendarView({ onRequestClick }: VacationCalendarViewPro
   const getRequestsForDay = (day: Date) => {
     if (!requests) return [];
     return requests.filter(r => {
-      const start = new Date(r.start_date);
-      const end = new Date(r.end_date);
+      const start = parseDateOnlyOr(r.start_date, new Date());
+      const end = parseDateOnlyOr(r.end_date, new Date());
       return isWithinInterval(day, { start, end });
     });
   };

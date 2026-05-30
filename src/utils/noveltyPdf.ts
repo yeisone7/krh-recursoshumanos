@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { NOVELTY_TYPE_LABELS, type NoveltyType } from '@/types/payroll';
 
 const loadImage = (url: string): Promise<string> => {
@@ -72,7 +73,7 @@ const generateNoveltyPDF = async (novelty: any, userName: string, logoUrl?: stri
   // Dates
   doc.setFontSize(7); 
   doc.setFont('helvetica', 'normal');
-  const reportDate = format(new Date(novelty.novelty_date), 'dd/MM/yyyy');
+  const reportDate = formatDateOnly(novelty.novelty_date, 'dd/MM/yyyy');
   const genDate = novelty.created_at ? format(new Date(novelty.created_at), 'dd/MM/yyyy HH:mm:ss') : format(new Date(), 'dd/MM/yyyy HH:mm:ss');
   
   doc.text('Fecha Reporte:', margin, cursorY);

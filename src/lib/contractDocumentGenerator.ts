@@ -36,6 +36,7 @@ export interface ContractDocumentData {
   employeePosition: string;
   employeeOperationCenter?: string;
   employeePayrollType?: string; // Tipo de nómina (quincenal/mensual)
+  employeeRestDay?: string; // Día de descanso del empleado
   
   // Contract info
   contractNumber?: string; // Número consecutivo del contrato (ej: PC-2024-0001)
@@ -102,6 +103,25 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+const dayOfWeekLabels: Record<string, string> = {
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miércoles',
+  miércoles: 'Miércoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sábado',
+  sábado: 'Sábado',
+  domingo: 'Domingo',
+};
+
+function formatRestDay(restDay?: string): string {
+  if (!restDay) return '';
+
+  const normalized = restDay.trim().toLowerCase();
+  return dayOfWeekLabels[normalized] || capitalize(normalized);
+}
+
 // Convert number to words (Spanish)
 function numberToWords(num: number): string {
   const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
@@ -152,6 +172,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
   const salaryFormatted = formatCurrency(data.salary);
   const salaryTypeText = data.salaryType === 'mensual' ? 'Salario Ordinario Mensual' : 'Salario Integral';
   const payrollTypeText = data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal';
+  const restDayText = formatRestDay(data.employeeRestDay);
   const durationText = data.contractDurationMonths
     ? `${data.contractDurationMonths} meses`
     : 'Indefinido';
@@ -194,6 +215,8 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     EMPLEADO_CENTRO: data.employeeOperationCenter || '',
     EMPLEADO_AREA: data.employeeOperationCenter || '',
     EMPLEADO_TIPO_NOMINA: payrollTypeText, // Default to Quincenal
+    DIA_DESCANSO: restDayText,
+    EMPLEADO_DIA_DESCANSO: restDayText,
     
     // Contract
     CONTRATO_NUMERO: data.contractNumber || '', // Consecutivo (ej: PC-2024-0001)

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { 
   Calendar, 
   User, 
@@ -113,8 +114,8 @@ export function IncapacityDetailDialog({
   const legalStage = getCurrentLegalStage(incapacity.origin, totalChainDays);
   const legalMilestones = getLegalMilestones(incapacity.origin, totalChainDays);
   const today = new Date();
-  const endDate = new Date(incapacity.end_date);
-  const isActive = endDate >= today && new Date(incapacity.start_date) <= today;
+  const endDate = parseDateOnlyOr(incapacity.end_date, new Date());
+  const isActive = endDate >= today && parseDateOnlyOr(incapacity.start_date, new Date()) <= today;
   const daysRemaining = differenceInDays(endDate, today);
   
   return (
@@ -140,7 +141,7 @@ export function IncapacityDetailDialog({
                       Incapacidad - {employeeName}
                     </DialogTitle>
                     <DialogDescription className="font-medium mt-1">
-                      {format(new Date(incapacity.start_date), "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
+                      {formatDateOnly(incapacity.start_date, "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
                     </DialogDescription>
                   </div>
                 </div>
@@ -452,7 +453,7 @@ export function IncapacityDetailDialog({
                       {incapacity.filing_date && (
                         <div>
                           <p className="text-sm text-muted-foreground">Fecha Radicación</p>
-                          <p className="font-medium">{format(new Date(incapacity.filing_date), 'dd/MM/yyyy')}</p>
+                          <p className="font-medium">{formatDateOnly(incapacity.filing_date, 'dd/MM/yyyy')}</p>
                         </div>
                       )}
                       {incapacity.filing_number && (
@@ -464,13 +465,13 @@ export function IncapacityDetailDialog({
                       {incapacity.expected_payment_date && (
                         <div>
                           <p className="text-sm text-muted-foreground">Fecha Esperada de Pago</p>
-                          <p className="font-medium">{format(new Date(incapacity.expected_payment_date), 'dd/MM/yyyy')}</p>
+                          <p className="font-medium">{formatDateOnly(incapacity.expected_payment_date, 'dd/MM/yyyy')}</p>
                         </div>
                       )}
                       {incapacity.actual_payment_date && (
                         <div>
                           <p className="text-sm text-muted-foreground">Fecha Real de Pago</p>
-                          <p className="font-medium">{format(new Date(incapacity.actual_payment_date), 'dd/MM/yyyy')}</p>
+                          <p className="font-medium">{formatDateOnly(incapacity.actual_payment_date, 'dd/MM/yyyy')}</p>
                         </div>
                       )}
                     </div>
@@ -577,7 +578,7 @@ export function IncapacityDetailDialog({
                           <div className="flex-1">
                             <p className="font-medium">Incapacidad Original</p>
                             <p className="text-sm text-muted-foreground">
-                              {format(new Date(incapacity.start_date), 'dd/MM/yyyy')} - {format(new Date(incapacity.end_date), 'dd/MM/yyyy')} ({incapacity.total_days} días)
+                              {formatDateOnly(incapacity.start_date, 'dd/MM/yyyy')} - {formatDateOnly(incapacity.end_date, 'dd/MM/yyyy')} ({incapacity.total_days} días)
                             </p>
                           </div>
                         </div>
@@ -593,7 +594,7 @@ export function IncapacityDetailDialog({
                             <div className="flex-1">
                               <p className="font-medium">Prórroga #{ext.extension_number}</p>
                               <p className="text-sm text-muted-foreground">
-                                {format(new Date(ext.start_date), 'dd/MM/yyyy')} - {format(new Date(ext.end_date), 'dd/MM/yyyy')} ({ext.total_days} días)
+                                {formatDateOnly(ext.start_date, 'dd/MM/yyyy')} - {formatDateOnly(ext.end_date, 'dd/MM/yyyy')} ({ext.total_days} días)
                               </p>
                             </div>
                             <Badge className={recoveryStatusColors[ext.recovery_status]}>

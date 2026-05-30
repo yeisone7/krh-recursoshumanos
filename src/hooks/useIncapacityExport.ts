@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import {
@@ -107,8 +108,8 @@ export function useIncapacityExport() {
           'Empleado': `${inc.employee?.first_name || ''} ${inc.employee?.last_name || ''}`,
           'Documento': inc.employee?.document_number || '',
           'Origen': incapacityOriginLabels[originKey] || inc.origin,
-          'Fecha Inicio': format(new Date(inc.start_date), 'dd/MM/yyyy'),
-          'Fecha Fin': format(new Date(inc.end_date), 'dd/MM/yyyy'),
+          'Fecha Inicio': formatDateOnly(inc.start_date, 'dd/MM/yyyy'),
+          'Fecha Fin': formatDateOnly(inc.end_date, 'dd/MM/yyyy'),
           'Etapa Legal': legalStage.label,
           'Responsable Legal Estimado': legalStage.responsible,
           'Días Totales': inc.total_days || 0,
@@ -125,7 +126,7 @@ export function useIncapacityExport() {
           'Monto Total': inc.total_amount || 0,
           'Estado Recobro': recoveryStatusLabels[statusKey] || inc.recovery_status,
           'Monto Recuperado': inc.recovered_amount || 0,
-          'Fecha Radicación': inc.filing_date ? format(new Date(inc.filing_date), 'dd/MM/yyyy') : '',
+          'Fecha Radicación': inc.filing_date ? formatDateOnly(inc.filing_date, 'dd/MM/yyyy') : '',
           'Número Radicación': inc.filing_number || '',
           'EPS': inc.eps_name || '',
           'ARL': inc.arl_name || '',
@@ -147,7 +148,7 @@ export function useIncapacityExport() {
       }> = {};
 
       data.forEach((inc: any) => {
-        const monthKey = format(new Date(inc.start_date), 'yyyy-MM');
+        const monthKey = formatDateOnly(inc.start_date, 'yyyy-MM');
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = { count: 0, days: 0, comun: 0, laboral: 0, total: 0, recovered: 0 };
         }

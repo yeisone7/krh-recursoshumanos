@@ -15,6 +15,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateCesantiasDeposit, useUpdateCesantiasDeposit } from '@/hooks/useCesantias';
 import { useAFCCatalog } from '@/hooks/useSocialSecurityCatalogs';
 import { supabase } from '@/integrations/supabase/client';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import type { CesantiasDeposit, CesantiasStatus } from '@/types/cesantias';
 
 const formSchema = z.object({
@@ -164,8 +165,8 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
 
   useEffect(() => {
     if (depositDate && dueDate && status === 'depositado') {
-      const due = new Date(dueDate);
-      const dep = new Date(depositDate);
+      const due = parseDateOnlyOr(dueDate, new Date());
+      const dep = parseDateOnlyOr(depositDate, new Date());
       if (dep > due) {
         form.setValue('status', 'extemporaneo');
       }
@@ -179,8 +180,8 @@ export function DepositFormDialog({ open, onOpenChange, deposit }: DepositFormDi
       let lateDays = 0;
 
       if (data.deposit_date && data.due_date) {
-        const due = new Date(data.due_date);
-        const dep = new Date(data.deposit_date);
+        const due = parseDateOnlyOr(data.due_date, new Date());
+        const dep = parseDateOnlyOr(data.deposit_date, new Date());
         if (dep > due) {
           isLate = true;
           lateDays = differenceInDays(dep, due);

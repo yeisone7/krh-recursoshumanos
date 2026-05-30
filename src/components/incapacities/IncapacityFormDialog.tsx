@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { CalendarIcon, DollarSign, Loader2, Stethoscope, User } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
@@ -111,8 +112,8 @@ export function IncapacityFormDialog({
       form.reset({
         employee_id: incapacity.employee_id,
         origin: incapacity.origin,
-        start_date: new Date(incapacity.start_date),
-        end_date: new Date(incapacity.end_date),
+        start_date: parseDateOnlyOr(incapacity.start_date, new Date()),
+        end_date: parseDateOnlyOr(incapacity.end_date, new Date()),
         diagnosis: incapacity.diagnosis,
         cie10_code: incapacity.cie10_code || '',
         treating_doctor: incapacity.treating_doctor || '',
@@ -379,7 +380,7 @@ export function IncapacityFormDialog({
                           <SelectContent>
                             {availableParents.map((inc) => (
                               <SelectItem key={inc.id} value={inc.id}>
-                                {format(new Date(inc.start_date), 'dd/MM/yyyy')} - {inc.diagnosis.substring(0, 30)}...
+                                {formatDateOnly(inc.start_date, 'dd/MM/yyyy')} - {inc.diagnosis.substring(0, 30)}...
                               </SelectItem>
                             ))}
                           </SelectContent>

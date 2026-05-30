@@ -1,3 +1,4 @@
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -60,7 +61,7 @@ export function useCreateExitExam() {
         .insert({
           employee_id: employeeId,
           exam_type: 'egreso',
-          exam_date: examDate.toISOString().split('T')[0],
+          exam_date: toDateOnlyString(examDate),
           result: 'pendiente',
           concept: 'Examen de egreso generado automáticamente por terminación de contrato',
           provider: 'Por definir',
@@ -128,7 +129,7 @@ export function useTerminateContract() {
         .from('contracts')
         .update({
           is_terminated: true,
-          termination_date: terminationDate.toISOString().split('T')[0],
+          termination_date: toDateOnlyString(terminationDate),
           termination_reason: terminationReason,
         })
         .eq('id', contractId)
@@ -172,7 +173,7 @@ export function useTerminateContract() {
           entity_id: data.id,
           entity_name: `Contrato - ${employeeName}`,
           new_values: { 
-            termination_date: terminationDate.toISOString().split('T')[0],
+            termination_date: toDateOnlyString(terminationDate),
             termination_reason: terminationReason,
             exit_exam_id: exitExamId,
             exit_exam_auto_created: !hasExitExam && autoCreateExitExam,

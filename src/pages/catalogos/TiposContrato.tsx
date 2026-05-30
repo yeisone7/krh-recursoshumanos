@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,21 +43,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Skeleton } from '@/components/ui/skeleton';
 
 const codeColors = [
-  'bg-primary/10 text-primary border-primary/20',
-  'bg-info/10 text-info border-info/20',
-  'bg-warning/10 text-warning-foreground border-warning/20',
-  'bg-accent/10 text-accent border-accent/20',
-  'bg-destructive/10 text-destructive border-destructive/20',
-  'bg-secondary text-secondary-foreground border-secondary',
+  'bg-rose-50 text-rose-700 border-rose-200',
+  'bg-sky-50 text-sky-700 border-sky-200',
+  'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'bg-amber-50 text-amber-700 border-amber-200',
+  'bg-violet-50 text-violet-700 border-violet-200',
+  'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'bg-orange-50 text-orange-700 border-orange-200',
+  'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
+  'bg-lime-50 text-lime-700 border-lime-200',
+  'bg-indigo-50 text-indigo-700 border-indigo-200',
 ];
-
-const getCodeColor = (code: string): string => {
-  let hash = 0;
-  for (let i = 0; i < code.length; i++) {
-    hash = code.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return codeColors[Math.abs(hash) % codeColors.length];
-};
 
 type PreviewTab = Pick<ContractTypeConfig, 'id' | 'display_name' | 'template_url' | 'template_file_name'>;
 
@@ -81,6 +77,13 @@ export default function TiposContrato() {
   const docxPreviewRef = useRef<HTMLDivElement>(null);
   const docxRenderIdRef = useRef(0);
   const docxHtmlCacheRef = useRef(new Map<string, string>());
+
+  const codeColorMap = useMemo(() => {
+    const codes = [...new Set(data.map(item => item.contract_type))].sort((a, b) => a.localeCompare(b));
+    return new Map(codes.map((code, index) => [code, codeColors[index % codeColors.length]]));
+  }, [data]);
+
+  const getCodeColor = (code: string): string => codeColorMap.get(code) || codeColors[0];
 
   const stats = {
     total: data.length,

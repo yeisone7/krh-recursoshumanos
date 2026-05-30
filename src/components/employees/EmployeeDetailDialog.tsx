@@ -57,7 +57,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
+import { formatDateOnly, parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
 import { useContracts } from '@/hooks/useContracts';
@@ -292,8 +292,8 @@ function ContractSummaryCard({ employeeId, employeeName, onCreateContract }: { e
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {c.contract_number && `${c.contract_number} • `}
-                    Desde {format(new Date(c.start_date), 'dd MMM yyyy', { locale: es })}
-                    {c.end_date && ` hasta ${format(new Date(c.end_date), 'dd MMM yyyy', { locale: es })}`}
+                    Desde {formatDateOnly(c.start_date, 'dd MMM yyyy', { locale: es })}
+                    {c.end_date && ` hasta ${formatDateOnly(c.end_date, 'dd MMM yyyy', { locale: es })}`}
                   </span>
                 </div>
                 <div className="text-right">
@@ -1012,14 +1012,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                               </span>
                               {cert.issue_date && (
                                 <span className="text-xs text-muted-foreground block">
-                                  Emitido: {format(new Date(cert.issue_date + 'T12:00:00'), 'PP', { locale: es })}
+                                  Emitido: {formatDateOnly(cert.issue_date + 'T12:00:00', 'PP', { locale: es })}
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center gap-2">
                               {cert.expiry_date && (
                                 <Badge variant={new Date(cert.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-                                  Vence: {format(new Date(cert.expiry_date + 'T12:00:00'), 'PP', { locale: es })}
+                                  Vence: {formatDateOnly(cert.expiry_date + 'T12:00:00', 'PP', { locale: es })}
                                 </Badge>
                               )}
                               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteCertification(cert.id)}>
@@ -1052,14 +1052,14 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                                 {vaccineTypeLabels[vac.vaccine_type]} - Dosis {vac.dose_number}
                               </span>
                               <span className="text-xs text-muted-foreground block">
-                                Aplicada: {format(new Date(vac.application_date + 'T12:00:00'), 'PP', { locale: es })}
+                                Aplicada: {formatDateOnly(vac.application_date + 'T12:00:00', 'PP', { locale: es })}
                                 {vac.provider && ` • ${vac.provider}`}
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
                               {vac.next_dose_date && (
                                 <Badge variant="outline" className="text-[11px]">
-                                  Próxima: {format(new Date(vac.next_dose_date + 'T12:00:00'), 'PP', { locale: es })}
+                                  Próxima: {formatDateOnly(vac.next_dose_date + 'T12:00:00', 'PP', { locale: es })}
                                 </Badge>
                               )}
                               <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteVaccination(vac.id)}>
@@ -1116,13 +1116,13 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                                           {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}
                                         </span>
                                         <span className="block truncate text-xs text-muted-foreground">
-                                          {doc.file_name} • {format(new Date(doc.upload_date), 'PP', { locale: es })}
+                                          {doc.file_name} • {formatDateOnly(doc.upload_date, 'PP', { locale: es })}
                                         </span>
                                       </div>
                                       <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
                                         {doc.expiry_date && (
                                           <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-                                            Vence: {format(new Date(doc.expiry_date), 'PP', { locale: es })}
+                                            Vence: {formatDateOnly(doc.expiry_date, 'PP', { locale: es })}
                                           </Badge>
                                         )}
                                         <div className="flex items-center gap-1">

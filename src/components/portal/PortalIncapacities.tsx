@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Stethoscope, Calendar, FileWarning, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 interface PortalIncapacitiesProps {
   incapacities: any[];
@@ -142,8 +143,8 @@ function IncapacityCard({ incapacity, isActive }: { incapacity: any; isActive?: 
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            {format(new Date(incapacity.start_date), 'PPP', { locale: es })} - {' '}
-            {format(new Date(incapacity.end_date), 'PPP', { locale: es })}
+            {formatDateOnly(incapacity.start_date, 'PPP', { locale: es })} - {' '}
+            {formatDateOnly(incapacity.end_date, 'PPP', { locale: es })}
           </p>
           <div className="flex items-center gap-2 pt-1">
             <Badge variant="secondary">

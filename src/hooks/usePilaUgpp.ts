@@ -1,3 +1,4 @@
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -93,8 +94,8 @@ function monthRange(month: string) {
   const [year, monthIndex] = month.split('-').map(Number);
   const start = new Date(year, monthIndex - 1, 1);
   const end = new Date(year, monthIndex, 0);
-  const periodStart = start.toISOString().slice(0, 10);
-  const periodEnd = end.toISOString().slice(0, 10);
+  const periodStart = toDateOnlyString(start);
+  const periodEnd = toDateOnlyString(end);
   const periodLabel = start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
   return { periodStart, periodEnd, periodLabel };
 }

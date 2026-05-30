@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -583,7 +584,7 @@ export default function Prestamos() {
                         {payments.map(p => (
                           <TableRow key={p.id}>
                             <TableCell className="font-medium">{p.payment_number}</TableCell>
-                            <TableCell>{format(new Date(p.payment_date), 'dd MMM yyyy', { locale: es })}</TableCell>
+                            <TableCell>{formatDateOnly(p.payment_date, 'dd MMM yyyy', { locale: es })}</TableCell>
                             <TableCell className="text-right">{formatCurrency(Number(p.amount))}</TableCell>
                             <TableCell className="text-right">{formatCurrency(Number(p.balance_after))}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">{p.payroll_period || '—'}</TableCell>
@@ -608,7 +609,7 @@ export default function Prestamos() {
                           <div key={r.id} className="p-3 rounded-lg border bg-background space-y-2 text-sm">
                             <div className="flex items-center justify-between">
                               <span className="font-medium">
-                                {format(new Date(r.refinance_date), 'dd MMM yyyy HH:mm', { locale: es })}
+                                {formatDateOnly(r.refinance_date, 'dd MMM yyyy HH:mm', { locale: es })}
                               </span>
                               {r.document_url && (
                                 <a href={r.document_url} target="_blank" rel="noopener noreferrer"

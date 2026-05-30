@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Users,
   UserCheck,
@@ -334,7 +335,7 @@ function CandidateCard({
           <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              {format(new Date(candidate.application_date), 'dd MMM', { locale: es })}
+              {formatDateOnly(candidate.application_date, 'dd MMM', { locale: es })}
             </div>
             {totalSteps > 0 && (
               <div className="flex items-center gap-1.5">

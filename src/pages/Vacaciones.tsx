@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { 
   Plus, 
   Search, 
@@ -289,8 +290,8 @@ export default function Vacaciones() {
                           fields: [
                             { label: 'Tipo', value: <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>{REQUEST_TYPE_LABELS[request.request_type]}</Badge> },
                             { label: 'Días', value: `${request.business_days} días` },
-                            { label: 'Desde', value: format(new Date(request.start_date), 'dd/MM/yyyy', { locale: es }) },
-                            { label: 'Hasta', value: format(new Date(request.end_date), 'dd/MM/yyyy', { locale: es }) },
+                            { label: 'Desde', value: formatDateOnly(request.start_date, 'dd/MM/yyyy', { locale: es }) },
+                            { label: 'Hasta', value: formatDateOnly(request.end_date, 'dd/MM/yyyy', { locale: es }) },
                           ],
                           onClick: () => handleRequestClick(request),
                         }))}
@@ -347,9 +348,9 @@ export default function Vacaciones() {
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
                           <div className="text-sm font-medium">
-                            <p className="text-foreground">{format(new Date(request.start_date), 'dd MMM yyyy', { locale: es })}</p>
+                            <p className="text-foreground">{formatDateOnly(request.start_date, 'dd MMM yyyy', { locale: es })}</p>
                             <p className="text-muted-foreground text-xs mt-0.5">
-                              al {format(new Date(request.end_date), 'dd MMM yyyy', { locale: es })}
+                              al {formatDateOnly(request.end_date, 'dd MMM yyyy', { locale: es })}
                             </p>
                           </div>
                         </TableCell>

@@ -6,6 +6,7 @@ import { useLeaveRequests, usePendingLeavesCount } from '@/hooks/useLeaves';
 import { LEAVE_TYPE_LABELS } from '@/types/leave';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 
 interface LeaveAlertsPanelProps {
   onViewRequest?: (requestId: string) => void;
@@ -84,7 +85,7 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
                       {LEAVE_TYPE_LABELS[request.leave_type]} • {request.total_days} días
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(request.start_date), 'dd MMM', { locale: es })} - {format(new Date(request.end_date), 'dd MMM yyyy', { locale: es })}
+                      {formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - {formatDateOnly(request.end_date, 'dd MMM yyyy', { locale: es })}
                     </p>
                   </div>
                   <div className="text-left sm:text-right">

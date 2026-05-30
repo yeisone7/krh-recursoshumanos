@@ -88,6 +88,7 @@ import {
 } from '@/types/evaluation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 import { generateEvaluationPdf } from '@/lib/evaluationPdfGenerator';
 import { toast } from 'sonner';
@@ -430,8 +431,8 @@ export default function Evaluaciones() {
                           <span className="block max-w-[180px] truncate">{cycle.template?.name || '-'}</span>
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-sm font-medium">
-                          {format(new Date(cycle.start_date), 'dd MMM', { locale: es })} -{' '}
-                          {format(new Date(cycle.end_date), 'dd MMM yyyy', { locale: es })}
+                          {formatDateOnly(cycle.start_date, 'dd MMM', { locale: es })} -{' '}
+                          {formatDateOnly(cycle.end_date, 'dd MMM yyyy', { locale: es })}
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">
                           {stats.total > 0 ? (

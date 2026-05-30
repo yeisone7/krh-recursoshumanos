@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
+import { parseDateOnlyOr, toDateOnlyString } from '@/lib/dateOnly';
 import { 
   VacationConfig, 
   VacationBalance, 
@@ -262,8 +263,8 @@ export function useCreateVacationRequest() {
       compensation_amount?: number;
       notes?: string;
     }) => {
-      const startDate = new Date(request.start_date);
-      const endDate = new Date(request.end_date);
+      const startDate = parseDateOnlyOr(request.start_date, new Date());
+      const endDate = parseDateOnlyOr(request.end_date, startDate);
       const calendarDays = request.calendar_days ?? calculateCalendarDays(startDate, endDate);
 
       const { data, error } = await supabase
@@ -386,7 +387,7 @@ export function useApproveVacation() {
           .from('vacation_balances')
           .update({
             is_accumulated: true,
-            accumulation_expires: expirationDate.toISOString().split('T')[0]
+            accumulation_expires: toDateOnlyString(expirationDate)
           })
           .eq('id', balanceId);
 
@@ -539,7 +540,7 @@ export function useVacationCalendar(year: number, month: number) {
         .eq('company_id', currentCompanyId!)
         .in('status', ['aprobado', 'en_curso', 'completado'])
         .eq('request_type', 'disfrute')
-        .or(`start_date.lte.${endOfMonth.toISOString().split('T')[0]},end_date.gte.${startOfMonth.toISOString().split('T')[0]}`);
+        .or(`start_date.lte.${toDateOnlyString(endOfMonth)},end_date.gte.${toDateOnlyString(startOfMonth)}`);
 
       if (error) throw error;
       return data as VacationRequest[];
@@ -592,8 +593,8 @@ export function useVacationStats() {
         activeVacations: requests.filter(r => {
           if (r.status !== 'aprobado' && r.status !== 'en_curso') return false;
           if (r.request_type !== 'disfrute') return false;
-          const start = new Date(r.start_date);
-          const end = new Date(r.end_date);
+          const start = parseDateOnlyOr(r.start_date, today);
+          const end = parseDateOnlyOr(r.end_date, start);
           return start <= today && end >= today;
         }).length,
         pendingApprovals: requests.filter(r => r.status === 'borrador').length

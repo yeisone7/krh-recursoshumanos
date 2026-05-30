@@ -11,6 +11,7 @@ import {
   LeaveRequestStatus 
 } from '@/types/leave';
 import { addDays, format } from 'date-fns';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
 import { useHolidaysSet } from '@/hooks/useHolidays';
 
 // =============================================
@@ -255,7 +256,7 @@ export function useCreateLeaveRequest() {
       if (error) throw error;
 
       // Update pending days in balance
-      const year = new Date(request.start_date).getFullYear();
+      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
       
       // Get existing balance
       const { data: existingBalance } = await supabase
@@ -337,7 +338,7 @@ export function useApproveLeaveRequest() {
       if (error) throw error;
 
       // Update balance: move from pending to used
-      const year = new Date(request.start_date).getFullYear();
+      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
       const { data: existingBalance } = await supabase
         .from('leave_balances')
         .select('*')
@@ -405,7 +406,7 @@ export function useRejectLeaveRequest() {
       if (error) throw error;
 
       // Remove from pending days
-      const year = new Date(request.start_date).getFullYear();
+      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
       const { data: existingBalance } = await supabase
         .from('leave_balances')
         .select('*')
@@ -463,7 +464,7 @@ export function useCancelLeaveRequest() {
       if (error) throw error;
 
       // Restore balance based on previous status
-      const year = new Date(request.start_date).getFullYear();
+      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
       const { data: existingBalance } = await supabase
         .from('leave_balances')
         .select('*')

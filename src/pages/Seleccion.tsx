@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Briefcase,
   Users,
@@ -131,7 +132,7 @@ export default function Seleccion() {
         fields: [
           { label: 'Centro', value: centerName },
           { label: 'Candidatos', value: candidateCount },
-          { label: 'Apertura', value: format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es }) },
+          { label: 'Apertura', value: formatDateOnly(vacancy.open_date, 'dd MMM yyyy', { locale: es }) },
         ],
         onClick: () => openVacancyDetail(vacancy.id),
         actions: (
@@ -356,7 +357,7 @@ export default function Seleccion() {
                           <TableCell>
                             <div className="flex flex-col">
                                <span className="text-[11px] font-bold text-foreground/80">
-                                  {format(new Date(vacancy.open_date), 'dd MMM yyyy', { locale: es })}
+                                  {formatDateOnly(vacancy.open_date, 'dd MMM yyyy', { locale: es })}
                                </span>
                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Fecha Apertura</span>
                             </div>

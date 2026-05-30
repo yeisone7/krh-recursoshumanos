@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { Plus, Calendar, List, Settings, Filter, Search, FileText } from 'lucide-react';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
@@ -283,7 +284,7 @@ export default function Permisos() {
                           ),
                           fields: [
                             { label: 'Días', value: `${request.total_days}` },
-                            { label: 'Fechas', value: `${format(new Date(request.start_date), 'dd MMM', { locale: es })} - ${format(new Date(request.end_date), 'dd MMM', { locale: es })}` },
+                            { label: 'Fechas', value: `${formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - ${formatDateOnly(request.end_date, 'dd MMM', { locale: es })}` },
                           ],
                           onClick: () => handleViewRequest(request),
                         }))}
@@ -346,7 +347,7 @@ export default function Permisos() {
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell font-medium">
-                          {format(new Date(request.start_date), 'dd MMM', { locale: es })} - {format(new Date(request.end_date), 'dd MMM', { locale: es })}
+                          {formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - {formatDateOnly(request.end_date, 'dd MMM', { locale: es })}
                         </TableCell>
                         <TableCell className="text-center">
                           <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary font-bold text-sm">

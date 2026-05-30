@@ -1,3 +1,4 @@
+import { toDateOnlyString } from '@/lib/dateOnly';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -105,8 +106,8 @@ export function useInitiateTermination() {
           employee_id: employeeId,
           company_id: currentCompanyId,
           termination_type: terminationType as DbTerminationType,
-          termination_date: terminationDate.toISOString().split('T')[0],
-          effective_date: effectiveDate.toISOString().split('T')[0],
+          termination_date: toDateOnlyString(terminationDate),
+          effective_date: toDateOnlyString(effectiveDate),
           reason,
           resignation_date: resignationDate?.toISOString().split('T')[0],
           created_by: user.id,
@@ -138,7 +139,7 @@ export function useInitiateTermination() {
       // For employees_v2, we track termination via employee_work_info
       const { error: workInfoError } = await supabase
         .from('employee_work_info')
-        .update({ termination_date: effectiveDate.toISOString().split('T')[0] })
+        .update({ termination_date: toDateOnlyString(effectiveDate) })
         .eq('employee_id', employeeId)
         .eq('is_current', true);
 
@@ -166,8 +167,8 @@ export function useInitiateTermination() {
         entity_id: termination.id,
         new_values: {
           termination_type: terminationType,
-          termination_date: terminationDate.toISOString().split('T')[0],
-          effective_date: effectiveDate.toISOString().split('T')[0],
+          termination_date: toDateOnlyString(terminationDate),
+          effective_date: toDateOnlyString(effectiveDate),
         },
         user_agent: navigator.userAgent,
       });
@@ -300,7 +301,7 @@ export function useCompleteTermination() {
         .from('contracts')
         .update({
           is_terminated: true,
-          termination_date: effectiveDate.toISOString().split('T')[0],
+          termination_date: toDateOnlyString(effectiveDate),
           termination_reason: reason,
         })
         .eq('id', contractId);
@@ -320,8 +321,8 @@ export function useCompleteTermination() {
         .from('employee_work_info')
         .update({ 
           is_current: false,
-          valid_to: effectiveDate.toISOString().split('T')[0],
-          termination_date: effectiveDate.toISOString().split('T')[0]
+          valid_to: toDateOnlyString(effectiveDate),
+          termination_date: toDateOnlyString(effectiveDate)
         })
         .eq('employee_id', employeeId)
         .eq('is_current', true);

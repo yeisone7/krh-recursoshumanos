@@ -14,6 +14,7 @@ import { PositionOnboardingTemplates } from '@/components/positions/PositionOnbo
 import { ProfileAnnexesTab } from './ProfileAnnexesTab';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 interface Props {
   open: boolean;
@@ -104,7 +105,7 @@ export function PositionProfileDetailDialog({ open, onOpenChange, positionId, po
                   {profile.is_current && <Badge className="bg-success/10 text-success border-success/20">Vigente</Badge>}
                   {profile.effective_date && (
                     <span className="text-xs text-muted-foreground">
-                      desde {format(new Date(profile.effective_date), 'dd MMM yyyy', { locale: es })}
+                      desde {formatDateOnly(profile.effective_date, 'dd MMM yyyy', { locale: es })}
                     </span>
                   )}
                 </div>

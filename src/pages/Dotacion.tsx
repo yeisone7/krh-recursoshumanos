@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { 
   Package, Plus, Search, Filter, Eye, 
   AlertTriangle, CheckCircle, Clock, Calendar,
@@ -468,7 +469,7 @@ export default function Dotacion() {
                                 <TableCell>
                                   <div className="flex flex-col">
                                      <span className="text-[11px] font-bold text-foreground/80">
-                                        {tx.delivery_date ? format(new Date(tx.delivery_date), 'dd MMM yyyy') : '—'}
+                                        {tx.delivery_date ? formatDateOnly(tx.delivery_date, 'dd MMM yyyy') : '—'}
                                      </span>
                                      <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground/40">Entrega</span>
                                   </div>
