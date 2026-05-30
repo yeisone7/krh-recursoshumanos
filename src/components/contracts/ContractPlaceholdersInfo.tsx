@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface PlaceholderInfo {
   key: string;
@@ -79,11 +80,11 @@ const placeholderCategories: { title: string; items: PlaceholderInfo[] }[] = [
   },
 ];
 
-export function ContractPlaceholdersInfo() {
+export function ContractPlaceholdersInfo({ className }: { className?: string }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full gap-2 sm:w-auto">
+        <Button variant="outline" size="sm" className={cn("w-full gap-2 sm:w-auto", className)}>
           <Info className="w-4 h-4" />
           Placeholders
         </Button>
