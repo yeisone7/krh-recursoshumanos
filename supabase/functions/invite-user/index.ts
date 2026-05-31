@@ -7,9 +7,32 @@ const corsHeaders = {
 
 interface InviteRequest {
   email: string;
+  mobile: string;
   roles: string[];
   companyId: string;
 }
+
+const normalizeColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.length === 10 && digits.startsWith("3")) {
+    return `+57${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith("57") && digits[2] === "3") {
+    return `+${digits}`;
+  }
+
+  return value.trim();
+};
+
+const isValidColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return (
+    (digits.length === 10 && digits.startsWith("3")) ||
+    (digits.length === 12 && digits.startsWith("57") && digits[2] === "3")
+  );
+};
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -67,11 +90,21 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: InviteRequest = await req.json();
-    const { email, roles: newRoles, companyId } = body;
+    const { email, mobile, roles: newRoles, companyId } = body;
 
-    if (!email || !newRoles || !companyId) {
+    if (!email || !mobile || !newRoles || !companyId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: email, roles, companyId" }),
+        JSON.stringify({ error: "Missing required fields: email, mobile, roles, companyId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const normalizedMobile = normalizeColombianMobile(mobile);
+    if (!isValidColombianMobile(normalizedMobile)) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid Colombian mobile number. Use 300 123 4567 or +57 300 123 4567",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -118,6 +151,22 @@ Deno.serve(async (req) => {
 
       invitedUserId = inviteData.user.id;
       console.log("User invited successfully:", invitedUserId);
+    }
+
+    // Persist the user's mobile number for admin visibility
+    const { error: profileError } = await supabaseAdmin
+      .from("user_profiles")
+      .upsert({
+        id: invitedUserId,
+        mobile: normalizedMobile,
+      }, { onConflict: "id" });
+
+    if (profileError) {
+      console.error("Profile update error:", profileError);
+      return new Response(
+        JSON.stringify({ error: "Failed to save user mobile number" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Assign roles

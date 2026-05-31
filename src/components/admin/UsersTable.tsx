@@ -33,7 +33,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search, Mail, Loader2, Calendar, Settings2, Trash2, Pencil } from 'lucide-react';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search, Mail, Phone, Loader2, Calendar, Settings2, Trash2, Pencil } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
@@ -104,6 +104,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     return users.filter(u => 
       getUserDisplayName(u).toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
+      u.mobile?.toLowerCase().includes(q) ||
       u.roles.some(r => r.toLowerCase().includes(q)) ||
       u.custom_roles.some(r => r.toLowerCase().includes(q))
     );
@@ -315,6 +316,10 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           ),
           fields: [
             {
+              label: 'Celular',
+              value: <span className="text-[10px] font-black uppercase text-slate-900">{user.mobile || 'NO REGISTRADO'}</span>,
+            },
+            {
               label: 'Privilegios',
               value: (
                 <div className="flex flex-wrap gap-1">
@@ -416,6 +421,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                           <Mail className="h-3.5 w-3.5 text-primary" />
                           <p className="max-w-[200px] truncate text-[10px] font-semibold lowercase tracking-tight text-slate-500">{user.email || 'correo no disponible'}</p>
                         </div>
+                        {user.mobile && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-3.5 w-3.5 text-primary" />
+                            <p className="max-w-[200px] truncate text-[10px] font-semibold tracking-tight text-slate-500">{user.mobile}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </TableCell>

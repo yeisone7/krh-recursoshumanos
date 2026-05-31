@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Mail, ShieldCheck, UserPlus } from 'lucide-react';
+import { Loader2, Mail, Phone, ShieldCheck, UserPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -31,8 +31,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomRoles } from '@/hooks/useRolesPermissions';
 
+const normalizeColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+
+  if (digits.length === 10 && digits.startsWith('3')) {
+    return `+57${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith('57') && digits[2] === '3') {
+    return `+${digits}`;
+  }
+
+  return value.trim();
+};
+
+const isValidColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, '');
+
+  return (
+    (digits.length === 10 && digits.startsWith('3')) ||
+    (digits.length === 12 && digits.startsWith('57') && digits[2] === '3')
+  );
+};
+
 const inviteSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
+  mobile: z
+    .string()
+    .trim()
+    .min(1, 'El número de celular es requerido')
+    .refine(isValidColombianMobile, {
+      message: 'Ingresa un celular colombiano válido, por ejemplo +57 300 123 4567',
+    }),
   roles: z.array(z.string()).min(1, 'Selecciona al menos un rol'),
 });
 
@@ -54,6 +84,7 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
     resolver: zodResolver(inviteSchema),
     defaultValues: {
       email: '',
+      mobile: '',
       roles: [],
     },
   });
@@ -79,6 +110,7 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
       const { error } = await supabase.functions.invoke('invite-user', {
         body: {
           email: data.email,
+          mobile: normalizeColombianMobile(data.mobile),
           roles: data.roles,
           companyId: currentCompanyId,
         },
@@ -125,31 +157,62 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
               <section className="rounded-2xl border border-border/70 bg-muted/25 p-4 shadow-sm sm:p-5">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-primary" />
-                        <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                          Correo electrónico
-                        </FormLabel>
-                      </div>
-                      <FormControl>
-                        <Input
-                          placeholder="usuario@empresa.com"
-                          {...field}
-                          className="h-12 rounded-xl border-border/70 bg-background px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
-                        />
-                      </FormControl>
-                      <FormDescription className="text-sm leading-relaxed text-muted-foreground">
-                        El usuario recibirá un enlace para crear su cuenta.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-primary" />
+                          <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            Correo electrónico
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Input
+                            placeholder="usuario@empresa.com"
+                            {...field}
+                            className="h-12 rounded-xl border-border/70 bg-background px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-sm leading-relaxed text-muted-foreground">
+                          El usuario recibirá un enlace para crear su cuenta.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="mobile"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4 text-primary" />
+                          <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            Número de celular
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Input
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel"
+                            placeholder="+57 300 123 4567"
+                            {...field}
+                            className="h-12 rounded-xl border-border/70 bg-background px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-sm leading-relaxed text-muted-foreground">
+                          Usa un celular colombiano válido. Acepta 300 123 4567 o +57 300 123 4567.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </section>
 
               <section className="rounded-2xl border border-border/70 bg-muted/20 p-4 shadow-sm sm:p-5">
@@ -170,7 +233,10 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                             Selecciona uno o varios roles para definir el nivel de acceso inicial.
                           </FormDescription>
                         </div>
-                        <Badge variant="secondary" className="shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">
+                        <Badge
+                          variant="secondary"
+                          className="shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+                        >
                           {selectedCount} seleccionados
                         </Badge>
                       </div>
