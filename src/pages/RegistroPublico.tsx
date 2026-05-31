@@ -77,9 +77,9 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
   documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Identidad' },
   avatarUrl: { label: 'Foto del Empleado', type: 'avatar', section: 'Identidad' },
   firstName: { label: 'Primer Nombre', type: 'text', section: 'Identidad' },
-  middleName: { label: 'Segundo Nombre', type: 'text', section: 'Identidad' },
+  middleName: { label: 'Segundo Nombre (si aplica)', type: 'text', section: 'Identidad' },
   lastName: { label: 'Primer Apellido', type: 'text', section: 'Identidad' },
-  secondLastName: { label: 'Segundo Apellido', type: 'text', section: 'Identidad' },
+  secondLastName: { label: 'Segundo Apellido (si aplica)', type: 'text', section: 'Identidad' },
   birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Identidad' },
   birthCity: { label: 'Ciudad de Nacimiento', type: 'city-birth', section: 'Identidad' },
   birthDepartment: { label: 'Departamento de Nacimiento', type: 'hidden-dept', section: 'Identidad' },
@@ -137,6 +137,27 @@ const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'doc
 
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
+
+const normalizeNameText = (value?: string | null) => (value || '').trim().replace(/\s+/g, ' ');
+const compareNameText = (value?: string | null) =>
+  normalizeNameText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase();
+
+const getEmployeeNamePayload = (formData: Record<string, any>) => {
+  const firstName = normalizeNameText(formData.firstName);
+  const middleName = normalizeNameText(formData.middleName);
+  const lastName = normalizeNameText(formData.lastName);
+  const secondLastName = normalizeNameText(formData.secondLastName);
+
+  return {
+    firstName,
+    middleName: middleName && compareNameText(middleName) !== compareNameText(firstName) ? middleName : null,
+    lastName,
+    secondLastName: secondLastName && compareNameText(secondLastName) !== compareNameText(lastName) ? secondLastName : null,
+  };
+};
 
 const MONTH_OPTIONS = [
   { value: '01', label: 'Enero' },
@@ -452,6 +473,7 @@ export default function RegistroPublico() {
       let result: any;
 
       if (isEmployee) {
+        const employeeNamePayload = getEmployeeNamePayload(formData);
         let employeeId = formData.employeeId;
 
         if (!employeeId) {
@@ -464,10 +486,10 @@ export default function RegistroPublico() {
         if (!employeeId) {
           const { data, error } = await supabase.rpc('submit_employee_registration', {
             p_token: tokenParam!,
-            p_first_name: formData.firstName || '',
-            p_last_name: formData.lastName || '',
-            p_middle_name: formData.middleName || null,
-            p_second_last_name: formData.secondLastName || null,
+            p_first_name: employeeNamePayload.firstName,
+            p_last_name: employeeNamePayload.lastName,
+            p_middle_name: employeeNamePayload.middleName,
+            p_second_last_name: employeeNamePayload.secondLastName,
             p_document_type: formData.documentType || 'CC',
             p_document_number: formData.documentNumber || '',
             p_birth_date: formData.birthDate || null,
@@ -533,10 +555,10 @@ export default function RegistroPublico() {
           const { data, error } = await supabase.rpc('update_employee_from_registration', {
             p_token: tokenParam!,
             p_employee_id: employeeId,
-            p_first_name: formData.firstName || '',
-            p_last_name: formData.lastName || '',
-            p_middle_name: formData.middleName || null,
-            p_second_last_name: formData.secondLastName || null,
+            p_first_name: employeeNamePayload.firstName,
+            p_last_name: employeeNamePayload.lastName,
+            p_middle_name: employeeNamePayload.middleName,
+            p_second_last_name: employeeNamePayload.secondLastName,
             p_document_type: formData.documentType || 'CC',
             p_document_number: formData.documentNumber || '',
             p_birth_date: formData.birthDate || null,
