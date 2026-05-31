@@ -240,8 +240,8 @@ export default function CentroNotificaciones() {
       )}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto max-w-full justify-start gap-2 overflow-x-auto bg-background p-1.5 rounded-[1.5rem] border border-border/50">
+        <div className="mb-6 overflow-x-auto rounded-[1.75rem] border border-border/70 bg-white p-1.5 shadow-sm">
+          <TabsList className="grid h-auto min-w-max grid-cols-6 gap-1 bg-transparent p-0">
             {[
               { value: 'radar', label: 'RADAR DE ALERTAS' },
               { value: 'alerts', label: 'ALERTAS EN APP' },
@@ -253,7 +253,7 @@ export default function CentroNotificaciones() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all whitespace-nowrap relative"
+                className="h-10 rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] text-muted-foreground shadow-none transition-all whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
               >
                 {tab.label}
               </TabsTrigger>
