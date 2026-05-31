@@ -375,7 +375,7 @@ export function NotificationRulesManager() {
                     </div>
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
                     {channelConfig.map((channel) => {
                       const Icon = channel.icon;
                       const checked = rule?.[channel.key] ?? false;
@@ -383,19 +383,19 @@ export function NotificationRulesManager() {
                         <label
                           key={channel.key}
                           className={cn(
-                            'grid min-h-[110px] cursor-pointer grid-rows-[1fr_auto] gap-3 rounded-2xl border p-3 transition-all',
+                            'grid min-h-[132px] cursor-pointer grid-rows-[1fr_auto] gap-4 rounded-2xl border p-4 transition-all',
                             isActive
                               ? channelToneStyles[channel.tone]
                               : 'border-border/50 bg-muted/20 text-muted-foreground'
                           )}
                         >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', checked && isActive ? channelChipStyles[channel.tone] : 'bg-white/80 text-muted-foreground')}>
+                          <div className="flex min-w-0 items-start gap-3">
+                            <div className={cn('mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', checked && isActive ? channelChipStyles[channel.tone] : 'bg-white/80 text-muted-foreground')}>
                               <Icon className="h-4 w-4" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-black leading-tight">{channel.label}</p>
-                              <p className="truncate text-[11px] leading-tight text-muted-foreground">{channel.description}</p>
+                            <div className="min-w-0 space-y-1">
+                              <p className="text-sm font-black leading-tight text-foreground">{channel.label}</p>
+                              <p className="text-[11px] leading-snug text-muted-foreground">{channel.description}</p>
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-2">
