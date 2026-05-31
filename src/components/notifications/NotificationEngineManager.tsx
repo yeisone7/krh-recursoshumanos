@@ -442,6 +442,7 @@ function EventDialog({
               <p className="text-xs font-semibold text-red-600">{payloadError}</p>
             )}
           </div>
+          </div>
         </div>
         <DialogFooter className="shrink-0 border-t border-slate-200 bg-white px-5 pb-4 pt-3 shadow-[0_-12px_30px_rgba(15,23,42,0.06)] sm:px-6">
           <Button className="h-11 rounded-xl px-6 font-bold" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
