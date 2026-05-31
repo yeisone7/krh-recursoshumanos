@@ -422,7 +422,11 @@ function AlertInfographics({ alerts, stats }: { alerts: UnifiedAlert[]; stats: R
   );
 }
 
-export default function Alertas() {
+interface AlertasProps {
+  embedded?: boolean;
+}
+
+export default function Alertas({ embedded = false }: AlertasProps = {}) {
   const navigate = useNavigate();
   const { data: alerts, isLoading, error } = useUnifiedAlerts();
   const stats = useAlertStats(alerts);
@@ -491,9 +495,9 @@ export default function Alertas() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col space-y-4 sm:space-y-5">
+    <div className={cn("flex min-h-0 flex-col space-y-4 sm:space-y-5", !embedded && "h-full")}>
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent px-5 py-4 shadow-sm sm:px-7 sm:py-5">
+      {!embedded && <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent px-5 py-4 shadow-sm sm:px-7 sm:py-5">
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/10 sm:h-14 sm:w-14">
             <Bell className="h-6 w-6 text-primary-foreground sm:h-7 sm:w-7" />
@@ -510,7 +514,7 @@ export default function Alertas() {
         {/* Decorative elements */}
         
         
-      </div>
+      </div>}
 
       {/* KPI Tiles */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

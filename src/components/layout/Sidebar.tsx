@@ -302,7 +302,7 @@ const getQuickAccessStyles = (label: string, isActive: boolean) => {
       iconColorActive: 'text-blue-500 dark:text-blue-400',
       iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'
     },
-    'Alertas': {
+    'Notificaciones': {
       activeClass: 'bg-rose-50/90 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 shadow-[0_2px_8px_rgba(225,29,72,0.08)] font-bold',
       hoverClass: 'hover:bg-rose-50/60 dark:hover:bg-rose-950/10 hover:border-rose-200/55 hover:text-rose-600 dark:hover:text-rose-400',
       iconColorActive: 'text-rose-500 dark:text-rose-400',
@@ -372,10 +372,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const toolsNavItems = useMemo<NavItem[]>(() => [
     ...filteredToolsNavItemsBase,
-    ...(canViewItem({ label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas' })
+    ...(canViewItem({ label: 'Notificaciones', icon: <Bell className="w-5 h-5" />, href: '/notificaciones', moduleCode: 'alertas' })
       ? [
-          { label: 'Alertas', icon: <Bell className="w-5 h-5" />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
-          { label: 'Notificaciones', icon: <Bell className="w-5 h-5" />, href: '/notificaciones', moduleCode: 'alertas' },
+          { label: 'Notificaciones', icon: <Bell className="w-5 h-5" />, href: '/notificaciones', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
         ]
       : []),
   ], [alertCount, filteredToolsNavItemsBase, canViewItem]);
@@ -383,7 +382,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const quickAccessItems = useMemo<NavItem[]>(() => [
     { label: 'Empleados', icon: <Users className="size-5 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
     { label: 'Contratos', icon: <FileText className="size-5 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
-    { label: 'Alertas', icon: <Bell className="size-5 shrink-0" strokeWidth={2} />, href: '/alertas', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
+    { label: 'Notificaciones', icon: <Bell className="size-5 shrink-0" strokeWidth={2} />, href: '/notificaciones', moduleCode: 'alertas', badge: alertCount > 0 ? alertCount : undefined },
   ].filter(canViewQuickAccessItem), [alertCount, canViewQuickAccessItem]);
 
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
@@ -545,7 +544,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               <Tooltip key={item.href} delayDuration={0}>
                 <TooltipTrigger asChild>{content}</TooltipTrigger>
                 <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg">
-                  {item.label === 'Alertas' ? 'Alertas Activas' : item.label}
+                  {item.label === 'Notificaciones' ? 'Centro de Notificaciones' : item.label}
                 </TooltipContent>
               </Tooltip>
             ) : content;

@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { OnboardingGuard } from "@/components/auth/OnboardingGuard";
@@ -17,7 +17,6 @@ import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
 import Contratos from "./pages/Contratos";
 import Incapacidades from "./pages/Incapacidades";
-import Alertas from "./pages/Alertas";
 import CentroNotificaciones from "./pages/CentroNotificaciones";
 import Dotacion from "./pages/Dotacion";
 import Examenes from "./pages/Examenes";
@@ -162,7 +161,7 @@ const App = () => (
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
                         <Route path="/incapacidades" element={<P module="incapacidades"><Incapacidades /></P>} />
                         <Route path="/incapacidades/analitica" element={<P module="analitica_incapacidades"><Suspense fallback={null}><AnaliticaIncapacidades /></Suspense></P>} />
-                        <Route path="/alertas" element={<P module="alertas"><Alertas /></P>} />
+                        <Route path="/alertas" element={<P module="alertas"><Navigate to="/notificaciones" replace /></P>} />
                         <Route path="/notificaciones" element={<P module="alertas"><CentroNotificaciones /></P>} />
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />

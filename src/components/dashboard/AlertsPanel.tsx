@@ -72,7 +72,7 @@ export function AlertsPanel() {
   };
 
   const handleViewAll = () => {
-    navigate('/alertas');
+    navigate('/notificaciones');
   };
 
   if (isLoading) {
