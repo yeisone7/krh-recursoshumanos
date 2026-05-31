@@ -339,7 +339,7 @@ export default function Analiticas() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SmallKpi label="Cursos activos" value={analytics.totalCourses} helper={`${analytics.publishedCourses} publicados y ${analytics.mandatoryCourses} obligatorios`} icon={BookOpen} tone="cyan" />
             <SmallKpi label="Personas capacitadas" value={analytics.uniquePeople} helper={`${analytics.completions} evidencias registradas`} icon={Users} tone="blue" />
-            <SmallKpi label="Certificables" value={analytics.certificationCourses} helper={`${stats?.certificatesThisYear || 0} certificados emitidos este ano`} icon={Award} tone="emerald" />
+            <SmallKpi label="Certificables" value={stats?.certificatesThisYear || 0} helper="certificados emitidos este ano" icon={Award} tone="emerald" />
             <SmallKpi label="Horas formativas" value={analytics.totalHours} helper="Suma de duracion del catalogo activo" icon={CalendarCheck} tone="orange" />
           </div>
 
