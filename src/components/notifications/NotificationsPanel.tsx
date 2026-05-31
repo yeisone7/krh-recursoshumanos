@@ -223,9 +223,9 @@ export function NotificationsPanel() {
               <Button
                 variant="ghost"
                 className="w-full text-sm"
-                onClick={() => navigate('/alertas')}
+                onClick={() => navigate('/notificaciones')}
               >
-                Ver Centro de Alertas
+                Ver Centro de Notificaciones
               </Button>
             </div>
           </>
