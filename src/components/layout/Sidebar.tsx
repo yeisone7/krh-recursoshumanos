@@ -355,6 +355,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     Jornadas: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
   };
 
+  const sidebarHoverTone = 'hover:bg-primary hover:border-primary/30 hover:text-primary-foreground';
+  const sidebarActiveTone = 'bg-primary border-primary/30 text-primary-foreground shadow-[0_4px_12px_rgba(14,165,233,0.18)] ring-1 ring-primary/20';
+  const sidebarIconHoverTone = 'group-hover:bg-primary group-hover:border-primary/30 group-hover:text-primary-foreground group-hover:shadow-md group-hover:shadow-primary/20';
+
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
   const filteredEvaluacionesItem = useMemo(() => filterItems([evaluacionesItem])[0], [filterItems]);
   const filteredCatalogosItem = useMemo(() => filterItems([catalogosItem])[0], [filterItems]);
@@ -390,18 +394,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "flex items-center gap-3 rounded-xl transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+          "flex items-center gap-3 rounded-xl border border-transparent transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isCollapsed
             ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
             : "px-4 py-2.5",
           isActive ?
-          "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-          "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
+          sidebarActiveTone :
+          cn("text-sidebar-foreground font-medium", sidebarHoverTone)
         )}>
 
           <span className={cn(
           "transition-colors",
-          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
+          isActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
         )}>
             {item.icon}
           </span>
@@ -549,17 +553,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
         "flex items-center gap-3 rounded-xl transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        "border border-transparent",
         isCollapsed
           ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
           : "px-4 py-2.5",
         isAnyChildActive ?
-        "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-        "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
+        sidebarActiveTone :
+        cn("text-sidebar-foreground font-medium", sidebarHoverTone)
       )}>
 
         <span className={cn(
         "transition-colors",
-        isAnyChildActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
+        isAnyChildActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
       )}>
           {item.icon}
         </span>
@@ -600,8 +605,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       <div className={cn(
                       "flex items-center gap-2 px-3 py-1.5 text-sm font-bold transition-colors [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
-                        "bg-sidebar-accent text-sidebar-accent-foreground font-medium" :
-                      "text-sidebar-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
+                        sidebarActiveTone :
+                      cn("text-sidebar-foreground", sidebarHoverTone)
                     )}>
                         {child.icon}
                         <span>{child.label}</span>
@@ -632,15 +637,15 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+                      "flex items-center gap-2 px-3 py-2 rounded-lg border border-transparent transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ?
-                      "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm font-semibold" :
-                      "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent font-medium"
+                      sidebarActiveTone :
+                      cn("text-sidebar-foreground font-medium", sidebarHoverTone)
                     )}>
 
                       <span className={cn(
                       "transition-colors",
-                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"
+                      isActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
                     )}>
                         {child.icon}
                       </span>
@@ -864,9 +869,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                         "relative flex transition-all duration-200 group",
                         isCollapsed 
                           ? "mx-auto h-11 w-11 items-center justify-center rounded-lg p-0" 
-                          : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
-                        isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-[0_4px_12px_rgba(14,165,233,0.08)] ring-1 ring-primary/20",
-                        isActive && isCollapsed && "bg-sidebar-accent"
+                          : cn(
+                              "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
+                              "hover:bg-primary hover:border-primary/30 hover:text-primary-foreground"
+                            ),
+                        isActive && !isCollapsed && sidebarActiveTone,
+                        isActive && isCollapsed && "bg-primary"
                       )}
                     >
                       {/* Icon Container */}
@@ -874,7 +882,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                         "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
                         isCollapsed 
                           ? "h-full w-full" 
-                          : cn("h-9 w-9 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
+                          : cn(
+                              "h-9 w-9 rounded-xl border",
+                              isActive
+                                ? "border-white/20 bg-white/15 text-white shadow-none"
+                                : cn(colorClass, sidebarIconHoverTone)
+                            )
                       )}>
                         {item.icon}
                       </div>
@@ -882,7 +895,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       {!isCollapsed && (
                         <span className={cn(
                           "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
-                          isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
+                          isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-primary-foreground"
                         )}>
                           {item.label}
                         </span>
@@ -902,7 +915,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
                       {/* Active Indicator Bar */}
                       {isActive && !isCollapsed && (
-                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-full" />
+                        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/90 rounded-full" />
                       )}
                     </motion.div>
                   </Link>
