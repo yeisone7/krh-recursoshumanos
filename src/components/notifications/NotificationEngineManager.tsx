@@ -202,14 +202,23 @@ function ChannelPicker({
   };
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {ENGINE_CHANNELS.map((channel) => {
         const Icon = channelIcons[channel];
+        const isSelected = selected.includes(channel);
         return (
-          <label key={channel} className="flex cursor-pointer items-center gap-3 rounded-xl border border-border/70 p-3 hover:border-primary/40">
-            <Checkbox checked={selected.includes(channel)} onCheckedChange={(checked) => toggle(channel, checked === true)} />
-            <Icon className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">{ENGINE_CHANNEL_LABELS[channel]}</span>
+          <label
+            key={channel}
+            className={cn(
+              'flex min-h-16 cursor-pointer items-center gap-3 rounded-2xl border p-3 transition-colors',
+              isSelected ? 'border-primary/40 bg-primary/5 text-primary' : 'border-border/70 bg-background hover:border-primary/30 hover:bg-muted/30',
+            )}
+          >
+            <Checkbox checked={isSelected} onCheckedChange={(checked) => toggle(channel, checked === true)} />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="min-w-0 truncate text-xs font-black uppercase tracking-wider text-foreground">{ENGINE_CHANNEL_LABELS[channel]}</span>
           </label>
         );
       })}
@@ -314,38 +323,38 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{event ? 'Editar evento' : 'Nuevo evento'}</DialogTitle>
+      <DialogContent className="max-h-[92vh] overflow-hidden p-0 sm:max-w-4xl">
+        <DialogHeader className="border-b border-border/70 bg-muted/20 px-6 py-5">
+          <DialogTitle className="text-xl font-black tracking-tight">{event ? 'Editar evento' : 'Nuevo evento'}</DialogTitle>
           <DialogDescription>Catalogo central por empresa.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid max-h-[calc(92vh-11rem)] gap-6 overflow-y-auto px-6 py-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Clave tecnica</Label>
-            <Input value={draft.event_key} onChange={(e) => setDraft((prev) => ({ ...prev, event_key: e.target.value }))} placeholder="ContratoPorVencer" />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Clave tecnica</Label>
+            <Input className="h-11 rounded-xl" value={draft.event_key} onChange={(e) => setDraft((prev) => ({ ...prev, event_key: e.target.value }))} placeholder="ContratoPorVencer" />
           </div>
           <div className="space-y-2">
-            <Label>Nombre</Label>
-            <Input value={draft.name} onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))} />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Nombre</Label>
+            <Input className="h-11 rounded-xl" value={draft.name} onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))} />
           </div>
           <div className="space-y-2">
-            <Label>Modulo origen</Label>
-            <Input value={draft.source_module} onChange={(e) => setDraft((prev) => ({ ...prev, source_module: e.target.value }))} />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Modulo origen</Label>
+            <Input className="h-11 rounded-xl" value={draft.source_module} onChange={(e) => setDraft((prev) => ({ ...prev, source_module: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Tipo</Label>
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Tipo</Label>
               <Select value={draft.kind} onValueChange={(value) => setDraft((prev) => ({ ...prev, kind: value as NotificationEngineKind }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ENGINE_KINDS.map((kind) => <SelectItem key={kind} value={kind}>{ENGINE_KIND_LABELS[kind]}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Prioridad</Label>
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Prioridad</Label>
               <Select value={draft.default_priority} onValueChange={(value) => setDraft((prev) => ({ ...prev, default_priority: value as NotificationEnginePriority }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ENGINE_PRIORITIES.map((priority) => <SelectItem key={priority} value={priority}>{ENGINE_PRIORITY_LABELS[priority]}</SelectItem>)}
                 </SelectContent>
@@ -353,27 +362,27 @@ function EventDialog({
             </div>
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label>Descripcion</Label>
-            <Textarea value={draft.description} onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))} />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Descripcion</Label>
+            <Textarea className="min-h-24 rounded-xl" value={draft.description} onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))} />
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label>Canales por defecto</Label>
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Canales por defecto</Label>
             <ChannelPicker selected={draft.default_channels} onChange={(default_channels) => setDraft((prev) => ({ ...prev, default_channels }))} />
           </div>
           <div className="space-y-2">
-            <Label>Variables</Label>
-            <Input value={draft.variables} onChange={(e) => setDraft((prev) => ({ ...prev, variables: e.target.value }))} placeholder="Empleado, Empresa, Fecha" />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Variables</Label>
+            <Input className="h-11 rounded-xl" value={draft.variables} onChange={(e) => setDraft((prev) => ({ ...prev, variables: e.target.value }))} placeholder="Empleado, Empresa, Fecha" />
           </div>
-          <label className="flex items-center gap-3 rounded-xl border border-border/70 p-3">
+          <label className="flex min-h-20 items-center gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
             <Switch checked={draft.is_active} onCheckedChange={(is_active) => setDraft((prev) => ({ ...prev, is_active }))} />
-            <span className="text-sm font-semibold">Activo</span>
+            <span className="text-sm font-black uppercase tracking-wider">Activo</span>
           </label>
           <div className="space-y-2 sm:col-span-2">
-            <Label>Payload de ejemplo</Label>
-            <Textarea className="min-h-36 font-mono text-xs" value={draft.sample_payload} onChange={(e) => setDraft((prev) => ({ ...prev, sample_payload: e.target.value }))} />
+            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Payload de ejemplo</Label>
+            <Textarea className="min-h-36 rounded-xl font-mono text-xs" value={draft.sample_payload} onChange={(e) => setDraft((prev) => ({ ...prev, sample_payload: e.target.value }))} />
           </div>
         </div>
-        <DialogFooter>
+        <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleSubmit} disabled={isSaving || !draft.event_key.trim() || !draft.name.trim()}>
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
