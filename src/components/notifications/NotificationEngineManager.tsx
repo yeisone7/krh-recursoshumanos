@@ -323,7 +323,7 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="relative !top-3 flex max-h-[calc(100dvh-1.5rem)] !translate-y-0 flex-col overflow-hidden rounded-[1.75rem] border-slate-200 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/20 sm:!top-4 sm:max-w-4xl">
+      <DialogContent className="!fixed !left-1/2 !top-3 flex max-h-[calc(100dvh-1.5rem)] !translate-x-[-50%] !translate-y-0 flex-col overflow-hidden rounded-[1.75rem] border-slate-200 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/20 sm:!top-4 sm:max-w-4xl">
         <DialogHeader className="shrink-0 border-b border-sky-100 bg-white px-5 pb-4 pt-5 sm:px-6">
           <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300" />
           <div className="flex items-start gap-4 pr-8">
