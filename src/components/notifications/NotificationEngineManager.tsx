@@ -289,7 +289,7 @@ function EventDialog({
     default_priority: 'info',
     default_channels: ['in_app'],
     variables: '',
-    sample_payload: '{}',
+    sample_payload: '',
     is_active: true,
   });
 
@@ -305,7 +305,7 @@ function EventDialog({
       default_priority: event?.default_priority || 'info',
       default_channels: event?.default_channels?.length ? event.default_channels : ['in_app'],
       variables: toVariableText(event?.variables),
-      sample_payload: toPrettyJson(event?.sample_payload),
+      sample_payload: event ? toPrettyJson(event?.sample_payload) : '',
       is_active: event?.is_active ?? true,
     });
   }, [event, open]);
