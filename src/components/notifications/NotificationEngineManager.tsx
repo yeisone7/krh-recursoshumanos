@@ -45,6 +45,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCustomRoles } from '@/hooks/useRolesPermissions';
+import { supabase } from '@/integrations/supabase/client';
 import {
   ENGINE_CHANNEL_LABELS,
   ENGINE_CHANNELS,
@@ -114,11 +115,32 @@ function parseJsonObject(value: string, fallback: Record<string, unknown> = {}) 
   return parsed as Record<string, unknown>;
 }
 
+function readJsonObject(value: string) {
+  try {
+    return parseJsonObject(value);
+  } catch {
+    return {};
+  }
+}
+
 function parseVariables(value: string) {
   return value
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function getTwilioProviderConfig(provider?: NotificationEngineChannelProvider | null) {
+  return {
+    provider: 'twilio',
+    mode: String(provider?.config?.mode || 'sandbox'),
+    account_sid: String(provider?.config?.account_sid || ''),
+    auth_token_secret: String(provider?.config?.auth_token_secret || 'TWILIO_AUTH_TOKEN'),
+    sender_id: String(provider?.config?.sender_id || 'whatsapp:+14155238886'),
+    sender_label: String(provider?.config?.sender_label || 'Sandbox de Twilio'),
+    content_sid: String(provider?.config?.content_sid || ''),
+    status_callback_url: String(provider?.config?.status_callback_url || ''),
+  };
 }
 
 function PriorityBadge({ priority }: { priority: NotificationEnginePriority }) {
@@ -868,19 +890,56 @@ function ChannelProviderDialog({
     retry_policy: '{}',
   });
 
+  const isTwilioWhatsApp = draft.channel === 'whatsapp' && draft.provider_key.trim().toLowerCase() === 'twilio';
+  const twilioConfig = readJsonObject(draft.config);
+
+  const updateTwilioConfig = (patch: Record<string, unknown>) => {
+    setDraft((prev) => {
+      const current = readJsonObject(prev.config);
+      return {
+        ...prev,
+        config: toPrettyJson({
+          ...current,
+          provider: 'twilio',
+          ...patch,
+        }),
+      };
+    });
+  };
+
   useEffect(() => {
     if (!open) return;
+    const defaultTwilio = getTwilioProviderConfig(provider);
     setDraft({
       id: provider?.id,
       channel: provider?.channel || 'in_app',
       provider_key: provider?.provider_key || '',
       display_name: provider?.display_name || '',
       is_enabled: provider?.is_enabled ?? false,
-      config: toPrettyJson(provider?.config),
-      throttle_per_minute: provider?.throttle_per_minute ? String(provider.throttle_per_minute) : '',
+      config: provider?.channel === 'whatsapp' && provider?.provider_key === 'twilio'
+        ? toPrettyJson({ ...defaultTwilio, ...(provider.config || {}) })
+        : toPrettyJson(provider?.config),
+      throttle_per_minute: provider?.throttle_per_minute ? String(provider.throttle_per_minute) : (provider?.channel === 'whatsapp' ? '20' : ''),
       retry_policy: toPrettyJson(provider?.retry_policy || { max_attempts: 3, backoff_minutes: 15 }),
     });
   }, [open, provider]);
+
+  const handleChannelChange = (channel: NotificationEngineChannel) => {
+    setDraft((prev) => {
+      if (channel === 'whatsapp' && (!prev.provider_key || prev.provider_key === 'future_whatsapp')) {
+        return {
+          ...prev,
+          channel,
+          provider_key: 'twilio',
+          display_name: prev.display_name || 'Twilio WhatsApp',
+          config: toPrettyJson(getTwilioProviderConfig(provider)),
+          throttle_per_minute: prev.throttle_per_minute || '20',
+          retry_policy: toPrettyJson({ max_attempts: 3, backoff_minutes: 10 }),
+        };
+      }
+      return { ...prev, channel };
+    });
+  };
 
   const handleSubmit = async () => {
     try {
@@ -911,7 +970,7 @@ function ChannelProviderDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label>Canal</Label>
-            <Select value={draft.channel} onValueChange={(channel) => setDraft((prev) => ({ ...prev, channel: channel as NotificationEngineChannel }))}>
+            <Select value={draft.channel} onValueChange={(channel) => handleChannelChange(channel as NotificationEngineChannel)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {ENGINE_CHANNELS.map((channel) => <SelectItem key={channel} value={channel}>{ENGINE_CHANNEL_LABELS[channel]}</SelectItem>)}
@@ -936,10 +995,81 @@ function ChannelProviderDialog({
               <Input type="number" min={1} value={draft.throttle_per_minute} onChange={(e) => setDraft((prev) => ({ ...prev, throttle_per_minute: e.target.value }))} />
             </div>
           </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Configuracion JSON</Label>
-            <Textarea className="min-h-32 font-mono text-xs" value={draft.config} onChange={(e) => setDraft((prev) => ({ ...prev, config: e.target.value }))} />
-          </div>
+          {isTwilioWhatsApp ? (
+            <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:col-span-2">
+              <div>
+                <h4 className="text-sm font-black text-foreground">Vinculacion Twilio WhatsApp</h4>
+                <p className="text-xs text-muted-foreground">
+                  El token no se guarda aqui. Define el secreto en Supabase con el nombre indicado.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Modo</Label>
+                  <Select value={String(twilioConfig.mode || 'sandbox')} onValueChange={(mode) => updateTwilioConfig({ mode })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sandbox">Sandbox</SelectItem>
+                      <SelectItem value="production">Produccion</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secreto Auth Token</Label>
+                  <Input
+                    value={String(twilioConfig.auth_token_secret || 'TWILIO_AUTH_TOKEN')}
+                    onChange={(e) => updateTwilioConfig({ auth_token_secret: e.target.value })}
+                    placeholder="TWILIO_AUTH_TOKEN"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account SID</Label>
+                  <Input
+                    value={String(twilioConfig.account_sid || '')}
+                    onChange={(e) => updateTwilioConfig({ account_sid: e.target.value })}
+                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sender WhatsApp</Label>
+                  <Input
+                    value={String(twilioConfig.sender_id || '')}
+                    onChange={(e) => updateTwilioConfig({ sender_id: e.target.value })}
+                    placeholder="whatsapp:+14155238886"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Etiqueta del sender</Label>
+                  <Input
+                    value={String(twilioConfig.sender_label || '')}
+                    onChange={(e) => updateTwilioConfig({ sender_label: e.target.value })}
+                    placeholder="Linea oficial RRHH"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Content SID opcional</Label>
+                  <Input
+                    value={String(twilioConfig.content_sid || '')}
+                    onChange={(e) => updateTwilioConfig({ content_sid: e.target.value })}
+                    placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Status Callback opcional</Label>
+                  <Input
+                    value={String(twilioConfig.status_callback_url || '')}
+                    onChange={(e) => updateTwilioConfig({ status_callback_url: e.target.value })}
+                    placeholder="Se genera automaticamente si se deja vacio"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Configuracion JSON</Label>
+              <Textarea className="min-h-32 font-mono text-xs" value={draft.config} onChange={(e) => setDraft((prev) => ({ ...prev, config: e.target.value }))} />
+            </div>
+          )}
           <div className="space-y-2 sm:col-span-2">
             <Label>Reintentos JSON</Label>
             <Textarea className="min-h-24 font-mono text-xs" value={draft.retry_policy} onChange={(e) => setDraft((prev) => ({ ...prev, retry_policy: e.target.value }))} />
@@ -957,8 +1087,88 @@ function ChannelProviderDialog({
   );
 }
 
+function TwilioWhatsAppTestDialog({
+  open,
+  onOpenChange,
+  provider,
+  companyId,
+  onSent,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  provider: NotificationEngineChannelProvider | null;
+  companyId: string | null | undefined;
+  onSent: () => void;
+}) {
+  const [to, setTo] = useState('');
+  const [body, setBody] = useState('Prueba de notificacion WhatsApp desde EmpatiQ.');
+  const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setTo('');
+    setBody('Prueba de notificacion WhatsApp desde EmpatiQ.');
+  }, [open]);
+
+  const handleSend = async () => {
+    if (!companyId || !provider) return;
+    setIsSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('twilio-whatsapp-send', {
+        body: {
+          companyId,
+          to,
+          body,
+          subject: 'Prueba Twilio WhatsApp',
+          priority: 'medium',
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`WhatsApp encolado en Twilio: ${(data as any)?.messageSid || 'sin SID'}`);
+      onSent();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'No se pudo enviar la prueba por WhatsApp.');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Enviar prueba por WhatsApp</DialogTitle>
+          <DialogDescription>{provider?.display_name || 'Twilio WhatsApp'}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Destino</Label>
+            <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="whatsapp:+573001234567" />
+          </div>
+          <div className="space-y-2">
+            <Label>Mensaje</Label>
+            <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="min-h-28" />
+            <p className="text-xs text-muted-foreground">
+              En sandbox, el destinatario debe haberse unido al sandbox de Twilio.
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={handleSend} disabled={isSending || !to.trim() || !body.trim() || !provider?.is_enabled}>
+            {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Enviar prueba
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function NotificationEngineManager() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, currentCompanyId } = useAuth();
   const canView = hasPermission('motor_notificaciones', 'view') || hasPermission('alertas', 'view');
   const canCreate = hasPermission('motor_notificaciones', 'create');
   const canUpdate = hasPermission('motor_notificaciones', 'update');
@@ -971,11 +1181,13 @@ export function NotificationEngineManager() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [escalationDialogOpen, setEscalationDialogOpen] = useState(false);
   const [channelDialogOpen, setChannelDialogOpen] = useState(false);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<NotificationEngineEvent | null>(null);
   const [editingRule, setEditingRule] = useState<NotificationEngineRule | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<NotificationEngineTemplate | null>(null);
   const [editingEscalation, setEditingEscalation] = useState<NotificationEngineEscalationRule | null>(null);
   const [editingProvider, setEditingProvider] = useState<NotificationEngineChannelProvider | null>(null);
+  const [testingProvider, setTestingProvider] = useState<NotificationEngineChannelProvider | null>(null);
 
   const eventsById = useMemo(() => new Map(engine.events.map((event) => [event.id, event])), [engine.events]);
   const rulesById = useMemo(() => new Map(engine.rules.map((rule) => [rule.id, rule])), [engine.rules]);
@@ -1011,6 +1223,11 @@ export function NotificationEngineManager() {
   const openProviderDialog = (provider: NotificationEngineChannelProvider | null = null) => {
     setEditingProvider(provider);
     setChannelDialogOpen(true);
+  };
+
+  const openTestDialog = (provider: NotificationEngineChannelProvider) => {
+    setTestingProvider(provider);
+    setTestDialogOpen(true);
   };
 
   const handleDeleteEvent = async (event: NotificationEngineEvent) => {
@@ -1340,7 +1557,13 @@ export function NotificationEngineManager() {
                         onCheckedChange={(is_enabled) => engine.upsertChannelProvider({ ...provider, is_enabled }).then(() => toast.success('Canal actualizado')).catch((error) => toast.error(error?.message || 'No se pudo actualizar el canal.'))}
                       />
                     </div>
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-1">
+                      {provider.channel === 'whatsapp' && provider.provider_key === 'twilio' && (
+                        <Button variant="ghost" size="sm" onClick={() => openTestDialog(provider)} disabled={!provider.is_enabled}>
+                          <Send className="mr-2 h-4 w-4" />
+                          Probar
+                        </Button>
+                      )}
                       <Button variant="ghost" size="sm" onClick={() => openProviderDialog(provider)} disabled={!canUpdate}>
                         <Settings2 className="mr-2 h-4 w-4" />
                         Configurar
@@ -1422,6 +1645,7 @@ export function NotificationEngineManager() {
       <TemplateDialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen} template={editingTemplate} events={engine.events} onSave={engine.upsertTemplate} isSaving={engine.isSaving} />
       <EscalationDialog open={escalationDialogOpen} onOpenChange={setEscalationDialogOpen} escalation={editingEscalation} rules={engine.rules} eventsById={eventsById} roleOptions={roleOptions} userOptions={userOptions} onSave={engine.upsertEscalation} isSaving={engine.isSaving} />
       <ChannelProviderDialog open={channelDialogOpen} onOpenChange={setChannelDialogOpen} provider={editingProvider} onSave={engine.upsertChannelProvider} isSaving={engine.isSaving} />
+      <TwilioWhatsAppTestDialog open={testDialogOpen} onOpenChange={setTestDialogOpen} provider={testingProvider} companyId={currentCompanyId} onSent={engine.refetch} />
     </div>
   );
 }
