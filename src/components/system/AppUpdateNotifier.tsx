@@ -39,6 +39,34 @@ function AppUpdateNotifierContent() {
   const updateCheckMinutes = Math.max(1, Math.min(1440, updateCheckConfig?.minutes ?? 5));
   const checkIntervalMs = updateCheckMinutes * 60 * 1000 || VERSION_CHECK_INTERVAL_MS;
 
+  const forceRefreshToLatest = async (deploymentKey: string) => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          try {
+            await registration.update();
+            registration.waiting?.postMessage({ type: 'SKIP_WAITING' });
+          } catch {
+            // Continuar con el siguiente registro
+          }
+        }
+      }
+
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((key) => caches.delete(key)));
+      }
+    } catch {
+      // Si falla la limpieza, continuamos con el refresco de URL
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set('refresh', deploymentKey.slice(0, 8));
+    url.searchParams.set('ts', Date.now().toString());
+    window.location.replace(url.toString());
+  };
+
   useEffect(() => {
     // En desarrollo local (localhost), evitamos la notificación de actualización 
     // para no molestar durante el ciclo de trabajo de desarrollo.
@@ -93,22 +121,18 @@ function AppUpdateNotifierContent() {
           duration: Infinity,
           action: {
             label: 'Actualizar',
-            onClick: () => {
+            onClick: async () => {
               // Guardamos en localStorage para persistencia real
               localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestDeploymentKey);
               toast.dismiss(UPDATE_TOAST_ID);
               
               // Pequeño delay para que el usuario vea el feedback del click
-              setTimeout(() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set('refresh', latestDeploymentKey.slice(0, 8));
-                window.location.replace(url.toString());
-              }, 100);
+              await forceRefreshToLatest(latestDeploymentKey);
             },
           },
           cancel: {
             label: 'Más tarde',
-            onClick: () => {
+            onClick: async () => {
               // Si el usuario da a "Más tarde", marcamos como reconocida para que 
               // no vuelva a aparecer en esta versión.
               localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, latestDeploymentKey);
