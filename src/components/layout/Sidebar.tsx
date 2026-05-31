@@ -493,7 +493,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     quickAccessItems.length > 0 ? (
       <div className="pt-3">
         <SectionLabel label="Accesos rápidos" />
-        <div className={cn("gap-2", isCollapsed ? "flex flex-col mt-1" : "grid grid-cols-3 mt-2 px-1")}>
+        <div className={cn("gap-2", isCollapsed ? "flex flex-col mt-1" : "grid grid-cols-2 mt-2 px-1")}>
           {quickAccessItems.map((item) => {
             const isActive = location.pathname === item.href;
             const style = getQuickAccessStyles(item.label, isActive);
@@ -520,7 +520,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   </span>
                   {!isCollapsed && (
                     <span className={cn(
-                      "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-nowrap",
+                    "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-normal text-center break-words",
                       isActive ? "text-inherit" : "text-sidebar-foreground/80 group-hover:text-inherit"
                     )}>
                       {item.label}
