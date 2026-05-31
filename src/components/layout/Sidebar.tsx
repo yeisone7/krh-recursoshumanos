@@ -345,12 +345,14 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Empleados', icon: <Users className="size-5 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
     { label: 'Contratos', icon: <FileText className="size-5 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
     { label: 'Requisiciones', icon: <ClipboardList className="size-5 shrink-0" strokeWidth={2} />, href: '/requisiciones', moduleCode: 'requisiciones' },
+    { label: 'Jornadas', icon: <Clock className="size-5 shrink-0" strokeWidth={2} />, href: '/jornadas', moduleCode: 'jornadas' },
   ].filter(canViewQuickAccessItem), [canViewQuickAccessItem]);
 
   const quickAccessColors: Record<string, string> = {
     Empleados: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
     Contratos: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     Requisiciones: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+    Jornadas: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
   };
 
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
@@ -475,23 +477,28 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     "relative flex transition-all duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
                       ? "mx-auto h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
-                      : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
-                    isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-[0_4px_12px_rgba(14,165,233,0.08)] ring-1 ring-primary/20",
-                    isActive && isCollapsed && "bg-sidebar-accent"
+                      : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
+                    isActive && !isCollapsed && "bg-primary border-primary/30 text-primary-foreground shadow-[0_4px_12px_rgba(14,165,233,0.18)] ring-1 ring-primary/20",
+                    isActive && isCollapsed && "bg-primary"
                   )}
                 >
                   <div className={cn(
                     "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
                     isCollapsed
                       ? "h-full w-full"
-                      : cn("h-9 w-9 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
+                      : cn(
+                          "h-9 w-9 rounded-xl border",
+                          isActive
+                            ? "border-white/20 bg-white/15 text-white shadow-none"
+                            : cn(colorClass, "group-hover:border-white/20 group-hover:bg-white/15 group-hover:text-white")
+                        )
                   )}>
                     {item.icon}
                   </div>
                   {!isCollapsed && (
                     <span className={cn(
                       "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
-                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
+                      isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-primary-foreground"
                     )}>
                       {item.label}
                     </span>
@@ -507,7 +514,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     </span>
                   )}
                   {isActive && !isCollapsed && (
-                    <div className="absolute bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-primary" />
+                    <div className="absolute bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-white/90" />
                   )}
                 </motion.div>
               </Link>
