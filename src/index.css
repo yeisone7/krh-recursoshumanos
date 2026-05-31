@@ -785,6 +785,11 @@ div[class*="DialogContent"] {
   transition: all 0.15s ease-in-out !important;
 }
 
+/* Event payload editor needs a much taller canvas so the JSON preview fits */
+[role="dialog"] textarea.sample-payload-textarea {
+  min-height: 28rem !important;
+}
+
 /* Active Focus outlines for inputs, selects and textareas */
 [role="dialog"] input:focus,
 [role="dialog"] select:focus,
