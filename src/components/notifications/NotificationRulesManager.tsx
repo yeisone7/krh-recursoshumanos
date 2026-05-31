@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BellRing, Mail, Monitor, RefreshCw, ShieldCheck, SlidersHorizontal, Smartphone } from 'lucide-react';
+import { BellRing, Mail, MessageSquareText, Monitor, RefreshCw, ShieldCheck, SlidersHorizontal, Smartphone, type LucideIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { useCustomRoles } from '@/hooks/useRolesPermissions';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-type NotificationChannel = 'in_app_enabled' | 'email_enabled' | 'push_enabled';
+type NotificationChannel = 'in_app_enabled' | 'email_enabled' | 'push_enabled' | 'whatsapp_enabled';
 
 interface NotificationEventDefinition {
   key: string;
@@ -33,6 +33,7 @@ interface NotificationRoleRule {
   in_app_enabled: boolean;
   email_enabled: boolean;
   push_enabled: boolean;
+  whatsapp_enabled: boolean;
   is_active: boolean;
 }
 
@@ -122,13 +123,36 @@ const NOTIFICATION_EVENTS: NotificationEventDefinition[] = [
 const channelConfig: Array<{
   key: NotificationChannel;
   label: string;
-  icon: typeof Monitor;
+  icon: LucideIcon;
   description: string;
+  tone: 'sky' | 'amber' | 'violet' | 'emerald';
 }> = [
-  { key: 'in_app_enabled', label: 'App', icon: Monitor, description: 'Centro de notificaciones' },
-  { key: 'email_enabled', label: 'Correo', icon: Mail, description: 'Envios por email' },
-  { key: 'push_enabled', label: 'Push', icon: Smartphone, description: 'Canal futuro' },
+  { key: 'in_app_enabled', label: 'App', icon: Monitor, description: 'Centro de notificaciones', tone: 'sky' },
+  { key: 'email_enabled', label: 'Correo', icon: Mail, description: 'Envios por email', tone: 'amber' },
+  { key: 'push_enabled', label: 'Push', icon: Smartphone, description: 'Canal futuro', tone: 'violet' },
+  { key: 'whatsapp_enabled', label: 'WhatsApp', icon: MessageSquareText, description: 'Mensajes y alertas móviles', tone: 'emerald' },
 ];
+
+const channelToneStyles: Record<'sky' | 'amber' | 'violet' | 'emerald', string> = {
+  sky: 'border-sky-100 bg-sky-50/70 hover:border-sky-300',
+  amber: 'border-amber-100 bg-amber-50/70 hover:border-amber-300',
+  violet: 'border-violet-100 bg-violet-50/70 hover:border-violet-300',
+  emerald: 'border-emerald-100 bg-emerald-50/70 hover:border-emerald-300',
+};
+
+const channelChipStyles: Record<'sky' | 'amber' | 'violet' | 'emerald', string> = {
+  sky: 'bg-sky-100 text-sky-700',
+  amber: 'bg-amber-100 text-amber-700',
+  violet: 'bg-violet-100 text-violet-700',
+  emerald: 'bg-emerald-100 text-emerald-700',
+};
+
+const channelActiveTextStyles: Record<'sky' | 'amber' | 'violet' | 'emerald', string> = {
+  sky: 'text-sky-700',
+  amber: 'text-amber-700',
+  violet: 'text-violet-700',
+  emerald: 'text-emerald-700',
+};
 
 export function NotificationRulesManager() {
   const { currentCompanyId } = useAuth();
@@ -168,6 +192,7 @@ export function NotificationRulesManager() {
       active: roleRules.filter((rule) => rule.is_active).length,
       email: roleRules.filter((rule) => rule.is_active && rule.email_enabled).length,
       app: roleRules.filter((rule) => rule.is_active && rule.in_app_enabled).length,
+      whatsapp: roleRules.filter((rule) => rule.is_active && rule.whatsapp_enabled).length,
     };
   }, [rulesQuery.data, effectiveRoleId]);
 
@@ -177,7 +202,7 @@ export function NotificationRulesManager() {
       patch,
     }: {
       event: NotificationEventDefinition;
-      patch: Partial<Pick<NotificationRoleRule, 'is_active' | 'in_app_enabled' | 'email_enabled' | 'push_enabled'>>;
+      patch: Partial<Pick<NotificationRoleRule, 'is_active' | 'in_app_enabled' | 'email_enabled' | 'push_enabled' | 'whatsapp_enabled'>>;
     }) => {
       if (!currentCompanyId || !effectiveRoleId) throw new Error('Selecciona una empresa y un rol valido.');
 
@@ -194,6 +219,7 @@ export function NotificationRulesManager() {
         in_app_enabled: patch.in_app_enabled ?? existing?.in_app_enabled ?? nextIsActive,
         email_enabled: patch.email_enabled ?? existing?.email_enabled ?? false,
         push_enabled: patch.push_enabled ?? existing?.push_enabled ?? false,
+        whatsapp_enabled: patch.whatsapp_enabled ?? existing?.whatsapp_enabled ?? false,
         is_active: nextIsActive,
       };
 
@@ -216,7 +242,7 @@ export function NotificationRulesManager() {
       event,
       patch: checked
         ? { is_active: true, in_app_enabled: true }
-        : { is_active: false, in_app_enabled: false, email_enabled: false, push_enabled: false },
+        : { is_active: false, in_app_enabled: false, email_enabled: false, push_enabled: false, whatsapp_enabled: false },
     });
   };
 
@@ -291,11 +317,12 @@ export function NotificationRulesManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-3">
+        <CardContent className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
           {[
             { label: 'Rol seleccionado', value: selectedRole?.name || 'Sin rol', icon: ShieldCheck },
             { label: 'Reglas activas', value: `${totals.active}/${NOTIFICATION_EVENTS.length}`, icon: BellRing },
             { label: 'Con correo', value: totals.email, icon: Mail },
+            { label: 'Con WhatsApp', value: totals.whatsapp, icon: MessageSquareText },
           ].map((stat) => (
             <div key={stat.label} className="flex items-center gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -348,7 +375,7 @@ export function NotificationRulesManager() {
                     </div>
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-3">
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     {channelConfig.map((channel) => {
                       const Icon = channel.icon;
                       const checked = rule?.[channel.key] ?? false;
@@ -356,14 +383,14 @@ export function NotificationRulesManager() {
                         <label
                           key={channel.key}
                           className={cn(
-                            'grid min-h-[96px] cursor-pointer grid-rows-[1fr_auto] gap-3 rounded-2xl border p-3 transition-colors',
+                            'grid min-h-[110px] cursor-pointer grid-rows-[1fr_auto] gap-3 rounded-2xl border p-3 transition-all',
                             isActive
-                              ? 'border-border/70 bg-background hover:border-primary/40'
+                              ? channelToneStyles[channel.tone]
                               : 'border-border/50 bg-muted/20 text-muted-foreground'
                           )}
                         >
                           <div className="flex min-w-0 items-center gap-2">
-                            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', checked && isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', checked && isActive ? channelChipStyles[channel.tone] : 'bg-white/80 text-muted-foreground')}>
                               <Icon className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
@@ -372,7 +399,7 @@ export function NotificationRulesManager() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-2">
-                            <span className={cn('text-[10px] font-black uppercase tracking-widest', checked && isActive ? 'text-primary' : 'text-muted-foreground')}>
+                            <span className={cn('text-[10px] font-black uppercase tracking-widest', checked && isActive ? channelActiveTextStyles[channel.tone] : 'text-muted-foreground')}>
                               {checked && isActive ? 'Activo' : 'Off'}
                             </span>
                             <Switch
