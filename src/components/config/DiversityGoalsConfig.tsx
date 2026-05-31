@@ -129,48 +129,52 @@ export function DiversityGoalsConfig() {
             ))}
           </div>
 
-          <div className="relative overflow-hidden rounded-[3rem] border border-primary/20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-10 text-white shadow-2xl">
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none scale-150">
-              <Target className="w-48 h-48" />
-            </div>
+          <div className="relative overflow-hidden rounded-[2.5rem] border border-sky-100 bg-white shadow-lg shadow-sky-100/60">
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300" />
+            <div className="absolute right-8 top-8 h-24 w-24 rounded-full bg-sky-100/60 blur-2xl" />
             
-            <div className="relative flex flex-col lg:flex-row items-center justify-between gap-10">
-              <div className="flex items-center gap-6">
-                <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 shadow-2xl">
-                  <Info className="w-7 h-7 text-primary stroke-[2.5]" />
+            <div className="relative grid gap-6 p-6 lg:grid-cols-[1.3fr_0.8fr_0.7fr] lg:items-stretch">
+              <div className="flex items-center gap-5 rounded-[2rem] border border-sky-100 bg-sky-50/70 p-5">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-white text-primary shadow-sm">
+                  <Info className="h-6 w-6 stroke-[2.5]" />
                 </div>
-                <div className="space-y-2 text-center lg:text-left">
-                  <h4 className="text-lg font-black uppercase tracking-tighter">Protocolos de Alerta Temprana</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed max-w-lg">
+                <div className="space-y-2">
+                  <Badge className="rounded-lg bg-primary/10 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-primary hover:bg-primary/10">
+                    Alerta temprana
+                  </Badge>
+                  <p className="max-w-2xl text-[10px] font-black uppercase leading-relaxed tracking-widest text-slate-500">
                     Notificar automáticamente al cierre de vacante si los indicadores de inclusión divergen del umbral estratégico.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-8 rounded-[2rem] border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
-                <div className="space-y-2">
-                  <Label className="block text-center text-[9px] font-black uppercase tracking-widest text-cyan-200 sm:text-right">Umbral de Cumplimiento</Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={goals.notify_threshold_pct}
-                      onChange={(e) => setGoals(g => ({ ...g, notify_threshold_pct: parseFloat(e.target.value) || 80 }))}
-                      className="h-11 w-24 rounded-xl border-white/30 bg-white text-center text-xs font-black text-slate-900 shadow-inner focus-visible:ring-primary/50"
-                    />
-                    <span className="text-[10px] font-black text-white/70">%</span>
-                  </div>
-                </div>
-                <div className="hidden sm:block h-12 w-px bg-white/10" />
-                <div className="flex items-center gap-5">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Broadcast</span>
-                  <Switch
-                    checked={goals.notify_on_close}
-                    onCheckedChange={(v) => setGoals(g => ({ ...g, notify_on_close: v }))}
-                    className="data-[state=checked]:bg-primary scale-110"
+              <div className="rounded-[2rem] border border-slate-200 bg-slate-50 p-5 shadow-inner">
+                <Label className="mb-3 block text-[9px] font-black uppercase tracking-widest text-slate-500">Umbral de Cumplimiento</Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={goals.notify_threshold_pct}
+                    onChange={(e) => setGoals(g => ({ ...g, notify_threshold_pct: parseFloat(e.target.value) || 80 }))}
+                    className="h-12 w-24 rounded-2xl border-sky-100 bg-white text-center text-sm font-black text-slate-950 shadow-sm focus-visible:ring-primary/30"
                   />
+                  <span className="rounded-xl bg-sky-100 px-3 py-2 text-[10px] font-black text-primary">%</span>
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 rounded-[2rem] border border-emerald-100 bg-emerald-50/80 p-5">
+                <div>
+                  <span className="block text-[9px] font-black uppercase tracking-widest text-emerald-700">Broadcast</span>
+                  <span className="mt-1 block text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {goals.notify_on_close ? 'Activo' : 'Pausado'}
+                  </span>
+                </div>
+                <Switch
+                  checked={goals.notify_on_close}
+                  onCheckedChange={(v) => setGoals(g => ({ ...g, notify_on_close: v }))}
+                  className="scale-110 data-[state=checked]:bg-primary"
+                />
               </div>
             </div>
           </div>
