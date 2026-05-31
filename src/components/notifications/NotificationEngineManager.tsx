@@ -323,25 +323,34 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-hidden p-0 sm:max-w-4xl">
-        <DialogHeader className="border-b border-border/70 bg-muted/20 px-6 py-5">
-          <DialogTitle className="text-xl font-black tracking-tight">{event ? 'Editar evento' : 'Nuevo evento'}</DialogTitle>
-          <DialogDescription>Catalogo central por empresa.</DialogDescription>
+      <DialogContent className="relative flex max-h-[90vh] flex-col overflow-hidden rounded-[2rem] border-slate-200 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/20 sm:max-w-4xl">
+        <DialogHeader className="shrink-0 border-b border-sky-100 bg-white px-6 pb-5 pt-6">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300" />
+          <div className="flex items-start gap-4 pr-8">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-primary shadow-sm">
+              <Layers className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-black tracking-tight text-slate-950">{event ? 'Editar evento' : 'Nuevo evento'}</DialogTitle>
+              <DialogDescription className="text-sm font-medium text-slate-500">Catalogo central por empresa.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="grid max-h-[calc(92vh-11rem)] gap-6 overflow-y-auto px-6 py-6 sm:grid-cols-2">
-          <div className="space-y-2">
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+          <div className="grid gap-5 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Clave tecnica</Label>
             <Input className="h-11 rounded-xl" value={draft.event_key} onChange={(e) => setDraft((prev) => ({ ...prev, event_key: e.target.value }))} placeholder="ContratoPorVencer" />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Nombre</Label>
             <Input className="h-11 rounded-xl" value={draft.name} onChange={(e) => setDraft((prev) => ({ ...prev, name: e.target.value }))} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Modulo origen</Label>
             <Input className="h-11 rounded-xl" value={draft.source_module} onChange={(e) => setDraft((prev) => ({ ...prev, source_module: e.target.value }))} />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 rounded-2xl bg-slate-50/70 p-4">
             <div className="space-y-2">
               <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Tipo</Label>
               <Select value={draft.kind} onValueChange={(value) => setDraft((prev) => ({ ...prev, kind: value as NotificationEngineKind }))}>
@@ -361,30 +370,31 @@ function EventDialog({
               </Select>
             </div>
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Descripcion</Label>
             <Textarea className="min-h-24 rounded-xl" value={draft.description} onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))} />
           </div>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-3 rounded-2xl border border-sky-100 bg-sky-50/60 p-4 sm:col-span-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Canales por defecto</Label>
             <ChannelPicker selected={draft.default_channels} onChange={(default_channels) => setDraft((prev) => ({ ...prev, default_channels }))} />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Variables</Label>
             <Input className="h-11 rounded-xl" value={draft.variables} onChange={(e) => setDraft((prev) => ({ ...prev, variables: e.target.value }))} placeholder="Empleado, Empresa, Fecha" />
           </div>
-          <label className="flex min-h-20 items-center gap-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
+          <label className="flex min-h-20 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
             <Switch checked={draft.is_active} onCheckedChange={(is_active) => setDraft((prev) => ({ ...prev, is_active }))} />
             <span className="text-sm font-black uppercase tracking-wider">Activo</span>
           </label>
-          <div className="space-y-2 sm:col-span-2">
+          <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Payload de ejemplo</Label>
             <Textarea className="min-h-36 rounded-xl font-mono text-xs" value={draft.sample_payload} onChange={(e) => setDraft((prev) => ({ ...prev, sample_payload: e.target.value }))} />
           </div>
+          </div>
         </div>
-        <DialogFooter className="border-t border-border/70 bg-background px-6 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isSaving || !draft.event_key.trim() || !draft.name.trim()}>
+        <DialogFooter className="shrink-0 border-t border-slate-200 bg-white px-6 pb-6 pt-4 shadow-[0_-12px_30px_rgba(15,23,42,0.06)]">
+          <Button className="h-11 rounded-xl px-6 font-bold" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button className="h-11 rounded-xl px-7 font-black" onClick={handleSubmit} disabled={isSaving || !draft.event_key.trim() || !draft.name.trim()}>
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
             Guardar
           </Button>
