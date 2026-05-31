@@ -6,6 +6,7 @@ import {
   FileText,
   Bell,
   Mail,
+  MessageSquareText,
   Loader2,
   Save,
   Users,
@@ -63,6 +64,17 @@ import { SecurityTab } from '@/components/config/SecurityTab';
 import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
 import { AITab } from '@/components/config/AITab';
 
+function normalizeTwilioWhatsappSender(value: string) {
+  const compact = value.trim().replace(/\s+/g, '');
+  if (!compact) return { from: '', phoneNumber: '' };
+  const withoutPrefix = compact.replace(/^whatsapp:/i, '');
+  const phoneNumber = withoutPrefix.startsWith('+') ? withoutPrefix : `+${withoutPrefix}`;
+  return {
+    from: `whatsapp:${phoneNumber}`,
+    phoneNumber,
+  };
+}
+
 export default function Configuracion() {
   const { currentCompanyId, isAdmin } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
@@ -113,6 +125,8 @@ export default function Configuracion() {
   const [alertTerminationWarning, setAlertTerminationWarning] = useState(7);
   const [alertTerminationCritical, setAlertTerminationCritical] = useState(3);
   const [alertTerminationPendingDays, setAlertTerminationPendingDays] = useState(7);
+  const [twilioWhatsappEnabled, setTwilioWhatsappEnabled] = useState(false);
+  const [twilioWhatsappSender, setTwilioWhatsappSender] = useState('');
 
   // Watermark config state
   const [watermarkEnabled, setWatermarkEnabled] = useState(DEFAULT_WATERMARK_CONFIG.enabled);
@@ -152,6 +166,7 @@ export default function Configuracion() {
       const dotationDays = systemConfig.alert_dotation_days;
       const terminationPendingDays = systemConfig.alert_termination_pending_days;
       const notificationRecipients = systemConfig.alert_notification_recipients;
+      const twilioWhatsappConfig = systemConfig.twilio_whatsapp_sender;
       
       if (notificationRecipients?.emails) {
         setAlertRecipients(notificationRecipients.emails.join('\n'));
@@ -176,6 +191,10 @@ export default function Configuracion() {
         setAlertTerminationInfo(terminationPendingDays.info || 15);
         setAlertTerminationWarning(terminationPendingDays.warning || 7);
         setAlertTerminationCritical(terminationPendingDays.critical || 3);
+      }
+      if (twilioWhatsappConfig) {
+        setTwilioWhatsappEnabled(twilioWhatsappConfig.enabled ?? false);
+        setTwilioWhatsappSender(twilioWhatsappConfig.from || twilioWhatsappConfig.phone_number || '');
       }
 
       // Load Watermark config
@@ -222,6 +241,12 @@ export default function Configuracion() {
         .split(/[\n,;]/)
         .map((email) => email.trim())
         .filter(Boolean);
+      const whatsappSender = normalizeTwilioWhatsappSender(twilioWhatsappSender);
+
+      if (twilioWhatsappEnabled && !whatsappSender.phoneNumber) {
+        toast.error('Ingresa el número de WhatsApp de Twilio o desactiva el canal.');
+        return;
+      }
 
       await Promise.all([
         updateConfig.mutateAsync({
@@ -255,6 +280,16 @@ export default function Configuracion() {
           key: 'hiring_notification_role',
           value: { role_id: hiringNotifRoleId === 'none' ? null : hiringNotifRoleId },
           description: 'Rol que recibe notificaciones al contratar candidatos',
+        }),
+        updateConfig.mutateAsync({
+          key: 'twilio_whatsapp_sender',
+          value: {
+            enabled: twilioWhatsappEnabled,
+            provider: 'twilio',
+            from: whatsappSender.from || null,
+            phone_number: whatsappSender.phoneNumber || null,
+          },
+          description: 'Número remitente de WhatsApp configurado en Twilio para notificaciones',
         }),
       ]);
       toast.success('Configuración de alertas guardada');
@@ -431,8 +466,8 @@ export default function Configuracion() {
 
         {/* Company Tab */}
         <TabsContent value="company" className="space-y-8 focus-visible:outline-none px-1">
-          <Card className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
-            <CardHeader className="p-8 border-b border-slate-50">
+          <Card className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader className="p-8 border-b border-slate-200 bg-slate-50/60">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                   <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Activos Corporativos</CardTitle>
@@ -443,7 +478,7 @@ export default function Configuracion() {
                   className={cn(
                     "h-12 px-10 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all w-full md:w-auto shadow-xl shadow-slate-100",
                     editingCompany 
-                      ? "bg-slate-100 text-slate-400 hover:bg-slate-200" 
+                      ? "bg-slate-200 text-slate-700 hover:bg-slate-300" 
                       : "bg-primary text-white hover:bg-primary/90"
                   )}
                 >
@@ -451,7 +486,7 @@ export default function Configuracion() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-8 bg-gradient-to-b from-white to-slate-50/40">
               {loadingCompany ? (
                 <div className="space-y-6">
                   <Skeleton className="h-14 w-full rounded-2xl" />
@@ -464,46 +499,46 @@ export default function Configuracion() {
                 <div className="space-y-10">
                   <div className="grid gap-8 grid-cols-1 md:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Razón Social</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Razón Social</Label>
                       <Input 
                         disabled={!editingCompany}
-                        className="h-14 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6"
+                        className="h-14 rounded-2xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200"
                         value={companyForm.name} 
                         onChange={(e) => setCompanyForm({...companyForm, name: e.target.value})} 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">NIT / Tax ID</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">NIT / Tax ID</Label>
                       <Input 
                         disabled={!editingCompany}
-                        className="h-14 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6"
+                        className="h-14 rounded-2xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200"
                         value={companyForm.nit} 
                         onChange={(e) => setCompanyForm({...companyForm, nit: e.target.value})} 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Correo Institucional</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Correo Institucional</Label>
                       <Input 
                         disabled={!editingCompany}
-                        className="h-14 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-black text-xs lowercase tracking-tight px-6"
+                        className="h-14 rounded-2xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-black text-xs lowercase tracking-tight px-6 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200"
                         value={companyForm.email} 
                         onChange={(e) => setCompanyForm({...companyForm, email: e.target.value})} 
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Teléfono Directo</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Teléfono Directo</Label>
                       <Input 
                         disabled={!editingCompany}
-                        className="h-14 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6"
+                        className="h-14 rounded-2xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200"
                         value={companyForm.phone} 
                         onChange={(e) => setCompanyForm({...companyForm, phone: e.target.value})} 
                       />
                     </div>
                     <div className="md:col-span-2 space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Sede Principal</Label>
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-600 px-1">Sede Principal</Label>
                       <Input 
                         disabled={!editingCompany}
-                        className="h-14 rounded-2xl bg-slate-50 border-slate-100 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6"
+                        className="h-14 rounded-2xl bg-white border-slate-200 focus:bg-white focus:border-primary transition-all font-black text-xs uppercase tracking-tight px-6 text-slate-800 disabled:bg-slate-100 disabled:text-slate-500 disabled:border-slate-200"
                         value={companyForm.address} 
                         onChange={(e) => setCompanyForm({...companyForm, address: e.target.value})} 
                       />
@@ -511,7 +546,7 @@ export default function Configuracion() {
                   </div>
 
                   {editingCompany && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end pt-8 border-t border-slate-50">
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end pt-8 border-t border-slate-200">
                       <Button 
                         onClick={handleSaveCompanyInfo} 
                         disabled={updateCompany.isPending}
@@ -643,6 +678,56 @@ export default function Configuracion() {
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2 flex items-center gap-2">
                   <Check className="w-3 h-3 text-emerald-500" />
                   Define los correos separándolos con saltos de línea para el sistema de broadcast.
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm">
+                <div className="grid gap-5 lg:grid-cols-[1fr_420px] lg:items-center">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+                      <MessageSquareText className="h-6 w-6 stroke-[2.5]" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">WhatsApp Twilio</h4>
+                        <Badge variant="outline" className={cn(
+                          "rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-widest",
+                          twilioWhatsappEnabled
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-slate-200 bg-slate-50 text-slate-500"
+                        )}>
+                          {twilioWhatsappEnabled ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
+                      <p className="max-w-2xl text-[10px] font-black uppercase leading-relaxed tracking-widest text-slate-500">
+                        Configura el número remitente aprobado en Twilio para habilitar envíos por WhatsApp cuando una regla lo requiera.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div className="space-y-2">
+                      <Label className="text-[9px] font-black uppercase tracking-widest text-slate-600">Número remitente</Label>
+                      <Input
+                        value={twilioWhatsappSender}
+                        onChange={(e) => setTwilioWhatsappSender(e.target.value)}
+                        placeholder="whatsapp:+14155238886"
+                        className="h-12 rounded-2xl border-emerald-100 bg-emerald-50/40 font-black text-xs tracking-wide text-slate-800 placeholder:text-slate-400 focus:border-emerald-300 focus:bg-white"
+                      />
+                    </div>
+                    <label className="flex h-12 items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 sm:mt-6">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-600">Usar canal</span>
+                      <Switch
+                        checked={twilioWhatsappEnabled}
+                        onCheckedChange={setTwilioWhatsappEnabled}
+                        className="data-[state=checked]:bg-emerald-500"
+                      />
+                    </label>
+                  </div>
+                </div>
+                <p className="mt-4 flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  <Check className="h-3 w-3 text-emerald-500" />
+                  Puedes ingresar el número como +14155238886 o como whatsapp:+14155238886; se guardará normalizado para Twilio.
                 </p>
               </div>
 
@@ -869,4 +954,5 @@ export default function Configuracion() {
     </div>
   );
 }
+
 
