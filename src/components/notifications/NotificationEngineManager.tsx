@@ -90,6 +90,17 @@ const channelIcons: Record<NotificationEngineChannel, typeof BellRing> = {
   webhook: Webhook,
 };
 
+const channelIconStyles: Record<NotificationEngineChannel, string> = {
+  in_app: 'bg-sky-100 text-sky-700',
+  push: 'bg-violet-100 text-violet-700',
+  email: 'bg-amber-100 text-amber-700',
+  whatsapp: 'bg-emerald-100 text-emerald-700',
+  sms: 'bg-cyan-100 text-cyan-700',
+  teams: 'bg-indigo-100 text-indigo-700',
+  telegram: 'bg-blue-100 text-blue-700',
+  webhook: 'bg-rose-100 text-rose-700',
+};
+
 function toVariableText(value: unknown) {
   if (Array.isArray(value)) return value.join(', ');
   if (value && typeof value === 'object') return Object.keys(value as Record<string, unknown>).join(', ');
@@ -215,7 +226,7 @@ function ChannelPicker({
             )}
           >
             <Checkbox checked={isSelected} onCheckedChange={(checked) => toggle(channel, checked === true)} />
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', channelIconStyles[channel])}>
               <Icon className="h-4 w-4" />
             </span>
             <span className="min-w-0 truncate text-xs font-black uppercase tracking-wider text-foreground">{ENGINE_CHANNEL_LABELS[channel]}</span>
