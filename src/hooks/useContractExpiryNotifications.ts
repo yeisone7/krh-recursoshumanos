@@ -43,7 +43,7 @@ export function useContractExpiryNotifications() {
         duration: 8000,
         action: {
           label: 'Ver alertas',
-          onClick: () => window.location.href = '/alertas',
+          onClick: () => window.location.href = '/notificaciones',
         },
       });
     }
@@ -54,7 +54,7 @@ export function useContractExpiryNotifications() {
         duration: 6000,
         action: {
           label: 'Ver alertas',
-          onClick: () => window.location.href = '/alertas',
+          onClick: () => window.location.href = '/notificaciones',
         },
       });
     }

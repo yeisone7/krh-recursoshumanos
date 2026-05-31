@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Bell, Check, Mail, RefreshCw, Search, Trash2, Users } from 'lucide-react';
 import { format } from 'date-fns';
@@ -10,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import Alertas from '@/pages/Alertas';
+import { AlertProtocolSettings } from '@/components/notifications/AlertProtocolSettings';
 import { NotificationEngineManager } from '@/components/notifications/NotificationEngineManager';
 import { NotificationRulesManager } from '@/components/notifications/NotificationRulesManager';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,8 +41,16 @@ function formatDate(value: string) {
   return format(new Date(value), "dd MMM yyyy, h:mm a", { locale: es });
 }
 
+function normalizeTab(tab: string | null) {
+  if (tab === 'radar' || tab === 'alerts' || tab === 'deliveries' || tab === 'rules' || tab === 'engine' || tab === 'settings') {
+    return tab;
+  }
+  return 'radar';
+}
+
 export default function CentroNotificaciones() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, permissionsLoaded } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     notifications,
     deliveryLogs,
@@ -56,8 +67,45 @@ export default function CentroNotificaciones() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('alerts');
-  const canViewEngine = hasPermission('motor_notificaciones', 'view') || hasPermission('motor_notificaciones', 'update');
+  const [activeTab, setActiveTab] = useState(() => normalizeTab(searchParams.get('tab')));
+  const canViewEngine = hasPermission('motor_notificaciones', 'view') || hasPermission('alertas', 'view');
+  const canManageAlertSettings =
+    hasPermission('alertas', 'update') ||
+    hasPermission('configuracion', 'update') ||
+    hasPermission('motor_notificaciones', 'update');
+
+  const handleTabChange = useCallback((next: string) => {
+    setActiveTab(next);
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (next === 'radar') {
+        params.delete('tab');
+      } else {
+        params.set('tab', next);
+      }
+      return params;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    const next = normalizeTab(searchParams.get('tab'));
+    if (next !== activeTab) {
+      setActiveTab(next);
+    }
+  }, [activeTab, searchParams]);
+
+  useEffect(() => {
+    if (!permissionsLoaded) return;
+    if (activeTab === 'engine' && !canViewEngine) {
+      handleTabChange('radar');
+    }
+    if (activeTab === 'rules' && !canManageCompanyHistory) {
+      handleTabChange('radar');
+    }
+    if (activeTab === 'settings' && !canManageAlertSettings) {
+      handleTabChange('radar');
+    }
+  }, [activeTab, canManageAlertSettings, canManageCompanyHistory, canViewEngine, handleTabChange, permissionsLoaded]);
 
   const filteredNotifications = useMemo(() => {
     const term = search.toLowerCase();
@@ -181,10 +229,10 @@ export default function CentroNotificaciones() {
 
       <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
         <div className="mb-6">
-          <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Historial Operativo</h2>
-          <p className="text-sm font-medium text-muted-foreground mt-1">Gestión detallada de comunicaciones y notificaciones de sistema.</p>
+          <h2 className="text-xl font-black tracking-tight text-foreground uppercase">Consola Operativa</h2>
+          <p className="text-sm font-medium text-muted-foreground mt-1">Visualiza alertas, envios, reglas y configuracion desde un solo modulo.</p>
         </div>
-      {activeTab !== 'rules' && activeTab !== 'engine' && (
+      {activeTab !== 'radar' && activeTab !== 'rules' && activeTab !== 'engine' && activeTab !== 'settings' && (
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
         <div className="relative flex flex-col md:flex-row items-center gap-4 bg-background p-3 rounded-[2rem] border border-border/50 shadow-sm">
@@ -233,14 +281,16 @@ export default function CentroNotificaciones() {
       </div>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="flex items-center justify-between mb-6">
           <TabsList className="flex h-auto max-w-full justify-start gap-2 overflow-x-auto bg-background p-1.5 rounded-[1.5rem] border border-border/50">
             {[
+              { value: 'radar', label: 'RADAR DE ALERTAS' },
               { value: 'alerts', label: 'ALERTAS EN APP' },
               { value: 'deliveries', label: 'CORREOS Y ENVÍOS' },
               ...(canManageCompanyHistory ? [{ value: 'rules', label: 'REGLAS INTELIGENTES' }] : []),
               ...(canViewEngine ? [{ value: 'engine', label: 'MOTOR EMPRESARIAL' }] : []),
+              ...(canManageAlertSettings ? [{ value: 'settings', label: 'CONFIGURACION' }] : []),
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -252,6 +302,9 @@ export default function CentroNotificaciones() {
             ))}
           </TabsList>
         </div>
+            <TabsContent value="radar" className="mt-0">
+              <Alertas embedded />
+            </TabsContent>
             {canManageCompanyHistory && (
               <TabsContent value="rules" className="mt-0">
                 <NotificationRulesManager />
@@ -260,6 +313,11 @@ export default function CentroNotificaciones() {
             {canViewEngine && (
               <TabsContent value="engine" className="mt-0">
                 <NotificationEngineManager />
+              </TabsContent>
+            )}
+            {canManageAlertSettings && (
+              <TabsContent value="settings" className="mt-0">
+                <AlertProtocolSettings />
               </TabsContent>
             )}
             <TabsContent value="alerts">
