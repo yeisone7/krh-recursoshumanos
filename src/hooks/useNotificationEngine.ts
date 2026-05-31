@@ -196,6 +196,15 @@ function isFailure(status: NotificationEngineStatus) {
   return ['failed', 'cancelled', 'suppressed'].includes(status);
 }
 
+
+async function readEngineRows<T>(request: PromiseLike<{ data: unknown; error: any }>, label: string) {
+  const { data, error } = await request;
+  if (error) {
+    console.warn(`[notification-engine] ${label}`, error);
+    return [] as T[];
+  }
+  return (data || []) as T[];
+}
 function parseResponseMinutes(delivery: NotificationEngineDelivery) {
   if (!delivery.action_at && !delivery.read_at) return null;
   const end = new Date(delivery.action_at || delivery.read_at || delivery.generated_at).getTime();
@@ -214,14 +223,15 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'events', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_events')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('source_module')
-        .order('name');
-      if (error) throw error;
-      return (data || []) as NotificationEngineEvent[];
+      return readEngineRows<NotificationEngineEvent>(
+        asAnySupabase
+          .from('notification_engine_events')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('source_module')
+        .order('name'),
+        'events'
+      );
     },
   });
 
@@ -229,13 +239,14 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'rules', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_rules')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as NotificationEngineRule[];
+      return readEngineRows<NotificationEngineRule>(
+        asAnySupabase
+          .from('notification_engine_rules')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: false }),
+        'rules'
+      );
     },
   });
 
@@ -243,14 +254,15 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'templates', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_templates')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('channel')
-        .order('name');
-      if (error) throw error;
-      return (data || []) as NotificationEngineTemplate[];
+      return readEngineRows<NotificationEngineTemplate>(
+        asAnySupabase
+          .from('notification_engine_templates')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('channel')
+        .order('name'),
+        'templates'
+      );
     },
   });
 
@@ -258,13 +270,14 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'channel-providers', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_channel_providers')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('channel');
-      if (error) throw error;
-      return (data || []) as NotificationEngineChannelProvider[];
+      return readEngineRows<NotificationEngineChannelProvider>(
+        asAnySupabase
+          .from('notification_engine_channel_providers')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('channel'),
+        'channel providers'
+      );
     },
   });
 
@@ -272,13 +285,14 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'escalations', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_escalation_rules')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('sequence');
-      if (error) throw error;
-      return (data || []) as NotificationEngineEscalationRule[];
+      return readEngineRows<NotificationEngineEscalationRule>(
+        asAnySupabase
+          .from('notification_engine_escalation_rules')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('sequence'),
+        'escalations'
+      );
     },
   });
 
@@ -286,14 +300,15 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'event-logs', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_event_logs')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('generated_at', { ascending: false })
-        .limit(150);
-      if (error) throw error;
-      return (data || []) as NotificationEngineEventLog[];
+      return readEngineRows<NotificationEngineEventLog>(
+        asAnySupabase
+          .from('notification_engine_event_logs')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('generated_at', { ascending: false })
+        .limit(150),
+        'event logs'
+      );
     },
   });
 
@@ -301,14 +316,15 @@ export function useNotificationEngine() {
     queryKey: ['notification-engine', 'deliveries', currentCompanyId],
     enabled: !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await asAnySupabase
-        .from('notification_engine_deliveries')
-        .select('*')
-        .eq('company_id', currentCompanyId)
-        .order('generated_at', { ascending: false })
-        .limit(300);
-      if (error) throw error;
-      return (data || []) as NotificationEngineDelivery[];
+      return readEngineRows<NotificationEngineDelivery>(
+        asAnySupabase
+          .from('notification_engine_deliveries')
+          .select('*')
+          .eq('company_id', currentCompanyId)
+          .order('generated_at', { ascending: false })
+        .limit(300),
+        'deliveries'
+      );
     },
   });
 
@@ -320,7 +336,10 @@ export function useNotificationEngine() {
         .from('user_company_assignments')
         .select('user_id')
         .eq('company_id', currentCompanyId);
-      if (assignmentsError) throw assignmentsError;
+      if (assignmentsError) {
+        console.warn('[notification-engine] company users', assignmentsError);
+        return [] as NotificationEngineUser[];
+      }
 
       const ids = Array.from(new Set((assignments || []).map((row: { user_id: string }) => row.user_id))).filter(Boolean);
       if (ids.length === 0) return [] as NotificationEngineUser[];
@@ -329,7 +348,10 @@ export function useNotificationEngine() {
         .from('user_profiles')
         .select('id, full_name, display_name')
         .in('id', ids);
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.warn('[notification-engine] user profiles', profilesError);
+        return ids.map((id) => ({ id, label: id }));
+      }
 
       const labelMap = new Map((profiles || []).map((profile) => [
         profile.id,

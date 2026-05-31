@@ -49,7 +49,7 @@ function normalizeTab(tab: string | null) {
 
 export default function CentroNotificaciones() {
   const { hasPermission, permissionsLoaded } = useAuth();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const {
     notifications,
     deliveryLogs,
@@ -75,19 +75,12 @@ export default function CentroNotificaciones() {
 
   const handleTabChange = useCallback((next: string) => {
     setActiveTab(next);
-    setSearchParams((prev) => {
-      const params = new URLSearchParams(prev);
-      if (next === 'radar') {
-        params.delete('tab');
-      } else {
-        params.set('tab', next);
-      }
-      return params;
-    }, { replace: true });
-  }, [setSearchParams]);
+  }, []);
 
   useEffect(() => {
-    const next = normalizeTab(searchParams.get('tab'));
+    const tabParam = searchParams.get('tab');
+    if (!tabParam) return;
+    const next = normalizeTab(tabParam);
     if (next !== activeTab) {
       setActiveTab(next);
     }
