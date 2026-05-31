@@ -252,25 +252,25 @@ export default function CentroNotificaciones() {
             ))}
           </TabsList>
         </div>
-            <TabsContent value="radar" className="mt-0" forceMount>
+            <TabsContent value="radar" className="mt-0">
               <Alertas embedded />
             </TabsContent>
             {canManageCompanyHistory && (
-              <TabsContent value="rules" className="mt-0" forceMount>
+              <TabsContent value="rules" className="mt-0">
                 <NotificationRulesManager />
               </TabsContent>
             )}
             {canViewEngine && (
-              <TabsContent value="engine" className="mt-0" forceMount>
+              <TabsContent value="engine" className="mt-0">
                 <NotificationEngineManager />
               </TabsContent>
             )}
             {canManageAlertSettings && (
-              <TabsContent value="settings" className="mt-0" forceMount>
+              <TabsContent value="settings" className="mt-0">
                 <AlertProtocolSettings />
               </TabsContent>
             )}
-            <TabsContent value="alerts" forceMount>
+            <TabsContent value="alerts">
               <div className="space-y-3 md:hidden">
                 {filteredNotifications.map((item) => (
                   <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
@@ -322,7 +322,7 @@ export default function CentroNotificaciones() {
               </Table>
               </div>
             </TabsContent>
-            <TabsContent value="deliveries" forceMount>
+            <TabsContent value="deliveries">
               <div className="space-y-3 md:hidden">
                 {filteredLogs.map((item) => (
                   <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
