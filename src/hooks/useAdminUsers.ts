@@ -10,6 +10,7 @@ export interface AdminUser {
   email: string;
   full_name: string;
   display_name: string;
+  mobile?: string;
   avatar_url?: string;
   created_at: string;
   roles: AppRole[];
@@ -122,7 +123,7 @@ export function useAdminUsers() {
         100,
         (chunk) => supabase
           .from('user_profiles')
-          .select('id, full_name, display_name, avatar_url')
+          .select('id, full_name, display_name, avatar_url, mobile')
           .in('id', chunk)
       );
       if (profilesError) throw profilesError;
@@ -166,6 +167,7 @@ export function useAdminUsers() {
           email: '',
           full_name: '',
           display_name: '',
+          mobile: '',
           avatar_url: undefined,
           created_at: '',
           roles: [],
@@ -182,6 +184,7 @@ export function useAdminUsers() {
         if (user) {
           user.full_name = p.full_name || '';
           user.display_name = p.display_name || '';
+          user.mobile = p.mobile || '';
           user.avatar_url = p.avatar_url || undefined;
         }
       });
