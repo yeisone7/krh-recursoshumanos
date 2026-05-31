@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Bell, Check, Mail, RefreshCw, Search, Trash2, Users } from 'lucide-react';
+import { Bell, Check, RefreshCw, Search, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -134,14 +133,6 @@ export default function CentroNotificaciones() {
     });
   }, [deliveryLogs, search, statusFilter, channelFilter, userDisplayMap]);
 
-  const stats = useMemo(() => ({
-    totalNotifications: notifications.length,
-    unread: notifications.filter((item) => !item.is_read).length,
-    attended: notifications.filter((item) => item.is_attended).length,
-    emails: deliveryLogs.filter((item) => item.channel === 'email').length,
-    failed: deliveryLogs.filter((item) => ['failed', 'error', 'dlq'].includes(item.status)).length,
-  }), [notifications, deliveryLogs]);
-
   const handleMarkRead = async (id: string) => {
     await markAsRead(id);
     toast.success('Notificación marcada como leída');
@@ -192,39 +183,6 @@ export default function CentroNotificaciones() {
         {/* Decorative elements */}
         
         
-      </div>
-
-      {/* KPI Tiles */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Total Alertas', value: stats.totalNotifications, icon: Bell, color: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20' },
-          { label: 'Sin Leer', value: stats.unread, icon: Users, color: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20' },
-          { label: 'Atendidas', value: stats.attended, icon: Check, color: 'text-success', bg: 'bg-success/10', border: 'border-success/20' },
-          { label: 'Fallidos', value: stats.failed, icon: Mail, color: 'text-destructive', bg: 'bg-destructive/10', border: 'border-destructive/20' },
-        ].map((stat, i) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={cn(
-              "relative overflow-hidden rounded-[2rem] border-2 bg-background p-6 transition-all duration-300 hover:shadow-sm",
-              stat.border
-            )}
-          >
-            <div className="flex items-center justify-between relative z-10">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-                <h2 className="text-3xl font-black tracking-tight text-foreground">
-                  {isLoading ? <RefreshCw className="h-6 w-6 animate-spin text-primary" /> : stat.value}
-                </h2>
-              </div>
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center shadow-inner", stat.bg)}>
-                <stat.icon className={cn("h-6 w-6", stat.color)} />
-              </div>
-            </div>
-          </motion.div>
-        ))}
       </div>
 
       <div className="rounded-[2.5rem] border-2 border-border/50 bg-background p-8">
@@ -282,8 +240,8 @@ export default function CentroNotificaciones() {
       )}
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="flex h-auto max-w-full justify-start gap-2 overflow-x-auto bg-background p-1.5 rounded-[1.5rem] border border-border/50">
+        <div className="mb-6 overflow-x-auto rounded-[1.75rem] border border-border/70 bg-white p-1.5 shadow-sm">
+          <TabsList className="grid h-auto min-w-max grid-cols-6 gap-1 bg-transparent p-0">
             {[
               { value: 'radar', label: 'RADAR DE ALERTAS' },
               { value: 'alerts', label: 'ALERTAS EN APP' },
@@ -295,7 +253,7 @@ export default function CentroNotificaciones() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all whitespace-nowrap relative"
+                className="h-10 rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] text-muted-foreground shadow-none transition-all whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm"
               >
                 {tab.label}
               </TabsTrigger>

@@ -531,6 +531,7 @@ export function useTrainingStats() {
         .from('training_certificates')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', currentCompanyId)
+        .eq('status', 'emitido')
         .gte('issue_date', startOfYear);
 
       // Get expiring certificates (next 30 days)

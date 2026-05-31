@@ -129,7 +129,7 @@ export function DiversityGoalsConfig() {
             ))}
           </div>
 
-          <div className="relative overflow-hidden rounded-[3rem] border border-primary/20 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-10 text-white shadow-2xl">
+          <div className="relative overflow-hidden rounded-[3rem] border border-[#1e2f63] bg-[#0b1638] p-10 text-white shadow-2xl">
             <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none scale-150">
               <Target className="w-48 h-48" />
             </div>
@@ -141,13 +141,13 @@ export function DiversityGoalsConfig() {
                 </div>
                 <div className="space-y-2 text-center lg:text-left">
                   <h4 className="text-lg font-black uppercase tracking-tighter">Protocolos de Alerta Temprana</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed max-w-lg">
+                  <p className="max-w-lg text-[10px] font-black uppercase tracking-widest leading-relaxed text-blue-100/80">
                     Notificar automáticamente al cierre de vacante si los indicadores de inclusión divergen del umbral estratégico.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-8 rounded-[2rem] border border-white/20 bg-white/10 p-6 backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-8 rounded-[2rem] border border-[#2f4485] bg-[#13224d] p-6">
                 <div className="space-y-2">
                   <Label className="block text-center text-[9px] font-black uppercase tracking-widest text-cyan-200 sm:text-right">Umbral de Cumplimiento</Label>
                   <div className="flex items-center gap-3">
