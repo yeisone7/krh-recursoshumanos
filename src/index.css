@@ -917,40 +917,42 @@ aside.bg-sidebar nav div.cursor-pointer.gap-3 svg {
 }
 
 /* Inactive Parent Items Default State */
-aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent),
-aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent) {
+aside.bg-sidebar nav a > div.gap-3:not(.bg-primary),
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary) {
   color: #475569 !important; /* Steel/Slate dark gray */
   background-color: transparent !important;
 }
 
-aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent) svg,
-aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent) svg {
+aside.bg-sidebar nav a > div.gap-3:not(.bg-primary) svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary) svg {
   color: #64748b !important; /* Slate icon color */
 }
 
 /* Hover State for Inactive Parent Items */
-aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover,
-aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover {
-  background-color: #f1f5f9 !important; /* Flat soft light gray hover background */
-  color: #0f172a !important; /* Darker slate for premium hover contrast */
+aside.bg-sidebar nav a > div.gap-3:not(.bg-primary):hover,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary):hover {
+  background-color: hsl(var(--primary)) !important; /* Same primary blue as quick access tiles */
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
-aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover svg,
-aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover svg {
-  color: #334155 !important; /* Darker slate icon on hover */
+aside.bg-sidebar nav a > div.gap-3:not(.bg-primary):hover svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary):hover svg {
+  color: hsl(var(--primary-foreground)) !important;
 }
 
-/* Active Parent Items (bg-sidebar-accent) */
-aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent,
-aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent {
-  background-color: #e0f2fe !important; /* Soft sky-blue active background */
-  color: #0ea5e9 !important; /* Crisp sky-blue active text */
+/* Active Parent Items (primary blue like quick access tiles) */
+aside.bg-sidebar nav a > div.gap-3.bg-primary,
+aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-primary {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
   font-weight: 600 !important; /* Slightly more defined active state */
 }
 
-aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent svg,
-aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent svg {
-  color: #0ea5e9 !important;
+aside.bg-sidebar nav a > div.gap-3.bg-primary svg,
+aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-primary svg {
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 /* 2. Sub-menu Navigation Links (gap-2) */
@@ -965,34 +967,36 @@ aside.bg-sidebar nav a > div.gap-2 {
 }
 
 /* Inactive Sub-menu Items Default State */
-aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) {
+aside.bg-sidebar nav a > div.gap-2:not(.bg-primary) {
   color: #475569 !important;
   background-color: transparent !important;
 }
 
-aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) svg {
+aside.bg-sidebar nav a > div.gap-2:not(.bg-primary) svg {
   color: #64748b !important;
 }
 
 /* Hover State for Inactive Sub-menu Items */
-aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
+aside.bg-sidebar nav a > div.gap-2:not(.bg-primary):hover {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
-aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover svg {
-  color: #334155 !important;
+aside.bg-sidebar nav a > div.gap-2:not(.bg-primary):hover svg {
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 /* Active Sub-menu Items */
-aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent {
-  background-color: #e0f2fe !important;
-  color: #0ea5e9 !important;
+aside.bg-sidebar nav a > div.gap-2.bg-primary {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
   font-weight: 600 !important;
 }
 
-aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent svg {
-  color: #0ea5e9 !important;
+aside.bg-sidebar nav a > div.gap-2.bg-primary svg {
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 /* 3. Section Labels (OPINÓMETRO, SISTEMA, etc.) */
@@ -1322,25 +1326,27 @@ html.dark aside.bg-sidebar {
   border-right-color: hsl(var(--sidebar-border)) !important;
 }
 
-html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent),
-html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent),
-html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent) {
+html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-primary),
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary),
+html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-primary) {
   color: hsl(var(--sidebar-foreground)) !important;
   background-color: transparent !important;
 }
 
-html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-sidebar-accent):hover,
-html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-sidebar-accent):hover,
-html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-sidebar-accent):hover {
-  background-color: hsl(var(--sidebar-accent)) !important;
-  color: hsl(var(--sidebar-accent-foreground)) !important;
+html.dark aside.bg-sidebar nav a > div.gap-3:not(.bg-primary):hover,
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3:not(.bg-primary):hover,
+html.dark aside.bg-sidebar nav a > div.gap-2:not(.bg-primary):hover {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
-html.dark aside.bg-sidebar nav a > div.gap-3.bg-sidebar-accent,
-html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-sidebar-accent,
-html.dark aside.bg-sidebar nav a > div.gap-2.bg-sidebar-accent {
-  background-color: hsl(var(--sidebar-accent)) !important;
-  color: hsl(var(--sidebar-accent-foreground)) !important;
+html.dark aside.bg-sidebar nav a > div.gap-3.bg-primary,
+html.dark aside.bg-sidebar nav div.cursor-pointer.gap-3.bg-primary,
+html.dark aside.bg-sidebar nav a > div.gap-2.bg-primary {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
 }
 
 html.dark [class~="bg-red-50"],
