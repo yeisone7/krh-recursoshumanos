@@ -391,7 +391,8 @@ function EventDialog({
           </div>
           <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Variables</Label>
-            <Input className="h-11 rounded-xl" value={draft.variables} onChange={(e) => setDraft((prev) => ({ ...prev, variables: e.target.value }))} placeholder="Empleado, Empresa, Fecha" />
+            <p className="text-[11px] leading-snug text-slate-500">Lista de datos esperados en el evento, separados por comas.</p>
+            <Input className="h-11 rounded-xl" value={draft.variables} onChange={(e) => setDraft((prev) => ({ ...prev, variables: e.target.value }))} placeholder="empleado, empresa, fecha, vacante_id" />
           </div>
           <label className="flex min-h-20 items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
             <Switch checked={draft.is_active} onCheckedChange={(is_active) => setDraft((prev) => ({ ...prev, is_active }))} />
@@ -399,7 +400,8 @@ function EventDialog({
           </label>
           <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
             <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Payload de ejemplo</Label>
-            <Textarea className="min-h-28 rounded-xl font-mono text-xs" value={draft.sample_payload} onChange={(e) => setDraft((prev) => ({ ...prev, sample_payload: e.target.value }))} />
+            <p className="text-[11px] leading-snug text-slate-500">JSON de referencia para pruebas, plantillas y reglas del evento.</p>
+            <Textarea className="min-h-28 rounded-xl font-mono text-xs" value={draft.sample_payload} onChange={(e) => setDraft((prev) => ({ ...prev, sample_payload: e.target.value }))} placeholder={'{\n  "empleado": "Juan Perez",\n  "empresa": "EmpatiQ",\n  "fecha": "2026-05-31",\n  "vacante_id": "VAC-1024"\n}'} />
           </div>
           </div>
         </div>
