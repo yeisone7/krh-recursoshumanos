@@ -283,44 +283,6 @@ const adminNavItems: NavItem[] = [
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 
-const getQuickAccessStyles = (label: string, isActive: boolean) => {
-  const themeColors: Record<string, {
-    activeClass: string;
-    hoverClass: string;
-    iconColorActive: string;
-    iconColorInactive: string;
-  }> = {
-    'Empleados': {
-      activeClass: 'bg-orange-50/90 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 shadow-[0_2px_8px_rgba(234,88,12,0.08)] font-bold',
-      hoverClass: 'hover:bg-orange-50/60 dark:hover:bg-orange-950/10 hover:border-orange-200/55 hover:text-orange-600 dark:hover:text-orange-400',
-      iconColorActive: 'text-orange-500 dark:text-orange-400',
-      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-orange-500'
-    },
-    'Contratos': {
-      activeClass: 'bg-blue-50/90 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 shadow-[0_2px_8px_rgba(37,99,235,0.08)] font-bold',
-      hoverClass: 'hover:bg-blue-50/60 dark:hover:bg-blue-950/10 hover:border-blue-200/55 hover:text-blue-600 dark:hover:text-blue-400',
-      iconColorActive: 'text-blue-500 dark:text-blue-400',
-      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'
-    },
-    'Requisiciones': {
-      activeClass: 'bg-emerald-50/90 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400 shadow-[0_2px_8px_rgba(16,185,129,0.08)] font-bold',
-      hoverClass: 'hover:bg-emerald-50/60 dark:hover:bg-emerald-950/10 hover:border-emerald-200/55 hover:text-emerald-600 dark:hover:text-emerald-400',
-      iconColorActive: 'text-emerald-500 dark:text-emerald-400',
-      iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-emerald-500'
-    }
-  };
-
-  const defaultTheme = {
-    activeClass: 'bg-primary/10 dark:bg-primary/20 border-primary/30 text-primary font-bold shadow-sm',
-    hoverClass: 'hover:bg-primary/5 hover:border-primary/25 hover:text-primary',
-    iconColorActive: 'text-primary',
-    iconColorInactive: 'text-slate-400 dark:text-slate-500 group-hover:text-primary'
-  };
-
-  return themeColors[label] || defaultTheme;
-};
-
-
 export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
@@ -384,6 +346,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Contratos', icon: <FileText className="size-5 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
     { label: 'Requisiciones', icon: <ClipboardList className="size-5 shrink-0" strokeWidth={2} />, href: '/requisiciones', moduleCode: 'requisiciones' },
   ].filter(canViewQuickAccessItem), [canViewQuickAccessItem]);
+
+  const quickAccessColors: Record<string, string> = {
+    Empleados: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
+    Contratos: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+    Requisiciones: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  };
 
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
   const filteredEvaluacionesItem = useMemo(() => filterItems([evaluacionesItem])[0], [filterItems]);
@@ -496,7 +464,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         <div className={cn("gap-2", isCollapsed ? "flex flex-col mt-1" : "grid grid-cols-2 mt-2 px-1")}>
           {quickAccessItems.map((item) => {
             const isActive = location.pathname === item.href;
-            const style = getQuickAccessStyles(item.label, isActive);
+            const colorClass = quickAccessColors[item.label] || 'bg-primary/10 text-primary border-primary/20';
             
             const content = (
               <Link key={item.href} to={item.href} onClick={handleNavClick}>
@@ -504,38 +472,42 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex transition-all duration-300 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex transition-all duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
                       ? "mx-auto h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
-                      : cn(
-                          "min-h-[5.75rem] flex-col items-center justify-between gap-2 rounded-2xl border text-center p-3",
-                          isActive ? style.activeClass : "border-sidebar-border bg-[#e7f0fc]/15 dark:bg-primary/5 text-sidebar-foreground/80 hover:shadow-sm " + style.hoverClass
-                        )
+                      : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
+                    isActive && !isCollapsed && "bg-sidebar-accent border-primary/30 shadow-[0_4px_12px_rgba(14,165,233,0.08)] ring-1 ring-primary/20",
+                    isActive && isCollapsed && "bg-sidebar-accent"
                   )}
                 >
-                  <span className={cn(
-                    "flex items-center justify-center shrink-0 transition-colors [&_svg]:size-5",
-                    isActive ? style.iconColorActive : style.iconColorInactive
+                  <div className={cn(
+                    "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
+                    isCollapsed
+                      ? "h-full w-full"
+                      : cn("h-9 w-9 rounded-xl border", colorClass, isActive && "bg-primary text-white border-transparent shadow-md shadow-primary/20")
                   )}>
                     {item.icon}
-                  </span>
+                  </div>
                   {!isCollapsed && (
                     <span className={cn(
-                    "text-[10px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-normal text-center break-words",
-                      isActive ? "text-inherit" : "text-sidebar-foreground/80 group-hover:text-inherit"
+                      "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
+                      isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/80 group-hover:text-sidebar-accent-foreground"
                     )}>
                       {item.label}
                     </span>
                   )}
                   {item.badge && (
                     <span className={cn(
-                      "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground font-black shadow-sm",
+                      "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm font-black",
                       isCollapsed 
-                        ? "-right-1 -top-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar" 
-                        : "top-1 right-1 h-4.5 min-w-[18px] px-1 text-[9px] leading-none"
+                        ? "-top-1 -right-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar"
+                        : "top-2 right-2 h-5 px-1.5 text-[9px] uppercase"
                     )}>
                       {item.badge}
                     </span>
+                  )}
+                  {isActive && !isCollapsed && (
+                    <div className="absolute bottom-1 left-1/2 h-1 w-8 -translate-x-1/2 rounded-full bg-primary" />
                   )}
                 </motion.div>
               </Link>
