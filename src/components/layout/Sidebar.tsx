@@ -507,8 +507,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     "relative flex transition-all duration-300 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
                       ? "mx-auto h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
-                      : cn("h-16 flex-col items-center justify-center gap-1 rounded-2xl border text-center p-1.5", 
-                           isActive ? style.activeClass : "border-sidebar-border bg-[#e7f0fc]/15 dark:bg-primary/5 text-sidebar-foreground/80 hover:shadow-sm " + style.hoverClass
+                      : cn(
+                          "min-h-[5.75rem] flex-col items-center justify-between gap-2 rounded-2xl border text-center p-3",
+                          isActive ? style.activeClass : "border-sidebar-border bg-[#e7f0fc]/15 dark:bg-primary/5 text-sidebar-foreground/80 hover:shadow-sm " + style.hoverClass
                         )
                   )}
                 >
@@ -520,7 +521,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   </span>
                   {!isCollapsed && (
                     <span className={cn(
-                    "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-normal text-center break-words",
+                    "text-[10px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 whitespace-normal text-center break-words",
                       isActive ? "text-inherit" : "text-sidebar-foreground/80 group-hover:text-inherit"
                     )}>
                       {item.label}
