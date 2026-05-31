@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Target, Save, Loader2, Info } from 'lucide-react';
+import { Accessibility, CircleUserRound, Globe2, GraduationCap, Home, Target, Save, Loader2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,11 +56,11 @@ export function DiversityGoalsConfig() {
   };
 
   const goalFields = [
-    { key: 'min_female_pct' as const, label: 'Género Femenino', icon: '♀' },
-    { key: 'min_disability_pct' as const, label: 'Inclusión Discapacidad', icon: '♿' },
-    { key: 'min_ethnic_pct' as const, label: 'Grupos Étnicos', icon: '🌍' },
-    { key: 'min_first_job_pct' as const, label: 'Primer Empleo Joven', icon: '🎓' },
-    { key: 'min_head_household_pct' as const, label: 'Cabeza de Familia', icon: '🏠' },
+    { key: 'min_female_pct' as const, label: 'Género Femenino', icon: CircleUserRound, iconClass: 'bg-sky-50 text-sky-600 border-sky-100' },
+    { key: 'min_disability_pct' as const, label: 'Inclusión Discapacidad', icon: Accessibility, iconClass: 'bg-emerald-50 text-emerald-600 border-emerald-100' },
+    { key: 'min_ethnic_pct' as const, label: 'Grupos Étnicos', icon: Globe2, iconClass: 'bg-violet-50 text-violet-600 border-violet-100' },
+    { key: 'min_first_job_pct' as const, label: 'Primer Empleo Joven', icon: GraduationCap, iconClass: 'bg-amber-50 text-amber-600 border-amber-100' },
+    { key: 'min_head_household_pct' as const, label: 'Cabeza de Familia', icon: Home, iconClass: 'bg-rose-50 text-rose-600 border-rose-100' },
   ];
 
   return (
@@ -105,8 +105,8 @@ export function DiversityGoalsConfig() {
               <div key={f.key} className="group relative rounded-[2.5rem] border border-slate-200 bg-slate-50 p-8 transition-all duration-500 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5">
                 <div className="flex flex-col gap-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-xl shadow-sm grayscale group-hover:grayscale-0 transition-all">
-                      {f.icon}
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm transition-all group-hover:scale-105 ${f.iconClass}`}>
+                      <f.icon className="h-5 w-5 stroke-[2.25]" />
                     </div>
                     <Badge variant="outline" className="rounded-lg border-primary/30 bg-primary/10 px-2 py-1 text-[8px] font-black uppercase text-primary">OBJETIVO</Badge>
                   </div>
