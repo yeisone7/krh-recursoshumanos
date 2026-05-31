@@ -35,7 +35,7 @@ const MODULE_SHORTCUTS: SearchResult[] = [
   { id: 'mod-preliquidacion', title: 'Pre-Liquidación', subtitle: 'Cálculo de nómina', type: 'module', icon: Calculator, url: '/pre-liquidacion' },
   { id: 'mod-calendario', title: 'Calendario', subtitle: 'Calendario unificado', type: 'module', icon: Calendar, url: '/calendario' },
   { id: 'mod-reportes', title: 'Reportes', subtitle: 'Informes y reportes', type: 'module', icon: BarChart3, url: '/reportes' },
-  { id: 'mod-alertas', title: 'Alertas', subtitle: 'Centro de alertas', type: 'module', icon: Bell, url: '/alertas' },
+  { id: 'mod-alertas', title: 'Notificaciones', subtitle: 'Radar de alertas y envios', type: 'module', icon: Bell, url: '/notificaciones' },
   { id: 'mod-centros', title: 'Centros de Operación', subtitle: 'Gestión de centros', type: 'module', icon: Building2, url: '/centros' },
   { id: 'mod-configuracion', title: 'Configuración', subtitle: 'Ajustes del sistema', type: 'module', icon: Settings, url: '/configuracion' },
 ];

@@ -90,7 +90,7 @@ const moduleSuggestions: Record<string, { module: string; moduleLabel: string; s
   '/seleccion': { module: 'seleccion', moduleLabel: 'Selección y Vacantes', suggestions: ['Crear vacante', 'Revisar candidatos', 'Mover candidato de etapa', 'Registrar entrevista', 'Consultar requisición vinculada', 'Validar documentos'] },
   '/dotacion': { module: 'dotacion', moduleLabel: 'Dotación', suggestions: ['Entregar dotación', 'Ver vencimientos', 'Configurar tipos', 'Registrar devolución', 'Consultar inventario', 'Revisar cumplimiento'] },
   '/examenes': { module: 'examenes', moduleLabel: 'Exámenes', suggestions: ['Registrar examen', 'Revisar vencimientos', 'Consultar profesiograma', 'Crear orden médica', 'Ver historial médico', 'Configurar catálogo'] },
-  '/alertas': { module: 'alertas', moduleLabel: 'Alertas', suggestions: ['Revisar alertas críticas', 'Gestionar notificaciones', 'Configurar destinatarios', 'Filtrar alertas', 'Atender vencimientos', 'Ver alertas resueltas'] },
+  '/notificaciones': { module: 'alertas', moduleLabel: 'Notificaciones', suggestions: ['Revisar alertas críticas', 'Gestionar notificaciones', 'Configurar destinatarios', 'Filtrar alertas', 'Atender vencimientos', 'Ver alertas resueltas'] },
 };
 
 function rotateItems<T>(items: T[], seed: string, count: number) {

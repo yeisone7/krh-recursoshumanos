@@ -447,7 +447,6 @@ export default function Configuracion() {
           <TabsList className="flex h-auto p-1.5 gap-1.5 bg-white border border-slate-100 rounded-2xl w-max md:w-full max-w-4xl shadow-sm">
             {[
               { value: 'company', label: 'Identidad', icon: Building2 },
-              { value: 'alerts', label: 'Alertas', icon: Bell },
               { value: 'security', label: 'Protección', icon: Shield },
               { value: 'ai', label: 'IA Cognitiva', icon: Brain },
               { value: 'watermark', label: 'Branding', icon: Stamp },
