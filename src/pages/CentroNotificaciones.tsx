@@ -66,7 +66,7 @@ export default function CentroNotificaciones() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [channelFilter, setChannelFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState(() => normalizeTab(searchParams.get('tab')));
+  const activeTab = normalizeTab(searchParams.get('tab'));
   const canViewEngine = hasPermission('motor_notificaciones', 'view') || hasPermission('alertas', 'view');
   const canManageAlertSettings =
     hasPermission('alertas', 'update') ||
@@ -74,7 +74,6 @@ export default function CentroNotificaciones() {
     hasPermission('motor_notificaciones', 'update');
 
   const handleTabChange = useCallback((next: string) => {
-    setActiveTab(next);
     setSearchParams((prev) => {
       const params = new URLSearchParams(prev);
       if (next === 'radar') {
@@ -85,13 +84,6 @@ export default function CentroNotificaciones() {
       return params;
     }, { replace: true });
   }, [setSearchParams]);
-
-  useEffect(() => {
-    const next = normalizeTab(searchParams.get('tab'));
-    if (next !== activeTab) {
-      setActiveTab(next);
-    }
-  }, [activeTab, searchParams]);
 
   useEffect(() => {
     if (!permissionsLoaded) return;
@@ -260,25 +252,25 @@ export default function CentroNotificaciones() {
             ))}
           </TabsList>
         </div>
-            <TabsContent value="radar" className="mt-0">
+            <TabsContent value="radar" className="mt-0" forceMount>
               <Alertas embedded />
             </TabsContent>
             {canManageCompanyHistory && (
-              <TabsContent value="rules" className="mt-0">
+              <TabsContent value="rules" className="mt-0" forceMount>
                 <NotificationRulesManager />
               </TabsContent>
             )}
             {canViewEngine && (
-              <TabsContent value="engine" className="mt-0">
+              <TabsContent value="engine" className="mt-0" forceMount>
                 <NotificationEngineManager />
               </TabsContent>
             )}
             {canManageAlertSettings && (
-              <TabsContent value="settings" className="mt-0">
+              <TabsContent value="settings" className="mt-0" forceMount>
                 <AlertProtocolSettings />
               </TabsContent>
             )}
-            <TabsContent value="alerts">
+            <TabsContent value="alerts" forceMount>
               <div className="space-y-3 md:hidden">
                 {filteredNotifications.map((item) => (
                   <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
@@ -330,7 +322,7 @@ export default function CentroNotificaciones() {
               </Table>
               </div>
             </TabsContent>
-            <TabsContent value="deliveries">
+            <TabsContent value="deliveries" forceMount>
               <div className="space-y-3 md:hidden">
                 {filteredLogs.map((item) => (
                   <div key={item.id} className="rounded-lg border bg-card p-3 space-y-3">
