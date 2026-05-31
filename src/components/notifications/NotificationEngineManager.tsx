@@ -1011,122 +1011,142 @@ function ChannelProviderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>{provider ? 'Editar proveedor' : 'Nuevo proveedor'}</DialogTitle>
-          <DialogDescription>Proveedor extensible por canal.</DialogDescription>
+      <DialogContent className="!fixed !left-1/2 !top-3 flex max-h-[calc(100dvh-1.5rem)] !translate-x-[-50%] !translate-y-0 flex-col overflow-hidden rounded-[1.75rem] border-slate-200 bg-slate-50/95 p-0 shadow-2xl shadow-slate-950/20 sm:!top-4 sm:max-w-4xl">
+        <DialogHeader className="shrink-0 border-b border-sky-100 bg-white px-5 pb-4 pt-5 sm:px-6">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-300" />
+          <div className="flex items-start gap-4 pr-8">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-sky-50 text-primary shadow-sm">
+              <RadioTower className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl font-black tracking-tight text-slate-950">
+                {provider ? 'Editar proveedor' : 'Nuevo proveedor'}
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium text-slate-500">
+                Define el canal, la configuración base y los límites operativos del proveedor.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Canal</Label>
-            <Select value={draft.channel} onValueChange={(channel) => handleChannelChange(channel as NotificationEngineChannel)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ENGINE_CHANNELS.map((channel) => <SelectItem key={channel} value={channel}>{ENGINE_CHANNEL_LABELS[channel]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Clave proveedor</Label>
-            <Input value={draft.provider_key} onChange={(e) => setDraft((prev) => ({ ...prev, provider_key: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
-            <Label>Nombre</Label>
-            <Input value={draft.display_name} onChange={(e) => setDraft((prev) => ({ ...prev, display_name: e.target.value }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center gap-3 rounded-xl border border-border/70 p-3">
-              <Switch checked={draft.is_enabled} onCheckedChange={(is_enabled) => setDraft((prev) => ({ ...prev, is_enabled }))} />
-              <span className="text-sm font-semibold">Habilitado</span>
-            </label>
-            <div className="space-y-2">
-              <Label>Limite/min</Label>
-              <Input type="number" min={1} value={draft.throttle_per_minute} onChange={(e) => setDraft((prev) => ({ ...prev, throttle_per_minute: e.target.value }))} />
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+          <div className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">
+            <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Canal</Label>
+              <Select value={draft.channel} onValueChange={(channel) => handleChannelChange(channel as NotificationEngineChannel)}>
+                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ENGINE_CHANNELS.map((channel) => <SelectItem key={channel} value={channel}>{ENGINE_CHANNEL_LABELS[channel]}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-          </div>
-          {isTwilioWhatsApp ? (
-            <div className="space-y-4 rounded-2xl border border-border/70 bg-muted/20 p-4 sm:col-span-2">
-              <div>
-                <h4 className="text-sm font-black text-foreground">Vinculacion Twilio WhatsApp</h4>
-                <p className="text-xs text-muted-foreground">
-                  El token no se guarda aqui. Define el secreto en Supabase con el nombre indicado.
-                </p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Modo</Label>
-                  <Select value={String(twilioConfig.mode || 'sandbox')} onValueChange={(mode) => updateTwilioConfig({ mode })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sandbox">Sandbox</SelectItem>
-                      <SelectItem value="production">Produccion</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Secreto Auth Token</Label>
-                  <Input
-                    value={String(twilioConfig.auth_token_secret || 'TWILIO_AUTH_TOKEN')}
-                    onChange={(e) => updateTwilioConfig({ auth_token_secret: e.target.value })}
-                    placeholder="TWILIO_AUTH_TOKEN"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Account SID</Label>
-                  <Input
-                    value={String(twilioConfig.account_sid || '')}
-                    onChange={(e) => updateTwilioConfig({ account_sid: e.target.value })}
-                    placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Sender WhatsApp</Label>
-                  <Input
-                    value={String(twilioConfig.sender_id || '')}
-                    onChange={(e) => updateTwilioConfig({ sender_id: e.target.value })}
-                    placeholder="whatsapp:+14155238886"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Etiqueta del sender</Label>
-                  <Input
-                    value={String(twilioConfig.sender_label || '')}
-                    onChange={(e) => updateTwilioConfig({ sender_label: e.target.value })}
-                    placeholder="Linea oficial RRHH"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Content SID opcional</Label>
-                  <Input
-                    value={String(twilioConfig.content_sid || '')}
-                    onChange={(e) => updateTwilioConfig({ content_sid: e.target.value })}
-                    placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label>Status Callback opcional</Label>
-                  <Input
-                    value={String(twilioConfig.status_callback_url || '')}
-                    onChange={(e) => updateTwilioConfig({ status_callback_url: e.target.value })}
-                    placeholder="Se genera automaticamente si se deja vacio"
-                  />
-                </div>
+            <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Clave proveedor</Label>
+              <Input className="h-11 rounded-xl" value={draft.provider_key} onChange={(e) => setDraft((prev) => ({ ...prev, provider_key: e.target.value }))} placeholder="twilio" />
+            </div>
+            <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Nombre visible</Label>
+              <Input className="h-11 rounded-xl" value={draft.display_name} onChange={(e) => setDraft((prev) => ({ ...prev, display_name: e.target.value }))} placeholder="Twilio WhatsApp" />
+            </div>
+            <div className="grid grid-cols-2 gap-3 rounded-2xl bg-slate-50/70 p-4">
+              <label className="flex items-center gap-3 rounded-xl border border-border/70 bg-white p-3">
+                <Switch checked={draft.is_enabled} onCheckedChange={(is_enabled) => setDraft((prev) => ({ ...prev, is_enabled }))} />
+                <span className="text-sm font-black uppercase tracking-wider">Habilitado</span>
+              </label>
+              <div className="space-y-2">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Límite/min</Label>
+                <Input className="h-11 rounded-xl" type="number" min={1} value={draft.throttle_per_minute} onChange={(e) => setDraft((prev) => ({ ...prev, throttle_per_minute: e.target.value }))} placeholder="20" />
               </div>
             </div>
-          ) : (
-            <div className="space-y-2 sm:col-span-2">
-              <Label>Configuracion JSON</Label>
-              <Textarea className="min-h-32 font-mono text-xs" value={draft.config} onChange={(e) => setDraft((prev) => ({ ...prev, config: e.target.value }))} />
+            {isTwilioWhatsApp ? (
+              <div className="space-y-4 rounded-2xl border border-sky-100 bg-sky-50/70 p-4 sm:col-span-2">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black text-slate-950">Vinculación Twilio WhatsApp</h4>
+                  <p className="text-xs leading-snug text-slate-500">
+                    El secreto no se guarda aquí. Completa los datos de conexión y deja el `auth_token` en Supabase con el nombre indicado.
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Modo</Label>
+                    <Select value={String(twilioConfig.mode || 'sandbox')} onValueChange={(mode) => updateTwilioConfig({ mode })}>
+                      <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sandbox">Sandbox</SelectItem>
+                        <SelectItem value="production">Producción</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Secreto Auth Token</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.auth_token_secret || 'TWILIO_AUTH_TOKEN')}
+                      onChange={(e) => updateTwilioConfig({ auth_token_secret: e.target.value })}
+                      placeholder="TWILIO_AUTH_TOKEN"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Account SID</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.account_sid || '')}
+                      onChange={(e) => updateTwilioConfig({ account_sid: e.target.value })}
+                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Sender WhatsApp</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.sender_id || '')}
+                      onChange={(e) => updateTwilioConfig({ sender_id: e.target.value })}
+                      placeholder="whatsapp:+14155238886"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Etiqueta del sender</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.sender_label || '')}
+                      onChange={(e) => updateTwilioConfig({ sender_label: e.target.value })}
+                      placeholder="Línea oficial RRHH"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Content SID opcional</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.content_sid || '')}
+                      onChange={(e) => updateTwilioConfig({ content_sid: e.target.value })}
+                      placeholder="HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Status Callback opcional</Label>
+                    <Input
+                      className="h-11 rounded-xl"
+                      value={String(twilioConfig.status_callback_url || '')}
+                      onChange={(e) => updateTwilioConfig({ status_callback_url: e.target.value })}
+                      placeholder="Se genera automáticamente si se deja vacio"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Configuración JSON</Label>
+                <Textarea className="min-h-32 rounded-xl font-mono text-xs" value={draft.config} onChange={(e) => setDraft((prev) => ({ ...prev, config: e.target.value }))} />
+              </div>
+            )}
+            <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
+              <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Reintentos JSON</Label>
+              <Textarea className="min-h-24 rounded-xl font-mono text-xs" value={draft.retry_policy} onChange={(e) => setDraft((prev) => ({ ...prev, retry_policy: e.target.value }))} />
             </div>
-          )}
-          <div className="space-y-2 sm:col-span-2">
-            <Label>Reintentos JSON</Label>
-            <Textarea className="min-h-24 font-mono text-xs" value={draft.retry_policy} onChange={(e) => setDraft((prev) => ({ ...prev, retry_policy: e.target.value }))} />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={isSaving || !draft.provider_key.trim() || !draft.display_name.trim()}>
+        <DialogFooter className="shrink-0 border-t border-slate-200 bg-white px-5 pb-4 pt-3 shadow-[0_-12px_30px_rgba(15,23,42,0.06)] sm:px-6">
+          <Button className="h-11 rounded-xl px-6 font-bold" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button className="h-11 rounded-xl px-7 font-black" onClick={handleSubmit} disabled={isSaving || !draft.provider_key.trim() || !draft.display_name.trim()}>
             {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
             Guardar
           </Button>
