@@ -1029,7 +1029,25 @@ function ChannelProviderDialog({
           </div>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-          <div className="grid gap-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2">
+          <div className="space-y-4 rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-sky-100 bg-sky-50/70 px-4 py-3">
+              <Badge variant="outline" className="rounded-md border-sky-200 bg-white text-[10px] font-black uppercase tracking-widest text-sky-700">
+                {ENGINE_CHANNEL_LABELS[draft.channel]}
+              </Badge>
+              <Badge variant="outline" className={cn('rounded-md text-[10px] font-black uppercase tracking-widest', draft.is_enabled ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-slate-100 text-slate-500')}>
+                {draft.is_enabled ? 'Activo' : 'Pausado'}
+              </Badge>
+              <Badge variant="outline" className="rounded-md border-cyan-200 bg-cyan-50 text-[10px] font-black uppercase tracking-widest text-cyan-700">
+                {draft.throttle_per_minute ? `${draft.throttle_per_minute}/min` : 'Sin límite'}
+              </Badge>
+              {isTwilioWhatsApp && (
+                <Badge variant="outline" className="rounded-md border-blue-200 bg-blue-50 text-[10px] font-black uppercase tracking-widest text-blue-700">
+                  Twilio
+                </Badge>
+              )}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4">
               <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Canal</Label>
               <Select value={draft.channel} onValueChange={(channel) => handleChannelChange(channel as NotificationEngineChannel)}>
@@ -1135,12 +1153,15 @@ function ChannelProviderDialog({
             ) : (
               <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
                 <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Configuración JSON</Label>
+                <p className="text-[11px] leading-snug text-slate-500">Solo usa este bloque si el proveedor no es Twilio. Aquí vive el JSON crudo de integración.</p>
                 <Textarea className="min-h-32 rounded-xl font-mono text-xs" value={draft.config} onChange={(e) => setDraft((prev) => ({ ...prev, config: e.target.value }))} />
               </div>
             )}
             <div className="space-y-2 rounded-2xl bg-slate-50/70 p-4 sm:col-span-2">
               <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">Reintentos JSON</Label>
+              <p className="text-[11px] leading-snug text-slate-500">Define cuántos intentos y con qué ventana de espera reintentar entregas fallidas.</p>
               <Textarea className="min-h-24 rounded-xl font-mono text-xs" value={draft.retry_policy} onChange={(e) => setDraft((prev) => ({ ...prev, retry_policy: e.target.value }))} />
+            </div>
             </div>
           </div>
         </div>
