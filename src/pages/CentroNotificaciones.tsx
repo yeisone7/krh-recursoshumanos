@@ -78,15 +78,6 @@ export default function CentroNotificaciones() {
   }, []);
 
   useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (!tabParam) return;
-    const next = normalizeTab(tabParam);
-    if (next !== activeTab) {
-      setActiveTab(next);
-    }
-  }, [activeTab, searchParams]);
-
-  useEffect(() => {
     if (!permissionsLoaded) return;
     if (activeTab === 'engine' && !canViewEngine) {
       handleTabChange('radar');
