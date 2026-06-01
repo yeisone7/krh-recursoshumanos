@@ -156,39 +156,28 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6 sm:px-8">
-              <section className="rounded-2xl border border-border/70 bg-muted/25 p-4 shadow-sm sm:p-5">
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-primary" />
-                          <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                            Correo electrónico
-                          </FormLabel>
-                        </div>
-                        <FormControl>
-                          <Input
-                            placeholder="usuario@empresa.com"
-                            {...field}
-                            className="h-12 rounded-xl border-border/70 bg-background px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
-                          />
-                        </FormControl>
-                        <FormDescription className="text-sm leading-relaxed text-muted-foreground">
-                          El usuario recibirá un enlace para crear su cuenta.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <section className="rounded-2xl border border-primary/15 bg-primary/5 p-4 shadow-sm sm:p-5">
+                <div className="mb-4 flex items-center justify-between gap-4 rounded-2xl border border-primary/10 bg-background px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Contacto de invitación</p>
+                      <p className="text-xs text-muted-foreground">Correo y celular quedan guardados para acceso y seguimiento.</p>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">
+                    WhatsApp listo
+                  </Badge>
+                </div>
 
+                <div className="space-y-4">
                   <FormField
                     control={form.control}
                     name="mobile"
                     render={({ field }) => (
-                      <FormItem className="space-y-3">
+                      <FormItem className="space-y-3 rounded-2xl border border-primary/15 bg-background p-4">
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-primary" />
                           <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -202,11 +191,37 @@ export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) 
                             autoComplete="tel"
                             placeholder="+57 300 123 4567"
                             {...field}
-                            className="h-12 rounded-xl border-border/70 bg-background px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
+                            className="h-12 rounded-xl border-primary/20 bg-white px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
                           />
                         </FormControl>
                         <FormDescription className="text-sm leading-relaxed text-muted-foreground">
                           Usa un celular colombiano válido. Acepta 300 123 4567 o +57 300 123 4567.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3 rounded-2xl border border-border/70 bg-background p-4">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-primary" />
+                          <FormLabel className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                            Correo electrónico
+                          </FormLabel>
+                        </div>
+                        <FormControl>
+                          <Input
+                            placeholder="usuario@empresa.com"
+                            {...field}
+                            className="h-12 rounded-xl border-border/70 bg-white px-4 text-sm shadow-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/10"
+                          />
+                        </FormControl>
+                        <FormDescription className="text-sm leading-relaxed text-muted-foreground">
+                          El usuario recibirá un enlace para crear su cuenta.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
