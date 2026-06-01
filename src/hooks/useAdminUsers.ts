@@ -118,7 +118,14 @@ export function useAdminUsers() {
       if (statusError) throw statusError;
 
       // 6. Fetch user profiles
-      const { data: profilesData, error: profilesError } = await batchQuery(
+      let profilesData: Array<{
+        id: string;
+        full_name: string | null;
+        display_name: string | null;
+        avatar_url: string | null;
+        mobile?: string | null;
+      }> | undefined;
+      const { data: profilesWithMobile, error: profilesError } = await batchQuery(
         userIds,
         100,
         (chunk) => supabase
@@ -126,7 +133,22 @@ export function useAdminUsers() {
           .select('id, full_name, display_name, avatar_url, mobile')
           .in('id', chunk)
       );
-      if (profilesError) throw profilesError;
+
+      if (profilesError) {
+        console.warn('Mobile column unavailable in user_profiles; falling back to legacy profile shape.', profilesError);
+        const { data: legacyProfiles, error: legacyProfilesError } = await batchQuery(
+          userIds,
+          100,
+          (chunk) => supabase
+            .from('user_profiles')
+            .select('id, full_name, display_name, avatar_url')
+            .in('id', chunk)
+        );
+        if (legacyProfilesError) throw legacyProfilesError;
+        profilesData = legacyProfiles?.map(profile => ({ ...profile, mobile: null })) as typeof profilesData;
+      } else {
+        profilesData = profilesWithMobile;
+      }
 
       // 7. Fetch auth emails through a guarded RPC. Auth emails are not exposed
       // directly through RLS tables, so admins get them from a security definer.

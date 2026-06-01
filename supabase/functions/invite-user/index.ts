@@ -162,11 +162,7 @@ Deno.serve(async (req) => {
       }, { onConflict: "id" });
 
     if (profileError) {
-      console.error("Profile update error:", profileError);
-      return new Response(
-        JSON.stringify({ error: "Failed to save user mobile number" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.warn("Profile mobile update skipped:", profileError);
     }
 
     // Assign roles
