@@ -104,7 +104,7 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     return users.filter(u => 
       getUserDisplayName(u).toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q) ||
-      u.mobile?.toLowerCase().includes(q) ||
+      String(u.mobile || '').toLowerCase().includes(q) ||
       u.roles.some(r => r.toLowerCase().includes(q)) ||
       u.custom_roles.some(r => r.toLowerCase().includes(q))
     );
