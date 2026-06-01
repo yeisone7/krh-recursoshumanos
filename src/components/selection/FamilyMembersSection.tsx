@@ -15,6 +15,7 @@ interface FamilyMember {
 
 interface FamilyMembersSectionProps {
   candidateId: string;
+  refreshKey?: number;
 }
 
 const genderLabels: Record<string, string> = {
@@ -22,7 +23,7 @@ const genderLabels: Record<string, string> = {
   F: 'Femenino',
 };
 
-export function FamilyMembersSection({ candidateId }: FamilyMembersSectionProps) {
+export function FamilyMembersSection({ candidateId, refreshKey }: FamilyMembersSectionProps) {
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,7 +38,7 @@ export function FamilyMembersSection({ candidateId }: FamilyMembersSectionProps)
       setLoading(false);
     };
     fetch();
-  }, [candidateId]);
+  }, [candidateId, refreshKey]);
 
   if (loading || members.length === 0) return null;
 

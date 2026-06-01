@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -44,7 +44,7 @@ import { toast } from 'sonner';
 
 import { candidateFormSchema, CandidateFormData } from '@/types/vacancy';
 import { useOpenVacancies } from '@/hooks/useVacancies';
-import { useCreateCandidate } from '@/hooks/useCandidates';
+import { useCreateCandidate, useUpdateCandidate } from '@/hooks/useCandidates';
 import { CityDepartmentSelect, CitySelect } from '@/components/ui/city-department-select';
 import { supabase } from '@/integrations/supabase/client';
 import { familyRelationshipOptions } from '@/types/employee';
@@ -53,23 +53,29 @@ import { useCandidateBackground } from '@/hooks/useCandidateBackground';
 import { useEducationLevels } from '@/hooks/useEducationLevels';
 import { useProfessions } from '@/hooks/useProfessions';
 import { CandidateBackgroundAlerts } from '@/components/selection/CandidateBackgroundAlerts';
+import type { Database } from '@/integrations/supabase/types';
+
+type CandidateRow = Database['public']['Tables']['candidates']['Row'];
 
 interface CandidateFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   vacancyId?: string;
   onSuccess?: () => void;
+  candidateToEdit?: CandidateRow | null;
 }
 
-export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }: CandidateFormDialogProps) {
+export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, candidateToEdit }: CandidateFormDialogProps) {
   const [activeTab, setActiveTab] = useState('personal');
   const { currentCompanyId } = useAuth();
   const { data: vacancies = [] } = useOpenVacancies();
   const { data: educationLevels = [] } = useEducationLevels();
   const { data: professions = [] } = useProfessions();
   const createCandidate = useCreateCandidate();
+  const updateCandidate = useUpdateCandidate();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
   const [prefilled, setPrefilled] = useState(false);
+  const isEditMode = !!candidateToEdit;
 
   const form = useForm<CandidateFormData>({
     resolver: zodResolver(candidateFormSchema),
@@ -89,10 +95,104 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
     control: form.control,
     name: 'familyMembers',
   });
+  const selectedEditVacancy = candidateToEdit
+    ? vacancies.find((vacancy) => vacancy.id === candidateToEdit.vacancy_id)
+    : undefined;
+
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        vacancyId: vacancyId || '',
+        documentType: 'CC',
+        experienceYears: 0,
+        isFirstJob: false,
+        isHeadOfHousehold: false,
+        isConflictVictim: false,
+        isDemobilized: false,
+        familyMembers: [],
+      });
+      setActiveTab('personal');
+      setPrefilled(false);
+      return;
+    }
+
+    const loadCandidate = async () => {
+      if (!candidateToEdit) {
+        form.reset({
+          vacancyId: vacancyId || '',
+          documentType: 'CC',
+          experienceYears: 0,
+          isFirstJob: false,
+          isHeadOfHousehold: false,
+          isConflictVictim: false,
+          isDemobilized: false,
+          familyMembers: [],
+        });
+        return;
+      }
+
+      const { data: familyMembers } = await supabase
+        .from('candidate_family_members' as any)
+        .select('*')
+        .eq('candidate_id', candidateToEdit.id)
+        .order('created_at', { ascending: true });
+
+      form.reset({
+        vacancyId: candidateToEdit.vacancy_id || vacancyId || '',
+        firstName: candidateToEdit.first_name || '',
+        lastName: candidateToEdit.last_name || '',
+        documentType: candidateToEdit.document_type || 'CC',
+        documentNumber: candidateToEdit.document_number || '',
+        documentIssueDate: candidateToEdit.document_issue_date ? new Date(`${candidateToEdit.document_issue_date}T00:00:00`) : undefined,
+        documentIssueCity: candidateToEdit.document_issue_city || '',
+        email: candidateToEdit.email || '',
+        phone: candidateToEdit.phone || '',
+        mobile: candidateToEdit.mobile || '',
+        address: candidateToEdit.address || '',
+        neighborhood: candidateToEdit.neighborhood || '',
+        city: candidateToEdit.city || '',
+        department: candidateToEdit.department || '',
+        birthDate: candidateToEdit.birth_date ? new Date(`${candidateToEdit.birth_date}T00:00:00`) : undefined,
+        gender: candidateToEdit.gender || '',
+        genderIdentity: candidateToEdit.gender_identity || '',
+        genderIdentityOther: candidateToEdit.gender_identity_other || '',
+        educationLevel: candidateToEdit.education_level || '',
+        educationLevelId: candidateToEdit.education_level_id || undefined,
+        profession: candidateToEdit.profession || '',
+        professionId: candidateToEdit.profession_id || undefined,
+        experienceYears: candidateToEdit.experience_years || 0,
+        currentCompany: candidateToEdit.current_company || '',
+        currentPosition: candidateToEdit.current_position || '',
+        salaryExpectation: candidateToEdit.salary_expectation ? String(candidateToEdit.salary_expectation) : '',
+        source: candidateToEdit.source || '',
+        generalNotes: candidateToEdit.general_notes || '',
+        isFirstJob: candidateToEdit.is_first_job || false,
+        isHeadOfHousehold: candidateToEdit.is_head_of_household || false,
+        disabilityType: candidateToEdit.disability_type || '',
+        ethnicGroup: candidateToEdit.ethnic_group || '',
+        isConflictVictim: candidateToEdit.is_conflict_victim || false,
+        isDemobilized: candidateToEdit.is_demobilized || false,
+        bloodType: candidateToEdit.blood_type || '',
+        maritalStatus: candidateToEdit.marital_status || '',
+        emergencyContactName: candidateToEdit.emergency_contact_name || '',
+        emergencyContactPhone: candidateToEdit.emergency_contact_phone || '',
+        emergencyContactRelationship: candidateToEdit.emergency_contact_relationship || '',
+        familyMembers: ((familyMembers as any[]) || []).map((member) => ({
+          relationship: member.relationship || '',
+          fullName: member.full_name || '',
+          age: member.age ?? undefined,
+          gender: member.gender ?? null,
+          observations: member.observations || '',
+        })),
+      });
+    };
+
+    loadCandidate();
+  }, [candidateToEdit, form, open, vacancyId]);
 
   const handleSubmit = async (data: CandidateFormData) => {
     try {
-      const candidate = await createCandidate.mutateAsync({
+      const candidatePayload = {
         vacancy_id: data.vacancyId,
         first_name: data.firstName,
         last_name: data.lastName,
@@ -130,12 +230,28 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         emergency_contact_name: data.emergencyContactName || null,
         emergency_contact_phone: data.emergencyContactPhone || null,
         emergency_contact_relationship: data.emergencyContactRelationship || null,
-      });
+      };
+
+      const candidate = isEditMode && candidateToEdit
+        ? await updateCandidate.mutateAsync({
+            id: candidateToEdit.id,
+            ...candidatePayload,
+          })
+        : await createCandidate.mutateAsync(candidatePayload);
+
+      if (isEditMode) {
+        const { error: deleteFamilyError } = await supabase
+          .from('candidate_family_members' as any)
+          .delete()
+          .eq('candidate_id', candidate.id);
+        if (deleteFamilyError) throw deleteFamilyError;
+      }
 
       // Save family members if any
       if (data.familyMembers && data.familyMembers.length > 0) {
         const familyInserts = data.familyMembers.map((m) => ({
           candidate_id: candidate.id,
+          company_id: currentCompanyId,
           relationship: m.relationship,
           full_name: m.fullName,
           age: m.age ?? null,
@@ -145,16 +261,18 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         await supabase.from('candidate_family_members' as any).insert(familyInserts);
       }
 
-      toast.success('Candidato registrado', {
-        description: `${data.firstName} ${data.lastName} ha sido agregado al proceso.`,
+      toast.success(isEditMode ? 'Candidato actualizado' : 'Candidato registrado', {
+        description: isEditMode
+          ? `La información de ${data.firstName} ${data.lastName} fue actualizada.`
+          : `${data.firstName} ${data.lastName} ha sido agregado al proceso.`,
       });
 
       onOpenChange(false);
       form.reset();
       onSuccess?.();
     } catch (error: any) {
-      console.error('Error creating candidate:', error);
-      toast.error('Error al registrar candidato', {
+      console.error('Error saving candidate:', error);
+      toast.error(isEditMode ? 'Error al actualizar candidato' : 'Error al registrar candidato', {
         description: error.message || 'Por favor intenta de nuevo',
       });
     }
@@ -173,10 +291,10 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
         <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
           <DialogTitle className="font-display text-lg leading-tight flex items-center gap-2 sm:text-xl">
             <User className="w-5 h-5 text-primary" />
-            Nuevo Candidato
+            {isEditMode ? 'Editar Candidato' : 'Nuevo Candidato'}
           </DialogTitle>
           <DialogDescription>
-            Registre un candidato para el proceso de selección.
+            {isEditMode ? 'Actualice la información del candidato postulado.' : 'Registre un candidato para el proceso de selección.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -216,6 +334,11 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="bg-background">
+                            {isEditMode && candidateToEdit && !selectedEditVacancy && (
+                              <SelectItem value={candidateToEdit.vacancy_id}>
+                                Vacante actual
+                              </SelectItem>
+                            )}
                             {vacancies.map((vacancy) => (
                               <SelectItem key={vacancy.id} value={vacancy.id}>
                                 {vacancy.position_title} - {(vacancy.operation_centers as any)?.name || 'General'}
@@ -298,7 +421,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
                                 const docNum = e.target.value.trim();
                                 if (docNum.length >= 4) {
                                   const result = await checkBackground(docNum, currentCompanyId);
-                                  if (result?.previous_candidacies?.length > 0 && !prefilled) {
+                                  if (!isEditMode && result?.previous_candidacies?.length > 0 && !prefilled) {
                                     const latest = result.previous_candidacies[0];
                                     const current = form.getValues();
                                     if (!current.firstName && latest.first_name) form.setValue('firstName', latest.first_name);
@@ -1132,8 +1255,10 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess }
               <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={createCandidate.isPending}>
-                {createCandidate.isPending ? 'Registrando...' : 'Registrar Candidato'}
+              <Button type="submit" className="w-full sm:w-auto" disabled={createCandidate.isPending || updateCandidate.isPending}>
+                {createCandidate.isPending || updateCandidate.isPending
+                  ? (isEditMode ? 'Guardando...' : 'Registrando...')
+                  : (isEditMode ? 'Guardar Cambios' : 'Registrar Candidato')}
               </Button>
             </div>
           </form>

@@ -82,8 +82,10 @@ export function DocumentFormDialog({
   onSuccess,
 }: DocumentFormDialogProps) {
   const { toast } = useToast();
-  const { isAdmin, isRRHH, isSuperAdmin, canCreate, canUpdate } = useAuth();
-  const canManageDocs = isAdmin || isRRHH || isSuperAdmin || canCreate('empleados') || canUpdate('empleados');
+  const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canUpdate } = useAuth();
+  const canManageDocs = entityType === 'candidate'
+    ? isAdmin || isRRHH || isSuperAdmin || isPsicologo || canCreate('seleccion') || canUpdate('seleccion')
+    : isAdmin || isRRHH || isSuperAdmin || canCreate('empleados') || canUpdate('empleados');
   const createEmployeeDocument = useCreateDocument();
   const createCandidateDocument = useCreateCandidateDocument();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
