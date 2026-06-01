@@ -532,6 +532,14 @@ export default function SuperAdmin() {
                 Operadores del Sistema
               </h3>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Directorio centralizado de privilegios y accesos</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">
+                  Incluye celular
+                </Badge>
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  La invitación solicita correo y número colombiano de contacto.
+                </span>
+              </div>
             </div>
             <Button 
               onClick={() => setInviteDialogOpen(true)} 
