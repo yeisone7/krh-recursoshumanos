@@ -42,6 +42,20 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type RecoveryFormData = z.infer<typeof recoverySchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
 
+const getRegisterErrorMessage = (message: string) => {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('email rate limit exceeded') || normalized.includes('rate limit')) {
+    return 'Se alcanzó el límite temporal de correos de registro. Espera unos minutos antes de intentarlo de nuevo o usa otro correo.';
+  }
+
+  if (normalized.includes('already registered') || normalized.includes('already been registered')) {
+    return 'Este correo ya está registrado. Intenta iniciar sesión.';
+  }
+
+  return message || 'No fue posible crear la cuenta. Intenta nuevamente.';
+};
+
 const features = [
 { icon: Shield, title: 'Seguridad basada en roles', desc: 'Control de acceso granular por rol y centro' },
 { icon: Building2, title: 'Multi-empresa', desc: 'Administra múltiples centros de operación' },
@@ -115,6 +129,8 @@ export default function Auth() {
   const [successType, setSuccessType] = useState<'register' | 'recovery' | null>(null);
   const [successEmail, setSuccessEmail] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [isRegisterFlowActive, setIsRegisterFlowActive] = useState(false);
+  const [isVerificationEmailExpected, setIsVerificationEmailExpected] = useState(true);
 
   useEffect(() => {
     if (countdown > 0) {
@@ -124,7 +140,7 @@ export default function Auth() {
   }, [countdown]);
 
   const loginErrorSummaryRef = useRef<HTMLDivElement>(null);
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast, dismiss } = useToast();
@@ -132,10 +148,10 @@ export default function Auth() {
   const from = location.state?.from?.pathname || '/';
 
   useEffect(() => {
-    if (user) {
+    if (user && !isRegisterFlowActive && !successType) {
       navigate(from, { replace: true });
     }
-  }, [user, navigate, from]);
+  }, [user, isRegisterFlowActive, successType, navigate, from]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsFormReady(true));
@@ -267,31 +283,53 @@ export default function Auth() {
   };
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
+    if (isSubmitting) return;
+
     setIsSubmitting(true);
+    setIsRegisterFlowActive(true);
     try {
       const fullName = `${data.first_name} ${data.last_name}`.trim();
-      const { error } = await signUp(data.email, data.password, {
+      const { error, session } = await signUp(data.email, data.password, {
         first_name: data.first_name,
         last_name: data.last_name,
         full_name: fullName,
         document_number: data.document_number
       });
+
       if (error) {
+        setIsRegisterFlowActive(false);
         toast({
           variant: 'destructive',
           title: 'Error de registro',
-          description: error.message.includes('already registered') ?
-          'Este correo ya está registrado. Intenta iniciar sesión.' :
-          error.message
+          description: getRegisterErrorMessage(error.message)
         });
         return;
       }
-      toast({ title: '¡Cuenta creada!', description: 'Revisa tu correo para confirmar tu cuenta.' });
+
+      if (session) {
+        await signOut();
+        setIsVerificationEmailExpected(false);
+        toast({
+          title: 'Cuenta creada',
+          description: 'La cuenta fue creada, pero la confirmacion por correo no esta activa en Supabase.'
+        });
+      } else {
+        setIsVerificationEmailExpected(true);
+        toast({ title: 'Cuenta creada', description: 'Revisa tu correo para confirmar tu cuenta.' });
+      }
+
       setSuccessType('register');
       setSuccessEmail(data.email);
       setCountdown(60);
       loginForm.reset();
       registerForm.reset();
+    } catch (err: any) {
+      setIsRegisterFlowActive(false);
+      toast({
+        variant: 'destructive',
+        title: 'Error de registro',
+        description: err?.message || 'No fue posible crear la cuenta. Intenta nuevamente.'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -302,6 +340,15 @@ export default function Auth() {
     setCountdown(60);
     try {
       if (successType === 'register') {
+        if (!isVerificationEmailExpected) {
+          toast({
+            variant: 'destructive',
+            title: 'Correo no disponible',
+            description: 'La confirmacion por correo no esta activa en Supabase para nuevos registros.'
+          });
+          return;
+        }
+
         const { error } = await supabase.auth.resend({
           type: 'signup',
           email: successEmail,
@@ -496,6 +543,12 @@ export default function Auth() {
                   </span>
                 </p>
 
+                {successType === 'register' && !isVerificationEmailExpected && (
+                  <div className="mb-6 w-full rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-center text-xs font-medium text-amber-800">
+                    Supabase creo la cuenta sin exigir verificacion por correo. Activa la confirmacion de email en Auth para que se envien correos de verificacion.
+                  </div>
+                )}
+
                 {/* Email shortcut actions */}
                 <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl space-y-3 mb-6">
                   <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
@@ -531,15 +584,17 @@ export default function Auth() {
                   <Button
                     variant="ghost"
                     onClick={handleResendEmail}
-                    disabled={countdown > 0}
+                    disabled={countdown > 0 || (successType === 'register' && !isVerificationEmailExpected)}
                     className={cn(
                       "w-full h-11 rounded-2xl text-xs font-semibold transition-all border border-dashed",
-                      countdown > 0 
+                      countdown > 0 || (successType === 'register' && !isVerificationEmailExpected)
                         ? "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-muted-foreground" 
                         : "hover:bg-primary/5 border-primary/20 hover:border-primary/30 text-primary"
                     )}
                   >
-                    {countdown > 0 ? (
+                    {successType === 'register' && !isVerificationEmailExpected ? (
+                      <span>Confirmacion por correo no activa</span>
+                    ) : countdown > 0 ? (
                       <span>Reenviar correo en {countdown}s</span>
                     ) : (
                       <span>Reenviar enlace de correo</span>
@@ -550,6 +605,7 @@ export default function Auth() {
                     variant="default"
                     onClick={() => {
                       setSuccessType(null);
+                      setIsRegisterFlowActive(false);
                       setIsLogin(true);
                       setIsRecoveryMode(false);
                     }}
