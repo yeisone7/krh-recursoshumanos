@@ -24,7 +24,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
@@ -71,6 +71,8 @@ interface VacancyFormDialogProps {
 
 const COLOCADO_ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const COLOCADO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const VACANCY_DATE_FROM_YEAR = 2000;
+const VACANCY_DATE_TO_YEAR = new Date().getFullYear() + 10;
 
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
@@ -538,14 +540,18 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar
-                                mode="single"
+                            <PopoverContent
+                              align="start"
+                              sideOffset={8}
+                              collisionPadding={16}
+                              className="z-[80] w-auto overflow-visible rounded-lg border-border bg-background p-0 shadow-xl"
+                            >
+                              <DatePickerWithDropdowns
                                 selected={field.value}
-                                onSelect={field.onChange}
-                                locale={es}
+                                onSelect={(date) => field.onChange(date)}
+                                fromYear={VACANCY_DATE_FROM_YEAR}
+                                toYear={VACANCY_DATE_TO_YEAR}
                                 initialFocus
-                                className="pointer-events-auto"
                               />
                             </PopoverContent>
                           </Popover>
@@ -574,14 +580,18 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar
-                                mode="single"
+                            <PopoverContent
+                              align="start"
+                              sideOffset={8}
+                              collisionPadding={16}
+                              className="z-[80] w-auto overflow-visible rounded-lg border-border bg-background p-0 shadow-xl"
+                            >
+                              <DatePickerWithDropdowns
                                 selected={field.value}
-                                onSelect={field.onChange}
-                                locale={es}
+                                onSelect={(date) => field.onChange(date)}
+                                fromYear={VACANCY_DATE_FROM_YEAR}
+                                toYear={VACANCY_DATE_TO_YEAR}
                                 initialFocus
-                                className="pointer-events-auto"
                               />
                             </PopoverContent>
                           </Popover>
