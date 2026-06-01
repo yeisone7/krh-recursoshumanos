@@ -35,6 +35,7 @@ import {
   Folder,
   ExternalLink,
   Plus,
+  Pencil,
 } from 'lucide-react';
 
 import {
@@ -69,6 +70,7 @@ import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
+import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
 import { generateExamOrderPdf } from '@/lib/examOrderPdf';
 import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
@@ -122,8 +124,10 @@ export function CandidateDetailDialog({
   const [showStepForm, setShowStepForm] = useState(false);
   const [showSharedDocForm, setShowSharedDocForm] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [familyRefreshKey, setFamilyRefreshKey] = useState(0);
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
-  const { user, currentCompanyId, hasPermission } = useAuth();
+  const { user, currentCompanyId, hasPermission, isRRHH, isPsicologo } = useAuth();
   const [selectedStep, setSelectedStep] = useState<SelectionStep | undefined>();
   const [defaultStepType, setDefaultStepType] = useState<SelectionStepType | undefined>();
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -167,6 +171,7 @@ export function CandidateDetailDialog({
   const statusStyle = candidateStatusConfig[status];
   const steps = (candidate as any).selection_steps || [];
   const vacancy = (candidate as any).vacancies;
+  const canEditCandidate = isRRHH || isPsicologo || hasPermission('seleccion', 'update');
 
   const handleAddStep = (stepType: SelectionStepType) => {
     setSelectedStep(undefined);
@@ -304,9 +309,23 @@ export function CandidateDetailDialog({
                   </p>
                 </div>
               </div>
-              <Badge className={cn('max-w-full self-start truncate', statusStyle.bg, statusStyle.text)}>
-                {candidateStatusLabels[status]}
-              </Badge>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {canEditCandidate && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => setShowEditForm(true)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                )}
+                <Badge className={cn('max-w-full self-start truncate', statusStyle.bg, statusStyle.text)}>
+                  {candidateStatusLabels[status]}
+                </Badge>
+              </div>
             </div>
           </DialogHeader>
 
@@ -674,7 +693,7 @@ export function CandidateDetailDialog({
                 </div>
 
                 {/* Family Members */}
-                <FamilyMembersSection candidateId={candidate.id} />
+                <FamilyMembersSection candidateId={candidate.id} refreshKey={familyRefreshKey} />
 
                 {/* Notes */}
                 {(candidate.general_notes || candidate.strengths || candidate.weaknesses) && (
@@ -1093,6 +1112,15 @@ export function CandidateDetailDialog({
         existingStepOrder={steps.length}
         vacancyOperationCenterId={vacancy?.operation_center_id}
         vacancyPositionId={vacancy?.position_id}
+      />
+
+      {/* Candidate Edit Dialog */}
+      <CandidateFormDialog
+        open={showEditForm}
+        onOpenChange={setShowEditForm}
+        vacancyId={candidate.vacancy_id}
+        candidateToEdit={candidate as any}
+        onSuccess={() => setFamilyRefreshKey((value) => value + 1)}
       />
 
       {/* Document Form Dialog */}
