@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import {
   Popover,
   PopoverContent,
@@ -448,34 +448,17 @@ export function RequisitionApprovalDialog({
                       <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-background" align="start">
-                    <Calendar
-                      mode="single"
+                  <PopoverContent
+                    align="start"
+                    sideOffset={8}
+                    collisionPadding={16}
+                    className="z-[80] w-auto overflow-visible rounded-lg border-border bg-background p-0 shadow-xl"
+                  >
+                    <DatePickerWithDropdowns
                       selected={fechaInicioProceso}
                       onSelect={setFechaInicioProceso}
-                      locale={es}
-                      captionLayout="dropdown-buttons"
                       fromYear={1990}
                       toYear={new Date().getFullYear() + 10}
-                      className="rounded-md border"
-                      classNames={{
-                        months: 'flex flex-col',
-                        month: 'space-y-3 p-3',
-                        caption: 'flex justify-center pt-1 relative items-center gap-2',
-                        caption_label: 'text-sm font-medium',
-                        nav: 'space-x-1 flex items-center',
-                        nav_button: 'h-8 w-8 bg-transparent p-0 opacity-60 hover:opacity-100',
-                        table: 'w-full border-collapse space-y-1',
-                        head_row: 'flex',
-                        head_cell: 'w-9 rounded-md text-[0.78rem] font-medium text-muted-foreground',
-                        row: 'flex w-full mt-1',
-                        cell: 'h-9 w-9 p-0 text-center text-sm relative',
-                        day: 'h-9 w-9 p-0 font-normal',
-                        day_selected: 'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground',
-                        day_today: 'bg-accent text-accent-foreground',
-                        day_outside: 'text-muted-foreground opacity-40',
-                        day_disabled: 'text-muted-foreground opacity-40',
-                      }}
                       initialFocus
                     />
                   </PopoverContent>
