@@ -546,8 +546,13 @@ export default function SuperAdmin() {
               className="h-14 px-10 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] w-full md:w-auto transition-all active:scale-95 group"
             >
               <UserPlus className="w-4 h-4 mr-3 stroke-[3] group-hover:scale-110 transition-transform" />
-              INVITAR OPERADOR
+              INVITAR OPERADOR + CELULAR
             </Button>
+          </div>
+          <div className="rounded-2xl border border-primary/15 bg-primary/5 px-4 py-3">
+            <p className="text-[11px] font-semibold text-foreground">
+              Para registrar el celular, abre <span className="font-black uppercase">Invitar operador + celular</span> y completa el campo <span className="font-black">NÃºmero de celular</span>.
+            </p>
           </div>
           <div className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden p-1">
             <UsersTable users={users} isLoading={usersLoading} />
