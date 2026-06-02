@@ -260,7 +260,7 @@ export function RequisitionApprovalDialog({
         <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
           <DialogTitle className="pr-8 text-lg leading-tight sm:pr-0">{stepTitles[step]}</DialogTitle>
           <DialogDescription className="break-words pr-8 sm:pr-0">
-            Requisición: {requisition.cargo_solicitado} ({requisition.cantidad_vacantes_requeridas} vacantes)
+            Requisición: {requisition.requisition_code || 'RQ-PEND'} - {requisition.cargo_solicitado} ({requisition.cantidad_vacantes_requeridas} vacantes)
           </DialogDescription>
         </DialogHeader>
 
@@ -276,6 +276,10 @@ export function RequisitionApprovalDialog({
                 </p>
               </div>
               <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Codigo</p>
+                  <p className="font-semibold">{requisition.requisition_code || 'RQ-PEND'}</p>
+                </div>
                 <div>
                   <p className="text-xs font-medium uppercase text-muted-foreground">Cargo solicitado</p>
                   <p className="font-semibold">{requisition.cargo_solicitado}</p>

@@ -91,7 +91,8 @@ export default function Requisiciones() {
 
   const filtered = useMemo(() => {
     return requisitions.filter(r => {
-      const matchesSearch = r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = (r.requisition_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter;
       return matchesSearch && matchesStatus;
@@ -209,7 +210,7 @@ export default function Requisiciones() {
           <div className="relative w-full sm:w-80 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
-              placeholder="Buscar por cargo, solicitante..."
+              placeholder="Buscar por codigo, cargo, solicitante..."
               className="w-full pl-10 h-10 rounded-xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -264,6 +265,9 @@ export default function Requisiciones() {
                       <CardContent className="p-6 space-y-4">
                         <div className="flex justify-between items-start gap-4">
                           <div className="min-w-0 flex-1">
+                            <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
+                              {req.requisition_code || 'RQ-PEND'}
+                            </Badge>
                             <p className="font-black uppercase text-base leading-none tracking-tight mb-1">{req.cargo_solicitado}</p>
                             <div className="flex items-center gap-2 mt-1 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                               <Users className="w-3.5 h-3.5 text-primary/60" />
@@ -352,6 +356,9 @@ export default function Requisiciones() {
                                 <FileText className="w-5 h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
+                                <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
+                                  {req.requisition_code || 'RQ-PEND'}
+                                </Badge>
                                 <p className="font-black tracking-tight text-foreground text-sm leading-none mb-1 uppercase truncate">{req.cargo_solicitado}</p>
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                                   <Users className="w-3.5 h-3.5 text-primary/60" />

@@ -499,6 +499,12 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <CardContent className="pt-0">
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                         <div className="space-y-1">
+                          <p className="text-xs text-muted-foreground">Codigo</p>
+                          <Badge variant="outline" className="border-primary/20 bg-primary/10 text-xs font-semibold text-primary">
+                            {requisition.requisition_code || 'RQ-PEND'}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Cargo Solicitado</p>
                           <p className="font-medium text-sm">{requisition.cargo_solicitado}</p>
                         </div>

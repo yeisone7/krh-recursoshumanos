@@ -261,7 +261,7 @@ export async function generateRequisitionPDF(
   doc.setTextColor(...NAVY);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(val(req.cargo_solicitado), ML + 7, y + 8);
+  doc.text(`${val(req.requisition_code)} - ${val(req.cargo_solicitado)}`, ML + 7, y + 8);
   doc.setFontSize(8);
   doc.setTextColor(...SLATE);
   doc.text(val(req.areas?.name), PW - MR, y + 5, { align: 'right' });
@@ -278,6 +278,7 @@ export async function generateRequisitionPDF(
   y = checkPage(doc, y, 40);
   y += 3;
   y = section(doc, '2.  INFORMACIÓN DEL CARGO SOLICITADO', y);
+  y = row2(doc, y, 'Codigo de Requisicion', val(req.requisition_code), 'Estado', statusLabel);
   y = row2(doc, y, 'Cargo Solicitado', val(req.cargo_solicitado), 'N.º de Vacantes', String(req.cantidad_vacantes_requeridas ?? '—'));
   y = row2(doc, y, 'Motivo de la Solicitud', val(req.motivo_solicitud ? (requisitionReasonLabels[req.motivo_solicitud as RequisitionReason] || req.motivo_solicitud) : null), 'Autoriza', val(req.autoriza ? (autorizaLabels[req.autoriza as AutorizaType] || req.autoriza) : null));
   if (req.motivo_solicitud === 'reemplazo' || !req.motivo_solicitud) {
@@ -420,6 +421,7 @@ export async function exportRequisitionToPDF(
   companyName: string
 ): Promise<void> {
   const doc = await generateRequisitionPDF(requisition, companyName);
+  const code = (requisition.requisition_code || 'RQ').replace(/\s+/g, '_');
   const cargo = (requisition.cargo_solicitado || 'Requisicion').replace(/\s+/g, '_');
-  doc.save(`Requisicion_${cargo}_${format(new Date(), 'yyyyMMdd')}.pdf`);
+  doc.save(`Requisicion_${code}_${cargo}_${format(new Date(), 'yyyyMMdd')}.pdf`);
 }
