@@ -170,7 +170,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
   const today = data.generationDate;
   const salaryWords = capitalize(numberToWords(data.salary));
   const salaryFormatted = formatCurrency(data.salary);
-  const salaryTypeText = data.salaryType === 'mensual' ? 'Salario Ordinario Mensual' : 'Salario Integral';
+  const salaryTypeText = data.salaryType === 'mensual' ? 'Salario Mensual' : 'Salario Convencional';
   const payrollTypeText = data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal';
   const restDayText = formatRestDay(data.employeeRestDay);
   const durationText = data.contractDurationMonths
@@ -413,7 +413,7 @@ export async function generateBasicContractPDF(data: ContractDocumentData): Prom
   doc.text('CUARTA - REMUNERACIÓN:', margin, y);
   y += 6;
   doc.setFont('helvetica', 'normal');
-  let clause4 = `EL EMPLEADOR pagará a EL TRABAJADOR un ${data.salaryType === 'mensual' ? 'salario mensual' : 'salario integral'} de ${formatCurrency(data.salary)} (${capitalize(numberToWords(data.salary))} pesos M/CTE).`;
+  let clause4 = `EL EMPLEADOR pagará a EL TRABAJADOR un ${data.salaryType === 'mensual' ? 'salario mensual' : 'salario convencional'} de ${formatCurrency(data.salary)} (${capitalize(numberToWords(data.salary))} pesos M/CTE).`;
   if (data.transportAllowance && data.transportAllowanceAmount) {
     clause4 += ` Adicionalmente, se pagará auxilio de transporte por valor de ${formatCurrency(data.transportAllowanceAmount)}.`;
   }
