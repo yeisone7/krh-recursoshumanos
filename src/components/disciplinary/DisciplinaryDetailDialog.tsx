@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Component, ReactNode, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -56,12 +56,48 @@ interface DisciplinaryDetailDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+class DisciplinaryPreviewErrorBoundary extends Component<
+  { children: ReactNode; onClose: () => void },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error('Error rendering disciplinary preview:', error);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+
+    return (
+      <div className="flex min-h-[24rem] flex-col items-center justify-center gap-4 px-6 py-12 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+        <div className="max-w-md space-y-2">
+          <h3 className="text-xl font-black tracking-tight text-foreground">No se pudo mostrar el expediente</h3>
+          <p className="text-sm font-medium text-muted-foreground">
+            Se detectó un dato inesperado al abrir el preview. Cierre el modal e intente de nuevo.
+          </p>
+        </div>
+        <Button onClick={this.props.onClose} className="h-11 rounded-xl px-6 font-bold">
+          Cerrar
+        </Button>
+      </div>
+    );
+  }
+}
+
 export function DisciplinaryDetailDialog({
   processId,
   open,
   onOpenChange,
 }: DisciplinaryDetailDialogProps) {
-  const { data: process, isLoading } = useDisciplinaryProcess(processId);
+  const { data: process, isLoading, isError } = useDisciplinaryProcess(processId);
   const advanceStatus = useAdvanceStatus();
   const { data: companies } = useCompanies();
   const { isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
@@ -73,8 +109,37 @@ export function DisciplinaryDetailDialog({
   const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  if (!process || isLoading) {
-    return null;
+  if (isLoading || isError || !process) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-lg overflow-hidden rounded-[2rem] border-border/50 p-0 shadow-2xl">
+          <div className="flex min-h-[18rem] flex-col items-center justify-center gap-4 px-6 py-10 text-center">
+            {isLoading ? (
+              <>
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary/20 border-t-primary" />
+                <div>
+                  <h3 className="text-lg font-black tracking-tight text-foreground">Cargando expediente</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Estamos consultando la información del proceso.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight text-foreground">No se pudo abrir el expediente</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Verifique el proceso seleccionado e intente nuevamente.</p>
+                </div>
+                <Button onClick={() => onOpenChange(false)} className="h-11 rounded-xl px-6 font-bold">
+                  Cerrar
+                </Button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
   }
 
   const isClosed = process.status === 'cerrado';
@@ -119,6 +184,7 @@ export function DisciplinaryDetailDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[100dvh] w-screen max-w-4xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
+          <DisciplinaryPreviewErrorBoundary onClose={() => onOpenChange(false)}>
           {/* Header con gradiente */}
           <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
             
@@ -530,6 +596,7 @@ export function DisciplinaryDetailDialog({
               Cerrar Expediente
             </Button>
           </div>
+          </DisciplinaryPreviewErrorBoundary>
         </DialogContent>
       </Dialog>
 
