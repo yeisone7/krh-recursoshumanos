@@ -263,7 +263,7 @@ const toolsNavItemsBase: NavItem[] = [
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama', moduleCode: 'organigrama' },
   { label: 'Asistente IA', icon: <Bot className="w-5 h-5" />, href: '/asistente-ia', moduleCode: 'asistente_ia' },
   { label: 'Automatizaciones', icon: <Workflow className="w-5 h-5" />, href: '/automatizaciones', moduleCode: 'automatizaciones' },
-  { label: 'Cumplimiento', icon: <ShieldCheck className="w-5 h-5" />, href: '/cumplimiento-laboral', moduleCode: 'cumplimiento_laboral' },
+  { label: 'Cumplimiento Laboral', icon: <ShieldCheck className="w-5 h-5" />, href: '/cumplimiento-laboral', moduleCode: 'cumplimiento_laboral' },
 ];
 
 const payrollNavItems: NavItem[] = [
