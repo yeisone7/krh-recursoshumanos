@@ -685,8 +685,8 @@ export function ContractFormDialog({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              <SelectItem value="monthly" className="m-1 rounded-lg font-medium">Sueldo Mensual Ordinario</SelectItem>
-                              <SelectItem value="integral" className="m-1 rounded-lg font-medium">Sueldo Mensual Integral</SelectItem>
+                              <SelectItem value="monthly" className="m-1 rounded-lg font-medium">Salario Mensual</SelectItem>
+                              <SelectItem value="integral" className="m-1 rounded-lg font-medium">Salario Convencional</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
