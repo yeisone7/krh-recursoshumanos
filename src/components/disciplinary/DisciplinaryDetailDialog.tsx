@@ -37,6 +37,7 @@ import {
   canAdvanceStatus,
   getNextStatusAction,
   DisciplinaryStatus,
+  DisciplinaryProcessWithEmployee,
 } from '@/types/disciplinary';
 import { EvidenceFormDialog } from './EvidenceFormDialog';
 import { DefenseFormDialog } from './DefenseFormDialog';
@@ -52,6 +53,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 interface DisciplinaryDetailDialogProps {
   processId: string | null;
+  initialProcess?: DisciplinaryProcessWithEmployee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -94,13 +96,15 @@ class DisciplinaryPreviewErrorBoundary extends Component<
 
 export function DisciplinaryDetailDialog({
   processId,
+  initialProcess,
   open,
   onOpenChange,
 }: DisciplinaryDetailDialogProps) {
-  const { data: process, isLoading, isError } = useDisciplinaryProcess(processId);
+  const { data: fetchedProcess, isLoading, isError } = useDisciplinaryProcess(processId);
   const advanceStatus = useAdvanceStatus();
   const { data: companies } = useCompanies();
   const { isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
+  const process = fetchedProcess ?? initialProcess;
   
   const [showEvidenceForm, setShowEvidenceForm] = useState(false);
   const [showDefenseForm, setShowDefenseForm] = useState(false);
@@ -109,7 +113,7 @@ export function DisciplinaryDetailDialog({
   const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  if (isLoading || isError || !process) {
+  if (!process) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-lg overflow-hidden rounded-[2rem] border-border/50 p-0 shadow-2xl">
