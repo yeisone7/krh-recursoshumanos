@@ -75,16 +75,12 @@ export function useCompany(companyId: string | undefined) {
 
 export function useOperationCenters() {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
     queryKey: ['operation_centers', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
-        return [];
-      }
-
       let query = supabase
         .from('operation_centers')
         .select('*')

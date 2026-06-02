@@ -155,16 +155,12 @@ const getSubmitRequisitionErrorDescription = (error: unknown) => {
 
 export function useRequisitions() {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
     queryKey: ['requisitions', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
-        return [];
-      }
-
       let query = supabase
         .from('personnel_requisitions')
         .select(`
