@@ -154,20 +154,31 @@ const getSubmitRequisitionErrorDescription = (error: unknown) => {
 };
 
 export function useRequisitions() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['requisitions', currentCompanyId],
+    queryKey: ['requisitions', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
+        return [];
+      }
+
+      let query = supabase
         .from('personnel_requisitions')
         .select(`
           *,
           areas(id, name),
           operation_centers(id, name)
         `)
-        .eq('company_id', currentCompanyId!)
-        .order('created_at', { ascending: false });
+        .eq('company_id', currentCompanyId!);
+
+      if (shouldLimitByAssignedCenters) {
+        query = query.in('operation_center_id', assignedCenterIds);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as unknown as PersonnelRequisition[];

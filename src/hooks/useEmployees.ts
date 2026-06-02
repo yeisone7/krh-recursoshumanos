@@ -7,8 +7,8 @@ import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
-function getEmployeeWorkInfoSelect(centerId?: string) {
-  const joinType = centerId && centerId !== 'all' ? '!inner' : '';
+function getEmployeeWorkInfoSelect(centerId?: string, requireCenterScope = false) {
+  const joinType = (centerId && centerId !== 'all') || requireCenterScope ? '!inner' : '';
 
   return `
           employee_work_info${joinType}(
@@ -47,6 +47,18 @@ function applyEmployeeStatusFilter(query: any, status?: string) {
   if (status === 'new') {
     const threshold = new Date(Date.now() - NEW_EMPLOYEE_WINDOW_MS).toISOString();
     return query.gte('created_at', threshold);
+  }
+
+  return query;
+}
+
+function applyEmployeeCenterFilter(query: any, centerId?: string, allowedCenterIds: string[] = []) {
+  if (centerId && centerId !== 'all') {
+    query = query.eq('employee_work_info.operation_center_id', centerId);
+  }
+
+  if (allowedCenterIds.length > 0) {
+    query = query.in('employee_work_info.operation_center_id', allowedCenterIds);
   }
 
   return query;
@@ -108,16 +120,19 @@ async function logAuditEvent(
 // =====================================================
 
 export function useEmployees() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['employees_v2', currentCompanyId],
+    queryKey: ['employees_v2', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
+      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) return [];
 
       // Get employees with their current related data
       // Use left joins so retired employees (without is_current records) still appear
-      const { data: employees, error } = await supabase
+      let query = supabase
         .from('employees_v2')
         .select(`
           *,
@@ -126,15 +141,19 @@ export function useEmployees() {
             id, email, mobile, phone, residence_city, residence_department,
             residence_address, emergency_contact_name, emergency_contact_phone
           ),
-          employee_work_info(
-            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id,
-            operation_centers(id, name, city),
-            areas(id, name)
-          )
+          ${getEmployeeWorkInfoSelect(undefined, shouldLimitByAssignedCenters)}
         `)
         .eq('company_id', currentCompanyId)
         .eq('employee_contact.is_current', true)
-        .eq('employee_work_info.is_current', true)
+        .eq('employee_work_info.is_current', true);
+
+      query = applyEmployeeCenterFilter(
+        query,
+        undefined,
+        shouldLimitByAssignedCenters ? assignedCenterIds : []
+      );
+
+      const { data: employees, error } = await query
         .order('last_name', { ascending: true });
 
       if (error) throw error;
@@ -163,15 +182,18 @@ export function useEmployeesPaginated(options: {
   status?: string;
   centerId?: string;
 }) {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const { page = 1, pageSize = 12, search, status, centerId } = options;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId],
+    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
+      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) return { data: [], count: 0 };
 
-      const workInfoSelect = getEmployeeWorkInfoSelect(centerId);
+      const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
 
       // Base query with essential fields only for better performance
       let query = supabase
@@ -193,9 +215,11 @@ export function useEmployeesPaginated(options: {
       }
 
       // 2. Server-side filtering
-      if (centerId && centerId !== 'all') {
-        query = query.eq('employee_work_info.operation_center_id', centerId);
-      }
+      query = applyEmployeeCenterFilter(
+        query,
+        centerId,
+        shouldLimitByAssignedCenters ? assignedCenterIds : []
+      );
 
       query = applyEmployeeStatusFilter(query, status);
 
@@ -237,15 +261,20 @@ export function useEmployeesInfinite(options: {
   status?: string;
   centerId?: string;
 }) {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const { pageSize = 12, search, status, centerId } = options;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useInfiniteQuery({
-    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId],
+    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
+      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
+        return { data: [], nextCursor: null, totalCount: 0 };
+      }
 
-      const workInfoSelect = getEmployeeWorkInfoSelect(centerId);
+      const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
 
       // Base query
       let query = supabase
@@ -267,9 +296,11 @@ export function useEmployeesInfinite(options: {
       }
 
       // 2. Filters
-      if (centerId && centerId !== 'all') {
-        query = query.eq('employee_work_info.operation_center_id', centerId);
-      }
+      query = applyEmployeeCenterFilter(
+        query,
+        centerId,
+        shouldLimitByAssignedCenters ? assignedCenterIds : []
+      );
       query = applyEmployeeStatusFilter(query, status);
 
       // 3. Pagination
