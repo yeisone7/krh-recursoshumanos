@@ -28,7 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -173,14 +173,19 @@ export function DisciplinaryFormDialog({
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 rounded-2xl border-border/50 shadow-2xl" align="start">
-                          <Calendar
-                            mode="single"
+                        <PopoverContent
+                          align="start"
+                          side="bottom"
+                          sideOffset={8}
+                          className="z-[120] w-auto rounded-2xl border-border/50 bg-background p-0 shadow-2xl"
+                        >
+                          <DatePickerWithDropdowns
                             selected={field.value}
                             onSelect={field.onChange}
                             disabled={(date) => date > new Date()}
+                            fromYear={1990}
+                            toYear={new Date().getFullYear()}
                             initialFocus
-                            className="pointer-events-auto"
                           />
                         </PopoverContent>
                       </Popover>
