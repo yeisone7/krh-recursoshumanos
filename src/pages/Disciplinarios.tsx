@@ -145,6 +145,11 @@ export default function Disciplinarios() {
     return matchesSearch && matchesStatus && matchesFault && matchesCenter;
   });
 
+  const selectedProcess = useMemo(
+    () => processes?.find((process) => process.id === selectedProcessId) || null,
+    [processes, selectedProcessId]
+  );
+
   const kpis = useMemo(() => ([
     { label: 'TOTAL CASOS', value: stats?.total || 0, desc: 'Histórico acumulado', icon: Scale, color: 'text-blue-600', bg: 'bg-blue-500/10' },
     { label: 'EN CURSO', value: stats?.active || 0, desc: 'Procesos vigentes', icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
@@ -295,7 +300,12 @@ export default function Disciplinarios() {
       </ScrollArea>
 
       <DisciplinaryFormDialog open={showFormDialog} onOpenChange={setShowFormDialog} />
-      <DisciplinaryDetailDialog processId={selectedProcessId} open={!!selectedProcessId} onOpenChange={(open) => !open && setSelectedProcessId(null)} />
+      <DisciplinaryDetailDialog
+        processId={selectedProcessId}
+        initialProcess={selectedProcess}
+        open={!!selectedProcessId}
+        onOpenChange={(open) => !open && setSelectedProcessId(null)}
+      />
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className="rounded-[2.5rem] border-border bg-background ">
