@@ -74,10 +74,14 @@ const COLOCADO_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const VACANCY_DATE_FROM_YEAR = 2000;
 const VACANCY_DATE_TO_YEAR = new Date().getFullYear() + 10;
 
+const getRequisitionDisplayCode = (requisition: { requisition_code?: string | null }) =>
+  requisition.requisition_code || 'RQ-PEND';
+
 export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRequisitionId }: VacancyFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
   const [colocadoFile, setColocadoFile] = useState<File | null>(null);
   const [uploadingColocado, setUploadingColocado] = useState(false);
+  const [requisitionSearchTerm, setRequisitionSearchTerm] = useState('');
   const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: approvedRequisitions = [], isLoading: loadingRequisitions } = useApprovedRequisitions();
@@ -86,6 +90,18 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
   const { data: educationLevels = [] } = useEducationLevels();
   const { data: professions = [] } = useProfessions();
   const createVacancy = useCreateVacancy();
+  const filteredApprovedRequisitions = approvedRequisitions.filter((req) => {
+    const search = requisitionSearchTerm.trim().toLowerCase();
+    if (!search) return true;
+
+    return [
+      getRequisitionDisplayCode(req),
+      req.cargo_solicitado,
+      req.operation_centers?.name,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search));
+  });
 
   const form = useForm<VacancyFormData>({
     resolver: zodResolver(vacancyFormSchema),
@@ -325,6 +341,12 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Requisición de Personal *</FormLabel>
+                          <Input
+                            value={requisitionSearchTerm}
+                            onChange={(event) => setRequisitionSearchTerm(event.target.value)}
+                            placeholder="Filtrar por codigo RQ-00001, cargo o centro"
+                            className="h-11 rounded-xl border-border bg-background"
+                          />
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -332,9 +354,14 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="bg-background">
-                              {approvedRequisitions.filter(req => !!req.id).map((req) => (
+                              {filteredApprovedRequisitions.length === 0 && (
+                                <SelectItem value="no-results" disabled>
+                                  No se encontraron requisiciones
+                                </SelectItem>
+                              )}
+                              {filteredApprovedRequisitions.filter(req => !!req.id).map((req) => (
                                 <SelectItem key={req.id} value={req.id}>
-                                  {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
+                                  {getRequisitionDisplayCode(req)} - {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
                                   {req.operation_centers?.name && ` (${req.operation_centers.name})`}
                                 </SelectItem>
                               ))}

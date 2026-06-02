@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface PersonnelRequisition {
   id: string;
+  requisition_code: string | null;
   company_id: string;
   fecha_requisicion: string;
   fecha_ingreso_estimada: string | null;
@@ -535,10 +536,10 @@ export function useApprovedRequisitions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('personnel_requisitions')
-        .select('id, cargo_solicitado, cantidad_vacantes_requeridas, rrhh_asignacion_salarial, rrhh_incluye_auxilio_transporte, operation_centers(name)')
+        .select('id, requisition_code, cargo_solicitado, cantidad_vacantes_requeridas, rrhh_asignacion_salarial, rrhh_incluye_auxilio_transporte, operation_centers(name)')
         .eq('company_id', currentCompanyId!)
         .in('estado_requisicion', ['aprobada', 'en_seleccion'])
-        .order('cargo_solicitado');
+        .order('requisition_code', { ascending: true });
 
       if (error) throw error;
       return data;

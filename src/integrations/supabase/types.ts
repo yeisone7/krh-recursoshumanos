@@ -6217,6 +6217,7 @@ export type Database = {
           operaciones_quien_aprobo: string | null
           operation_center_id: string | null
           persona_a_reemplazar: string | null
+          requisition_code: string
           requiere_herramienta_trabajo: boolean | null
           rrhh_aprobado: boolean | null
           rrhh_aprobador_id: string | null
@@ -6295,6 +6296,7 @@ export type Database = {
           operaciones_quien_aprobo?: string | null
           operation_center_id?: string | null
           persona_a_reemplazar?: string | null
+          requisition_code?: string
           requiere_herramienta_trabajo?: boolean | null
           rrhh_aprobado?: boolean | null
           rrhh_aprobador_id?: string | null
@@ -6373,6 +6375,7 @@ export type Database = {
           operaciones_quien_aprobo?: string | null
           operation_center_id?: string | null
           persona_a_reemplazar?: string | null
+          requisition_code?: string
           requiere_herramienta_trabajo?: boolean | null
           rrhh_aprobado?: boolean | null
           rrhh_aprobador_id?: string | null

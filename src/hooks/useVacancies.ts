@@ -18,7 +18,7 @@ export function useVacancies() {
           *,
           operation_centers(id, name),
           candidates(id, status),
-          personnel_requisitions:requisition_id(id, cargo_solicitado, estado_requisicion),
+          personnel_requisitions:requisition_id(id, requisition_code, cargo_solicitado, estado_requisicion),
           vacancy_education_levels(
             education_levels(id, name)
           )
@@ -44,7 +44,7 @@ export function useVacancy(id: string | undefined) {
           *,
           operation_centers(id, name),
           personnel_requisitions:requisition_id(
-            id, cargo_solicitado, estado_requisicion, fecha_requisicion, 
+            id, requisition_code, cargo_solicitado, estado_requisicion, fecha_requisicion, 
             solicitante_nombre, motivo_solicitud, operation_centers(name)
           ),
           cancelled_by_profile:cancelled_by(id, full_name),

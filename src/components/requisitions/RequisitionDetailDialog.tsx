@@ -472,6 +472,12 @@ export function RequisitionDetailDialog({
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
+                    <p className="text-sm text-muted-foreground">Codigo de Requisicion</p>
+                    <Badge variant="outline" className="border-primary/20 bg-primary/10 font-semibold text-primary">
+                      {requisition.requisition_code || 'RQ-PEND'}
+                    </Badge>
+                  </div>
+                  <div>
                     <p className="text-sm text-muted-foreground">Cargo Solicitado</p>
                     <p className="font-medium">{requisition.cargo_solicitado}</p>
                   </div>
