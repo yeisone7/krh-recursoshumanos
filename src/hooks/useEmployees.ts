@@ -121,14 +121,13 @@ async function logAuditEvent(
 
 export function useEmployees() {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
     queryKey: ['employees_v2', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
-      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) return [];
 
       // Get employees with their current related data
       // Use left joins so retired employees (without is_current records) still appear
@@ -184,14 +183,13 @@ export function useEmployeesPaginated(options: {
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const { page = 1, pageSize = 12, search, status, centerId } = options;
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
     queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
-      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) return { data: [], count: 0 };
 
       const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
 
@@ -263,16 +261,13 @@ export function useEmployeesInfinite(options: {
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const { pageSize = 12, search, status, centerId } = options;
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useInfiniteQuery({
     queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
-      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
-        return { data: [], nextCursor: null, totalCount: 0 };
-      }
 
       const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
 
