@@ -74,11 +74,17 @@ export function useCompany(companyId: string | undefined) {
 }
 
 export function useOperationCenters() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['operation_centers', currentCompanyId],
+    queryKey: ['operation_centers', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
+      if (shouldLimitByAssignedCenters && assignedCenterIds.length === 0) {
+        return [];
+      }
+
       let query = supabase
         .from('operation_centers')
         .select('*')
@@ -86,6 +92,10 @@ export function useOperationCenters() {
 
       if (currentCompanyId) {
         query = query.eq('company_id', currentCompanyId);
+      }
+
+      if (shouldLimitByAssignedCenters) {
+        query = query.in('id', assignedCenterIds);
       }
 
       const { data, error } = await query;
