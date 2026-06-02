@@ -45,6 +45,7 @@ import { AppealFormDialog } from './AppealFormDialog';
 import { GenerateDefenseTokenDialog } from './GenerateDefenseTokenDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
+import { cn } from '@/lib/utils';
 import { useCompanies } from '@/hooks/useCompanies';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -354,7 +355,7 @@ export function DisciplinaryDetailDialog({
                               <Badge variant="outline" className="text-[9px] uppercase tracking-widest text-primary border-primary/20 rounded-lg">
                                 {def.defense_type === 'escrito' ? 'Escrito' : 'Oral'}
                               </Badge>
-                              {(def as any).submitted_via_token && (
+                              {def.submitted_via_token && (
                                 <Badge className="text-[9px] uppercase tracking-widest bg-green-500/10 text-green-600 border-0 rounded-lg">Vía Enlace</Badge>
                               )}
                             </div>
