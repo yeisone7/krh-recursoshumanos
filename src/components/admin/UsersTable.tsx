@@ -67,6 +67,10 @@ function getUserInitials(user: AdminUser): string {
   return user.id.slice(0, 2).toUpperCase();
 }
 
+function isPendingCompanyAssignment(user: AdminUser): boolean {
+  return user.companies.length === 0;
+}
+
 type AppRole = Database['public']['Enums']['app_role'];
 
 const ROLE_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -294,6 +298,17 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           title: (
             <div className="flex items-center gap-2">
               <span className="font-black text-slate-900 uppercase tracking-tight">{getUserDisplayName(user)}</span>
+              {isPendingCompanyAssignment(user) && (
+                <Badge variant="outline" className="h-5 rounded-md border-warning/20 bg-warning-light px-2 text-[8px] font-black uppercase tracking-widest text-warning">
+                  Nuevo
+                </Badge>
+              )}
+              {isPendingCompanyAssignment(user) && (
+                <span className="relative flex h-4 w-4 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75" />
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-[8px] font-bold text-warning-foreground">N</span>
+                </span>
+              )}
               {user.id === currentUser?.id && <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">TÚ</Badge>}
             </div>
           ),
@@ -309,10 +324,18 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             </Badge>
           ),
           icon: (
-            <Avatar className="h-12 w-12 rounded-xl border-none bg-primary/5 shadow-none">
-              <AvatarImage src={user.avatar_url} />
-              <AvatarFallback className="bg-transparent text-primary font-black text-xs">{getUserInitials(user)}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-12 w-12 rounded-xl border-none bg-primary/5 shadow-none">
+                <AvatarImage src={user.avatar_url} />
+                <AvatarFallback className="bg-transparent text-primary font-black text-xs">{getUserInitials(user)}</AvatarFallback>
+              </Avatar>
+              {isPendingCompanyAssignment(user) && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75" />
+                  <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-[8px] font-bold text-warning-foreground">N</span>
+                </span>
+              )}
+            </div>
           ),
           fields: [
             {
@@ -409,10 +432,21 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
                             {getUserInitials(user)}
                           </AvatarFallback>
                         </Avatar>
+                        {isPendingCompanyAssignment(user) && (
+                          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-warning opacity-75" />
+                            <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-[8px] font-bold text-warning-foreground">N</span>
+                          </span>
+                        )}
                       </div>
                       <div className="min-w-0 space-y-1">
                         <div className="flex items-center gap-2 font-black uppercase leading-none tracking-tight text-slate-950">
                           {getUserDisplayName(user)}
+                          {isPendingCompanyAssignment(user) && (
+                            <Badge variant="outline" className="h-5 rounded-md border-warning/20 bg-warning-light px-2 text-[8px] font-black uppercase tracking-widest text-warning">
+                              Nuevo
+                            </Badge>
+                          )}
                           {user.id === currentUser?.id && (
                             <Badge className="bg-primary/10 text-primary border-none font-black text-[8px] px-1.5 h-4 uppercase tracking-widest">SISTEMA:TÚ</Badge>
                           )}

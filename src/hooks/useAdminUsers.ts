@@ -124,13 +124,14 @@ export function useAdminUsers() {
         display_name: string | null;
         avatar_url: string | null;
         mobile?: string | null;
+        created_at?: string | null;
       }> | undefined;
       const { data: profilesWithMobile, error: profilesError } = await batchQuery(
         userIds,
         100,
         (chunk) => supabase
           .from('user_profiles')
-          .select('id, full_name, display_name, avatar_url, mobile')
+          .select('id, full_name, display_name, avatar_url, mobile, created_at')
           .in('id', chunk)
       );
 
@@ -141,7 +142,7 @@ export function useAdminUsers() {
           100,
           (chunk) => supabase
             .from('user_profiles')
-            .select('id, full_name, display_name, avatar_url')
+            .select('id, full_name, display_name, avatar_url, created_at')
             .in('id', chunk)
         );
         if (legacyProfilesError) throw legacyProfilesError;
@@ -208,6 +209,7 @@ export function useAdminUsers() {
           user.display_name = p.display_name || '';
           user.mobile = p.mobile || '';
           user.avatar_url = p.avatar_url || undefined;
+          user.created_at = p.created_at || '';
         }
       });
 
