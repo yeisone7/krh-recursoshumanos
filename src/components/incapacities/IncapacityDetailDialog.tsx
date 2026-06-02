@@ -33,6 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,10 +122,10 @@ export function IncapacityDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto p-0 bg-background border-border/50 shadow-2xl rounded-[2rem]">
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 bg-background border-border/50 shadow-2xl rounded-[2rem] sm:h-[90vh] sm:max-h-[90vh]">
           
           {/* Premium Gradient Header */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
+          <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
             
             
             <DialogHeader className="relative z-10">
@@ -159,18 +160,19 @@ export function IncapacityDetailDialog({
             </DialogHeader>
           </div>
           
-          <div className="px-8 py-6 min-h-0">
-            <Tabs defaultValue="general" className="w-full">
-              <TabsList className="mb-6 h-12 w-full justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide">
+          <div className="flex min-h-0 flex-1 flex-col px-4 py-4 sm:px-8 sm:py-6">
+            <Tabs defaultValue="general" className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="mb-4 h-12 w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:mb-6">
                 <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><FileText className="h-4 w-4 shrink-0" />General</TabsTrigger>
                 <TabsTrigger value="payment" className="h-10 min-w-[104px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><DollarSign className="h-4 w-4 shrink-0" />Pagos</TabsTrigger>
                 <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
                 <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
                 <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
               </TabsList>
+              <ScrollArea className="-mx-4 min-h-0 flex-1 px-4 pb-4 sm:-mx-8 sm:px-8 sm:pb-6">
               
               {/* General Tab */}
-              <TabsContent value="general" className="space-y-4 mt-4">
+              <TabsContent value="general" className="mt-0 space-y-4">
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                   <Card>
                     <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
@@ -349,7 +351,7 @@ export function IncapacityDetailDialog({
               </TabsContent>
               
               {/* Payment Tab */}
-              <TabsContent value="payment" className="space-y-4 mt-4">
+              <TabsContent value="payment" className="mt-0 space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -423,7 +425,7 @@ export function IncapacityDetailDialog({
               </TabsContent>
               
               {/* Recovery Tab */}
-              <TabsContent value="recovery" className="space-y-4 mt-4">
+              <TabsContent value="recovery" className="mt-0 space-y-4">
                 <Card>
                   <CardHeader>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -494,7 +496,7 @@ export function IncapacityDetailDialog({
               </TabsContent>
               
               {/* Documents Tab */}
-              <TabsContent value="documents" className="space-y-4 mt-4">
+              <TabsContent value="documents" className="mt-0 space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
@@ -548,7 +550,7 @@ export function IncapacityDetailDialog({
               </TabsContent>
               
               {/* History Tab */}
-              <TabsContent value="history" className="space-y-4 mt-4">
+              <TabsContent value="history" className="mt-0 space-y-4">
                 <Card>
                   <CardHeader>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -617,10 +619,11 @@ export function IncapacityDetailDialog({
                   </CardContent>
                 </Card>
               </TabsContent>
+              </ScrollArea>
             </Tabs>
           </div>
           
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between px-8 py-6 border-t bg-background /10">
+          <div className="flex shrink-0 flex-col-reverse gap-3 border-t bg-background /10 px-4 py-4 sm:flex-row sm:justify-between sm:px-8 sm:py-6">
             <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
               <Trash2 className="h-4 w-4 mr-1" />
               Eliminar
