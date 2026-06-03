@@ -48,6 +48,7 @@ async function getEmployeeV2Info(employeeId: string) {
       last_name, 
       second_last_name,
       document_number,
+      document_type,
       company_id,
       employee_work_info!inner(
         id,
@@ -96,6 +97,7 @@ export function useContracts() {
             last_name, 
             second_last_name,
             document_number,
+            document_type,
             company_id,
             employee_work_info(
               id,
@@ -170,6 +172,7 @@ export function useContract(id: string | undefined) {
           last_name: employee.last_name,
           second_last_name: employee.second_last_name,
           document_number: employee.document_number,
+          document_type: employee.document_type,
           operation_centers: employee.employee_work_info?.[0]?.operation_centers || null,
           employee_work_info: employee.employee_work_info || []
         } : null

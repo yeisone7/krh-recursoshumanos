@@ -834,6 +834,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
             trial_period_days: dbContract.trial_period_days || null,
             work_city: dbContract.work_city || null,
             work_address: dbContract.work_address || null,
+            work_labor_description: dbContract.work_labor_description || null,
             has_non_compete_clause: dbContract.has_non_compete_clause,
             has_confidentiality_clause: dbContract.has_confidentiality_clause,
             special_clauses: dbContract.special_clauses,
@@ -844,6 +845,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               last_name: dbContract.employees?.last_name || '',
               second_last_name: dbContract.employees?.second_last_name || '',
               document_number: dbContract.employees?.document_number || '',
+              document_type: dbContract.employees?.document_type || 'cc',
               operation_centers: dbContract.employees?.operation_centers ? { name: dbContract.employees.operation_centers.name } : null,
             },
           }}

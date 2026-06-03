@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSendAiChatMessage, type AiChatMessage, type ChatMode } from '@/hooks/useAiChat';
 
 interface AiChatPanelProps {
@@ -155,6 +156,7 @@ function MessageBubble({ message }: { message: AiChatMessage }) {
 
 export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = false }: AiChatPanelProps) {
   const location = useLocation();
+  const { user, profile } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const isNearBottomRef = useRef(true);
@@ -170,8 +172,15 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
   const sendMessage = useSendAiChatMessage();
   const canConfirmStep = false;
   const currentStepLabel = '';
+  const userFirstName = useMemo(() => {
+    const rawName = profile?.full_name || profile?.display_name || user?.user_metadata?.full_name || user?.user_metadata?.name || '';
+    const cleanName = rawName.replace(/[0-9]/g, '').replace(/[._-]/g, ' ').trim();
+    const firstName = cleanName.split(/\s+/)[0];
+    if (!firstName || firstName.includes('@')) return '';
+    return firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+  }, [profile?.full_name, profile?.display_name, user?.user_metadata?.full_name, user?.user_metadata?.name]);
   const pageContext = useMemo(() => {
-    const savedPathname = sessionStorage.getItem('krh_last_module_path') || '';
+    const savedPathname = sessionStorage.getItem('empatiq_last_module_path') || '';
     const pathname = location.pathname === '/asistente-ia' ? savedPathname : location.pathname;
     const match = Object.entries(moduleSuggestions).find(([path]) => pathname.startsWith(path));
     if (!match) return null;
@@ -287,8 +296,8 @@ export function AiChatPanel({ compact = false, onClose: _onClose, hideTabs = fal
         <Bot className="h-7 w-7" />
       </div>
       <div>
-        <p className="text-lg font-semibold">¿Qué necesitas hacer en EmpatiQ?</p>
-        <p className="mt-1 text-sm text-muted-foreground">El asistente responde de forma completa sobre el uso de la aplicacion.</p>
+        <p className="text-lg font-semibold">{userFirstName ? `Hola, ${userFirstName}. ` : ''}¿Qué necesitas resolver?</p>
+        <p className="mt-1 text-sm text-muted-foreground">Cuéntame la duda, el proceso o el cálculo que necesitas analizar.</p>
       </div>
       {pageContext && (
         <div className="w-full max-w-2xl rounded-lg border border-border bg-background /40 p-3 text-left">

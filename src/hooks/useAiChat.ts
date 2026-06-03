@@ -25,7 +25,7 @@ export interface AiChatMessage {
 }
 
 export function useSendAiChatMessage() {
-  const { currentCompanyId, companies, user } = useAuth();
+  const { currentCompanyId, companies, user, profile } = useAuth();
 
   const getUserDisplayName = async () => {
     if (!user?.id) return undefined;
@@ -35,6 +35,14 @@ export function useSendAiChatMessage() {
       if (!text || text.includes('@')) return undefined;
       return text.split(/\s+/)[0];
     };
+
+    const authContextName =
+      cleanName(profile?.full_name) ||
+      cleanName(profile?.display_name) ||
+      cleanName(user.user_metadata?.full_name) ||
+      cleanName(user.user_metadata?.name);
+
+    if (authContextName) return authContextName;
 
     const { data } = await supabase
       .from('user_profiles' as never)

@@ -71,12 +71,13 @@ export function calculateMonthsDifference(startDate: Date, endDate: Date): numbe
 
 // Helper to format currency
 function formatCurrency(amount: number): string {
+  const safeAmount = Number.isFinite(Number(amount)) ? Number(amount) : 0;
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 // Helper to load image for PDF
@@ -92,15 +93,74 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 
 // Helper to format date in Spanish words
 function formatDateInWords(date: Date): string {
-  const day = format(date, 'd', { locale: es });
-  const month = format(date, 'MMMM', { locale: es });
-  const year = format(date, 'yyyy', { locale: es });
+  const safeDate = date instanceof Date && !isNaN(date.getTime()) ? date : new Date();
+  const day = format(safeDate, 'd', { locale: es });
+  const month = format(safeDate, 'MMMM', { locale: es });
+  const year = format(safeDate, 'yyyy', { locale: es });
   return `${day} de ${month} de ${year}`;
 }
 
 // Capitalize first letter
-function capitalize(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
+function asText(value: unknown, fallback = ''): string {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+}
+
+function capitalize(str?: string | null): string {
+  const safeValue = asText(str).trim();
+  if (!safeValue) return '';
+  return safeValue.charAt(0).toUpperCase() + safeValue.slice(1);
+}
+
+function normalizeContractDocumentData(data: ContractDocumentData): ContractDocumentData {
+  const safeDate = (value: Date | null | undefined, fallback = new Date()) =>
+    value instanceof Date && !isNaN(value.getTime()) ? value : fallback;
+
+  return {
+    ...data,
+    companyName: asText(data.companyName, 'Empresa'),
+    companyNit: asText(data.companyNit),
+    companyAddress: asText(data.companyAddress) || undefined,
+    companyPhone: asText(data.companyPhone) || undefined,
+    companyEmail: asText(data.companyEmail) || undefined,
+    logoUrl: asText(data.logoUrl) || undefined,
+    representativeName: asText(data.representativeName) || undefined,
+    representativePosition: asText(data.representativePosition) || undefined,
+    representativeSignatureUrl: asText(data.representativeSignatureUrl) || undefined,
+    employeeFullName: asText(data.employeeFullName, 'Empleado'),
+    employeeFirstName: asText(data.employeeFirstName, 'Empleado'),
+    employeeLastName: asText(data.employeeLastName),
+    employeeDocumentType: asText(data.employeeDocumentType, 'C.C.'),
+    employeeDocumentNumber: asText(data.employeeDocumentNumber),
+    employeeAddress: asText(data.employeeAddress) || undefined,
+    employeeCity: asText(data.employeeCity) || undefined,
+    employeePhone: asText(data.employeePhone) || undefined,
+    employeeEmail: asText(data.employeeEmail) || undefined,
+    employeeBirthDate: asText(data.employeeBirthDate) || undefined,
+    employeePosition: asText(data.employeePosition, 'No especificado'),
+    employeeOperationCenter: asText(data.employeeOperationCenter) || undefined,
+    employeePayrollType: asText(data.employeePayrollType, 'quincenal'),
+    employeeRestDay: asText(data.employeeRestDay) || undefined,
+    contractNumber: asText(data.contractNumber) || undefined,
+    contractType: asText(data.contractType, 'contrato'),
+    workLaborDescription: asText(data.workLaborDescription) || undefined,
+    contractTypeDisplay: asText(data.contractTypeDisplay, data.contractType || 'Contrato'),
+    startDate: safeDate(data.startDate),
+    endDate: data.endDate ? safeDate(data.endDate, data.startDate) : null,
+    salary: Number.isFinite(Number(data.salary)) ? Number(data.salary) : 0,
+    salaryType: asText(data.salaryType, 'mensual'),
+    transportAllowance: Boolean(data.transportAllowance),
+    transportAllowanceAmount: Number.isFinite(Number(data.transportAllowanceAmount)) ? Number(data.transportAllowanceAmount) : 0,
+    trialPeriodDays: Number.isFinite(Number(data.trialPeriodDays)) ? Number(data.trialPeriodDays) : undefined,
+    workCity: asText(data.workCity) || undefined,
+    workAddress: asText(data.workAddress) || undefined,
+    contractDurationMonths: Number.isFinite(Number(data.contractDurationMonths)) ? Number(data.contractDurationMonths) : undefined,
+    hasNonCompeteClause: Boolean(data.hasNonCompeteClause),
+    hasConfidentialityClause: Boolean(data.hasConfidentialityClause),
+    specialClauses: asText(data.specialClauses) || undefined,
+    generationDate: safeDate(data.generationDate),
+    generationCity: asText(data.generationCity, 'Bogotá D.C.'),
+  };
 }
 
 const dayOfWeekLabels: Record<string, string> = {
@@ -124,49 +184,51 @@ function formatRestDay(restDay?: string): string {
 
 // Convert number to words (Spanish)
 function numberToWords(num: number): string {
+  const safeNum = Number.isFinite(Number(num)) ? Math.trunc(Number(num)) : 0;
   const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const tens = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
   const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
   const hundreds = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
   
-  if (num === 0) return 'cero';
-  if (num < 0) return 'menos ' + numberToWords(-num);
+  if (safeNum === 0) return 'cero';
+  if (safeNum < 0) return 'menos ' + numberToWords(-safeNum);
   
-  if (num < 10) return units[num];
-  if (num < 20) return teens[num - 10];
-  if (num < 100) {
-    const t = Math.floor(num / 10);
-    const u = num % 10;
+  if (safeNum < 10) return units[safeNum];
+  if (safeNum < 20) return teens[safeNum - 10];
+  if (safeNum < 100) {
+    const t = Math.floor(safeNum / 10);
+    const u = safeNum % 10;
     if (u === 0) return tens[t];
     if (t === 2) return 'veinti' + units[u];
     return tens[t] + ' y ' + units[u];
   }
-  if (num < 1000) {
-    const h = Math.floor(num / 100);
-    const remainder = num % 100;
+  if (safeNum < 1000) {
+    const h = Math.floor(safeNum / 100);
+    const remainder = safeNum % 100;
     if (remainder === 0) return h === 1 ? 'cien' : hundreds[h];
     return (h === 1 ? 'ciento' : hundreds[h]) + ' ' + numberToWords(remainder);
   }
-  if (num < 1000000) {
-    const thousands = Math.floor(num / 1000);
-    const remainder = num % 1000;
+  if (safeNum < 1000000) {
+    const thousands = Math.floor(safeNum / 1000);
+    const remainder = safeNum % 1000;
     const thousandWord = thousands === 1 ? 'mil' : numberToWords(thousands) + ' mil';
     if (remainder === 0) return thousandWord;
     return thousandWord + ' ' + numberToWords(remainder);
   }
-  if (num < 1000000000) {
-    const millions = Math.floor(num / 1000000);
-    const remainder = num % 1000000;
+  if (safeNum < 1000000000) {
+    const millions = Math.floor(safeNum / 1000000);
+    const remainder = safeNum % 1000000;
     const millionWord = millions === 1 ? 'un millón' : numberToWords(millions) + ' millones';
     if (remainder === 0) return millionWord;
     return millionWord + ' ' + numberToWords(remainder);
   }
   
-  return num.toString();
+  return safeNum.toString();
 }
 
 // Prepare template data with all placeholders
 function prepareTemplateData(data: ContractDocumentData): Record<string, string> {
+  data = normalizeContractDocumentData(data);
   const today = data.generationDate;
   const salaryWords = capitalize(numberToWords(data.salary));
   const salaryFormatted = formatCurrency(data.salary);
@@ -180,7 +242,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     ? formatCurrency(data.transportAllowanceAmount)
     : 'No aplica';
   
-  return {
+  const templateData = {
     // Company
     EMPRESA_NOMBRE: data.companyName,
     EMPRESA_NIT: data.companyNit,
@@ -264,6 +326,10 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     MES_ACTUAL: capitalize(format(today, 'MMMM', { locale: es })),
     ANIO_ACTUAL: format(today, 'yyyy'),
   };
+
+  return Object.fromEntries(
+    Object.entries(templateData).map(([key, value]) => [key, asText(value)])
+  );
 }
 
 // Download template from Supabase storage
@@ -284,6 +350,7 @@ export async function generateContractFromTemplate(
   templateUrl: string,
   data: ContractDocumentData
 ): Promise<Blob> {
+  data = normalizeContractDocumentData(data);
   // Download the template
   const templateBuffer = await downloadTemplate(templateUrl);
   
@@ -315,6 +382,7 @@ export async function generateContractFromTemplate(
 
 // Generate a basic PDF contract (fallback when no template)
 export async function generateBasicContractPDF(data: ContractDocumentData): Promise<jsPDF> {
+  data = normalizeContractDocumentData(data);
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -538,6 +606,7 @@ export async function generateHighFidelityPDFFromDocx(
   filename: string,
   data?: ContractDocumentData
 ): Promise<void> {
+  data = data ? normalizeContractDocumentData(data) : undefined;
   // 1. Create the off-screen layout container inside the PARENT window.
   // We place it off-screen and keep it active in layout tree so margins and text render perfectly.
   const hiddenContainer = window.document.createElement('div');
@@ -929,6 +998,7 @@ function updatePageNumbersInElement(element: HTMLElement, currentPage: number, t
 
 // Open a new tab/window with a high-fidelity print preview of the Word template and print dialog
 export async function showContractPrintPreview(docxBlob: Blob, data: ContractDocumentData): Promise<void> {
+  data = normalizeContractDocumentData(data);
   // 1. Open a clean, empty new window
   const printWindow = window.open('', '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   if (!printWindow) {
