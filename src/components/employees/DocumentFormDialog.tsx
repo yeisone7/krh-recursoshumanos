@@ -352,7 +352,13 @@ export function DocumentFormDialog({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                    <PopoverContent
+                      className="z-[80] w-auto max-h-[min(24rem,calc(100dvh-2rem))] overflow-auto bg-background p-0"
+                      align="start"
+                      sideOffset={8}
+                      avoidCollisions
+                      collisionPadding={16}
+                    >
                       <Calendar
                         mode="single"
                         selected={field.value}

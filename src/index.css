@@ -868,6 +868,10 @@ div[class*="DialogContent"] {
 }
 
 /* Popover list options and menus dropdowns */
+[data-radix-popper-content-wrapper] {
+  z-index: 80 !important;
+}
+
 [data-radix-popper-content-wrapper] [role="listbox"],
 [data-radix-popper-content-wrapper] > div,
 .PopoverContent,
