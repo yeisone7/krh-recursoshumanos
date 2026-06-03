@@ -71,12 +71,13 @@ export function calculateMonthsDifference(startDate: Date, endDate: Date): numbe
 
 // Helper to format currency
 function formatCurrency(amount: number): string {
+  const safeAmount = Number.isFinite(Number(amount)) ? Number(amount) : 0;
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 // Helper to load image for PDF
@@ -99,7 +100,9 @@ function formatDateInWords(date: Date): string {
 }
 
 // Capitalize first letter
-function capitalize(str: string): string {
+function capitalize(value?: string | null): string {
+  const str = String(value || '').trim();
+  if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
@@ -115,15 +118,18 @@ const dayOfWeekLabels: Record<string, string> = {
   domingo: 'Domingo',
 };
 
-function formatRestDay(restDay?: string): string {
+function formatRestDay(restDay?: string | null): string {
   if (!restDay) return '';
 
-  const normalized = restDay.trim().toLowerCase();
+  const normalized = String(restDay).trim().toLowerCase();
+  if (!normalized) return '';
   return dayOfWeekLabels[normalized] || capitalize(normalized);
 }
 
 // Convert number to words (Spanish)
 function numberToWords(num: number): string {
+  if (!Number.isFinite(num)) return 'cero';
+
   const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve'];
   const tens = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
   const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
@@ -168,8 +174,9 @@ function numberToWords(num: number): string {
 // Prepare template data with all placeholders
 function prepareTemplateData(data: ContractDocumentData): Record<string, string> {
   const today = data.generationDate;
-  const salaryWords = capitalize(numberToWords(data.salary));
-  const salaryFormatted = formatCurrency(data.salary);
+  const salary = Number.isFinite(Number(data.salary)) ? Number(data.salary) : 0;
+  const salaryWords = capitalize(numberToWords(salary));
+  const salaryFormatted = formatCurrency(salary);
   const salaryTypeText = data.salaryType === 'mensual' ? 'Salario Mensual' : 'Salario Convencional';
   const payrollTypeText = data.employeePayrollType === 'mensual' ? 'Mensual' : 'Quincenal';
   const restDayText = formatRestDay(data.employeeRestDay);
@@ -228,7 +235,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     CONTRATO_FECHA_FIN: data.endDate ? format(data.endDate, 'dd/MM/yyyy') : 'No aplica',
     CONTRATO_FECHA_FIN_LETRAS: data.endDate ? formatDateInWords(data.endDate) : 'No aplica',
     CONTRATO_SALARIO: salaryFormatted,
-    CONTRATO_SALARIO_NUMERO: data.salary.toString(),
+    CONTRATO_SALARIO_NUMERO: salary.toString(),
     CONTRATO_SALARIO_LETRAS: salaryWords + ' pesos M/CTE',
     CONTRATO_TIPO_SALARIO: salaryTypeText,
     CONTRATO_AUXILIO_TRANSPORTE: data.transportAllowance ? 'Sí' : 'No',
@@ -240,7 +247,7 @@ function prepareTemplateData(data: ContractDocumentData): Record<string, string>
     
     // Friendly aliases shown in the catalog helper.
     SALARIO: salaryFormatted,
-    SALARIO_NUMERO: data.salary.toString(),
+    SALARIO_NUMERO: salary.toString(),
     SALARIO_LETRAS: salaryWords,
     SALARIO_TIPO: salaryTypeText,
     AUXILIO_TRANSPORTE: transportAllowanceText,
@@ -276,7 +283,16 @@ export async function downloadTemplate(templateUrl: string): Promise<ArrayBuffer
     throw new Error(`Error downloading template: ${error.message}`);
   }
   
-  return await data.arrayBuffer();
+  if (!data) {
+    throw new Error('La plantilla del contrato no devolvio contenido.');
+  }
+
+  const buffer = await data.arrayBuffer();
+  if (!buffer || buffer.byteLength === 0) {
+    throw new Error('La plantilla del contrato esta vacia o no se pudo leer.');
+  }
+
+  return buffer;
 }
 
 // Generate contract document from DOCX template
@@ -288,7 +304,13 @@ export async function generateContractFromTemplate(
   const templateBuffer = await downloadTemplate(templateUrl);
   
   // Load the template with PizZip
-  const zip = new PizZip(templateBuffer);
+  let zip: PizZip;
+  try {
+    zip = new PizZip(templateBuffer);
+  } catch (error) {
+    console.error('Error opening contract DOCX template:', error);
+    throw new Error('No se pudo abrir la plantilla DOCX del contrato. Verifique que el archivo sea un .docx valido.');
+  }
   
   // Create docxtemplater instance
   const doc = new Docxtemplater(zip, {
@@ -299,18 +321,26 @@ export async function generateContractFromTemplate(
   });
   
   // Get template data
-  const templateData = prepareTemplateData(data);
+  const templateData = Object.fromEntries(
+    Object.entries(prepareTemplateData(data)).map(([key, value]) => [key, String(value ?? '')])
+  );
   
   // Render the document
-  doc.render(templateData);
+  try {
+    doc.render(templateData);
+  } catch (error) {
+    console.error('Error rendering contract template:', error);
+    throw new Error('No se pudo completar la plantilla del contrato. Revise que las variables del archivo DOCX esten bien escritas.');
+  }
   
   // Generate the output
   const out = doc.getZip().generate({
-    type: 'blob',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    type: 'arraybuffer',
   });
   
-  return out;
+  return new Blob([out], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
 }
 
 // Generate a basic PDF contract (fallback when no template)
@@ -413,7 +443,8 @@ export async function generateBasicContractPDF(data: ContractDocumentData): Prom
   doc.text('CUARTA - REMUNERACIÓN:', margin, y);
   y += 6;
   doc.setFont('helvetica', 'normal');
-  let clause4 = `EL EMPLEADOR pagará a EL TRABAJADOR un ${data.salaryType === 'mensual' ? 'salario mensual' : 'salario convencional'} de ${formatCurrency(data.salary)} (${capitalize(numberToWords(data.salary))} pesos M/CTE).`;
+  const salary = Number.isFinite(Number(data.salary)) ? Number(data.salary) : 0;
+  let clause4 = `EL EMPLEADOR pagará a EL TRABAJADOR un ${data.salaryType === 'mensual' ? 'salario mensual' : 'salario convencional'} de ${formatCurrency(salary)} (${capitalize(numberToWords(salary))} pesos M/CTE).`;
   if (data.transportAllowance && data.transportAllowanceAmount) {
     clause4 += ` Adicionalmente, se pagará auxilio de transporte por valor de ${formatCurrency(data.transportAllowanceAmount)}.`;
   }
@@ -1129,19 +1160,25 @@ export async function showContractPrintPreview(docxBlob: Blob, data: ContractDoc
   const targetRoot = printWindow.document.getElementById('docx-preview-root')!;
 
   // 5. Render the DOCX blob inside the new window's preview element
-  await renderAsync(docxBlob, targetRoot, undefined, {
-    className: 'docx',
-    inWrapper: true,
-    ignoreWidth: false,
-    ignoreHeight: false, // Keep physical dimensions
-    breakPages: true,     // Let docx-preview paginate natively
-    ignoreLastRenderedPageBreak: false, // Don't ignore Word's page breaks
-    experimental: true,                  // Enable exact page spacing and breaks
-    renderHeaders: true,
-    renderFooters: true,
-    useBase64URL: true,
-    debug: false,
-  });
+  try {
+    await renderAsync(docxBlob, targetRoot, undefined, {
+      className: 'docx',
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: false, // Keep physical dimensions
+      breakPages: true,     // Let docx-preview paginate natively
+      ignoreLastRenderedPageBreak: false, // Don't ignore Word's page breaks
+      experimental: true,                  // Enable exact page spacing and breaks
+      renderHeaders: true,
+      renderFooters: true,
+      useBase64URL: true,
+      debug: false,
+    });
+  } catch (error) {
+    printWindow.close();
+    console.error('Error rendering contract print preview:', error);
+    throw new Error('No se pudo abrir la vista previa del contrato. Genere el Word para validar que la plantilla DOCX este correcta.');
+  }
 
   // 5.5. Proportionalize <col> widths to prevent horizontal table overflow/misalignment
   const allTables = targetRoot.querySelectorAll('table');
