@@ -376,18 +376,19 @@ function buildCompleteSystemPrompt(mode: ChatMode, pageContext?: PageContext | n
 
   const userName = userContext?.displayName?.trim();
   const personalizationContext = userName
-    ? `\nEl usuario se llama ${userName}. Si la conversacion es nueva, saludalo brevemente usando solo ese primer nombre. No repitas saludos si la conversacion ya esta en curso.`
-    : `\n${userContext?.isNewConversation ? "Saluda de forma breve y amable al inicio." : "No repitas saludos si la conversacion ya esta en curso."}`;
+    ? `\nEl usuario se llama ${userName}. Si la conversacion es nueva, saludalo brevemente usando solo ese primer nombre y con calidez. No repitas saludos si la conversacion ya esta en curso.`
+    : `\n${userContext?.isNewConversation ? "Saluda de forma breve, amable y cercana al inicio." : "No repitas saludos si la conversacion ya esta en curso."}`;
   const moduleContext = pageContext?.moduleLabel
     ? `\nContexto actual del usuario: viene del modulo ${pageContext.moduleLabel}${pageContext.pathname ? ` (${pageContext.pathname})` : ""}. Si la pregunta es ambigua, interpreta primero desde ese modulo.`
     : "";
   const appUsageKnowledge = buildAppUsageKnowledge(pageContext, userMessage);
 
   return `Eres el asistente de ayuda interna de EmpatiQ, una aplicacion de gestion de talento humano.
-Tu alcance es orientar sobre el uso de la app: modulos, navegacion, procesos, configuraciones, alertas, contratos, empleados, seleccion, capacitaciones, evaluaciones, notificaciones, permisos, seguridad y flujos operativos.
-No consultes ni inventes datos reales de empleados, contratos, nomina, candidatos o reportes. Si el usuario pide conteos, tendencias, metricas o listados internos, explica que debe usar el Asistente de Datos IA y que este chat solo explica como usar la plataforma.
+Tu alcance es orientar sobre el uso de la app, resolver dudas operativas, ayudar a razonar procesos y hacer calculos o analisis con la informacion que el usuario escriba en el chat.
+No consultes ni inventes datos reales de empleados, contratos, nomina, candidatos o reportes. Si el usuario pide conteos, tendencias, metricas o listados internos que dependan de la base de datos, explica con naturalidad que debe usar el Asistente de Datos IA.
+Si el usuario te entrega numeros, fechas, porcentajes, salarios, duraciones, cantidades o tablas en el mensaje, puedes calcular, comparar, validar consistencia y resumir hallazgos. Muestra la operacion o el criterio de forma breve para que el resultado sea verificable.
 No des asesoria legal definitiva. Puedes orientar en lenguaje practico sobre donde registrar informacion, que flujo usar o que validacion revisar dentro de la app.
-Usa un tono humano, cercano, claro y experto. Responde en espanol.${personalizationContext}
+Usa un tono humano, calido, amable y jovial, como una persona experta que acompana sin sonar robotica. Responde en espanol.${personalizationContext}
 
 FUENTE DE VERDAD SOBRE USO REAL DE LA APP:
 - Usa primero la ficha de conocimiento estructurado incluida abajo. Esta ficha representa el comportamiento real de EmpatiQ en esta version.
@@ -398,12 +399,14 @@ FUENTE DE VERDAD SOBRE USO REAL DE LA APP:
 FICHA DE CONOCIMIENTO RELEVANTE:
 ${appUsageKnowledge || "- No se detecto modulo especifico; responde con conocimiento general de navegacion y permisos de EmpatiQ."}
 
-FORMATO OBLIGATORIO:
-- Responde completo en una sola respuesta. No guies por "Paso 1 de N", no esperes confirmacion para continuar y no fragmentes el proceso.
-- Si el usuario pregunta como hacer algo, entrega ruta, flujo completo, validaciones, permisos necesarios y resultado esperado.
-- Usa Markdown limpio con titulos cortos, listas y tablas cuando ayuden. Evita parrafos largos.
+ESTILO DE RESPUESTA:
+- Prioriza respuestas naturales en parrafos cortos. Evita sonar como plantilla, manual tecnico o checklist salvo que el usuario pida pasos.
+- No llenes la respuesta de titulos, tablas o listas por defecto. Usa estructura solo cuando ayude de verdad a entender un proceso, una comparacion o un calculo.
+- Si el usuario pregunta como hacer algo, entrega la ruta, el flujo completo, validaciones, permisos necesarios y resultado esperado, pero con lenguaje conversacional.
+- Para calculos y analisis, se preciso: identifica supuestos, realiza operaciones paso a paso solo lo necesario y da una conclusion clara.
+- Si falta un dato indispensable, pregunta una sola cosa concreta. Si puedes responder con supuestos razonables, dilo y continua.
 - No incluyas secciones de "Proximos clics recomendados", badges ni cierres decorativos.
-- Haz preguntas solo si falta un dato indispensable para responder correctamente.
+- No uses "Paso 1 de N" ni esperes confirmacion para continuar, a menos que el usuario pida acompanamiento paso a paso.
 
 CONOCIMIENTO ACTUALIZADO DE LA APP:
 - SuperAdmin tiene Empresas, Usuarios y Roles. La matriz de acceso permite permisos base por modulo y permisos especiales independientes por item, incluyendo aprobaciones por area y analiticas.
@@ -441,7 +444,7 @@ async function callGateway(apiKey: string, systemPrompt: string, messages: ChatM
         { role: "system", content: systemPrompt },
         ...messages,
       ],
-      temperature: 0.3,
+      temperature: 0.35,
     }),
   });
 
@@ -488,7 +491,7 @@ async function callGeminiDirect(apiKey: string, systemPrompt: string, messages: 
         parts: [{ text: message.content }],
       })),
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      generationConfig: { temperature: 0.3 },
+      generationConfig: { temperature: 0.35 },
     }),
     });
 
@@ -530,7 +533,7 @@ async function callOpenAIDirect(apiKey: string, systemPrompt: string, messages: 
         { role: "system", content: systemPrompt },
         ...messages,
       ],
-      temperature: 0.3,
+      temperature: 0.35,
     }),
     });
 
@@ -662,7 +665,7 @@ serve(async (req) => {
       ? body.history
           .filter((item: any) => (item?.role === "user" || item?.role === "assistant") && typeof item?.content === "string")
           .slice(-30)
-          .map((item: any) => ({ role: item.role as ChatRole, content: item.content.trim().slice(0, 4000) }))
+          .map((item: any) => ({ role: item.role as ChatRole, content: item.content.trim().slice(0, 8000) }))
           .filter((item: ChatMessage) => item.content)
       : [];
     const rawPageContext = body.pageContext && typeof body.pageContext === "object" ? body.pageContext : null;
@@ -678,7 +681,7 @@ serve(async (req) => {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(companyId)) {
       return jsonResponse({ error: "Empresa inválida" }, 400);
     }
-    if (!message || message.length > 4000) return jsonResponse({ error: "Escribe una pregunta de máximo 4000 caracteres" }, 400);
+    if (!message || message.length > 8000) return jsonResponse({ error: "Escribe una pregunta de maximo 8000 caracteres" }, 400);
     if (mode === "data_analysis") return jsonResponse({ error: "El chat de análisis de datos estará disponible próximamente." }, 403);
 
     const [{ data: membership }, { data: superAdmin }] = await Promise.all([

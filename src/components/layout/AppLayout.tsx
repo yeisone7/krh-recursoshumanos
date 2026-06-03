@@ -68,7 +68,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
     const updatePanelHeight = () => {
       const viewportHeight = window.innerHeight;
-      setAiPanelHeight(isMobile ? Math.round(viewportHeight * 0.84) : Math.min(680, viewportHeight - 48));
+      setAiPanelHeight(isMobile ? Math.round(Math.min(viewportHeight * 0.78, viewportHeight - 88)) : Math.min(660, viewportHeight - 96));
     };
 
     updatePanelHeight();
@@ -104,7 +104,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
     const deltaY = event.clientY - start.y;
     const minHeight = isMobile ? Math.max(280, window.innerHeight * 0.38) : 420;
-    const maxHeight = isMobile ? window.innerHeight * 0.9 : window.innerHeight - 48;
+    const maxHeight = isMobile ? window.innerHeight - 88 : window.innerHeight - 96;
     setAiPanelHeight(Math.round(Math.min(maxHeight, Math.max(minHeight, start.height - deltaY))));
   };
 
@@ -206,8 +206,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             exit={isMobile ? { y: 80, opacity: 0 } : { x: 40, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={isMobile
-              ? 'fixed inset-x-2 bottom-0 z-[60] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
-              : 'fixed bottom-6 right-6 z-[60] w-[440px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
+              ? 'fixed inset-x-2 bottom-0 z-[60] max-h-[calc(100dvh-5.5rem)] overflow-hidden rounded-t-xl border border-border bg-card shadow-2xl'
+              : 'fixed bottom-6 right-6 z-[60] w-[440px] max-h-[calc(100dvh-6rem)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-card shadow-2xl'}
             style={{ height: aiPanelMinimized ? 64 : aiPanelHeight || undefined }}
           >
             <div className="flex h-16 items-center gap-2 border-b border-border bg-card px-3">
