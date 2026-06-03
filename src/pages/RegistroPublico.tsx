@@ -35,17 +35,17 @@ interface TokenData {
 
 // Candidate fields config
 const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; section: string; placeholder?: string }> = {
-  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Personal' },
-  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Personal' },
-  firstName: { label: 'Nombre', type: 'text', section: 'Personal' },
-  lastName: { label: 'Apellido', type: 'text', section: 'Personal' },
-  documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Personal' },
-  documentIssueCity: { label: 'Lugar de Expedición', type: 'text', section: 'Personal' },
-  birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Personal' },
-  gender: { label: 'Sexo Biológico', type: 'select-gender', section: 'Personal' },
-  genderIdentity: { label: 'Sexo de Identificación', type: 'select-gender-identity', section: 'Personal' },
-  maritalStatus: { label: 'Estado Civil', type: 'select-marital', section: 'Personal' },
-  bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Personal' },
+  documentNumber: { label: 'Número de Documento', type: 'text', section: 'Identidad' },
+  documentType: { label: 'Tipo de Documento', type: 'select-doc-type', section: 'Identidad' },
+  firstName: { label: 'Nombre', type: 'text', section: 'Identidad' },
+  lastName: { label: 'Apellido', type: 'text', section: 'Identidad' },
+  documentIssueDate: { label: 'Fecha de Expedición', type: 'date', section: 'Identidad' },
+  documentIssueCity: { label: 'Lugar de Expedición', type: 'text', section: 'Identidad' },
+  birthDate: { label: 'Fecha de Nacimiento', type: 'date', section: 'Identidad' },
+  gender: { label: 'Sexo Biológico', type: 'select-gender', section: 'Identidad' },
+  genderIdentity: { label: 'Sexo de Identificación', type: 'select-gender-identity', section: 'Identidad' },
+  maritalStatus: { label: 'Estado Civil', type: 'select-marital', section: 'Identidad' },
+  bloodType: { label: 'Tipo de Sangre', type: 'select-blood', section: 'Identidad' },
   email: { label: 'Email', type: 'email', section: 'Contacto' },
   mobile: { label: 'Celular', type: 'tel', section: 'Contacto' },
   phone: { label: 'Teléfono Fijo', type: 'tel', section: 'Contacto' },
@@ -69,6 +69,7 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
   ethnicGroup: { label: 'Grupo Étnico', type: 'select-ethnic', section: 'Especificaciones' },
   isConflictVictim: { label: 'Víctima del Conflicto', type: 'select-yes-no', section: 'Especificaciones' },
   isDemobilized: { label: 'Desmovilizado', type: 'select-yes-no', section: 'Especificaciones' },
+  familyMembers: { label: 'Personas a Cargo (Núcleo Familiar)', type: 'array', section: 'Familia' },
 };
 
 // Employee fields config
@@ -135,7 +136,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
 const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber', 'educationLevelId', 'professionId'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber'];
 
-const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
+const CANDIDATE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 const normalizeNameText = (value?: string | null) => (value || '').trim().replace(/\s+/g, ' ');
@@ -667,7 +668,8 @@ export default function RegistroPublico() {
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
           p_identification_type_id: formData.identificationTypeId || null,
-        });
+          p_family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers : [],
+        } as any);
         if (error) {
           throw new Error(getRpcErrorMessage(error, 'Error al crear el candidato'));
         }

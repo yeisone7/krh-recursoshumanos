@@ -21,26 +21,41 @@ interface Props {
 }
 
 const CANDIDATE_FIELDS = [
-  { key: 'documentNumber', label: 'Número de Documento', section: 'Personal', required: true },
-  { key: 'documentType', label: 'Tipo de Documento', section: 'Personal', required: true },
-  { key: 'firstName', label: 'Nombre', section: 'Personal', required: true },
-  { key: 'lastName', label: 'Apellido', section: 'Personal', required: true },
-  { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Personal' },
-  { key: 'gender', label: 'Sexo Biológico', section: 'Personal' },
-  { key: 'genderIdentity', label: 'Sexo de Identificación', section: 'Personal' },
+  { key: 'documentNumber', label: 'Numero de Documento', section: 'Identidad', required: true },
+  { key: 'documentType', label: 'Tipo de Documento', section: 'Identidad', required: true },
+  { key: 'firstName', label: 'Nombre', section: 'Identidad', required: true },
+  { key: 'lastName', label: 'Apellido', section: 'Identidad', required: true },
+  { key: 'documentIssueDate', label: 'Fecha de Expedicion Documento', section: 'Identidad' },
+  { key: 'documentIssueCity', label: 'Ciudad de Expedicion', section: 'Identidad' },
+  { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Identidad' },
+  { key: 'gender', label: 'Sexo Biologico', section: 'Identidad' },
+  { key: 'genderIdentity', label: 'Sexo de Identificacion', section: 'Identidad' },
+  { key: 'maritalStatus', label: 'Estado Civil', section: 'Identidad' },
+  { key: 'bloodType', label: 'Tipo de Sangre', section: 'Identidad' },
   { key: 'email', label: 'Email', section: 'Contacto' },
   { key: 'mobile', label: 'Celular', section: 'Contacto' },
-  { key: 'phone', label: 'Teléfono Fijo', section: 'Contacto' },
+  { key: 'phone', label: 'Telefono Fijo', section: 'Contacto' },
   { key: 'city', label: 'Ciudad', section: 'Contacto' },
   { key: 'department', label: 'Departamento', section: 'Contacto' },
-  { key: 'address', label: 'Dirección', section: 'Contacto' },
+  { key: 'address', label: 'Direccion', section: 'Contacto' },
+  { key: 'neighborhood', label: 'Barrio, Vereda u otro.', section: 'Contacto' },
+  { key: 'emergencyContactName', label: 'Nombre Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactPhone', label: 'Telefono Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactRelationship', label: 'Parentesco Contacto de Emergencia', section: 'Contacto' },
+  { key: 'familyMembers', label: 'Personas a Cargo (Nucleo Familiar)', section: 'Familia' },
   { key: 'educationLevelId', label: 'Nivel Escolar', section: 'Profesional' },
-  { key: 'professionId', label: 'Profesión / Título', section: 'Profesional' },
-  { key: 'experienceYears', label: 'Años de Experiencia', section: 'Profesional' },
+  { key: 'professionId', label: 'Profesion / Titulo', section: 'Profesional' },
+  { key: 'experienceYears', label: 'Anos de Experiencia', section: 'Profesional' },
   { key: 'currentCompany', label: 'Empresa Actual', section: 'Profesional' },
   { key: 'currentPosition', label: 'Cargo Actual', section: 'Profesional' },
   { key: 'salaryExpectation', label: 'Expectativa Salarial', section: 'Profesional' },
   { key: 'generalNotes', label: 'Notas', section: 'Profesional' },
+  { key: 'isFirstJob', label: 'Primer Empleo', section: 'Especificaciones' },
+  { key: 'isHeadOfHousehold', label: 'Cabeza de Familia', section: 'Especificaciones' },
+  { key: 'disabilityType', label: 'Tipo de Discapacidad', section: 'Especificaciones' },
+  { key: 'ethnicGroup', label: 'Grupo Etnico', section: 'Especificaciones' },
+  { key: 'isConflictVictim', label: 'Victima del Conflicto', section: 'Especificaciones' },
+  { key: 'isDemobilized', label: 'Desmovilizado', section: 'Especificaciones' },
 ];
 
 const EMPLOYEE_FIELDS = [
@@ -97,7 +112,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'isDemobilized', label: 'Desmovilizado', section: 'Especificaciones' },
 ];
 
-const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
+const CANDIDATE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType, vacancyId }: Props) {
