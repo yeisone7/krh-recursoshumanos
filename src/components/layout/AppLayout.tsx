@@ -56,7 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [isMobile]);
 
   useEffect(() => {
-    const trackedModules = ['/empleados', '/contratos', '/jornadas', '/novedades', '/requisiciones', '/seleccion', '/dotacion', '/examenes', '/notificaciones'];
+    const trackedModules = ['/empleados', '/contratos', '/jornadas', '/novedades', '/requisiciones', '/seleccion', '/dotacion', '/examenes', '/notificaciones', '/chat'];
     if (trackedModules.some((path) => location.pathname.startsWith(path))) {
       sessionStorage.setItem('empatiq_last_module_path', location.pathname);
     }

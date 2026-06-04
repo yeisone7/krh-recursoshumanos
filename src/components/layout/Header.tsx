@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize, Clock } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize, Clock, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,17 +18,22 @@ import { NotificationsPanel } from '@/components/notifications/NotificationsPane
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { useTheme } from '@/hooks/useTheme';
 import { CommandPalette } from '@/components/layout/CommandPalette';
+import { useChatUnreadCount } from '@/hooks/useChat';
+import { useChatPushSubscription } from '@/hooks/useChatPushSubscription';
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
 }
 
 export function Header({ onMobileMenuToggle }: HeaderProps) {
-  const { user, profile, companies, roles, signOut } = useAuth();
+  const { user, profile, companies, roles, signOut, permissionsLoaded, hasPermission } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
+  const showChatButton = permissionsLoaded && hasPermission('chat', 'view');
+  const { data: chatUnreadCount = 0 } = useChatUnreadCount(showChatButton);
+  useChatPushSubscription(showChatButton);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {
@@ -171,6 +176,25 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             </TooltipTrigger>
             <TooltipContent>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</TooltipContent>
           </Tooltip>
+
+          {/* Internal chat */}
+          {showChatButton && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative h-9 w-9" asChild>
+                  <Link to="/chat" aria-label="Abrir chat">
+                    <MessageCircle className="w-4 h-4 text-muted-foreground" />
+                    {chatUnreadCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-card">
+                        {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Chat interno</TooltipContent>
+            </Tooltip>
+          )}
 
           {/* Notifications */}
           <NotificationsPanel />
