@@ -303,6 +303,7 @@ function PublicDateField({
 export default function RegistroPublico() {
   const [searchParams] = useSearchParams();
   const tokenParam = searchParams.get('token');
+  const draftStorageKey = tokenParam ? `registration-draft:${tokenParam}` : null;
 
   const [step, setStep] = useState<Step>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -312,6 +313,7 @@ export default function RegistroPublico() {
   const [formData, setFormData] = useState<Record<string, any>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   // Catalog data for dropdowns
   const [catalogData, setCatalogData] = useState<Record<string, any[]>>({
@@ -344,16 +346,43 @@ export default function RegistroPublico() {
 
   // Set default identification type when loaded
   useEffect(() => {
-    if (identificationTypes.length > 0 && !formData.identificationTypeId) {
+    if (identificationTypes.length > 0) {
       const ccType = identificationTypes.find(t => t.code === 'CC' || t.name?.includes('Cédula'));
       const defaultType = ccType || identificationTypes[0];
-      setFormData(prev => ({ 
-        ...prev, 
-        identificationTypeId: defaultType.id,
-        documentType: defaultType.code || 'CC'
-      }));
+      setFormData(prev => {
+        if (prev.identificationTypeId) return prev;
+        return {
+          ...prev,
+          identificationTypeId: defaultType.id,
+          documentType: defaultType.code || 'CC'
+        };
+      });
     }
   }, [identificationTypes]);
+
+  useEffect(() => {
+    if (!draftStorageKey || !tokenData) return;
+
+    setDraftLoaded(false);
+    try {
+      const rawDraft = window.localStorage.getItem(draftStorageKey);
+      if (rawDraft) {
+        const draft = JSON.parse(rawDraft);
+        if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
+          setFormData(prev => ({ ...prev, ...draft }));
+        }
+      }
+    } catch {
+      window.localStorage.removeItem(draftStorageKey);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, [draftStorageKey, tokenData]);
+
+  useEffect(() => {
+    if (!draftStorageKey || step !== 'form' || !draftLoaded) return;
+    window.localStorage.setItem(draftStorageKey, JSON.stringify(formData));
+  }, [draftStorageKey, draftLoaded, formData, step]);
 
   useEffect(() => {
     if (!tokenParam) {
@@ -419,7 +448,7 @@ export default function RegistroPublico() {
     }
   };
 
-  const handleChange = (key: string, value: string) => {
+  const handleChange = (key: string, value: any) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
@@ -432,7 +461,8 @@ export default function RegistroPublico() {
   const handleSubmit = async () => {
     for (const key of requiredFields) {
       if (!formData[key]?.trim()) {
-        toast.error(`El campo "${fieldConfig[key]?.label}" es obligatorio`);
+        const fieldLabel = fieldConfig[key]?.label || (key === 'identificationTypeId' ? 'Tipo de Documento' : key);
+        toast.error(`El campo "${fieldLabel}" es obligatorio`);
         return;
       }
     }
@@ -679,6 +709,9 @@ export default function RegistroPublico() {
         return;
       }
 
+      if (draftStorageKey) {
+        window.localStorage.removeItem(draftStorageKey);
+      }
       setStep('done');
     } catch (err: any) {
       console.error('Registration submit error:', err);
