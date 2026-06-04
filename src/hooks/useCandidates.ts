@@ -352,9 +352,11 @@ export function useConvertToEmployee() {
 
       const vacancy = candidate.vacancies as any;
       const hireDate = startDate || todayDateOnlyString();
+      const employeeId = crypto.randomUUID();
 
       // Step 1: Create employee in new normalized model (employees_v2)
       const employeePayload: any = {
+        id: employeeId,
         company_id: currentCompanyId!,
         first_name: candidate.first_name,
         last_name: candidate.last_name,
@@ -383,11 +385,9 @@ export function useConvertToEmployee() {
 
       let employee: Database['public']['Tables']['employees_v2']['Row'];
 
-      const { data: createdEmployee, error: createError } = await supabase
+      const { error: createError } = await supabase
         .from('employees_v2')
-        .insert(employeePayload)
-        .select()
-        .single();
+        .insert(employeePayload);
 
       if (createError) {
         if (createError.code !== '23505') throw createError;
@@ -403,7 +403,7 @@ export function useConvertToEmployee() {
         if (existingEmployeeError || !existingEmployee) throw createError;
         employee = existingEmployee;
       } else {
-        employee = createdEmployee;
+        employee = employeePayload as Database['public']['Tables']['employees_v2']['Row'];
       }
 
       // Step 1b: Create contact record
@@ -471,8 +471,10 @@ export function useConvertToEmployee() {
       const contractTransport = transportAllowance !== undefined
         ? transportAllowance
         : (vacancy?.includes_transport ? 200000 : 0); // Default Colombian transport allowance
+      const contractId = crypto.randomUUID();
 
       const contractData: any = {
+        id: contractId,
         employee_id: employee.id,
         company_id: currentCompanyId!,
         contract_type: contractType || 'indefinido',
@@ -495,13 +497,12 @@ export function useConvertToEmployee() {
         contractData.trial_end_date = toDateOnlyString(trialEnd);
       }
 
-      const { data: contract, error: contractError } = await supabase
+      const { error: contractError } = await supabase
         .from('contracts')
-        .insert(contractData)
-        .select()
-        .single();
+        .insert(contractData);
 
       if (contractError) throw contractError;
+      const contract = contractData;
 
       // Step 3: Copy medical exam data from selection_steps to medical_exams
       let entryExam = null;
@@ -526,8 +527,10 @@ export function useConvertToEmployee() {
           en_tratamiento: 'pendiente',
         };
         const mappedResult = (medicalStep?.result && resultMapping[medicalStep.result]) || 'pendiente';
+        const entryExamId = crypto.randomUUID();
 
         const examData: any = {
+          id: entryExamId,
           employee_id: employee.id,
           company_id: currentCompanyId!,
           exam_type: 'ingreso',
@@ -540,11 +543,9 @@ export function useConvertToEmployee() {
           created_by: user?.id,
         };
 
-        const { data: exam, error: examError } = await supabase
+        const { error: examError } = await supabase
           .from('medical_exams')
-          .insert(examData)
-          .select()
-          .single();
+          .insert(examData);
 
         if (examError) {
           console.error('Error creating entry exam:', examError);
@@ -552,7 +553,7 @@ export function useConvertToEmployee() {
             description: 'No se pudo crear el examen de ingreso automáticamente. Créelo manualmente.',
           });
         } else {
-          entryExam = exam;
+          entryExam = examData;
           toast.success('Examen de ingreso registrado', {
             description: 'Se transfirió el examen médico de selección al historial del empleado.',
           });
