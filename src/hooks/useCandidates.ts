@@ -474,6 +474,7 @@ export function useConvertToEmployee() {
 
       const contractData: any = {
         employee_id: employee.id,
+        company_id: currentCompanyId!,
         contract_type: contractType || 'indefinido',
         start_date: hireDate,
         salary: contractSalary,
@@ -528,6 +529,7 @@ export function useConvertToEmployee() {
 
         const examData: any = {
           employee_id: employee.id,
+          company_id: currentCompanyId!,
           exam_type: 'ingreso',
           exam_date: medicalStep?.completed_date?.split('T')[0] || hireDate,
           result: mappedResult,
