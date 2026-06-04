@@ -6,7 +6,11 @@ import "./index.css";
 const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
-    void updateSW(true);
+    window.dispatchEvent(
+      new CustomEvent("empatiq-app-update-available", {
+        detail: { updateSW },
+      }),
+    );
   },
   onRegisteredSW(_swUrl, registration) {
     if (!registration) return;

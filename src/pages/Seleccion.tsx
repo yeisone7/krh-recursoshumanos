@@ -365,7 +365,7 @@ export default function Seleccion() {
                           <TableCell>
                             <Badge
                               variant="outline"
-                              className={cn('h-7 rounded-full text-[9px] font-black uppercase tracking-widest px-3 border-border shadow-sm', statusStyle.bg, statusStyle.text, statusStyle.border)}
+                              className={cn('inline-flex h-7 min-w-[5.5rem] shrink-0 items-center justify-center whitespace-nowrap rounded-full border-border px-3 text-[9px] font-black uppercase tracking-wide shadow-sm', statusStyle.bg, statusStyle.text, statusStyle.border)}
                             >
                               {vacancyStatusLabels[status]}
                             </Badge>

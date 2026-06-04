@@ -352,13 +352,32 @@ export function DocumentFormDialog({
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                    <PopoverContent
+                      side="top"
+                      align="start"
+                      sideOffset={8}
+                      collisionPadding={16}
+                      className="z-[90] w-[min(calc(100vw-2rem),20rem)] overflow-visible rounded-xl border-border bg-background p-0 shadow-2xl"
+                    >
                       <Calendar
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        className={cn('p-3 pointer-events-auto')}
+                        className="pointer-events-auto p-2"
+                        classNames={{
+                          months: 'flex flex-col',
+                          month: 'space-y-2',
+                          caption: 'relative flex items-center justify-center px-9 pt-1',
+                          table: 'w-full border-collapse',
+                          head_row: 'grid grid-cols-7',
+                          head_cell: 'flex h-8 items-center justify-center rounded-md text-[0.75rem] font-medium text-muted-foreground',
+                          row: 'grid grid-cols-7',
+                          cell: 'relative flex h-8 items-center justify-center p-0 text-center text-sm focus-within:z-20',
+                          day: 'h-8 w-8 rounded-md p-0 font-normal aria-selected:opacity-100',
+                          nav_button_previous: 'absolute left-1 top-0',
+                          nav_button_next: 'absolute right-1 top-0',
+                        }}
                       />
                     </PopoverContent>
                   </Popover>
