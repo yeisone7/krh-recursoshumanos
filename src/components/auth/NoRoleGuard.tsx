@@ -1,5 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, ShieldAlert, LogOut, Clock, Sparkles } from 'lucide-react';
+import { Loader2, ShieldAlert, LogOut, Clock, Sparkles, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -9,7 +9,12 @@ interface NoRoleGuardProps {
 }
 
 export function NoRoleGuard({ children }: NoRoleGuardProps) {
-  const { user, isLoading, permissionsLoaded, hasAnyRole, isAdmin, signOut } = useAuth();
+  const { user, isLoading, permissionsLoaded, hasAnyRole, isAdmin, signOut, refreshPermissions } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    window.location.assign('/auth');
+  };
 
   if (isLoading || !permissionsLoaded) {
     return (
@@ -80,8 +85,16 @@ export function NoRoleGuard({ children }: NoRoleGuardProps) {
 
               <div className="flex flex-col gap-4 pt-2">
                 <Button
+                  variant="secondary"
+                  onClick={refreshPermissions}
+                  className="w-full h-12 gap-2 rounded-xl transition-all shadow-sm"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Reintentar Acceso
+                </Button>
+                <Button
                   variant="outline"
-                  onClick={() => signOut()}
+                  onClick={handleSignOut}
                   className="w-full h-12 gap-2 rounded-xl border-border/60 hover:bg-background hover:text-foreground transition-all shadow-sm"
                 >
                   <LogOut className="w-4 h-4" />

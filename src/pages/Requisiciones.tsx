@@ -65,7 +65,9 @@ export default function Requisiciones() {
     e.stopPropagation();
     setExportingId(req.id);
     try {
-      await exportRequisitionToPDF(req, currentCompany?.name || 'Empresa');
+      await exportRequisitionToPDF(req, currentCompany?.name || 'Empresa', {
+        logoUrl: currentCompany?.horizontal_logo_url || currentCompany?.logo_url,
+      });
       toast({
         title: 'PDF generado',
         description: 'La requisición se ha exportado correctamente.',

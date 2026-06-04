@@ -91,6 +91,7 @@ export interface PersonnelRequisition {
   // Relations
   areas?: { id: string; name: string } | null;
   operation_centers?: { id: string; name: string } | null;
+  shifts?: { id: string; name: string; code: string | null } | null;
   vacancies?: { id: string; position_title: string; status: string }[];
 }
 
@@ -167,7 +168,8 @@ export function useRequisitions() {
         .select(`
           *,
           areas(id, name),
-          operation_centers(id, name)
+          operation_centers(id, name),
+          shifts(id, name, code)
         `)
         .eq('company_id', currentCompanyId!);
 
@@ -194,7 +196,8 @@ export function useRequisition(id: string | undefined) {
         .select(`
           *,
           areas(id, name),
-          operation_centers(id, name)
+          operation_centers(id, name),
+          shifts(id, name, code)
         `)
         .eq('id', id)
         .single();
@@ -220,7 +223,8 @@ export function useRequisitionWithVacancies(id: string | undefined) {
         .select(`
           *,
           areas(id, name),
-          operation_centers(id, name)
+          operation_centers(id, name),
+          shifts(id, name, code)
         `)
         .eq('id', id)
         .single();

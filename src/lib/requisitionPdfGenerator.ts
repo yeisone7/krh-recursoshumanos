@@ -15,12 +15,12 @@ import {
   AutorizaType,
 } from '@/types/requisition';
 
-import petrocasinosLogoFull from '@/assets/petrocasinos-logo-full.png';
-import petrocasinosLogoWhite from '@/assets/petrocasinos-logo-white.png';
-
 // ─── Brand palette ──────────────────────────────────────────────────────────
 const NAVY      = [30, 41, 66]   as [number, number, number];
 const NAVY_MID  = [50, 67, 107]  as [number, number, number];
+const HEADER_BG = [226, 232, 240] as [number, number, number];
+const HEADER_TEXT = [15, 23, 42] as [number, number, number];
+const HEADER_MUTED = [71, 85, 105] as [number, number, number];
 const ORANGE    = [230, 90, 20]  as [number, number, number];
 const ORANGE_LT = [245, 130, 60] as [number, number, number];
 const SLATE     = [71, 85, 105]  as [number, number, number];
@@ -31,6 +31,10 @@ const WHITE     = [255, 255, 255]as [number, number, number];
 const GREEN     = [22, 163, 74]  as [number, number, number];
 const RED       = [220, 38, 38]  as [number, number, number];
 const GRAY_MID  = [203, 213, 225]as [number, number, number];
+
+type RequisitionPdfOptions = {
+  logoUrl?: string | null;
+};
 
 // ─── Page metrics ───────────────────────────────────────────────────────────
 const PW   = 216;   // Letter width mm
@@ -53,6 +57,16 @@ function fmtCOP(n: number | null | undefined) {
   return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
 }
 function val(v: string | null | undefined) { return v || '—'; }
+
+function imageFormat(dataUrl: string): 'PNG' | 'JPEG' {
+  return dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg') ? 'JPEG' : 'PNG';
+}
+function shiftLabel(req: PersonnelRequisition): string {
+  if (req.shifts?.name && req.shifts?.code) return `${req.shifts.name} (${req.shifts.code})`;
+  if (req.shifts?.name) return req.shifts.name;
+  if (req.shifts?.code) return req.shifts.code;
+  return '—';
+}
 
 async function toBase64(src: string): Promise<string> {
   return new Promise((res, rej) => {
@@ -181,25 +195,27 @@ function addFooter(doc: jsPDF, companyName: string, pageNum: number) {
 // ─── Main generator ──────────────────────────────────────────────────────────
 export async function generateRequisitionPDF(
   req: PersonnelRequisition,
-  companyName: string
+  companyName: string,
+  options: RequisitionPdfOptions = {}
 ): Promise<jsPDF> {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
 
   // ── HEADER BLOCK ──────────────────────────────────────────────────────────
-  // Dark navy band
-  doc.setFillColor(...NAVY);
+  // Header band
+  doc.setFillColor(...HEADER_BG);
   doc.rect(0, 0, PW, 40, 'F');
   // Orange bottom stripe
   doc.setFillColor(...ORANGE);
   doc.rect(0, 40, PW, 3, 'F');
 
-  // Logo (white version for dark background)
+  // Company logo from configuration
   try {
-    const logoB64 = await toBase64(petrocasinosLogoWhite);
-    doc.addImage(logoB64, 'PNG', ML, 6, 52, 28);
+    if (!options.logoUrl) throw new Error('No company logo configured');
+    const logoB64 = await toBase64(options.logoUrl);
+    doc.addImage(logoB64, imageFormat(logoB64), ML, 7, 52, 25, undefined, 'FAST');
   } catch {
-    doc.setTextColor(...WHITE);
-    doc.setFontSize(15);
+    doc.setTextColor(...HEADER_TEXT);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text(companyName.toUpperCase(), ML, 22);
   }
@@ -210,7 +226,7 @@ export async function generateRequisitionPDF(
   doc.line(ML + 58, 8, ML + 58, 36);
 
   // Document title
-  doc.setTextColor(...WHITE);
+  doc.setTextColor(...HEADER_TEXT);
   doc.setFontSize(15);
   doc.setFont('helvetica', 'bold');
   doc.text('REQUISICIÓN DE PERSONAL', ML + 64, 18);
@@ -218,7 +234,7 @@ export async function generateRequisitionPDF(
   // Doc meta (code + version + date)
   doc.setFontSize(7.5);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...ORANGE_LT);
+  doc.setTextColor(...HEADER_MUTED);
   doc.text('Código: GT FO 218   Versión: 04', ML + 64, 25);
   const fechaReq = req.fecha_requisicion
     ? format(new Date(req.fecha_requisicion), 'dd/MM/yyyy')
@@ -243,7 +259,7 @@ export async function generateRequisitionPDF(
   // Number of vacancies pill
   const vacLabel = `${req.cantidad_vacantes_requeridas || '?'} VACANTE${(req.cantidad_vacantes_requeridas || 0) > 1 ? 'S' : ''}`;
   const vacW = doc.getTextWidth(vacLabel) + 8;
-  doc.setFillColor(...NAVY_MID);
+  doc.setFillColor(...SLATE);
   doc.roundedRect(PW - MR - vacW, 18, vacW, 7, 1.5, 1.5, 'F');
   doc.setTextColor(...WHITE);
   doc.setFontSize(7);
@@ -280,6 +296,7 @@ export async function generateRequisitionPDF(
   y = section(doc, '2.  INFORMACIÓN DEL CARGO SOLICITADO', y);
   y = row2(doc, y, 'Codigo de Requisicion', val(req.requisition_code), 'Estado', statusLabel);
   y = row2(doc, y, 'Cargo Solicitado', val(req.cargo_solicitado), 'N.º de Vacantes', String(req.cantidad_vacantes_requeridas ?? '—'));
+  y = row2(doc, y, 'Tipo de Turno', shiftLabel(req), 'Horario de Trabajo', val(req.horario_trabajo));
   y = row2(doc, y, 'Motivo de la Solicitud', val(req.motivo_solicitud ? (requisitionReasonLabels[req.motivo_solicitud as RequisitionReason] || req.motivo_solicitud) : null), 'Autoriza', val(req.autoriza ? (autorizaLabels[req.autoriza as AutorizaType] || req.autoriza) : null));
   if (req.motivo_solicitud === 'reemplazo' || !req.motivo_solicitud) {
     y = row2(doc, y, 'Persona a Reemplazar', val(req.persona_a_reemplazar), 'Cargo a Reemplazar', val(req.cargo_a_reemplazar));
@@ -418,9 +435,10 @@ export async function generateRequisitionPDF(
 
 export async function exportRequisitionToPDF(
   requisition: PersonnelRequisition,
-  companyName: string
+  companyName: string,
+  options: RequisitionPdfOptions = {}
 ): Promise<void> {
-  const doc = await generateRequisitionPDF(requisition, companyName);
+  const doc = await generateRequisitionPDF(requisition, companyName, options);
   const code = (requisition.requisition_code || 'RQ').replace(/\s+/g, '_');
   const cargo = (requisition.cargo_solicitado || 'Requisicion').replace(/\s+/g, '_');
   doc.save(`Requisicion_${code}_${cargo}_${format(new Date(), 'yyyyMMdd')}.pdf`);

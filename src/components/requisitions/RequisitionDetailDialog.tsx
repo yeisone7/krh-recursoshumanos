@@ -167,7 +167,9 @@ export function RequisitionDetailDialog({
     
     setIsExporting(true);
     try {
-      await exportRequisitionToPDF(requisition, currentCompany?.name || 'Empresa');
+      await exportRequisitionToPDF(requisition, currentCompany?.name || 'Empresa', {
+        logoUrl: currentCompany?.horizontal_logo_url || currentCompany?.logo_url,
+      });
       toast({
         title: 'PDF generado',
         description: 'La requisición se ha exportado correctamente.',
