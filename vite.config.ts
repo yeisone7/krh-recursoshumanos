@@ -31,11 +31,11 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     appVersionPlugin(),
     VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-256x256.png", "pwa-384x384.png", "pwa-512x512.png", "pwa-maskable-512.png"],
       workbox: {
-        skipWaiting: true,
-        clientsClaim: true,
+        skipWaiting: false,
+        clientsClaim: false,
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: "/index.html",

@@ -19,6 +19,10 @@ type VersionResponse = {
   buildId?: string;
 };
 
+type AppUpdateEvent = CustomEvent<{
+  updateSW?: (reloadPage?: boolean) => Promise<void>;
+}>;
+
 export function AppUpdateNotifier() {
   const auth = useOptionalAuth();
   const location = useLocation();
@@ -34,6 +38,7 @@ export function AppUpdateNotifier() {
 function AppUpdateNotifierContent() {
   const { data: systemConfig } = useSystemConfig();
   const updateNotifiedRef = useRef(false);
+  const pendingServiceWorkerUpdateRef = useRef<((reloadPage?: boolean) => Promise<void>) | null>(null);
   const updateCheckConfig = systemConfig?.app_update_check;
   const updateCheckEnabled = updateCheckConfig?.enabled ?? true;
   const updateCheckMinutes = Math.max(1, Math.min(1440, updateCheckConfig?.minutes ?? 5));
@@ -67,6 +72,57 @@ function AppUpdateNotifierContent() {
     window.location.replace(url.toString());
   };
 
+  const showUpdateToast = (deploymentKey: string, options?: { useServiceWorkerUpdate?: boolean }) => {
+    if (localStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === deploymentKey) return;
+
+    updateNotifiedRef.current = true;
+
+    toast.info('Nueva versión disponible', {
+      id: UPDATE_TOAST_ID,
+      description: 'Se han aplicado mejoras y correcciones importantes.',
+      duration: Infinity,
+      action: {
+        label: 'Actualizar',
+        onClick: async () => {
+          localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, deploymentKey);
+          toast.dismiss(UPDATE_TOAST_ID);
+
+          const updateSW = pendingServiceWorkerUpdateRef.current;
+          if (options?.useServiceWorkerUpdate && updateSW) {
+            await updateSW(true);
+            return;
+          }
+
+          await forceRefreshToLatest(deploymentKey);
+        },
+      },
+      cancel: {
+        label: 'Más tarde',
+        onClick: () => {
+          localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, deploymentKey);
+          toast.dismiss(UPDATE_TOAST_ID);
+        },
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!updateCheckEnabled) return;
+
+    const handleServiceWorkerUpdate = (event: Event) => {
+      const updateEvent = event as AppUpdateEvent;
+      pendingServiceWorkerUpdateRef.current = updateEvent.detail?.updateSW || null;
+      showUpdateToast(`service-worker-update-${Date.now()}`, {
+        useServiceWorkerUpdate: true,
+      });
+    };
+
+    window.addEventListener('empatiq-app-update-available', handleServiceWorkerUpdate);
+    return () => {
+      window.removeEventListener('empatiq-app-update-available', handleServiceWorkerUpdate);
+    };
+  }, [updateCheckEnabled]);
+
   useEffect(() => {
     // En desarrollo local (localhost), evitamos la notificación de actualización 
     // para no molestar durante el ciclo de trabajo de desarrollo.
@@ -98,6 +154,11 @@ function AppUpdateNotifierContent() {
         const latestBuildId = data.buildId;
         const latestDeploymentKey = latestBuildId || latestVersion;
         const currentDeploymentKey = CURRENT_BUILD_ID || CURRENT_APP_VERSION;
+
+        if (isMounted && latestDeploymentKey && latestDeploymentKey !== currentDeploymentKey) {
+          showUpdateToast(latestDeploymentKey);
+          return;
+        }
 
         // Caso 1: Ya estamos en la versión más reciente
         if (!isMounted || !latestDeploymentKey || latestDeploymentKey === currentDeploymentKey) {

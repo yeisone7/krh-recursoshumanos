@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ThankYouPreviewDialog } from './ThankYouPreviewDialog';
 import { useCandidateBackground } from '@/hooks/useCandidateBackground';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
@@ -140,7 +141,25 @@ export function CandidateDetailDialog({
   const updateStep = useUpdateSelectionStep();
 
   const candidateEmployeeId = candidate?.employee_id || undefined;
-  const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(candidateEmployeeId);
+  const { data: matchedEmployee } = useQuery({
+    queryKey: ['candidate-matched-employee', candidate?.document_number, currentCompanyId],
+    queryFn: async () => {
+      if (!candidate?.document_number || !currentCompanyId) return null;
+
+      const { data, error } = await supabase
+        .from('employees_v2')
+        .select('id')
+        .eq('company_id', currentCompanyId)
+        .eq('document_number', candidate.document_number)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as { id: string } | null;
+    },
+    enabled: open && !!candidate?.document_number && !!currentCompanyId && !candidateEmployeeId,
+  });
+  const resolvedEmployeeId = candidateEmployeeId || matchedEmployee?.id;
+  const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(resolvedEmployeeId);
   const { data: candidateDocs = [], isLoading: loadingDocs } = useCandidateDocuments(candidateId);
   const deleteCandidateDoc = useDeleteCandidateDocument();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
@@ -172,6 +191,10 @@ export function CandidateDetailDialog({
   const steps = (candidate as any).selection_steps || [];
   const vacancy = (candidate as any).vacancies;
   const canEditCandidate = isRRHH || isPsicologo || hasPermission('seleccion', 'update');
+  const hasMedicalExamStep = steps.some((step: any) => step.step_type === 'examenes_medicos');
+  const occupationalExamDocs = sharedDocs.filter(
+    (doc: any) => doc.is_valid !== false && normalizeEmployeeDocumentFolder(doc.document_type as any) === 'examenes_ocupacionales'
+  );
 
   const handleAddStep = (stepType: SelectionStepType) => {
     setSelectedStep(undefined);
@@ -276,6 +299,23 @@ export function CandidateDetailDialog({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const openStorageDocument = async (fileUrl?: string | null) => {
+    if (!fileUrl) return;
+    try {
+      const path = fileUrl.includes('storage/v1/object/public/documents/')
+        ? fileUrl.split('storage/v1/object/public/documents/')[1]
+        : fileUrl.includes('storage/v1/object/documents/')
+        ? fileUrl.split('storage/v1/object/documents/')[1]
+        : fileUrl.startsWith('documents/')
+        ? fileUrl.replace('documents/', '')
+        : fileUrl;
+      const { data } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
+      window.open(data?.signedUrl || fileUrl, '_blank');
+    } catch {
+      toast.error('Error al acceder al documento');
+    }
+  };
+
   const formatSalary = (value: number | null) => {
     if (!value) return 'No especificado';
     return new Intl.NumberFormat('es-CO', {
@@ -349,7 +389,7 @@ export function CandidateDetailDialog({
                   <Paperclip className="w-4 h-4" />
                   <span className="truncate">Documentos</span>
                 </TabsTrigger>
-                {candidate.employee_id && (
+                {resolvedEmployeeId && (
                   <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-xs sm:col-span-1 sm:gap-2 sm:text-sm">
                     <FolderOpen className="w-4 h-4" />
                     <span className="truncate">Docs Compartidos</span>
@@ -406,6 +446,59 @@ export function CandidateDetailDialog({
                     }
                   }}
                 />
+
+                {hasMedicalExamStep && (
+                  <div className="mt-5">
+                    <SectionCard title="Adjuntos del empleado - Exámenes Ocupacionales" icon={Stethoscope}>
+                      {!resolvedEmployeeId ? (
+                        <div className="rounded-lg border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+                          No se encontró un empleado vinculado para consultar la carpeta Exámenes Ocupacionales.
+                        </div>
+                      ) : loadingSharedDocs ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      ) : occupationalExamDocs.length === 0 ? (
+                        <div className="rounded-lg border border-dashed border-border bg-background p-4 text-sm text-muted-foreground">
+                          La carpeta Exámenes Ocupacionales del empleado no tiene archivos adjuntos.
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {occupationalExamDocs.map((doc: any) => (
+                            <div
+                              key={doc.id}
+                              className="flex flex-col gap-2 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <FileText className="h-5 w-5 shrink-0 text-primary" />
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium">
+                                    {doc.document_name || doc.file_name || 'Documento'}
+                                  </p>
+                                  <p className="truncate text-xs text-muted-foreground">
+                                    {formatFileSize(doc.file_size)}
+                                    {doc.upload_date && ` • ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`}
+                                    {doc.expiry_date && ` • Vence ${formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}`}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 shrink-0 gap-1.5 text-xs"
+                                onClick={() => openStorageDocument(doc.file_url)}
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                Ver archivo
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </SectionCard>
+                  </div>
+                )}
               </TabsContent>
 
               {/* Info Tab */}
@@ -810,11 +903,9 @@ export function CandidateDetailDialog({
                                                 variant="ghost" 
                                                 size="icon" 
                                                 className="h-8 w-8" 
-                                                asChild
+                                                onClick={() => openStorageDocument(doc.file_url)}
                                               >
-                                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                                  <ExternalLink className="h-4 w-4" />
-                                                </a>
+                                                <ExternalLink className="h-4 w-4" />
                                               </Button>
                                               <Button 
                                                 variant="ghost" 
@@ -876,10 +967,13 @@ export function CandidateDetailDialog({
                                       <div className="flex items-center justify-between p-2 rounded-lg bg-background transition-colors hover:bg-background px-3">
                                         <span className="text-xs truncate max-w-[200px]">{doc.document_name}</span>
                                         <div className="flex items-center gap-1">
-                                           <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                                             <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
-                                               <ExternalLink className="h-3.5 w-3.5" />
-                                             </a>
+                                           <Button
+                                             size="icon"
+                                             variant="ghost"
+                                             className="h-7 w-7"
+                                             onClick={() => openStorageDocument(doc.file_url)}
+                                           >
+                                             <ExternalLink className="h-3.5 w-3.5" />
                                            </Button>
                                            <Button 
                                              size="icon" 
@@ -904,7 +998,7 @@ export function CandidateDetailDialog({
               </TabsContent>
 
               {/* Shared Docs Tab */}
-              {candidate.employee_id && (
+              {resolvedEmployeeId && (
                 <TabsContent value="shared_docs" className="p-6 mt-0 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -958,22 +1052,7 @@ export function CandidateDetailDialog({
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={async () => {
-                                if (!doc.file_url) return;
-                                try {
-                                  const path = doc.file_url.includes('storage/v1/object/public/documents/')
-                                    ? doc.file_url.split('storage/v1/object/public/documents/')[1]
-                                    : doc.file_url.includes('storage/v1/object/documents/')
-                                    ? doc.file_url.split('storage/v1/object/documents/')[1]
-                                    : doc.file_url.startsWith('documents/')
-                                    ? doc.file_url.replace('documents/', '')
-                                    : doc.file_url;
-                                  const { data } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
-                                  if (data?.signedUrl) window.open(data.signedUrl, '_blank');
-                                } catch {
-                                  toast.error('Error al acceder al documento');
-                                }
-                              }}
+                              onClick={() => openStorageDocument(doc.file_url)}
                             >
                               <Eye className="w-4 h-4" />
                             </Button>
@@ -1134,11 +1213,11 @@ export function CandidateDetailDialog({
       />
 
       {/* Shared Document Form Dialog */}
-      {candidate?.employee_id && currentCompanyId && (
+      {resolvedEmployeeId && currentCompanyId && (
         <DocumentFormDialog
           open={showSharedDocForm}
           onOpenChange={setShowSharedDocForm}
-          entityId={candidate.employee_id}
+          entityId={resolvedEmployeeId}
           entityType="employee"
           companyId={currentCompanyId}
           entityName={`${candidate.first_name} ${candidate.last_name}`}

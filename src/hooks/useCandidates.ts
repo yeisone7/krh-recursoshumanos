@@ -228,11 +228,20 @@ export function useCreateSelectionStep() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (step: Omit<SelectionStepInsert, 'created_by'>) => {
+    mutationFn: async (
+      step: Omit<SelectionStepInsert, 'created_by' | 'company_id'> & Partial<Pick<SelectionStepInsert, 'company_id'>>
+    ) => {
+      const companyId = step.company_id || currentCompanyId;
+
+      if (!companyId) {
+        throw new Error('No hay una compañía activa para registrar la etapa.');
+      }
+
       const { data, error } = await supabase
         .from('selection_steps')
         .insert({
           ...step,
+          company_id: companyId,
           created_by: user?.id,
         })
         .select()

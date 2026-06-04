@@ -304,7 +304,7 @@ export function SelectionTimeline({
               <div className="absolute left-0 w-10 h-10 rounded-full flex items-center justify-center border-2 border-dashed border-muted-foreground/30 z-10">
                 <Plus className="w-5 h-5 text-muted-foreground" />
               </div>
-              <div className="p-4 rounded-lg border border-dashed hover:border-border 0 transition-colors">
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 transition-colors hover:border-slate-300">
                 <p className="text-sm text-muted-foreground mb-2">Agregar etapa</p>
                 <div className="flex flex-wrap gap-2">
                   {missingSteps.map((stepType) => {
@@ -314,10 +314,10 @@ export function SelectionTimeline({
                         key={stepType}
                         variant="outline"
                         size="sm"
-                        className="gap-1"
+                        className="gap-1.5 rounded-lg border-slate-300 bg-slate-100 text-slate-700 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-200 hover:text-slate-900"
                         onClick={() => onAddStep(stepType)}
                       >
-                        <Icon className="w-3.5 h-3.5" />
+                        <Icon className="w-3.5 h-3.5 text-slate-500" />
                         {selectionStepTypeLabels[stepType]}
                       </Button>
                     );

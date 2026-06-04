@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Stethoscope, ClipboardList } from 'lucide-react';
+import { CalendarIcon, Stethoscope, ClipboardList, CheckCircle2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -224,10 +224,13 @@ export function SelectionStepFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-md overflow-y-auto sm:w-full">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? `Editar: ${stepLabel}` : stepLabel || 'Nueva Etapa de Selección'}
+      <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1.5rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-2xl border-border bg-background p-0 shadow-2xl sm:w-full">
+        <DialogHeader className="border-b border-border bg-muted/30 px-5 py-4 pr-12 sm:px-6">
+          <DialogTitle className="flex items-center gap-2 font-display text-xl leading-tight">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              {isMedicalExam ? <Stethoscope className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+            </span>
+            <span>{isEditing ? `Editar: ${stepLabel}` : stepLabel || 'Nueva Etapa de Selección'}</span>
           </DialogTitle>
           <DialogDescription>
             {isEditing
@@ -237,7 +240,8 @@ export function SelectionStepFormDialog({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-muted/10 px-5 py-5 sm:px-6">
 
             {/* Step type selector — only visible when no default is pre-set */}
             {!defaultStepType && !isEditing && (
@@ -249,7 +253,7 @@ export function SelectionStepFormDialog({
                     <FormLabel>Tipo de Etapa *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-background">
                           <SelectValue placeholder="Seleccionar etapa" />
                         </SelectTrigger>
                       </FormControl>
@@ -278,14 +282,19 @@ export function SelectionStepFormDialog({
                         <Button
                           type="button"
                           variant="outline"
-                          className={cn('w-full pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
+                          className={cn('w-full bg-background pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}
                         >
                           {field.value ? format(field.value, 'PPP', { locale: es }) : <span>Seleccionar fecha</span>}
                           <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                    <PopoverContent
+                      align="start"
+                      sideOffset={8}
+                      collisionPadding={16}
+                      className="z-[90] w-auto overflow-visible rounded-xl border-border bg-background p-0 shadow-2xl"
+                    >
                       <Calendar
                         mode="single"
                         selected={field.value}
@@ -311,7 +320,7 @@ export function SelectionStepFormDialog({
                     <FormLabel>Resultado</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-background">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -329,8 +338,8 @@ export function SelectionStepFormDialog({
 
             {/* ── MEDICAL EXAM SPECIFIC ── */}
             {isMedicalExam && (
-              <div className="space-y-4 rounded-lg border border-primary/20 p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+              <div className="space-y-5 rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
+                <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-background/80 p-3 text-sm font-semibold text-primary">
                   <Stethoscope className="w-4 h-4" />
                   Datos del Examen Médico de Ingreso
                 </div>
@@ -344,7 +353,7 @@ export function SelectionStepFormDialog({
                       <FormLabel>Aptitud</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-background">
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -368,7 +377,7 @@ export function SelectionStepFormDialog({
                       <FormLabel>Concepto Médico</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-background">
                             <SelectValue placeholder="Seleccionar concepto" />
                           </SelectTrigger>
                         </FormControl>
@@ -395,7 +404,7 @@ export function SelectionStepFormDialog({
                       <FormLabel>Tipo de Orden</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || ''}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="bg-background">
                             <SelectValue placeholder="Seleccionar tipo de orden" />
                           </SelectTrigger>
                         </FormControl>
@@ -417,7 +426,7 @@ export function SelectionStepFormDialog({
                       <FormItem>
                         <FormLabel>Proveedor / IPS</FormLabel>
                         <FormControl>
-                          <Input placeholder="Nombre de la IPS" {...field} />
+                          <Input className="bg-background" placeholder="Nombre de la IPS" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -447,7 +456,7 @@ export function SelectionStepFormDialog({
                       <FormControl>
                         <Textarea
                           placeholder="Detalle del concepto médico, restricciones o recomendaciones..."
-                          className="min-h-[60px]"
+                          className="min-h-[96px] bg-background"
                           {...field}
                         />
                       </FormControl>
@@ -463,11 +472,11 @@ export function SelectionStepFormDialog({
                       <ClipboardList className="w-4 h-4 text-muted-foreground" />
                       Exámenes del Profesiograma
                     </div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <div className="max-h-44 space-y-2 overflow-y-auto pr-1">
                       {profesiograma.items.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center gap-3 p-2 rounded-md border bg-background hover:bg-background transition-colors"
+                          className="flex items-center gap-3 rounded-lg border bg-background p-3 transition-colors hover:border-primary/30 hover:bg-primary/5"
                         >
                           <Checkbox
                             checked={selectedExams.includes(item.exam_catalog_id)}
@@ -511,7 +520,7 @@ export function SelectionStepFormDialog({
                     <FormControl>
                       <Textarea
                         placeholder="Escribe una observación..."
-                        className="min-h-[80px]"
+                        className="min-h-[96px]"
                         {...field}
                       />
                     </FormControl>
@@ -521,8 +530,9 @@ export function SelectionStepFormDialog({
               />
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t border-border bg-muted/20 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
               <Button
                 type="button"
                 variant="outline"
