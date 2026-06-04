@@ -18,6 +18,7 @@ import Empleados from "./pages/Empleados";
 import Contratos from "./pages/Contratos";
 import Incapacidades from "./pages/Incapacidades";
 import CentroNotificaciones from "./pages/CentroNotificaciones";
+import Chat from "./pages/Chat";
 import Dotacion from "./pages/Dotacion";
 import Examenes from "./pages/Examenes";
 import Seleccion from "./pages/Seleccion";
@@ -163,6 +164,7 @@ const App = () => (
                         <Route path="/incapacidades/analitica" element={<P module="analitica_incapacidades"><Suspense fallback={null}><AnaliticaIncapacidades /></Suspense></P>} />
                         <Route path="/alertas" element={<P module="alertas"><Navigate to="/notificaciones" replace /></P>} />
                         <Route path="/notificaciones" element={<P module="alertas"><CentroNotificaciones /></P>} />
+                        <Route path="/chat" element={<P module="chat"><Chat /></P>} />
                         <Route path="/dotacion" element={<P module="dotacion"><Dotacion /></P>} />
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />

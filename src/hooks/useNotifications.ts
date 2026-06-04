@@ -101,11 +101,12 @@ export function useNotifications() {
               variant: newNotification.type === 'error' ? 'destructive' : 'default',
             });
 
-            // Send browser push notification
-            if (newNotification.type === 'error' || newNotification.type === 'warning') {
+            // Send browser notification for urgent alerts and chat messages.
+            if (newNotification.type === 'error' || newNotification.type === 'warning' || newNotification.category === 'chat') {
               sendNotification(newNotification.title, {
                 body: newNotification.message,
                 tag: newNotification.id,
+                data: newNotification.action_url ? { url: newNotification.action_url } : undefined,
               });
             }
           } else if (payload.eventType === 'UPDATE') {
