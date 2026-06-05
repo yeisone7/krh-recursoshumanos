@@ -617,9 +617,7 @@ BEGIN
     category,
     entity_type,
     entity_id,
-    action_url,
-    event_key,
-    priority
+    action_url
   )
   SELECT
     cp.user_id,
@@ -630,9 +628,7 @@ BEGIN
     'chat',
     'chat_message',
     NEW.id,
-    '/chat?conversation=' || NEW.conversation_id::text,
-    'chat.message.new',
-    'info'
+    '/chat?conversation=' || NEW.conversation_id::text
   FROM public.chat_participants cp
   WHERE cp.conversation_id = NEW.conversation_id
     AND cp.user_id <> NEW.sender_id
