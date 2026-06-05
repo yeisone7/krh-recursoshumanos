@@ -377,12 +377,23 @@ export function useChatActions() {
 
       if (conversationError) throw conversationError;
 
-      const { error: participantsError } = await chatClient.from('chat_participants').insert([
-        { conversation_id: conversationId, company_id: currentCompanyId, user_id: user.id, role: 'member' },
-        { conversation_id: conversationId, company_id: currentCompanyId, user_id: peerUserId, role: 'member' },
-      ]);
+      const { error: selfParticipantError } = await chatClient.from('chat_participants').insert({
+        conversation_id: conversationId,
+        company_id: currentCompanyId,
+        user_id: user.id,
+        role: 'member',
+      });
 
-      if (participantsError) throw participantsError;
+      if (selfParticipantError) throw selfParticipantError;
+
+      const { error: peerParticipantError } = await chatClient.from('chat_participants').insert({
+        conversation_id: conversationId,
+        company_id: currentCompanyId,
+        user_id: peerUserId,
+        role: 'member',
+      });
+
+      if (peerParticipantError) throw peerParticipantError;
 
       return conversationId;
     },
@@ -405,12 +416,22 @@ export function useChatActions() {
 
       if (conversationError) throw conversationError;
 
+      const { error: selfParticipantError } = await chatClient.from('chat_participants').insert({
+        conversation_id: conversationId,
+        company_id: currentCompanyId,
+        user_id: user.id,
+        role: 'admin',
+      });
+
+      if (selfParticipantError) throw selfParticipantError;
+
+      const otherParticipantIds = uniqueParticipantIds.filter((id) => id !== user.id);
       const { error: participantsError } = await chatClient.from('chat_participants').insert(
-        uniqueParticipantIds.map((id) => ({
+        otherParticipantIds.map((id) => ({
           conversation_id: conversationId,
           company_id: currentCompanyId,
           user_id: id,
-          role: id === user.id ? 'admin' : 'member',
+          role: 'member',
         }))
       );
 

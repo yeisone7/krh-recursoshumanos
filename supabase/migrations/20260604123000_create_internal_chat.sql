@@ -191,6 +191,21 @@ AS $$
     )
 $$;
 
+CREATE OR REPLACE FUNCTION public.is_user_company_member(_user_id UUID, _company_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.user_company_assignments uca
+    WHERE uca.user_id = _user_id
+      AND uca.company_id = _company_id
+  )
+$$;
+
 CREATE OR REPLACE FUNCTION public.get_chat_unread_count(_company_id UUID)
 RETURNS INTEGER
 LANGUAGE sql
@@ -213,8 +228,22 @@ AS $$
   ) unread;
 $$;
 
+REVOKE ALL ON FUNCTION public.is_chat_participant(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_chat_in_company(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_user_company_member(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_chat_unread_count(UUID) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.is_chat_participant(UUID, UUID) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.can_chat_in_company(UUID) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.is_user_company_member(UUID, UUID) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.get_chat_unread_count(UUID) FROM anon;
+GRANT EXECUTE ON FUNCTION public.is_chat_participant(UUID, UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_chat_in_company(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_user_company_member(UUID, UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_chat_unread_count(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_chat_participant(UUID, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.can_chat_in_company(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.is_user_company_member(UUID, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.get_chat_unread_count(UUID) TO service_role;
 
 INSERT INTO public.modules (code, name, icon, sort_order, is_active)
 VALUES ('chat', 'Chat Interno', 'MessageCircle', 26, true)
@@ -254,6 +283,7 @@ FOR SELECT
 TO authenticated
 USING (
   public.is_super_admin()
+  OR created_by = auth.uid()
   OR public.is_chat_participant(id, auth.uid())
 );
 
@@ -289,6 +319,12 @@ TO authenticated
 USING (
   public.is_super_admin()
   OR public.is_chat_participant(conversation_id, auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.chat_conversations cc
+    WHERE cc.id = chat_participants.conversation_id
+      AND cc.created_by = auth.uid()
+  )
 );
 
 DROP POLICY IF EXISTS "Company users can add chat participants" ON public.chat_participants;
@@ -305,12 +341,7 @@ WITH CHECK (
       AND cc.company_id = chat_participants.company_id
       AND public.can_chat_in_company(cc.company_id)
   )
-  AND EXISTS (
-    SELECT 1
-    FROM public.user_company_assignments uca
-    WHERE uca.user_id = chat_participants.user_id
-      AND uca.company_id = chat_participants.company_id
-  )
+  AND public.is_user_company_member(chat_participants.user_id, chat_participants.company_id)
 );
 
 DROP POLICY IF EXISTS "Participants can update own chat settings" ON public.chat_participants;
@@ -722,6 +753,6 @@ BEGIN
     $job$SELECT public.purge_expired_chat_messages();$job$
   );
 EXCEPTION
-  WHEN undefined_schema OR undefined_table OR undefined_function THEN
+  WHEN invalid_schema_name OR undefined_table OR undefined_function THEN
     NULL;
 END $$;
