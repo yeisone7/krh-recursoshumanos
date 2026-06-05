@@ -32,6 +32,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { useDeleteRequisition, useRequisitions, PersonnelRequisition } from '@/hooks/useRequisitions';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import {
@@ -47,6 +48,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 export default function Requisiciones() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [centerFilter, setCenterFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export default function Requisiciones() {
   const [deleteTarget, setDeleteTarget] = useState<PersonnelRequisition | null>(null);
 
   const { data: requisitions = [], isLoading } = useRequisitions();
+  const { data: operationCenters = [] } = useOperationCenters();
   const deleteRequisition = useDeleteRequisition();
   const { companies, currentCompanyId, hasPermission } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
@@ -97,9 +100,10 @@ export default function Requisiciones() {
         r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter;
-      return matchesSearch && matchesStatus;
+      const matchesCenter = centerFilter === 'all' || r.operation_center_id === centerFilter;
+      return matchesSearch && matchesStatus && matchesCenter;
     });
-  }, [requisitions, searchQuery, statusFilter]);
+  }, [requisitions, searchQuery, statusFilter, centerFilter]);
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
@@ -153,6 +157,11 @@ export default function Requisiciones() {
   const statusOptions = [
     { value: 'all', label: 'Todos los estados' },
     ...Object.entries(requisitionStatusLabels).map(([k, v]) => ({ value: k, label: v })),
+  ];
+
+  const centerOptions = [
+    { value: 'all', label: 'Todos los centros' },
+    ...operationCenters.map((center) => ({ value: center.id, label: center.name })),
   ];
 
   const kpis = useMemo(() => ([
@@ -219,7 +228,7 @@ export default function Requisiciones() {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
              <SearchableSelect
               options={statusOptions}
               value={statusFilter}
@@ -228,6 +237,17 @@ export default function Requisiciones() {
               searchPlaceholder="Buscar estado..."
               triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
+            <SearchableSelect
+              options={centerOptions}
+              value={centerFilter}
+              onValueChange={setCenterFilter}
+              placeholder="Centro de operacion"
+              searchPlaceholder="Buscar centro..."
+              triggerClassName="h-10 w-full sm:w-[240px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="flex items-center px-4 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
               <span className="text-sm font-black text-primary">{filtered.length}</span>
             </div>
