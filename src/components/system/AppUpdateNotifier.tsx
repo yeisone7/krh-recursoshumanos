@@ -9,6 +9,7 @@ const UPDATE_TOAST_ID = 'app-update-available';
 const CURRENT_APP_VERSION = import.meta.env.VITE_APP_VERSION;
 const CURRENT_BUILD_ID = import.meta.env.VITE_BUILD_ID;
 const ACKNOWLEDGED_UPDATE_KEY = 'empatiq_acknowledged_update_version';
+const APPLYING_UPDATE_KEY = 'empatiq_applying_update_version';
 
 const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos'];
 
@@ -20,6 +21,12 @@ type VersionResponse = {
 type AppUpdateEvent = CustomEvent<{
   updateSW?: (reloadPage?: boolean) => Promise<void>;
 }>;
+
+const getCurrentDeploymentKey = () => CURRENT_BUILD_ID || CURRENT_APP_VERSION || null;
+
+const acknowledgeDeploymentKey = (deploymentKey: string) => {
+  localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, deploymentKey);
+};
 
 export function AppUpdateNotifier() {
   const auth = useOptionalAuth();
@@ -85,7 +92,8 @@ function AppUpdateNotifierContent() {
 
   const applyUpdate = useCallback(
     async (deploymentKey: string, useServiceWorkerUpdate?: boolean) => {
-      localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, deploymentKey);
+      acknowledgeDeploymentKey(deploymentKey);
+      sessionStorage.setItem(APPLYING_UPDATE_KEY, deploymentKey);
       toast.dismiss(UPDATE_TOAST_ID);
 
       const updateSW = pendingServiceWorkerUpdateRef.current;
@@ -116,7 +124,18 @@ function AppUpdateNotifierContent() {
 
   const showUpdateToast = useCallback(
     (deploymentKey: string, options?: { useServiceWorkerUpdate?: boolean }) => {
+      const currentDeploymentKey = getCurrentDeploymentKey();
+      if (currentDeploymentKey && deploymentKey === currentDeploymentKey) {
+        acknowledgeDeploymentKey(deploymentKey);
+        sessionStorage.removeItem(APPLYING_UPDATE_KEY);
+        activeUpdateKeyRef.current = null;
+        updateNotifiedRef.current = false;
+        toast.dismiss(UPDATE_TOAST_ID);
+        return;
+      }
+
       if (localStorage.getItem(ACKNOWLEDGED_UPDATE_KEY) === deploymentKey) return;
+      if (sessionStorage.getItem(APPLYING_UPDATE_KEY) === deploymentKey) return;
       if (activeUpdateKeyRef.current === deploymentKey) return;
 
       activeUpdateKeyRef.current = deploymentKey;
@@ -135,7 +154,7 @@ function AppUpdateNotifierContent() {
         cancel: {
           label: 'Más tarde',
           onClick: () => {
-            localStorage.setItem(ACKNOWLEDGED_UPDATE_KEY, deploymentKey);
+            acknowledgeDeploymentKey(deploymentKey);
             activeUpdateKeyRef.current = null;
             updateNotifiedRef.current = false;
             toast.dismiss(UPDATE_TOAST_ID);
@@ -152,11 +171,20 @@ function AppUpdateNotifierContent() {
     const handleServiceWorkerUpdate = (event: Event) => {
       const updateEvent = event as AppUpdateEvent;
       pendingServiceWorkerUpdateRef.current = updateEvent.detail?.updateSW || null;
-      const fallbackDeploymentKey = CURRENT_BUILD_ID || CURRENT_APP_VERSION || 'service-worker-update';
+      const fallbackDeploymentKey = getCurrentDeploymentKey() || 'service-worker-update';
 
       void fetchLatestDeploymentKey()
         .then((latestDeploymentKey) => {
-          showUpdateToast(latestDeploymentKey || fallbackDeploymentKey, {
+          const deploymentKey = latestDeploymentKey || fallbackDeploymentKey;
+          const currentDeploymentKey = getCurrentDeploymentKey();
+
+          if (currentDeploymentKey && deploymentKey === currentDeploymentKey) {
+            acknowledgeDeploymentKey(deploymentKey);
+            sessionStorage.removeItem(APPLYING_UPDATE_KEY);
+            return;
+          }
+
+          showUpdateToast(deploymentKey, {
             useServiceWorkerUpdate: true,
           });
         })
@@ -190,7 +218,7 @@ function AppUpdateNotifierContent() {
 
       try {
         const latestDeploymentKey = await fetchLatestDeploymentKey();
-        const currentDeploymentKey = CURRENT_BUILD_ID || CURRENT_APP_VERSION;
+        const currentDeploymentKey = getCurrentDeploymentKey();
 
         if (!isMounted || !latestDeploymentKey) return;
 
@@ -199,7 +227,8 @@ function AppUpdateNotifierContent() {
           return;
         }
 
-        localStorage.removeItem(ACKNOWLEDGED_UPDATE_KEY);
+        acknowledgeDeploymentKey(latestDeploymentKey);
+        sessionStorage.removeItem(APPLYING_UPDATE_KEY);
         activeUpdateKeyRef.current = null;
         updateNotifiedRef.current = false;
       } catch {
