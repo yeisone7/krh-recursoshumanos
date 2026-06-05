@@ -208,31 +208,31 @@ function NewChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Nuevo chat</DialogTitle>
+      <DialogContent className="flex max-h-[min(680px,calc(100dvh-2rem))] max-w-[min(560px,calc(100vw-1.5rem))] grid-rows-none flex-col gap-0 overflow-hidden rounded-2xl p-0">
+        <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5 pr-12 text-left">
+          <DialogTitle className="text-base font-black tracking-tight sm:text-lg">Nuevo chat</DialogTitle>
           <DialogDescription>Inicia una conversación directa o selecciona varias personas para crear un grupo.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 px-5 py-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Buscar usuario" />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="h-10 rounded-xl pl-9" placeholder="Buscar usuario" />
           </div>
           {selectedIds.length > 1 && (
-            <Input value={groupTitle} onChange={(event) => setGroupTitle(event.target.value)} placeholder="Nombre del grupo" />
+            <Input value={groupTitle} onChange={(event) => setGroupTitle(event.target.value)} className="h-10 rounded-xl" placeholder="Nombre del grupo" />
           )}
-          <ScrollArea className="h-72 rounded-lg border border-border">
-            <div className="divide-y divide-border">
+          <ScrollArea className="min-h-[220px] flex-1 rounded-xl border border-border">
+            <div className="divide-y divide-border/80">
               {filteredUsers.map((user) => {
                 const selected = selectedIds.includes(user.id);
                 return (
-                  <div key={user.id} className="flex items-center gap-3 px-3 py-2">
+                  <div key={user.id} className="flex min-h-14 items-center gap-3 px-3 py-2">
                     <Checkbox checked={selected} onCheckedChange={() => toggle(user.id)} />
                     <button type="button" className="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={() => toggle(user.id)}>
                       <ConversationAvatar title={userName(user)} avatarUrl={user.avatar_url} />
-                      <span className="truncate text-sm font-semibold">{userName(user)}</span>
+                      <span className="min-w-0 truncate text-sm font-semibold leading-tight">{userName(user)}</span>
                     </button>
-                    <Button type="button" variant="ghost" size="sm" disabled={isSaving} onClick={() => onDirect(user.id)}>
+                    <Button type="button" variant="ghost" size="sm" className="h-8 shrink-0 px-2.5 text-xs font-bold" disabled={isSaving} onClick={() => onDirect(user.id)}>
                       Chat
                     </Button>
                   </div>
@@ -242,11 +242,12 @@ function NewChatDialog({
             </div>
           </ScrollArea>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-row justify-end gap-2 space-x-0 shrink-0 border-t border-border bg-background px-5 py-3 [&>button]:w-auto sm:space-x-0">
+          <Button variant="outline" className="h-10 rounded-xl" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button
+            className="h-10 rounded-xl"
             disabled={selectedIds.length < 2 || isSaving}
             onClick={() => onGroup(groupTitle, selectedIds)}
           >
