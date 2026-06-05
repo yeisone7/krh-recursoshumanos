@@ -8,11 +8,12 @@ import { motion } from 'framer-motion';
 interface PermissionRouteProps {
   children: React.ReactNode;
   moduleCode: string;
+  anyModuleCodes?: string[];
   action?: string;
   fallback?: 'deny' | 'redirect';
 }
 
-export function PermissionRoute({ children, moduleCode, action = 'view', fallback = 'deny' }: PermissionRouteProps) {
+export function PermissionRoute({ children, moduleCode, anyModuleCodes, action = 'view', fallback = 'deny' }: PermissionRouteProps) {
   const { isAdmin, permissionsLoaded, hasPermission } = useAuth();
 
   // Admin always has access
@@ -21,7 +22,9 @@ export function PermissionRoute({ children, moduleCode, action = 'view', fallbac
   // Wait until permissions are loaded
   if (!permissionsLoaded) return null;
 
-  const hasAccess = hasPermission(moduleCode, action);
+  const hasAccess = anyModuleCodes?.length
+    ? anyModuleCodes.some(code => hasPermission(code, action))
+    : hasPermission(moduleCode, action);
 
   if (!hasAccess) {
     if (fallback === 'redirect') {

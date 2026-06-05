@@ -69,6 +69,7 @@ import Auditoria from "./pages/Auditoria";
 import Automatizaciones from "./pages/Automatizaciones";
 import CumplimientoLaboral from "./pages/CumplimientoLaboral";
 import PilaUgpp from "./pages/PilaUgpp";
+import { CATALOG_CHILD_PERMISSION_CODES, CATALOG_PERMISSION_CODES } from "@/lib/catalogPermissions";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -108,6 +109,10 @@ const queryClient = new QueryClient({
 // Helper to wrap a page with permission check
 const P = ({ module, children }: { module: string; children: React.ReactNode }) => (
   <PermissionRoute moduleCode={module}>{children}</PermissionRoute>
+);
+
+const PAny = ({ modules, children }: { modules: string[]; children: React.ReactNode }) => (
+  <PermissionRoute moduleCode={modules[0]} anyModuleCodes={modules}>{children}</PermissionRoute>
 );
 
 const App = () => (
@@ -201,24 +206,24 @@ const App = () => (
                         <Route path="/automatizaciones" element={<P module="automatizaciones"><Automatizaciones /></P>} />
                         <Route path="/cumplimiento-laboral" element={<P module="cumplimiento_laboral"><CumplimientoLaboral /></P>} />
                         <Route path="/pila-ugpp" element={<P module="pila_ugpp"><PilaUgpp /></P>} />
-                        <Route path="/catalogos" element={<P module="catalogos"><Catalogos /></P>} />
-                        <Route path="/catalogos/areas" element={<P module="catalogos"><CatalogosAreas /></P>} />
-                        <Route path="/catalogos/cargos" element={<P module="catalogos"><CatalogosCargos /></P>} />
-                        <Route path="/catalogos/tipos-dotacion" element={<P module="catalogos"><CatalogosTiposDotacion /></P>} />
-                        <Route path="/catalogos/arl" element={<P module="catalogos"><CatalogosARL /></P>} />
-                        <Route path="/catalogos/eps" element={<P module="catalogos"><CatalogosEPS /></P>} />
-                        <Route path="/catalogos/afp" element={<P module="catalogos"><CatalogosAFP /></P>} />
-                        <Route path="/catalogos/ccf" element={<P module="catalogos"><CatalogosCCF /></P>} />
-                        <Route path="/catalogos/afc" element={<P module="catalogos"><CatalogosAFC /></P>} />
-                        <Route path="/catalogos/ips" element={<P module="catalogos"><CatalogosIPS /></P>} />
-                        <Route path="/catalogos/bancos" element={<P module="catalogos"><CatalogosBancos /></P>} />
-                        <Route path="/catalogos/tipos-contrato" element={<P module="catalogos"><CatalogosTiposContrato /></P>} />
-                        <Route path="/catalogos/festivos" element={<P module="catalogos"><CatalogosFestivos /></P>} />
-                        <Route path="/catalogos/motivos-novedad" element={<P module="catalogos"><CatalogosMotivosNovedad /></P>} />
-                        <Route path="/catalogos/plataformas-publicacion" element={<P module="catalogos"><CatalogosPlataformasPublicacion /></P>} />
-                        <Route path="/catalogos/tipos-identificacion" element={<P module="catalogos"><CatalogosTiposIdentificacion /></P>} />
-                        <Route path="/catalogos/niveles-educativos" element={<P module="catalogos"><CatalogosNivelesEducativos /></P>} />
-                        <Route path="/catalogos/profesiones" element={<P module="catalogos"><CatalogosProfessions /></P>} />
+                        <Route path="/catalogos" element={<PAny modules={[CATALOG_PERMISSION_CODES.index, ...CATALOG_CHILD_PERMISSION_CODES]}><Catalogos /></PAny>} />
+                        <Route path="/catalogos/areas" element={<P module={CATALOG_PERMISSION_CODES.areas}><CatalogosAreas /></P>} />
+                        <Route path="/catalogos/cargos" element={<P module={CATALOG_PERMISSION_CODES.cargos}><CatalogosCargos /></P>} />
+                        <Route path="/catalogos/tipos-dotacion" element={<P module={CATALOG_PERMISSION_CODES.tiposDotacion}><CatalogosTiposDotacion /></P>} />
+                        <Route path="/catalogos/arl" element={<P module={CATALOG_PERMISSION_CODES.arl}><CatalogosARL /></P>} />
+                        <Route path="/catalogos/eps" element={<P module={CATALOG_PERMISSION_CODES.eps}><CatalogosEPS /></P>} />
+                        <Route path="/catalogos/afp" element={<P module={CATALOG_PERMISSION_CODES.afp}><CatalogosAFP /></P>} />
+                        <Route path="/catalogos/ccf" element={<P module={CATALOG_PERMISSION_CODES.ccf}><CatalogosCCF /></P>} />
+                        <Route path="/catalogos/afc" element={<P module={CATALOG_PERMISSION_CODES.afc}><CatalogosAFC /></P>} />
+                        <Route path="/catalogos/ips" element={<P module={CATALOG_PERMISSION_CODES.ips}><CatalogosIPS /></P>} />
+                        <Route path="/catalogos/bancos" element={<P module={CATALOG_PERMISSION_CODES.bancos}><CatalogosBancos /></P>} />
+                        <Route path="/catalogos/tipos-contrato" element={<P module={CATALOG_PERMISSION_CODES.tiposContrato}><CatalogosTiposContrato /></P>} />
+                        <Route path="/catalogos/festivos" element={<P module={CATALOG_PERMISSION_CODES.festivos}><CatalogosFestivos /></P>} />
+                        <Route path="/catalogos/motivos-novedad" element={<P module={CATALOG_PERMISSION_CODES.motivosNovedad}><CatalogosMotivosNovedad /></P>} />
+                        <Route path="/catalogos/plataformas-publicacion" element={<P module={CATALOG_PERMISSION_CODES.plataformasPublicacion}><CatalogosPlataformasPublicacion /></P>} />
+                        <Route path="/catalogos/tipos-identificacion" element={<P module={CATALOG_PERMISSION_CODES.tiposIdentificacion}><CatalogosTiposIdentificacion /></P>} />
+                        <Route path="/catalogos/niveles-educativos" element={<P module={CATALOG_PERMISSION_CODES.nivelesEducativos}><CatalogosNivelesEducativos /></P>} />
+                        <Route path="/catalogos/profesiones" element={<P module={CATALOG_PERMISSION_CODES.profesiones}><CatalogosProfessions /></P>} />
                         <Route path="/perfil" element={<Perfil />} />
                         <Route path="/super-admin" element={<SuperAdmin />} />
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />

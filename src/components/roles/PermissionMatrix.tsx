@@ -33,6 +33,7 @@ import {
 } from '@/hooks/useRolesPermissions';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
 
 interface PermissionMatrixProps {
   role: CustomRole;
@@ -98,9 +99,15 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     setHasChanges(false);
   }, [rolePerms]);
 
+  const visiblePermissionsCatalog = useMemo(() => {
+    const catalogosModuleId = modules.find(module => module.code === CATALOG_PERMISSION_CODES.index)?.id;
+    if (!catalogosModuleId) return permissionsCatalog;
+    return permissionsCatalog.filter(permission => permission.module_id !== catalogosModuleId);
+  }, [modules, permissionsCatalog]);
+
   const permsByModule = useMemo(() => {
     const map: Record<string, Permission[]> = {};
-    permissionsCatalog.forEach(permission => {
+    visiblePermissionsCatalog.forEach(permission => {
       if (!map[permission.module_id]) map[permission.module_id] = [];
       map[permission.module_id].push(permission);
     });
@@ -108,7 +115,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
       permissions.sort((a, b) => ACTION_ORDER.indexOf(a.action) - ACTION_ORDER.indexOf(b.action))
     );
     return map;
-  }, [permissionsCatalog]);
+  }, [visiblePermissionsCatalog]);
 
   const childrenByModule = useMemo(() => {
     const map: Record<string, Module[]> = {};
@@ -182,7 +189,9 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     try {
       await setPermissions.mutateAsync({
         roleId: role.id,
-        permissionIds: Array.from(selectedIds),
+        permissionIds: Array.from(selectedIds).filter(permissionId =>
+          visiblePermissionsCatalog.some(permission => permission.id === permissionId)
+        ),
         roleName: role.name,
       });
       setHasChanges(false);
@@ -193,7 +202,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
 
   const selectAll = () => {
     if (role.is_system) return;
-    setSelectedIds(new Set(permissionsCatalog.map(permission => permission.id)));
+    setSelectedIds(new Set(visiblePermissionsCatalog.map(permission => permission.id)));
     setHasChanges(true);
   };
 
@@ -203,10 +212,10 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     setHasChanges(true);
   };
 
-  const selectedCount = role.is_system ? permissionsCatalog.length : selectedIds.size;
-  const totalPerms = permissionsCatalog.length;
-  const approveCount = permissionsCatalog.filter(p => p.action === 'approve' && isChecked(p.id)).length;
-  const exportCount = permissionsCatalog.filter(p => p.action === 'export' && isChecked(p.id)).length;
+  const selectedCount = role.is_system ? visiblePermissionsCatalog.length : visiblePermissionsCatalog.filter(permission => selectedIds.has(permission.id)).length;
+  const totalPerms = visiblePermissionsCatalog.length;
+  const approveCount = visiblePermissionsCatalog.filter(p => p.action === 'approve' && isChecked(p.id)).length;
+  const exportCount = visiblePermissionsCatalog.filter(p => p.action === 'export' && isChecked(p.id)).length;
 
   const filteredModules = useMemo(() => {
     const query = search.trim().toLowerCase();

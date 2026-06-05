@@ -60,6 +60,7 @@ import {
 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import sidebarLogo from '@/assets/empatiq-icono-sidebar.png';
 import empatiqTextLogo from '@/assets/empatiq-texto.png';
@@ -238,22 +239,23 @@ const catalogosItem: NavItem = {
   href: '/catalogos',
   moduleCode: 'catalogos',
   children: [
-    { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas' },
-    { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos' },
-    { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato' },
-    { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion' },
-    { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos' },
-    { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl' },
-    { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps' },
-    { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp' },
-    { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf' },
-    { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc' },
-    { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips' },
-    { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos' },
-    { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad' },
-    { label: 'Plataformas Publicación', icon: <Globe className="w-4 h-4" />, href: '/catalogos/plataformas-publicacion' },
-    { label: 'Niveles Educativos', icon: <GraduationCap className="w-4 h-4" />, href: '/catalogos/niveles-educativos' },
-    { label: 'Profesiones', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/profesiones' },
+    { label: 'Áreas', icon: <Users className="w-4 h-4" />, href: '/catalogos/areas', moduleCode: CATALOG_PERMISSION_CODES.areas },
+    { label: 'Cargos', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/cargos', moduleCode: CATALOG_PERMISSION_CODES.cargos },
+    { label: 'Tipos de Contrato', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-contrato', moduleCode: CATALOG_PERMISSION_CODES.tiposContrato },
+    { label: 'Tipos de Dotación', icon: <Shirt className="w-4 h-4" />, href: '/catalogos/tipos-dotacion', moduleCode: CATALOG_PERMISSION_CODES.tiposDotacion },
+    { label: 'Días Festivos', icon: <Calendar className="w-4 h-4" />, href: '/catalogos/festivos', moduleCode: CATALOG_PERMISSION_CODES.festivos },
+    { label: 'ARL', icon: <ShieldCheck className="w-4 h-4" />, href: '/catalogos/arl', moduleCode: CATALOG_PERMISSION_CODES.arl },
+    { label: 'EPS', icon: <HeartPulse className="w-4 h-4" />, href: '/catalogos/eps', moduleCode: CATALOG_PERMISSION_CODES.eps },
+    { label: 'AFP', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afp', moduleCode: CATALOG_PERMISSION_CODES.afp },
+    { label: 'Caja Compensación', icon: <Users className="w-4 h-4" />, href: '/catalogos/ccf', moduleCode: CATALOG_PERMISSION_CODES.ccf },
+    { label: 'AFC', icon: <Landmark className="w-4 h-4" />, href: '/catalogos/afc', moduleCode: CATALOG_PERMISSION_CODES.afc },
+    { label: 'IPS', icon: <Stethoscope className="w-4 h-4" />, href: '/catalogos/ips', moduleCode: CATALOG_PERMISSION_CODES.ips },
+    { label: 'Bancos', icon: <BanknoteIcon className="w-4 h-4" />, href: '/catalogos/bancos', moduleCode: CATALOG_PERMISSION_CODES.bancos },
+    { label: 'Motivos Novedad', icon: <ClipboardList className="w-4 h-4" />, href: '/catalogos/motivos-novedad', moduleCode: CATALOG_PERMISSION_CODES.motivosNovedad },
+    { label: 'Plataformas Publicación', icon: <Globe className="w-4 h-4" />, href: '/catalogos/plataformas-publicacion', moduleCode: CATALOG_PERMISSION_CODES.plataformasPublicacion },
+    { label: 'Tipos Identificación', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-identificacion', moduleCode: CATALOG_PERMISSION_CODES.tiposIdentificacion },
+    { label: 'Niveles Educativos', icon: <GraduationCap className="w-4 h-4" />, href: '/catalogos/niveles-educativos', moduleCode: CATALOG_PERMISSION_CODES.nivelesEducativos },
+    { label: 'Profesiones', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/profesiones', moduleCode: CATALOG_PERMISSION_CODES.profesiones },
   ],
 };
 
@@ -299,13 +301,17 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   // Filter nav items based on permissions
   const filterItems = useCallback((items: NavItem[]): NavItem[] => {
     if (isAdmin || !permissionsLoaded) return items;
-    return items.filter(item => {
-      if (!canViewItem(item)) return false;
-      return true;
-    }).map(item => ({
-      ...item,
-      children: item.children ? filterItems(item.children) : undefined
-    }));
+    return items
+      .map(item => {
+        const filteredChildren = item.children ? filterItems(item.children) : undefined;
+        const hasVisibleChildren = !!filteredChildren?.length;
+        if (!canViewItem(item) && !hasVisibleChildren) return null;
+        return {
+          ...item,
+          children: filteredChildren,
+        };
+      })
+      .filter((item): item is NavItem => item !== null);
   }, [canView, isAdmin, permissionsLoaded]);
 
   const canViewItem = useCallback((item: NavItem): boolean => {
