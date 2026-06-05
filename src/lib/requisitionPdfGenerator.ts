@@ -298,9 +298,7 @@ export async function generateRequisitionPDF(
   y = row2(doc, y, 'Cargo Solicitado', val(req.cargo_solicitado), 'N.º de Vacantes', String(req.cantidad_vacantes_requeridas ?? '—'));
   y = row2(doc, y, 'Tipo de Turno', shiftLabel(req), 'Horario de Trabajo', val(req.horario_trabajo));
   y = row2(doc, y, 'Motivo de la Solicitud', val(req.motivo_solicitud ? (requisitionReasonLabels[req.motivo_solicitud as RequisitionReason] || req.motivo_solicitud) : null), 'Autoriza', val(req.autoriza ? (autorizaLabels[req.autoriza as AutorizaType] || req.autoriza) : null));
-  if (req.motivo_solicitud === 'reemplazo' || !req.motivo_solicitud) {
-    y = row2(doc, y, 'Persona a Reemplazar', val(req.persona_a_reemplazar), 'Cargo a Reemplazar', val(req.cargo_a_reemplazar));
-  }
+  y = row2(doc, y, 'Persona a Reemplazar', val(req.persona_a_reemplazar), 'Cargo a Reemplazar', val(req.cargo_a_reemplazar));
   if (req.observaciones_motivo_solicitud) {
     y = rowText(doc, y, 'Observaciones del Motivo', req.observaciones_motivo_solicitud);
   }
@@ -311,9 +309,12 @@ export async function generateRequisitionPDF(
   y = section(doc, '3.  CONDICIONES LABORALES', y);
   y = row2(doc, y, 'Salario Propuesto', fmtCOP(req.salario_propuesto), 'Tipo de Contrato', val(req.tipo_contrato_solicitado));
   y = row2(doc, y, 'Horario de Trabajo', val(req.horario_trabajo), 'Día de Descanso', val(req.dia_descanso_obligatorio ? (dayOfWeekLabels[req.dia_descanso_obligatorio as DayOfWeek] || req.dia_descanso_obligatorio) : null));
-  const auxilio = req.incluye_auxilio_transporte === true ? 'Sí' : req.incluye_auxilio_transporte === false ? 'No' : '—';
+  const auxilio = req.rrhh_incluye_auxilio_transporte === true
+    ? 'Sí tiene derecho al auxilio de transporte'
+    : 'No tiene derecho al auxilio de transporte';
   const herramienta = req.requiere_herramienta_trabajo === true ? 'Sí' : req.requiere_herramienta_trabajo === false ? 'No' : '—';
-  y = row2(doc, y, 'Auxilio de Transporte', auxilio, 'Requiere Herramientas de Trabajo', herramienta);
+  y = row1(doc, y, 'Auxilio de Transporte', auxilio);
+  y = row1(doc, y, 'Requiere Herramientas de Trabajo', herramienta);
 
   // ── 4. DEFINICIONES RRHH ─────────────────────────────────────────────────
   y = checkPage(doc, y, 40);

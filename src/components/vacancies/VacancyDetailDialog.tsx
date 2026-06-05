@@ -350,8 +350,11 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       toast.success('Candidato contratado exitosamente', {
         description: `Se creó el empleado, contrato y examen de ingreso para ${result.employee.first_name} ${result.employee.last_name}.`,
       });
-    } catch (error) {
-      toast.error('Error al contratar candidato');
+    } catch (error: any) {
+      console.error('Error al contratar candidato:', error);
+      toast.error('Error al contratar candidato', {
+        description: error?.message || 'Error desconocido',
+      });
     }
   };
 

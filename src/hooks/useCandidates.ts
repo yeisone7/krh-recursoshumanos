@@ -407,7 +407,7 @@ export function useConvertToEmployee() {
       }
 
       // Step 1b: Create contact record
-      await supabase.from('employee_contact').insert({
+      const { error: contactError } = await supabase.from('employee_contact').insert({
         employee_id: employee.id,
         company_id: currentCompanyId!,
         email: candidate.email,
@@ -422,6 +422,7 @@ export function useConvertToEmployee() {
         emergency_contact_relationship: candidate.emergency_contact_relationship,
         is_current: true,
       });
+      if (contactError) throw contactError;
 
       // Step 1b2: Copy family members from candidate to employee
       try {
@@ -456,7 +457,7 @@ export function useConvertToEmployee() {
         'servicios': 'servicios',
       };
       
-      await supabase.from('employee_work_info').insert({
+      const { error: workInfoError } = await supabase.from('employee_work_info').insert({
         employee_id: employee.id,
         company_id: currentCompanyId!,
         operation_center_id: centerId,
@@ -465,6 +466,7 @@ export function useConvertToEmployee() {
         link_type: linkTypeMap[contractType || 'indefinido'] || 'indefinido',
         is_current: true,
       });
+      if (workInfoError) throw workInfoError;
 
       // Step 2: Create contract using vacancy data or provided values
       const contractSalary = salary || candidate.salary_expectation || vacancy?.salary_range_min || 0;
