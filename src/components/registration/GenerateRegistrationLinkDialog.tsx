@@ -131,6 +131,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
   const { companies, currentCompanyId } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const createToken = useCreateRegistrationToken();
+  const recipientPlural = targetType === 'candidate' ? 'candidatos' : 'empleados';
 
   const toggleField = (key: string) => {
     if (requiredKeys.includes(key)) return;
@@ -183,6 +184,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
     setSelectedFields([...requiredKeys, ...optionalKeys]);
     setLinkName('');
     setExpirationDays('7');
+    setReusable(targetType === 'employee');
     onOpenChange(false);
   };
 
@@ -318,7 +320,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                         Permitir múltiples usos
                       </span>
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        El enlace podrá ser usado por varios empleados hasta que expire.
+                        El enlace podrá ser usado por varios {recipientPlural} hasta que expire.
                       </p>
                     </div>
                   </label>
