@@ -4,14 +4,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import { employeeDocumentFolderOrder, normalizeEmployeeDocumentFolder } from '@/types/employee';
 
 type Candidate = Database['public']['Tables']['candidates']['Row'];
 type ContractType = Database['public']['Enums']['contract_type'];
 type LinkType = Database['public']['Enums']['link_type'];
 type GenderType = Database['public']['Enums']['gender_type'];
+type EmployeeDocumentType = Database['public']['Enums']['employee_document_type'];
 type CandidateInsert = Database['public']['Tables']['candidates']['Insert'];
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
 type SelectionStepInsert = Database['public']['Tables']['selection_steps']['Insert'];
+
+const employeeDocumentFolders = new Set<string>(employeeDocumentFolderOrder);
+
+function normalizeCandidateDocumentType(type: unknown): EmployeeDocumentType {
+  if (typeof type !== 'string') return 'proceso_seleccion';
+
+  const normalized = normalizeEmployeeDocumentFolder(type as EmployeeDocumentType);
+  return employeeDocumentFolders.has(normalized) ? normalized : 'proceso_seleccion';
+}
 
 function normalizeCandidateGenderToEmployeeGender(gender: string | null | undefined): GenderType | null {
   if (!gender) return null;
@@ -447,6 +458,60 @@ export function useConvertToEmployee() {
         console.error('Error copying family members:', err);
       }
 
+      // Step 1b3: Make selection documents visible in the employee document module.
+      try {
+        const { data: candidateDocuments, error: candidateDocsError } = await supabase
+          .from('candidate_documents' as any)
+          .select('*')
+          .eq('candidate_id', candidateId);
+
+        if (candidateDocsError) throw candidateDocsError;
+
+        const sourceDocuments = ((candidateDocuments || []) as any[]).filter((doc) => doc.file_url);
+
+        if (sourceDocuments.length > 0) {
+          const fileUrls = sourceDocuments.map((doc) => doc.file_url);
+          const { data: existingDocuments, error: existingDocsError } = await supabase
+            .from('employee_documents')
+            .select('file_url')
+            .eq('employee_id', employee.id)
+            .in('file_url', fileUrls);
+
+          if (existingDocsError) throw existingDocsError;
+
+          const existingFileUrls = new Set((existingDocuments || []).map((doc) => doc.file_url));
+          const employeeDocumentInserts = sourceDocuments
+            .filter((doc) => !existingFileUrls.has(doc.file_url))
+            .map((doc) => ({
+              employee_id: employee.id,
+              company_id: doc.company_id || currentCompanyId!,
+              document_type: normalizeCandidateDocumentType(doc.document_type),
+              document_name: doc.document_name || doc.file_name || 'Documento de selección',
+              file_url: doc.file_url,
+              file_name: doc.file_name || null,
+              file_size: doc.file_size || null,
+              mime_type: doc.mime_type || null,
+              expiry_date: doc.expiry_date || null,
+              is_valid: true,
+              observations: doc.observations || null,
+              uploaded_by: doc.uploaded_by || user?.id || null,
+            }));
+
+          if (employeeDocumentInserts.length > 0) {
+            const { error: copyDocsError } = await supabase
+              .from('employee_documents')
+              .insert(employeeDocumentInserts as any);
+
+            if (copyDocsError) throw copyDocsError;
+          }
+        }
+      } catch (err) {
+        console.error('Error copying candidate documents:', err);
+        toast.warning('Documentos del aspirante', {
+          description: 'El empleado fue creado, pero algunos documentos de selección deberán revisarse manualmente.',
+        });
+      }
+
       // Step 1c: Create work info record
       const centerId = operationCenterId || vacancy?.operation_center_id;
       const linkTypeMap: Record<string, LinkType> = {
@@ -736,6 +801,7 @@ export function useConvertToEmployee() {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_documents'] });
     },
   });
 }

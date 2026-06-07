@@ -25,15 +25,24 @@ const CANDIDATE_FIELDS = [
   { key: 'documentType', label: 'Tipo de Documento', section: 'Personal', required: true },
   { key: 'firstName', label: 'Nombre', section: 'Personal', required: true },
   { key: 'lastName', label: 'Apellido', section: 'Personal', required: true },
+  { key: 'documentIssueDate', label: 'Fecha de Expedición Documento', section: 'Personal' },
+  { key: 'documentIssueCity', label: 'Ciudad de Expedición', section: 'Personal' },
   { key: 'birthDate', label: 'Fecha de Nacimiento', section: 'Personal' },
   { key: 'gender', label: 'Sexo Biológico', section: 'Personal' },
   { key: 'genderIdentity', label: 'Sexo de Identificación', section: 'Personal' },
+  { key: 'maritalStatus', label: 'Estado Civil', section: 'Personal' },
+  { key: 'bloodType', label: 'Tipo de Sangre', section: 'Personal' },
   { key: 'email', label: 'Email', section: 'Contacto' },
   { key: 'mobile', label: 'Celular', section: 'Contacto' },
   { key: 'phone', label: 'Teléfono Fijo', section: 'Contacto' },
   { key: 'city', label: 'Ciudad', section: 'Contacto' },
   { key: 'department', label: 'Departamento', section: 'Contacto' },
   { key: 'address', label: 'Dirección', section: 'Contacto' },
+  { key: 'neighborhood', label: 'Barrio, Vereda u otro.', section: 'Contacto' },
+  { key: 'emergencyContactName', label: 'Nombre Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactPhone', label: 'Teléfono Contacto de Emergencia', section: 'Contacto' },
+  { key: 'emergencyContactRelationship', label: 'Parentesco Contacto de Emergencia', section: 'Contacto' },
+  { key: 'familyMembers', label: 'Personas a Cargo (Núcleo Familiar)', section: 'Familia' },
   { key: 'educationLevelId', label: 'Nivel Escolar', section: 'Profesional' },
   { key: 'professionId', label: 'Profesión / Título', section: 'Profesional' },
   { key: 'experienceYears', label: 'Años de Experiencia', section: 'Profesional' },
@@ -41,6 +50,12 @@ const CANDIDATE_FIELDS = [
   { key: 'currentPosition', label: 'Cargo Actual', section: 'Profesional' },
   { key: 'salaryExpectation', label: 'Expectativa Salarial', section: 'Profesional' },
   { key: 'generalNotes', label: 'Notas', section: 'Profesional' },
+  { key: 'isFirstJob', label: 'Primer Empleo', section: 'Especificaciones' },
+  { key: 'isHeadOfHousehold', label: 'Cabeza de Familia', section: 'Especificaciones' },
+  { key: 'disabilityType', label: 'Tipo de Discapacidad', section: 'Especificaciones' },
+  { key: 'ethnicGroup', label: 'Grupo Étnico', section: 'Especificaciones' },
+  { key: 'isConflictVictim', label: 'Víctima del Conflicto', section: 'Especificaciones' },
+  { key: 'isDemobilized', label: 'Desmovilizado', section: 'Especificaciones' },
 ];
 
 const EMPLOYEE_FIELDS = [
@@ -97,7 +112,7 @@ const EMPLOYEE_FIELDS = [
   { key: 'isDemobilized', label: 'Desmovilizado', section: 'Especificaciones' },
 ];
 
-const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional'];
+const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Familia', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType, vacancyId }: Props) {
@@ -116,6 +131,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
   const { companies, currentCompanyId } = useAuth();
   const currentCompany = companies.find(c => c.id === currentCompanyId);
   const createToken = useCreateRegistrationToken();
+  const recipientPlural = targetType === 'candidate' ? 'candidatos' : 'empleados';
 
   const toggleField = (key: string) => {
     if (requiredKeys.includes(key)) return;
@@ -168,6 +184,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
     setSelectedFields([...requiredKeys, ...optionalKeys]);
     setLinkName('');
     setExpirationDays('7');
+    setReusable(targetType === 'employee');
     onOpenChange(false);
   };
 
@@ -303,7 +320,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
                         Permitir múltiples usos
                       </span>
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        El enlace podrá ser usado por varios empleados hasta que expire.
+                        El enlace podrá ser usado por varios {recipientPlural} hasta que expire.
                       </p>
                     </div>
                   </label>
