@@ -56,6 +56,7 @@ const CANDIDATE_FIELD_CONFIG: Record<string, { label: string; type: string; sect
   emergencyContactName: { label: 'Nombre Contacto de Emergencia', type: 'text', section: 'Contacto' },
   emergencyContactPhone: { label: 'Teléfono Contacto de Emergencia', type: 'tel', section: 'Contacto' },
   emergencyContactRelationship: { label: 'Parentesco', type: 'text', section: 'Contacto' },
+  familyMembers: { label: 'Personas a Cargo (Núcleo Familiar)', type: 'array', section: 'Familia' },
   educationLevelId: { label: 'Nivel Educativo', type: 'select-education-id', section: 'Profesional' },
   professionId: { label: 'Profesión / Título', type: 'select-profession-id', section: 'Profesional' },
   experienceYears: { label: 'Años de Experiencia', type: 'number', section: 'Profesional' },
@@ -135,7 +136,7 @@ const EMPLOYEE_FIELD_CONFIG: Record<string, { label: string; type: string; secti
 const CANDIDATE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber', 'educationLevelId', 'professionId'];
 const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'documentNumber'];
 
-const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Profesional', 'Especificaciones'];
+const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Familia', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
 const normalizeNameText = (value?: string | null) => (value || '').trim().replace(/\s+/g, ' ');
@@ -697,7 +698,12 @@ export default function RegistroPublico() {
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
           p_identification_type_id: formData.identificationTypeId || null,
-        });
+          p_family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers.map(m => ({
+            ...m,
+            document_type: m.document_type || 'CC',
+            document_number: m.document_number || ''
+          })) : [],
+        } as any);
         if (error) {
           throw new Error(getRpcErrorMessage(error, 'Error al crear el candidato'));
         }
