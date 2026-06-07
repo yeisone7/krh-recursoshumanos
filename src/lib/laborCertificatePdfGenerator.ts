@@ -13,6 +13,7 @@ interface GeneratorParams {
     contractType: string;
     startDate: string;
     endDate: string | null;
+    showSalary?: boolean;
     periods?: Array<{
       salaryAmount: number;
       positionName: string;
@@ -44,6 +45,11 @@ const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   PPT: 'Permiso por Protección Temporal',
 };
 
+const PDF_FONT = 'helvetica'; // jsPDF built-in sans serif, visually equivalent to Arial in generated PDFs.
+const FOOTER_PRIMARY = '#1f2a44';
+const FOOTER_ACCENT = '#e56b1f';
+const FOOTER_MUTED = '#6b7280';
+
 // Helper function to load an image from URL and return a base64 string
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   const response = await fetch(url);
@@ -68,21 +74,20 @@ export async function generateLaborCertificatePdf({
   const doc = new jsPDF('p', 'mm', 'letter');
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 10; // smaller margin for border (moved 50% closer to the edge, 20 -> 10)
   const contentMargin = 25;
   const contentWidth = pageWidth - contentMargin * 2;
-  let y = 15;
+  const footerHeight = 30;
+  const footerYStart = pageHeight - footerHeight - 8;
+  let y = 14;
 
-  // Set Serif font to match Image 2
-  doc.setFont('times', 'normal');
+  doc.setFont(PDF_FONT, 'normal');
 
-  // 1. Header (Company Logo + Letterhead Info)
-  const logoToUse = company?.horizontal_logo_url || company?.logo_url;
+  // Header: only the company icon/logo at the upper-left.
+  const logoToUse = company?.logo_url || company?.horizontal_logo_url;
   if (logoToUse) {
     try {
       const logoBase64 = await fetchImageAsBase64(logoToUse);
-      // Horizontal logo sizing (reduced width by 10% from 60 to 54, height reduced by 5% from 20 to 19)
-      doc.addImage(logoBase64, 'PNG', contentMargin, y, 54, 19, undefined, 'FAST');
+      doc.addImage(logoBase64, 'PNG', contentMargin, y, 34, 18, undefined, 'FAST');
     } catch (err) {
       console.warn("Could not load company logo", err);
     }
@@ -95,44 +100,11 @@ export async function generateLaborCertificatePdf({
   const companyEmail = company?.email || company?.contact_email || 'No registrado';
   const companyCity = company?.city || 'No registrada';
 
-  // Letterhead text on the right side of the header
-  const headerTextX = contentMargin + 65;
-  doc.setFont('times', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(60, 60, 60); // #3c3c3c for company name matching border
-  doc.text(companyName.toUpperCase(), headerTextX, y + 5);
-  doc.setFont('times', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(100);
-  doc.text(`NIT: ${companyNit}`, headerTextX, y + 10);
-  doc.text(`Dirección: ${companyAddress} | Ciudad: ${companyCity}`, headerTextX, y + 14);
-  doc.text(`Teléfono: ${companyPhone} | Correo electrónico: ${companyEmail}`, headerTextX, y + 18);
-
-  y += 25;
-
-  // 2. Borders matching Image 2 (Outer #3c3c3c, Orange/Yellow inner)
-  const borderYStart = y;
-  const borderBottom = pageHeight - margin; // Ends at pageHeight - 20
-  const footerHeight = 18;
-  const borderHeight = borderBottom - borderYStart;
-  
-  doc.setDrawColor(60, 60, 60); // #3c3c3c 
-  doc.setLineWidth(1.5);
-  doc.line(0, borderYStart, pageWidth, borderYStart);
-
-  doc.setLineWidth(1);
-  doc.rect(margin, borderYStart, pageWidth - margin * 2, borderHeight);
-  
-  const orangeBorderHeight = borderHeight - footerHeight;
-  doc.setDrawColor(255, 165, 0); // Orange/Yellow
-  doc.setLineWidth(0.3);
-  doc.rect(margin + 1.5, borderYStart + 1.5, pageWidth - margin * 2 - 3, orangeBorderHeight - 1.5);
-
-  y += 10;
+  y += 32;
   doc.setTextColor(0); // Reset text color
 
   // Folio
-  doc.setFont('times', 'normal');
+  doc.setFont(PDF_FONT, 'normal');
   doc.setFontSize(10);
   doc.setTextColor(100);
   doc.text(`No. ${folio}`, pageWidth - contentMargin, y, { align: 'right' });
@@ -140,7 +112,7 @@ export async function generateLaborCertificatePdf({
   y += 15;
 
   // Title
-  doc.setFont('times', 'bold');
+  doc.setFont(PDF_FONT, 'bold');
   doc.setFontSize(16);
   doc.text('CERTIFICACIÓN LABORAL', pageWidth / 2, y, { align: 'center' });
   y += 15;
@@ -165,7 +137,7 @@ export async function generateLaborCertificatePdf({
   }
 
   // Body Content Setup
-  doc.setFont('times', 'normal');
+  doc.setFont(PDF_FONT, 'normal');
   doc.setFontSize(12);
 
   const today = format(new Date(), "d 'de' MMMM 'de' yyyy", { locale: es });
@@ -221,30 +193,30 @@ export async function generateLaborCertificatePdf({
 
     // Bullet points
     const lineHeight = 7;
-    doc.setFont('times', 'bold');
+    doc.setFont(PDF_FONT, 'bold');
     doc.text('Tipo de vinculación: ', contentMargin, y);
-    doc.setFont('times', 'normal');
+    doc.setFont(PDF_FONT, 'normal');
     doc.text(`${singlePeriod.contractType || 'N/A'}`, contentMargin + 40, y);
     y += lineHeight;
 
-    doc.setFont('times', 'bold');
+    doc.setFont(PDF_FONT, 'bold');
     doc.text('Jornada laboral: ', contentMargin, y);
-    doc.setFont('times', 'normal');
+    doc.setFont(PDF_FONT, 'normal');
     doc.text(`Tiempo completo`, contentMargin + 35, y);
     y += lineHeight;
 
     const showSalary = data.showSalary !== false;
     if (showSalary) {
-      doc.setFont('times', 'bold');
+      doc.setFont(PDF_FONT, 'bold');
       doc.text('Asignación salarial: ', contentMargin, y);
-      doc.setFont('times', 'normal');
+      doc.setFont(PDF_FONT, 'normal');
       doc.text(`Salario básico mensual de ${salaryFormatted}`, contentMargin + 42, y);
       y += lineHeight;
     }
 
-    doc.setFont('times', 'bold');
+    doc.setFont(PDF_FONT, 'bold');
     doc.text('Auxilio(s) o concepto(s): ', contentMargin, y);
-    doc.setFont('times', 'normal');
+    doc.setFont(PDF_FONT, 'normal');
     doc.text(`N/A`, contentMargin + 50, y);
     y += lineHeight + 6;
 
@@ -263,7 +235,7 @@ export async function generateLaborCertificatePdf({
     const showSalary = data.showSalary !== false;
 
     // Table settings
-    doc.setFont('times', 'bold');
+    doc.setFont(PDF_FONT, 'bold');
     doc.setFontSize(10);
     
     const colX = showSalary ? {
@@ -294,7 +266,7 @@ export async function generateLaborCertificatePdf({
 
     y += 8;
 
-    doc.setFont('times', 'normal');
+    doc.setFont(PDF_FONT, 'normal');
     doc.setTextColor(0);
 
     periodsToRender.forEach((p: any) => {
@@ -336,7 +308,7 @@ export async function generateLaborCertificatePdf({
 
     y += 8;
 
-    doc.setFont('times', 'normal');
+    doc.setFont(PDF_FONT, 'normal');
     doc.setFontSize(12);
 
     const isCurrentlyActive = periodsToRender.some((p: any) => !p.endDate);
@@ -349,22 +321,19 @@ export async function generateLaborCertificatePdf({
   doc.text('Cordialmente,', contentMargin, y);
   y += 15;
 
-  // We need to calculate footerYStart first to anchor the signature
-  const footerYStart = borderBottom - footerHeight;
-
   // Signature Block - Anchored above the footer
   let sigTextY = footerYStart - 5; // Bottom-most text line
   
-  doc.setFont('times', 'normal');
+  doc.setFont(PDF_FONT, 'normal');
   doc.text(`Teléfono: ${companyPhone}`, contentMargin, sigTextY);
   sigTextY -= 5;
   doc.text(`Correo corporativo: ${companyEmail}`, contentMargin, sigTextY);
   sigTextY -= 5;
   doc.text(signatureConfig?.signer_position || companyName, contentMargin, sigTextY);
   sigTextY -= 5;
-  doc.setFont('times', 'bold');
+  doc.setFont(PDF_FONT, 'bold');
   doc.text(signatureConfig?.signer_name || 'Departamento de Recursos Humanos', contentMargin, sigTextY);
-  doc.setFont('times', 'normal');
+  doc.setFont(PDF_FONT, 'normal');
   
   sigTextY -= 4; // Space before the line
   doc.setLineWidth(0.3);
@@ -407,19 +376,44 @@ export async function generateLaborCertificatePdf({
     console.error("Error generating QR code", err);
   }
 
-  // Footer Text Block matching Image 2
-  doc.setFillColor(60, 60, 60); // #3c3c3c (matching outer border perfectly)
-  doc.rect(margin, footerYStart, pageWidth - margin * 2, footerHeight, 'F');
-  
-  doc.setTextColor(255, 255, 255);
+  // Footer inspired by the attached template: clean white band, contact data, and legal verification text.
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, footerYStart - 2, pageWidth, footerHeight + 10, 'F');
+  doc.setDrawColor(225, 229, 235);
+  doc.setLineWidth(0.2);
+  doc.line(contentMargin, footerYStart - 1, pageWidth - contentMargin, footerYStart - 1);
+
+  doc.setFont(PDF_FONT, 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(FOOTER_PRIMARY);
+  doc.text(`PBX: ${companyPhone}`, contentMargin, footerYStart + 6);
+  doc.text(companyName.toUpperCase(), contentMargin + 78, footerYStart + 6);
+  doc.text(companyEmail, contentMargin + 78, footerYStart + 12);
+
+  doc.setDrawColor(45, 55, 75);
+  doc.setLineWidth(0.45);
+  doc.line(contentMargin + 68, footerYStart + 2, contentMargin + 68, footerYStart + 15);
+  doc.line(pageWidth - contentMargin - 76, footerYStart + 2, pageWidth - contentMargin - 76, footerYStart + 15);
+
+  doc.setFont(PDF_FONT, 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(FOOTER_MUTED);
+  doc.text(companyAddress, contentMargin + 78, footerYStart + 18, { maxWidth: 86 });
+  doc.text(`${companyCity} - Colombia`, contentMargin + 78, footerYStart + 24);
+
+  doc.setFont(PDF_FONT, 'bold');
+  doc.setTextColor(FOOTER_PRIMARY);
+  doc.text(`Verificación: ${folio}`, pageWidth - contentMargin, footerYStart + 6, { align: 'right' });
+  doc.text(`FOLIO-${folio} | Página 1 de 1`, pageWidth - contentMargin, footerYStart + 12, { align: 'right' });
+
+  doc.setFont(PDF_FONT, 'normal');
+  doc.setTextColor(FOOTER_MUTED);
+  doc.text('Documento oficial con validez legal', pageWidth - contentMargin, footerYStart + 18, { align: 'right' });
+
+  doc.setFont(PDF_FONT, 'bold');
   doc.setFontSize(8);
-  doc.text(`${companyName} - ${companyCity}, Colombia`, margin + 5, footerYStart + 7);
-  doc.text(`Verificación: ${folio}`, margin + 5, footerYStart + 13);
-  
-  doc.text(`FOLIO-${folio} | Página 1 de 1`, pageWidth - margin - 5, footerYStart + 7, { align: 'right' });
-  doc.setTextColor(150, 150, 150);
-  doc.text(`Documento oficial con validez legal`, pageWidth - margin - 5, footerYStart + 13, { align: 'right' });
+  doc.setTextColor(FOOTER_ACCENT);
+  doc.text(company?.website || company?.web_site || 'www.petrocasinos.com', contentMargin, footerYStart + 24);
 
   return doc;
 }
-
