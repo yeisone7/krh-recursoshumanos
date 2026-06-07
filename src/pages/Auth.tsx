@@ -373,7 +373,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="auth-page min-h-screen flex bg-background">
       {/* Left side - Hero Branding */}
       <div className="hidden md:flex md:w-[42%] lg:w-[50%] xl:w-[55%] md:min-w-[320px] relative overflow-hidden bg-background">
         <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:28px_28px] opacity-15" />
@@ -464,14 +464,14 @@ export default function Auth() {
       </div>
 
       {/* Right side - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8 relative bg-background">
+      <div className="auth-main relative flex min-w-0 flex-1 items-center justify-center bg-background p-4 sm:p-6 md:p-8">
         <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary)/0.15)_1px,transparent_1px)] bg-[size:24px_24px] opacity-40" />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md relative z-10">
+          className="auth-panel relative z-10 w-full min-w-0 sm:max-w-md">
 
           <div className="md:hidden mb-4 overflow-hidden border border-primary/15 bg-card shadow-sm">
             <button
@@ -722,12 +722,12 @@ export default function Auth() {
                           </FormItem>
                       } />
 
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="auth-login-options flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs">
                         <label className="flex items-center gap-2 text-muted-foreground">
                           <input type="checkbox" className="h-4 w-4 rounded border-border accent-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} />
                           Recordar sesión
                         </label>
-                        <button type="button" className="font-semibold text-primary hover:text-primary-hover hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
+                        <button type="button" className="ml-auto whitespace-nowrap font-semibold text-primary hover:text-primary-hover hover:underline transition-colors disabled:cursor-not-allowed disabled:opacity-50" disabled={isSubmitting} onClick={() => {
                           setIsRecoveryMode(true);
                           setIsRecoverySent(false);
                           recoveryForm.setValue('email', loginForm.getValues('email'));
