@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -13,7 +13,7 @@
        Reference palette: Sky blue accents with clean white surfaces */
 
     /* Core backgrounds */
-    --background: 210 20% 96.5%; /* #f3f6f9 - Clean light grayish-blue for app background matching SentiQ */
+    --background: 210 24% 97%; /* #f5f7fa - calm operational workspace */
     --foreground: 222 47% 11%;
 
     /* Cards and surfaces */
@@ -25,15 +25,15 @@
     --popover-foreground: 222 47% 11%;
 
     /* Primary - Sky Blue #0ea5e9 */
-    --primary: 199 89% 48%;
+    --primary: 198 84% 43%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 199 89% 42%;
-    --primary-light: 199 89% 96%;
+    --primary-hover: 198 88% 36%;
+    --primary-light: 198 84% 95%;
 
     /* Secondary - Light Sky */
-    --secondary: 199 89% 96%;
-    --secondary-foreground: 199 89% 30%;
-    --secondary-light: 199 89% 98%;
+    --secondary: 207 32% 93%;
+    --secondary-foreground: 214 37% 24%;
+    --secondary-light: 210 40% 98%;
 
     /* Tertiary - Muted Blue-Grey */
     --tertiary: 215 16% 47%;
@@ -45,9 +45,9 @@
     --muted-foreground: 215 16% 47%;
 
     /* Accent - Active state backgrounds */
-    --accent: 199 100% 96%;
-    --accent-foreground: 199 89% 48%;
-    --accent-light: 199 100% 98%;
+    --accent: 187 64% 94%;
+    --accent-foreground: 188 78% 28%;
+    --accent-light: 190 60% 97%;
 
     /* Extended Color Palette (Flattened) */
     --violet: 250 89% 65%;
@@ -94,19 +94,19 @@
     /* Borders and inputs */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 199 89% 48%;
+    --ring: 198 84% 43%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
     /* Sidebar - Matching image 1/2 */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 215 16% 47%;
-    --sidebar-primary: 199 89% 48%;
+    --sidebar-primary: 198 84% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 199 100% 96%;
-    --sidebar-accent-foreground: 199 89% 48%;
+    --sidebar-accent: 187 64% 94%;
+    --sidebar-accent-foreground: 188 78% 28%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 199 89% 48%;
+    --sidebar-ring: 198 84% 43%;
 
     /* Brand Identity - Flat Design System */
     --brand-primary: hsl(var(--primary));
@@ -114,12 +114,12 @@
     --brand-accent: hsl(var(--accent));
 
     /* Shadows - Flat Design (Removed or minimized) */
-    --shadow-sm: 0 1px 2px 0 hsl(215 20% 10% / 0.02);
-    --shadow-md: none;
-    --shadow-lg: none;
-    --shadow-xl: none;
-    --shadow-card: none;
-    --shadow-card-hover: none;
+    --shadow-sm: 0 1px 2px 0 hsl(215 30% 12% / 0.03);
+    --shadow-md: 0 8px 24px -20px hsl(215 30% 12% / 0.28);
+    --shadow-lg: 0 18px 42px -30px hsl(215 30% 12% / 0.34);
+    --shadow-xl: 0 24px 60px -36px hsl(215 30% 12% / 0.38);
+    --shadow-card: 0 1px 2px hsl(215 30% 12% / 0.03);
+    --shadow-card-hover: 0 10px 28px -24px hsl(215 30% 12% / 0.34);
   }
 
   .dark {
@@ -181,7 +181,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Manrope', system-ui, sans-serif;
   }
 
   html.dark,
@@ -212,7 +212,8 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans', 'Manrope', system-ui, sans-serif;
+    letter-spacing: 0;
   }
 
   /* Global Table Header Override - Ensure headers are white as requested */
@@ -226,7 +227,7 @@
     color: #475569 !important;
     font-weight: 600 !important;
     font-size: 14px !important;
-    padding: 16px 20px !important;
+    padding: 12px 16px !important;
     text-transform: none !important;
     letter-spacing: normal !important;
   }
@@ -234,7 +235,7 @@
   /* Premium Grid Container Override */
   .grid-container, 
   .card-table-wrapper {
-    @apply rounded-[2.5rem] bg-white border border-slate-100 overflow-hidden;
+    @apply rounded-lg bg-white border border-slate-200 overflow-hidden;
   }
 
   /* Global Input Background Contrast */
@@ -258,7 +259,7 @@
 
 @layer components {
   .card-elevated {
-    @apply bg-card rounded-xl border border-border;
+    @apply bg-card rounded-lg border border-border;
     box-shadow: var(--shadow-card);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
@@ -268,7 +269,7 @@
   }
 
   .kpi-card {
-    @apply bg-card rounded-xl border border-border p-6;
+    @apply bg-card rounded-lg border border-border p-5;
     box-shadow: var(--shadow-card);
   }
 
@@ -452,6 +453,36 @@ body.app-ready #app-launch-screen {
   pointer-events: none;
 }
 
+.auth-page,
+.auth-main {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+.auth-panel {
+  width: min(100%, 28rem);
+  max-width: 28rem;
+}
+
+@media (max-width: 639px) {
+  .auth-panel {
+    width: min(calc(100vw - 2rem), 22rem);
+    max-width: 22rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .auth-login-options {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+
+  .auth-login-options button {
+    margin-left: 0;
+  }
+}
+
 /* Themed scrollbar */
 .scrollbar-themed::-webkit-scrollbar {
   width: 8px;
@@ -562,16 +593,21 @@ div.relative.overflow-hidden[class*="bg-gradient-"],
   border: 1px solid #fef3c7 !important;
 }
 
-/* 3. Strip Shadows and Enforce Flat Clean Borders (Flat Design) */
+/* 3. Normalize shadows and enforce clean borders */
 .shadow-2xl,
 .shadow-xl,
-.shadow-lg,
+.shadow-lg {
+  box-shadow: var(--shadow-lg) !important;
+}
+
 .shadow-md,
 .shadow-sm,
-.shadow,
-.shadow-inner,
-[class*="shadow-"] {
-  box-shadow: none !important;
+.shadow {
+  box-shadow: var(--shadow-card) !important;
+}
+
+.shadow-inner {
+  box-shadow: inset 0 1px 2px hsl(215 30% 12% / 0.06) !important;
 }
 
 /* KPI cards, regular cards, modals, and container elements are strictly flat with a 1px border */
@@ -581,9 +617,9 @@ div.relative.overflow-hidden[class*="bg-gradient-"],
 .grid-container,
 .card-table-wrapper,
 [role="dialog"] {
-  box-shadow: none !important;
+  box-shadow: var(--shadow-card) !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: 1rem !important; /* Elegant 16px border-radius standard */
+  border-radius: 0.5rem !important;
   background-color: #ffffff !important;
 }
 
@@ -605,8 +641,8 @@ button[role="switch"] {
 }
 
 button[role="switch"][data-state="checked"] {
-  background-color: #0ea5e9 !important;
-  border-color: #0ea5e9 !important;
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
 }
 
 button[role="switch"] span {
@@ -623,8 +659,8 @@ button[role="checkbox"] {
 }
 
 button[role="checkbox"][data-state="checked"] {
-  background-color: #0ea5e9 !important;
-  border-color: #0ea5e9 !important;
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
   color: #ffffff !important;
 }
 
@@ -663,9 +699,9 @@ div[data-state] > [class*="SheetOverlay"],
 [role="dialog"].DialogContent,
 div[class*="DialogContent"] {
   background-color: #ffffff !important;
-  border-radius: 1.25rem !important; /* Premium 20px corners */
+  border-radius: 0.75rem !important;
   border: 1px solid #e2e8f0 !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-lg) !important;
   padding: 0 !important; /* Standardize inner layout spacing */
   overflow: hidden !important;
 }
@@ -690,31 +726,31 @@ div[class*="DialogContent"] {
 [role="dialog"] [class*="DialogHeader"] .rounded-xl,
 [role="dialog"] [class*="DialogHeader"] [class*="bg-primary"] {
   background-color: #f1f5f9 !important;
-  color: #0ea5e9 !important;
+  color: hsl(var(--primary)) !important;
   box-shadow: none !important;
   border: none !important;
 }
 
 [role="dialog"] [class*="DialogHeader"] .rounded-xl svg,
 [role="dialog"] [class*="DialogHeader"] [class*="bg-primary"] svg {
-  color: #0ea5e9 !important;
+  color: hsl(var(--primary)) !important;
 }
 
 /* Dialog Title and Description styling */
 [role="dialog"] [class*="DialogTitle"],
 [role="dialog"] .text-2xl.font-black {
-  font-family: 'Inter', system-ui, sans-serif !important;
+  font-family: 'IBM Plex Sans', 'Manrope', system-ui, sans-serif !important;
   font-weight: 700 !important;
   font-size: 1.25rem !important; /* 20px text-xl equivalent */
   color: #1e293b !important; /* slate-800 */
-  letter-spacing: -0.02em !important;
+  letter-spacing: 0 !important;
   margin: 0 !important;
   text-transform: none !important;
 }
 
 [role="dialog"] [class*="DialogDescription"],
 [role="dialog"] p.text-xs.font-bold {
-  font-family: 'Inter', system-ui, sans-serif !important;
+  font-family: 'Manrope', system-ui, sans-serif !important;
   font-size: 0.875rem !important; /* text-sm equivalent */
   color: #64748b !important; /* slate-500 */
   font-weight: 400 !important;
@@ -735,24 +771,24 @@ div[class*="DialogContent"] {
 [role="dialog"] label,
 [role="dialog"] [class*="FormLabel"],
 [role="dialog"] .text-\[10px\].font-black {
-  font-family: 'Inter', system-ui, sans-serif !important;
+  font-family: 'Manrope', system-ui, sans-serif !important;
   font-size: 0.75rem !important; /* 12px (text-xs) */
   font-weight: 600 !important; /* semibold */
   text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
+  letter-spacing: 0.04em !important;
   color: #64748b !important; /* slate-500 */
   margin-bottom: 0.5rem !important;
   margin-left: 0 !important;
   display: inline-block !important;
 }
 
-/* Form inputs & dropdown triggers unifications (44px, white background, rounded-xl) */
+/* Form inputs & dropdown triggers unifications (44px, white background, rounded-md) */
 [role="dialog"] input:not([type="checkbox"]):not([type="radio"]),
 [role="dialog"] select,
 [role="dialog"] [class*="SelectTrigger"],
 [role="dialog"] button[role="combobox"] {
   height: 2.75rem !important; /* 44px (h-11) */
-  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border-radius: 0.5rem !important;
   border: 1px solid #cbd5e1 !important;
   background-color: #ffffff !important;
   color: #334155 !important;
@@ -773,7 +809,7 @@ div[class*="DialogContent"] {
 
 /* Textareas in forms */
 [role="dialog"] textarea {
-  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border-radius: 0.5rem !important;
   border: 1px solid #cbd5e1 !important;
   background-color: #ffffff !important;
   color: #334155 !important;
@@ -796,9 +832,9 @@ div[class*="DialogContent"] {
 [role="dialog"] [class*="SelectTrigger"]:focus,
 [role="dialog"] button[role="combobox"]:focus,
 [role="dialog"] textarea:focus {
-  border-color: #0ea5e9 !important;
+  border-color: hsl(var(--primary)) !important;
   outline: none !important;
-  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1) !important;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.12) !important;
 }
 
 /* Unified Dialog Footer */
@@ -816,8 +852,8 @@ div[class*="DialogContent"] {
   justify-content: flex-end !important;
   align-items: center !important;
   gap: 0.75rem !important;
-  border-bottom-left-radius: 1.25rem !important;
-  border-bottom-right-radius: 1.25rem !important;
+  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.75rem !important;
 }
 
 /* Button overrides inside dialog footer */
@@ -825,7 +861,7 @@ div[class*="DialogContent"] {
 [role="dialog"] form > div.flex.justify-end button,
 [role="dialog"] div.pt-4.border-t button {
   height: 2.75rem !important; /* 44px (h-11) */
-  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border-radius: 0.5rem !important;
   font-weight: 600 !important;
   font-size: 0.875rem !important;
   text-transform: none !important;
@@ -840,7 +876,7 @@ div[class*="DialogContent"] {
 [role="dialog"] [class*="DialogFooter"] button.bg-primary,
 [role="dialog"] form > div.flex.justify-end button[type="submit"],
 [role="dialog"] div.pt-4.border-t button[type="submit"] {
-  background-color: #0ea5e9 !important;
+  background-color: hsl(var(--primary)) !important;
   color: #ffffff !important;
   border: none !important;
 }
@@ -849,7 +885,7 @@ div[class*="DialogContent"] {
 [role="dialog"] [class*="DialogFooter"] button.bg-primary:hover,
 [role="dialog"] form > div.flex.justify-end button[type="submit"]:hover,
 [role="dialog"] div.pt-4.border-t button[type="submit"]:hover {
-  background-color: #0284c7 !important;
+  background-color: hsl(var(--primary-hover)) !important;
 }
 
 /* Cancel/Secondary buttons */
@@ -873,7 +909,7 @@ div[class*="DialogContent"] {
 .PopoverContent,
 [class*="PopoverContent"],
 [class*="SelectContent"] {
-  border-radius: 0.75rem !important; /* 12px (rounded-xl) */
+  border-radius: 0.5rem !important;
   border: 1px solid #e2e8f0 !important;
   background-color: #ffffff !important;
   box-shadow: none !important;
@@ -901,10 +937,10 @@ aside.bg-sidebar {
 /* 1. Parent Navigation Items and Expandable Menu Buttons */
 aside.bg-sidebar nav a > div.gap-3,
 aside.bg-sidebar nav div.cursor-pointer.gap-3 {
-  border-radius: 0.75rem !important; /* Premium 12px rounded corners */
-  margin-top: 4px !important;
-  margin-bottom: 4px !important;
-  padding: 10px 14px !important; /* Generous breathing room */
+  border-radius: 0.5rem !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  padding: 9px 12px !important;
   transition: all 0.2s ease-in-out !important;
   font-weight: 500 !important; /* Modern medium text like mockup */
 }
@@ -1032,7 +1068,7 @@ div[class*="border"]:has(table),
 .rounded-lg:has([role="grid"]),
 .border:has([role="grid"]),
 div[class*="border"]:has([role="grid"]) {
-  border-radius: 0.75rem !important; /* Premium 12px rounded corners */
+  border-radius: 0.5rem !important;
   border: 1px solid #e2e8f0 !important; /* Sleek flat border */
   background-color: #ffffff !important;
   box-shadow: none !important;
@@ -1049,7 +1085,7 @@ div[class*="border"]:has(table):not([class*="overflow-"]):not([class*="max-h-"])
 div[class*="overflow-"]:has(table),
 div[class*="max-h-"]:has(table) {
   overflow: auto !important; /* Keep scroll behavior */
-  border-radius: 0.75rem !important;
+  border-radius: 0.5rem !important;
 }
 
 thead, thead tr {
@@ -1063,23 +1099,23 @@ th, thead th {
   text-transform: none !important; /* Normal capitalization */
   font-size: 14px !important; /* Standard font size */
   letter-spacing: normal !important;
-  padding: 16px 20px !important; /* Spacious padding */
+  padding: 12px 16px !important;
   border-bottom: 1px solid #f1f5f9 !important;
   text-align: left !important;
 }
 
 /* Round the top corners of the very first header cells in the separate border model */
 thead tr:first-child th:first-child {
-  border-top-left-radius: 0.75rem !important;
+  border-top-left-radius: 0.5rem !important;
 }
 thead tr:first-child th:last-child {
-  border-top-right-radius: 0.75rem !important;
+  border-top-right-radius: 0.5rem !important;
 }
 
 td, tbody td {
   border-bottom: 1px solid #f1f5f9 !important; /* Fine row separators */
   background-color: #ffffff !important; /* All rows are white */
-  padding: 16px 20px !important; /* Standard padding matching header */
+  padding: 12px 16px !important;
   color: #334155 !important;
   font-size: 14px !important;
   vertical-align: middle !important;
@@ -1092,10 +1128,10 @@ tbody tr:last-child td {
 
 /* Round the bottom corners of the very last row's cells in the separate border model */
 tbody tr:last-child td:first-child {
-  border-bottom-left-radius: 0.75rem !important;
+  border-bottom-left-radius: 0.5rem !important;
 }
 tbody tr:last-child td:last-child {
-  border-bottom-right-radius: 0.75rem !important;
+  border-bottom-right-radius: 0.5rem !important;
 }
 
 /* Ensure no alternating row backgrounds to maintain clean mockup aesthetic */

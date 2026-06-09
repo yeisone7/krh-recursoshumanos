@@ -160,18 +160,27 @@ export function useUpdateVacancy() {
 
 export function useDeleteVacancy() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('vacancies')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', currentCompanyId!)
+        .eq('status', 'open')
+        .select('id')
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        throw new Error('Solo se pueden eliminar vacantes con estado Abierta.');
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy', id] });
     },
   });
 }
