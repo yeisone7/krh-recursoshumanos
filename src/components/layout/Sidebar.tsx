@@ -400,7 +400,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
         className={cn(
-          "flex items-center gap-3 rounded-xl border border-transparent transition-all duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+          "flex items-center gap-3 rounded-md border border-transparent transition-colors duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isCollapsed
             ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
             : "px-4 py-2.5",
@@ -421,12 +421,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </span>
           }
           {item.badge && !isCollapsed &&
-        <span className="ml-auto min-w-5 rounded-full bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground shadow-sm">
+        <span className="ml-auto min-w-5 rounded-md bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground">
               {item.badge}
             </span>
         }
           {item.badge && isCollapsed &&
-        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar shadow-sm">
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-md bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar">
               {item.badge}
             </span>
         }
@@ -442,13 +442,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-              className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg"
+              className="rounded-md border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg"
             sideOffset={8}>
 
             <div className="flex items-center gap-2">
               <span>{item.label}</span>
               {item.badge &&
-              <span className="rounded-full bg-primary px-1.5 py-0.5 text-xs font-extrabold text-primary-foreground">
+              <span className="rounded-md bg-primary px-1.5 py-0.5 text-xs font-extrabold text-primary-foreground">
                   {item.badge}
                 </span>
               }
@@ -484,10 +484,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
                   className={cn(
-                    "relative flex transition-all duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex transition-colors duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
-                      ? "mx-auto h-11 w-11 items-center justify-center rounded-xl border border-sidebar-border bg-[#e7f0fc] dark:bg-primary/10 text-sidebar-foreground [&_svg]:size-5" 
-                      : "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
+                      ? "mx-auto h-10 w-10 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent text-sidebar-foreground [&_svg]:size-5"
+                      : "min-h-20 h-auto flex-col items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
                     isActive && !isCollapsed && sidebarActiveTone,
                     isActive && isCollapsed && "bg-primary"
                   )}
@@ -497,7 +497,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     isCollapsed
                       ? "h-full w-full"
                       : cn(
-                          "h-9 w-9 rounded-xl border",
+                          "h-8 w-8 rounded-md border",
                           isActive
                             ? "border-white/20 bg-white/15 text-white shadow-none"
                             : cn(colorClass, "group-hover:border-white/20 group-hover:bg-white/15 group-hover:text-white")
@@ -515,7 +515,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   )}
                   {item.badge && (
                     <span className={cn(
-                      "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm font-black",
+                      "absolute flex items-center justify-center rounded-md bg-primary text-primary-foreground font-black",
                       isCollapsed 
                         ? "-top-1 -right-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar"
                         : "top-2 right-2 h-5 px-1.5 text-[9px] uppercase"
@@ -555,7 +555,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       whileTap={{ scale: 0.98 }}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 rounded-xl transition-all duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        "flex items-center gap-3 rounded-md transition-colors duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         "border border-transparent",
         isCollapsed
           ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
@@ -674,7 +674,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 80 : 260) }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
-          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-[4px_0_12px_rgba(0,0,0,0.08)] z-10",
+          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10",
           isMobileDrawer && "h-full"
         )}>
 
@@ -682,7 +682,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       {!isMobileDrawer && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-[0_8px_18px_hsl(var(--primary)/0.35),0_2px_6px_hsl(var(--foreground)/0.18)] flex items-center justify-center hover:bg-primary/90 hover:shadow-[0_10px_22px_hsl(var(--primary)/0.42),0_3px_8px_hsl(var(--foreground)/0.22)] transition-[background-color,box-shadow,transform] hover:scale-105">
+          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md flex items-center justify-center hover:bg-primary/90 transition-colors">
           {collapsed ?
             <ChevronRight className="w-3.5 h-3.5" /> :
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -701,7 +701,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2">
 
-              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center p-1 transition-colors group-hover:bg-primary/10">
+              <div className="w-12 h-12 rounded-md overflow-hidden flex items-center justify-center p-1 transition-colors group-hover:bg-primary/10">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col justify-center">
@@ -715,7 +715,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
-              <div className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center mx-auto p-1 hover:bg-primary/10 transition-colors">
+              <div className="w-12 h-12 rounded-md overflow-hidden flex items-center justify-center mx-auto p-1 hover:bg-primary/10 transition-colors">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
             </motion.div>
@@ -865,9 +865,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       className={cn(
                         "relative flex transition-all duration-200 group",
                         isCollapsed 
-                          ? "mx-auto h-11 w-11 items-center justify-center rounded-lg p-0" 
+                          ? "mx-auto h-10 w-10 items-center justify-center rounded-md p-0"
                           : cn(
-                              "min-h-[86px] h-auto flex-col items-center justify-center gap-1.5 rounded-2xl border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
+                              "min-h-20 h-auto flex-col items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center",
                               "hover:bg-primary hover:border-primary/30 hover:text-primary-foreground"
                             ),
                         isActive && !isCollapsed && sidebarActiveTone,
@@ -880,7 +880,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                         isCollapsed 
                           ? "h-full w-full" 
                           : cn(
-                              "h-9 w-9 rounded-xl border",
+                              "h-8 w-8 rounded-md border",
                               isActive
                                 ? "border-white/20 bg-white/15 text-white shadow-none"
                                 : cn(colorClass, sidebarIconHoverTone)
@@ -901,7 +901,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                       {/* Badge */}
                       {item.badge && (
                         <span className={cn(
-                          "absolute flex items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm font-black",
+                          "absolute flex items-center justify-center rounded-md bg-primary text-primary-foreground font-black",
                           isCollapsed 
                             ? "-top-1 -right-1 h-5 min-w-5 text-[10px] ring-2 ring-sidebar" 
                             : "top-2 right-2 h-5 px-1.5 text-[9px] uppercase"
@@ -918,7 +918,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   return (
                     <Tooltip key={item.href} delayDuration={0}>
                       <TooltipTrigger asChild>{content}</TooltipTrigger>
-                      <TooltipContent side="right" sideOffset={8} className="rounded-lg border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg">
+                      <TooltipContent side="right" sideOffset={8} className="rounded-md border border-border bg-popover px-3 py-2 font-bold text-popover-foreground shadow-lg">
                         {item.label}
                       </TooltipContent>
                     </Tooltip>
@@ -1011,7 +1011,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
         <PopoverTrigger asChild>
           <div
             className={cn(
-              "flex items-center gap-3 rounded-xl border border-sidebar-border bg-card shadow-sm cursor-pointer hover:border-primary/40 hover:shadow-md transition-all",
+              "flex items-center gap-3 rounded-md border border-sidebar-border bg-card shadow-sm cursor-pointer hover:border-primary/40 transition-colors",
               collapsed ? "justify-center p-2" : "px-3 py-2"
             )}>
             <CompanyLogo name={currentCompany?.name} logoUrl={currentCompany?.logo_url} />
