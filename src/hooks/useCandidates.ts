@@ -15,6 +15,35 @@ type CandidateInsert = Database['public']['Tables']['candidates']['Insert'];
 type SelectionStep = Database['public']['Tables']['selection_steps']['Row'];
 type SelectionStepInsert = Database['public']['Tables']['selection_steps']['Insert'];
 
+function parseNumericValue(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.replace(/[^0-9.-]+/g, '');
+  if (!normalized) return null;
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseDurationMonths(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) && value > 0 ? Math.trunc(value) : null;
+  if (typeof value !== 'string') return null;
+
+  const match = value.match(/\d+/);
+  if (!match) return null;
+
+  const months = Number(match[0]);
+  return Number.isFinite(months) && months > 0 ? months : null;
+}
+
+function calculateEndDateFromMonths(startDate: string, months: number): string {
+  const endDate = new Date(`${startDate}T00:00:00`);
+  endDate.setMonth(endDate.getMonth() + months);
+  endDate.setDate(endDate.getDate() - 1);
+  return toDateOnlyString(endDate);
+}
+
 const employeeDocumentFolders = new Set<string>(employeeDocumentFolderOrder);
 
 function normalizeCandidateDocumentType(type: unknown): EmployeeDocumentType {
@@ -346,14 +375,29 @@ export function useConvertToEmployee() {
           vacancies(
             id,
             operation_center_id,
+            requisition_id,
             position_id,
             position_title,
             department_area,
             shift_type,
             vacancy_type,
+            salary_type,
             salary_range_min,
             salary_range_max,
-            includes_transport
+            includes_transport,
+            operation_centers(id, name, city, address),
+            personnel_requisitions:requisition_id(
+              id,
+              area_id,
+              cargo_solicitado,
+              juridico_tipo_contrato,
+              juridico_duracion,
+              tipo_contrato_solicitado,
+              rrhh_asignacion_salarial,
+              salario_propuesto,
+              dia_descanso_obligatorio,
+              rrhh_condiciones_adicionales
+            )
           )
         `)
         .eq('id', candidateId)
@@ -362,8 +406,18 @@ export function useConvertToEmployee() {
       if (fetchError) throw fetchError;
 
       const vacancy = candidate.vacancies as any;
+      const requisition = vacancy?.personnel_requisitions as any;
+      const operationCenter = vacancy?.operation_centers as any;
       const hireDate = startDate || todayDateOnlyString();
       const employeeId = crypto.randomUUID();
+      const effectiveContractType = (
+        contractType ||
+        requisition?.juridico_tipo_contrato ||
+        requisition?.tipo_contrato_solicitado ||
+        'indefinido'
+      ) as ContractType;
+      const durationMonths = endDate ? null : parseDurationMonths(requisition?.juridico_duracion);
+      const derivedEndDate = endDate || (durationMonths ? calculateEndDateFromMonths(hireDate, durationMonths) : null);
 
       // Step 1: Create employee in new normalized model (employees_v2)
       const employeePayload: any = {
@@ -526,36 +580,99 @@ export function useConvertToEmployee() {
         employee_id: employee.id,
         company_id: currentCompanyId!,
         operation_center_id: centerId,
-        position_name: vacancy?.position_title || 'Por definir',
+        position_id: vacancy?.position_id || null,
+        area_id: requisition?.area_id || null,
+        position_name: vacancy?.position_title || requisition?.cargo_solicitado || 'Por definir',
         hire_date: hireDate,
-        link_type: linkTypeMap[contractType || 'indefinido'] || 'indefinido',
+        link_type: linkTypeMap[effectiveContractType] || 'indefinido',
+        work_city: operationCenter?.city || null,
         is_current: true,
       });
       if (workInfoError) throw workInfoError;
 
+      const schedulePayload = {
+        payroll_type: 'quincenal' as const,
+        rest_day: requisition?.dia_descanso_obligatorio || null,
+        is_office_schedule: true,
+      };
+
+      const { data: currentSchedule, error: currentScheduleError } = await supabase
+        .from('employee_schedule')
+        .select('id')
+        .eq('employee_id', employee.id)
+        .eq('is_current', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (currentScheduleError) throw currentScheduleError;
+
+      if (currentSchedule?.id) {
+        const { error: scheduleUpdateError } = await supabase
+          .from('employee_schedule')
+          .update(schedulePayload)
+          .eq('id', currentSchedule.id);
+
+        if (scheduleUpdateError) throw scheduleUpdateError;
+      } else {
+        const { error: scheduleInsertError } = await supabase
+          .from('employee_schedule')
+          .insert({
+            employee_id: employee.id,
+            company_id: currentCompanyId!,
+            valid_from: hireDate,
+            is_current: true,
+            ...schedulePayload,
+          });
+
+        if (scheduleInsertError) throw scheduleInsertError;
+      }
+
       // Step 2: Create contract using vacancy data or provided values
-      const contractSalary = salary || candidate.salary_expectation || vacancy?.salary_range_min || 0;
+      const contractSalary =
+        salary ||
+        parseNumericValue(requisition?.rrhh_asignacion_salarial) ||
+        parseNumericValue(requisition?.salario_propuesto) ||
+        parseNumericValue(candidate.salary_expectation) ||
+        parseNumericValue(vacancy?.salary_range_min) ||
+        0;
       const contractTransport = transportAllowance !== undefined
         ? transportAllowance
-        : (vacancy?.includes_transport ? 200000 : 0); // Default Colombian transport allowance
+        : (vacancy?.includes_transport ? 140606 : 0);
       const contractId = crypto.randomUUID();
+      let contractNumber: string | null = null;
+
+      const { data: numberResult, error: numberError } = await supabase
+        .rpc('get_next_contract_number', {
+          _company_id: currentCompanyId!,
+          _prefix: null,
+        });
+
+      if (!numberError && numberResult) {
+        contractNumber = numberResult;
+      }
+      if (!contractNumber) {
+        throw new Error(numberError?.message || 'No se pudo generar el consecutivo del contrato');
+      }
 
       const contractData: any = {
         id: contractId,
         employee_id: employee.id,
         company_id: currentCompanyId!,
-        contract_type: contractType || 'indefinido',
+        contract_number: contractNumber,
+        contract_type: effectiveContractType,
         start_date: hireDate,
+        end_date: derivedEndDate,
         salary: contractSalary,
+        salary_type: vacancy?.salary_type || 'mensual',
         transport_allowance: contractTransport,
         trial_period_days: trialPeriodDays ?? 60,
+        work_city: operationCenter?.city || null,
+        work_address: operationCenter?.address || null,
+        has_confidentiality_clause: true,
+        has_non_compete_clause: false,
+        special_clauses: requisition?.rrhh_condiciones_adicionales || null,
         created_by: user?.id,
       };
-
-      // Add end_date only for fixed-term contracts
-      if (contractType && contractType !== 'indefinido' && endDate) {
-        contractData.end_date = endDate;
-      }
 
       // Calculate trial_end_date
       if (contractData.trial_period_days > 0) {
@@ -655,6 +772,7 @@ export function useConvertToEmployee() {
             contract_id: contract.id,
             entry_exam_id: entryExam?.id,
             contract_type: contractData.contract_type,
+            contract_number: contractNumber,
             salary: contractSalary,
           },
           user_agent: navigator.userAgent,

@@ -152,7 +152,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar centro..."
                 emptyMessage="No se encontraron centros."
                 disabled={isEditing}
-                className="h-12 rounded-xl border-border/50 bg-background "
+                triggerClassName="h-12 rounded-xl border-border/50 bg-background"
               />
             </div>
             <div className="space-y-2.5">
@@ -165,7 +165,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
                 searchPlaceholder="Buscar cargo..."
                 emptyMessage="No se encontraron cargos."
                 disabled={isEditing}
-                className="h-12 rounded-xl border-border/50 bg-background "
+                triggerClassName="h-12 rounded-xl border-border/50 bg-background"
               />
             </div>
           </div>
