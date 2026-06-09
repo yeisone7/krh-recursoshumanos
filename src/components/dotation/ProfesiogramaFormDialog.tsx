@@ -121,7 +121,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-[55rem] flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-2xl bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
           
@@ -284,11 +284,11 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-border/50 bg-background /10">
+        <div className="flex items-center justify-end gap-2.5 border-t border-border/50 bg-background/10 px-5 py-3">
           <Button 
             variant="ghost" 
             onClick={() => onOpenChange(false)}
-            className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
+            className="h-10 px-4 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-background transition-colors"
           >
             Cancelar
           </Button>
@@ -296,7 +296,7 @@ export function ProfesiogramaFormDialog({ open, onOpenChange, centers, positions
             size="lg"
             onClick={handleSubmit} 
             disabled={isPending} 
-            className="h-12 px-8 rounded-2xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
+            className="h-10 px-5 rounded-xl gap-2 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px] transition-all"
           >
             {isPending ? (
               <>
