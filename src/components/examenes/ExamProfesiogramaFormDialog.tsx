@@ -148,7 +148,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 searchPlaceholder="Buscar centro..."
                 emptyMessage="No se encontraron centros."
                 disabled={isEditing}
-                className="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
+                triggerClassName="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
               />
             </div>
             <div className="space-y-2">
@@ -161,7 +161,7 @@ export function ExamProfesiogramaFormDialog({ open, onOpenChange, centers, posit
                 searchPlaceholder="Buscar cargo..."
                 emptyMessage="No se encontraron cargos."
                 disabled={isEditing}
-                className="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
+                triggerClassName="h-12 rounded-xl bg-background border-border/50 focus:ring-4 focus:ring-violet/10 transition-all font-medium"
               />
             </div>
           </div>

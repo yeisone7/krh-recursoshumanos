@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -17,6 +17,8 @@ import {
   Building2,
   UserPlus,
   Filter,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -40,9 +42,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
-import { useVacancies } from '@/hooks/useVacancies';
+import { useDeleteVacancy, useVacancies } from '@/hooks/useVacancies';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,6 +71,8 @@ import {
   vacancyStatusConfig,
 } from '@/types/vacancy';
 
+type VacancyListItem = NonNullable<ReturnType<typeof useVacancies>['data']>[number];
+
 export default function Seleccion() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -71,12 +86,15 @@ export default function Seleccion() {
   const [candidateFormVacancyId, setCandidateFormVacancyId] = useState<string | null>(null);
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<VacancyListItem | null>(null);
 
   const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
   const { data: candidates = [] } = useCandidates();
   const { data: operationCenters = [] } = useOperationCenters();
-  const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate } = useAuth();
+  const deleteVacancy = useDeleteVacancy();
+  const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canDelete } = useAuth();
   const canCreateVacancy = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canCreate('seleccion');
+  const canDeleteVacancy = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canDelete('seleccion');
 
   // Stats
   const stats = useMemo(() => {
@@ -137,6 +155,17 @@ export default function Seleccion() {
         onClick: () => openVacancyDetail(vacancy.id),
         actions: (
           <div className="flex gap-2">
+            {canDeleteVacancy && vacancy.status === 'open' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-10 w-10 rounded-xl hover:bg-destructive/10 text-destructive"
+                onClick={(e) => requestDeleteVacancy(vacancy, e)}
+                disabled={deleteVacancy.isPending}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -165,12 +194,39 @@ export default function Seleccion() {
         ),
       };
     }),
-    [filteredVacancies]
+    [canDeleteVacancy, deleteVacancy.isPending, filteredVacancies]
   );
 
   const openVacancyDetail = (vacancyId: string) => {
     setSelectedVacancyId(vacancyId);
     setShowVacancyDetail(true);
+  };
+
+  const requestDeleteVacancy = (vacancy: VacancyListItem, event?: MouseEvent) => {
+    event?.stopPropagation();
+    if (vacancy.status !== 'open') {
+      toast.error('Solo se pueden eliminar vacantes con estado Abierta.');
+      return;
+    }
+    setDeleteTarget(vacancy);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await deleteVacancy.mutateAsync(deleteTarget.id);
+      toast.success('Vacante eliminada correctamente');
+      if (selectedVacancyId === deleteTarget.id) {
+        setShowVacancyDetail(false);
+        setSelectedVacancyId(null);
+      }
+      setDeleteTarget(null);
+    } catch (error: any) {
+      toast.error('No se pudo eliminar la vacante', {
+        description: error?.message || 'Verifique que la vacante siga en estado Abierta y no tenga registros vinculados.',
+      });
+    }
   };
 
   const kpis = useMemo(() => ([
@@ -385,6 +441,17 @@ export default function Seleccion() {
                               >
                                 <UserPlus className="w-4 h-4" />
                               </Button>
+                              {canDeleteVacancy && vacancy.status === 'open' && (
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="h-8 w-8 rounded-lg text-destructive shadow-sm transition-all hover:bg-destructive hover:text-destructive-foreground"
+                                  onClick={(e) => requestDeleteVacancy(vacancy, e)}
+                                  disabled={deleteVacancy.isPending}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button
                                 size="icon"
                                 variant="ghost"
@@ -414,6 +481,36 @@ export default function Seleccion() {
       {selectedVacancyId && <VacancyDetailDialog open={showVacancyDetail} onOpenChange={setShowVacancyDetail} vacancyId={selectedVacancyId} />}
       <CandidateFormDialog open={showCandidateForm} onOpenChange={(open) => { setShowCandidateForm(open); if (!open) { setTimeout(() => setCandidateFormVacancyId(null), 200); } }} vacancyId={candidateFormVacancyId || undefined} />
       {selectedCandidateId && <CandidateDetailDialog open={showCandidateDetail} onOpenChange={setShowCandidateDetail} candidateId={selectedCandidateId} />}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="z-[80] max-w-[calc(100vw-2rem)] rounded-[2rem] border border-destructive/20 sm:max-w-lg">
+          <AlertDialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <AlertTriangle className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle>Eliminar vacante</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Esta acción eliminará permanentemente la vacante
+                {deleteTarget ? ` "${deleteTarget.position_title}"` : ''}.
+              </span>
+              <span className="block font-semibold text-destructive">
+                Solo se permite eliminar vacantes en estado Abierta. Si ya tiene candidatos u otros registros vinculados, la base de datos puede impedir la eliminación para proteger la trazabilidad.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+            <AlertDialogCancel disabled={deleteVacancy.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteVacancy.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteVacancy.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
