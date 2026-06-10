@@ -8,6 +8,15 @@ export interface PsychologyUser {
   display_name: string;
 }
 
+const normalizeRoleName = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+const psychologyRoleNames = new Set(['psicologia', 'sicologia']);
+
 export function usePsychologyUsers() {
   const { currentCompanyId } = useAuth();
 
@@ -16,18 +25,18 @@ export function usePsychologyUsers() {
     queryFn: async (): Promise<PsychologyUser[]> => {
       if (!currentCompanyId) return [];
 
-      // 1. Fetch custom role "Sicología" assignments for the current company
+      // 1. Fetch custom psychology role assignments for the current company.
       const { data: customAssignments, error: customError } = await supabase
         .from('user_custom_roles')
         .select(`
           user_id,
-          custom_roles!inner(name, company_id)
+          custom_roles!inner(name, company_id, is_active)
         `)
         .eq('custom_roles.company_id', currentCompanyId)
-        .eq('custom_roles.name', 'Sicología');
+        .eq('custom_roles.is_active', true);
 
       if (customError) {
-        console.error('Error fetching custom roles for Sicología:', customError);
+        console.error('Error fetching custom roles for psychology:', customError);
       }
 
       // 2. Fetch system role "psicologo" assignments
@@ -40,7 +49,13 @@ export function usePsychologyUsers() {
         console.error('Error fetching system roles for psicologo:', systemError);
       }
 
-      const customUserIds = customAssignments?.map(a => a.user_id) || [];
+      const customUserIds = customAssignments
+        ?.filter((assignment) => {
+          const role = assignment.custom_roles;
+          const roleName = Array.isArray(role) ? role[0]?.name : role?.name;
+          return roleName ? psychologyRoleNames.has(normalizeRoleName(roleName)) : false;
+        })
+        .map((assignment) => assignment.user_id) || [];
       const systemUserIds = systemAssignments?.map(a => a.user_id) || [];
       
       const combinedUserIds = Array.from(new Set([...customUserIds, ...systemUserIds]));
