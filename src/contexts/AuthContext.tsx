@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId),
       supabase.from('user_company_assignments').select('company_id, companies(id, name, nit, logo_url, horizontal_logo_url)').eq('user_id', userId),
-      supabase.from('super_admins').select('id').eq('user_id', userId).maybeSingle(),
+      supabase.rpc('is_super_admin'),
       supabase.from('user_profiles').select('full_name, display_name, avatar_url').eq('id', userId).maybeSingle(),
       supabase.from('user_center_assignments').select('operation_center_id').eq('user_id', userId),
       supabase.rpc('get_user_permissions', { _user_id: userId }),
@@ -138,7 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHasAnyRole(hasAnyCustomRole);
 
     // Process super admin status
-    const isSA = !!saRes.data;
+    if (saRes.error) {
+      console.error('Error checking super admin status:', saRes.error);
+    }
+    const isSA = saRes.data === true;
     setIsSuperAdmin(isSA);
 
     // Process profile data
