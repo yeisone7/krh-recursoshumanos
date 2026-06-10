@@ -39,6 +39,7 @@ import { parseDateOnly } from '@/lib/dateOnly';
 
 interface ContractData {
   id: string;
+  company_id?: string;
   employee_id: string;
   contract_type: string;
   contract_number: string | null; // Consecutivo del contrato
@@ -84,6 +85,21 @@ function getLocalGenerationDate(): Date {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12);
 }
 
+function firstRecord<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] || null;
+  return value || null;
+}
+
+function cleanText(value?: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed || undefined;
+}
+
+function hasSpecificPosition(value?: string | null): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return !!normalized && !['no especificado', 'no asignada', 'no asignado', 'por definir'].includes(normalized);
+}
+
 export function GenerateContractDialog({
   open,
   onOpenChange,
@@ -107,7 +123,10 @@ export function GenerateContractDialog({
         .from('employee_contact')
         .select('email, phone, mobile, residence_address, residence_city, residence_department')
         .eq('employee_id', contract.employee_id)
-        .eq('is_current', true)
+        .order('is_current', { ascending: false })
+        .order('valid_from', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -124,14 +143,61 @@ export function GenerateContractDialog({
         .from('employee_work_info')
         .select(`
           position_name,
+          work_city,
           operation_center_id,
-          operation_centers (name)
+          is_current,
+          valid_from,
+          created_at,
+          operation_centers (name, city, address)
         `)
         .eq('employee_id', contract.employee_id)
-        .eq('is_current', true)
-        .maybeSingle();
+        .order('is_current', { ascending: false })
+        .order('valid_from', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1);
       if (error) throw error;
-      return data;
+      return data?.[0] || null;
+    },
+    enabled: open && !!contract?.employee_id,
+  });
+
+  const { data: selectionHiringContext } = useQuery({
+    queryKey: ['selection-hiring-context', contract?.employee_id, contract?.company_id || currentCompanyId],
+    queryFn: async () => {
+      if (!contract?.employee_id) return null;
+
+      let query = supabase
+        .from('candidates')
+        .select(`
+          email,
+          phone,
+          mobile,
+          address,
+          city,
+          department,
+          updated_at,
+          vacancies(
+            position_title,
+            operation_centers(name, city, address),
+            personnel_requisitions:requisition_id(
+              cargo_solicitado,
+              dia_descanso_obligatorio,
+              operation_centers(name, city, address)
+            )
+          )
+        `)
+        .eq('employee_id', contract.employee_id)
+        .order('updated_at', { ascending: false })
+        .limit(1);
+
+      const companyId = contract.company_id || currentCompanyId;
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data?.[0] || null;
     },
     enabled: open && !!contract?.employee_id,
   });
@@ -290,10 +356,35 @@ export function GenerateContractDialog({
       }
     }
 
-    // Get position and operation center from work info
-    const position = employeeWorkInfo?.position_name || 'No especificado';
-    const operationCenter = employeeWorkInfo?.operation_centers?.name || 
-      contract.employees.operation_centers?.name || undefined;
+    const vacancy = firstRecord((selectionHiringContext as any)?.vacancies);
+    const requisition = firstRecord(vacancy?.personnel_requisitions);
+    const workOperationCenter = firstRecord((employeeWorkInfo as any)?.operation_centers);
+    const vacancyOperationCenter = firstRecord(vacancy?.operation_centers);
+    const requisitionOperationCenter = firstRecord(requisition?.operation_centers);
+
+    const position = hasSpecificPosition(employeeWorkInfo?.position_name)
+      ? employeeWorkInfo!.position_name
+      : cleanText(vacancy?.position_title) || cleanText(requisition?.cargo_solicitado) || 'No especificado';
+    const operationCenter = cleanText(workOperationCenter?.name) ||
+      cleanText(contract.employees.operation_centers?.name) ||
+      cleanText(vacancyOperationCenter?.name) ||
+      cleanText(requisitionOperationCenter?.name);
+    const workCity = cleanText(contract.work_city) ||
+      cleanText(employeeWorkInfo?.work_city) ||
+      cleanText(workOperationCenter?.city) ||
+      cleanText(vacancyOperationCenter?.city) ||
+      cleanText(requisitionOperationCenter?.city);
+    const workAddress = cleanText(contract.work_address) ||
+      cleanText(workOperationCenter?.address) ||
+      cleanText(vacancyOperationCenter?.address) ||
+      cleanText(requisitionOperationCenter?.address);
+    const employeeAddress = cleanText(employeeContact?.residence_address) || cleanText((selectionHiringContext as any)?.address);
+    const employeeCity = cleanText(employeeContact?.residence_city) || cleanText((selectionHiringContext as any)?.city);
+    const employeePhone = cleanText(employeeContact?.phone) ||
+      cleanText(employeeContact?.mobile) ||
+      cleanText((selectionHiringContext as any)?.phone) ||
+      cleanText((selectionHiringContext as any)?.mobile);
+    const employeeEmail = cleanText(employeeContact?.email) || cleanText((selectionHiringContext as any)?.email);
 
     return {
       // Company
@@ -313,14 +404,14 @@ export function GenerateContractDialog({
       employeeLastName: employee.last_name,
       employeeDocumentType: docType ? documentTypeLabels[docType] || 'C.C.' : 'C.C.',
       employeeDocumentNumber: employee.document_number,
-      employeeAddress: employeeContact?.residence_address || undefined,
-      employeeCity: employeeContact?.residence_city || undefined,
-      employeePhone: employeeContact?.phone || employeeContact?.mobile || undefined,
-      employeeEmail: employeeContact?.email || undefined,
+      employeeAddress,
+      employeeCity,
+      employeePhone,
+      employeeEmail,
       employeePosition: position,
       employeeOperationCenter: operationCenter,
       employeePayrollType: employeeSchedule?.payroll_type || 'quincenal', // Default to quincenal if no schedule record
-      employeeRestDay: employeeSchedule?.rest_day || undefined,
+      employeeRestDay: employeeSchedule?.rest_day || requisition?.dia_descanso_obligatorio || undefined,
 
       // Contract
       contractNumber: contract.contract_number || undefined, // Consecutivo (ej: PC-2024-0001)
@@ -333,8 +424,8 @@ export function GenerateContractDialog({
       transportAllowance: (contract.transport_allowance || 0) > 0,
       transportAllowanceAmount: contract.transport_allowance || 0,
       trialPeriodDays: contract.trial_period_days || undefined,
-      workCity: contract.work_city || undefined,
-      workAddress: contract.work_address || undefined,
+      workCity,
+      workAddress,
       contractDurationMonths: durationMonths,
       workLaborDescription: contract.work_labor_description || undefined, // Objeto/labor para contratos obra_labor
 
