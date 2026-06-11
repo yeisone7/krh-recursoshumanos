@@ -303,6 +303,7 @@ export default function Seleccion() {
                 <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todos los estados</SelectItem>
                 <SelectItem value="open" className="p-2.5 text-xs font-bold uppercase text-emerald-600">Abierta</SelectItem>
                 <SelectItem value="in_process" className="p-2.5 text-xs font-bold uppercase text-amber-600">En Proceso</SelectItem>
+                <SelectItem value="pending_placed" className="p-2.5 text-xs font-bold uppercase text-sky-600">Pendiente Colocado</SelectItem>
                 <SelectItem value="closed" className="p-2.5 text-xs font-bold uppercase text-blue-600">Cerrada</SelectItem>
                 <SelectItem value="cancelled" className="p-2.5 text-xs font-bold uppercase text-destructive">Cancelada</SelectItem>
               </SelectContent>

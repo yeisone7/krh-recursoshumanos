@@ -9315,7 +9315,13 @@ export type Database = {
         | "growth"
         | "temporary"
         | "other"
-      vacancy_status: "open" | "in_process" | "closed" | "cancelled"
+      vacancy_status:
+        | "open"
+        | "in_process"
+        | "paused"
+        | "pending_placed"
+        | "closed"
+        | "cancelled"
       vacancy_type: "internal" | "external" | "both"
       vacation_request_type:
         | "disfrute"
@@ -9758,7 +9764,7 @@ export const Constants = {
         "temporary",
         "other",
       ],
-      vacancy_status: ["open", "in_process", "closed", "cancelled"],
+      vacancy_status: ["open", "in_process", "paused", "pending_placed", "closed", "cancelled"],
       vacancy_type: ["internal", "external", "both"],
       vacation_request_type: [
         "disfrute",

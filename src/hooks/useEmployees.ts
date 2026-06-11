@@ -622,10 +622,16 @@ export function useCreateEmployee() {
 
       return employee;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
-      queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
-      queryClient.invalidateQueries({ queryKey: ['onboarding-tasks'] });
+    onSuccess: async (data) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['employees_v2'] }),
+        queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] }),
+        queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] }),
+        queryClient.invalidateQueries({ queryKey: ['onboarding-tasks'] }),
+      ]);
     },
   });
 }
@@ -941,9 +947,15 @@ export function useUpdateEmployee() {
 
       return employee;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
-      queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] });
+    onSuccess: async (data) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['employees_v2'] }),
+        queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] }),
+        queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] }),
+        queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] }),
+      ]);
     },
   });
 }
