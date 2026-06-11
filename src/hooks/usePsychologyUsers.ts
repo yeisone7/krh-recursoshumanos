@@ -16,15 +16,6 @@ const normalizeRoleName = (value: string) =>
 
 const psychologyRoleNames = new Set(['psicologia', 'sicologia']);
 
-const normalizeRoleName = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim()
-    .toLowerCase();
-
-const psychologyRoleNames = new Set(['psicologia', 'sicologia']);
-
 export function usePsychologyUsers() {
   const { currentCompanyId } = useAuth();
 
