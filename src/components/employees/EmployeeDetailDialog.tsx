@@ -417,7 +417,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const canDeleteEmployeeDocs = isAdmin || isRRHH || isSuperAdmin || canDelete('empleados');
   const transferAsSource = transfers?.find(t => (t as any).source_employee_id === employeeId && (t as any).status === 'completed');
   const transferAsTarget = transfers?.find(t => (t as any).target_employee_id === employeeId && (t as any).status === 'completed');
-  const { data: linkedCandidateDocs = [] } = useQuery({
+  const { data: linkedCandidateDocs = [], refetch: refetchLinkedCandidateDocs } = useQuery({
     queryKey: ['employee-linked-candidate-documents', employee?.document_number, currentCompanyId],
     queryFn: async () => {
       if (!employee?.document_number || !currentCompanyId) return [];
@@ -511,6 +511,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const handleDeleteCandidateDocument = async (doc: any) => {
     try {
       await deleteCandidateDocument.mutateAsync({ id: doc.id, candidateId: doc.candidate_id });
+      await refetchLinkedCandidateDocs();
       toast({ title: 'Documento eliminado' });
     } catch {
       toast({ title: 'Error al eliminar', variant: 'destructive' });
