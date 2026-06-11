@@ -171,6 +171,12 @@ export function CandidateDetailDialog({
     }
   }, [candidate?.document_number, open, currentCompanyId]);
 
+  useEffect(() => {
+    if (activeTab === 'shared_docs') {
+      setActiveTab('documents');
+    }
+  }, [activeTab]);
+
 
   if (isLoading || !candidate) {
     return (
@@ -400,12 +406,6 @@ export function CandidateDetailDialog({
                   <Paperclip className="h-3.5 w-3.5" />
                   <span className="truncate">Documentos</span>
                 </TabsTrigger>
-                {resolvedEmployeeId && (
-                  <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-[11px] font-semibold tracking-[0.04em] sm:col-span-1 sm:gap-1.5 sm:text-xs">
-                    <FolderOpen className="h-3.5 w-3.5" />
-                    <span className="truncate">Docs Compartidos</span>
-                  </TabsTrigger>
-                )}
               </TabsList>
             </div>
 
@@ -488,7 +488,7 @@ export function CandidateDetailDialog({
                                   </p>
                                   <p className="truncate text-xs text-muted-foreground">
                                     {formatFileSize(doc.file_size)}
-                                    {doc.upload_date && ` • ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`}
+                                    {doc.upload_date && ` - ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`} 
                                     {doc.expiry_date && ` • Vence ${formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}`}
                                   </p>
                                 </div>
@@ -1005,75 +1005,75 @@ export function CandidateDetailDialog({
                       </div>
                     </SectionCard>
                   )}
+
+                  {resolvedEmployeeId && (
+                    <SectionCard
+                      title="Documentos del Empleado"
+                      icon={FolderOpen}
+                      action={
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setShowSharedDocForm(true)}
+                        >
+                          <Upload className="w-3.5 h-3.5 mr-1" />
+                          Subir
+                        </Button>
+                      }
+                    >
+                      <p className="mb-3 text-xs text-muted-foreground">
+                        Vinculados al expediente del empleado y visibles tambien en el modulo de Empleados.
+                      </p>
+
+                      {loadingSharedDocs ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                        </div>
+                      ) : sharedDocs.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                          <p className="text-sm">No hay documentos del empleado</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {sharedDocs.map((doc: any) => (
+                            <div
+                              key={doc.id}
+                              className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <FileText className="w-5 h-5 text-primary shrink-0" />
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate">
+                                    {doc.document_name || doc.file_name || 'Documento'}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {doc.document_type && <Badge variant="secondary" className="text-xs mr-2">{doc.document_type}</Badge>}
+                                    {formatFileSize(doc.file_size)}
+                                    {doc.upload_date && ` - ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`} 
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openStorageDocument(doc.file_url)}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </SectionCard>
+                  )}
                 </div>
               </TabsContent>
 
-              {/* Shared Docs Tab */}
-              {resolvedEmployeeId && (
-                <TabsContent value="shared_docs" className="p-6 mt-0 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground flex items-center gap-2">
-                      <FolderOpen className="w-4 h-4 text-primary" />
-                      Documentos Compartidos del Empleado
-                    </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowSharedDocForm(true)}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Subir documento
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Estos documentos están vinculados al expediente del empleado y son visibles tanto aquí como en la vista de Empleados.
-                  </p>
-
-                  {loadingSharedDocs ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : sharedDocs.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                      <p className="text-sm">No hay documentos compartidos</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {sharedDocs.map((doc: any) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <FileText className="w-5 h-5 text-primary shrink-0" />
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                {doc.document_name || doc.file_name || 'Documento'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {doc.document_type && <Badge variant="secondary" className="text-xs mr-2">{doc.document_type}</Badge>}
-                                {formatFileSize(doc.file_size)}
-                                {doc.upload_date && ` • ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => openStorageDocument(doc.file_url)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </TabsContent>
-              )}
             </div>
           </Tabs>
 
@@ -1270,3 +1270,4 @@ export function CandidateDetailDialog({
     </>
   );
 }
+
