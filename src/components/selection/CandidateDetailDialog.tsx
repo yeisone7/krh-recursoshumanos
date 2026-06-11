@@ -22,13 +22,11 @@ import {
   RefreshCw,
   ArrowRight,
   Clock,
-  Upload,
   Loader2,
   Trash2,
   Download,
   Eye,
   Paperclip,
-  FolderOpen,
   FileDown,
   Stethoscope,
   ChevronDown,
@@ -65,7 +63,7 @@ import {
   useCandidateDocuments,
   useDeleteCandidateDocument 
 } from '@/hooks/useCandidates';
-import { useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
+import { useDeleteDocument, useEmployeeDocuments } from '@/hooks/useEmployeeHealth';
 import { DocumentFormDialog } from '@/components/employees/DocumentFormDialog';
 import { SelectionTimeline } from './SelectionTimeline';
 import { SelectionStepFormDialog } from './SelectionStepFormDialog';
@@ -123,7 +121,6 @@ export function CandidateDetailDialog({
 }: CandidateDetailDialogProps) {
   const [activeTab, setActiveTab] = useState('timeline');
   const [showStepForm, setShowStepForm] = useState(false);
-  const [showSharedDocForm, setShowSharedDocForm] = useState(false);
   const [isDocFormOpen, setIsDocFormOpen] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [familyRefreshKey, setFamilyRefreshKey] = useState(0);
@@ -162,6 +159,7 @@ export function CandidateDetailDialog({
   const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(resolvedEmployeeId);
   const { data: candidateDocs = [], isLoading: loadingDocs } = useCandidateDocuments(candidateId);
   const deleteCandidateDoc = useDeleteCandidateDocument();
+  const deleteEmployeeDoc = useDeleteDocument();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
 
   // Auto-check background when candidate loads
@@ -170,13 +168,6 @@ export function CandidateDetailDialog({
       checkBackground(candidate.document_number, currentCompanyId);
     }
   }, [candidate?.document_number, open, currentCompanyId]);
-
-  useEffect(() => {
-    if (activeTab === 'shared_docs') {
-      setActiveTab('documents');
-    }
-  }, [activeTab]);
-
 
   if (isLoading || !candidate) {
     return (
@@ -201,6 +192,16 @@ export function CandidateDetailDialog({
   const occupationalExamDocs = sharedDocs.filter(
     (doc: any) => doc.is_valid !== false && normalizeEmployeeDocumentFolder(doc.document_type as any) === 'examenes_ocupacionales'
   );
+  const uncategorizedDocs = [
+    ...candidateDocs
+      .filter((d) => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any)))
+      .map((doc) => ({ source: 'candidate' as const, doc })),
+    ...(resolvedEmployeeId
+      ? sharedDocs
+          .filter((d: any) => d.is_valid !== false && (!d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any))))
+          .map((doc: any) => ({ source: 'employee' as const, doc }))
+      : []),
+  ];
 
   const handleAddStep = (stepType: SelectionStepType) => {
     setSelectedStep(undefined);
@@ -314,6 +315,16 @@ export function CandidateDetailDialog({
     } catch {
       return fileName;
     }
+  };
+
+  const handleDeleteDocument = (item: { source: 'candidate' | 'employee'; doc: any }) => {
+    if (item.source === 'employee') {
+      if (!resolvedEmployeeId) return;
+      deleteEmployeeDoc.mutate({ id: item.doc.id, employeeId: resolvedEmployeeId });
+      return;
+    }
+
+    deleteCandidateDoc.mutate({ id: item.doc.id, candidateId });
   };
 
   const openStorageDocument = async (fileUrl?: string | null) => {
@@ -487,7 +498,7 @@ export function CandidateDetailDialog({
                                     {doc.document_name || doc.file_name || 'Documento'}
                                   </p>
                                   <p className="truncate text-xs text-muted-foreground">
-                                    {formatFileSize(doc.file_size)}
+                                              {formatFileSize(item.doc.file_size)} - {formatDateOnly(item.doc.upload_date || item.doc.created_at, 'dd MMM yyyy', { locale: es })}
                                     {doc.upload_date && ` - ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`} 
                                     {doc.expiry_date && ` • Vence ${formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}`}
                                   </p>
@@ -834,13 +845,13 @@ export function CandidateDetailDialog({
               {/* Documents Tab */}
               <TabsContent value="documents" className="p-0 mt-0">
                 <div className="p-4 sm:p-6 space-y-4">
-                  {loadingDocs ? (
+                  {loadingDocs || (resolvedEmployeeId && loadingSharedDocs) ? (
                     <div className="flex justify-center py-12">
                       <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
                   ) : (
                     <SectionCard 
-                      title="Documentos del Candidato" 
+                      title="Documentos" 
                       icon={FileText}
                       action={
                         <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setIsDocFormOpen(true)}>
@@ -850,9 +861,16 @@ export function CandidateDetailDialog({
                     >
                       <div className="space-y-1">
                         {employeeDocumentFolderOrder.map((folder) => {
-                          const folderDocs = candidateDocs.filter(
-                            (d) => normalizeEmployeeDocumentFolder(d.document_type as any) === folder
-                          );
+                          const folderDocs = [
+                            ...candidateDocs
+                              .filter((d) => normalizeEmployeeDocumentFolder(d.document_type as any) === folder)
+                              .map((doc) => ({ source: 'candidate' as const, doc })),
+                            ...(resolvedEmployeeId
+                              ? sharedDocs
+                                  .filter((d: any) => d.is_valid !== false && normalizeEmployeeDocumentFolder(d.document_type as any) === folder)
+                                  .map((doc: any) => ({ source: 'employee' as const, doc }))
+                              : []),
+                          ];
                           const isExpanded = expandedFolders.includes(folder);
 
                           return (
@@ -886,27 +904,27 @@ export function CandidateDetailDialog({
                               {isExpanded && (
                                 <div className="ml-5 border-l border-border pl-3">
                                   {folderDocs.length > 0 ? (
-                                    folderDocs.map((doc) => (
+                                    folderDocs.map((item) => (
                                       <div 
-                                        key={doc.id} 
+                                        key={`${item.source}-${item.doc.id}`} 
                                         className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
                                       >
                                         <div className="flex flex-col gap-2 rounded-lg bg-background p-2.5 transition-colors hover:bg-background sm:flex-row sm:items-center sm:justify-between">
                                           <div className="min-w-0 flex-1">
                                             <span className="block truncate text-sm font-medium">
-                                              {getCandidateDocumentDisplayName(doc)}
+                                              {getCandidateDocumentDisplayName(item.doc)}
                                             </span>
                                             <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                                              {formatFileSize(doc.file_size)} • {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}
+                                              {formatFileSize(item.doc.file_size)} - {formatDateOnly(item.doc.upload_date || item.doc.created_at, 'dd MMM yyyy', { locale: es })}
                                             </span>
                                           </div>
                                           <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
-                                            {doc.expiry_date && (
+                                            {item.doc.expiry_date && (
                                               <Badge 
-                                                variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} 
+                                                variant={new Date(item.doc.expiry_date) < new Date() ? 'destructive' : 'outline'} 
                                                 className="text-[10px] h-5"
                                               >
-                                                Vence: {formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}
+                                                Vence: {formatDateOnly(item.doc.expiry_date, 'dd MMM yyyy', { locale: es })}
                                               </Badge>
                                             )}
                                             <div className="flex items-center gap-1">
@@ -914,7 +932,7 @@ export function CandidateDetailDialog({
                                                 variant="ghost" 
                                                 size="icon" 
                                                 className="h-8 w-8" 
-                                                onClick={() => openStorageDocument(doc.file_url)}
+                                                onClick={() => openStorageDocument(item.doc.file_url)}
                                               >
                                                 <ExternalLink className="h-4 w-4" />
                                               </Button>
@@ -922,7 +940,7 @@ export function CandidateDetailDialog({
                                                 variant="ghost" 
                                                 size="icon" 
                                                 className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                                onClick={() => deleteCandidateDoc.mutate({ id: doc.id, candidateId })}
+                                                onClick={() => handleDeleteDocument(item)}
                                               >
                                                 <Trash2 className="h-3.5 w-3.5" />
                                               </Button>
@@ -943,7 +961,7 @@ export function CandidateDetailDialog({
                         })}
 
                         {/* Otro folder for uncategorized docs */}
-                        {candidateDocs.some(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any))) && (
+                        {uncategorizedDocs.length > 0 && (
                           <div className="relative">
                             <button
                               type="button"
@@ -962,27 +980,25 @@ export function CandidateDetailDialog({
                               <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
                               <span className="min-w-0 flex-1 truncate text-sm font-medium">Otros documentos</span>
                               <Badge variant="secondary" className="h-5 text-[10px]">
-                                {candidateDocs.filter(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any))).length}
+                                {uncategorizedDocs.length}
                               </Badge>
                             </button>
 
                             {expandedFolders.includes('otro') && (
                               <div className="ml-5 border-l border-border pl-3">
-                                {candidateDocs
-                                  .filter(d => !d.document_type || !employeeDocumentFolderOrder.includes(normalizeEmployeeDocumentFolder(d.document_type as any)))
-                                  .map((doc) => (
+                                {uncategorizedDocs.map((item) => (
                                     <div 
-                                      key={doc.id} 
+                                      key={`${item.source}-${item.doc.id}`} 
                                       className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
                                     >
                                       <div className="flex items-center justify-between p-2 rounded-lg bg-background transition-colors hover:bg-background px-3">
-                                        <span className="text-xs truncate max-w-[200px]">{getCandidateDocumentDisplayName(doc)}</span>
+                                        <span className="text-xs truncate max-w-[200px]">{getCandidateDocumentDisplayName(item.doc)}</span>
                                         <div className="flex items-center gap-1">
                                            <Button
                                              size="icon"
                                              variant="ghost"
                                              className="h-7 w-7"
-                                             onClick={() => openStorageDocument(doc.file_url)}
+                                             onClick={() => openStorageDocument(item.doc.file_url)}
                                            >
                                              <ExternalLink className="h-3.5 w-3.5" />
                                            </Button>
@@ -990,7 +1006,7 @@ export function CandidateDetailDialog({
                                              size="icon" 
                                              variant="ghost" 
                                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                                             onClick={() => deleteCandidateDoc.mutate({ id: doc.id, candidateId })}
+                                             onClick={() => handleDeleteDocument(item)}
                                            >
                                              <Trash2 className="h-3.5 w-3.5" />
                                            </Button>
@@ -1003,72 +1019,6 @@ export function CandidateDetailDialog({
                           </div>
                         )}
                       </div>
-                    </SectionCard>
-                  )}
-
-                  {resolvedEmployeeId && (
-                    <SectionCard
-                      title="Documentos del Empleado"
-                      icon={FolderOpen}
-                      action={
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs"
-                          onClick={() => setShowSharedDocForm(true)}
-                        >
-                          <Upload className="w-3.5 h-3.5 mr-1" />
-                          Subir
-                        </Button>
-                      }
-                    >
-                      <p className="mb-3 text-xs text-muted-foreground">
-                        Vinculados al expediente del empleado y visibles tambien en el modulo de Empleados.
-                      </p>
-
-                      {loadingSharedDocs ? (
-                        <div className="flex justify-center py-8">
-                          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : sharedDocs.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                          <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                          <p className="text-sm">No hay documentos del empleado</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {sharedDocs.map((doc: any) => (
-                            <div
-                              key={doc.id}
-                              className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <FileText className="w-5 h-5 text-primary shrink-0" />
-                                <div className="min-w-0">
-                                  <p className="text-sm font-medium truncate">
-                                    {doc.document_name || doc.file_name || 'Documento'}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {doc.document_type && <Badge variant="secondary" className="text-xs mr-2">{doc.document_type}</Badge>}
-                                    {formatFileSize(doc.file_size)}
-                                    {doc.upload_date && ` - ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`} 
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1 shrink-0">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => openStorageDocument(doc.file_url)}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </SectionCard>
                   )}
                 </div>
@@ -1217,23 +1167,11 @@ export function CandidateDetailDialog({
       <DocumentFormDialog
         open={isDocFormOpen}
         onOpenChange={setIsDocFormOpen}
-        entityId={candidate.id}
-        entityType="candidate"
+        entityId={resolvedEmployeeId || candidate.id}
+        entityType={resolvedEmployeeId ? 'employee' : 'candidate'}
         companyId={currentCompanyId!}
         entityName={`${candidate.first_name} ${candidate.last_name}`}
       />
-
-      {/* Shared Document Form Dialog */}
-      {resolvedEmployeeId && currentCompanyId && (
-        <DocumentFormDialog
-          open={showSharedDocForm}
-          onOpenChange={setShowSharedDocForm}
-          entityId={resolvedEmployeeId}
-          entityType="employee"
-          companyId={currentCompanyId}
-          entityName={`${candidate.first_name} ${candidate.last_name}`}
-        />
-      )}
 
       {/* Rejection Reason Dialog */}
       <CandidateReasonDialog
@@ -1270,4 +1208,5 @@ export function CandidateDetailDialog({
     </>
   );
 }
+
 
