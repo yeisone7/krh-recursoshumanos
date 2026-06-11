@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { format, differenceInYears, differenceInMonths, differenceInDays, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
@@ -60,6 +61,7 @@ import { cn } from '@/lib/utils';
 import { formatDateOnly, parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
+import { useDeleteCandidateDocument } from '@/hooks/useCandidates';
 import { useContracts } from '@/hooks/useContracts';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
@@ -408,12 +410,39 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   const deleteCertification = useDeleteCertification();
   const deleteVaccination = useDeleteVaccination();
   const deleteDocument = useDeleteDocument();
+  const deleteCandidateDocument = useDeleteCandidateDocument();
   const { data: transfers } = useEmployeeTransfers(employeeId || undefined);
   const { currentCompanyId, canCreate, canUpdate, canDelete, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canManageEmployeeDocs = isAdmin || isRRHH || isSuperAdmin || canCreate('empleados') || canUpdate('empleados');
   const canDeleteEmployeeDocs = isAdmin || isRRHH || isSuperAdmin || canDelete('empleados');
   const transferAsSource = transfers?.find(t => (t as any).source_employee_id === employeeId && (t as any).status === 'completed');
   const transferAsTarget = transfers?.find(t => (t as any).target_employee_id === employeeId && (t as any).status === 'completed');
+  const { data: linkedCandidateDocs = [] } = useQuery({
+    queryKey: ['employee-linked-candidate-documents', employee?.document_number, currentCompanyId],
+    queryFn: async () => {
+      if (!employee?.document_number || !currentCompanyId) return [];
+
+      const { data: candidates, error: candidateError } = await supabase
+        .from('candidates')
+        .select('id')
+        .eq('company_id', currentCompanyId)
+        .eq('document_number', employee.document_number);
+
+      if (candidateError) throw candidateError;
+      const candidateIds = (candidates || []).map((candidate) => candidate.id);
+      if (candidateIds.length === 0) return [];
+
+      const { data: docs, error: docsError } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .in('candidate_id', candidateIds)
+        .order('created_at', { ascending: false });
+
+      if (docsError) throw docsError;
+      return docs || [];
+    },
+    enabled: !!employee?.document_number && !!currentCompanyId,
+  });
 
   if (!employeeId) return null;
 
@@ -479,6 +508,15 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
     }
   };
 
+  const handleDeleteCandidateDocument = async (doc: any) => {
+    try {
+      await deleteCandidateDocument.mutateAsync({ id: doc.id, candidateId: doc.candidate_id });
+      toast({ title: 'Documento eliminado' });
+    } catch {
+      toast({ title: 'Error al eliminar', variant: 'destructive' });
+    }
+  };
+
   const handleOpenDocument = async (doc: EmployeeDocument) => {
     try {
       await openEmployeeDocument(doc);
@@ -488,11 +526,16 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   };
 
   const employeeFullName = employee ? getEmployeeFullName(employee) : '';
-  const documentsByFolder = employeeDocumentFolderOrder.reduce((acc, folder) => ({ ...acc, [folder]: [] as EmployeeDocument[] }), {} as Record<string, EmployeeDocument[]>);
+  const documentsByFolder = employeeDocumentFolderOrder.reduce((acc, folder) => ({ ...acc, [folder]: [] as Array<{ source: 'employee' | 'candidate'; doc: any }> }), {} as Record<string, Array<{ source: 'employee' | 'candidate'; doc: any }>>);
   employee?.documents?.forEach((doc) => {
     const folder = normalizeEmployeeDocumentFolder(doc.document_type);
     if (!documentsByFolder[folder]) documentsByFolder[folder] = [];
-    documentsByFolder[folder].push(doc);
+    documentsByFolder[folder].push({ source: 'employee', doc });
+  });
+  linkedCandidateDocs.forEach((doc: any) => {
+    const folder = normalizeEmployeeDocumentFolder(doc.document_type);
+    if (!documentsByFolder[folder]) documentsByFolder[folder] = [];
+    documentsByFolder[folder].push({ source: 'candidate', doc });
   });
 
   return (
@@ -1108,29 +1151,32 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
                             {isOpen && (
                               <div className="ml-5 border-l border-border pl-3">
-                                {docs.length > 0 ? docs.map((doc) => (
-                                  <div key={doc.id} className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border">
+                                {docs.length > 0 ? docs.map((item) => (
+                                  <div key={`${item.source}-${item.doc.id}`} className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border">
                                     <div className="flex flex-col gap-2 rounded-lg bg-background p-2.5 transition-colors hover:bg-background /80 sm:flex-row sm:items-center sm:justify-between">
                                       <div className="min-w-0 flex-1">
                                         <span className="block truncate text-sm font-medium">
-                                          {doc.document_name || employeeDocumentTypeLabels[doc.document_type]}
+                                          {item.doc.file_name || item.doc.document_name || employeeDocumentTypeLabels[normalizeEmployeeDocumentFolder(item.doc.document_type)]}
                                         </span>
                                         <span className="block truncate text-xs text-muted-foreground">
-                                          {doc.file_name} • {formatDateOnly(doc.upload_date, 'PP', { locale: es })}
+                                          {item.doc.file_name || item.doc.document_name || 'Documento'} - {formatDateOnly(item.doc.upload_date || item.doc.created_at, 'PP', { locale: es })}
                                         </span>
                                       </div>
                                       <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
-                                        {doc.expiry_date && (
-                                          <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
-                                            Vence: {formatDateOnly(doc.expiry_date, 'PP', { locale: es })}
+                                        <Badge variant="outline" className="h-5 text-[10px]">
+                                          {item.source === 'employee' ? 'Empleado' : 'Candidato'}
+                                        </Badge>
+                                        {item.doc.expiry_date && (
+                                          <Badge variant={new Date(item.doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
+                                            Vence: {formatDateOnly(item.doc.expiry_date, 'PP', { locale: es })}
                                           </Badge>
                                         )}
                                         <div className="flex items-center gap-1">
-                                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDocument(doc)} title="Abrir documento">
+                                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDocument(item.doc as EmployeeDocument)} title="Abrir documento">
                                             <ExternalLink className="h-4 w-4" />
                                           </Button>
                                           {canDeleteEmployeeDocs && (
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteDocument(doc.id)} title="Eliminar documento">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => item.source === 'employee' ? handleDeleteDocument(item.doc.id) : handleDeleteCandidateDocument(item.doc)} title="Eliminar documento">
                                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                             </Button>
                                           )}
