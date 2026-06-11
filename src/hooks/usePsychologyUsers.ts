@@ -7,6 +7,14 @@ export interface PsychologyUser {
   full_name: string;
   display_name: string;
 }
+const normalizeRoleName = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+const psychologyRoleNames = new Set(['psicologia', 'sicologia']);
 
 const normalizeRoleName = (value: string) =>
   value
@@ -98,3 +106,4 @@ export function usePsychologyUsers() {
     enabled: !!currentCompanyId,
   });
 }
+

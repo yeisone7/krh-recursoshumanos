@@ -96,6 +96,7 @@ const spanishLabels: Record<string, string> = {
   rejected: 'Rechazado',
   open: 'Abierta',
   in_process: 'En proceso',
+  pending_placed: 'Pendiente colocado',
   closed: 'Cerrada',
   cancelled: 'Cancelada',
   approved: 'Aprobada',
@@ -715,7 +716,7 @@ export default function AnaliticaSeleccion() {
     const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
     const activeRequisitions = requisitions.filter((item: any) => !['rechazada', 'cancelada', 'cerrada', 'finalizada'].includes(String(item.estado_requisicion || '').toLowerCase()));
-    const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process'].includes(item.status));
+    const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process', 'pending_placed'].includes(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
     const hiredCandidates = candidates.filter((item: any) => item.status === 'hired');
     const selectedCandidates = candidates.filter((item: any) => item.status === 'selected');
