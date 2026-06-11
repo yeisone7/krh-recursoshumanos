@@ -498,7 +498,7 @@ export function CandidateDetailDialog({
                                     {doc.document_name || doc.file_name || 'Documento'}
                                   </p>
                                   <p className="truncate text-xs text-muted-foreground">
-                                              {formatFileSize(item.doc.file_size)} - {formatDateOnly(item.doc.upload_date || item.doc.created_at, 'dd MMM yyyy', { locale: es })}
+                                    {formatFileSize(doc.file_size)}
                                     {doc.upload_date && ` - ${formatDateOnly(doc.upload_date, 'dd MMM yyyy', { locale: es })}`} 
                                     {doc.expiry_date && ` • Vence ${formatDateOnly(doc.expiry_date, 'dd MMM yyyy', { locale: es })}`}
                                   </p>
@@ -915,7 +915,7 @@ export function CandidateDetailDialog({
                                               {getCandidateDocumentDisplayName(item.doc)}
                                             </span>
                                             <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                                              {formatFileSize(item.doc.file_size)} - {formatDateOnly(item.doc.upload_date || item.doc.created_at, 'dd MMM yyyy', { locale: es })}
+                                    {formatFileSize(doc.file_size)}
                                             </span>
                                           </div>
                                           <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
