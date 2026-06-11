@@ -915,10 +915,13 @@ export function CandidateDetailDialog({
                                               {getCandidateDocumentDisplayName(item.doc)}
                                             </span>
                                             <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                                    {formatFileSize(item.doc.file_size)}
+                                              {formatFileSize(item.doc.file_size)}
                                             </span>
                                           </div>
                                           <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+                                            <Badge variant="outline" className="h-5 text-[10px]">
+                                              {item.source === 'employee' ? 'Empleado' : 'Candidato'}
+                                            </Badge>
                                             {item.doc.expiry_date && (
                                               <Badge 
                                                 variant={new Date(item.doc.expiry_date) < new Date() ? 'destructive' : 'outline'} 
@@ -994,6 +997,9 @@ export function CandidateDetailDialog({
                                       <div className="flex items-center justify-between p-2 rounded-lg bg-background transition-colors hover:bg-background px-3">
                                         <span className="text-xs truncate max-w-[200px]">{getCandidateDocumentDisplayName(item.doc)}</span>
                                         <div className="flex items-center gap-1">
+                                           <Badge variant="outline" className="h-5 text-[10px]">
+                                             {item.source === 'employee' ? 'Empleado' : 'Candidato'}
+                                           </Badge>
                                            <Button
                                              size="icon"
                                              variant="ghost"
