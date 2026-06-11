@@ -70,6 +70,7 @@ export function CandidateBackgroundAlerts({ background, loading, compact }: Cand
         </Alert>
       )}
 
+      <div className={`grid gap-2 ${hasEmployee && hasCandidacies ? 'lg:grid-cols-2' : ''}`}>
       {/* Employee - Yellow/Warning */}
       {hasEmployee && (
         <Alert className="border-yellow-500/50 bg-yellow-50/50 dark:bg-yellow-950/20">
@@ -125,6 +126,7 @@ export function CandidateBackgroundAlerts({ background, loading, compact }: Cand
           </AlertDescription>
         </Alert>
       )}
+      </div>
     </div>
   );
 }
