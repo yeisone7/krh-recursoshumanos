@@ -299,6 +299,17 @@ export function CandidateDetailDialog({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const getCandidateDocumentDisplayName = (doc: any) => {
+    const fileName = doc.file_name || doc.file_url?.split(/[\\/]/).pop()?.split('?')[0];
+    if (!fileName) return doc.document_name || 'Documento';
+
+    try {
+      return decodeURIComponent(fileName);
+    } catch {
+      return fileName;
+    }
+  };
+
   const openStorageDocument = async (fileUrl?: string | null) => {
     if (!fileUrl) return;
     try {
@@ -883,7 +894,7 @@ export function CandidateDetailDialog({
                                         <div className="flex flex-col gap-2 rounded-lg bg-background p-2.5 transition-colors hover:bg-background sm:flex-row sm:items-center sm:justify-between">
                                           <div className="min-w-0 flex-1">
                                             <span className="block truncate text-sm font-medium">
-                                              {doc.document_name}
+                                              {getCandidateDocumentDisplayName(doc)}
                                             </span>
                                             <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
                                               {formatFileSize(doc.file_size)} • {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}
@@ -965,7 +976,7 @@ export function CandidateDetailDialog({
                                       className="group relative py-1.5 before:absolute before:-left-3 before:top-5 before:h-px before:w-3 before:bg-border"
                                     >
                                       <div className="flex items-center justify-between p-2 rounded-lg bg-background transition-colors hover:bg-background px-3">
-                                        <span className="text-xs truncate max-w-[200px]">{doc.document_name}</span>
+                                        <span className="text-xs truncate max-w-[200px]">{getCandidateDocumentDisplayName(doc)}</span>
                                         <div className="flex items-center gap-1">
                                            <Button
                                              size="icon"
