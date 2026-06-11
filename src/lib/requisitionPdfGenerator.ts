@@ -58,6 +58,12 @@ function fmtCOP(n: number | null | undefined) {
 }
 function val(v: string | null | undefined) { return v || '—'; }
 
+function yesNo(v: boolean | null | undefined) {
+  if (v === true) return 'Sí';
+  if (v === false) return 'No';
+  return 'No definido';
+}
+
 function imageFormat(dataUrl: string): 'PNG' | 'JPEG' {
   return dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg') ? 'JPEG' : 'PNG';
 }
@@ -278,10 +284,9 @@ export async function generateRequisitionPDF(
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.text(`${val(req.requisition_code)} - ${val(req.cargo_solicitado)}`, ML + 7, y + 8);
-  doc.setFontSize(8);
+  doc.setFontSize(9.5);
   doc.setTextColor(...SLATE);
-  doc.text(val(req.areas?.name), PW - MR, y + 5, { align: 'right' });
-  doc.text(val(req.operation_centers?.name), PW - MR, y + 10, { align: 'right' });
+  doc.text(val(req.operation_centers?.name), PW - MR - 6, y + 8, { align: 'right' });
   y += 16;
 
   // ── 1. DATOS DEL SOLICITANTE ──────────────────────────────────────────────
@@ -313,7 +318,11 @@ export async function generateRequisitionPDF(
     ? 'Sí tiene derecho al auxilio de transporte'
     : 'No tiene derecho al auxilio de transporte';
   const herramienta = req.requiere_herramienta_trabajo === true ? 'Sí' : req.requiere_herramienta_trabajo === false ? 'No' : '—';
+  const trayecto = req.incluye_desplazamiento === true && req.trayecto_desplazamiento
+    ? `Sí - ${req.trayecto_desplazamiento}`
+    : yesNo(req.incluye_desplazamiento);
   y = row1(doc, y, 'Auxilio de Transporte', auxilio);
+  y = row1(doc, y, 'Trayecto Incluido', trayecto);
   y = row1(doc, y, 'Requiere Herramientas de Trabajo', herramienta);
 
   // ── 4. DEFINICIONES RRHH ─────────────────────────────────────────────────

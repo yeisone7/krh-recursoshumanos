@@ -11,6 +11,7 @@ const statusLabels: Record<string, string> = {
   draft: 'Borrador',
   open: 'Abierta',
   in_process: 'En proceso',
+  pending_placed: 'Pendiente colocado',
   closed: 'Cerrada',
   cancelled: 'Cancelada',
 };
@@ -19,6 +20,7 @@ const statusStyles: Record<string, string> = {
   draft: 'bg-background text-muted-foreground border-border',
   open: 'bg-success-light text-success border-success/20',
   in_process: 'bg-info-light text-info border-info/20',
+  pending_placed: 'bg-info-light text-info border-info/20',
   closed: 'bg-background text-muted-foreground border-border',
   cancelled: 'bg-destructive-light text-destructive border-destructive/20',
 };
@@ -34,8 +36,7 @@ export function VacanciesOverview() {
   const navigate = useNavigate();
   const { data: vacancies, isLoading } = useVacancies();
 
-  // Filter active vacancies (open or in_process)
-  const activeVacancies = vacancies?.filter(v => v.status === 'open' || v.status === 'in_process') || [];
+  const activeVacancies = vacancies?.filter(v => ['open', 'in_process', 'pending_placed'].includes(v.status)) || [];
   const displayVacancies = activeVacancies.slice(0, 5);
 
   if (isLoading) {
