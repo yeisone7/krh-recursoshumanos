@@ -90,6 +90,7 @@ const statusIcons: Record<VacancyStatus, React.ElementType> = {
   open: CheckCircle,
   in_process: Clock,
   paused: Pause,
+  pending_placed: Clock,
   closed: CheckCircle,
   cancelled: XCircle,
 };
@@ -1033,6 +1034,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <Pause className="w-4 h-4 mr-2" />
                     Pausar Vacante
                   </Button>
+                  <Button variant="outline" onClick={() => handleStatusChange('pending_placed')}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Pendiente Colocado
+                  </Button>
                   <Button variant="outline" onClick={() => handleStatusChange('closed')}>
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Cerrar Vacante
@@ -1045,7 +1050,13 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   Reanudar Proceso
                 </Button>
               )}
-              {(status === 'open' || status === 'in_process' || status === 'paused') && (
+              {status === 'pending_placed' && (
+                <Button variant="outline" onClick={() => handleStatusChange('closed')}>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Cerrar Vacante
+                </Button>
+              )}
+              {(status === 'open' || status === 'in_process' || status === 'paused' || status === 'pending_placed') && (
                 <Button
                   variant="outline"
                   className="text-destructive"

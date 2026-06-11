@@ -48,7 +48,7 @@ const DATA_DICTIONARY = [
     module: "Seleccion",
     tables: "personnel_requisitions, vacancies, candidates, selection_steps",
     metrics: "vacantes abiertas, candidatos por vacante, candidatos por etapa, avance del proceso",
-    businessRules: "vacante abierta = vacancies.status IN ('open','in_process'); etapa vigente = candidates.current_step",
+    businessRules: "vacante abierta = vacancies.status IN ('open','in_process','pending_placed'); etapa vigente = candidates.current_step",
   },
   {
     module: "Retiros",
@@ -571,7 +571,7 @@ LIMIT ${DEFAULT_RESULT_LIMIT}`,
   if (hasAll(q, ["vacante", "abierta", "candidato", "etapa"])) {
     return {
       intent: "vacancies_open_candidates_by_stage",
-      sourceSummary: "Fuente: vacancies y candidates. Filtro: empresa actual y vacantes en estado open/in_process. Etapa: candidates.current_step.",
+      sourceSummary: "Fuente: vacancies y candidates. Filtro: empresa actual y vacantes en estado open/in_process/pending_placed. Etapa: candidates.current_step.",
       suggestedQuestions: [
         "Vacantes abiertas por centro de operacion",
         "Candidatos seleccionados por vacante",
@@ -587,7 +587,7 @@ LEFT JOIN candidates ca
   ON ca.vacancy_id = v.id
   AND ca.company_id = '${companyId}'
 WHERE v.company_id = '${companyId}'
-  AND v.status IN ('open', 'in_process')
+  AND v.status IN ('open', 'in_process', 'pending_placed')
 GROUP BY v.position_title, COALESCE(ca.current_step::text, 'sin_etapa')
 ORDER BY v.position_title ASC, cantidad_candidatos DESC
 LIMIT ${DEFAULT_RESULT_LIMIT}`,
@@ -597,7 +597,7 @@ LIMIT ${DEFAULT_RESULT_LIMIT}`,
   if (hasAny(q, ["vacante", "vacantes"]) && hasAny(q, ["abierta", "abiertas"]) && hasAny(q, ["centro", "operacion", "operación"])) {
     return {
       intent: "open_vacancies_by_operation_center",
-      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process.",
+      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process/pending_placed.",
       suggestedQuestions: [
         "Vacantes abiertas y candidatos por etapa",
         "Vacantes abiertas por mas de 30 dias",
@@ -613,7 +613,7 @@ LEFT JOIN operation_centers oc
   ON oc.id = v.operation_center_id
   AND oc.company_id = '${companyId}'
 WHERE v.company_id = '${companyId}'
-  AND v.status IN ('open', 'in_process')
+  AND v.status IN ('open', 'in_process', 'pending_placed')
 GROUP BY COALESCE(oc.name, 'Sin centro')
 ORDER BY vacantes_abiertas DESC, cupos_requeridos DESC
 LIMIT ${DEFAULT_RESULT_LIMIT}`,
@@ -968,7 +968,7 @@ LIMIT ${DEFAULT_RESULT_LIMIT}`,
   if (hasAny(q, ["vacante", "vacantes"]) && hasAny(q, ["dias", "antigua", "antiguas", "abierta", "abiertas"])) {
     return {
       intent: "open_vacancies_age_ranking",
-      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process; calcula dias abiertas.",
+      sourceSummary: "Fuente: vacancies y operation_centers. Filtro: empresa actual y vacantes open/in_process/pending_placed; calcula dias abiertas.",
       suggestedQuestions: [
         "Vacantes abiertas y candidatos por etapa",
         "Vacantes abiertas por centro de operacion",
@@ -986,7 +986,7 @@ LEFT JOIN operation_centers oc
   ON oc.id = v.operation_center_id
   AND oc.company_id = '${companyId}'
 WHERE v.company_id = '${companyId}'
-  AND v.status IN ('open', 'in_process')
+  AND v.status IN ('open', 'in_process', 'pending_placed')
 ORDER BY dias_abierta DESC
 LIMIT ${DEFAULT_RESULT_LIMIT}`,
     };
@@ -1253,7 +1253,7 @@ REGLAS DE NEGOCIO:
 - Salario base actual: contratos no terminados del empleado.
 - Género: 'M' masculino, 'F' femenino.
 
-- Vacantes abiertas: vacancies.status IN ('open', 'in_process').
+- Vacantes abiertas: vacancies.status IN ('open', 'in_process', 'pending_placed').
 - Etapa actual de candidato: usa candidates.current_step cuando solo necesites la etapa vigente. Si necesitas detalle de pasos, usa selection_steps.step_type, selection_steps.step_order y selection_steps.status.
 - Para vacantes y candidatos usa siempre las tablas reales vacancies, candidates y selection_steps. No inventes vistas o tablas como open_vacancies, candidates_per_stage, active_vacancies ni candidate_stages; si necesitas organizar la consulta, esos nombres pueden ser CTEs, no tablas reales.
 - Campos clave de vacancies: id, company_id, position_title, status, open_date, target_close_date, operation_center_id, positions_count.

@@ -348,7 +348,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         restDay: currentEmployeeData.schedule?.rest_day || undefined,
 
         // K. Time Mode
-        timeMode: currentEmployeeData.time_config?.time_mode || 'administrative',
+        timeMode: currentEmployeeData.time_config?.mode || 'administrative',
         timeModeStartDate: parseDateOnlyOr(currentEmployeeData.time_config?.start_date, new Date()),
         workScheduleId: currentEmployeeData.time_config?.work_schedule_id || undefined,
         shiftCycleId: currentEmployeeData.time_config?.shift_cycle_id || undefined,
