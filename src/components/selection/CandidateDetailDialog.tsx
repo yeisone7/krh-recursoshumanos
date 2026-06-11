@@ -328,10 +328,10 @@ export function CandidateDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl p-0 overflow-hidden sm:w-full">
+        <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0 sm:w-full">
           <DialogTitle className="sr-only">Detalles del Candidato</DialogTitle>
           <DialogDescription className="sr-only">Información detallada del candidato {candidate.first_name} {candidate.last_name}</DialogDescription>
-          <DialogHeader className="px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
+          <DialogHeader className="shrink-0 px-4 pt-5 pb-4 border-b border-border sm:px-6 sm:pt-6">
             <div className="flex flex-col items-start gap-3 pr-8 sm:flex-row sm:items-start sm:justify-between sm:pr-0">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                 <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center sm:h-12 sm:w-12">
@@ -370,35 +370,35 @@ export function CandidateDetailDialog({
           </DialogHeader>
 
           {/* Background alerts */}
-          <div className="px-4 sm:px-6">
+          <div className="shrink-0 px-4 sm:px-6">
             <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-            <div className="px-4 pt-2 border-b sm:px-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
+            <div className="shrink-0 px-4 pt-2 border-b sm:px-6">
               <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-background p-1 sm:inline-flex sm:h-10 sm:w-auto sm:gap-0">
-                <TabsTrigger value="timeline" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Clock className="w-4 h-4" />
+                <TabsTrigger value="timeline" className="h-9 min-w-0 gap-1 px-2 text-[11px] font-semibold tracking-[0.04em] sm:gap-1.5 sm:text-xs">
+                  <Clock className="h-3.5 w-3.5" />
                   <span className="truncate">Proceso</span>
                 </TabsTrigger>
-                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <User className="w-4 h-4" />
+                <TabsTrigger value="info" className="h-9 min-w-0 gap-1 px-2 text-[11px] font-semibold tracking-[0.04em] sm:gap-1.5 sm:text-xs">
+                  <User className="h-3.5 w-3.5" />
                   <span className="truncate">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-xs sm:gap-2 sm:text-sm">
-                  <Paperclip className="w-4 h-4" />
+                <TabsTrigger value="documents" className="h-9 min-w-0 gap-1 px-2 text-[11px] font-semibold tracking-[0.04em] sm:gap-1.5 sm:text-xs">
+                  <Paperclip className="h-3.5 w-3.5" />
                   <span className="truncate">Documentos</span>
                 </TabsTrigger>
                 {resolvedEmployeeId && (
-                  <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-xs sm:col-span-1 sm:gap-2 sm:text-sm">
-                    <FolderOpen className="w-4 h-4" />
+                  <TabsTrigger value="shared_docs" className="col-span-3 h-9 min-w-0 gap-1 px-2 text-[11px] font-semibold tracking-[0.04em] sm:col-span-1 sm:gap-1.5 sm:text-xs">
+                    <FolderOpen className="h-3.5 w-3.5" />
                     <span className="truncate">Docs Compartidos</span>
                   </TabsTrigger>
                 )}
               </TabsList>
             </div>
 
-            <div className="overflow-y-auto scrollbar-themed" style={{ maxHeight: 'calc(92dvh - 280px)' }}>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3 scrollbar-themed">
               {/* Timeline Tab */}
               <TabsContent value="timeline" className="p-4 mt-0 sm:p-6">
                 <SelectionTimeline
@@ -1067,7 +1067,7 @@ export function CandidateDetailDialog({
           </Tabs>
 
           {/* Footer Actions */}
-          <div className="px-4 py-4 border-t border-border bg-background flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
+          <div className="shrink-0 px-4 py-4 border-t border-border bg-background flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
             <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap" role="group" aria-label="Acciones del candidato">
               {status === 'selected' && (
                 <>
