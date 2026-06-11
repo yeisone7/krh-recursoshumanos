@@ -915,7 +915,7 @@ export function CandidateDetailDialog({
                                               {getCandidateDocumentDisplayName(item.doc)}
                                             </span>
                                             <span className="block truncate text-[10px] text-muted-foreground mt-0.5">
-                                    {formatFileSize(doc.file_size)}
+                                    {formatFileSize(item.doc.file_size)}
                                             </span>
                                           </div>
                                           <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
@@ -1208,5 +1208,6 @@ export function CandidateDetailDialog({
     </>
   );
 }
+
 
 
