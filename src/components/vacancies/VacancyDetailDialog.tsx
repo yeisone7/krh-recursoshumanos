@@ -111,6 +111,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [uploadingColocadoDocs, setUploadingColocadoDocs] = useState(false);
   const navigate = useNavigate();
   const { user, currentCompanyId } = useAuth();
   const queryClient = useQueryClient();
@@ -180,6 +181,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           vacancy_id: vacancyId,
           company_id: currentCompanyId,
           document_name: file.name,
+          document_type: 'otro',
           file_url: urlData.publicUrl,
           file_name: file.name,
           file_size: file.size,
@@ -194,6 +196,43 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       toast.error('Error al subir documento');
     } finally {
       setUploadingDoc(false);
+    }
+  };
+
+  const handleColocadoUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !currentCompanyId) return;
+    setUploadingColocadoDocs(true);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} excede 10MB`);
+          continue;
+        }
+        const ext = file.name.split('.').pop();
+        const filePath = `vacancies/colocado_${vacancyId}_${Date.now()}_${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
+        if (uploadError) throw uploadError;
+        const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase.from('vacancy_documents').insert({
+          vacancy_id: vacancyId,
+          company_id: currentCompanyId,
+          document_name: file.name,
+          document_type: 'colocado',
+          file_url: urlData.publicUrl,
+          file_name: file.name,
+          file_size: file.size,
+          mime_type: file.type,
+          uploaded_by: user?.id,
+        });
+        if (insertError) throw insertError;
+      }
+      toast.success('Documento(s) de colocado subido(s)');
+      fetchDocuments();
+    } catch {
+      toast.error('Error al subir documento de colocado');
+    } finally {
+      setUploadingColocadoDocs(false);
     }
   };
 
@@ -239,6 +278,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const statusStyle = vacancyStatusConfig[status];
   const candidates = (vacancy as any).candidates || [];
   const requisition = (vacancy as any).personnel_requisitions;
+  const colocadoDocuments = documents.filter((doc) => doc.document_type === 'colocado');
+  const generalDocuments = documents.filter((doc) => doc.document_type !== 'colocado');
 
   const selectedCount = candidates.filter((c: any) => c.status === 'selected' || c.status === 'hired').length;
   const positionsCount = vacancy.positions_count || 1;
@@ -680,26 +721,66 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                     <FileText className="w-4 h-4 text-primary" />
                     Colocado
                   </h3>
-                  {vacancy.colocado_url ? (
-                    <div className="flex flex-col gap-3 p-3 rounded-lg border bg-card sm:flex-row sm:items-center">
-                      <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
-                        <FileText className="h-5 w-5" />
+                  <div className="space-y-2">
+                    {vacancy.colocado_url && (
+                      <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center">
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">Documento adjunto</p>
+                          <p className="text-xs text-muted-foreground">Archivo de colocado</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(vacancy.colocado_url!, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">Documento adjunto</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.open(vacancy.colocado_url!, '_blank')}
+                    )}
+                    {colocadoDocuments.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex flex-col gap-3 rounded-lg border bg-card p-3 sm:flex-row sm:items-center"
                       >
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Ver
-                      </Button>
-                    </div>
-                  ) : (
-                    <ColocadoUpload vacancyId={vacancy.id} />
-                  )}
+                        <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-primary/10 text-primary">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{doc.document_name || doc.file_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(doc.file_size)}
+                            {doc.created_at && ` â€¢ ${format(new Date(doc.created_at), 'dd MMM yyyy', { locale: es })}`}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => window.open(doc.file_url, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteDoc(doc.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <ColocadoUpload
+                      vacancyId={vacancy.id}
+                      uploading={uploadingColocadoDocs}
+                      onUpload={handleColocadoUpload}
+                    />
+                  </div>
                 </div>
               </TabsContent>
 
@@ -951,7 +1032,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       className="hidden"
                       multiple
                       accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
-                      onChange={(e) => handleDocUpload(e.target.files)}
+                      onChange={(e) => {
+                        handleDocUpload(e.target.files);
+                        e.target.value = '';
+                      }}
                     />
                     <Button
                       size="sm"
@@ -969,7 +1053,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
                   </div>
-                ) : documents.length === 0 ? (
+                ) : generalDocuments.length === 0 ? (
                   <div
                     className="text-center py-10 bg-background rounded-lg border-2 border-dashed cursor-pointer hover:border-primary/40 transition-colors"
                     onClick={() => document.getElementById(`vacancy-doc-upload-${vacancyId}`)?.click()}
@@ -980,7 +1064,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {documents.map((doc) => (
+                    {generalDocuments.map((doc) => (
                       <div
                         key={doc.id}
                         className="flex flex-col gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-background sm:flex-row sm:items-center"
@@ -1175,54 +1259,37 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   );
 }
 
-function ColocadoUpload({ vacancyId }: { vacancyId: string }) {
-  const [file, setFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const updateVacancy = useUpdateVacancy();
-
-  const handleUpload = async () => {
-    if (!file) return;
-    setUploading(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const filePath = `vacancies/colocado_${vacancyId}_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('documents').upload(filePath, file);
-      if (error) throw error;
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
-      await updateVacancy.mutateAsync({ id: vacancyId, colocado_url: urlData.publicUrl });
-      toast.success('Documento de colocado subido');
-      setFile(null);
-    } catch (err) {
-      toast.error('Error al subir documento');
-    } finally {
-      setUploading(false);
-    }
-  };
-
+function ColocadoUpload({
+  vacancyId,
+  uploading,
+  onUpload,
+}: {
+  vacancyId: string;
+  uploading: boolean;
+  onUpload: (files: FileList | null) => void;
+}) {
   return (
-    <div className="space-y-3">
+    <div>
       <div
-        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-border 0 transition-colors"
+        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors"
         onClick={() => document.getElementById(`colocado-detail-${vacancyId}`)?.click()}
       >
         <input
           id={`colocado-detail-${vacancyId}`}
           type="file"
           className="hidden"
+          multiple
           accept=".pdf,.jpg,.jpeg,.png,.webp"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
+          onChange={(e) => {
+            onUpload(e.target.files);
+            e.target.value = '';
+          }}
         />
-        {file ? (
-          <p className="text-sm font-medium text-foreground">{file.name}</p>
-        ) : (
-          <p className="text-sm text-muted-foreground">Haz clic para adjuntar documento</p>
-        )}
+        <Upload className="mx-auto mb-2 h-5 w-5 text-primary" />
+        <p className="text-sm text-muted-foreground">
+          {uploading ? 'Subiendo documento(s)...' : 'Haz clic para adjuntar uno o varios documentos'}
+        </p>
       </div>
-      {file && (
-        <Button size="sm" onClick={handleUpload} disabled={uploading}>
-          {uploading ? 'Subiendo...' : 'Subir documento'}
-        </Button>
-      )}
     </div>
   );
 }
