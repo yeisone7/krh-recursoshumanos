@@ -257,8 +257,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         actual_close_date: newStatus === 'closed' ? todayDateOnlyString() : null,
       });
       toast.success('Estado actualizado');
-    } catch (error) {
-      toast.error('Error al actualizar estado');
+    } catch (error: any) {
+      toast.error('Error al actualizar estado', {
+        description: error?.message || 'Intente nuevamente o revise los permisos de la vacante.',
+      });
     }
   };
 

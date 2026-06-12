@@ -9319,3 +9319,6 @@ CREATE TRIGGER update_document_expiry_alerts_updated_at
 BEFORE UPDATE ON public.document_expiry_alerts
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
+
+ALTER TYPE public.vacancy_status ADD VALUE IF NOT EXISTS 'paused';
+ALTER TYPE public.vacancy_status ADD VALUE IF NOT EXISTS 'pending_placed';
