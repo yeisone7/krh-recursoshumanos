@@ -315,7 +315,7 @@ export default function Requisiciones() {
                               {req.requisition_code || 'RQ-PEND'}
                             </Badge>
                             {closedVacancies.length > 0 && (
-                              <Badge variant="outline" className="mb-2 ml-2 w-fit border-emerald-500/20 bg-emerald-500/10 text-[9px] font-black tracking-widest text-emerald-700">
+                              <Badge variant="outline" className="mb-2 ml-2 w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600">
                                 Vacante cerrada
                               </Badge>
                             )}
@@ -415,7 +415,7 @@ export default function Requisiciones() {
                                   <Badge
                                     variant="outline"
                                     title={closedVacancies.map(v => v.position_title).join(', ')}
-                                    className="mb-2 ml-2 w-fit border-emerald-500/20 bg-emerald-500/10 text-[9px] font-black tracking-widest text-emerald-700"
+                                    className="mb-2 ml-2 w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600"
                                   >
                                     Vacante cerrada
                                   </Badge>
@@ -490,7 +490,7 @@ export default function Requisiciones() {
                                 <Badge
                                   variant="outline"
                                   title={closedVacancies.map(v => v.position_title).join(', ')}
-                                  className="h-6 max-w-[130px] truncate rounded-full border-emerald-500/20 bg-emerald-500/10 px-2 text-[8px] font-black uppercase tracking-wider text-emerald-700"
+                                  className="h-6 max-w-[130px] truncate rounded-full border-yellow-500/30 bg-yellow-400/15 px-2 text-[8px] font-black uppercase tracking-wider text-orange-600"
                                 >
                                   Cierre vacante
                                 </Badge>
