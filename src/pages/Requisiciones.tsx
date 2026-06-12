@@ -49,6 +49,7 @@ export default function Requisiciones() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
+  const [vacancyClosureFilter, setVacancyClosureFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -96,14 +97,19 @@ export default function Requisiciones() {
 
   const filtered = useMemo(() => {
     return requisitions.filter(r => {
+      const hasClosedVacancy = r.vacancies?.some(v => v.status === 'closed') ?? false;
       const matchesSearch = (r.requisition_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter;
       const matchesCenter = centerFilter === 'all' || r.operation_center_id === centerFilter;
-      return matchesSearch && matchesStatus && matchesCenter;
+      const matchesVacancyClosure =
+        vacancyClosureFilter === 'all' ||
+        (vacancyClosureFilter === 'closed' && hasClosedVacancy) ||
+        (vacancyClosureFilter === 'without_closed' && !hasClosedVacancy);
+      return matchesSearch && matchesStatus && matchesCenter && matchesVacancyClosure;
     });
-  }, [requisitions, searchQuery, statusFilter, centerFilter]);
+  }, [requisitions, searchQuery, statusFilter, centerFilter, vacancyClosureFilter]);
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
@@ -163,6 +169,15 @@ export default function Requisiciones() {
     { value: 'all', label: 'Todos los centros' },
     ...operationCenters.map((center) => ({ value: center.id, label: center.name })),
   ];
+
+  const vacancyClosureOptions = [
+    { value: 'all', label: 'Todas las requisiciones' },
+    { value: 'closed', label: 'Con vacante cerrada' },
+    { value: 'without_closed', label: 'Sin vacante cerrada' },
+  ];
+
+  const getClosedVacancies = (req: PersonnelRequisition) =>
+    req.vacancies?.filter(vacancy => vacancy.status === 'closed') || [];
 
   const kpis = useMemo(() => ([
     { label: 'TOTAL REQUISICIONES', value: stats.total, desc: 'Historial completo', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-500/10' },
@@ -228,7 +243,7 @@ export default function Requisiciones() {
             />
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2">
+          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
              <SearchableSelect
               options={statusOptions}
               value={statusFilter}
@@ -244,6 +259,14 @@ export default function Requisiciones() {
               placeholder="Centro de operacion"
               searchPlaceholder="Buscar centro..."
               triggerClassName="h-10 w-full sm:w-[240px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+            />
+            <SearchableSelect
+              options={vacancyClosureOptions}
+              value={vacancyClosureFilter}
+              onValueChange={setVacancyClosureFilter}
+              placeholder="Cierre de vacante"
+              searchPlaceholder="Buscar indicador..."
+              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
           </div>
 
@@ -281,6 +304,7 @@ export default function Requisiciones() {
                   const status = req.estado_requisicion as RequisitionStatus;
                   const cfg = requisitionStatusConfig[status];
                   const progress = getApprovalProgress(req);
+                  const closedVacancies = getClosedVacancies(req);
                   return (
                     <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-border shadow-md bg-background " onClick={() => openDetail(req.id)}>
                       <div className={cn("absolute left-0 top-0 h-full w-1.5", cfg.bg)} />
@@ -290,6 +314,11 @@ export default function Requisiciones() {
                             <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
                               {req.requisition_code || 'RQ-PEND'}
                             </Badge>
+                            {closedVacancies.length > 0 && (
+                              <Badge variant="outline" className="mb-2 ml-2 w-fit border-emerald-500/20 bg-emerald-500/10 text-[9px] font-black tracking-widest text-emerald-700">
+                                Vacante cerrada
+                              </Badge>
+                            )}
                             <p className="font-black uppercase text-base leading-none tracking-tight mb-1">{req.cargo_solicitado}</p>
                             <div className="flex items-center gap-2 mt-1 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                               <Users className="w-3.5 h-3.5 text-primary/60" />
@@ -370,6 +399,7 @@ export default function Requisiciones() {
                       const cfg = requisitionStatusConfig[status];
                       const step = getCurrentApprovalStep(req);
                       const progress = getApprovalProgress(req);
+                      const closedVacancies = getClosedVacancies(req);
                       return (
                         <TableRow key={req.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
                           <TableCell className="px-4 py-4">
@@ -381,6 +411,15 @@ export default function Requisiciones() {
                                 <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
                                   {req.requisition_code || 'RQ-PEND'}
                                 </Badge>
+                                {closedVacancies.length > 0 && (
+                                  <Badge
+                                    variant="outline"
+                                    title={closedVacancies.map(v => v.position_title).join(', ')}
+                                    className="mb-2 ml-2 w-fit border-emerald-500/20 bg-emerald-500/10 text-[9px] font-black tracking-widest text-emerald-700"
+                                  >
+                                    Vacante cerrada
+                                  </Badge>
+                                )}
                                 <p className="font-black tracking-tight text-foreground text-sm leading-none mb-1 uppercase truncate">{req.cargo_solicitado}</p>
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                                   <Users className="w-3.5 h-3.5 text-primary/60" />
@@ -443,9 +482,20 @@ export default function Requisiciones() {
                             </TooltipProvider>
                           </TableCell>
                           <TableCell className="px-3 py-4">
-                            <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
-                              {requisitionStatusLabels[status]}
-                            </Badge>
+                            <div className="flex flex-col items-start gap-1.5">
+                              <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                                {requisitionStatusLabels[status]}
+                              </Badge>
+                              {closedVacancies.length > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  title={closedVacancies.map(v => v.position_title).join(', ')}
+                                  className="h-6 max-w-[130px] truncate rounded-full border-emerald-500/20 bg-emerald-500/10 px-2 text-[8px] font-black uppercase tracking-wider text-emerald-700"
+                                >
+                                  Cierre vacante
+                                </Badge>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="px-3 py-4 text-right">
                             <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>

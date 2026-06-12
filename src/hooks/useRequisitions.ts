@@ -92,7 +92,7 @@ export interface PersonnelRequisition {
   areas?: { id: string; name: string } | null;
   operation_centers?: { id: string; name: string } | null;
   shifts?: { id: string; name: string; code: string | null } | null;
-  vacancies?: { id: string; position_title: string; status: string }[];
+  vacancies?: { id: string; position_title: string; status: string; actual_close_date?: string | null }[];
 }
 
 type SupabaseMutationError = {
@@ -169,7 +169,8 @@ export function useRequisitions() {
           *,
           areas(id, name),
           operation_centers(id, name),
-          shifts(id, name, code)
+          shifts(id, name, code),
+          vacancies(id, position_title, status, actual_close_date)
         `)
         .eq('company_id', currentCompanyId!);
 
@@ -234,7 +235,7 @@ export function useRequisitionWithVacancies(id: string | undefined) {
       // Get linked vacancies
       const { data: vacancies, error: vacError } = await supabase
         .from('vacancies')
-        .select('id, position_title, status, candidates(id, status)')
+        .select('id, position_title, status, actual_close_date, candidates(id, status)')
         .eq('requisition_id', id);
 
       if (vacError) throw vacError;

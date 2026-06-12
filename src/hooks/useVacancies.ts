@@ -102,8 +102,14 @@ export function useCreateVacancy() {
 
       return newVacancy;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['requisitions'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-requisitions'] });
+      if (data.requisition_id) {
+        queryClient.invalidateQueries({ queryKey: ['requisition', data.requisition_id] });
+        queryClient.invalidateQueries({ queryKey: ['requisition-vacancies', data.requisition_id] });
+      }
     },
   });
 }
@@ -154,6 +160,12 @@ export function useUpdateVacancy() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
       queryClient.invalidateQueries({ queryKey: ['vacancy', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['requisitions'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-requisitions'] });
+      if (data.requisition_id) {
+        queryClient.invalidateQueries({ queryKey: ['requisition', data.requisition_id] });
+        queryClient.invalidateQueries({ queryKey: ['requisition-vacancies', data.requisition_id] });
+      }
     },
   });
 }
@@ -177,10 +189,13 @@ export function useDeleteVacancy() {
       if (!data) {
         throw new Error('Solo se pueden eliminar vacantes con estado Abierta.');
       }
+
+      return data;
     },
-    onSuccess: (_data, id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
-      queryClient.invalidateQueries({ queryKey: ['vacancy', id] });
+      queryClient.invalidateQueries({ queryKey: ['requisitions'] });
+      queryClient.invalidateQueries({ queryKey: ['approved-requisitions'] });
     },
   });
 }
