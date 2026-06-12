@@ -43,6 +43,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -67,16 +74,49 @@ import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog'
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
 import {
   VacancyStatus,
+  CandidateStatus,
   vacancyStatusLabels,
   vacancyStatusConfig,
+  candidateStatusLabels,
+  candidateStatusConfig,
 } from '@/types/vacancy';
 
 type VacancyListItem = NonNullable<ReturnType<typeof useVacancies>['data']>[number];
+type CandidateListItem = NonNullable<ReturnType<typeof useCandidates>['data']>[number];
+type CandidateKpiView = 'all' | 'in_process' | 'hired';
+
+const candidateKpiContent: Record<CandidateKpiView, { title: string; description: string; empty: string }> = {
+  all: {
+    title: 'Candidatos',
+    description: 'Base completa de candidatos con su vacante relacionada.',
+    empty: 'No hay candidatos con los filtros seleccionados.',
+  },
+  in_process: {
+    title: 'Candidatos en proceso',
+    description: 'Candidatos activos en el proceso de selección, excluyendo contratados, descartados y retirados.',
+    empty: 'No hay candidatos en proceso con los filtros seleccionados.',
+  },
+  hired: {
+    title: 'Candidatos contratados',
+    description: 'Candidatos marcados como contratados y su vacante asociada.',
+    empty: 'No hay candidatos contratados con los filtros seleccionados.',
+  },
+};
+
+const isCandidateInProcess = (status: string | null | undefined) =>
+  !['hired', 'not_selected', 'withdrawn'].includes(status || '');
+
+const getCandidateFullName = (candidate: CandidateListItem) =>
+  `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Candidato sin nombre';
 
 export default function Seleccion() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
+  const [activeCandidateKpi, setActiveCandidateKpi] = useState<CandidateKpiView | null>(null);
+  const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
+  const [candidateVacancyFilter, setCandidateVacancyFilter] = useState('all');
+  const [candidateStatusFilter, setCandidateStatusFilter] = useState('all');
   
   // Dialogs
   const [showVacancyForm, setShowVacancyForm] = useState(false);
@@ -101,9 +141,7 @@ export default function Seleccion() {
     const openVacancies = vacancies.filter((v) => v.status === 'open').length;
     const inProcessVacancies = vacancies.filter((v) => v.status === 'in_process').length;
     const totalCandidates = candidates.length;
-    const inProcessCandidates = candidates.filter((c) =>
-      !['hired', 'not_selected', 'withdrawn'].includes(c.status)
-    ).length;
+    const inProcessCandidates = candidates.filter((c) => isCandidateInProcess(c.status)).length;
     const hiredCandidates = candidates.filter((c) => c.status === 'hired').length;
     const selectedCandidates = candidates.filter((c) => c.status === 'selected').length;
 
@@ -116,6 +154,56 @@ export default function Seleccion() {
       selectedCandidates,
     };
   }, [vacancies, candidates]);
+
+  const candidateVacancyOptions = useMemo(() => {
+    const vacancyMap = new Map<string, string>();
+    candidates.forEach((candidate) => {
+      const vacancy = (candidate as any).vacancies;
+      if (candidate.vacancy_id && vacancy?.position_title) {
+        vacancyMap.set(candidate.vacancy_id, vacancy.position_title);
+      }
+    });
+
+    return Array.from(vacancyMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, label]) => ({ id, label }));
+  }, [candidates]);
+
+  const openCandidateKpi = (view: CandidateKpiView) => {
+    setActiveCandidateKpi(view);
+    setCandidateSearchQuery('');
+    setCandidateVacancyFilter('all');
+    setCandidateStatusFilter('all');
+  };
+
+  const candidateKpiRows = useMemo(() => {
+    if (!activeCandidateKpi) return [];
+
+    const normalizedSearch = candidateSearchQuery.trim().toLowerCase();
+
+    return candidates.filter((candidate) => {
+      const vacancy = (candidate as any).vacancies;
+      const candidateName = getCandidateFullName(candidate).toLowerCase();
+      const vacancyName = (vacancy?.position_title || '').toLowerCase();
+      const documentNumber = (candidate.document_number || '').toLowerCase();
+      const email = (candidate.email || '').toLowerCase();
+
+      const matchesView =
+        activeCandidateKpi === 'all' ||
+        (activeCandidateKpi === 'in_process' && isCandidateInProcess(candidate.status)) ||
+        (activeCandidateKpi === 'hired' && candidate.status === 'hired');
+      const matchesSearch =
+        !normalizedSearch ||
+        candidateName.includes(normalizedSearch) ||
+        vacancyName.includes(normalizedSearch) ||
+        documentNumber.includes(normalizedSearch) ||
+        email.includes(normalizedSearch);
+      const matchesVacancy = candidateVacancyFilter === 'all' || candidate.vacancy_id === candidateVacancyFilter;
+      const matchesStatus = candidateStatusFilter === 'all' || candidate.status === candidateStatusFilter;
+
+      return matchesView && matchesSearch && matchesVacancy && matchesStatus;
+    });
+  }, [activeCandidateKpi, candidateSearchQuery, candidateStatusFilter, candidateVacancyFilter, candidates]);
 
   // Filter vacancies
   const filteredVacancies = useMemo(() => {
@@ -231,9 +319,9 @@ export default function Seleccion() {
 
   const kpis = useMemo(() => ([
     { label: 'VACANTES ABIERTAS', value: stats.openVacancies, desc: 'Nuevas solicitudes', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'EN PROCESO', value: stats.inProcessVacancies, desc: 'Reclutamiento activo', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10' },
-    { label: 'CANDIDATOS', value: stats.totalCandidates, desc: 'Base de datos total', icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'CONTRATADOS', value: stats.hiredCandidates, desc: 'Cierres exitosos', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'EN PROCESO', value: stats.inProcessCandidates, desc: 'Candidatos activos', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10', view: 'in_process' as CandidateKpiView },
+    { label: 'CANDIDATOS', value: stats.totalCandidates, desc: 'Ver base completa', icon: Users, color: 'text-primary', bg: 'bg-primary/10', view: 'all' as CandidateKpiView },
+    { label: 'CONTRATADOS', value: stats.hiredCandidates, desc: 'Ver contratados', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10', view: 'hired' as CandidateKpiView },
   ]), [stats]);
 
   return (
@@ -263,7 +351,19 @@ export default function Seleccion() {
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:min-w-[500px]">
             {kpis.map((stat, i) => (
-              <div key={i} className="group relative overflow-hidden rounded-xl bg-background border border-border px-3 py-2 shadow-sm hover:shadow-md hover:border-border transition-all duration-500">
+              <button
+                key={i}
+                type="button"
+                onClick={() => stat.view && openCandidateKpi(stat.view)}
+                disabled={!stat.view}
+                className={cn(
+                  'group relative overflow-hidden rounded-xl bg-background border border-border px-3 py-2 text-left shadow-sm transition-all duration-300',
+                  stat.view
+                    ? 'cursor-pointer hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30'
+                    : 'cursor-default'
+                )}
+                title={stat.view ? `Ver ${stat.label.toLowerCase()}` : undefined}
+              >
                 <div className={`absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-lg ${stat.bg} ${stat.color} opacity-30 group-hover:opacity-100 transition-opacity`}>
                    <stat.icon className="w-3 h-3" />
                 </div>
@@ -272,7 +372,7 @@ export default function Seleccion() {
                   <p className={`text-base sm:text-lg font-black tracking-tighter leading-none ${stat.color}`}>{stat.value}</p>
                   <p className="text-[8px] font-bold text-muted-foreground/60 leading-none truncate">{stat.desc}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -476,6 +576,202 @@ export default function Seleccion() {
           )}
         </div>
       </ScrollArea>
+
+      <Dialog open={!!activeCandidateKpi} onOpenChange={(open) => !open && setActiveCandidateKpi(null)}>
+        <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-5xl flex-col gap-0 overflow-hidden rounded-2xl border-border bg-background p-0 shadow-2xl sm:w-full">
+          {activeCandidateKpi && (
+            <>
+              <DialogHeader className="border-b border-border px-4 py-4 text-left sm:px-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <Badge variant="outline" className="mb-2 border-primary/20 bg-primary/10 text-[9px] font-black uppercase tracking-[0.18em] text-primary">
+                      Seleccion y Vacantes
+                    </Badge>
+                    <DialogTitle className="text-xl font-black tracking-tight text-foreground sm:text-2xl">
+                      {candidateKpiContent[activeCandidateKpi].title}
+                    </DialogTitle>
+                    <DialogDescription className="mt-1 text-xs font-medium text-muted-foreground">
+                      {candidateKpiContent[activeCandidateKpi].description}
+                    </DialogDescription>
+                  </div>
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Users className="h-5 w-5" />
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="border-b border-border bg-muted/20 px-4 py-3 sm:px-6">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(220px,1fr)_220px_190px_auto]">
+                  <div className="relative min-w-0">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={candidateSearchQuery}
+                      onChange={(event) => setCandidateSearchQuery(event.target.value)}
+                      placeholder="Buscar candidato, documento, correo o vacante..."
+                      className="h-10 rounded-xl border-border bg-background pl-9 text-xs font-bold placeholder:font-normal"
+                    />
+                  </div>
+
+                  <Select value={candidateVacancyFilter} onValueChange={setCandidateVacancyFilter}>
+                    <SelectTrigger className="h-10 rounded-xl border-border bg-background text-[11px] font-black uppercase tracking-wider">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Briefcase className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <SelectValue placeholder="Vacante" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72 rounded-xl border-border shadow-md">
+                      <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todas las vacantes</SelectItem>
+                      {candidateVacancyOptions.map((vacancy) => (
+                        <SelectItem key={vacancy.id} value={vacancy.id} className="p-2.5 text-xs font-bold">
+                          {vacancy.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={candidateStatusFilter} onValueChange={setCandidateStatusFilter}>
+                    <SelectTrigger className="h-10 rounded-xl border-border bg-background text-[11px] font-black uppercase tracking-wider">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Filter className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <SelectValue placeholder="Estado" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72 rounded-xl border-border shadow-md">
+                      <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todos los estados</SelectItem>
+                      {Object.entries(candidateStatusLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value} className="p-2.5 text-xs font-bold">
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <div className="flex h-10 items-center justify-center rounded-xl border border-border bg-background px-4">
+                    <span className="text-sm font-black text-primary">{candidateKpiRows.length}</span>
+                  </div>
+                </div>
+              </div>
+
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="p-3 sm:p-4">
+                  {candidateKpiRows.length === 0 ? (
+                    <div className="flex min-h-[260px] flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-background text-center">
+                      <Users className="mb-4 h-12 w-12 text-muted-foreground/30" />
+                      <p className="text-sm font-black uppercase tracking-[0.18em] text-muted-foreground/50">
+                        {candidateKpiContent[activeCandidateKpi].empty}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-2 md:hidden">
+                        {candidateKpiRows.map((candidate) => {
+                          const vacancy = (candidate as any).vacancies;
+                          const status = candidate.status as CandidateStatus;
+                          const statusStyle = candidateStatusConfig[status] || candidateStatusConfig.applied;
+
+                          return (
+                            <button
+                              key={candidate.id}
+                              type="button"
+                              className="rounded-2xl border border-border bg-background p-4 text-left shadow-sm transition hover:border-primary/30 hover:bg-primary/[0.02]"
+                              onClick={() => {
+                                setSelectedCandidateId(candidate.id);
+                                setShowCandidateDetail(true);
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-black text-foreground">{getCandidateFullName(candidate)}</p>
+                                  <p className="mt-1 truncate text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                                    {vacancy?.position_title || 'Sin vacante'}
+                                  </p>
+                                </div>
+                                <Badge className={cn('shrink-0 rounded-full px-2 text-[8px] font-black uppercase tracking-wider', statusStyle.bg, statusStyle.text)}>
+                                  {candidateStatusLabels[status] || status}
+                                </Badge>
+                              </div>
+                              <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-bold text-muted-foreground">
+                                <span>{candidate.document_number || 'Sin documento'}</span>
+                                <span className="text-right">{candidate.mobile || candidate.phone || 'Sin telefono'}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="hidden overflow-hidden rounded-2xl border border-border bg-background md:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/30 hover:bg-muted/30">
+                              <TableHead className="h-10 px-3 text-[9px] font-black uppercase tracking-[0.18em]">Candidato</TableHead>
+                              <TableHead className="h-10 px-3 text-[9px] font-black uppercase tracking-[0.18em]">Vacante</TableHead>
+                              <TableHead className="h-10 px-3 text-[9px] font-black uppercase tracking-[0.18em]">Contacto</TableHead>
+                              <TableHead className="h-10 px-3 text-[9px] font-black uppercase tracking-[0.18em]">Estado</TableHead>
+                              <TableHead className="h-10 px-3 text-right text-[9px] font-black uppercase tracking-[0.18em]">Accion</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {candidateKpiRows.map((candidate) => {
+                              const vacancy = (candidate as any).vacancies;
+                              const centerName = vacancy?.operation_centers?.name || 'Sin centro';
+                              const status = candidate.status as CandidateStatus;
+                              const statusStyle = candidateStatusConfig[status] || candidateStatusConfig.applied;
+
+                              return (
+                                <TableRow key={candidate.id} className="border-border hover:bg-primary/[0.02]">
+                                  <TableCell className="px-3 py-3">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-black text-foreground">{getCandidateFullName(candidate)}</p>
+                                      <p className="truncate text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                        {candidate.document_number || 'Sin documento'}
+                                      </p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-xs font-black text-foreground">{vacancy?.position_title || 'Sin vacante'}</p>
+                                      <p className="truncate text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{centerName}</p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3">
+                                    <div className="min-w-0 text-[11px] font-bold text-muted-foreground">
+                                      <p className="truncate">{candidate.email || 'Sin correo'}</p>
+                                      <p className="truncate">{candidate.mobile || candidate.phone || 'Sin telefono'}</p>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3">
+                                    <Badge className={cn('rounded-full px-2.5 text-[8px] font-black uppercase tracking-wider', statusStyle.bg, statusStyle.text)}>
+                                      {candidateStatusLabels[status] || status}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="px-3 py-3 text-right">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-8 w-8 rounded-lg text-primary hover:bg-primary hover:text-primary-foreground"
+                                      onClick={() => {
+                                        setSelectedCandidateId(candidate.id);
+                                        setShowCandidateDetail(true);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Dialogs */}
       <VacancyFormDialog open={showVacancyForm} onOpenChange={setShowVacancyForm} />
