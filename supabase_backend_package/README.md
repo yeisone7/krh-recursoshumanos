@@ -4,7 +4,7 @@ Este paquete contiene el backend actual para montarlo en un proyecto Supabase ex
 
 ## Contenido
 
-- `supabase/migrations/`: 131 migraciones en orden cronológico.
+- `supabase/migrations/`: 132 migraciones en orden cronológico.
 - `supabase/00_all_migrations_combined.sql`: alternativa consolidada para SQL Editor.
 - `supabase/functions/`: 16 Edge Functions.
 - `scripts/`: scripts numerados para ejecutar en orden.
