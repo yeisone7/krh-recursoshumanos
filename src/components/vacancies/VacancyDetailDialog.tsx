@@ -173,7 +173,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           continue;
         }
         const ext = file.name.split('.').pop();
-        const filePath = `vacancies/docs_${vacancyId}_${Date.now()}.${ext}`;
+        const filePath = `${currentCompanyId}/vacancies/docs_${vacancyId}_${Date.now()}.${ext}`;
         const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
@@ -193,8 +193,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       }
       toast.success('Documento(s) subido(s) exitosamente');
       fetchDocuments();
-    } catch (err) {
-      toast.error('Error al subir documento');
+    } catch (err: any) {
+      toast.error('Error al subir documento', {
+        description: err?.message || 'No se pudo cargar el archivo.',
+      });
     } finally {
       setUploadingDoc(false);
     }
@@ -213,7 +215,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         const ext = file.name.split('.').pop();
         const documentId = crypto.randomUUID();
         const createdAt = new Date().toISOString();
-        const filePath = `vacancies/colocado_${vacancyId}_${Date.now()}_${documentId}.${ext}`;
+        const filePath = `${currentCompanyId}/vacancies/colocado_${vacancyId}_${Date.now()}_${documentId}.${ext}`;
         const { error: uploadError } = await supabase.storage.from('documents').upload(filePath, file);
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('documents').getPublicUrl(filePath);
@@ -243,8 +245,10 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         setDocuments((prev) => [...uploadedDocuments, ...prev]);
         toast.success('Documento(s) de colocado subido(s)');
       }
-    } catch {
-      toast.error('Error al subir documento de colocado');
+    } catch (err: any) {
+      toast.error('Error al subir documento de colocado', {
+        description: err?.message || 'No se pudo cargar el archivo.',
+      });
     } finally {
       setUploadingColocadoDocs(false);
     }
