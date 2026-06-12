@@ -231,9 +231,9 @@ export default function Requisiciones() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-5 py-3 sm:px-8 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex flex-col sm:flex-row items-center gap-2.5 flex-1">
-          <div className="relative w-full sm:w-80 group">
+      <div className="sticky top-0 z-30 px-5 py-3 sm:px-8 bg-background border-b border-border flex flex-col xl:flex-row xl:items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full sm:w-72 xl:w-80 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <input
               placeholder="Buscar por codigo, cargo, solicitante..."
@@ -243,14 +243,14 @@ export default function Requisiciones() {
             />
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-3">
+          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-3">
              <SearchableSelect
               options={statusOptions}
               value={statusFilter}
               onValueChange={setStatusFilter}
               placeholder="Filtrar por estado"
               searchPlaceholder="Buscar estado..."
-              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-10 w-full sm:w-[210px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
             <SearchableSelect
               options={centerOptions}
@@ -258,7 +258,7 @@ export default function Requisiciones() {
               onValueChange={setCenterFilter}
               placeholder="Centro de operacion"
               searchPlaceholder="Buscar centro..."
-              triggerClassName="h-10 w-full sm:w-[240px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
             <SearchableSelect
               options={vacancyClosureOptions}
@@ -277,7 +277,7 @@ export default function Requisiciones() {
           </div>
         </div>
 
-        <Button className="h-10 w-full lg:w-auto px-6 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
+        <Button className="h-10 w-full px-6 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10 sm:w-auto xl:shrink-0" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
           <Plus className="w-3.5 h-3.5 mr-2" />
           Nueva Requisición
         </Button>
