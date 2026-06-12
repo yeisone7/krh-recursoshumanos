@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -24,10 +25,18 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface Tab360DocumentsProps {
   employee: EmployeeV2WithRelations;
+}
+
+type DocumentOrigin = 'employee' | 'candidate';
+
+interface DocumentTreeItemData {
+  source: DocumentOrigin;
+  doc: any;
 }
 
 function getFileIcon(mimeType?: string | null) {
@@ -57,7 +66,8 @@ function extractStoragePath(fileUrl: string): string {
   return fileUrl;
 }
 
-function DocumentTreeItem({ doc }: { doc: any }) {
+function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
+  const { doc, source } = item;
   const [isLoading, setIsLoading] = useState(false);
 
   const handleView = async () => {
@@ -126,7 +136,7 @@ function DocumentTreeItem({ doc }: { doc: any }) {
             </span>
             <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              {formatDateOnly(doc.upload_date, 'PP', { locale: es })}
+              {formatDateOnly(doc.upload_date || doc.created_at, 'PP', { locale: es })}
               {doc.file_size ? <span>| {formatFileSize(doc.file_size)}</span> : null}
             </span>
             {doc.observations && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{doc.observations}</p>}
@@ -134,6 +144,9 @@ function DocumentTreeItem({ doc }: { doc: any }) {
         </div>
 
         <div className="flex shrink-0 items-center justify-between gap-2 sm:justify-end">
+          <Badge variant="outline" className="h-5 text-[10px]">
+            {source === 'employee' ? 'Empleado' : 'Candidato'}
+          </Badge>
           {doc.expiry_date && (
             <Badge variant={new Date(doc.expiry_date) < new Date() ? 'destructive' : 'outline'} className="text-[11px]">
               Vence: {formatDateOnly(doc.expiry_date, 'PP', { locale: es })}
@@ -156,20 +169,52 @@ function DocumentTreeItem({ doc }: { doc: any }) {
 }
 
 export function Tab360Documents({ employee }: Tab360DocumentsProps) {
-  const documents = employee.documents || [];
+  const { currentCompanyId } = useAuth();
+  const employeeDocuments = employee.documents || [];
+  const { data: linkedCandidateDocs = [] } = useQuery({
+    queryKey: ['employee-linked-candidate-documents', employee?.document_number, currentCompanyId],
+    queryFn: async () => {
+      if (!employee?.document_number || !currentCompanyId) return [];
+
+      const { data: candidates, error: candidateError } = await supabase
+        .from('candidates')
+        .select('id')
+        .eq('company_id', currentCompanyId)
+        .eq('document_number', employee.document_number);
+
+      if (candidateError) throw candidateError;
+      const candidateIds = (candidates || []).map((candidate) => candidate.id);
+      if (candidateIds.length === 0) return [];
+
+      const { data: docs, error: docsError } = await supabase
+        .from('candidate_documents')
+        .select('*')
+        .in('candidate_id', candidateIds)
+        .order('created_at', { ascending: false });
+
+      if (docsError) throw docsError;
+      return docs || [];
+    },
+    enabled: !!employee?.document_number && !!currentCompanyId,
+  });
+  const documents: DocumentTreeItemData[] = [
+    ...employeeDocuments.map((doc) => ({ source: 'employee' as const, doc })),
+    ...linkedCandidateDocs.map((doc: any) => ({ source: 'candidate' as const, doc })),
+  ];
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>(
     () => Object.fromEntries(employeeDocumentFolderOrder.map((folder) => [folder, true]))
   );
 
   const grouped = employeeDocumentFolderOrder.reduce(
-    (acc, folder) => ({ ...acc, [folder]: [] as any[] }),
-    {} as Record<string, any[]>
+    (acc, folder) => ({ ...acc, [folder]: [] as DocumentTreeItemData[] }),
+    {} as Record<string, DocumentTreeItemData[]>
   );
 
-  documents.forEach((doc) => {
+  documents.forEach((item) => {
+    const { doc } = item;
     const type = normalizeEmployeeDocumentFolder(doc.document_type || 'otro');
     if (!grouped[type]) grouped[type] = [];
-    grouped[type].push(doc);
+    grouped[type].push(item);
   });
 
   return (
@@ -215,7 +260,7 @@ export function Tab360Documents({ employee }: Tab360DocumentsProps) {
               {isOpen && (
                 <div className="ml-5 border-l border-border pl-3">
                   {docs.length > 0 ? (
-                    docs.map((doc) => <DocumentTreeItem key={doc.id} doc={doc} />)
+                    docs.map((item) => <DocumentTreeItem key={`${item.source}-${item.doc.id}`} item={item} />)
                   ) : (
                     <div className="relative py-2 pl-1 text-xs text-muted-foreground before:absolute before:-left-3 before:top-4 before:h-px before:w-3 before:bg-border">
                       Sin documentos
