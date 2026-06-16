@@ -15,6 +15,7 @@ import {
   Clock,
   GripVertical,
   Eye,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,6 +33,8 @@ interface Candidate {
   last_name: string;
   document_number: string;
   status: string;
+  current_step?: string | null;
+  employee_id?: string | null;
   application_date: string;
   email?: string;
   phone?: string;
@@ -108,9 +111,16 @@ const columns: KanbanColumn[] = [
 interface CandidateKanbanProps {
   candidates: Candidate[];
   onCandidateClick: (candidateId: string) => void;
+  canDeleteCandidate?: (candidate: Candidate) => boolean;
+  onCandidateDeleteRequest?: (candidate: Candidate) => void;
 }
 
-export function CandidateKanban({ candidates, onCandidateClick }: CandidateKanbanProps) {
+export function CandidateKanban({
+  candidates,
+  onCandidateClick,
+  canDeleteCandidate,
+  onCandidateDeleteRequest,
+}: CandidateKanbanProps) {
   const [draggedCandidate, setDraggedCandidate] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<CandidateStatus | null>(null);
   
@@ -249,6 +259,8 @@ export function CandidateKanban({ candidates, onCandidateClick }: CandidateKanba
                             onDragStart={() => handleDragStart(candidate.id)}
                             onDragEnd={handleDragEnd}
                             onClick={() => onCandidateClick(candidate.id)}
+                            canDelete={canDeleteCandidate?.(candidate) || false}
+                            onDelete={() => onCandidateDeleteRequest?.(candidate)}
                           />
                         ))
                       )}
@@ -270,6 +282,8 @@ interface CandidateCardProps {
   onDragStart: () => void;
   onDragEnd: () => void;
   onClick: () => void;
+  canDelete?: boolean;
+  onDelete?: () => void;
 }
 
 function CandidateCard({
@@ -278,6 +292,8 @@ function CandidateCard({
   onDragStart,
   onDragEnd,
   onClick,
+  canDelete = false,
+  onDelete,
 }: CandidateCardProps) {
   const passedSteps = candidate.selection_steps?.filter(s => s.status === 'passed').length || 0;
   const totalSteps = candidate.selection_steps?.length || 0;
@@ -330,6 +346,19 @@ function CandidateCard({
             >
               <Eye className="w-3.5 h-3.5" />
             </Button>
+            {canDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-7 w-7 flex-shrink-0 text-destructive hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete?.();
+                }}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+            )}
           </div>
 
           <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">

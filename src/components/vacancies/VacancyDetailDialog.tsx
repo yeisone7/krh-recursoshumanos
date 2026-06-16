@@ -43,6 +43,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,7 +72,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useVacancy, useUpdateVacancy } from '@/hooks/useVacancies';
 import { useAuth } from '@/contexts/AuthContext';
-import { useUpdateCandidate, useConvertToEmployee } from '@/hooks/useCandidates';
+import { useUpdateCandidate, useConvertToEmployee, useDeleteCandidate } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
 import { CandidateReasonDialog } from '@/components/selection/CandidateReasonDialog';
@@ -108,19 +118,21 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [actingCandidate, setActingCandidate] = useState<{ id: string; name: string } | null>(null);
+  const [deleteCandidateTarget, setDeleteCandidateTarget] = useState<any | null>(null);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [uploadingColocadoDocs, setUploadingColocadoDocs] = useState(false);
   const navigate = useNavigate();
-  const { user, currentCompanyId } = useAuth();
+  const { user, currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canDelete } = useAuth();
   const queryClient = useQueryClient();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
   const updateVacancy = useUpdateVacancy();
   const updateCandidate = useUpdateCandidate();
   const convertToEmployee = useConvertToEmployee();
+  const deleteCandidate = useDeleteCandidate();
 
   // Realtime: auto-refresh when a new candidate is added to this vacancy
   useEffect(() => {
@@ -302,6 +314,15 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const selectedCount = candidates.filter((c: any) => c.status === 'selected' || c.status === 'hired').length;
   const positionsCount = vacancy.positions_count || 1;
   const isSelectionLimitReached = selectedCount >= positionsCount;
+  const canDeleteCandidates = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canDelete('seleccion');
+
+  const canDeleteCandidateWithoutProcess = (candidate: any) => (
+    canDeleteCandidates &&
+    candidate.status === 'applied' &&
+    !candidate.current_step &&
+    !candidate.employee_id &&
+    ((candidate.selection_steps || []).length === 0)
+  );
 
   const handleStatusChange = async (newStatus: VacancyStatus) => {
     if (newStatus === 'cancelled') {
@@ -365,6 +386,24 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
       toast.success('Estado del candidato actualizado');
     } catch (error) {
       toast.error('Error al actualizar candidato');
+    }
+  };
+
+  const handleConfirmDeleteCandidate = async () => {
+    if (!deleteCandidateTarget) return;
+
+    try {
+      await deleteCandidate.mutateAsync(deleteCandidateTarget.id);
+      toast.success('Candidato eliminado correctamente');
+      if (selectedCandidateId === deleteCandidateTarget.id) {
+        setShowCandidateDetail(false);
+        setSelectedCandidateId(null);
+      }
+      setDeleteCandidateTarget(null);
+    } catch (error: any) {
+      toast.error('No se pudo eliminar el candidato', {
+        description: error?.message || 'Solo se pueden eliminar candidatos sin proceso iniciado.',
+      });
     }
   };
 
@@ -889,6 +928,8 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                           vacancies: { position_title: vacancy.position_title, operation_centers: (vacancy as any).operation_centers },
                         }))}
                         onCandidateClick={openCandidateDetail}
+                        canDeleteCandidate={canDeleteCandidateWithoutProcess}
+                        onCandidateDeleteRequest={setDeleteCandidateTarget}
                       />
                     </div>
                   ) : (
@@ -1021,6 +1062,29 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                     </TooltipContent>
                                   </Tooltip>
                                 </div>
+                              )}
+
+                              {canDeleteCandidateWithoutProcess(candidate) && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteCandidateTarget(candidate);
+                                      }}
+                                      disabled={deleteCandidate.isPending}
+                                    >
+                                      <Trash2 className="w-4 h-4 mr-1" />
+                                      Eliminar
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Eliminar candidato sin proceso iniciado</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
                             </div>
                           </div>
@@ -1184,6 +1248,36 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         </TooltipProvider>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteCandidateTarget} onOpenChange={(open) => !open && setDeleteCandidateTarget(null)}>
+        <AlertDialogContent className="z-[80] max-w-[calc(100vw-2rem)] rounded-2xl border border-destructive/20 sm:max-w-lg">
+          <AlertDialogHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+              <Trash2 className="h-6 w-6" />
+            </div>
+            <AlertDialogTitle>Eliminar candidato</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Esta acción eliminará permanentemente a
+                {deleteCandidateTarget ? ` ${deleteCandidateTarget.first_name} ${deleteCandidateTarget.last_name}` : ' este candidato'}.
+              </span>
+              <span className="block font-semibold text-destructive">
+                Solo se permite eliminar candidatos postulados que no tengan etapas ni proceso iniciado.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+            <AlertDialogCancel disabled={deleteCandidate.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteCandidate}
+              disabled={deleteCandidate.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteCandidate.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Candidate Form Dialog */}
       <CandidateFormDialog
