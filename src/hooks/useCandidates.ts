@@ -172,19 +172,50 @@ export function useUpdateCandidate() {
 
 export function useDeleteCandidate() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
+      if (!currentCompanyId) {
+        throw new Error('No hay una compañía activa para eliminar el candidato.');
+      }
+
+      const { data: candidate, error: candidateError } = await supabase
+        .from('candidates')
+        .select('id, vacancy_id, status, current_step, employee_id')
+        .eq('id', id)
+        .eq('company_id', currentCompanyId)
+        .maybeSingle();
+
+      if (candidateError) throw candidateError;
+      if (!candidate) {
+        throw new Error('No se encontró el candidato o no pertenece a la compañía activa.');
+      }
+
+      const { count, error: stepsError } = await supabase
+        .from('selection_steps')
+        .select('id', { count: 'exact', head: true })
+        .eq('candidate_id', id);
+
+      if (stepsError) throw stepsError;
+      if ((count || 0) > 0 || candidate.current_step || candidate.employee_id || candidate.status !== 'applied') {
+        throw new Error('Solo se pueden eliminar candidatos postulados sin proceso iniciado.');
+      }
+
       const { error } = await supabase
         .from('candidates')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
+
+      return candidate;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['candidates'] });
       queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy', data.vacancy_id] });
+      queryClient.invalidateQueries({ queryKey: ['candidate', data.id] });
     },
   });
 }

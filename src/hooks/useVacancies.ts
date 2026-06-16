@@ -49,7 +49,7 @@ export function useVacancy(id: string | undefined) {
           ),
           cancelled_by_profile:cancelled_by(id, full_name),
           candidates(
-            id, first_name, last_name, document_number, status, application_date, email, mobile,
+            id, first_name, last_name, document_number, status, current_step, employee_id, application_date, email, mobile,
             selection_steps(*)
           ),
           vacancy_education_levels(
