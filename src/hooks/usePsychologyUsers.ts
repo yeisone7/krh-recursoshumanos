@@ -24,6 +24,19 @@ export function usePsychologyUsers() {
     queryFn: async (): Promise<PsychologyUser[]> => {
       if (!currentCompanyId) return [];
 
+      const { data: rpcUsers, error: rpcError } = await (supabase as any)
+        .rpc('get_psychology_users', { p_company_id: currentCompanyId });
+
+      if (!rpcError) {
+        return (rpcUsers || []).map((p: PsychologyUser) => ({
+          id: p.id,
+          full_name: p.full_name || p.display_name || 'Sin Nombre',
+          display_name: p.display_name || '',
+        }));
+      }
+
+      console.error('Error fetching psychology users via RPC:', rpcError);
+
       // 1. Fetch custom psychology role assignments for the current company.
       const { data: customAssignments, error: customError } = await supabase
         .from('user_custom_roles')
@@ -97,4 +110,3 @@ export function usePsychologyUsers() {
     enabled: !!currentCompanyId,
   });
 }
-
