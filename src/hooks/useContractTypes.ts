@@ -36,7 +36,15 @@ export function useContractTypes() {
         .order('display_name', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as ContractTypeConfig[];
+      return (data || []).map((item) => {
+        const contractTypeText = `${item.contract_type ?? ''} ${item.display_name ?? ''}`.toLowerCase();
+        const isWorkLaborContract = item.contract_type === 'obra_labor' || (contractTypeText.includes('obra') && contractTypeText.includes('labor'));
+
+        return {
+          ...item,
+          requires_end_date: isWorkLaborContract ? false : item.requires_end_date,
+        };
+      }) as ContractTypeConfig[];
     },
     enabled: !!currentCompanyId,
   });
