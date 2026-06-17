@@ -49,6 +49,7 @@ export default function Requisiciones() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
+  const [processLeaderFilter, setProcessLeaderFilter] = useState<string>('all');
   const [vacancyClosureFilter, setVacancyClosureFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -100,16 +101,18 @@ export default function Requisiciones() {
       const hasClosedVacancy = r.vacancies?.some(v => v.status === 'closed') ?? false;
       const matchesSearch = (r.requisition_code || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase());
+        r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (r.lider_proceso || '').toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter;
       const matchesCenter = centerFilter === 'all' || r.operation_center_id === centerFilter;
+      const matchesProcessLeader = processLeaderFilter === 'all' || (r.lider_proceso || 'Sin lider asignado') === processLeaderFilter;
       const matchesVacancyClosure =
         vacancyClosureFilter === 'all' ||
         (vacancyClosureFilter === 'closed' && hasClosedVacancy) ||
         (vacancyClosureFilter === 'without_closed' && !hasClosedVacancy);
-      return matchesSearch && matchesStatus && matchesCenter && matchesVacancyClosure;
+      return matchesSearch && matchesStatus && matchesCenter && matchesProcessLeader && matchesVacancyClosure;
     });
-  }, [requisitions, searchQuery, statusFilter, centerFilter, vacancyClosureFilter]);
+  }, [requisitions, searchQuery, statusFilter, centerFilter, processLeaderFilter, vacancyClosureFilter]);
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
@@ -169,6 +172,22 @@ export default function Requisiciones() {
     { value: 'all', label: 'Todos los centros' },
     ...operationCenters.map((center) => ({ value: center.id, label: center.name })),
   ];
+
+  const processLeaderOptions = useMemo(() => {
+    const leaders = Array.from(
+      new Set(
+        requisitions
+          .map((req) => req.lider_proceso?.trim())
+          .filter((leader): leader is string => Boolean(leader))
+      )
+    ).sort((a, b) => a.localeCompare(b, 'es'));
+
+    return [
+      { value: 'all', label: 'Todos los lideres' },
+      { value: 'Sin lider asignado', label: 'Sin lider asignado' },
+      ...leaders.map((leader) => ({ value: leader, label: leader })),
+    ];
+  }, [requisitions]);
 
   const vacancyClosureOptions = [
     { value: 'all', label: 'Todas las requisiciones' },
@@ -243,7 +262,7 @@ export default function Requisiciones() {
             />
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-4">
              <SearchableSelect
               options={statusOptions}
               value={statusFilter}
@@ -258,6 +277,14 @@ export default function Requisiciones() {
               onValueChange={setCenterFilter}
               placeholder="Centro de operacion"
               searchPlaceholder="Buscar centro..."
+              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+            />
+            <SearchableSelect
+              options={processLeaderOptions}
+              value={processLeaderFilter}
+              onValueChange={setProcessLeaderFilter}
+              placeholder="Lider de proceso"
+              searchPlaceholder="Buscar lider..."
               triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
             />
             <SearchableSelect
