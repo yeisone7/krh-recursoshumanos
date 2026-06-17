@@ -136,7 +136,7 @@ export interface TerminationDocument {
 // Employee termination process interface
 export interface EmployeeTermination {
   id: string;
-  contractId: string;
+  contractId: string | null;
   employeeId: string;
   companyId: string;
   terminationType: TerminationType;
