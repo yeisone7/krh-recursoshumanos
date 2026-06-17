@@ -3632,7 +3632,7 @@ export type Database = {
           company_id: string
           completed_at: string | null
           completed_by: string | null
-          contract_id: string
+          contract_id: string | null
           created_at: string
           created_by: string | null
           effective_date: string
@@ -3649,7 +3649,7 @@ export type Database = {
           company_id: string
           completed_at?: string | null
           completed_by?: string | null
-          contract_id: string
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           effective_date: string
@@ -3666,7 +3666,7 @@ export type Database = {
           company_id?: string
           completed_at?: string | null
           completed_by?: string | null
-          contract_id?: string
+          contract_id?: string | null
           created_at?: string
           created_by?: string | null
           effective_date?: string

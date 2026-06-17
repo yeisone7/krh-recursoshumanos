@@ -70,6 +70,7 @@ import {
 } from '@/types/termination';
 import {
   useContractTerminationProcess,
+  useEmployeeTerminationProcess,
   useInitiateTermination,
   useMarkDocumentGenerated,
   useCompleteTermination,
@@ -83,16 +84,19 @@ import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeD
 import { IssueCertificateDialog } from '@/components/employees/IssueCertificateDialog';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
+import { getEmployeeFullName } from '@/types/employee';
 interface TerminationProcessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contract: Contract;
+  contract?: Contract;
+  employee?: any;
 }
 
 export function TerminationProcessDialog({
   open,
   onOpenChange,
   contract,
+  employee,
 }: TerminationProcessDialogProps) {
   const { currentCompanyId } = useAuth();
   const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
@@ -103,13 +107,28 @@ export function TerminationProcessDialog({
   const [laborCertificateGenerated, setLaborCertificateGenerated] = useState(false);
   const [certificateDocumentId, setCertificateDocumentId] = useState<string | null>(null);
 
-  const { data: employeeData } = useEmployee(contract.employeeId);
+  const employeeId = contract?.employeeId || employee?.id;
+  const contractId = contract?.id || null;
+  const { data: employeeData } = useEmployee(employeeId);
   const { data: systemConfig } = useSystemConfig();
 
-  const { data: termination, isLoading } = useContractTerminationProcess(contract.id);
+  const { data: contractTermination, isLoading: isLoadingContractTermination } = useContractTerminationProcess(contract?.id);
+  const { data: employeeTermination, isLoading: isLoadingEmployeeTermination } = useEmployeeTerminationProcess(contract ? undefined : employeeId);
+  const termination = contractTermination || employeeTermination;
+  const isLoading = isLoadingContractTermination || isLoadingEmployeeTermination;
   const initiateTermination = useInitiateTermination();
   const markDocumentGenerated = useMarkDocumentGenerated();
   const completeTermination = useCompleteTermination();
+  const resolvedEmployee = employeeData || employee;
+  const workInfo = resolvedEmployee?.work_info;
+  const employeeName = contract?.employeeName || (resolvedEmployee ? getEmployeeFullName(resolvedEmployee) : 'Empleado');
+  const employeeDocumentType = employeeData?.identification_types?.name || employeeData?.document_type || contract?.employeeDocumentType || resolvedEmployee?.document_type || 'C.C.';
+  const employeeDocumentNumber = employeeData?.document_number || contract?.employeeDocument || resolvedEmployee?.document_number || 'SIN-DOC';
+  const employeePosition = contract?.position || workInfo?.position_name || resolvedEmployee?.positions?.name || 'Sin cargo';
+  const employeeArea = contract?.area || resolvedEmployee?.areas?.name || workInfo?.areas?.name || '';
+  const employeeOperationCenter = contract?.operationCenter || resolvedEmployee?.operation_centers?.name || workInfo?.operation_centers?.name || '';
+  const fallbackStartDate = workInfo?.hire_date ? new Date(workInfo.hire_date) : new Date();
+  const isContractBacked = Boolean(contract);
 
   const form = useForm<InitiateTerminationFormData>({
     resolver: zodResolver(initiateTerminationSchema),
@@ -130,7 +149,7 @@ export function TerminationProcessDialog({
   useEffect(() => {
     setLaborCertificateGenerated(false);
     setCertificateDocumentId(null);
-  }, [contract.id]);
+  }, [contractId, employeeId]);
 
   // Calculate checklist if termination exists
   const checklist = termination
@@ -174,8 +193,8 @@ export function TerminationProcessDialog({
   const handleInitiate = async (data: InitiateTerminationFormData) => {
     try {
       await initiateTermination.mutateAsync({
-        contractId: contract.id,
-        employeeId: contract.employeeId,
+        contractId,
+        employeeId: employeeId!,
         terminationType: data.terminationType,
         terminationDate: data.terminationDate,
         effectiveDate: data.effectiveDate,
@@ -198,8 +217,8 @@ export function TerminationProcessDialog({
     const company = companyData || await fetchCompanyData();
     if (!company || !termination) return;
 
-    const documentTypeLabel = employeeData?.identification_types?.name || employeeData?.document_type || contract.employeeDocumentType || 'C.C.';
-    const documentNumber = employeeData?.document_number || contract.employeeDocument || 'SIN-DOC';
+    const documentTypeLabel = employeeDocumentType;
+    const documentNumber = employeeDocumentNumber;
     const generatedAt = new Date();
     const cleanDocumentNumber = documentNumber.replace(/[^\w-]/g, '').toUpperCase();
     const documentCode = docType.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
@@ -212,16 +231,16 @@ export function TerminationProcessDialog({
       companyAddress: company.address,
       companyCity: 'Bucaramanga',
       companyPhone: company.phone,
-      employeeFullName: contract.employeeName || 'Sin nombre',
+      employeeFullName: employeeName || 'Sin nombre',
       employeeDocumentType: documentTypeLabel,
       employeeDocumentNumber: documentNumber,
-      employeePosition: contract.position || 'Sin cargo',
-      employeeArea: contract.area || '',
-      employeeOperationCenter: contract.operationCenter || '',
-      contractType: contractTypeLabels[contract.contractType] || contract.contractType || 'No especificado',
-      contractStartDate: contract.startDate,
-      contractEndDate: contract.originalEndDate || undefined,
-      salary: contract.salary,
+      employeePosition,
+      employeeArea,
+      employeeOperationCenter,
+      contractType: contract ? (contractTypeLabels[contract.contractType] || contract.contractType || 'No especificado') : 'Sin contrato registrado',
+      contractStartDate: contract?.startDate || fallbackStartDate,
+      contractEndDate: contract?.originalEndDate || undefined,
+      salary: contract?.salary || 0,
       terminationType: termination.terminationType,
       terminationDate: termination.terminationDate,
       effectiveDate: termination.effectiveDate,
@@ -248,7 +267,7 @@ export function TerminationProcessDialog({
       await markDocumentGenerated.mutateAsync({
         documentId: docId,
         documentData,
-        contractId: contract.id,
+        contractId,
       });
     } catch (error) {
       console.error('Error generating document:', error);
@@ -262,8 +281,8 @@ export function TerminationProcessDialog({
     
     await completeTermination.mutateAsync({
       terminationId: termination.id,
-      contractId: contract.id,
-      employeeId: contract.employeeId,
+      contractId,
+      employeeId: employeeId!,
       effectiveDate: termination.effectiveDate,
       reason: termination.reason,
     });
@@ -283,7 +302,7 @@ export function TerminationProcessDialog({
 
     await markDocumentGenerated.mutateAsync({
       documentId: certificateDocumentId,
-      contractId: contract.id,
+      contractId,
       documentData: {
         generatedFrom: 'labor_certificate_dialog',
         generatedAt: new Date().toISOString(),
@@ -298,11 +317,13 @@ export function TerminationProcessDialog({
           <DialogHeader className="shrink-0 border-b bg-muted/30 px-5 py-4 sm:px-6">
             <DialogTitle className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" />
-              Proceso de Retiro - {contract.employeeName}
+              Proceso de Retiro - {employeeName}
             </DialogTitle>
             <DialogDescription>
               {step === 'initiate'
-                ? 'Configure los detalles de la terminación del contrato.'
+                ? isContractBacked
+                  ? 'Configure los detalles de la terminación del contrato.'
+                  : 'Configure los detalles del retiro del empleado.'
                 : 'Complete el checklist de documentos requeridos.'}
             </DialogDescription>
           </DialogHeader>
@@ -586,7 +607,7 @@ export function TerminationProcessDialog({
             </AlertDialogTitle>
             <AlertDialogDescription>
               Aún tiene documentos pendientes por generar. El proceso de retiro quedará guardado 
-              y podrá continuarlo en cualquier momento desde el detalle del contrato.
+              y podrá continuarlo en cualquier momento.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

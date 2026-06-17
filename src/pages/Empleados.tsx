@@ -32,6 +32,7 @@ import { EmployeeCard } from '@/components/employees/EmployeeCard';
 import { IssueCertificateDialog } from '@/components/employees/IssueCertificateDialog';
 import { RehireEmployeeDialog } from '@/components/employees/RehireEmployeeDialog';
 import { TransferEmployeeDialog } from '@/components/employees/TransferEmployeeDialog';
+import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
 import { RegistrationTokensList } from '@/components/registration/RegistrationTokensList';
 import {
@@ -81,6 +82,8 @@ export default function Empleados() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [certEmployee, setCertEmployee] = useState<any>(null);
   const [isCertOpen, setIsCertOpen] = useState(false);
+  const [terminationEmployee, setTerminationEmployee] = useState<any>(null);
+  const [isTerminationOpen, setIsTerminationOpen] = useState(false);
   const [toggleEmployee, setToggleEmployee] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
@@ -96,7 +99,7 @@ export default function Empleados() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { currentCompanyId, assignedCenterIds } = useAuth();
+  const { currentCompanyId, assignedCenterIds, canUpdate } = useAuth();
   
   // Use infinite hook for the list view
   const { 
@@ -222,6 +225,11 @@ export default function Empleados() {
     setIsCertOpen(true);
   };
 
+  const handleStartTermination = (employee: any) => {
+    setTerminationEmployee(employee);
+    setIsTerminationOpen(true);
+  };
+
   const isEmployeeSuspended = (employee: any) => {
     if (!employee) return false;
     const isLegacyRetired = !employee.is_active && employee.status === 'active';
@@ -252,6 +260,8 @@ export default function Empleados() {
     setCenterFilter('all');
     toast.success('Filtros limpiados');
   };
+
+  const canStartTermination = canUpdate('contratos') || canUpdate('empleados');
 
   const handleExport = () => {
     if (!filteredEmployeesForExport || filteredEmployeesForExport.length === 0) {
@@ -659,6 +669,7 @@ export default function Empleados() {
                   onTransfer={handleTransfer}
                   onIssueCertificate={handleIssueCertificate}
                   onToggleActive={setToggleEmployee}
+                  onStartTermination={canStartTermination ? handleStartTermination : undefined}
                 />
               ))}
             </div>
@@ -675,6 +686,7 @@ export default function Empleados() {
                 onTransfer={handleTransfer}
                 onIssueCertificate={handleIssueCertificate}
                 onToggleActive={setToggleEmployee}
+                onStartTermination={canStartTermination ? handleStartTermination : undefined}
               />
             </div>
           )}
@@ -728,6 +740,17 @@ export default function Empleados() {
             if (!open) setCertEmployee(null);
           }}
           employee={certEmployee}
+        />
+      )}
+
+      {terminationEmployee && (
+        <TerminationProcessDialog
+          open={isTerminationOpen}
+          onOpenChange={(open) => {
+            setIsTerminationOpen(open);
+            if (!open) setTerminationEmployee(null);
+          }}
+          employee={terminationEmployee}
         />
       )}
 

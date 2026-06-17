@@ -14,6 +14,39 @@ import type { Database } from '@/integrations/supabase/types';
 type DbTerminationType = Database['public']['Enums']['termination_type'];
 type DbDocumentType = Database['public']['Enums']['termination_document_type'];
 
+function mapTerminationRow(data: any): EmployeeTermination {
+  return {
+    id: data.id,
+    contractId: data.contract_id,
+    employeeId: data.employee_id,
+    companyId: data.company_id,
+    terminationType: data.termination_type as TerminationType,
+    terminationDate: new Date(data.termination_date),
+    effectiveDate: new Date(data.effective_date),
+    reason: data.reason ?? undefined,
+    resignationDate: data.resignation_date ? new Date(data.resignation_date) : undefined,
+    isCompleted: data.is_completed,
+    completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
+    documents: (data.termination_documents || []).map((doc: any) => ({
+      id: doc.id,
+      terminationId: doc.termination_id,
+      documentType: doc.document_type as TerminationDocumentType,
+      isRequired: doc.is_required,
+      isGenerated: doc.is_generated,
+      isSigned: doc.is_signed,
+      documentData: doc.document_data,
+      documentUrl: doc.document_url ?? undefined,
+      signedAt: doc.signed_at ? new Date(doc.signed_at) : undefined,
+      signedBy: doc.signed_by ?? undefined,
+      generatedAt: doc.generated_at ? new Date(doc.generated_at) : undefined,
+      createdAt: new Date(doc.created_at),
+      updatedAt: new Date(doc.updated_at),
+    })),
+    createdAt: new Date(data.created_at),
+    updatedAt: new Date(data.updated_at),
+  };
+}
+
 // Fetch termination by contract ID
 export function useContractTerminationProcess(contractId: string | undefined) {
   const { currentCompanyId } = useAuth();
@@ -35,41 +68,37 @@ export function useContractTerminationProcess(contractId: string | undefined) {
       if (error) throw error;
       if (!data) return null;
 
-      // Transform to EmployeeTermination interface
-      const termination: EmployeeTermination = {
-        id: data.id,
-        contractId: data.contract_id,
-        employeeId: data.employee_id,
-        companyId: data.company_id,
-        terminationType: data.termination_type as TerminationType,
-        terminationDate: new Date(data.termination_date),
-        effectiveDate: new Date(data.effective_date),
-        reason: data.reason ?? undefined,
-        resignationDate: data.resignation_date ? new Date(data.resignation_date) : undefined,
-        isCompleted: data.is_completed,
-        completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
-        documents: (data.termination_documents || []).map((doc: any) => ({
-          id: doc.id,
-          terminationId: doc.termination_id,
-          documentType: doc.document_type as TerminationDocumentType,
-          isRequired: doc.is_required,
-          isGenerated: doc.is_generated,
-          isSigned: doc.is_signed,
-          documentData: doc.document_data,
-          documentUrl: doc.document_url ?? undefined,
-          signedAt: doc.signed_at ? new Date(doc.signed_at) : undefined,
-          signedBy: doc.signed_by ?? undefined,
-          generatedAt: doc.generated_at ? new Date(doc.generated_at) : undefined,
-          createdAt: new Date(doc.created_at),
-          updatedAt: new Date(doc.updated_at),
-        })),
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
-      };
-
-      return termination;
+      return mapTerminationRow(data);
     },
     enabled: !!contractId && !!currentCompanyId,
+  });
+}
+
+// Fetch latest active termination by employee ID for offboarding without a contract
+export function useEmployeeTerminationProcess(employeeId: string | undefined) {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['employee-termination-process', employeeId],
+    queryFn: async () => {
+      if (!employeeId) return null;
+
+      const { data, error } = await supabase
+        .from('employee_terminations')
+        .select(`
+          *,
+          termination_documents(*)
+        `)
+        .eq('employee_id', employeeId)
+        .eq('is_completed', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data ? mapTerminationRow(data) : null;
+    },
+    enabled: !!employeeId && !!currentCompanyId,
   });
 }
 
@@ -88,7 +117,7 @@ export function useInitiateTermination() {
       reason,
       resignationDate,
     }: {
-      contractId: string;
+      contractId?: string | null;
       employeeId: string;
       terminationType: TerminationType;
       terminationDate: Date;
@@ -102,7 +131,7 @@ export function useInitiateTermination() {
       const { data: termination, error: terminationError } = await supabase
         .from('employee_terminations')
         .insert({
-          contract_id: contractId,
+          contract_id: contractId ?? null,
           employee_id: employeeId,
           company_id: currentCompanyId,
           termination_type: terminationType as DbTerminationType,
@@ -176,7 +205,10 @@ export function useInitiateTermination() {
       return termination;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['termination-process', variables.contractId] });
+      if (variables.contractId) {
+        queryClient.invalidateQueries({ queryKey: ['termination-process', variables.contractId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['employee-termination-process', variables.employeeId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
@@ -204,7 +236,7 @@ export function useMarkDocumentGenerated() {
     }: {
       documentId: string;
       documentData?: Record<string, any>;
-      contractId: string;
+      contractId?: string | null;
     }) => {
       const { data, error } = await supabase
         .from('termination_documents')
@@ -222,7 +254,10 @@ export function useMarkDocumentGenerated() {
       return { data, contractId };
     },
     onSuccess: ({ contractId }) => {
-      queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+      if (contractId) {
+        queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['employee-termination-process'] });
     },
   });
 }
@@ -241,7 +276,7 @@ export function useMarkDocumentSigned() {
       documentId: string;
       documentUrl: string;
       signedBy: string;
-      contractId: string;
+      contractId?: string | null;
     }) => {
       const { data, error } = await supabase
         .from('termination_documents')
@@ -259,7 +294,10 @@ export function useMarkDocumentSigned() {
       return { data, contractId };
     },
     onSuccess: ({ contractId }) => {
-      queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+      if (contractId) {
+        queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['employee-termination-process'] });
       toast.success('Documento firmado registrado');
     },
   });
@@ -279,7 +317,7 @@ export function useCompleteTermination() {
       reason,
     }: {
       terminationId: string;
-      contractId: string;
+      contractId?: string | null;
       employeeId: string;
       effectiveDate: Date;
       reason?: string;
@@ -296,17 +334,19 @@ export function useCompleteTermination() {
 
       if (terminationError) throw terminationError;
 
-      // Mark contract as terminated
-      const { error: contractError } = await supabase
-        .from('contracts')
-        .update({
-          is_terminated: true,
-          termination_date: toDateOnlyString(effectiveDate),
-          termination_reason: reason,
-        })
-        .eq('id', contractId);
+      // Mark contract as terminated when the process started from a contract.
+      if (contractId) {
+        const { error: contractError } = await supabase
+          .from('contracts')
+          .update({
+            is_terminated: true,
+            termination_date: toDateOnlyString(effectiveDate),
+            termination_reason: reason,
+          })
+          .eq('id', contractId);
 
-      if (contractError) throw contractError;
+        if (contractError) throw contractError;
+      }
 
       // Update employee status in employees_v2 - set as retired
       const { error: employeeError } = await supabase
@@ -350,11 +390,14 @@ export function useCompleteTermination() {
         });
       }
 
-      return { terminationId, contractId };
+      return { terminationId, contractId, employeeId };
     },
-    onSuccess: ({ contractId }) => {
-      queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
-      queryClient.invalidateQueries({ queryKey: ['contract', contractId] });
+    onSuccess: ({ contractId, employeeId }) => {
+      if (contractId) {
+        queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
+        queryClient.invalidateQueries({ queryKey: ['contract', contractId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['employee-termination-process', employeeId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });

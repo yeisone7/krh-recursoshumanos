@@ -43,6 +43,7 @@ interface EmployeeTableProps {
   onTransfer?: (employee: any) => void;
   onIssueCertificate?: (employee: any) => void;
   onToggleActive?: (employee: any) => void;
+  onStartTermination?: (employee: any) => void;
 }
 
 export function EmployeeTable({
@@ -56,6 +57,7 @@ export function EmployeeTable({
   onTransfer,
   onIssueCertificate,
   onToggleActive,
+  onStartTermination,
 }: EmployeeTableProps) {
   const navigate = useNavigate();
 
@@ -209,6 +211,15 @@ export function EmployeeTable({
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                           Documentos
                         </DropdownMenuItem>
+                        {onStartTermination && (!isRetired || isEnRetiro) && (
+                          <DropdownMenuItem
+                            onClick={(e) => { e.stopPropagation(); onStartTermination(employee); }}
+                            className="text-destructive font-medium"
+                          >
+                            <UserX className="w-4 h-4 mr-2" />
+                            {isEnRetiro ? 'Continuar retiro' : 'Iniciar retiro'}
+                          </DropdownMenuItem>
+                        )}
                         {onIssueCertificate && (
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onIssueCertificate(employee); }}>
                             <FileBadge className="w-4 h-4 mr-2 text-primary" />
