@@ -450,7 +450,17 @@ export default function RegistroPublico() {
   };
 
   const handleChange = (key: string, value: any) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [key]: value };
+      if ((key === 'documentNumber' || key === 'documentType' || key === 'identificationTypeId') && value !== prev[key]) {
+        delete next.candidateId;
+      }
+      return next;
+    });
+
+    if (key === 'documentNumber' || key === 'documentType' || key === 'identificationTypeId') {
+      setPrefilled(false);
+    }
   };
 
   const isEmployee = tokenData?.target_type === 'employee';
@@ -1272,6 +1282,69 @@ export default function RegistroPublico() {
               toast.info('Se encontró información de tu perfil. Los campos han sido pre-llenados.');
             }
           } else {
+            const { data: candidateLookupData } = await (supabase as any).rpc('get_candidate_by_token_and_document', {
+              p_token: tokenParam!,
+              p_document_number: docNum,
+              p_document_type: formData.documentType || 'CC',
+            });
+            const candidateLookup = candidateLookupData as any;
+            if (candidateLookup?.success && candidateLookup?.found && candidateLookup?.candidate) {
+              const candidate = candidateLookup.candidate;
+              const updates: Record<string, any> = {
+                candidateId: candidate.id,
+                firstName: candidate.first_name,
+                lastName: candidate.last_name,
+                email: candidate.email,
+                mobile: candidate.mobile,
+                phone: candidate.phone,
+                address: candidate.address,
+                city: candidate.city,
+                department: candidate.department,
+                neighborhood: candidate.neighborhood,
+                birthDate: candidate.birth_date,
+                gender: candidate.gender === 'M' ? 'masculino' : candidate.gender === 'F' ? 'femenino' : (candidate.gender ? 'otro' : ''),
+                genderIdentity: candidate.gender_identity,
+                genderIdentityOther: candidate.gender_identity_other,
+                documentIssueDate: candidate.document_issue_date,
+                documentIssueCity: candidate.document_issue_city,
+                maritalStatus: candidate.marital_status,
+                bloodType: candidate.blood_type,
+                emergencyContactName: candidate.emergency_contact_name,
+                emergencyContactPhone: candidate.emergency_contact_phone,
+                emergencyContactRelationship: candidate.emergency_contact_relationship,
+                educationLevelId: candidate.education_level_id,
+                professionId: candidate.profession_id,
+                educationLevel: candidate.education_level,
+                profession: candidate.profession,
+                experienceYears: candidate.experience_years?.toString(),
+                currentCompany: candidate.current_company,
+                currentPosition: candidate.current_position,
+                salaryExpectation: candidate.salary_expectation?.toString(),
+                generalNotes: candidate.general_notes,
+                isFirstJob: candidate.is_first_job ? 'true' : 'false',
+                isHeadOfHousehold: candidate.is_head_of_household ? 'true' : 'false',
+                disabilityType: candidate.disability_type,
+                ethnicGroup: candidate.ethnic_group,
+                isConflictVictim: candidate.is_conflict_victim ? 'true' : 'false',
+                isDemobilized: candidate.is_demobilized ? 'true' : 'false',
+                identificationTypeId: candidate.identification_type_id,
+                documentType: candidate.document_type,
+              };
+
+              if (Array.isArray(candidateLookup.family_members)) {
+                updates.familyMembers = candidateLookup.family_members;
+              }
+
+              Object.keys(updates).forEach(k => {
+                if (updates[k] === null || updates[k] === undefined) delete updates[k];
+              });
+
+              setFormData(prev => ({ ...prev, ...updates }));
+              setPrefilled(true);
+              toast.info('Se encontro informacion previa asociada a este documento. Los campos han sido pre-llenados.');
+              return;
+            }
+
             const { data } = await supabase.rpc('check_candidate_background', {
               p_document_number: docNum,
               p_company_id: tokenData.company_id,
