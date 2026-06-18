@@ -224,7 +224,7 @@ export default function AccesoPublico() {
   // ─── Loading ──────────────────────────────────
   if (step === 'loading') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="notranslate min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Validando acceso...</p>
@@ -236,7 +236,7 @@ export default function AccesoPublico() {
   // ─── Error ────────────────────────────────────
   if (step === 'error') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="notranslate min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto" />
@@ -251,7 +251,7 @@ export default function AccesoPublico() {
   // ─── Done ─────────────────────────────────────
   if (step === 'done') {
     return (
-      <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent flex items-center justify-center p-4">
+      <div className="notranslate min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent flex items-center justify-center p-4">
         <div className="max-w-lg w-full">
           <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white/70 backdrop-blur-xl">
             <CardContent className="pt-12 text-center space-y-6">
@@ -315,7 +315,7 @@ export default function AccesoPublico() {
 
   // ─── Main Flow ────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
+    <div className="notranslate min-h-screen bg-[#f8fafc] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent">
 
       {/* Course title bar */}
       {step !== 'identify' && (

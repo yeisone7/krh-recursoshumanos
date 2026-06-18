@@ -217,7 +217,10 @@ function PublicDateField({
   const commitDate = (nextDay: string, nextMonth: string, nextYear: string) => {
     if (nextDay && nextMonth && nextYear) {
       onChange(`${nextYear}-${nextMonth}-${nextDay}`);
+      return;
     }
+
+    onChange('');
   };
 
   const handleDayChange = (nextDay: string) => {
@@ -261,38 +264,41 @@ function PublicDateField({
         )}
       </div>
       <div className="grid grid-cols-3 gap-2">
-        <Select value={day} onValueChange={handleDayChange}>
-          <SelectTrigger className="h-11 rounded-xl">
-            <SelectValue placeholder="Dia" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72 bg-background">
-            {dayOptions.map((option) => (
-              <SelectItem key={option} value={option}>{option}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          value={day}
+          onChange={(event) => handleDayChange(event.target.value)}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label={`${label}: dia`}
+        >
+          <option value="">Dia</option>
+          {dayOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
 
-        <Select value={month} onValueChange={handleMonthChange}>
-          <SelectTrigger className="h-11 rounded-xl">
-            <SelectValue placeholder="Mes" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72 bg-background">
-            {MONTH_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          value={month}
+          onChange={(event) => handleMonthChange(event.target.value)}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label={`${label}: mes`}
+        >
+          <option value="">Mes</option>
+          {MONTH_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
 
-        <Select value={year} onValueChange={handleYearChange}>
-          <SelectTrigger className="h-11 rounded-xl">
-            <SelectValue placeholder="Ano" />
-          </SelectTrigger>
-          <SelectContent className="max-h-72 bg-background">
-            {DATE_YEAR_OPTIONS.map((option) => (
-              <SelectItem key={option} value={option}>{option}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select
+          value={year}
+          onChange={(event) => handleYearChange(event.target.value)}
+          className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          aria-label={`${label}: ano`}
+        >
+          <option value="">Ano</option>
+          {DATE_YEAR_OPTIONS.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
       </div>
       <p className="text-[11px] font-medium text-muted-foreground">
         Selecciona directamente el ano, mes y dia sin navegar el calendario mes a mes.
@@ -1404,7 +1410,7 @@ export default function RegistroPublico() {
   const HeaderIcon = isEmployee ? Building : User;
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center p-4 py-12 transition-colors duration-300">
+    <div className="notranslate min-h-screen bg-slate-50/50 dark:bg-slate-950 flex items-center justify-center p-4 py-12 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
