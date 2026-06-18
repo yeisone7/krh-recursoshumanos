@@ -34,6 +34,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
+import { TRAINING_PERMISSION_CODES } from '@/lib/trainingPermissions';
 
 interface PermissionMatrixProps {
   role: CustomRole;
@@ -100,9 +101,13 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
   }, [rolePerms]);
 
   const visiblePermissionsCatalog = useMemo(() => {
-    const catalogosModuleId = modules.find(module => module.code === CATALOG_PERMISSION_CODES.index)?.id;
-    if (!catalogosModuleId) return permissionsCatalog;
-    return permissionsCatalog.filter(permission => permission.module_id !== catalogosModuleId);
+    const hiddenParentModuleIds = new Set(
+      modules
+        .filter(module => [CATALOG_PERMISSION_CODES.index, TRAINING_PERMISSION_CODES.index].includes(module.code))
+        .map(module => module.id)
+    );
+    if (hiddenParentModuleIds.size === 0) return permissionsCatalog;
+    return permissionsCatalog.filter(permission => !hiddenParentModuleIds.has(permission.module_id));
   }, [modules, permissionsCatalog]);
 
   const permsByModule = useMemo(() => {

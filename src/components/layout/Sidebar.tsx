@@ -61,6 +61,7 @@ import {
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
+import { TRAINING_PERMISSION_CODES } from '@/lib/trainingPermissions';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import sidebarLogo from '@/assets/empatiq-icono-sidebar.png';
 import empatiqTextLogo from '@/assets/empatiq-texto.png';
@@ -196,14 +197,14 @@ const capacitacionesItem: NavItem = {
   href: '/capacitaciones',
   moduleCode: 'capacitaciones',
   children: [
-    { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/capacitaciones' },
-    { label: 'Nueva con IA', icon: <Sparkles className="w-4 h-4" />, href: '/capacitaciones/crear' },
-    { label: 'Nueva Manual', icon: <PenLine className="w-4 h-4" />, href: '/capacitaciones/crear-manual' },
-    { label: 'Biblioteca', icon: <Library className="w-4 h-4" />, href: '/capacitaciones/biblioteca' },
-    { label: 'Enlaces', icon: <Link2 className="w-4 h-4" />, href: '/capacitaciones/acceso/generar' },
-    { label: 'Cumplimiento', icon: <ClipboardCheck className="w-4 h-4" />, href: '/capacitaciones/cumplimiento' },
-    { label: 'Evidencias', icon: <FileSignature className="w-4 h-4" />, href: '/capacitaciones/evidencias' },
-    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas', moduleCode: 'analitica_capacitaciones' },
+    { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/capacitaciones', moduleCode: TRAINING_PERMISSION_CODES.dashboard },
+    { label: 'Nueva con IA', icon: <Sparkles className="w-4 h-4" />, href: '/capacitaciones/crear', moduleCode: TRAINING_PERMISSION_CODES.ai },
+    { label: 'Nueva Manual', icon: <PenLine className="w-4 h-4" />, href: '/capacitaciones/crear-manual', moduleCode: TRAINING_PERMISSION_CODES.manual },
+    { label: 'Biblioteca', icon: <Library className="w-4 h-4" />, href: '/capacitaciones/biblioteca', moduleCode: TRAINING_PERMISSION_CODES.library },
+    { label: 'Enlaces', icon: <Link2 className="w-4 h-4" />, href: '/capacitaciones/acceso/generar', moduleCode: TRAINING_PERMISSION_CODES.links },
+    { label: 'Cumplimiento', icon: <ClipboardCheck className="w-4 h-4" />, href: '/capacitaciones/cumplimiento', moduleCode: TRAINING_PERMISSION_CODES.compliance },
+    { label: 'Evidencias', icon: <FileSignature className="w-4 h-4" />, href: '/capacitaciones/evidencias', moduleCode: TRAINING_PERMISSION_CODES.evidence },
+    { label: 'Analíticas', icon: <BarChart3 className="w-4 h-4" />, href: '/capacitaciones/analiticas', moduleCode: TRAINING_PERMISSION_CODES.analytics },
   ],
 };
 

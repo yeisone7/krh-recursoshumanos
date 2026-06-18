@@ -99,7 +99,8 @@ export default function Empleados() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { currentCompanyId, assignedCenterIds, canUpdate } = useAuth();
+  const { currentCompanyId, assignedCenterIds, canUpdate, hasPermission } = useAuth();
+  const canManageRegistrationLinks = hasPermission('emp_registration_links', 'create');
   
   // Use infinite hook for the list view
   const { 
@@ -368,22 +369,26 @@ export default function Empleados() {
           <p className="text-muted-foreground mt-1">Gestiona la información de todos los empleados</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setShowTokensList(!showTokensList)}
-            className="gap-2 hidden sm:inline-flex"
-          >
-            <Link2 className="w-4 h-4" />
-            Enlaces de Registro
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowGenerateLink(true)}
-            className="gap-2 hidden sm:inline-flex"
-          >
-            <Link2 className="w-4 h-4" />
-            Generar Enlace
-          </Button>
+          {canManageRegistrationLinks && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowTokensList(!showTokensList)}
+                className="gap-2 hidden sm:inline-flex"
+              >
+                <Link2 className="w-4 h-4" />
+                Enlaces de Registro
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowGenerateLink(true)}
+                className="gap-2 hidden sm:inline-flex"
+              >
+                <Link2 className="w-4 h-4" />
+                Generar Enlace
+              </Button>
+            </>
+          )}
           <Button 
             onClick={() => setIsFormOpen(true)}
             className="gradient-primary text-primary-foreground hover:opacity-90 gap-2 w-full sm:w-auto"
@@ -424,7 +429,7 @@ export default function Empleados() {
         targetType="employee"
       />
 
-      {showTokensList && !isLoading && (
+      {showTokensList && canManageRegistrationLinks && !isLoading && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
