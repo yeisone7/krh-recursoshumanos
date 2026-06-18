@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Search, Trash2, FileSignature, Eye, Download, List, FolderTree, CheckSquare } from 'lucide-react';
+import { Search, Trash2, Eye, Download, List, FolderTree, Files, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, useTrainingCourses } from '@/hooks/useTraining';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
+import PizZip from 'pizzip';
 import type { TrainingCompletion } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 
@@ -26,6 +27,11 @@ export default function Evidencias() {
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('tree');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [signatureView, setSignatureView] = useState<string | null>(null);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkCenter, setBulkCenter] = useState('');
+  const [bulkCourse, setBulkCourse] = useState('');
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
 
   const filtered = useMemo(() => {
     return (completions as TrainingCompletion[]).filter(c => {
@@ -37,6 +43,74 @@ export default function Evidencias() {
 
   const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(c => c.id)));
+
+  const getCompletionCenter = (completion: TrainingCompletion) => ({
+    id: (completion as any).token?.center?.id || (completion as any).token?.operation_center_id || 'sin-centro',
+    name: (completion as any).token?.center?.name || 'Sin centro',
+  });
+
+  const centerOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    (completions as TrainingCompletion[]).forEach((completion) => {
+      const center = getCompletionCenter(completion);
+      map.set(center.id, center.name);
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [completions]);
+
+  const bulkCourseOptions = useMemo(() => {
+    const source = (completions as TrainingCompletion[]).filter((completion) => {
+      if (!bulkCenter) return true;
+      return getCompletionCenter(completion).id === bulkCenter;
+    });
+    const map = new Map<string, string>();
+    source.forEach((completion) => {
+      map.set(completion.course_id, completion.course?.name || 'Sin capacitacion');
+    });
+    return [...map.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [bulkCenter, completions]);
+
+  const bulkCandidates = useMemo(() => {
+    if (!bulkCenter || !bulkCourse) return [];
+    return (completions as TrainingCompletion[])
+      .filter((completion) => getCompletionCenter(completion).id === bulkCenter && completion.course_id === bulkCourse)
+      .sort((a, b) => a.operator_name.localeCompare(b.operator_name));
+  }, [bulkCenter, bulkCourse, completions]);
+
+  const selectedBulkCompletions = useMemo(
+    () => bulkCandidates.filter((completion) => bulkSelected.has(completion.id)),
+    [bulkCandidates, bulkSelected]
+  );
+
+  useEffect(() => {
+    if (!bulkDialogOpen || !bulkCenter || bulkCourse || bulkCourseOptions.length === 0) return;
+    setBulkCourse(bulkCourseOptions[0].id);
+  }, [bulkCenter, bulkCourse, bulkCourseOptions, bulkDialogOpen]);
+
+  useEffect(() => {
+    if (!bulkDialogOpen || !bulkCourse) return;
+    setBulkSelected(new Set(bulkCandidates.map((completion) => completion.id)));
+  }, [bulkCandidates, bulkCourse, bulkDialogOpen]);
+
+  const toggleBulkSelect = (id: string) => {
+    setBulkSelected(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleBulkAll = () => {
+    setBulkSelected(prev => (
+      bulkCandidates.length > 0 && prev.size === bulkCandidates.length
+        ? new Set()
+        : new Set(bulkCandidates.map((completion) => completion.id))
+    ));
+  };
 
   const handleDelete = async (id: string) => { try { await deleteCompletion.mutateAsync(id); toast.success('Eliminado'); } catch { toast.error('Error'); } };
   const handleBulkDelete = async () => {
@@ -61,7 +135,7 @@ export default function Evidencias() {
     });
   };
 
-  const exportPdf = async (completion: TrainingCompletion) => {
+  const buildCertificatePdf = async (completion: TrainingCompletion) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -208,7 +282,62 @@ export default function Evidencias() {
     doc.text('Este documento es una constancia de capacitación generada electrónicamente por el sistema de gestión RRHH.', pageWidth / 2, pageHeight - 10, { align: 'center' });
     doc.text('PETROCASINOS S.A. — Sistema de Gestión de Capacitaciones', pageWidth / 2, pageHeight - 5, { align: 'center' });
 
-    doc.save(`constancia-${completion.operator_name.replace(/\s+/g, '-')}.pdf`);
+    return doc;
+  };
+
+  const sanitizeFileName = (value: string) => (
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80) || 'constancia'
+  );
+
+  const exportPdf = async (completion: TrainingCompletion) => {
+    const doc = await buildCertificatePdf(completion);
+    doc.save(`constancia-${sanitizeFileName(completion.operator_name)}.pdf`);
+  };
+
+  const handleOpenBulkDialog = () => {
+    setBulkDialogOpen(true);
+    if (!bulkCenter && centerOptions[0]) setBulkCenter(centerOptions[0].id);
+  };
+
+  const handleBulkGenerate = async () => {
+    if (selectedBulkCompletions.length === 0) return;
+    setIsBulkGenerating(true);
+    try {
+      const zip = new PizZip();
+      for (const completion of selectedBulkCompletions) {
+        const doc = await buildCertificatePdf(completion);
+        const fileName = [
+          'constancia',
+          sanitizeFileName(completion.course?.name || 'capacitacion'),
+          sanitizeFileName(completion.operator_name),
+          sanitizeFileName(completion.operator_cedula || completion.id),
+        ].join('-');
+        zip.file(`${fileName}.pdf`, doc.output('arraybuffer'));
+      }
+
+      const blob = zip.generate({ type: 'blob', compression: 'DEFLATE' });
+      const centerName = centerOptions.find((center) => center.id === bulkCenter)?.name || 'centro';
+      const courseName = bulkCourseOptions.find((course) => course.id === bulkCourse)?.name || 'capacitacion';
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `constancias-${sanitizeFileName(centerName)}-${sanitizeFileName(courseName)}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success(`${selectedBulkCompletions.length} constancias generadas`);
+      setBulkDialogOpen(false);
+    } catch {
+      toast.error('No se pudieron generar las constancias');
+    } finally {
+      setIsBulkGenerating(false);
+    }
   };
 
   return (
@@ -221,6 +350,7 @@ export default function Evidencias() {
             <p className="text-muted-foreground font-medium mt-1">Registro de capacitaciones completadas con firma digital</p>
           </div>
           <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg" onClick={handleOpenBulkDialog} title="Generar constancias masivas"><Files className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'table' ? 'shadow-md' : ''}`} onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
           </div>
@@ -295,6 +425,97 @@ export default function Evidencias() {
       <Dialog open={!!signatureView} onOpenChange={() => setSignatureView(null)}>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Firma Digital</DialogTitle></DialogHeader>
           {signatureView && <div className="bg-white rounded-lg p-4 border"><img src={signatureView} alt="Firma" className="w-full" /></div>}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Generar constancias por centro y capacitacion</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Select
+                value={bulkCenter}
+                onValueChange={(value) => {
+                  setBulkCenter(value);
+                  setBulkCourse('');
+                  setBulkSelected(new Set());
+                }}
+              >
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Centro de operacion" />
+                </SelectTrigger>
+                <SelectContent>
+                  {centerOptions.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={bulkCourse}
+                onValueChange={(value) => {
+                  setBulkCourse(value);
+                  setBulkSelected(new Set());
+                }}
+                disabled={!bulkCenter}
+              >
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Capacitacion" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bulkCourseOptions.map((course) => (
+                    <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="rounded-xl border border-border/60">
+              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+                <div>
+                  <p className="text-sm font-bold">Empleados capacitados</p>
+                  <p className="text-xs text-muted-foreground">{selectedBulkCompletions.length} de {bulkCandidates.length} seleccionados</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={toggleBulkAll} disabled={bulkCandidates.length === 0}>
+                  {bulkSelected.size === bulkCandidates.length && bulkCandidates.length > 0 ? 'Limpiar' : 'Seleccionar todos'}
+                </Button>
+              </div>
+
+              <div className="max-h-80 overflow-y-auto">
+                {bulkCandidates.length === 0 ? (
+                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                    Selecciona un centro y una capacitacion con evidencias registradas.
+                  </div>
+                ) : (
+                  bulkCandidates.map((completion) => (
+                    <label key={completion.id} className="flex cursor-pointer items-center gap-3 border-b border-border/40 px-4 py-3 last:border-b-0 hover:bg-muted/40">
+                      <Checkbox checked={bulkSelected.has(completion.id)} onCheckedChange={() => toggleBulkSelect(completion.id)} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{completion.operator_name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {completion.operator_cedula || 'Sin cedula'} - {format(parseISO(completion.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                          {completion.quiz_score != null ? ` - ${completion.quiz_score}%` : ''}
+                        </p>
+                      </div>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setBulkDialogOpen(false)} disabled={isBulkGenerating}>
+                Cancelar
+              </Button>
+              <Button onClick={handleBulkGenerate} disabled={selectedBulkCompletions.length === 0 || isBulkGenerating}>
+                {isBulkGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Generar ZIP ({selectedBulkCompletions.length})
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

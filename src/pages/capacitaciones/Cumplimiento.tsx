@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import {
   ClipboardCheck, ChevronDown, ChevronRight, UserCheck, UserX,
   Search, Building2, BookOpen, Download, SlidersHorizontal,
+  Table2, Rows3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useTrainingCompliance, type CenterComplianceData, type CourseComplianceData } from '@/hooks/useTrainingCompliance';
 import * as XLSX from 'xlsx';
+
+type ViewMode = 'cards' | 'table';
 
 function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
   const [showCompleted, setShowCompleted] = useState(false);
@@ -132,12 +135,147 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
   );
 }
 
+function ComplianceViewToggle({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mode: ViewMode) => void }) {
+  return (
+    <div className="grid grid-cols-2 rounded-xl border border-border/50 bg-background p-1 shadow-inner">
+      <Button
+        type="button"
+        variant={viewMode === 'cards' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => onChange('cards')}
+        className="h-10 rounded-lg gap-2 text-xs font-bold"
+      >
+        <Rows3 className="h-4 w-4" />
+        Actual
+      </Button>
+      <Button
+        type="button"
+        variant={viewMode === 'table' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => onChange('table')}
+        className="h-10 rounded-lg gap-2 text-xs font-bold"
+      >
+        <Table2 className="h-4 w-4" />
+        Tabla
+      </Button>
+    </div>
+  );
+}
+
+function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[]; courseFilter: string }) {
+  const rows = data.flatMap((center) => {
+    const coursesToShow = courseFilter === 'all'
+      ? center.courses
+      : center.courses.filter((course) => course.course_id === courseFilter);
+
+    return coursesToShow.flatMap((course) => [
+      ...course.completed.map(({ employee, completed_at }) => ({
+        centerId: center.center_id,
+        centerName: center.center_name,
+        courseId: course.course_id,
+        courseName: course.course_name,
+        courseCode: course.course_code,
+        employee,
+        status: 'Completado' as const,
+        completedAt: completed_at,
+      })),
+      ...course.pending.map((employee) => ({
+        centerId: center.center_id,
+        centerName: center.center_name,
+        courseId: course.course_id,
+        courseName: course.course_name,
+        courseCode: course.course_code,
+        employee,
+        status: 'Pendiente' as const,
+        completedAt: null,
+      })),
+    ]);
+  });
+
+  if (rows.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          No hay empleados para mostrar con los filtros seleccionados.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm">
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[880px] text-sm">
+            <thead className="border-b border-border/70 bg-muted/60">
+              <tr className="text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
+                <th className="px-5 py-4">Centro</th>
+                <th className="px-5 py-4">Curso</th>
+                <th className="px-5 py-4">Empleado</th>
+                <th className="px-5 py-4">Cedula</th>
+                <th className="px-5 py-4">Estado</th>
+                <th className="px-5 py-4">Fecha</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60 bg-background">
+              {rows.map(({ centerId, centerName, courseId, courseName, courseCode, employee, status, completedAt }) => {
+                const isCompleted = status === 'Completado';
+                return (
+                  <tr key={`${centerId}-${courseId}-${employee.id}`} className="transition-colors hover:bg-muted/30">
+                    <td className="px-5 py-4 align-top">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Building2 className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-foreground">{centerName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <div className="flex min-w-0 items-start gap-2">
+                        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          <p className="break-words font-semibold text-foreground">{courseName}</p>
+                          {courseCode && (
+                            <p className="mt-1 text-xs font-medium text-muted-foreground">{courseCode}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <p className="font-semibold text-foreground">{employee.first_name} {employee.last_name}</p>
+                    </td>
+                    <td className="px-5 py-4 align-top font-medium text-muted-foreground">
+                      {employee.document_number || '-'}
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <Badge className={isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
+                        {isCompleted ? <UserCheck className="mr-1 h-3.5 w-3.5" /> : <UserX className="mr-1 h-3.5 w-3.5" />}
+                        {status}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-4 align-top font-medium text-muted-foreground">
+                      {completedAt ? format(parseISO(completedAt), 'dd MMM yyyy', { locale: es }) : '-'}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Cumplimiento() {
   const { complianceData, centers, courses, isLoading } = useTrainingCompliance();
   const [centerFilter, setCenterFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
   const filteredData = useMemo(() => {
     let data = complianceData;
@@ -242,6 +380,7 @@ export default function Cumplimiento() {
                   ))}
                 </SelectContent>
               </Select>
+              <ComplianceViewToggle viewMode={viewMode} onChange={setViewMode} />
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -278,6 +417,9 @@ export default function Cumplimiento() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="w-full sm:col-span-2 lg:col-span-1 lg:w-[220px]">
+              <ComplianceViewToggle viewMode={viewMode} onChange={setViewMode} />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -289,9 +431,13 @@ export default function Cumplimiento() {
         <Card><CardContent className="py-12 text-center text-muted-foreground">No hay centros con empleados activos asignados que tengan enlaces de capacitación publicados. Verifica que los empleados tengan un centro de operación asignado en su información laboral y que existan enlaces publicados para ese centro.</CardContent></Card>
       ) : (
         <motion.div className="space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          {filteredData.map((center) => (
-            <CenterComplianceSection key={center.center_id} center={center} courseFilter={courseFilter} />
-          ))}
+          {viewMode === 'table' ? (
+            <ComplianceTable data={filteredData} courseFilter={courseFilter} />
+          ) : (
+            filteredData.map((center) => (
+              <CenterComplianceSection key={center.center_id} center={center} courseFilter={courseFilter} />
+            ))
+          )}
         </motion.div>
       )}
     </div>

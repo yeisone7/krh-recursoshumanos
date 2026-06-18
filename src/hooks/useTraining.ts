@@ -665,10 +665,12 @@ export function useDeleteAccessToken() {
 // =====================================================
 
 export function useTrainingCompletions(courseId?: string) {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['training_completions', currentCompanyId, courseId],
+    queryKey: ['training_completions', currentCompanyId, courseId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
@@ -685,7 +687,18 @@ export function useTrainingCompletions(courseId?: string) {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data as unknown as TrainingCompletion[];
+
+      const completions = (data || []) as unknown as TrainingCompletion[];
+      if (!shouldLimitByAssignedCenters) return completions;
+
+      return completions.filter((completion) => {
+        const centerId =
+          (completion as any).token?.operation_center_id ||
+          (completion as any).token?.center?.id ||
+          null;
+
+        return centerId ? assignedCenterIds.includes(centerId) : false;
+      });
     },
     enabled: !!currentCompanyId,
   });
