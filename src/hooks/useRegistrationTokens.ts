@@ -46,7 +46,7 @@ export function useRegistrationTokens(vacancyId?: string) {
 
 export function useCreateRegistrationToken() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { user, currentCompanyId, hasPermission } = useAuth();
 
   return useMutation({
     mutationFn: async (input: {
@@ -58,6 +58,17 @@ export function useCreateRegistrationToken() {
       is_reusable?: boolean;
     }) => {
       if (!currentCompanyId) throw new Error('No company');
+      const canCreateEmployeeToken =
+        input.target_type === 'employee' &&
+        hasPermission('emp_registration_links', 'create');
+      const canCreateCandidateToken =
+        input.target_type === 'candidate' &&
+        (hasPermission('seleccion', 'create') || hasPermission('seleccion', 'update'));
+
+      if (!canCreateEmployeeToken && !canCreateCandidateToken) {
+        throw new Error('No tienes permiso para generar este enlace de registro');
+      }
+
       const { data, error } = await supabase
         .from('self_registration_tokens')
         .insert({

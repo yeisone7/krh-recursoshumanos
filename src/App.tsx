@@ -70,6 +70,7 @@ import Automatizaciones from "./pages/Automatizaciones";
 import CumplimientoLaboral from "./pages/CumplimientoLaboral";
 import PilaUgpp from "./pages/PilaUgpp";
 import { CATALOG_CHILD_PERMISSION_CODES, CATALOG_PERMISSION_CODES } from "@/lib/catalogPermissions";
+import { TRAINING_PERMISSION_CODES } from "@/lib/trainingPermissions";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -187,14 +188,14 @@ const App = () => (
                         <Route path="/configuracion-laboral" element={<P module="config_laboral"><ConfiguracionLaboral /></P>} />
                         <Route path="/prestamos" element={<P module="prestamos"><Prestamos /></P>} />
                         <Route path="/descuentos" element={<P module="descuentos"><Descuentos /></P>} />
-                        <Route path="/capacitaciones" element={<P module="capacitaciones"><Capacitaciones /></P>} />
-                        <Route path="/capacitaciones/crear" element={<P module="capacitaciones"><CrearCapacitacion /></P>} />
-                        <Route path="/capacitaciones/crear-manual" element={<P module="capacitaciones"><CrearManual /></P>} />
-                        <Route path="/capacitaciones/biblioteca" element={<P module="capacitaciones"><BibliotecaCapacitaciones /></P>} />
-                        <Route path="/capacitaciones/acceso/generar" element={<P module="capacitaciones"><GenerarAcceso /></P>} />
-                        <Route path="/capacitaciones/evidencias" element={<P module="capacitaciones"><EvidenciasCapacitaciones /></P>} />
-                        <Route path="/capacitaciones/analiticas" element={<P module="analitica_capacitaciones"><AnaliticasCapacitaciones /></P>} />
-                        <Route path="/capacitaciones/cumplimiento" element={<P module="capacitaciones"><CumplimientoCapacitaciones /></P>} />
+                        <Route path="/capacitaciones" element={<P module={TRAINING_PERMISSION_CODES.dashboard}><Capacitaciones /></P>} />
+                        <Route path="/capacitaciones/crear" element={<P module={TRAINING_PERMISSION_CODES.ai}><CrearCapacitacion /></P>} />
+                        <Route path="/capacitaciones/crear-manual" element={<P module={TRAINING_PERMISSION_CODES.manual}><CrearManual /></P>} />
+                        <Route path="/capacitaciones/biblioteca" element={<P module={TRAINING_PERMISSION_CODES.library}><BibliotecaCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/acceso/generar" element={<P module={TRAINING_PERMISSION_CODES.links}><GenerarAcceso /></P>} />
+                        <Route path="/capacitaciones/evidencias" element={<P module={TRAINING_PERMISSION_CODES.evidence}><EvidenciasCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/analiticas" element={<P module={TRAINING_PERMISSION_CODES.analytics}><AnaliticasCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/cumplimiento" element={<P module={TRAINING_PERMISSION_CODES.compliance}><CumplimientoCapacitaciones /></P>} />
                         <Route path="/evaluaciones" element={<P module="evaluaciones"><Evaluaciones /></P>} />
                         <Route path="/evaluaciones/analiticas" element={<P module="analitica_evaluaciones"><AnaliticasEvaluaciones /></P>} />
                         <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />
