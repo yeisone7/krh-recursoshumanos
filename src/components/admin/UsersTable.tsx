@@ -40,7 +40,7 @@ import { UserCenterDialog } from './UserCenterDialog';
 import { UserCompanyDialog } from './UserCompanyDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
 import { UserNameEditDialog } from './UserNameEditDialog';
-import { useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
+import { useDeleteSystemUser, useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -98,9 +98,12 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState('');
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
+  const deleteSystemUser = useDeleteSystemUser();
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
@@ -184,6 +187,31 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
     }
   };
 
+  const handleDeleteSystemUser = (user: AdminUser) => {
+    if (user.id === currentUser?.id) {
+      toast.error('No puedes eliminar tu propio usuario');
+      return;
+    }
+
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteSystemUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteSystemUser.mutateAsync({ userId: userToDelete.id });
+      toast.success('Usuario eliminado del sistema');
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error: any) {
+      toast.error('No fue posible eliminar el usuario', {
+        description: error?.message || 'Por favor intenta de nuevo',
+      });
+    }
+  };
+
   const renderActionsMenu = (user: AdminUser) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -242,6 +270,14 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
         >
           <Trash2 className="w-4 h-4" />
           EXPULSAR ENTIDAD
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="rounded-xl h-10 gap-3 font-black text-[10px] uppercase tracking-widest text-red-700 focus:bg-red-700 focus:text-white cursor-pointer"
+          onClick={() => handleDeleteSystemUser(user)}
+          disabled={user.id === currentUser?.id || deleteSystemUser.isPending}
+        >
+          <UserX className="w-4 h-4" />
+          ELIMINAR DEL SISTEMA
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -588,6 +624,72 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
             >
               <UserMinus className="w-4 h-4 mr-3" />
               CONFIRMAR BLOQUEO
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open && !deleteSystemUser.isPending) {
+            setUserToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent className="rounded-[2.5rem] border-slate-100 bg-white p-8 shadow-2xl">
+          <div className="flex flex-col items-center text-center space-y-4">
+            <div className="h-16 w-16 rounded-[1.25rem] bg-red-50 text-red-600 flex items-center justify-center">
+              <UserX className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-2xl font-black uppercase tracking-tight text-slate-900">
+                  Eliminar usuario
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-[11px] font-black uppercase tracking-widest text-slate-400 leading-relaxed">
+                  Esta acciÃ³n retirarÃ¡ al usuario del sistema y limpiarÃ¡ sus accesos administrativos.
+                  <br />
+                  Solo debe usarse cuando realmente no deba volver a operar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-red-100 bg-red-50/70 p-4 text-left">
+            <p className="text-xs font-black uppercase tracking-widest text-red-700">
+              Usuario objetivo
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              {userToDelete ? getUserDisplayName(userToDelete) : 'Sin selecciÃ³n'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              {userToDelete?.email || 'Sin correo disponible'}
+            </p>
+          </div>
+
+          <AlertDialogFooter className="mt-8 flex flex-col sm:flex-row gap-3">
+            <AlertDialogCancel
+              disabled={deleteSystemUser.isPending}
+              className="h-14 rounded-2xl border-slate-200 font-black uppercase text-[10px] tracking-widest flex-1"
+            >
+              CANCELAR
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                confirmDeleteSystemUser();
+              }}
+              disabled={deleteSystemUser.isPending}
+              className="h-14 rounded-2xl bg-red-600 text-white hover:bg-red-700 font-black uppercase tracking-widest text-[10px] flex-1 shadow-xl shadow-red-200"
+            >
+              {deleteSystemUser.isPending ? (
+                <Loader2 className="w-4 h-4 mr-3 animate-spin" />
+              ) : (
+                <UserX className="w-4 h-4 mr-3" />
+              )}
+              CONFIRMAR ELIMINACIÃ“N
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
