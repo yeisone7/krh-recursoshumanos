@@ -559,18 +559,26 @@ export function useTrainingStats() {
 // =====================================================
 
 export function useTrainingAccessTokens() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, user, isAdmin, isSuperAdmin } = useAuth();
+  const canViewAllTokens = isAdmin || isSuperAdmin;
 
   return useQuery({
-    queryKey: ['training_access_tokens', currentCompanyId],
+    queryKey: ['training_access_tokens', currentCompanyId, user?.id, canViewAllTokens],
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('training_access_tokens')
         .select(`*, course:training_courses(id, name, category, status), center:operation_centers(id, name, code)`)
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
+
+      if (!canViewAllTokens) {
+        if (!user?.id) return [];
+        query = query.eq('created_by', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as unknown as TrainingAccessToken[];
@@ -625,13 +633,22 @@ export function useCreateAccessToken() {
 
 export function useToggleAccessToken() {
   const queryClient = useQueryClient();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
+  const canManageAllTokens = isAdmin || isSuperAdmin;
 
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const { error } = await supabase
+      let query = supabase
         .from('training_access_tokens')
         .update({ is_active: isActive })
         .eq('id', id);
+
+      if (!canManageAllTokens) {
+        if (!user?.id) throw new Error('User not authenticated');
+        query = query.eq('created_by', user.id);
+      }
+
+      const { error } = await query;
 
       if (error) throw error;
     },
@@ -643,14 +660,23 @@ export function useToggleAccessToken() {
 
 export function useDeleteAccessToken() {
   const queryClient = useQueryClient();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
+  const canManageAllTokens = isAdmin || isSuperAdmin;
 
   return useMutation({
     mutationFn: async (id: string) => {
       // Soft-delete: deactivate instead of removing to preserve compliance history
-      const { error } = await supabase
+      let query = supabase
         .from('training_access_tokens')
         .update({ is_active: false })
         .eq('id', id);
+
+      if (!canManageAllTokens) {
+        if (!user?.id) throw new Error('User not authenticated');
+        query = query.eq('created_by', user.id);
+      }
+
+      const { error } = await query;
 
       if (error) throw error;
     },
