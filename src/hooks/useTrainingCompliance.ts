@@ -39,9 +39,14 @@ export interface CenterComplianceData {
   totalEmployees: number;
 }
 
-function useActiveEmployeesByCenter(companyId: string | undefined) {
+function useActiveEmployeesByCenter(
+  companyId: string | undefined,
+  assignedCenterIds: string[],
+  shouldLimitByAssignedCenters: boolean,
+  assignedCenterKey: string
+) {
   return useQuery({
-    queryKey: ['compliance-employees', companyId],
+    queryKey: ['compliance-employees', companyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('employees_v2')
@@ -66,21 +71,38 @@ function useActiveEmployeesByCenter(companyId: string | undefined) {
             operation_center_id: currentWork?.operation_center_id || null,
             center_name: null,
           } as ComplianceEmployee;
+        })
+        .filter((employee) => {
+          if (!shouldLimitByAssignedCenters) return true;
+          return employee.operation_center_id
+            ? assignedCenterIds.includes(employee.operation_center_id)
+            : false;
         });
     },
     enabled: !!companyId,
   });
 }
 
-function useOperationCentersList(companyId: string | undefined) {
+function useOperationCentersList(
+  companyId: string | undefined,
+  assignedCenterIds: string[],
+  shouldLimitByAssignedCenters: boolean,
+  assignedCenterKey: string
+) {
   return useQuery({
-    queryKey: ['compliance-centers', companyId],
+    queryKey: ['compliance-centers', companyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('operation_centers')
         .select('id, name')
         .eq('company_id', companyId!)
         .order('name');
+
+      if (shouldLimitByAssignedCenters) {
+        query = query.in('id', assignedCenterIds);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -106,23 +128,37 @@ function usePublishedCourses(companyId: string | undefined) {
   });
 }
 
-function useTokenCenterAssociations() {
+function useTokenCenterAssociations(
+  assignedCenterIds: string[],
+  shouldLimitByAssignedCenters: boolean,
+  assignedCenterKey: string
+) {
   return useQuery({
-    queryKey: ['compliance-token-center'],
+    queryKey: ['compliance-token-center', shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('training_access_tokens')
         .select('course_id, operation_center_id')
         .not('operation_center_id', 'is', null);
+
+      if (shouldLimitByAssignedCenters) {
+        query = query.in('operation_center_id', assignedCenterIds);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
 }
 
-function useAllCompletions() {
+function useAllCompletions(
+  assignedCenterIds: string[],
+  shouldLimitByAssignedCenters: boolean,
+  assignedCenterKey: string
+) {
   return useQuery({
-    queryKey: ['compliance-completions'],
+    queryKey: ['compliance-completions', shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('training_completions')
@@ -140,17 +176,46 @@ function useAllCompletions() {
         operator_name: c.operator_name,
         token_center_id: c.training_access_tokens?.operation_center_id || null,
       })) as ComplianceCompletion[];
+
+      if (!shouldLimitByAssignedCenters) return mapped;
+
+      return mapped.filter((completion) =>
+        completion.token_center_id
+          ? assignedCenterIds.includes(completion.token_center_id)
+          : false
+      );
     },
   });
 }
 
 export function useTrainingCompliance() {
-  const { currentCompanyId } = useAuth();
-  const employees = useActiveEmployeesByCenter(currentCompanyId);
-  const centers = useOperationCentersList(currentCompanyId);
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
+
+  const employees = useActiveEmployeesByCenter(
+    currentCompanyId,
+    assignedCenterIds,
+    shouldLimitByAssignedCenters,
+    assignedCenterKey
+  );
+  const centers = useOperationCentersList(
+    currentCompanyId,
+    assignedCenterIds,
+    shouldLimitByAssignedCenters,
+    assignedCenterKey
+  );
   const courses = usePublishedCourses(currentCompanyId);
-  const completions = useAllCompletions();
-  const tokenAssociations = useTokenCenterAssociations();
+  const completions = useAllCompletions(
+    assignedCenterIds,
+    shouldLimitByAssignedCenters,
+    assignedCenterKey
+  );
+  const tokenAssociations = useTokenCenterAssociations(
+    assignedCenterIds,
+    shouldLimitByAssignedCenters,
+    assignedCenterKey
+  );
 
   const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading;
 
