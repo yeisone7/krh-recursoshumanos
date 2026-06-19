@@ -5,19 +5,118 @@ import { motion } from 'framer-motion';
 import {
   ClipboardCheck, ChevronDown, ChevronRight, UserCheck, UserX,
   Search, Building2, BookOpen, Download, SlidersHorizontal,
-  Table2, Rows3,
+  Table2, Rows3, CalendarDays, IdCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTrainingCompliance, type CenterComplianceData, type CourseComplianceData } from '@/hooks/useTrainingCompliance';
 import * as XLSX from 'xlsx';
 
 type ViewMode = 'cards' | 'table';
+
+type ComplianceTableRow = {
+  centerId: string;
+  centerName: string;
+  courseId: string;
+  courseName: string;
+  courseCode: string | null;
+  employee: CourseComplianceData['pending'][number];
+  status: 'Completado' | 'Pendiente';
+  completedAt: string | null;
+};
+
+function normalizeSearchText(value: unknown) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function getEmployeeName(employee: CourseComplianceData['pending'][number]) {
+  return [employee.first_name, employee.last_name].filter(Boolean).join(' ').trim();
+}
+
+function matchesSearch(value: unknown, search: string) {
+  return normalizeSearchText(value).includes(search);
+}
+
+function employeeMatchesSearch(employee: CourseComplianceData['pending'][number], search: string) {
+  return (
+    matchesSearch(getEmployeeName(employee), search) ||
+    matchesSearch(employee.document_number, search)
+  );
+}
+
+function recalculateCourse(course: CourseComplianceData): CourseComplianceData {
+  const total = course.completed.length + course.pending.length;
+  const completedCount = course.completed.length;
+
+  return {
+    ...course,
+    total,
+    completedCount,
+    percentage: total > 0 ? Math.round((completedCount / total) * 100) : 0,
+  };
+}
+
+function filterComplianceDataBySearch(data: CenterComplianceData[], search: string) {
+  const normalizedSearch = normalizeSearchText(search);
+  if (!normalizedSearch) return data;
+
+  return data
+    .map((center) => {
+      const centerMatches = matchesSearch(center.center_name, normalizedSearch);
+
+      const courses = center.courses
+        .map((course) => {
+          const courseMatches =
+            matchesSearch(course.course_name, normalizedSearch) ||
+            matchesSearch(course.course_code, normalizedSearch);
+
+          if (centerMatches || courseMatches) return course;
+
+          const completed = course.completed.filter(({ employee }) =>
+            employeeMatchesSearch(employee, normalizedSearch)
+          );
+          const pending = course.pending.filter((employee) =>
+            employeeMatchesSearch(employee, normalizedSearch)
+          );
+
+          if (completed.length === 0 && pending.length === 0) return null;
+
+          return recalculateCourse({
+            ...course,
+            completed,
+            pending,
+          });
+        })
+        .filter(Boolean) as CourseComplianceData[];
+
+      if (courses.length === 0) return null;
+
+      if (centerMatches) return { ...center, courses };
+
+      const visibleEmployeeIds = new Set<string>();
+      for (const course of courses) {
+        course.completed.forEach(({ employee }) => visibleEmployeeIds.add(employee.id));
+        course.pending.forEach((employee) => visibleEmployeeIds.add(employee.id));
+      }
+
+      return {
+        ...center,
+        courses,
+        totalEmployees: visibleEmployeeIds.size || center.totalEmployees,
+      };
+    })
+    .filter(Boolean) as CenterComplianceData[];
+}
 
 function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
   const [showCompleted, setShowCompleted] = useState(false);
@@ -163,7 +262,9 @@ function ComplianceViewToggle({ viewMode, onChange }: { viewMode: ViewMode; onCh
 }
 
 function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[]; courseFilter: string }) {
-  const rows = data.flatMap((center) => {
+  const [selectedRow, setSelectedRow] = useState<ComplianceTableRow | null>(null);
+
+  const rows: ComplianceTableRow[] = data.flatMap((center) => {
     const coursesToShow = courseFilter === 'all'
       ? center.courses
       : center.courses.filter((course) => course.course_id === courseFilter);
@@ -203,69 +304,161 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm">
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-sm">
-            <thead className="border-b border-border/70 bg-muted/60">
-              <tr className="text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
-                <th className="px-5 py-4">Centro</th>
-                <th className="px-5 py-4">Curso</th>
-                <th className="px-5 py-4">Empleado</th>
-                <th className="px-5 py-4">Cedula</th>
-                <th className="px-5 py-4">Estado</th>
-                <th className="px-5 py-4">Fecha</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/60 bg-background">
-              {rows.map(({ centerId, centerName, courseId, courseName, courseCode, employee, status, completedAt }) => {
-                const isCompleted = status === 'Completado';
-                return (
-                  <tr key={`${centerId}-${courseId}-${employee.id}`} className="transition-colors hover:bg-muted/30">
-                    <td className="px-5 py-4 align-top">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                          <Building2 className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="font-bold text-foreground">{centerName}</p>
+    <>
+      <Card className="overflow-hidden rounded-2xl border-border/50 shadow-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[880px] text-sm">
+              <thead className="border-b border-border/70 bg-muted/60">
+                <tr className="text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
+                  <th className="px-5 py-4">Centro</th>
+                  <th className="px-5 py-4">Curso</th>
+                  <th className="px-5 py-4">Empleado</th>
+                  <th className="px-5 py-4">Documento</th>
+                  <th className="px-5 py-4">Estado</th>
+                  <th className="px-5 py-4">Fecha</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60 bg-background">
+                {rows.map((row) => {
+                  const { centerId, centerName, courseId, courseName, courseCode, employee, status, completedAt } = row;
+                  const isCompleted = status === 'Completado';
+                  return (
+                    <tr
+                      key={`${centerId}-${courseId}-${employee.id}`}
+                      className="cursor-pointer transition-colors hover:bg-muted/40 focus:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                      tabIndex={0}
+                      onClick={() => setSelectedRow(row)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setSelectedRow(row);
+                        }
+                      }}
+                    >
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <Building2 className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="font-bold text-foreground">{centerName}</p>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 align-top">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0">
-                          <p className="break-words font-semibold text-foreground">{courseName}</p>
-                          {courseCode && (
-                            <p className="mt-1 text-xs font-medium text-muted-foreground">{courseCode}</p>
-                          )}
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div className="min-w-0">
+                            <p className="break-words font-semibold text-foreground">{courseName}</p>
+                            {courseCode && (
+                              <p className="mt-1 text-xs font-medium text-muted-foreground">{courseCode}</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 align-top">
-                      <p className="font-semibold text-foreground">{employee.first_name} {employee.last_name}</p>
-                    </td>
-                    <td className="px-5 py-4 align-top font-medium text-muted-foreground">
-                      {employee.document_number || '-'}
-                    </td>
-                    <td className="px-5 py-4 align-top">
-                      <Badge className={isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
-                        {isCompleted ? <UserCheck className="mr-1 h-3.5 w-3.5" /> : <UserX className="mr-1 h-3.5 w-3.5" />}
-                        {status}
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <p className="font-semibold text-foreground">{getEmployeeName(employee)}</p>
+                      </td>
+                      <td className="px-5 py-4 align-top font-medium text-muted-foreground">
+                        {employee.document_number || '-'}
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <Badge className={isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}>
+                          {isCompleted ? <UserCheck className="mr-1 h-3.5 w-3.5" /> : <UserX className="mr-1 h-3.5 w-3.5" />}
+                          {status}
+                        </Badge>
+                      </td>
+                      <td className="px-5 py-4 align-top font-medium text-muted-foreground">
+                        {completedAt ? format(parseISO(completedAt), 'dd MMM yyyy', { locale: es }) : '-'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!selectedRow} onOpenChange={(open) => !open && setSelectedRow(null)}>
+        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-2xl overflow-hidden rounded-[2rem] border-border/50 bg-background p-0 shadow-2xl sm:w-full [&>button]:right-5 [&>button]:top-5 [&>button]:rounded-xl [&>button]:bg-background/90 [&>button]:p-2 [&>button]:opacity-100 [&>button]:shadow-sm">
+          {selectedRow && (
+            <>
+              <div className="relative overflow-hidden border-b border-border/50 bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-6 pr-16 sm:px-8">
+                <DialogHeader className="relative z-10 text-left">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-inner">
+                      <ClipboardCheck className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0">
+                      <Badge variant="outline" className="mb-2 border-primary/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-primary">
+                        Registro
                       </Badge>
-                    </td>
-                    <td className="px-5 py-4 align-top font-medium text-muted-foreground">
-                      {completedAt ? format(parseISO(completedAt), 'dd MMM yyyy', { locale: es }) : '-'}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+                      <DialogTitle className="break-words text-2xl font-black tracking-tight text-foreground">
+                        Detalle de cumplimiento
+                      </DialogTitle>
+                      <DialogDescription className="mt-1 text-sm font-medium leading-relaxed text-muted-foreground">
+                        Informacion del empleado, capacitacion y estado del registro seleccionado.
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              <div className="max-h-[calc(90dvh-9rem)] overflow-y-auto px-6 py-5 sm:px-8 sm:py-6">
+                <div className="space-y-5">
+                  <div className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Empleado</p>
+                      <p className="mt-1 break-words text-xl font-black text-foreground">{getEmployeeName(selectedRow.employee)}</p>
+                    </div>
+                    <Badge className={`w-fit shrink-0 px-3 py-1 font-black uppercase tracking-widest ${selectedRow.status === 'Completado' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
+                      {selectedRow.status === 'Completado' ? <UserCheck className="mr-1.5 h-3.5 w-3.5" /> : <UserX className="mr-1.5 h-3.5 w-3.5" />}
+                      {selectedRow.status}
+                    </Badge>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <IdCard className="h-4 w-4 text-primary" />
+                        Documento
+                      </div>
+                      <p className="mt-3 break-words font-semibold text-foreground">{selectedRow.employee.document_number || '-'}</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <Building2 className="h-4 w-4 text-primary" />
+                        Centro
+                      </div>
+                      <p className="mt-3 break-words font-semibold text-foreground">{selectedRow.centerName}</p>
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        Capacitacion
+                      </div>
+                      <p className="mt-3 break-words font-semibold text-foreground">{selectedRow.courseName}</p>
+                      {selectedRow.courseCode && <p className="mt-1 text-xs font-medium text-muted-foreground">{selectedRow.courseCode}</p>}
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                        <CalendarDays className="h-4 w-4 text-primary" />
+                        Fecha de cumplimiento
+                      </div>
+                      <p className="mt-3 font-semibold text-foreground">
+                        {selectedRow.completedAt ? format(parseISO(selectedRow.completedAt), 'dd MMMM yyyy', { locale: es }) : 'Pendiente'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -282,10 +475,7 @@ export default function Cumplimiento() {
     if (centerFilter !== 'all') {
       data = data.filter((c) => c.center_id === centerFilter);
     }
-    if (search) {
-      data = data.filter((c) => c.center_name.toLowerCase().includes(search.toLowerCase()));
-    }
-    return data;
+    return filterComplianceDataBySearch(data, search);
   }, [complianceData, centerFilter, search]);
 
   function handleExport() {
@@ -354,7 +544,7 @@ export default function Cumplimiento() {
             <CardContent className="space-y-3 pt-0 pb-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar centro..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder="Buscar centro, empleado o documento..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <Select value={centerFilter} onValueChange={setCenterFilter}>
                 <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
@@ -391,7 +581,7 @@ export default function Cumplimiento() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
             <div className="relative min-w-0 lg:flex-1 lg:min-w-[200px] lg:max-w-sm">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input placeholder="Buscar centro..." className="h-12 pl-12 rounded-xl border-border/50 bg-background shadow-inner text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input placeholder="Buscar centro, empleado o documento..." className="h-12 pl-12 rounded-xl border-border/50 bg-background shadow-inner text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <Select value={centerFilter} onValueChange={setCenterFilter}>
               <SelectTrigger className="h-12 w-full rounded-xl border-border/50 bg-background shadow-inner text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background lg:w-[220px]">
