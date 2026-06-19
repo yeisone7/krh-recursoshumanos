@@ -285,18 +285,21 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
               <TabsContent value="employee" className="space-y-6 mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="space-y-3">
                   <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Empleado Responsable *</Label>
-                  <Select value={employeeId} onValueChange={setEmployeeId}>
-                    <SelectTrigger className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20">
-                      <SelectValue placeholder="Seleccionar colaborador" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-border/50 rounded-2xl shadow-2xl">
-                      {employees.filter(e => e.is_active).map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10">
-                          {getEmployeeFullName(emp)} - {emp.document_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={employees
+                      .filter((emp) => emp.is_active)
+                      .map((emp) => ({
+                        value: emp.id,
+                        label: `${getEmployeeFullName(emp)} - ${emp.document_number}`,
+                      }))}
+                    value={employeeId}
+                    onValueChange={setEmployeeId}
+                    placeholder="Seleccionar colaborador"
+                    searchPlaceholder="Buscar por nombre o documento..."
+                    emptyMessage="No se encontraron empleados activos."
+                    triggerClassName="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20"
+                    className="rounded-2xl border-border/50 bg-background shadow-2xl"
+                  />
                 </div>
 
                 {selectedEmployee && (

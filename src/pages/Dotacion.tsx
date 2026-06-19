@@ -316,9 +316,9 @@ export default function Dotacion() {
       {/* Tabs Sticky Bar */}
       <div className="sticky top-0 z-40 bg-background border-b border-border px-6 sm:px-10 py-2">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="bg-transparent h-auto p-0 gap-6">
+          <TabsList className="flex h-auto w-full justify-start gap-6 overflow-x-auto bg-transparent p-0">
             {[
-              { value: 'entregas', label: 'Entregas', icon: Package },
+              { value: 'entregas', label: 'Gestión EPP', icon: Package, enabled: true },
               { value: 'inventario', label: 'Inventario', icon: Warehouse, count: lowStockCount, enabled: inventoryEnabled },
               { value: 'profesiograma', label: 'Profesiograma', icon: ClipboardList, enabled: true },
               { value: 'cumplimiento', label: 'Cumplimiento', icon: ShieldCheck, enabled: true },
@@ -327,7 +327,7 @@ export default function Dotacion() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group"
+                className="group relative h-12 shrink-0 border-none bg-transparent px-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
               >
                 <div className="flex items-center gap-2">
                   <tab.icon className={cn("w-4 h-4 transition-colors", activeTab === tab.value ? "text-primary" : "text-muted-foreground")} />
