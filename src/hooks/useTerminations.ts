@@ -15,10 +15,6 @@ type DbTerminationType = Database['public']['Enums']['termination_type'];
 type DbDocumentType = Database['public']['Enums']['termination_document_type'];
 type DbEmployeeStatus = Database['public']['Enums']['employee_status'];
 
-function isMissingStatusColumnError(error: any) {
-  return error?.code === 'PGRST204' && String(error?.message || '').includes("'status' column");
-}
-
 async function updateEmployeeLifecycleState({
   employeeId,
   status,
@@ -39,23 +35,6 @@ async function updateEmployeeLifecycleState({
     .eq('id', employeeId);
 
   if (!error) return;
-
-  if (isMissingStatusColumnError(error) && typeof isActive === 'boolean') {
-    const { error: fallbackError } = await supabase
-      .from('employees_v2')
-      .update({ is_active: isActive })
-      .eq('id', employeeId);
-
-    if (!fallbackError) {
-      console.warn('employees_v2.status no está disponible; se actualizó únicamente is_active.', error);
-      return;
-    }
-
-    if (required) throw fallbackError;
-    console.error('Error updating employee active state:', fallbackError);
-    return;
-  }
-
   if (required) throw error;
   console.error('Error updating employee lifecycle state:', error);
 }
@@ -209,9 +188,7 @@ export function useInitiateTermination() {
 
       if (docsError) throw docsError;
 
-      // Update employee status in employees_v2 - set is_active to false during termination process
-      // Note: We don't change is_active here, only when process completes
-      // For employees_v2, we track termination via employee_work_info
+      // Track the pending retirement on the current work-info row.
       const { error: workInfoError } = await supabase
         .from('employee_work_info')
         .update({ termination_date: toDateOnlyString(effectiveDate) })
@@ -222,12 +199,6 @@ export function useInitiateTermination() {
         console.error('Error updating work info:', workInfoError);
         // Don't fail the whole process for this
       }
-
-      await updateEmployeeLifecycleState({
-        employeeId,
-        status: 'en_retiro',
-        required: false,
-      });
 
       // Log audit event
       await supabase.from('audit_logs').insert({
