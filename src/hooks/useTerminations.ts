@@ -13,6 +13,52 @@ import type { Database } from '@/integrations/supabase/types';
 
 type DbTerminationType = Database['public']['Enums']['termination_type'];
 type DbDocumentType = Database['public']['Enums']['termination_document_type'];
+type DbEmployeeStatus = Database['public']['Enums']['employee_status'];
+
+function isMissingStatusColumnError(error: any) {
+  return error?.code === 'PGRST204' && String(error?.message || '').includes("'status' column");
+}
+
+async function updateEmployeeLifecycleState({
+  employeeId,
+  status,
+  isActive,
+  required = false,
+}: {
+  employeeId: string;
+  status: DbEmployeeStatus;
+  isActive?: boolean;
+  required?: boolean;
+}) {
+  const payload: Database['public']['Tables']['employees_v2']['Update'] = { status };
+  if (typeof isActive === 'boolean') payload.is_active = isActive;
+
+  const { error } = await supabase
+    .from('employees_v2')
+    .update(payload)
+    .eq('id', employeeId);
+
+  if (!error) return;
+
+  if (isMissingStatusColumnError(error) && typeof isActive === 'boolean') {
+    const { error: fallbackError } = await supabase
+      .from('employees_v2')
+      .update({ is_active: isActive })
+      .eq('id', employeeId);
+
+    if (!fallbackError) {
+      console.warn('employees_v2.status no está disponible; se actualizó únicamente is_active.', error);
+      return;
+    }
+
+    if (required) throw fallbackError;
+    console.error('Error updating employee active state:', fallbackError);
+    return;
+  }
+
+  if (required) throw error;
+  console.error('Error updating employee lifecycle state:', error);
+}
 
 function mapTerminationRow(data: any): EmployeeTermination {
   return {
@@ -177,14 +223,11 @@ export function useInitiateTermination() {
         // Don't fail the whole process for this
       }
 
-      const { error: employeeStatusError } = await supabase
-        .from('employees_v2')
-        .update({ status: 'en_retiro' } as any)
-        .eq('id', employeeId);
-
-      if (employeeStatusError) {
-        console.error('Error updating employee status:', employeeStatusError);
-      }
+      await updateEmployeeLifecycleState({
+        employeeId,
+        status: 'en_retiro',
+        required: false,
+      });
 
       // Log audit event
       await supabase.from('audit_logs').insert({
@@ -349,12 +392,12 @@ export function useCompleteTermination() {
       }
 
       // Update employee status in employees_v2 - set as retired
-      const { error: employeeError } = await supabase
-        .from('employees_v2')
-        .update({ is_active: false, status: 'retired' } as any)
-        .eq('id', employeeId);
-
-      if (employeeError) throw employeeError;
+      await updateEmployeeLifecycleState({
+        employeeId,
+        status: 'retired',
+        isActive: false,
+        required: true,
+      });
 
       // Update work info to mark as not current
       const { error: workInfoError } = await supabase
