@@ -138,6 +138,45 @@ function applyEmployeeCenterFilter(query: any, centerId?: string, allowedCenterI
   return query;
 }
 
+async function findEmployeeIdsByCurrentPosition(companyId: string, searchPattern: string) {
+  const { data, error } = await supabase
+    .from('employee_work_info')
+    .select('employee_id')
+    .eq('company_id', companyId)
+    .eq('is_current', true)
+    .ilike('position_name', searchPattern);
+
+  if (error) throw error;
+
+  return Array.from(new Set((data || []).map((row: any) => row.employee_id).filter(Boolean)));
+}
+
+async function applyEmployeeSearchFilter(query: any, search: string | undefined, companyId: string) {
+  if (!search || search.trim() === '') return query;
+
+  const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+
+  for (const term of searchTerms) {
+    const searchPattern = `%${term}%`;
+    const employeeIdsByPosition = await findEmployeeIdsByCurrentPosition(companyId, searchPattern);
+    const searchFilters = [
+      `first_name.ilike.${searchPattern}`,
+      `middle_name.ilike.${searchPattern}`,
+      `last_name.ilike.${searchPattern}`,
+      `second_last_name.ilike.${searchPattern}`,
+      `document_number.ilike.${searchPattern}`,
+    ];
+
+    if (employeeIdsByPosition.length > 0) {
+      searchFilters.push(`id.in.(${employeeIdsByPosition.join(',')})`);
+    }
+
+    query = query.or(searchFilters.join(','));
+  }
+
+  return query;
+}
+
 async function resolveValidShiftTypeId(shiftTypeId?: string | null, companyId?: string | null) {
   if (!shiftTypeId || !companyId) return null;
 
@@ -281,14 +320,8 @@ export function useEmployeesPaginated(options: {
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
-      // 1. Server-side search (Name or Document)
-      if (search && search.trim() !== '') {
-        const searchTerms = search.trim().split(/\s+/).filter(Boolean);
-        searchTerms.forEach(term => {
-          const searchPattern = `%${term}%`;
-          query = query.or(`first_name.ilike.${searchPattern},middle_name.ilike.${searchPattern},last_name.ilike.${searchPattern},second_last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
-        });
-      }
+      // 1. Server-side search (Name, document, or current position)
+      query = await applyEmployeeSearchFilter(query, search, currentCompanyId);
 
       // 2. Server-side filtering
       query = applyEmployeeCenterFilter(
@@ -359,14 +392,8 @@ export function useEmployeesInfinite(options: {
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
-      // 1. Search
-      if (search && search.trim() !== '') {
-        const searchTerms = search.trim().split(/\s+/).filter(Boolean);
-        searchTerms.forEach(term => {
-          const searchPattern = `%${term}%`;
-          query = query.or(`first_name.ilike.${searchPattern},middle_name.ilike.${searchPattern},last_name.ilike.${searchPattern},second_last_name.ilike.${searchPattern},document_number.ilike.${searchPattern}`);
-        });
-      }
+      // 1. Search (Name, document, or current position)
+      query = await applyEmployeeSearchFilter(query, search, currentCompanyId);
 
       // 2. Filters
       query = applyEmployeeCenterFilter(
