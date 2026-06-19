@@ -4219,6 +4219,7 @@ export type Database = {
             | null
           middle_name: string | null
           second_last_name: string | null
+          status: Database["public"]["Enums"]["employee_status"]
           updated_at: string
         }
         Insert: {
@@ -4253,6 +4254,7 @@ export type Database = {
             | null
           middle_name?: string | null
           second_last_name?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
         }
         Update: {
@@ -4287,6 +4289,7 @@ export type Database = {
             | null
           middle_name?: string | null
           second_last_name?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
         }
         Relationships: [
