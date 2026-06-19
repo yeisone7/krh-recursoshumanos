@@ -1417,3 +1417,55 @@ html.dark [class~="bg-indigo-50"] {
   background-color: rgb(76 29 149 / 0.26) !important;
   border-color: rgb(167 139 250 / 0.32) !important;
 }
+
+/* Keep react-day-picker isolated from the app-wide table normalization rules. */
+.rdp-empatiq table,
+.rdp-empatiq thead,
+.rdp-empatiq tbody,
+.rdp-empatiq tr,
+.rdp-empatiq th,
+.rdp-empatiq td {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.rdp-empatiq table {
+  width: auto !important;
+  min-width: 17.5rem !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+.rdp-empatiq thead,
+.rdp-empatiq thead tr,
+.rdp-empatiq tbody tr,
+.rdp-empatiq tbody tr:hover,
+.rdp-empatiq tbody tr:hover td,
+.rdp-empatiq tbody tr:nth-child(even) td {
+  background: transparent !important;
+}
+
+.rdp-empatiq th,
+.rdp-empatiq td {
+  width: 2.25rem !important;
+  min-width: 2.25rem !important;
+  max-width: 2.25rem !important;
+  height: 2.25rem !important;
+  padding: 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.rdp-empatiq th {
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+.rdp-empatiq td button {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
