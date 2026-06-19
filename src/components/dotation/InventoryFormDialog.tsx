@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Package } from 'lucide-react';
+import { Check, Loader2, Package, Plus } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+  Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,12 +19,24 @@ import { useCreateInventoryItem, useUpdateInventoryItem, type DotationInventoryI
 import { useDotationItemTypes } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { useQuery } from '@tanstack/react-query';
 
 interface InventoryFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editItem?: DotationInventoryItem | null;
+}
+
+type DotationItemType = Database['public']['Tables']['dotation_item_types']['Row'];
+type OperationCenterOption = Pick<Database['public']['Tables']['operation_centers']['Row'], 'id' | 'name'>;
+
+interface InventoryFormValues {
+  operation_center_id: string;
+  item_type: string;
+  size: string;
+  quantity_available: number;
+  minimum_stock: number;
 }
 
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
@@ -36,18 +48,18 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
   const updateItem = useUpdateInventoryItem();
   const { data: dotationItemTypes = [] } = useDotationItemTypes();
 
-  const activeItemTypes = (dotationItemTypes as any[])?.filter((t: any) => t.is_active !== false) || [];
+  const activeItemTypes = ((dotationItemTypes ?? []) as DotationItemType[]).filter((t) => t.is_active !== false);
 
   const { data: centers = [] } = useQuery({
     queryKey: ['operation_centers_list', currentCompanyId],
-    queryFn: async (): Promise<{ id: string; name: string }[]> => {
-      const { data } = await (supabase as any).from('operation_centers').select('id, name').eq('company_id', currentCompanyId!).eq('is_active', true).order('name');
+    queryFn: async (): Promise<OperationCenterOption[]> => {
+      const { data } = await supabase.from('operation_centers').select('id, name').eq('company_id', currentCompanyId!).eq('is_active', true).order('name');
       return data || [];
     },
     enabled: !!currentCompanyId,
   });
 
-  const form = useForm({
+  const form = useForm<InventoryFormValues>({
     defaultValues: {
       operation_center_id: '',
       item_type: '',
@@ -78,12 +90,12 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
   }, [editItem, open, form]);
 
   const selectedItemType = form.watch('item_type');
-  const selectedTypeData = activeItemTypes.find((t: any) => t.id === selectedItemType);
+  const selectedTypeData = activeItemTypes.find((t) => t.id === selectedItemType);
   const isFootwear = selectedTypeData?.category?.toLowerCase()?.includes('calzado');
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: InventoryFormValues) => {
     try {
-      const selectedType = activeItemTypes.find((t: any) => t.id === values.item_type);
+      const selectedType = activeItemTypes.find((t) => t.id === values.item_type);
       const payload = {
         operation_center_id: values.operation_center_id || null,
         item_type: values.item_type,
@@ -101,8 +113,8 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
         toast.success('Artículo agregado al inventario');
       }
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error('Error', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Error', { description: error instanceof Error ? error.message : 'No se pudo guardar el artículo' });
     }
   };
 
@@ -171,7 +183,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tipo de Dotación *</FormLabel>
                       <FormControl>
                         <SearchableSelect
-                          options={activeItemTypes.map((t: any) => ({
+                          options={activeItemTypes.map((t) => ({
                             value: t.id,
                             label: `${t.name}${t.code ? ` (${t.code})` : ''}`,
                           }))}

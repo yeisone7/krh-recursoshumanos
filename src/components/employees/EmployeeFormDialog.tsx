@@ -42,6 +42,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -188,6 +189,20 @@ function resolveDocumentType(type?: { code?: string | null; name?: string | null
   return 'CC';
 }
 
+function normalizeCatalogName(value?: string | null) {
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase();
+}
+
+type PositionOption = {
+  id: string;
+  name: string | null;
+};
+
 interface EmployeeFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -226,6 +241,27 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
   );
 
   const currentEmployeeData = fullEmployee || employee;
+
+  const resolvedPositionId = useMemo(() => {
+    const currentWorkInfo = currentEmployeeData?.work_info;
+    if (!currentWorkInfo) return undefined;
+    if (currentWorkInfo.position_id) return currentWorkInfo.position_id;
+
+    const legacyPositionName = normalizeCatalogName(currentWorkInfo.position_name);
+    if (!legacyPositionName) return undefined;
+
+    const matchingPosition = (positions as PositionOption[]).find(
+      (position) => normalizeCatalogName(position.name) === legacyPositionName
+    );
+
+    return matchingPosition?.id;
+  }, [currentEmployeeData?.work_info, positions]);
+
+  const hasUnmatchedLegacyPosition = Boolean(
+    currentEmployeeData?.work_info?.position_name &&
+    !currentEmployeeData.work_info.position_id &&
+    !resolvedPositionId
+  );
 
   // Filter active schedules and cycles
   const activeSchedules = workSchedules.filter(s => s.is_active);
@@ -319,7 +355,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         operationCenterId: currentEmployeeData.work_info?.operation_center_id || undefined,
         costCenter: currentEmployeeData.work_info?.cost_center || undefined,
         areaId: currentEmployeeData.work_info?.area_id || undefined,
-        positionId: currentEmployeeData.work_info?.position_id || undefined,
+        positionId: resolvedPositionId || undefined,
         positionName: currentEmployeeData.work_info?.position_name || '',
         workCity: currentEmployeeData.work_info?.work_city || undefined,
         hireDate: parseDateOnlyOr(currentEmployeeData.work_info?.hire_date, new Date()),
@@ -384,7 +420,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         isDemobilized: false,
       });
     }
-  }, [currentEmployeeData, open, form]);
+  }, [currentEmployeeData, open, form, resolvedPositionId]);
 
   const handleSubmit = async (data: EmployeeFullFormData) => {
     if (!currentCompanyId && !isEditMode) {
@@ -1374,6 +1410,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           </FormItem>
                         )}
                       />
+                      {hasUnmatchedLegacyPosition && (
+                        <div className="md:col-span-2">
+                          <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-900">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-xs font-medium text-amber-800">
+                              Este empleado tiene el cargo histÃ³rico "{currentEmployeeData?.work_info?.position_name}", pero no estÃ¡ vinculado a un cargo activo del catÃ¡logo. Seleccione el cargo correcto para normalizar la informaciÃ³n.
+                            </AlertDescription>
+                          </Alert>
+                        </div>
+                      )}
                       <FormField
                         control={form.control}
                         name="positionId"

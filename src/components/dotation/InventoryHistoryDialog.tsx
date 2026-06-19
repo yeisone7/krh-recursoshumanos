@@ -6,6 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useInventoryMovements, type InventoryMovement } from '@/hooks/useInventoryMovements';
 import type { DotationInventoryItem } from '@/hooks/useDotationInventory';
 

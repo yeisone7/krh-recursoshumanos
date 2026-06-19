@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { useAdjustInventoryQuantity, type DotationInventoryItem } from '@/hooks/useDotationInventory';
 
 interface InventoryAdjustDialogProps {
@@ -40,8 +41,8 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
       onOpenChange(false);
       setQuantity(1);
       setNotes('');
-    } catch (error: any) {
-      toast.error('Error al ajustar stock', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Error al ajustar stock', { description: error instanceof Error ? error.message : 'No se pudo ajustar el stock' });
     }
   };
 
