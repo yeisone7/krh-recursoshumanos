@@ -138,43 +138,45 @@ function applyEmployeeCenterFilter(query: any, centerId?: string, allowedCenterI
   return query;
 }
 
-async function findEmployeeIdsByCurrentPosition(companyId: string, searchPattern: string) {
-  const { data, error } = await supabase
-    .from('employee_work_info')
-    .select('employee_id')
-    .eq('company_id', companyId)
-    .eq('is_current', true)
-    .ilike('position_name', searchPattern);
-
-  if (error) throw error;
-
-  return Array.from(new Set((data || []).map((row: any) => row.employee_id).filter(Boolean)));
+function getEmployeeSearchTerms(search?: string) {
+  return search?.trim().toLowerCase().split(/\s+/).filter(Boolean) || [];
 }
 
-async function applyEmployeeSearchFilter(query: any, search: string | undefined, companyId: string) {
-  if (!search || search.trim() === '') return query;
+function normalizeEmployeeSearchValue(value: unknown) {
+  return String(value ?? '').toLowerCase();
+}
 
-  const searchTerms = search.trim().split(/\s+/).filter(Boolean);
+function employeeMatchesSearch(employee: EmployeeV2WithRelations, search?: string) {
+  const searchTerms = getEmployeeSearchTerms(search);
+  if (searchTerms.length === 0) return true;
 
-  for (const term of searchTerms) {
-    const searchPattern = `%${term}%`;
-    const employeeIdsByPosition = await findEmployeeIdsByCurrentPosition(companyId, searchPattern);
-    const searchFilters = [
-      `first_name.ilike.${searchPattern}`,
-      `middle_name.ilike.${searchPattern}`,
-      `last_name.ilike.${searchPattern}`,
-      `second_last_name.ilike.${searchPattern}`,
-      `document_number.ilike.${searchPattern}`,
-    ];
+  const workInfo = employee.work_info || getDisplayWorkInfo(employee);
+  const searchableText = [
+    employee.first_name,
+    employee.middle_name,
+    employee.last_name,
+    employee.second_last_name,
+    employee.document_number,
+    employee.document_type,
+    workInfo?.position_name,
+  ]
+    .map(normalizeEmployeeSearchValue)
+    .join(' ');
 
-    if (employeeIdsByPosition.length > 0) {
-      searchFilters.push(`id.in.(${employeeIdsByPosition.join(',')})`);
-    }
+  return searchTerms.every((term) => searchableText.includes(term));
+}
 
-    query = query.or(searchFilters.join(','));
-  }
+function transformEmployees(data: any[] | null | undefined) {
+  return (data || []).map((emp: any) => {
+    const workInfo = getDisplayWorkInfo(emp);
 
-  return query;
+    return {
+      ...emp,
+      work_info: workInfo,
+      operation_centers: workInfo?.operation_centers || null,
+      areas: workInfo?.areas || null,
+    };
+  }) as EmployeeV2WithRelations[];
 }
 
 async function resolveValidShiftTypeId(shiftTypeId?: string | null, companyId?: string | null) {
@@ -320,10 +322,7 @@ export function useEmployeesPaginated(options: {
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
-      // 1. Server-side search (Name, document, or current position)
-      query = await applyEmployeeSearchFilter(query, search, currentCompanyId);
-
-      // 2. Server-side filtering
+      // 1. Server-side filtering
       query = applyEmployeeCenterFilter(
         query,
         centerId,
@@ -332,9 +331,20 @@ export function useEmployeesPaginated(options: {
 
       query = applyEmployeeStatusFilter(query, status);
 
-      // 3. Pagination range
+      // 2. Pagination range
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
+      const hasSearch = getEmployeeSearchTerms(search).length > 0;
+
+      if (hasSearch) {
+        const { data, error } = await query.order('last_name', { ascending: true });
+
+        if (error) throw error;
+
+        const filtered = transformEmployees(data).filter((employee) => employeeMatchesSearch(employee, search));
+
+        return { data: filtered.slice(from, to + 1), count: filtered.length };
+      }
 
       const { data, error, count } = await query
         .order('last_name', { ascending: true })
@@ -342,19 +352,7 @@ export function useEmployeesPaginated(options: {
 
       if (error) throw error;
 
-      // Transform data
-      const transformed = (data || []).map((emp: any) => {
-        const workInfo = getDisplayWorkInfo(emp);
-
-        return {
-          ...emp,
-          work_info: workInfo,
-          operation_centers: workInfo?.operation_centers || null,
-          areas: workInfo?.areas || null,
-        };
-      }) as EmployeeV2WithRelations[];
-
-      return { data: transformed, count: count || 0 };
+      return { data: transformEmployees(data), count: count || 0 };
     },
     enabled: !!currentCompanyId,
   });
@@ -392,10 +390,7 @@ export function useEmployeesInfinite(options: {
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
-      // 1. Search (Name, document, or current position)
-      query = await applyEmployeeSearchFilter(query, search, currentCompanyId);
-
-      // 2. Filters
+      // 1. Filters
       query = applyEmployeeCenterFilter(
         query,
         centerId,
@@ -403,9 +398,25 @@ export function useEmployeesInfinite(options: {
       );
       query = applyEmployeeStatusFilter(query, status);
 
-      // 3. Pagination
+      // 2. Pagination
       const from = pageParam * pageSize;
       const to = from + pageSize - 1;
+      const hasSearch = getEmployeeSearchTerms(search).length > 0;
+
+      if (hasSearch) {
+        const { data, error } = await query.order('last_name', { ascending: true });
+
+        if (error) throw error;
+
+        const filtered = transformEmployees(data).filter((employee) => employeeMatchesSearch(employee, search));
+        const pageData = filtered.slice(from, to + 1);
+
+        return {
+          data: pageData,
+          nextCursor: to + 1 < filtered.length ? pageParam + 1 : null,
+          totalCount: filtered.length
+        };
+      }
 
       const { data, error, count } = await query
         .order('last_name', { ascending: true })
@@ -413,17 +424,7 @@ export function useEmployeesInfinite(options: {
 
       if (error) throw error;
 
-      // Transform
-      const transformed = (data || []).map((emp: any) => {
-        const workInfo = getDisplayWorkInfo(emp);
-
-        return {
-          ...emp,
-          work_info: workInfo,
-          operation_centers: workInfo?.operation_centers || null,
-          areas: workInfo?.areas || null,
-        };
-      }) as EmployeeV2WithRelations[];
+      const transformed = transformEmployees(data);
 
       return {
         data: transformed,
