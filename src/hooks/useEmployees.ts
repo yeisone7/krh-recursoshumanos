@@ -22,7 +22,81 @@ function getEmployeeWorkInfoSelect(centerId?: string, requireCenterScope = false
 function getDisplayWorkInfo(employee: any) {
   const workInfoRows = employee.employee_work_info || [];
 
-  return workInfoRows.find((row: any) => row.is_current) || workInfoRows[0] || null;
+  return pickBestRelatedRecord(workInfoRows, 'is_current');
+}
+
+function hasMeaningfulValue(value: unknown) {
+  return value !== null && value !== undefined && String(value).trim() !== '';
+}
+
+function getRecordTimestamp(record: any) {
+  const rawTimestamp = record?.updated_at || record?.created_at;
+  const timestamp = rawTimestamp ? new Date(rawTimestamp).getTime() : 0;
+
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function getRecordCompletenessScore(record: any) {
+  if (!record) return 0;
+
+  return Object.entries(record).reduce((score, [key, value]) => {
+    if (key === 'id' || key === 'employee_id' || key === 'company_id' || key === 'created_by') {
+      return score;
+    }
+
+    if (typeof value === 'object' && value !== null) {
+      return score;
+    }
+
+    return hasMeaningfulValue(value) ? score + 1 : score;
+  }, 0);
+}
+
+function pickBestRelatedRecord<T extends Record<string, any>>(records: T[] | null | undefined, currentColumn: string): T | null {
+  const rows = records || [];
+  if (rows.length === 0) return null;
+
+  const currentRows = rows.filter((row) => row?.[currentColumn] === true);
+  const candidates = currentRows.length > 0 ? currentRows : rows;
+
+  return [...candidates].sort((a, b) => {
+    const completenessDelta = getRecordCompletenessScore(b) - getRecordCompletenessScore(a);
+    if (completenessDelta !== 0) return completenessDelta;
+
+    return getRecordTimestamp(b) - getRecordTimestamp(a);
+  })[0] || null;
+}
+
+async function fetchBestEmployeeRelatedRecord(
+  table: string,
+  select: string,
+  employeeId: string,
+  currentColumn = 'is_current'
+) {
+  const { data: rows, error } = await (supabase.from(table as any) as any)
+    .select(select)
+    .eq('employee_id', employeeId);
+
+  if (error) throw error;
+
+  return pickBestRelatedRecord(rows || [], currentColumn);
+}
+
+async function deactivateOtherCurrentRecords(
+  table: string,
+  employeeId: string,
+  keepId: string | null | undefined,
+  currentColumn = 'is_current'
+) {
+  if (!keepId) return;
+
+  const { error } = await (supabase.from(table as any) as any)
+    .update({ [currentColumn]: false })
+    .eq('employee_id', employeeId)
+    .eq(currentColumn, true)
+    .neq('id', keepId);
+
+  if (error) throw error;
 }
 
 function applyEmployeeStatusFilter(query: any, status?: string) {
@@ -158,13 +232,17 @@ export function useEmployees() {
       if (error) throw error;
 
       // Transform data to include nested relations
-      return (employees || []).map((emp: any) => ({
-        ...emp,
-        contact: emp.employee_contact?.[0] || null,
-        work_info: emp.employee_work_info?.[0] || null,
-        operation_centers: emp.employee_work_info?.[0]?.operation_centers || null,
-        areas: emp.employee_work_info?.[0]?.areas || null,
-      })) as EmployeeV2WithRelations[];
+      return (employees || []).map((emp: any) => {
+        const workInfo = getDisplayWorkInfo(emp);
+
+        return {
+          ...emp,
+          contact: pickBestRelatedRecord(emp.employee_contact || [], 'is_current'),
+          work_info: workInfo,
+          operation_centers: workInfo?.operation_centers || null,
+          areas: workInfo?.areas || null,
+        };
+      }) as EmployeeV2WithRelations[];
     },
     enabled: !!currentCompanyId,
   });
@@ -349,37 +427,37 @@ export function useEmployee(id: string | undefined) {
 
       // Get all related data in parallel
       const [
-        { data: contact },
-        { data: family },
-        { data: workInfo },
-        { data: socialSecurity },
-        { data: bankInfo },
-        { data: schedule },
+        contact,
+        family,
+        workInfo,
+        socialSecurity,
+        bankInfo,
+        schedule,
         { data: documents },
         { data: certifications },
         { data: vaccinations },
-        { data: timeConfig },
+        timeConfig,
         { data: familyMembers },
       ] = await Promise.all([
-        supabase.from('employee_contact').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_family').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_work_info').select(`
+        fetchBestEmployeeRelatedRecord('employee_contact', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_family', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_work_info', `
           *,
           operation_centers(id, name, city),
           areas(id, name),
           positions(id, name)
-        `).eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_social_security').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_bank_info').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_schedule').select('*').eq('employee_id', id).eq('is_current', true).maybeSingle(),
+        `, id),
+        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id),
         supabase.from('employee_documents').select('*').eq('employee_id', id).eq('is_valid', true).order('upload_date', { ascending: false }),
         supabase.from('employee_certifications').select('*').eq('employee_id', id).eq('is_valid', true).order('expiry_date', { ascending: true }),
         supabase.from('employee_vaccinations').select('*').eq('employee_id', id).order('application_date', { ascending: false }),
-        supabase.from('employee_time_config').select(`
+        fetchBestEmployeeRelatedRecord('employee_time_config', `
           *,
           work_schedules(id, name, days_of_week, start_time, end_time, break_minutes),
           shift_cycles(id, name, code, total_days)
-        `).eq('employee_id', id).eq('is_active', true).maybeSingle(),
+        `, id, 'is_active'),
         supabase.from('employee_family_members').select('*').eq('employee_id', id).order('created_at', { ascending: true }),
       ]);
 
@@ -692,21 +770,31 @@ export function useUpdateEmployee() {
       // 2. Update or insert related records
       // First, check which records exist
       const [
-        { data: existingContact },
-        { data: existingFamily },
-        { data: existingWorkInfo },
-        { data: existingSocialSecurity },
-        { data: existingBankInfo },
-        { data: existingSchedule },
-        { data: existingTimeConfig },
+        existingContact,
+        existingFamily,
+        existingWorkInfo,
+        existingSocialSecurity,
+        existingBankInfo,
+        existingSchedule,
+        existingTimeConfig,
       ] = await Promise.all([
-        supabase.from('employee_contact').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_family').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_work_info').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_social_security').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_bank_info').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_schedule').select('id').eq('employee_id', id).eq('is_current', true).maybeSingle(),
-        supabase.from('employee_time_config').select('id').eq('employee_id', id).eq('is_active', true).maybeSingle(),
+        fetchBestEmployeeRelatedRecord('employee_contact', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_family', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_work_info', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active'),
+      ]);
+
+      await Promise.all([
+        deactivateOtherCurrentRecords('employee_contact', id, existingContact?.id),
+        deactivateOtherCurrentRecords('employee_family', id, existingFamily?.id),
+        deactivateOtherCurrentRecords('employee_work_info', id, existingWorkInfo?.id),
+        deactivateOtherCurrentRecords('employee_social_security', id, existingSocialSecurity?.id),
+        deactivateOtherCurrentRecords('employee_bank_info', id, existingBankInfo?.id),
+        deactivateOtherCurrentRecords('employee_schedule', id, existingSchedule?.id),
+        deactivateOtherCurrentRecords('employee_time_config', id, existingTimeConfig?.id, 'is_active'),
       ]);
 
       // Prepare upsert operations
@@ -728,6 +816,7 @@ export function useUpdateEmployee() {
               emergency_contact_name: data.emergencyContactName || null,
               emergency_contact_phone: data.emergencyContactPhone || null,
               emergency_contact_relationship: data.emergencyContactRelationship || null,
+              is_current: true,
             })
             .eq('id', existingContact.id)
         );
@@ -783,6 +872,7 @@ export function useUpdateEmployee() {
               hire_date: format(data.hireDate, 'yyyy-MM-dd'),
               link_type: data.linkType || 'indefinido',
               observations: data.observations || null,
+              is_current: true,
             })
             .eq('id', existingWorkInfo.id)
         );
@@ -818,6 +908,7 @@ export function useUpdateEmployee() {
               ccf: data.ccf || null,
               afc: data.afc || null,
               ips: data.ips || null,
+              is_current: true,
             })
             .eq('id', existingSocialSecurity.id)
         );
@@ -847,6 +938,7 @@ export function useUpdateEmployee() {
               account_type: data.accountType || null,
               account_number: data.accountNumber || null,
               account_registered: data.accountRegistered || false,
+              is_current: true,
             })
             .eq('id', existingBankInfo.id)
         );
@@ -873,6 +965,7 @@ export function useUpdateEmployee() {
               shift_type_id: validShiftTypeId,
               is_office_schedule: data.isOfficeSchedule ?? true,
               rest_day: data.restDay || null,
+              is_current: true,
             })
             .eq('id', existingSchedule.id)
         );
@@ -901,6 +994,7 @@ export function useUpdateEmployee() {
               cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
               start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
               notes: data.timeModeNotes || null,
+              is_active: true,
             })
             .eq('id', existingTimeConfig.id)
         );

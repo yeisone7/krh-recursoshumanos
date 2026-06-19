@@ -527,6 +527,21 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
   };
 
   const employeeFullName = employee ? getEmployeeFullName(employee) : '';
+  const hasContactDetails = Boolean(employee?.contact && [
+    employee.contact.email,
+    employee.contact.personal_email,
+    employee.contact.phone,
+    employee.contact.mobile,
+    employee.contact.residence_address,
+    employee.contact.residence_city,
+    employee.contact.residence_department,
+    employee.contact.residence_neighborhood,
+  ].some(Boolean));
+  const hasEmergencyContact = Boolean(employee?.contact && [
+    employee.contact.emergency_contact_name,
+    employee.contact.emergency_contact_relationship,
+    employee.contact.emergency_contact_phone,
+  ].some(Boolean));
   const documentsByFolder = employeeDocumentFolderOrder.reduce((acc, folder) => ({ ...acc, [folder]: [] as Array<{ source: 'employee' | 'candidate'; doc: any }> }), {} as Record<string, Array<{ source: 'employee' | 'candidate'; doc: any }>>);
   employee?.documents?.forEach((doc) => {
     const folder = normalizeEmployeeDocumentFolder(doc.document_type);
@@ -806,7 +821,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   </div>
 
                   {/* Contact Info */}
-                  {employee.contact && (
+                  {hasContactDetails && (
                     <SectionCard title="Contacto" icon={Phone}>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                         <div className="divide-y divide-border">
@@ -827,7 +842,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   )}
 
                   {/* Emergency Contact */}
-                  {employee.contact?.emergency_contact_name && (
+                  {hasEmergencyContact && (
                     <Card className="border-warning/30 bg-warning-light/30 shadow-none">
                       <CardContent className="p-4">
                         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
