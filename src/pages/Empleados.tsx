@@ -307,9 +307,14 @@ export default function Empleados() {
     return employees.filter((emp) => {
       const fullName = getEmployeeFullName(emp).toLowerCase();
       const position = emp.work_info?.position_name?.toLowerCase() || '';
+      const documentNumber = emp.document_number?.toLowerCase() || '';
+      const documentType = emp.document_type?.toLowerCase() || '';
+      const normalizedSearch = searchQuery.toLowerCase();
       const matchesSearch = 
-        fullName.includes(searchQuery.toLowerCase()) ||
-        position.includes(searchQuery.toLowerCase());
+        fullName.includes(normalizedSearch) ||
+        position.includes(normalizedSearch) ||
+        documentNumber.includes(normalizedSearch) ||
+        documentType.includes(normalizedSearch);
       
       let matchesStatus = true;
       if (statusFilter === 'active') matchesStatus = emp.is_active && emp.status === 'active';
@@ -454,7 +459,7 @@ export default function Empleados() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por nombre, cargo..."
+              placeholder="Buscar por nombre, cargo o documento..."
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-transparent focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all shadow-sm"
             />
           </div>

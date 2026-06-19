@@ -19,6 +19,7 @@ import {
   Filter,
   Trash2,
   AlertTriangle,
+  FileCheck,
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -113,6 +114,7 @@ export default function Seleccion() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
+  const [requisitionFilter, setRequisitionFilter] = useState<string>('all');
   const [activeCandidateKpi, setActiveCandidateKpi] = useState<CandidateKpiView | null>(null);
   const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
   const [candidateVacancyFilter, setCandidateVacancyFilter] = useState('all');
@@ -169,6 +171,23 @@ export default function Seleccion() {
       .map(([id, label]) => ({ id, label }));
   }, [candidates]);
 
+  const requisitionOptions = useMemo(() => {
+    const requisitionMap = new Map<string, string>();
+
+    vacancies.forEach((vacancy) => {
+      const requisition = (vacancy as any).personnel_requisitions;
+      if (!vacancy.requisition_id || !requisition) return;
+
+      const code = requisition.requisition_code || 'RQ-PEND';
+      const cargo = requisition.cargo_solicitado ? ` - ${requisition.cargo_solicitado}` : '';
+      requisitionMap.set(vacancy.requisition_id, `${code}${cargo}`);
+    });
+
+    return Array.from(requisitionMap.entries())
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, label]) => ({ id, label }));
+  }, [vacancies]);
+
   const openCandidateKpi = (view: CandidateKpiView) => {
     setActiveCandidateKpi(view);
     setCandidateSearchQuery('');
@@ -207,17 +226,27 @@ export default function Seleccion() {
 
   // Filter vacancies
   const filteredVacancies = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+
     return vacancies.filter((vacancy) => {
+      const requisition = (vacancy as any).personnel_requisitions;
+      const requisitionCode = (requisition?.requisition_code || '').toLowerCase();
+      const requisitionCargo = (requisition?.cargo_solicitado || '').toLowerCase();
       const matchesSearch =
-        vacancy.position_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vacancy.department_area?.toLowerCase().includes(searchQuery.toLowerCase());
+        !normalizedSearch ||
+        vacancy.position_title.toLowerCase().includes(normalizedSearch) ||
+        vacancy.department_area?.toLowerCase().includes(normalizedSearch) ||
+        requisitionCode.includes(normalizedSearch) ||
+        requisitionCargo.includes(normalizedSearch);
       const matchesStatus = statusFilter === 'all' || vacancy.status === statusFilter;
       const matchesCenter =
         centerFilter === 'all' || vacancy.operation_center_id === centerFilter;
+      const matchesRequisition =
+        requisitionFilter === 'all' || vacancy.requisition_id === requisitionFilter;
 
-      return matchesSearch && matchesStatus && matchesCenter;
+      return matchesSearch && matchesStatus && matchesCenter && matchesRequisition;
     });
-  }, [vacancies, searchQuery, statusFilter, centerFilter]);
+  }, [vacancies, searchQuery, statusFilter, centerFilter, requisitionFilter]);
 
   const vacancyItems = useMemo(
     () => filteredVacancies.map((vacancy) => {
@@ -225,6 +254,8 @@ export default function Seleccion() {
       const statusStyle = vacancyStatusConfig[status];
       const candidateCount = (vacancy as any).candidates?.length || 0;
       const centerName = (vacancy as any).operation_centers?.name || 'General';
+      const requisition = (vacancy as any).personnel_requisitions;
+      const requisitionCode = requisition?.requisition_code || 'RQ-PEND';
 
       return {
         id: vacancy.id,
@@ -236,6 +267,7 @@ export default function Seleccion() {
           </Badge>
         ),
         fields: [
+          { label: 'Requisición', value: requisitionCode },
           { label: 'Centro', value: centerName },
           { label: 'Candidatos', value: candidateCount },
           { label: 'Apertura', value: formatDateOnly(vacancy.open_date, 'dd MMM yyyy', { locale: es }) },
@@ -384,7 +416,7 @@ export default function Seleccion() {
           <div className="relative w-full sm:w-72 group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
-              placeholder="Buscar vacantes por cargo o área..."
+              placeholder="Buscar por cargo, área o requisición..."
               className="h-9 rounded-lg border-border bg-background pl-8 text-xs font-bold transition-all placeholder:font-normal focus:bg-background focus:ring-4 focus:ring-primary/5"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -421,6 +453,23 @@ export default function Seleccion() {
                 {operationCenters.map((center) => (
                   <SelectItem key={center.id} value={center.id} className="p-2.5 text-xs font-bold uppercase">
                     {center.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={requisitionFilter} onValueChange={setRequisitionFilter}>
+              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-[11px] font-bold uppercase tracking-wider sm:w-[190px]">
+                <div className="flex items-center gap-1.5">
+                  <FileCheck className="w-3.5 h-3.5 shrink-0 text-primary" />
+                  <SelectValue placeholder="Requisición" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="max-h-72 rounded-xl border-border shadow-md">
+                <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todas las requisiciones</SelectItem>
+                {requisitionOptions.map((requisition) => (
+                  <SelectItem key={requisition.id} value={requisition.id} className="p-2.5 text-xs font-bold">
+                    {requisition.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -463,9 +512,10 @@ export default function Seleccion() {
                 <Table className="w-full table-fixed">
                   <TableHeader className="[&_th]:h-10 [&_th]:px-2 [&_th]:text-[9px] [&_th]:tracking-[0.18em]">
                     <TableRow className="border-b border-foreground/20 bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="h-10 w-[30%] px-3 text-[9px] font-black uppercase tracking-[0.18em]">Vacante</TableHead>
-                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[18%]">Ubicación</TableHead>
-                      <TableHead className="h-10 w-[15%] px-2 text-[9px] font-black uppercase tracking-[0.18em]">Candidatos</TableHead>
+                      <TableHead className="h-10 w-[25%] px-3 text-[9px] font-black uppercase tracking-[0.18em]">Vacante</TableHead>
+                      <TableHead className="h-10 w-[14%] px-2 text-[9px] font-black uppercase tracking-[0.18em]">Requisición</TableHead>
+                      <TableHead className="h-16 font-black text-[10px] uppercase tracking-[0.2em] w-[15%]">Ubicación</TableHead>
+                      <TableHead className="h-10 w-[13%] px-2 text-[9px] font-black uppercase tracking-[0.18em]">Candidatos</TableHead>
                       <TableHead className="h-10 w-[12%] px-2 text-[9px] font-black uppercase tracking-[0.18em]">Apertura</TableHead>
                       <TableHead className="h-10 w-[12%] px-2 text-[9px] font-black uppercase tracking-[0.18em]">Estado</TableHead>
                       <TableHead className="h-10 w-[13%] px-3 text-right text-[9px] font-black uppercase tracking-[0.18em]">Acciones</TableHead>
@@ -477,6 +527,8 @@ export default function Seleccion() {
                       const statusStyle = vacancyStatusConfig[status];
                       const candidateCount = (vacancy as any).candidates?.length || 0;
                       const centerName = (vacancy as any).operation_centers?.name || 'General';
+                      const requisition = (vacancy as any).personnel_requisitions;
+                      const requisitionCode = requisition?.requisition_code || 'RQ-PEND';
 
                       return (
                         <TableRow
@@ -495,6 +547,16 @@ export default function Seleccion() {
                                   {vacancy.department_area || 'Sin área'} • {vacancy.positions_count} {vacancy.positions_count > 1 ? 'Posiciones' : 'Posición'}
                                 </p>
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="px-2 py-2.5">
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                                {requisitionCode}
+                              </Badge>
+                              <span className="truncate text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
+                                {requisition?.cargo_solicitado || 'Sin requisición'}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="px-2 py-2.5">
