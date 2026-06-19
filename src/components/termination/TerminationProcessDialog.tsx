@@ -362,7 +362,7 @@ export function TerminationProcessDialog({
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <FormField
                       control={form.control}
                       name="terminationDate"
@@ -372,14 +372,14 @@ export function TerminationProcessDialog({
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
-                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <Button variant="outline" className={cn('h-12 w-full justify-start rounded-xl border-border/60 bg-background px-4 text-left font-medium shadow-sm', !field.value && 'text-muted-foreground')}>
+                                  <span className="min-w-0 flex-1 truncate">{field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}</span>
+                                  <CalendarIcon className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            <PopoverContent className="z-[70] w-auto rounded-2xl border-border/50 bg-popover p-0 shadow-2xl" align="start" sideOffset={8}>
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} className="rounded-2xl p-3" />
                             </PopoverContent>
                           </Popover>
                           <FormMessage />
@@ -396,14 +396,14 @@ export function TerminationProcessDialog({
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
-                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <Button variant="outline" className={cn('h-12 w-full justify-start rounded-xl border-border/60 bg-background px-4 text-left font-medium shadow-sm', !field.value && 'text-muted-foreground')}>
+                                  <span className="min-w-0 flex-1 truncate">{field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}</span>
+                                  <CalendarIcon className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            <PopoverContent className="z-[70] w-auto rounded-2xl border-border/50 bg-popover p-0 shadow-2xl" align="start" sideOffset={8}>
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} className="rounded-2xl p-3" />
                             </PopoverContent>
                           </Popover>
                           <FormMessage />
@@ -422,14 +422,14 @@ export function TerminationProcessDialog({
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
-                                <Button variant="outline" className={cn('pl-3 text-left font-normal', !field.value && 'text-muted-foreground')}>
-                                  {field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                <Button variant="outline" className={cn('h-12 w-full justify-start rounded-xl border-border/60 bg-background px-4 text-left font-medium shadow-sm', !field.value && 'text-muted-foreground')}>
+                                  <span className="min-w-0 flex-1 truncate">{field.value ? format(field.value, 'PPP', { locale: es }) : 'Seleccione'}</span>
+                                  <CalendarIcon className="ml-3 h-4 w-4 shrink-0 text-muted-foreground" />
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-background" align="start">
-                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} />
+                            <PopoverContent className="z-[70] w-auto rounded-2xl border-border/50 bg-popover p-0 shadow-2xl" align="start" sideOffset={8}>
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} locale={es} className="rounded-2xl p-3" />
                             </PopoverContent>
                           </Popover>
                           <FormMessage />
