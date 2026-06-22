@@ -327,7 +327,7 @@ export function useUpdateRequisition() {
 
 export function useApproveRequisitionStep() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   return useMutation({
@@ -342,9 +342,19 @@ export function useApproveRequisitionStep() {
       approved: boolean;
       data?: Record<string, any>;
     }) => {
+      const approverName =
+        data?.[`${step}_quien_aprobo`] ||
+        profile?.full_name?.trim() ||
+        profile?.display_name?.trim() ||
+        user?.user_metadata?.full_name ||
+        user?.user_metadata?.name ||
+        user?.email?.split('@')[0] ||
+        null;
+
       const updates: Record<string, any> = {
         ...data,
         [`${step}_aprobado`]: approved,
+        [`${step}_quien_aprobo`]: approverName,
         [`${step}_aprobador_id`]: user?.id,
         [`${step}_fecha_aprobacion`]: new Date().toISOString(),
       };
