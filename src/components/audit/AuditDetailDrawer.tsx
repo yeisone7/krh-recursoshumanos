@@ -24,7 +24,7 @@ import {
 import { VisualDiff } from './VisualDiff';
 import {
   actionLabels, entityTypeLabels,
-  actionConfig, severityConfig, resolveModuleLabel,
+  actionConfig, getAuditActorName, getAuditEventSummary, severityConfig, resolveModuleLabel,
   type AuditLogEntry,
 } from '@/hooks/useAuditLog';
 
@@ -63,6 +63,8 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
 
   const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-muted-foreground' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
+  const actorName = getAuditActorName(log);
+  const eventSummary = getAuditEventSummary(log);
 
   const browserInfo = (() => {
     const ua = log.user_agent ?? '';
@@ -116,11 +118,13 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
           <div className="space-y-6 px-4 py-5 sm:px-6">
 
             {/* Descripción */}
-            {log.description && (
-              <div className="rounded-lg bg-background border px-4 py-3">
-                <p className="text-sm text-foreground">{log.description}</p>
-              </div>
-            )}
+            <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary/70">Qué pasó</p>
+              <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">{eventSummary}</p>
+              {log.description && log.description !== eventSummary && (
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{log.description}</p>
+              )}
+            </div>
 
             {/* Info del evento */}
             <section className="space-y-3">
@@ -128,7 +132,16 @@ export function AuditDetailDrawer({ log, open, onOpenChange }: AuditDetailDrawer
                 <Shield className="w-3.5 h-3.5" /> Información del Evento
               </h3>
               <div className="grid grid-cols-1 gap-3">
-                <MetaRow icon={User}     label="Usuario"   value={log.user_email ?? 'Sistema'} />
+                <MetaRow
+                  icon={User}
+                  label="Usuario"
+                  value={
+                    <span>
+                      {actorName}
+                      {log.user_email && <span className="block text-xs font-normal text-muted-foreground">{log.user_email}</span>}
+                    </span>
+                  }
+                />
                 <MetaRow icon={Clock}    label="Fecha/Hora" value={
                   format(new Date(log.created_at), "dd MMM yyyy, HH:mm:ss", { locale: es })
                 } />
