@@ -37,7 +37,8 @@ import { AuditFilters } from './AuditFilters';
 import {
   actionConfig,
   actionLabels,
-  entityTypeLabels,
+  getAuditActorName,
+  getAuditEventSummary,
   resolveModuleLabel,
   severityConfig,
   type AuditFilters as AuditFiltersType,
@@ -60,6 +61,8 @@ function SeverityIcon({ severity, className }: { severity: string | null | undef
 function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
   const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
+  const eventSummary = getAuditEventSummary(log);
+  const actorName = getAuditActorName(log);
 
   return (
     <TableRow
@@ -77,47 +80,33 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
         </div>
       </TableCell>
 
-      <TableCell className="px-5 py-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white">
+      <TableCell className="min-w-[360px] px-5 py-4">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-white">
             <User className="relative h-4 w-4 text-primary" />
           </div>
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-xs font-black tracking-tight text-slate-900">
-              {log.user_email?.split('@')[0] ?? 'SISTEMA'}
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="line-clamp-2 text-sm font-black leading-snug tracking-tight text-slate-900">
+              {eventSummary}
             </span>
-            <span className="max-w-[180px] truncate text-[10px] font-medium tracking-wide text-slate-400">
-              {log.user_email ?? 'Automatico'}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="max-w-[220px] truncate text-[10px] font-bold text-slate-400">
+                {actorName}{log.user_email ? ` · ${log.user_email}` : ''}
+              </span>
+              <Badge
+                variant="outline"
+                className={cn('border-none px-2 py-0.5 text-[9px] font-black uppercase tracking-widest', actionCfg.class)}
+              >
+                {actionLabels[log.action] ?? log.action}
+              </Badge>
+            </div>
           </div>
         </div>
-      </TableCell>
-
-      <TableCell className="px-5 py-4">
-        <Badge
-          variant="outline"
-          className={cn('border-none px-2 py-0.5 text-[9px] font-black uppercase tracking-widest', actionCfg.class)}
-        >
-          {actionLabels[log.action] ?? log.action}
-        </Badge>
       </TableCell>
 
       <TableCell className="px-5 py-4">
         <div className="inline-flex items-center gap-1.5 rounded-lg border border-slate-100 bg-background px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight text-slate-500">
           {resolveModuleLabel(log.module)}
-        </div>
-      </TableCell>
-
-      <TableCell className="px-5 py-4">
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate text-xs font-black tracking-tight text-slate-900">
-            {entityTypeLabels[log.entity_type] ?? log.entity_type}
-          </span>
-          {log.entity_name && (
-            <span className="max-w-[190px] truncate text-[10px] font-medium text-slate-400">
-              {log.entity_name}
-            </span>
-          )}
         </div>
       </TableCell>
 
@@ -158,6 +147,8 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
 function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
   const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
+  const eventSummary = getAuditEventSummary(log);
+  const actorName = getAuditActorName(log);
 
   return (
     <button
@@ -171,11 +162,11 @@ function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => 
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-slate-950">
-              {log.user_email?.split('@')[0] ?? 'SISTEMA'}
+            <p className="line-clamp-2 text-sm font-black leading-snug text-slate-950">
+              {eventSummary}
             </p>
             <p className="truncate text-[11px] font-semibold text-slate-400">
-              {log.user_email ?? 'Automatico'}
+              {actorName}{log.user_email ? ` · ${log.user_email}` : ''}
             </p>
           </div>
         </div>
@@ -203,15 +194,15 @@ function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => 
       <div className="mt-4 rounded-xl bg-slate-50 p-3">
         <div className="flex items-center justify-between gap-3">
           <p className="min-w-0 truncate text-xs font-black text-slate-900">
-            {entityTypeLabels[log.entity_type] ?? log.entity_type}
+            {resolveModuleLabel(log.module)}
           </p>
           <p className="shrink-0 text-[10px] font-black uppercase tracking-widest text-primary">
             {format(new Date(log.created_at), 'dd MMM yy', { locale: es })}
           </p>
         </div>
-        {log.entity_name && (
+        {(log.description || log.entity_name) && (
           <p className="mt-1 line-clamp-2 text-[11px] font-semibold text-slate-500">
-            {log.entity_name}
+            {log.description || log.entity_name}
           </p>
         )}
         <p className="mt-2 text-[10px] font-bold text-slate-400">
@@ -386,10 +377,8 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                     <TableHeader className="bg-background">
                       <TableRow className="border-slate-100 hover:bg-transparent">
                         <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Temporalidad</TableHead>
-                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Actor</TableHead>
-                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Operacion</TableHead>
-                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Contexto</TableHead>
-                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Entidad</TableHead>
+                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Evento</TableHead>
+                        <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Modulo</TableHead>
                         <TableHead className="px-5 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Impacto</TableHead>
                         <TableHead className="w-12 px-5" />
                       </TableRow>

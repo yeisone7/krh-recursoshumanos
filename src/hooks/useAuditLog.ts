@@ -22,6 +22,7 @@ export interface AuditLogEntry {
   id: string;
   user_id: string;
   user_email: string | null;
+  actor_name?: string | null;
   company_id: string | null;
   action: string;
   entity_type: string;
@@ -242,6 +243,175 @@ export function resolveModuleLabel(module: string | null | undefined): string {
   );
 }
 
+const approvalStepLabels: Record<string, string> = {
+  coordinadores: 'Coordinadores',
+  rrhh: 'Recursos Humanos',
+  juridico: 'Jurídico',
+  operaciones: 'Operaciones',
+  gerencia: 'Gerencia',
+  seleccion: 'Selección',
+};
+
+const entityNameKeys = [
+  'full_name',
+  'display_name',
+  'name',
+  'employee_name',
+  'employee_full_name',
+  'candidate_name',
+  'cargo_solicitado',
+  'position_title',
+  'requisition_code',
+  'email',
+  'user_email',
+  'role_name',
+  'title',
+];
+
+function cleanText(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getValues(log: AuditLogEntry): Record<string, unknown> {
+  return {
+    ...(log.old_values ?? {}),
+    ...(log.new_values ?? {}),
+    ...(log.metadata ?? {}),
+  };
+}
+
+function valueFromKeys(values: Record<string, unknown>, keys: string[]): string | null {
+  for (const key of keys) {
+    const value = cleanText(values[key]);
+    if (value) return value;
+  }
+  return null;
+}
+
+function getTargetName(log: AuditLogEntry): string | null {
+  return cleanText(log.entity_name) || valueFromKeys(getValues(log), entityNameKeys);
+}
+
+function getRoleName(log: AuditLogEntry): string | null {
+  return cleanText(log.new_values?.role_name) || cleanText(log.old_values?.role_name) || cleanText(getValues(log).role);
+}
+
+function getApprovalChange(log: AuditLogEntry): { step: string; approved: boolean } | null {
+  const values = log.new_values ?? {};
+
+  for (const [key, value] of Object.entries(values)) {
+    const match = key.match(/^(.+)_aprobado$/);
+    if (!match || typeof value !== 'boolean') continue;
+    const rawStep = match[1];
+    return {
+      step: approvalStepLabels[rawStep] ?? rawStep.replace(/_/g, ' '),
+      approved: value,
+    };
+  }
+
+  return null;
+}
+
+function getActivationAction(log: AuditLogEntry): 'activo' | 'inactivo' | null {
+  const candidates = ['is_active', 'active', 'enabled'];
+
+  for (const key of candidates) {
+    if (typeof log.new_values?.[key] === 'boolean') {
+      return log.new_values[key] ? 'activo' : 'inactivo';
+    }
+  }
+
+  const status = cleanText(log.new_values?.status)?.toLowerCase();
+  if (!status) return null;
+  if (['inactive', 'inactivo', 'suspended', 'suspendido'].includes(status)) return 'inactivo';
+  if (['active', 'activo'].includes(status)) return 'activo';
+  return null;
+}
+
+function describeEntity(log: AuditLogEntry): string {
+  const entityLabel = entityTypeLabels[log.entity_type] ?? log.entity_type.replace(/_/g, ' ');
+  const targetName = getTargetName(log);
+  const normalizedEntity = entityLabel.toLowerCase();
+
+  if (normalizedEntity.includes('usuario')) {
+    return targetName ? `a ${targetName} como usuario` : 'un usuario';
+  }
+
+  if (normalizedEntity.includes('requisicion') || normalizedEntity.includes('requisici')) {
+    return targetName ? `la Requisición ${targetName}` : 'una Requisición';
+  }
+
+  if (normalizedEntity.includes('rol')) {
+    return targetName ? `el rol ${targetName}` : 'un rol';
+  }
+
+  return targetName ? `${entityLabel} ${targetName}` : entityLabel;
+}
+
+export function getAuditActorName(log: AuditLogEntry): string {
+  return (
+    cleanText(log.actor_name) ||
+    cleanText(log.metadata?.actor_name) ||
+    cleanText(log.metadata?.user_name) ||
+    cleanText(log.user_email?.split('@')[0]) ||
+    'Sistema'
+  );
+}
+
+export function getAuditEventSummary(log: AuditLogEntry): string {
+  const actor = getAuditActorName(log);
+  const approval = getApprovalChange(log);
+  const targetName = getTargetName(log);
+
+  if (approval && (log.entity_type === 'requisition' || log.entity_type === 'personnel_requisitions')) {
+    const verb = approval.approved ? 'aprobó' : 'rechazó';
+    return `${actor} ${verb} Requisición en ${approval.step}${targetName ? ` (${targetName})` : ''}`;
+  }
+
+  if (log.action === 'assign_role') {
+    const roleName = getRoleName(log);
+    return `${actor} asignó${roleName ? ` el rol ${roleName}` : ' un rol'} a ${targetName ?? 'un usuario'}`;
+  }
+
+  if (log.action === 'remove_role') {
+    const roleName = getRoleName(log);
+    return `${actor} retiró${roleName ? ` el rol ${roleName}` : ' un rol'} a ${targetName ?? 'un usuario'}`;
+  }
+
+  if (log.action === 'change_permissions') {
+    return `${actor} cambió los permisos de ${describeEntity(log)}`;
+  }
+
+  if (log.action === 'create' || log.action === 'invite_user') {
+    return `${actor} creó ${describeEntity(log)}`;
+  }
+
+  if (log.action === 'delete') {
+    return `${actor} eliminó ${describeEntity(log)}`;
+  }
+
+  if (log.action === 'update') {
+    const activationAction = getActivationAction(log);
+    if (activationAction === 'inactivo') return `${actor} inactivó ${describeEntity(log)}`;
+    if (activationAction === 'activo') return `${actor} activó ${describeEntity(log)}`;
+    return `${actor} actualizó ${describeEntity(log)}`;
+  }
+
+  if (log.action === 'login') return `${actor} inició sesión`;
+  if (log.action === 'logout') return `${actor} cerró sesión`;
+  if (log.action === 'failed_login') return `${actor} tuvo un intento fallido de ingreso`;
+
+  if (log.action.startsWith('export_')) {
+    return `${actor} exportó información de ${resolveModuleLabel(log.module)}`;
+  }
+
+  if (log.description) return log.description;
+
+  return `${actor} realizó ${actionLabels[log.action]?.toLowerCase() ?? log.action} en ${describeEntity(log)}`;
+}
+
 export const severityConfig: Record<AuditSeverity, { label: string; class: string }> = {
   info:     { label: 'Info',     class: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
   warning:  { label: 'Alerta',   class: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
@@ -307,7 +477,32 @@ export function useAuditLogs(
 
       const { data, error, count } = await query;
       if (error) throw error;
-      return { data: (data ?? []) as AuditLogEntry[], total: count ?? 0 };
+
+      const logs = (data ?? []) as AuditLogEntry[];
+      const userIds = Array.from(new Set(logs.map(log => log.user_id).filter(Boolean)));
+      let profileMap = new Map<string, string>();
+
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('id, full_name, display_name')
+          .in('id', userIds);
+
+        profileMap = new Map(
+          (profiles ?? []).map(profile => [
+            profile.id,
+            profile.full_name || profile.display_name || profile.id,
+          ])
+        );
+      }
+
+      return {
+        data: logs.map(log => ({
+          ...log,
+          actor_name: profileMap.get(log.user_id) ?? null,
+        })),
+        total: count ?? 0,
+      };
     },
     enabled: !!currentCompanyId,
     staleTime: 1000 * 30, // 30s cache
