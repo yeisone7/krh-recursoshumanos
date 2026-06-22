@@ -99,7 +99,7 @@ export const actionLabels: Record<string, string> = {
 
 export const entityTypeLabels: Record<string, string> = {
   // Empleados
-  employee: 'Empleado', employees_v2: 'Empleado', employees: 'Empleado',
+  employee: 'Empleado', employee_v2: 'Empleado', employees_v2: 'Empleado', employees: 'Empleado',
   employee_work_info: 'Info Laboral', employee_contact: 'Contacto Empleado',
   employee_family: 'Familia Empleado', employee_bank_info: 'Info Bancaria',
   employee_document: 'Documento Empleado', employee_documents: 'Documento Empleado',
@@ -178,7 +178,7 @@ export const moduleLabels: Record<string, string> = {
   configuracion: 'Configuración', seguridad: 'Seguridad',
   asistente_ia: 'Asistente IA', sistema: 'Sistema',
   // Claves en inglés/snake_case (backfill desde entity_type en registros históricos)
-  employees_v2: 'Empleados', employees: 'Empleados', employee: 'Empleados',
+  employee_v2: 'Empleados', employees_v2: 'Empleados', employees: 'Empleados', employee: 'Empleados',
   employee_work_info: 'Empleados', employee_contact: 'Empleados',
   employee_family: 'Empleados', employee_bank_info: 'Empleados',
   employee_documents: 'Empleados', employee_certifications: 'Empleados',
