@@ -45,6 +45,20 @@ interface TimelineStepData {
   extraData?: Record<string, any>;
 }
 
+function formatTimelineDate(date: string, includeTime = false) {
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return date;
+  }
+
+  return format(
+    parsedDate,
+    includeTime ? "dd 'de' MMMM 'de' yyyy, h:mm a" : "dd 'de' MMMM 'de' yyyy",
+    { locale: es }
+  );
+}
+
 function getTimelineSteps(requisition: PersonnelRequisition, autoriza: string | null): TimelineStepData[] {
   const estado = requisition.estado_requisicion;
 
@@ -225,6 +239,9 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
         <div className="space-y-8">
           {steps.map((step, index) => {
             const Icon = step.icon;
+            const isApprovalStep = step.key !== 'solicitud';
+            const approvalActionLabel = step.status === 'rejected' ? 'Rechazado' : 'Aprobado';
+            const shouldShowApprovalMeta = isApprovalStep && (step.status === 'approved' || step.status === 'rejected');
 
             return (
               <div key={step.key} className="relative flex gap-4">
@@ -265,12 +282,14 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
                   <CardContent className="space-y-2">
                     {step.date && (
                       <p className="text-sm text-muted-foreground">
-                        <strong>Fecha:</strong> {format(new Date(step.date), "dd 'de' MMMM 'de' yyyy", { locale: es })}
+                        <strong>{shouldShowApprovalMeta ? `Fecha y hora de ${approvalActionLabel.toLowerCase()}:` : 'Fecha:'}</strong>{' '}
+                        {formatTimelineDate(step.date, shouldShowApprovalMeta)}
                       </p>
                     )}
                     {step.approver && (
                       <p className="text-sm text-muted-foreground">
-                        <strong>Responsable:</strong> {step.approver}
+                        <strong>{shouldShowApprovalMeta ? `${approvalActionLabel} por:` : 'Responsable:'}</strong>{' '}
+                        {step.approver}
                       </p>
                     )}
                     {step.observations && (
