@@ -181,7 +181,10 @@ export default function Biblioteca() {
 
       {/* Grid View */}
       {viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+        <div
+          className="grid grid-cols-1 justify-start gap-8"
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 22.5rem), 22.5rem))' }}
+        >
           {filtered.map((course, i) => {
             const content = course.content as TrainingCourseContent | null;
             const statusCfg = STATUS_CONFIG[course.status] || STATUS_CONFIG.borrador;
