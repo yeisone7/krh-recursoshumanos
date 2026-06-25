@@ -63,6 +63,14 @@ import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
+const EMPLOYEES_VIEW_MODE_STORAGE_KEY = 'krh.employees.viewMode';
+
+const getInitialEmployeesViewMode = (): 'grid' | 'table' => {
+  if (typeof window === 'undefined') return 'grid';
+
+  const storedViewMode = window.localStorage.getItem(EMPLOYEES_VIEW_MODE_STORAGE_KEY);
+  return storedViewMode === 'table' || storedViewMode === 'grid' ? storedViewMode : 'grid';
+};
 
 export default function Empleados() {
   const navigate = useNavigate();
@@ -85,7 +93,7 @@ export default function Empleados() {
   const [terminationEmployee, setTerminationEmployee] = useState<any>(null);
   const [isTerminationOpen, setIsTerminationOpen] = useState(false);
   const [toggleEmployee, setToggleEmployee] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(getInitialEmployeesViewMode);
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const pageSize = 12;
@@ -98,6 +106,11 @@ export default function Empleados() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const handleViewModeChange = (nextViewMode: 'grid' | 'table') => {
+    setViewMode(nextViewMode);
+    window.localStorage.setItem(EMPLOYEES_VIEW_MODE_STORAGE_KEY, nextViewMode);
+  };
 
   const { currentCompanyId, assignedCenterIds, canUpdate, hasPermission } = useAuth();
   const canManageRegistrationLinks = hasPermission('emp_registration_links', 'create');
@@ -513,7 +526,7 @@ export default function Empleados() {
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('grid')}
+                onClick={() => handleViewModeChange('grid')}
                 className={cn(
                   "h-8 w-8 p-0 transition-all",
                   viewMode === 'grid' ? "bg-primary text-primary-foreground shadow-sm" : "hover:hover:text-primary"
@@ -525,7 +538,7 @@ export default function Empleados() {
               <Button
                 variant={viewMode === 'table' ? 'default' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('table')}
+                onClick={() => handleViewModeChange('table')}
                 className={cn(
                   "h-8 w-8 p-0 transition-all",
                   viewMode === 'table' ? "bg-primary text-primary-foreground shadow-sm" : "hover:hover:text-primary"

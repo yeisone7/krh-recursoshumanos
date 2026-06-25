@@ -47,6 +47,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { trainingMinutesToHours } from '@/lib/trainingDuration';
 import { useTrainingCourses, useTrainingCompletions, useTrainingStats } from '@/hooks/useTraining';
 import type { TrainingCompletion, TrainingCourse } from '@/types/training';
 
@@ -182,7 +183,11 @@ export default function Analiticas() {
     const certificationCourses = typedCourses.filter((course) => course.requires_certification).length;
     const manualCourses = typedCourses.filter((course) => course.content?.isManual).length;
     const aiCourses = Math.max(typedCourses.length - manualCourses, 0);
-    const totalHours = Math.round(typedCourses.reduce((sum, course) => sum + (Number(course.duration_hours) || 0), 0));
+    const totalHours = Number(
+      typedCourses
+        .reduce((sum, course) => sum + trainingMinutesToHours(course.duration_hours), 0)
+        .toFixed(1)
+    );
     const scores = typedCompletions.map((completion) => Number(completion.quiz_score)).filter((score) => Number.isFinite(score));
     const averageScore = average(scores);
     const approvedScores = scores.filter((score) => score >= 70).length;

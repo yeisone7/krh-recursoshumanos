@@ -32,13 +32,16 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useApproveRequisitionStep, PersonnelRequisition } from '@/hooks/useRequisitions';
+import {
+  isApprovalStepActiveForRequisition,
+  requisitionApprovalStepPermissions,
+  RequisitionApprovalStep,
+} from '@/lib/requisitionApprovalFlow';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useVacancyPlatforms } from '@/hooks/useVacancyPlatforms';
 import { recruitmentTypeLabels, RecruitmentType } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-type ApprovalStep = 'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
 
 interface VacancyCodeEntry {
   platformId: string;
@@ -51,10 +54,10 @@ interface RequisitionApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   requisition: PersonnelRequisition | null;
-  step: ApprovalStep;
+  step: RequisitionApprovalStep;
 }
 
-const stepTitles: Record<ApprovalStep, string> = {
+const stepTitles: Record<RequisitionApprovalStep, string> = {
   coordinadores: 'Aprobacion Coordinadores',
   operaciones: 'Aprobación de Operaciones',
   rrhh: 'Aprobación de RRHH',
@@ -154,8 +157,6 @@ export function RequisitionApprovalDialog({
     }
   };
 
-  const canSubmit = isStepValid();
-
   const addVacancyCode = () => {
     setVacancyCodes(prev => [...prev, { platformId: '', code: '', fechaCreacion: '', fechaCierre: '' }]);
   };
@@ -169,21 +170,19 @@ export function RequisitionApprovalDialog({
   };
 
   const { hasPermission } = useAuth();
-  
-  const stepPermissionMap: Record<ApprovalStep, string> = {
-    coordinadores: 'req_approve_coordinadores',
-    rrhh: 'req_approve_rh',
-    juridico: 'req_approve_juridica',
-    operaciones: 'req_approve_ger_op',
-    gerencia: 'req_approve_ger_adm',
-    seleccion: 'req_approve_seleccion',
-  };
 
-  const canApproveStep = hasPermission(stepPermissionMap[step], 'approve');
+  const isActiveStep = requisition ? isApprovalStepActiveForRequisition(requisition, step) : false;
+  const canApproveStep = isActiveStep && hasPermission(requisitionApprovalStepPermissions[step], 'approve');
   const canManageSalaries = hasPermission('salarios', 'update');
+  const canSubmit = canApproveStep && isStepValid();
 
   const onSubmit = async () => {
     if (!requisition) return;
+
+    if (!isActiveStep) {
+      toast.error('Esta requisicion aun no esta en este paso de aprobacion');
+      return;
+    }
     
     if (!canApproveStep) {
       toast.error('No tienes permisos para aprobar este paso');

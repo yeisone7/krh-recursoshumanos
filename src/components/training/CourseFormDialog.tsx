@@ -40,7 +40,7 @@ const formSchema = z.object({
   category: z.string().min(1, 'La categoría es requerida'),
   description: z.string().optional(),
   modality: z.enum(['presencial', 'virtual', 'mixto']),
-  durationHours: z.coerce.number().min(1, 'Duración mínima 1 hora'),
+  durationHours: z.coerce.number().min(1, 'Duración mínima 1 minuto'),
   isMandatory: z.boolean(),
   requiresCertification: z.boolean(),
   validityMonths: z.coerce.number().optional(),
@@ -266,9 +266,9 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
                 name="durationHours"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duración (horas)</FormLabel>
+                    <FormLabel>Duración (minutos)</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} />
+                      <Input type="number" min={1} placeholder="60" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

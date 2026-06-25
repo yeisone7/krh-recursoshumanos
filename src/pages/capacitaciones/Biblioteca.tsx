@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TrainingCourse, TrainingCourseContent } from '@/types/training';
+import { formatTrainingDuration } from '@/lib/trainingDuration';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   borrador: { label: 'Borrador', className: 'border-yellow-300 bg-yellow-50 text-yellow-700 dark:border-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400' },
@@ -56,12 +57,6 @@ const MODALITY_LABELS: Record<string, string> = {
   virtual: 'virtual',
   mixto: 'híbrida',
 };
-
-function formatDuration(hours: number): string {
-  if (hours < 1) return `${Math.round(hours * 60)} minutos`;
-  if (hours === 1) return '1 hora';
-  return `${hours} horas`;
-}
 
 export default function Biblioteca() {
   const navigate = useNavigate();
@@ -258,7 +253,7 @@ export default function Biblioteca() {
                       
                       <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400/90">
                         <Clock className="h-3.5 w-3.5 shrink-0 opacity-80" />
-                        <span>{formatDuration(course.duration_hours)}</span>
+                        <span>{formatTrainingDuration(course.duration_hours)}</span>
                         <span className="opacity-40">•</span>
                         <span className="capitalize">{MODALITY_LABELS[course.modality] || course.modality}</span>
                       </div>
@@ -321,7 +316,7 @@ export default function Biblioteca() {
                       <TableCell className="font-medium">{course.name}</TableCell>
                       <TableCell><Badge variant="outline">{course.category}</Badge></TableCell>
                       <TableCell className="capitalize">{course.level}</TableCell>
-                      <TableCell>{formatDuration(course.duration_hours)}</TableCell>
+                      <TableCell>{formatTrainingDuration(course.duration_hours)}</TableCell>
                       <TableCell className="capitalize">{MODALITY_LABELS[course.modality] || course.modality}</TableCell>
                       <TableCell>v{course.version}</TableCell>
                       <TableCell><Badge variant="outline" className={statusCfg.className}>{statusCfg.label}</Badge></TableCell>

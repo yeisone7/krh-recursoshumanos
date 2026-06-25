@@ -188,6 +188,13 @@ export function useInitiateTermination() {
 
       if (docsError) throw docsError;
 
+      // Mark the employee as being in an active offboarding process.
+      await updateEmployeeLifecycleState({
+        employeeId,
+        status: 'en_retiro',
+        required: true,
+      });
+
       // Track the pending retirement on the current work-info row.
       const { error: workInfoError } = await supabase
         .from('employee_work_info')

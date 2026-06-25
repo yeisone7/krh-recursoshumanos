@@ -22,6 +22,7 @@ import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
 import type { WatermarkConfig } from '@/lib/watermark';
+import { formatTrainingDuration } from '@/lib/trainingDuration';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -319,9 +320,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
     }
   };
 
-  const durationLabel = course.duration_hours < 1
-    ? `${Math.round(course.duration_hours * 60)} minutos`
-    : `${course.duration_hours} hora${course.duration_hours > 1 ? 's' : ''}`;
+  const durationLabel = formatTrainingDuration(course.duration_hours);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

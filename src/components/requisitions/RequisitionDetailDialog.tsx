@@ -42,6 +42,11 @@ import { usePsychologyUsers } from '@/hooks/usePsychologyUsers';
 import { RequisitionTimeline } from './RequisitionTimeline';
 import { RequisitionApprovalDialog } from './RequisitionApprovalDialog';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
+import {
+  getCurrentApprovalStepForRequisition,
+  requisitionApprovalStepPermissions,
+  RequisitionApprovalStep,
+} from '@/lib/requisitionApprovalFlow';
 import { useToast } from '@/hooks/use-toast';
 import { useVacancyPlatforms } from '@/hooks/useVacancyPlatforms';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,7 +99,7 @@ export function RequisitionDetailDialog({
   const [isExporting, setIsExporting] = useState(false);
   const [liderProceso, setLiderProceso] = useState('');
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
-  const [approvalStep, setApprovalStep] = useState<'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [approvalStep, setApprovalStep] = useState<RequisitionApprovalStep | null>(null);
   const [newVacancyCodes, setNewVacancyCodes] = useState<VacancyCodeEntry[]>([]);
 
   const { data: vacancyCodes = [], isLoading: loadingVacancyCodes } = useQuery({
@@ -289,40 +294,20 @@ export function RequisitionDetailDialog({
   
   const getApprovalAction = () => {
     if (!requisition) return null;
-    
-    switch (status) {
-      case 'en_coordinadores':
-        if (hasPermission('req_approve_coordinadores', 'approve')) {
-          return { step: 'coordinadores' as const, label: 'Aprobar Coordinadores' };
-        }
-        break;
-      case 'en_rrhh':
-        if (hasPermission('req_approve_rh', 'approve')) {
-          return { step: 'rrhh' as const, label: 'Aprobar RRHH' };
-        }
-        break;
-      case 'en_juridico':
-        if (hasPermission('req_approve_juridica', 'approve')) {
-          return { step: 'juridico' as const, label: 'Aprobar Jurídico' };
-        }
-        break;
-      case 'en_operaciones':
-        if (hasPermission('req_approve_ger_op', 'approve')) {
-          return { step: 'operaciones' as const, label: 'Aprobar Operaciones' };
-        }
-        break;
-      case 'en_gerencia':
-        if (hasPermission('req_approve_ger_adm', 'approve')) {
-          return { step: 'gerencia' as const, label: 'Aprobar Gerencia' };
-        }
-        break;
-      case 'en_seleccion':
-        if (hasPermission('req_approve_seleccion', 'approve')) {
-          return { step: 'seleccion' as const, label: 'Aprobar Selección' };
-        }
-        break;
-    }
-    return null;
+
+    const step = getCurrentApprovalStepForRequisition(requisition);
+    if (!step || !hasPermission(requisitionApprovalStepPermissions[step], 'approve')) return null;
+
+    const labels: Record<RequisitionApprovalStep, string> = {
+      coordinadores: 'Aprobar Coordinadores',
+      rrhh: 'Aprobar RRHH',
+      juridico: 'Aprobar Juridico',
+      operaciones: 'Aprobar Operaciones',
+      gerencia: 'Aprobar Gerencia',
+      seleccion: 'Aprobar Seleccion',
+    };
+
+    return { step, label: labels[step] };
   };
 
   const approvalAction = getApprovalAction();

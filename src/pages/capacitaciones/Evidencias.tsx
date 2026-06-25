@@ -19,6 +19,7 @@ import { jsPDF } from 'jspdf';
 import PizZip from 'pizzip';
 import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
+import { formatTrainingDuration } from '@/lib/trainingDuration';
 
 export default function Evidencias() {
   const { currentCompanyId, companies } = useAuth();
@@ -158,14 +159,6 @@ export default function Evidencias() {
     if (!value) return null;
     const date = parseISO(value);
     return Number.isNaN(date.getTime()) ? null : date;
-  };
-
-  const formatCourseDuration = (hours: number | string | null | undefined): string => {
-    const numericHours = Number(hours);
-    if (!Number.isFinite(numericHours) || numericHours <= 0) return '-';
-    if (numericHours < 1) return `${Math.round(numericHours * 60)} minutos`;
-    if (numericHours === 1) return '1 hora';
-    return `${numericHours} horas`;
   };
 
   const drawContainedImage = async (
@@ -335,7 +328,7 @@ export default function Evidencias() {
     doc.rect(margin, y, contentWidth, 8);
     doc.line(margin + 35, y, margin + 35, y + 8);
     drawCellText(doc, 'Duracion', margin, y, 35, 8, { align: 'center', size: 8 });
-    drawCellText(doc, formatCourseDuration(course?.duration_hours), margin + 35, y, contentWidth - 35, 8, { size: 8 });
+    drawCellText(doc, formatTrainingDuration(course?.duration_hours), margin + 35, y, contentWidth - 35, 8, { size: 8 });
 
     y += 10;
     doc.rect(margin, y, contentWidth, 18);

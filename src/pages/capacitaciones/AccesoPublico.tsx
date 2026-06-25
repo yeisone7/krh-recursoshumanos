@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { TrainingCourse, TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
 import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
+import { formatTrainingDuration } from '@/lib/trainingDuration';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -352,7 +353,7 @@ export default function AccesoPublico() {
                 )}
                 {course?.duration_hours && (
                   <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest gap-1 py-0.5">
-                    <Clock className="h-3 w-3" />{course.duration_hours}h
+                    <Clock className="h-3 w-3" />{formatTrainingDuration(course.duration_hours)}
                   </Badge>
                 )}
               </div>
@@ -385,7 +386,7 @@ export default function AccesoPublico() {
                     <BookOpen className="h-3 w-3" />{course?.category}
                   </Badge>
                   <Badge variant="outline" className="text-xs gap-1">
-                    <Clock className="h-3 w-3" />{course?.duration_hours}h
+                    <Clock className="h-3 w-3" />{formatTrainingDuration(course?.duration_hours)}
                   </Badge>
                 </CardDescription>
               </CardHeader>
