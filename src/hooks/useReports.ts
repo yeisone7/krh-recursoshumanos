@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInMonths, differenceInDays } from 'date-fns';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
+import { getIncapacityOriginShortLabel } from '@/types/incapacity';
 
 export interface EmployeeReportRow {
   documento: string;
@@ -188,7 +189,7 @@ export function useIncapacityReport(startDate?: Date, endDate?: Date) {
         empleado: `${inc.employees_v2.first_name} ${inc.employees_v2.last_name}`,
         documento: inc.employees_v2.document_number,
         diagnostico: inc.diagnosis,
-        origen: inc.origin === 'comun' ? 'Común' : inc.origin === 'laboral' ? 'Laboral' : 'Accidente',
+        origen: getIncapacityOriginShortLabel(inc.origin),
         fecha_inicio: formatDateOnly(inc.start_date, 'dd/MM/yyyy'),
         fecha_fin: formatDateOnly(inc.end_date, 'dd/MM/yyyy'),
         dias_totales: inc.total_days,

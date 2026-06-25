@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateIncapacity, useUpdateIncapacity, useIncapacity, useEmployeeIncapacities } from '@/hooks/useIncapacities';
-import { incapacityFormSchema, type IncapacityFormData, incapacityOriginLabels } from '@/types/incapacity';
+import { incapacityFormSchema, type IncapacityFormData, incapacityOriginOptions } from '@/types/incapacity';
 
 interface IncapacityFormDialogProps {
   open: boolean;
@@ -250,8 +250,8 @@ export function IncapacityFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(incapacityOriginLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                          {incapacityOriginOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>

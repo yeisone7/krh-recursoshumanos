@@ -50,7 +50,9 @@ import {
   IncapacityExportDialog,
 } from '@/components/incapacities';
 import {
-  incapacityOriginLabels,
+  getIncapacityOriginShortLabel,
+  incapacityOriginOptions,
+  isWorkRelatedIncapacityOrigin,
   recoveryStatusLabels,
   recoveryStatusColors,
   getTotalChainDays,
@@ -69,6 +71,14 @@ export default function Incapacidades() {
   const { data: incapacities, isLoading } = useIncapacities();
   const { data: stats } = useIncapacityStats();
   const isMobile = useIsMobile();
+
+  const originKpiStyles = [
+    { bg: 'from-emerald-500/5', iconBg: 'bg-emerald-500/10', text: 'text-emerald-600' },
+    { bg: 'from-red-500/5', iconBg: 'bg-red-500/10', text: 'text-red-600' },
+    { bg: 'from-amber-500/5', iconBg: 'bg-amber-500/10', text: 'text-amber-600' },
+    { bg: 'from-fuchsia-500/5', iconBg: 'bg-fuchsia-500/10', text: 'text-fuchsia-600' },
+    { bg: 'from-cyan-500/5', iconBg: 'bg-cyan-500/10', text: 'text-cyan-600' },
+  ];
   
   // Handle deep linking from dashboard
   useEffect(() => {
@@ -151,7 +161,7 @@ export default function Incapacidades() {
       </div>
       
       {/* KPIs Premium */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
         <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-5 relative z-10 flex items-center justify-between">
@@ -202,37 +212,43 @@ export default function Incapacidades() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 sm:col-span-2 rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
+        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5 relative z-10 flex items-center justify-between h-full">
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 w-full">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Origen Común</p>
-                <div className="flex items-baseline gap-2">
-                  <h3 className="text-3xl font-black tracking-tight">{stats?.byOrigin?.comun || 0}</h3>
-                </div>
-              </div>
-              <div className="w-px h-12 bg-border/50 hidden sm:block"></div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Origen Laboral</p>
-                <div className="flex items-baseline gap-2">
-                  <h3 className="text-3xl font-black tracking-tight">{stats?.byOrigin?.laboral || 0}</h3>
-                </div>
-              </div>
-              <div className="w-px h-12 bg-border/50 hidden sm:block"></div>
-              <div className="hidden sm:block">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Duración Promedio</p>
-                <div className="flex items-baseline gap-2">
-                  <h3 className="text-3xl font-black tracking-tight text-emerald-600">{stats?.avgDuration || 0}</h3>
-                  <p className="text-xs text-muted-foreground font-medium">días</p>
-                </div>
+          <CardContent className="p-5 relative z-10 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Duración Promedio</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black tracking-tight text-emerald-600">{stats?.avgDuration || 0}</h3>
+                <p className="text-xs text-muted-foreground font-medium">días</p>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-[1rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 hidden sm:flex">
+            <div className="w-12 h-12 rounded-[1rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
               <TrendingUp className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
+
+        {incapacityOriginOptions.map((option, index) => {
+          const style = originKpiStyles[index % originKpiStyles.length];
+
+          return (
+            <Card key={option.value} className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
+              <div className={`absolute inset-0 bg-gradient-to-br ${style.bg} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+              <CardContent className="p-5 relative z-10 flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{option.kpiLabel}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className={`text-3xl font-black tracking-tight ${style.text}`}>{stats?.byOrigin?.[option.value] || 0}</h3>
+                    <p className="text-xs text-muted-foreground font-medium">casos</p>
+                  </div>
+                </div>
+                <div className={`w-12 h-12 rounded-[1rem] ${style.iconBg} ${style.text} flex items-center justify-center shrink-0`}>
+                  <Stethoscope className="w-6 h-6" />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       
       {/* Main Content */}
@@ -278,8 +294,9 @@ export default function Incapacidades() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="comun">Común</SelectItem>
-                          <SelectItem value="laboral">Laboral</SelectItem>
+                          {incapacityOriginOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.shortLabel}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -320,7 +337,7 @@ export default function Incapacidades() {
                       ),
                       fields: [
                         { label: 'Días', value: `${inc.total_days} días` },
-                        { label: 'Origen', value: inc.origin === 'laboral' ? 'Laboral' : 'Común' },
+                        { label: 'Origen', value: getIncapacityOriginShortLabel(inc.origin) },
                         { label: 'Período', value: `${formatDateOnly(inc.start_date, 'dd/MM')} - ${formatDateOnly(inc.end_date, 'dd/MM')}` },
                         { label: 'Valor', value: formatCurrency(inc.total_amount) },
                       ],
@@ -384,8 +401,8 @@ export default function Incapacidades() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={inc.origin === 'laboral' ? 'destructive' : 'secondary'}>
-                            {inc.origin === 'laboral' ? 'Laboral' : 'Común'}
+                          <Badge variant={isWorkRelatedIncapacityOrigin(inc.origin) ? 'destructive' : 'secondary'}>
+                            {getIncapacityOriginShortLabel(inc.origin)}
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">

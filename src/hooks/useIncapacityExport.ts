@@ -8,14 +8,17 @@ import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import {
   getCurrentLegalStage,
-  incapacityOriginLabels,
+  getIncapacityOriginLabel,
+  incapacityOriginOptions,
+  incapacityOriginShortLabels,
+  type IncapacityOrigin,
   recoveryStatusLabels,
 } from '@/types/incapacity';
 
 export interface ExportFilters {
   startDate: Date;
   endDate: Date;
-  origin?: 'comun' | 'laboral' | 'all';
+  origin?: IncapacityOrigin | 'all';
   recoveryStatus?: string;
 }
 
@@ -55,12 +58,11 @@ interface SummaryRow {
   'Período': string;
   'Total Incapacidades': number;
   'Días Perdidos': number;
-  'Origen Común': number;
-  'Origen Laboral': number;
   'Monto Total': number;
   'Monto Recuperado': number;
   'Pendiente Recuperar': number;
   'Tasa Recuperación (%)': number;
+  [key: string]: string | number;
 }
 
 export function useIncapacityExport() {
@@ -100,14 +102,13 @@ export function useIncapacityExport() {
 
       // Transform data for Excel
       const excelData: IncapacityExportRow[] = data.map((inc: any) => {
-        const originKey = inc.origin as keyof typeof incapacityOriginLabels;
         const statusKey = inc.recovery_status as keyof typeof recoveryStatusLabels;
         const legalStage = getCurrentLegalStage(inc.origin, inc.total_days || 0);
         
         return {
           'Empleado': `${inc.employee?.first_name || ''} ${inc.employee?.last_name || ''}`,
           'Documento': inc.employee?.document_number || '',
-          'Origen': incapacityOriginLabels[originKey] || inc.origin,
+          'Origen': getIncapacityOriginLabel(inc.origin),
           'Fecha Inicio': formatDateOnly(inc.start_date, 'dd/MM/yyyy'),
           'Fecha Fin': formatDateOnly(inc.end_date, 'dd/MM/yyyy'),
           'Etapa Legal': legalStage.label,
@@ -138,11 +139,18 @@ export function useIncapacityExport() {
       });
 
       // Generate monthly summary
+      const emptyOrigins = () => incapacityOriginOptions.reduce(
+        (acc, option) => {
+          acc[option.value] = 0;
+          return acc;
+        },
+        {} as Record<IncapacityOrigin, number>
+      );
+
       const monthlyData: Record<string, { 
         count: number; 
         days: number; 
-        comun: number; 
-        laboral: number; 
+        origins: Record<IncapacityOrigin, number>;
         total: number; 
         recovered: number 
       }> = {};
@@ -150,54 +158,70 @@ export function useIncapacityExport() {
       data.forEach((inc: any) => {
         const monthKey = formatDateOnly(inc.start_date, 'yyyy-MM');
         if (!monthlyData[monthKey]) {
-          monthlyData[monthKey] = { count: 0, days: 0, comun: 0, laboral: 0, total: 0, recovered: 0 };
+          monthlyData[monthKey] = { count: 0, days: 0, origins: emptyOrigins(), total: 0, recovered: 0 };
         }
         monthlyData[monthKey].count++;
         monthlyData[monthKey].days += inc.total_days || 0;
-        if (inc.origin === 'comun') monthlyData[monthKey].comun++;
-        if (inc.origin === 'laboral') monthlyData[monthKey].laboral++;
+        if (inc.origin in monthlyData[monthKey].origins) {
+          monthlyData[monthKey].origins[inc.origin as IncapacityOrigin]++;
+        }
         monthlyData[monthKey].total += inc.total_amount || 0;
         monthlyData[monthKey].recovered += inc.recovered_amount || 0;
       });
 
       const summaryData: SummaryRow[] = Object.entries(monthlyData)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([month, stats]) => ({
-          'Período': format(new Date(month + '-01'), 'MMMM yyyy', { locale: es }),
-          'Total Incapacidades': stats.count,
-          'Días Perdidos': stats.days,
-          'Origen Común': stats.comun,
-          'Origen Laboral': stats.laboral,
-          'Monto Total': stats.total,
-          'Monto Recuperado': stats.recovered,
-          'Pendiente Recuperar': stats.total - stats.recovered,
-          'Tasa Recuperación (%)': stats.total > 0 ? Math.round((stats.recovered / stats.total) * 100) : 0,
-        }));
+        .map(([month, stats]) => {
+          const row: SummaryRow = {
+            'Período': format(new Date(month + '-01'), 'MMMM yyyy', { locale: es }),
+            'Total Incapacidades': stats.count,
+            'Días Perdidos': stats.days,
+            'Monto Total': stats.total,
+            'Monto Recuperado': stats.recovered,
+            'Pendiente Recuperar': stats.total - stats.recovered,
+            'Tasa Recuperación (%)': stats.total > 0 ? Math.round((stats.recovered / stats.total) * 100) : 0,
+          };
+
+          for (const option of incapacityOriginOptions) {
+            row[`Origen ${option.shortLabel}`] = stats.origins[option.value];
+          }
+
+          return row;
+        });
 
       // Add totals row
       const totals = summaryData.reduce(
         (acc, row) => ({
           count: acc.count + row['Total Incapacidades'],
           days: acc.days + row['Días Perdidos'],
-          comun: acc.comun + row['Origen Común'],
-          laboral: acc.laboral + row['Origen Laboral'],
+          origins: incapacityOriginOptions.reduce(
+            (originAcc, option) => {
+              originAcc[option.value] = acc.origins[option.value] + Number(row[`Origen ${option.shortLabel}`] || 0);
+              return originAcc;
+            },
+            {} as Record<IncapacityOrigin, number>
+          ),
           total: acc.total + row['Monto Total'],
           recovered: acc.recovered + row['Monto Recuperado'],
         }),
-        { count: 0, days: 0, comun: 0, laboral: 0, total: 0, recovered: 0 }
+        { count: 0, days: 0, origins: emptyOrigins(), total: 0, recovered: 0 }
       );
 
-      summaryData.push({
+      const totalRow: SummaryRow = {
         'Período': 'TOTAL',
         'Total Incapacidades': totals.count,
         'Días Perdidos': totals.days,
-        'Origen Común': totals.comun,
-        'Origen Laboral': totals.laboral,
         'Monto Total': totals.total,
         'Monto Recuperado': totals.recovered,
         'Pendiente Recuperar': totals.total - totals.recovered,
         'Tasa Recuperación (%)': totals.total > 0 ? Math.round((totals.recovered / totals.total) * 100) : 0,
-      });
+      };
+
+      for (const option of incapacityOriginOptions) {
+        totalRow[`Origen ${option.shortLabel}`] = totals.origins[option.value];
+      }
+
+      summaryData.push(totalRow);
 
       // Create workbook with multiple sheets
       const wb = XLSX.utils.book_new();
@@ -246,8 +270,7 @@ export function useIncapacityExport() {
         { wch: 20 }, // Período
         { wch: 18 }, // Total Incapacidades
         { wch: 15 }, // Días Perdidos
-        { wch: 15 }, // Origen Común
-        { wch: 15 }, // Origen Laboral
+        ...incapacityOriginOptions.map((option) => ({ wch: Math.max(15, incapacityOriginShortLabels[option.value].length + 9) })),
         { wch: 15 }, // Monto Total
         { wch: 18 }, // Monto Recuperado
         { wch: 18 }, // Pendiente Recuperar

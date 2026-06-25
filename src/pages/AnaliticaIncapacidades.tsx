@@ -69,7 +69,7 @@ import {
   getCurrentLegalStage,
   getLegalMilestones,
   getTotalChainDays,
-  incapacityOriginLabels,
+  incapacityOriginOptions,
   recoveryStatusLabels,
   type IncapacityWithEmployee,
   type RecoveryStatus,
@@ -558,8 +558,11 @@ function SexInfographicBlock({
 
 function IncapacityInfographicsTab({ analytics }: { analytics: any }) {
   const originCircleData = [
-    { label: 'Comun', value: analytics.originData.find((item: { name: string }) => item.name === 'Comun')?.value || 0, color: palette.teal },
-    { label: 'Laboral', value: analytics.originData.find((item: { name: string }) => item.name === 'Laboral')?.value || 0, color: palette.orange },
+    ...analytics.originData.map((item: { name: string; value: number }, index: number) => ({
+      label: item.name,
+      value: item.value,
+      color: chartColors[index % chartColors.length],
+    })),
     { label: 'Largo plazo', value: analytics.longCases, color: palette.violet },
     { label: 'Riesgo legal', value: analytics.legalRisk, color: palette.navy },
   ].filter((item) => item.value > 0);
@@ -737,22 +740,33 @@ export default function AnaliticaIncapacidades() {
     const monthly = months.map((month) => {
       const key = format(month, 'yyyy-MM');
       const monthItems = filtered.filter((item) => item.start_date?.startsWith(key));
+      const originDays = incapacityOriginOptions.reduce(
+        (acc, option) => {
+          acc[option.shortLabel] = monthItems
+            .filter((item) => item.origin === option.value)
+            .reduce((sum, item) => sum + item.total_days, 0);
+          return acc;
+        },
+        {} as Record<string, number>
+      );
+
       return {
         key,
         mes: getMonthLabel(key),
         Incapacidades: monthItems.length,
         Dias: monthItems.reduce((sum, item) => sum + item.total_days, 0),
-        Comun: monthItems.filter((item) => item.origin === 'comun').reduce((sum, item) => sum + item.total_days, 0),
-        Laboral: monthItems.filter((item) => item.origin === 'laboral').reduce((sum, item) => sum + item.total_days, 0),
+        ...originDays,
         Estimado: Math.round(monthItems.reduce((sum, item) => sum + getRecoveryBase(item), 0)),
         Recuperado: Math.round(monthItems.reduce((sum, item) => sum + getRecoveredAmount(item), 0)),
       };
     });
 
-    const originData = [
-      { name: 'Comun', value: filtered.filter((item) => item.origin === 'comun').length },
-      { name: 'Laboral', value: filtered.filter((item) => item.origin === 'laboral').length },
-    ].filter((item) => item.value > 0);
+    const originData = incapacityOriginOptions
+      .map((option) => ({
+        name: option.shortLabel,
+        value: filtered.filter((item) => item.origin === option.value).length,
+      }))
+      .filter((item) => item.value > 0);
 
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
     const legalData = groupBy(filtered, (item) => item.legalResponsible, (item) => item.total_days || 0);
@@ -900,8 +914,9 @@ export default function AnaliticaIncapacidades() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los origenes</SelectItem>
-                <SelectItem value="comun">{incapacityOriginLabels.comun}</SelectItem>
-                <SelectItem value="laboral">Origen laboral</SelectItem>
+                {incapacityOriginOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={recoveryStatus} onValueChange={setRecoveryStatus}>
@@ -991,8 +1006,17 @@ export default function AnaliticaIncapacidades() {
               <YAxis tick={{ fontSize: 11, fill: palette.navy }} axisLine={{ stroke: palette.ink }} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
-              <Area type="monotone" dataKey="Comun" stackId="1" stroke={palette.teal} fill={palette.teal} name="Comun" />
-              <Area type="monotone" dataKey="Laboral" stackId="1" stroke={palette.orange} fill={palette.orange} name="Laboral" />
+              {incapacityOriginOptions.map((option, index) => (
+                <Area
+                  key={option.value}
+                  type="monotone"
+                  dataKey={option.shortLabel}
+                  stackId="1"
+                  stroke={chartColors[index % chartColors.length]}
+                  fill={chartColors[index % chartColors.length]}
+                  name={option.shortLabel}
+                />
+              ))}
             </AreaChart>
           </ResponsiveContainer>
         </ChartPanel>

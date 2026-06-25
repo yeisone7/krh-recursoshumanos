@@ -7,17 +7,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
+import { getIncapacityOriginLabel, isWorkRelatedIncapacityOrigin } from '@/types/incapacity';
 
 interface Tab360IncapacitiesProps {
   incapacities: any[];
   isLoading: boolean;
 }
-
-const originLabels: Record<string, string> = {
-  comun: 'Enfermedad Común',
-  laboral: 'Accidente Laboral',
-  profesional: 'Enfermedad Profesional',
-};
 
 const recoveryStatusConfig: Record<string, { label: string; color: string }> = {
   pendiente: { label: 'Pendiente', color: 'bg-warning-light text-warning' },
@@ -156,11 +151,11 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
                     <div className="space-y-2 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className={cn(
-                          inc.origin === 'laboral' && 'bg-destructive/10 text-destructive border-destructive/20',
+                          isWorkRelatedIncapacityOrigin(inc.origin) && 'bg-destructive/10 text-destructive border-destructive/20',
                           inc.origin === 'comun' && 'bg-primary-light text-primary border-primary/20',
-                          inc.origin === 'profesional' && 'bg-warning-light text-warning border-warning/20'
+                          ['accidente_transito', 'licencia_maternidad', 'licencia_paternidad'].includes(inc.origin) && 'bg-warning-light text-warning border-warning/20'
                         )}>
-                          {originLabels[inc.origin] || inc.origin}
+                          {getIncapacityOriginLabel(inc.origin)}
                         </Badge>
                         {inc.is_extension && (
                           <Badge variant="secondary">
