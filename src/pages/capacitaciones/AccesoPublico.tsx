@@ -146,6 +146,22 @@ export default function AccesoPublico() {
         setOperatorName('');
       } else {
         const emp = (data as any[])[0];
+        const { data: alreadyCompleted, error: completionCheckError } = await (supabase as any).rpc('has_training_completion', {
+          p_token: tokenParam,
+          p_employee_id: emp.employee_id,
+          p_operator_cedula: cedula.trim(),
+        });
+
+        if (completionCheckError) throw completionCheckError;
+
+        if (alreadyCompleted) {
+          setCedulaError('Esta persona ya completó esta capacitación. No es necesario registrarla nuevamente.');
+          setCedulaVerified(false);
+          setEmployeeId(null);
+          setOperatorName('');
+          return;
+        }
+
         setCedulaVerified(true);
         setEmployeeId(emp.employee_id);
         setOperatorName(emp.employee_name);
@@ -199,7 +215,12 @@ export default function AccesoPublico() {
       setStep('done');
     } catch (err) {
       console.error('Completion error:', err);
-      setErrorMsg('Error al registrar la evidencia. Intente de nuevo.');
+      const message = String((err as any)?.message || '').toLowerCase();
+      if (message.includes('ya completo') || message.includes('ya completó')) {
+        setErrorMsg('Esta persona ya completó esta capacitación. No se creó una nueva evidencia.');
+      } else {
+        setErrorMsg('Error al registrar la evidencia. Intente de nuevo.');
+      }
       setStep('error');
     } finally {
       setSubmitting(false);
