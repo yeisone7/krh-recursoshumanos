@@ -1,8 +1,18 @@
 import { useState } from 'react';
-import { FileText, Download, Eye, Clock, User, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { FileText, Download, Eye, Clock, ChevronDown, ChevronUp, ExternalLink, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,6 +23,7 @@ import {
   useDocumentVersions,
   useCurrentDocument,
   useDocumentUrl,
+  useDeleteDocumentVersion,
   downloadDocument,
   type EntityType,
   type DocumentVersion,
@@ -25,6 +36,7 @@ interface DocumentViewerProps {
   entityType: EntityType;
   entityId: string;
   showVersionHistory?: boolean;
+  allowDelete?: boolean;
   className?: string;
 }
 
@@ -36,13 +48,17 @@ function formatFileSize(bytes: number): string {
 
 function DocumentItem({ 
   doc, 
-  isCurrent = false 
+  isCurrent = false,
+  allowDelete = false,
 }: { 
   doc: DocumentVersion; 
   isCurrent?: boolean;
+  allowDelete?: boolean;
 }) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { data: signedUrl } = useDocumentUrl(doc.file_path);
+  const deleteDocument = useDeleteDocumentVersion();
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -63,71 +79,121 @@ function DocumentItem({
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteDocument.mutateAsync({ document: doc });
+      toast.success('Documento eliminado correctamente');
+      setShowDeleteConfirm(false);
+    } catch (error) {
+      toast.error('Error al eliminar el documento');
+      console.error('Delete document error:', error);
+    }
+  };
+
   const isPdf = doc.mime_type === 'application/pdf';
   const isImage = doc.mime_type.startsWith('image/');
 
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 p-3 rounded-lg border bg-card',
-        isCurrent && 'border-border 0 bg-accent/50'
-      )}
-    >
-      <div className="flex-shrink-0">
-        <div className={cn(
-          'h-10 w-10 rounded-lg flex items-center justify-center',
-          isPdf ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
-        )}>
-          <FileText className="h-5 w-5" />
+    <>
+      <div
+        className={cn(
+          'flex items-center gap-3 p-3 rounded-lg border bg-card',
+          isCurrent && 'border-border 0 bg-accent/50'
+        )}
+      >
+        <div className="flex-shrink-0">
+          <div className={cn(
+            'h-10 w-10 rounded-lg flex items-center justify-center',
+            isPdf ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'
+          )}>
+            <FileText className="h-5 w-5" />
+          </div>
         </div>
-      </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium truncate">{doc.file_name}</p>
-          {isCurrent && (
-            <Badge variant="default" className="text-xs">
-              Actual
-            </Badge>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium truncate">{doc.file_name}</p>
+            {isCurrent && (
+              <Badge variant="default" className="text-xs">
+                Actual
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {format(new Date(doc.uploaded_at), "d MMM yyyy, HH:mm", { locale: es })}
+            </span>
+            <span>{formatFileSize(doc.file_size)}</span>
+            <span>v{doc.version}</span>
+          </div>
+          {doc.notes && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              {doc.notes}
+            </p>
           )}
         </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {format(new Date(doc.uploaded_at), "d MMM yyyy, HH:mm", { locale: es })}
-          </span>
-          <span>{formatFileSize(doc.file_size)}</span>
-          <span>v{doc.version}</span>
-        </div>
-        {doc.notes && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-            {doc.notes}
-          </p>
-        )}
-      </div>
 
-      <div className="flex items-center gap-1">
-        {(isPdf || isImage) && signedUrl && (
+        <div className="flex items-center gap-1">
+          {(isPdf || isImage) && signedUrl && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePreview}
+              title="Ver documento"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
-            onClick={handlePreview}
-            title="Ver documento"
+            onClick={handleDownload}
+            disabled={isDownloading}
+            title="Descargar"
           >
-            <Eye className="h-4 w-4" />
+            <Download className="h-4 w-4" />
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDownload}
-          disabled={isDownloading}
-          title="Descargar"
-        >
-          <Download className="h-4 w-4" />
-        </Button>
+          {allowDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deleteDocument.isPending}
+              title="Eliminar documento"
+              className="text-destructive hover:text-destructive"
+            >
+              {deleteDocument.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar documento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará el archivo {doc.file_name}. Si es el documento actual, la versión anterior quedará como vigente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteDocument.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteDocument.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteDocument.isPending ? 'Eliminando...' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -135,6 +201,7 @@ export function DocumentViewer({
   entityType,
   entityId,
   showVersionHistory = false,
+  allowDelete = false,
   className,
 }: DocumentViewerProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -163,7 +230,7 @@ export function DocumentViewer({
 
   return (
     <div className={cn('space-y-3', className)}>
-      <DocumentItem doc={currentDoc} isCurrent />
+      <DocumentItem doc={currentDoc} isCurrent allowDelete={allowDelete} />
 
       {showVersionHistory && previousVersions.length > 0 && (
         <Collapsible open={historyOpen} onOpenChange={setHistoryOpen}>
@@ -181,7 +248,7 @@ export function DocumentViewer({
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-2 mt-2">
             {previousVersions.map((doc) => (
-              <DocumentItem key={doc.id} doc={doc} />
+              <DocumentItem key={doc.id} doc={doc} allowDelete={allowDelete} />
             ))}
           </CollapsibleContent>
         </Collapsible>
