@@ -450,8 +450,8 @@ export default function Evidencias() {
     const margin = 20;
     const contentWidth = pageWidth - margin * 2;
 
-    // --- Navy blue header bar ---
-    doc.setFillColor(15, 30, 60);
+    // --- Gray header bar ---
+    doc.setFillColor(72, 78, 88);
     doc.rect(0, 0, pageWidth, 38, 'F');
 
     // Orange accent line under header
@@ -465,11 +465,11 @@ export default function Evidencias() {
         const logoDataUrl = await loadImageAsDataUrl(certificateLogoUrl);
         const image = await getImageSize(logoDataUrl);
         const maxLogoWidth = 42;
-        const maxLogoHeight = 18;
+        const maxLogoHeight = 14;
         const ratio = Math.min(maxLogoWidth / image.width, maxLogoHeight / image.height);
         const logoW = image.width * ratio;
         const logoH = image.height * ratio;
-        doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 9 + (maxLogoHeight - logoH) / 2, logoW, logoH);
+        doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 6 + (maxLogoHeight - logoH) / 2, logoW, logoH);
       } catch { /* skip logo */ }
     }
 
@@ -483,13 +483,13 @@ export default function Evidencias() {
     // Document title in header
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(200, 210, 230);
+    doc.setTextColor(235, 238, 242);
     doc.text('Constancia de Capacitación', margin, 28);
 
     // Document number / date on the right
     doc.setFontSize(9);
-    doc.setTextColor(180, 190, 210);
-    doc.text(`Fecha de generación: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth - margin, 28, { align: 'right' });
+    doc.setTextColor(225, 229, 235);
+    doc.text(`Fecha de generación: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`, pageWidth - margin, 31, { align: 'right' });
 
     // --- Certificate title ---
     let y = 56;
@@ -671,11 +671,11 @@ export default function Evidencias() {
   };
 
   const FiltersSkeleton = () => (
-    <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+    <div className="flex flex-col sm:flex-row items-center gap-3 bg-background border border-border/50 rounded-[1.5rem] px-4 py-3 shadow-sm mb-4">
       <div className="relative flex-1 w-full sm:max-w-md">
-        <Skeleton className="h-12 w-full rounded-xl bg-muted/70" />
+        <Skeleton className="h-10 w-full rounded-xl bg-muted/70" />
       </div>
-      <Skeleton className="h-12 w-full rounded-xl bg-muted/70 sm:w-64" />
+      <Skeleton className="h-10 w-full rounded-xl bg-muted/70 sm:w-64" />
     </div>
   );
 
@@ -722,21 +722,21 @@ export default function Evidencias() {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
+    <div className="space-y-4 max-w-7xl mx-auto pb-12">
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-5 border border-border/50 rounded-[1.5rem] shadow-sm mb-4">
         
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Evidencias</h1>
-            <p className="text-muted-foreground font-medium mt-1">Registro de capacitaciones completadas con firma digital</p>
+            <h1 className="text-2xl font-black tracking-tight text-foreground">Evidencias</h1>
+            <p className="text-sm text-muted-foreground font-medium mt-1">Registro de capacitaciones completadas con firma digital</p>
           </div>
           <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
-            <Button variant="ghost" className="h-10 rounded-lg px-3 text-xs font-bold uppercase tracking-wider" onClick={handleOpenBulkDialog} title="Exportar evidencias">
+            <Button variant="ghost" className="h-9 rounded-lg px-3 text-xs font-bold uppercase tracking-wider" onClick={handleOpenBulkDialog} title="Exportar evidencias">
               <Files className="mr-2 h-4 w-4" />
               Exportar evidencias
             </Button>
-            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'table' ? 'shadow-md' : ''}`} onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className={`h-9 w-9 rounded-lg ${viewMode === 'table' ? 'shadow-md' : ''}`} onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-9 w-9 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
@@ -744,13 +744,13 @@ export default function Evidencias() {
       {isInitialLoading ? (
         <FiltersSkeleton />
       ) : (
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-background border border-border/50 rounded-[1.5rem] px-4 py-3 shadow-sm mb-4">
         <div className="relative flex-1 w-full sm:max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="Buscar por nombre o cédula..." className="pl-12 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm" value={search} onChange={e => setSearch(e.target.value)} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Buscar por nombre o cédula..." className="pl-11 h-10 rounded-xl border-border/50 bg-background shadow-inner text-sm" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <Select value={filterCourse} onValueChange={setFilterCourse}>
-          <SelectTrigger className="w-full sm:w-64 h-12 rounded-xl border-border/50 bg-background shadow-inner text-sm">
+          <SelectTrigger className="w-full sm:w-64 h-10 rounded-xl border-border/50 bg-background shadow-inner text-sm">
             <SelectValue placeholder="Capacitación" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
@@ -758,7 +758,7 @@ export default function Evidencias() {
             {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        {selected.size > 0 && <Button variant="destructive" className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-destructive/20 w-full sm:w-auto" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-2" /> Eliminar ({selected.size})</Button>}
+        {selected.size > 0 && <Button variant="destructive" className="h-10 px-5 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-destructive/20 w-full sm:w-auto" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-2" /> Eliminar ({selected.size})</Button>}
       </div>
       )}
 
