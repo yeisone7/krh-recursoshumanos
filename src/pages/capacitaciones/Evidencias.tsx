@@ -11,13 +11,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, useTrainingCourses } from '@/hooks/useTraining';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCompany } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import PizZip from 'pizzip';
-import type { TrainingCompletion } from '@/types/training';
+import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 
 export default function Evidencias() {
+  const { currentCompanyId, companies } = useAuth();
+  const { data: selectedCompany } = useCompany(currentCompanyId || undefined);
   const { data: completions = [] } = useTrainingCompletions();
   const { data: courses = [] } = useTrainingCourses();
   const deleteCompletion = useDeleteCompletion();
@@ -32,6 +36,9 @@ export default function Evidencias() {
   const [bulkCourse, setBulkCourse] = useState('');
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
   const [isBulkGenerating, setIsBulkGenerating] = useState(false);
+  const [isAttendanceReportGenerating, setIsAttendanceReportGenerating] = useState(false);
+
+  const currentCompany = selectedCompany || companies.find(company => company.id === currentCompanyId);
 
   const filtered = useMemo(() => {
     return (completions as TrainingCompletion[]).filter(c => {
@@ -133,6 +140,284 @@ export default function Evidencias() {
       img.onerror = () => reject();
       img.src = src;
     });
+  };
+
+  const getImageSize = (src: string): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+      img.onerror = () => reject();
+      img.src = src;
+    });
+  };
+
+  const drawContainedImage = async (
+    doc: jsPDF,
+    dataUrl: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    padding = 1.5
+  ) => {
+    try {
+      const image = await getImageSize(dataUrl);
+      const maxWidth = Math.max(width - padding * 2, 1);
+      const maxHeight = Math.max(height - padding * 2, 1);
+      const ratio = Math.min(maxWidth / image.width, maxHeight / image.height);
+      const renderWidth = image.width * ratio;
+      const renderHeight = image.height * ratio;
+      const renderX = x + (width - renderWidth) / 2;
+      const renderY = y + (height - renderHeight) / 2;
+      doc.addImage(dataUrl, 'PNG', renderX, renderY, renderWidth, renderHeight);
+    } catch {
+      // Keep the report usable even if a stored signature cannot be rendered.
+    }
+  };
+
+  const getEmployeePosition = (completion: TrainingCompletion) => {
+    const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
+    return completion.employee?.current_position || currentWorkInfo?.position_name || '-';
+  };
+
+  const getCourseObjective = (completion: TrainingCompletion) => {
+    const course = completion.course;
+    const content = course?.content as TrainingCourseContent | null | undefined;
+    return course?.objective
+      || course?.objectives
+      || content?.objetivos?.[0]
+      || course?.description
+      || 'Registrar la participacion y finalizacion de la capacitacion.';
+  };
+
+  const drawCellText = (
+    doc: jsPDF,
+    value: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    options: { bold?: boolean; align?: 'left' | 'center'; size?: number } = {}
+  ) => {
+    doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
+    doc.setFontSize(options.size || 8);
+    doc.setTextColor(0, 0, 0);
+    const lines = doc.splitTextToSize(value || '-', width - 3).slice(0, Math.max(1, Math.floor(height / 4)));
+    const lineHeight = (options.size || 8) * 0.36 + 1.5;
+    const totalHeight = lines.length * lineHeight;
+    const textY = y + Math.max((height - totalHeight) / 2 + lineHeight - 1, 4);
+    const textX = options.align === 'center' ? x + width / 2 : x + 1.5;
+    doc.text(lines, textX, textY, { align: options.align || 'left' });
+  };
+
+  const drawCheckbox = (doc: jsPDF, label: string, checked: boolean, x: number, y: number, width: number) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(label, x + 1, y + 5);
+    doc.rect(x + width - 8, y + 1.5, 5, 5);
+    if (checked) {
+      doc.setLineWidth(0.8);
+      doc.line(x + width - 7.2, y + 4, x + width - 5.9, y + 5.2);
+      doc.line(x + width - 5.9, y + 5.2, x + width - 3.6, y + 2.4);
+      doc.setLineWidth(0.2);
+    }
+  };
+
+  const drawAttendanceReportPage = async (
+    doc: jsPDF,
+    pageRows: TrainingCompletion[],
+    pageNumber: number,
+    totalPages: number,
+    logoDataUrl: string | null,
+    centerName: string,
+    courseName: string,
+    dateText: string,
+    isLastPage: boolean
+  ) => {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+    const contentWidth = pageWidth - margin * 2;
+    const course = pageRows[0]?.course;
+    const category = (course?.category || '').toLowerCase();
+    const legal = (course?.legal_framework || '').toLowerCase();
+    const audience = (course?.target_audience || '').toLowerCase();
+    const modality = course?.modality === 'mixto' ? 'Hibrida' : course?.modality || '-';
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.35);
+
+    doc.rect(margin, 8, contentWidth, 22);
+    doc.line(margin + 43, 8, margin + 43, 30);
+    doc.line(pageWidth - margin - 34, 8, pageWidth - margin - 34, 30);
+    if (logoDataUrl) await drawContainedImage(doc, logoDataUrl, margin + 2, 10, 39, 18, 1);
+    drawCellText(doc, 'Registro de Asistencia', margin + 43, 8, contentWidth - 77, 22, { bold: true, align: 'center', size: 11 });
+    drawCellText(doc, 'Codigo GH FO 36', pageWidth - margin - 34, 8, 34, 7, { align: 'center', size: 8 });
+    doc.line(pageWidth - margin - 34, 15.3, pageWidth - margin, 15.3);
+    drawCellText(doc, 'VERSION 02', pageWidth - margin - 34, 15.3, 34, 7, { align: 'center', size: 8 });
+    doc.line(pageWidth - margin - 34, 22.6, pageWidth - margin, 22.6);
+    drawCellText(doc, `No Paginas ${pageNumber}/${totalPages}`, pageWidth - margin - 34, 22.6, 34, 7.4, { align: 'center', size: 8 });
+
+    let y = 34;
+    doc.rect(margin, y, contentWidth, 25);
+    drawCellText(doc, 'De acuerdo con la actividad por favor marcar', margin, y, contentWidth, 6, { bold: true, align: 'center', size: 8 });
+    doc.line(margin, y + 6, pageWidth - margin, y + 6);
+    const activityCellW = contentWidth / 2;
+    doc.line(margin + activityCellW, y + 6, margin + activityCellW, y + 25);
+    ['Induccion', 'Reunion', 'Charla informativa'].forEach((label, idx) => {
+      drawCheckbox(doc, label, category.includes(label.toLowerCase().split(' ')[0]), margin, y + 6 + idx * 6.3, activityCellW);
+      doc.line(margin, y + 12.3 + idx * 6.3, margin + activityCellW, y + 12.3 + idx * 6.3);
+    });
+    [
+      ['Capacitacion', !category.includes('induccion') && !category.includes('reinduccion') && !category.includes('charla')],
+      ['Reinduccion', category.includes('reinduccion')],
+      ['Entrenamiento grupal', category.includes('entren')],
+    ].forEach(([label, checked], idx) => {
+      drawCheckbox(doc, label as string, Boolean(checked), margin + activityCellW, y + 6 + idx * 6.3, activityCellW);
+      doc.line(margin + activityCellW, y + 12.3 + idx * 6.3, pageWidth - margin, y + 12.3 + idx * 6.3);
+    });
+
+    y += 28;
+    doc.rect(margin, y, contentWidth, 20);
+    drawCellText(doc, 'Departamento/area/proceso responsable', margin, y, contentWidth, 6, { bold: true, align: 'center', size: 8 });
+    doc.line(margin, y + 6, pageWidth - margin, y + 6);
+    const areas = [
+      ['Talento Humano', audience.includes('talento') || audience.includes('humano')],
+      ['Bienestar y Desarrollo', audience.includes('bienestar')],
+      ['SGI', category.includes('calidad') || legal.includes('iso')],
+      ['SST', category.includes('hseq') || legal.includes('sst')],
+      ['Ambiental', category.includes('ambiental')],
+      ['Seguridad Alimentaria', category.includes('alimenta')],
+      ['Juridica', category.includes('jurid')],
+      ['PESV', legal.includes('pesv')],
+      ['Otras', true],
+    ];
+    const areaW = contentWidth / 4;
+    areas.slice(0, 8).forEach(([label, checked], idx) => {
+      const col = idx % 4;
+      const row = Math.floor(idx / 4);
+      drawCheckbox(doc, label as string, Boolean(checked), margin + col * areaW, y + 6 + row * 7, areaW);
+    });
+    drawCellText(doc, `Cual: ${course?.target_audience || course?.category || '-'}`, margin + areaW, y + 13, areaW * 3, 7, { size: 7 });
+
+    y += 24;
+    doc.rect(margin, y, contentWidth, 8);
+    drawCellText(doc, `Contrato/ Sede/ Ciudad: ${centerName}`, margin, y, contentWidth * 0.58, 8, { bold: true, size: 8 });
+    doc.line(margin + contentWidth * 0.58, y, margin + contentWidth * 0.58, y + 8);
+    drawCellText(doc, `Fecha de ejecucion: ${dateText}`, margin + contentWidth * 0.58, y, contentWidth * 0.42, 8, { bold: true, size: 8 });
+
+    y += 8;
+    doc.rect(margin, y, contentWidth, 17);
+    doc.line(margin + 35, y, margin + 35, y + 17);
+    drawCellText(doc, 'Tematica', margin, y, 35, 17, { align: 'center', size: 8 });
+    drawCellText(doc, courseName, margin + 35, y, contentWidth - 35, 17, { align: 'center', size: 12 });
+
+    y += 17;
+    doc.rect(margin, y, contentWidth, 8);
+    doc.line(margin + 35, y, margin + 35, y + 8);
+    drawCellText(doc, 'Duracion', margin, y, 35, 8, { align: 'center', size: 8 });
+    drawCellText(doc, course?.duration_hours ? formatDuration(course.duration_hours) : '-', margin + 35, y, contentWidth - 35, 8, { size: 8 });
+
+    y += 10;
+    doc.rect(margin, y, contentWidth, 18);
+    doc.line(margin + 35, y, margin + 35, y + 18);
+    drawCellText(doc, 'Objetivo', margin, y, 35, 18, { align: 'center', size: 8 });
+    drawCellText(doc, getCourseObjective(pageRows[0]), margin + 35, y, contentWidth - 35, 18, { size: 8 });
+
+    y += 23;
+    doc.rect(margin, y, contentWidth, 7);
+    drawCellText(doc, 'ASISTENTES', margin, y, contentWidth, 7, { bold: true, align: 'center', size: 9 });
+    y += 7;
+    const cols = [10, 71, 27, 42, 40];
+    const headers = ['No', 'NOMBRE', 'CEDULA', 'CARGO', 'FIRMA'];
+    let x = margin;
+    headers.forEach((header, idx) => {
+      doc.rect(x, y, cols[idx], 8);
+      drawCellText(doc, header, x, y, cols[idx], 8, { bold: true, align: 'center', size: 8 });
+      x += cols[idx];
+    });
+
+    y += 8;
+    const rowHeight = 14;
+    for (const [idx, completion] of pageRows.entries()) {
+      x = margin;
+      const globalIndex = (pageNumber - 1) * 8 + idx + 1;
+      const rowValues = [
+        String(globalIndex),
+        completion.operator_name,
+        completion.operator_cedula || completion.employee?.document_number || '-',
+        getEmployeePosition(completion),
+      ];
+      rowValues.forEach((value, colIdx) => {
+        doc.rect(x, y, cols[colIdx], rowHeight);
+        drawCellText(doc, value, x, y, cols[colIdx], rowHeight, { align: colIdx === 0 ? 'center' : 'left', size: colIdx === 1 ? 7.5 : 7 });
+        x += cols[colIdx];
+      });
+      doc.rect(x, y, cols[4], rowHeight);
+      if (completion.signature_data) await drawContainedImage(doc, completion.signature_data, x, y, cols[4], rowHeight, 1);
+      y += rowHeight;
+    }
+
+    if (isLastPage) {
+      y += 3;
+      doc.rect(margin, y, contentWidth, 14);
+      doc.line(margin + 30, y, margin + 30, y + 14);
+      drawCellText(doc, 'Realizada por:', margin, y, 30, 14, { align: 'center', size: 8 });
+      const infoCols = [42, 38, 40, 40];
+      const infoHeaders = ['NOMBRE', 'FIRMA', 'PROFESION', 'MODALIDAD'];
+      x = margin + 30;
+      infoHeaders.forEach((header, idx) => {
+        doc.rect(x, y, infoCols[idx], 6);
+        drawCellText(doc, header, x, y, infoCols[idx], 6, { bold: true, align: 'center', size: 7 });
+        doc.rect(x, y + 6, infoCols[idx], 8);
+        x += infoCols[idx];
+      });
+      drawCellText(doc, course?.provider || currentCompany?.name || 'Sistema KRH', margin + 30, y + 6, infoCols[0], 8, { align: 'center', size: 7 });
+      drawCellText(doc, modality, margin + 30 + infoCols[0] + infoCols[1] + infoCols[2], y + 6, infoCols[3], 8, { align: 'center', size: 7 });
+
+      y += 17;
+      doc.rect(margin, y, contentWidth, 18);
+      drawCellText(doc, `Observaciones: Informe generado desde evidencias el ${format(new Date(), 'dd/MM/yyyy HH:mm')}.`, margin, y, contentWidth, 18, { size: 8 });
+    }
+  };
+
+  const buildAttendanceReportPdf = async (reportCompletions: TrainingCompletion[]) => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const sorted = [...reportCompletions].sort((a, b) => a.operator_name.localeCompare(b.operator_name));
+    const rowsPerPage = 8;
+    const pages = Math.max(1, Math.ceil(sorted.length / rowsPerPage));
+    const centerName = centerOptions.find(center => center.id === bulkCenter)?.name || getCompletionCenter(sorted[0]).name;
+    const courseName = bulkCourseOptions.find(course => course.id === bulkCourse)?.name || sorted[0]?.course?.name || 'Capacitacion';
+    const dates = sorted.map(c => parseISO(c.completed_at)).sort((a, b) => a.getTime() - b.getTime());
+    const dateText = dates.length > 1
+      ? `${format(dates[0], 'dd/MM/yyyy')} - ${format(dates[dates.length - 1], 'dd/MM/yyyy')}`
+      : dates[0] ? format(dates[0], 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy');
+    const logoUrl = currentCompany?.horizontal_logo_url || currentCompany?.logo_url || null;
+    let logoDataUrl: string | null = null;
+
+    if (logoUrl) {
+      try {
+        logoDataUrl = await loadImageAsDataUrl(logoUrl);
+      } catch {
+        logoDataUrl = null;
+      }
+    }
+
+    for (let page = 0; page < pages; page += 1) {
+      if (page > 0) doc.addPage();
+      await drawAttendanceReportPage(
+        doc,
+        sorted.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+        page + 1,
+        pages,
+        logoDataUrl,
+        centerName,
+        courseName,
+        dateText,
+        page === pages - 1
+      );
+    }
+
+    return doc;
   };
 
   const buildCertificatePdf = async (completion: TrainingCompletion) => {
@@ -340,6 +625,22 @@ export default function Evidencias() {
     }
   };
 
+  const handleAttendanceReportGenerate = async () => {
+    if (selectedBulkCompletions.length === 0) return;
+    setIsAttendanceReportGenerating(true);
+    try {
+      const doc = await buildAttendanceReportPdf(selectedBulkCompletions);
+      const centerName = centerOptions.find((center) => center.id === bulkCenter)?.name || 'centro';
+      const courseName = bulkCourseOptions.find((course) => course.id === bulkCourse)?.name || 'capacitacion';
+      doc.save(`registro-asistencia-${sanitizeFileName(centerName)}-${sanitizeFileName(courseName)}.pdf`);
+      toast.success('Informe de asistencia generado');
+    } catch {
+      toast.error('No se pudo generar el informe de asistencia');
+    } finally {
+      setIsAttendanceReportGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
@@ -431,7 +732,7 @@ export default function Evidencias() {
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Generar constancias por centro y capacitacion</DialogTitle>
+            <DialogTitle>Exportar evidencias por centro y capacitacion</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -507,10 +808,18 @@ export default function Evidencias() {
             </div>
 
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={() => setBulkDialogOpen(false)} disabled={isBulkGenerating}>
+              <Button variant="outline" onClick={() => setBulkDialogOpen(false)} disabled={isBulkGenerating || isAttendanceReportGenerating}>
                 Cancelar
               </Button>
-              <Button onClick={handleBulkGenerate} disabled={selectedBulkCompletions.length === 0 || isBulkGenerating}>
+              <Button
+                variant="outline"
+                onClick={handleAttendanceReportGenerate}
+                disabled={selectedBulkCompletions.length === 0 || isBulkGenerating || isAttendanceReportGenerating}
+              >
+                {isAttendanceReportGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                Informe asistencia
+              </Button>
+              <Button onClick={handleBulkGenerate} disabled={selectedBulkCompletions.length === 0 || isBulkGenerating || isAttendanceReportGenerating}>
                 {isBulkGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Generar ZIP ({selectedBulkCompletions.length})
               </Button>
