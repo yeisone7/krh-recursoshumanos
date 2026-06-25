@@ -18,6 +18,7 @@ import {
   getAccumulatedDays,
   getLegalMilestones,
   getTotalChainDays,
+  incapacityOriginValues,
   requiresReintegrationExam,
 } from '@/types/incapacity';
 import { calculateExpirationDate, PERIODIC_EXAM_VALIDITY_MONTHS } from '@/types/medicalExam';
@@ -624,7 +625,7 @@ export interface IncapacityStats {
   totalDaysThisMonth: number;
   pendingRecovery: number;
   pendingRecoveryAmount: number;
-  byOrigin: { comun: number; laboral: number };
+  byOrigin: Record<IncapacityOrigin, number>;
   avgDuration: number;
 }
 
@@ -665,10 +666,19 @@ export function useIncapacityStats() {
       );
       
       // By origin
-      const byOrigin = {
-        comun: incapacities.filter(inc => inc.origin === 'comun').length,
-        laboral: incapacities.filter(inc => inc.origin === 'laboral').length,
-      };
+      const byOrigin = incapacityOriginValues.reduce(
+        (acc, origin) => {
+          acc[origin] = 0;
+          return acc;
+        },
+        {} as Record<IncapacityOrigin, number>
+      );
+
+      for (const inc of incapacities) {
+        if (inc.origin in byOrigin) {
+          byOrigin[inc.origin]++;
+        }
+      }
       
       // Average duration
       const avgDuration = incapacities.length > 0

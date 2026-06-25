@@ -47,7 +47,8 @@ import {
 
 import { useIncapacity, useDeleteIncapacity, useCreateReintegrationExam } from '@/hooks/useIncapacities';
 import { 
-  incapacityOriginLabels, 
+  getIncapacityOriginLabel,
+  isWorkRelatedIncapacityOrigin,
   recoveryStatusLabels, 
   recoveryStatusColors,
   getCurrentLegalStage,
@@ -147,8 +148,8 @@ export function IncapacityDetailDialog({
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end mt-2 sm:mt-0">
-                  <Badge variant={incapacity.origin === 'laboral' ? 'destructive' : 'secondary'} className="rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
-                    {incapacityOriginLabels[incapacity.origin]}
+                  <Badge variant={isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'destructive' : 'secondary'} className="rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
+                    {getIncapacityOriginLabel(incapacity.origin)}
                   </Badge>
                   {isActive && (
                     <Badge variant="default" className="bg-green-500 rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
@@ -371,7 +372,7 @@ export function IncapacityDetailDialog({
                       
                       <Separator />
                       
-                      {incapacity.origin === 'laboral' ? (
+                      {isWorkRelatedIncapacityOrigin(incapacity.origin) ? (
                         <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
                           <div>
                             <p className="font-medium">ARL - {incapacity.arl_name || 'No registrada'}</p>
@@ -435,7 +436,7 @@ export function IncapacityDetailDialog({
                           Estado del Recobro
                         </CardTitle>
                         <CardDescription>
-                          Gestión del recobro ante {incapacity.origin === 'laboral' ? 'ARL' : 'EPS'}
+                          Gestión del recobro ante {isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'ARL' : 'EPS'}
                         </CardDescription>
                       </div>
                       <Button size="sm" onClick={() => setShowRecoveryDialog(true)} className="w-full sm:w-auto">

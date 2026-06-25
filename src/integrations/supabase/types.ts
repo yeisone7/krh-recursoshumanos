@@ -9174,7 +9174,12 @@ export type Database = {
         | "seguimiento"
       fault_type: "leve" | "grave" | "gravisima"
       gender_type: "M" | "F" | "O"
-      incapacity_origin: "comun" | "laboral"
+      incapacity_origin:
+        | "comun"
+        | "laboral"
+        | "accidente_transito"
+        | "licencia_maternidad"
+        | "licencia_paternidad"
       leave_duration_type: "dias_completos" | "medio_dia" | "horas"
       leave_request_status: "pendiente" | "aprobado" | "rechazado" | "cancelado"
       leave_type:
@@ -9614,7 +9619,13 @@ export const Constants = {
       ],
       fault_type: ["leve", "grave", "gravisima"],
       gender_type: ["M", "F", "O"],
-      incapacity_origin: ["comun", "laboral"],
+      incapacity_origin: [
+        "comun",
+        "laboral",
+        "accidente_transito",
+        "licencia_maternidad",
+        "licencia_paternidad",
+      ],
       leave_duration_type: ["dias_completos", "medio_dia", "horas"],
       leave_request_status: ["pendiente", "aprobado", "rechazado", "cancelado"],
       leave_type: [

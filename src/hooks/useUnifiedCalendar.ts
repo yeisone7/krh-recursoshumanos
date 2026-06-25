@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, addDays, subDays } from 'date-fns';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
+import { getIncapacityOriginShortLabel } from '@/types/incapacity';
 
 export type CalendarEventType = 'vacation' | 'leave' | 'incapacity' | 'contract' | 'training';
 
@@ -163,7 +164,7 @@ export function useUnifiedCalendar(
               id: `incapacity-${i.id}`,
               type: 'incapacity',
               title: `${employee?.first_name || ''} ${employee?.last_name || ''}`.trim(),
-              description: `${i.origin === 'laboral' ? 'Laboral' : 'Común'} - ${i.diagnosis}`,
+              description: `${getIncapacityOriginShortLabel(i.origin)} - ${i.diagnosis}`,
               startDate: parseDateOnlyOr(i.start_date, new Date()),
               endDate: parseDateOnlyOr(i.end_date, new Date()),
               employeeId: employee?.id,

@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 
 import { useIncapacityExport, ExportFilters } from '@/hooks/useIncapacityExport';
-import { recoveryStatusLabels } from '@/types/incapacity';
+import { incapacityOriginOptions, recoveryStatusLabels, type IncapacityOrigin } from '@/types/incapacity';
 
 interface IncapacityExportDialogProps {
   open: boolean;
@@ -45,7 +45,7 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
     const filters: ExportFilters = {
       startDate,
       endDate,
-      origin: origin as 'comun' | 'laboral' | 'all',
+      origin: origin as IncapacityOrigin | 'all',
       recoveryStatus,
     };
     
@@ -178,8 +178,9 @@ export function IncapacityExportDialog({ open, onOpenChange }: IncapacityExportD
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="comun">Enfermedad Común</SelectItem>
-                  <SelectItem value="laboral">Accidente Laboral</SelectItem>
+                  {incapacityOriginOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

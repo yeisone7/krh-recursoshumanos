@@ -4,7 +4,15 @@ import { z } from 'zod';
 // ENUMS AND TYPES
 // =====================================================
 
-export type IncapacityOrigin = 'comun' | 'laboral';
+export const incapacityOriginValues = [
+  'comun',
+  'laboral',
+  'accidente_transito',
+  'licencia_maternidad',
+  'licencia_paternidad',
+] as const;
+
+export type IncapacityOrigin = typeof incapacityOriginValues[number];
 export type RecoveryStatus = 'pendiente' | 'radicado' | 'en_tramite' | 'aprobado' | 'rechazado' | 'pagado';
 export type IncapacityLegalStage =
   | 'employer'
@@ -36,10 +44,73 @@ export interface IncapacityLegalMilestone {
   daysRemaining: number;
 }
 
-export const incapacityOriginLabels: Record<IncapacityOrigin, string> = {
-  comun: 'Enfermedad Común',
-  laboral: 'Accidente Laboral / Enfermedad Profesional',
-};
+export const incapacityOriginOptions: Array<{
+  value: IncapacityOrigin;
+  label: string;
+  shortLabel: string;
+  kpiLabel: string;
+}> = [
+  {
+    value: 'comun',
+    label: 'Enfermedad Común',
+    shortLabel: 'Común',
+    kpiLabel: 'Origen Común',
+  },
+  {
+    value: 'laboral',
+    label: 'Accidente Laboral / Enfermedad Profesional',
+    shortLabel: 'Laboral',
+    kpiLabel: 'Origen Laboral',
+  },
+  {
+    value: 'accidente_transito',
+    label: 'Accidente de Tránsito',
+    shortLabel: 'Tránsito',
+    kpiLabel: 'Accidente de Tránsito',
+  },
+  {
+    value: 'licencia_maternidad',
+    label: 'Licencia de Maternidad',
+    shortLabel: 'Maternidad',
+    kpiLabel: 'Licencia de Maternidad',
+  },
+  {
+    value: 'licencia_paternidad',
+    label: 'Licencia de Paternidad',
+    shortLabel: 'Paternidad',
+    kpiLabel: 'Licencia de Paternidad',
+  },
+];
+
+export const incapacityOriginLabels = incapacityOriginOptions.reduce(
+  (acc, option) => {
+    acc[option.value] = option.label;
+    return acc;
+  },
+  {} as Record<IncapacityOrigin, string>
+);
+
+export const incapacityOriginShortLabels = incapacityOriginOptions.reduce(
+  (acc, option) => {
+    acc[option.value] = option.shortLabel;
+    return acc;
+  },
+  {} as Record<IncapacityOrigin, string>
+);
+
+export function getIncapacityOriginLabel(origin: string | null | undefined) {
+  if (!origin) return 'Sin origen';
+  return incapacityOriginLabels[origin as IncapacityOrigin] || origin;
+}
+
+export function getIncapacityOriginShortLabel(origin: string | null | undefined) {
+  if (!origin) return 'Sin origen';
+  return incapacityOriginShortLabels[origin as IncapacityOrigin] || origin;
+}
+
+export function isWorkRelatedIncapacityOrigin(origin: string | null | undefined) {
+  return origin === 'laboral';
+}
 
 export const recoveryStatusLabels: Record<RecoveryStatus, string> = {
   pendiente: 'Pendiente de Radicar',
@@ -146,7 +217,7 @@ export interface IncapacityWithEmployee extends EmployeeIncapacity {
 
 export const incapacityFormSchema = z.object({
   employee_id: z.string().min(1, 'Empleado requerido'),
-  origin: z.enum(['comun', 'laboral'] as const),
+  origin: z.enum(incapacityOriginValues),
   start_date: z.date({ required_error: 'Fecha de inicio requerida' }),
   end_date: z.date({ required_error: 'Fecha de fin requerida' }),
   
@@ -218,7 +289,7 @@ export function calculatePaymentDistribution(
 } {
   const roundMoney = (value: number) => Math.round(value * 100) / 100;
 
-  if (origin === 'laboral') {
+  if (isWorkRelatedIncapacityOrigin(origin)) {
     // ARL pays 100% from day 1
     const arlAmount = roundMoney(totalDays * dailyBaseSalary);
     return {
@@ -323,7 +394,7 @@ export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: 
   label: string;
   responsible: string;
 } {
-  if (origin === 'laboral') {
+  if (isWorkRelatedIncapacityOrigin(origin)) {
     return { stage: 'arl', label: 'Origen laboral', responsible: 'ARL' };
   }
 
@@ -335,7 +406,7 @@ export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: 
 }
 
 export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: number): IncapacityLegalMilestone[] {
-  if (origin === 'laboral') {
+  if (isWorkRelatedIncapacityOrigin(origin)) {
     return [{
       key: 'day_120',
       day: 1,
