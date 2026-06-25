@@ -50,8 +50,8 @@ export function useSendAiChatMessage() {
       .eq('id', user.id)
       .maybeSingle();
 
-    const profile = data as { full_name?: string | null; display_name?: string | null } | null;
-    return cleanName(profile?.full_name) || cleanName(profile?.display_name) || cleanName(user.user_metadata?.full_name) || cleanName(user.user_metadata?.name);
+    const dbProfile = data as { full_name?: string | null; display_name?: string | null } | null;
+    return cleanName(dbProfile?.full_name) || cleanName(dbProfile?.display_name) || cleanName(user.user_metadata?.full_name) || cleanName(user.user_metadata?.name);
   };
 
   return useMutation({
