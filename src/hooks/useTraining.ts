@@ -702,7 +702,7 @@ export function useTrainingCompletions(courseId?: string) {
 
       let query = supabase
         .from('training_completions')
-        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number, current_position, employee_work_info(id, position_name, is_current)), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
+        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number, current_position), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
         .eq('company_id', currentCompanyId)
         .order('completed_at', { ascending: false });
 
@@ -715,6 +715,29 @@ export function useTrainingCompletions(courseId?: string) {
       if (error) throw error;
 
       const completions = (data || []) as unknown as TrainingCompletion[];
+      const employeeIds = [...new Set(completions.map(completion => completion.employee_id).filter(Boolean))] as string[];
+
+      if (employeeIds.length > 0) {
+        const { data: workInfoRows, error: workInfoError } = await supabase
+          .from('employee_work_info')
+          .select('id, employee_id, position_name, is_current')
+          .in('employee_id', employeeIds);
+
+        if (!workInfoError && workInfoRows) {
+          const workInfoByEmployee = new Map<string, typeof workInfoRows>();
+          workInfoRows.forEach(row => {
+            const rows = workInfoByEmployee.get(row.employee_id) || [];
+            rows.push(row);
+            workInfoByEmployee.set(row.employee_id, rows);
+          });
+
+          completions.forEach(completion => {
+            if (!completion.employee || !completion.employee_id) return;
+            completion.employee.employee_work_info = workInfoByEmployee.get(completion.employee_id) || [];
+          });
+        }
+      }
+
       if (!shouldLimitByAssignedCenters) return completions;
 
       return completions.filter((completion) => {
