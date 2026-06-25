@@ -158,6 +158,18 @@ export interface TrainingCompletion {
   ip_address: string | null;
   user_agent: string | null;
   course?: TrainingCourse;
+  employee?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    document_number: string;
+    current_position: string | null;
+    employee_work_info?: Array<{
+      id: string;
+      position_name: string | null;
+      is_current: boolean | null;
+    }>;
+  } | null;
 }
 
 export interface TrainingMedia {

@@ -702,7 +702,7 @@ export function useTrainingCompletions(courseId?: string) {
 
       let query = supabase
         .from('training_completions')
-        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
+        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number, current_position, employee_work_info(id, position_name, is_current)), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
         .eq('company_id', currentCompanyId)
         .order('completed_at', { ascending: false });
 
