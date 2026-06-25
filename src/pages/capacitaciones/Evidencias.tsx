@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Search, Trash2, Eye, Download, List, FolderTree, Files, Loader2 } from 'lucide-react';
+import { Search, Trash2, Eye, Download, List, FolderTree, Files, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
