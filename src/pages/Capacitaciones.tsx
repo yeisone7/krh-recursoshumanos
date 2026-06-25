@@ -24,6 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
 import { cn } from '@/lib/utils';
+import { formatTrainingDuration } from '@/lib/trainingDuration';
 
 const STATUS_COLORS: Record<string, string> = {
   programado: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -320,7 +321,7 @@ export default function Capacitaciones() {
                               </div>
                               <div className="rounded-2xl bg-background p-3 flex flex-col items-center justify-center text-center">
                                 <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1">Duración</span>
-                                <p className="text-xs font-black text-foreground">{course.duration_hours}h</p>
+                                <p className="text-xs font-black text-foreground">{formatTrainingDuration(course.duration_hours)}</p>
                               </div>
                             </div>
                           </div>
@@ -378,7 +379,7 @@ export default function Capacitaciones() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Timer className="w-4 h-4 text-primary/60" />
-                                <span className="text-sm font-black tracking-tight text-foreground/80">{course.duration_hours}h</span>
+                                <span className="text-sm font-black tracking-tight text-foreground/80">{formatTrainingDuration(course.duration_hours)}</span>
                               </div>
                             </TableCell>
                             <TableCell>

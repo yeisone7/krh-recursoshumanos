@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import {
+  getExpectedStatusForApprovalStep,
+  getNextStatusForApprovalStep,
+  isApprovalStepActiveForRequisition,
+  RequisitionApprovalStep,
+} from '@/lib/requisitionApprovalFlow';
 
 export interface PersonnelRequisition {
   id: string;
@@ -338,7 +344,7 @@ export function useApproveRequisitionStep() {
       data,
     }: {
       id: string;
-      step: 'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia';
+      step: RequisitionApprovalStep;
       approved: boolean;
       data?: Record<string, any>;
     }) => {
@@ -359,10 +365,19 @@ export function useApproveRequisitionStep() {
         [`${step}_fecha_aprobacion`]: new Date().toISOString(),
       };
 
-      // First fetch the requisition to get autoriza value
+      // Fetch the current workflow state so approval steps cannot be skipped.
       const { data: reqData, error: fetchError } = await supabase
         .from('personnel_requisitions')
-        .select('autoriza')
+        .select(`
+          autoriza,
+          estado_requisicion,
+          coordinadores_aprobado,
+          rrhh_aprobado,
+          juridico_aprobado,
+          operaciones_aprobado,
+          gerencia_aprobado,
+          seleccion_aprobado
+        `)
         .eq('id', id)
         .single();
 
@@ -371,45 +386,18 @@ export function useApproveRequisitionStep() {
         throw fetchError;
       }
 
-      const autoriza = (reqData as any)?.autoriza;
-
-      // Determine next status dynamically based on autoriza
-      let statusMap: Record<string, string>;
-      if (autoriza === 'gerencia_administrativa') {
-        statusMap = {
-          coordinadores: approved ? 'en_rrhh' : 'rechazada',
-          rrhh: approved ? 'en_juridico' : 'rechazada',
-          juridico: approved ? 'en_gerencia' : 'rechazada',
-          gerencia: approved ? 'en_seleccion' : 'rechazada',
-          seleccion: approved ? 'aprobada' : 'rechazada',
-        };
-      } else if (autoriza === 'gerencia_operaciones') {
-        statusMap = {
-          coordinadores: approved ? 'en_rrhh' : 'rechazada',
-          rrhh: approved ? 'en_juridico' : 'rechazada',
-          juridico: approved ? 'en_operaciones' : 'rechazada',
-          operaciones: approved ? 'en_seleccion' : 'rechazada',
-          seleccion: approved ? 'aprobada' : 'rechazada',
-        };
-      } else {
-        statusMap = {
-          coordinadores: approved ? 'en_rrhh' : 'rechazada',
-          rrhh: approved ? 'en_juridico' : 'rechazada',
-          juridico: approved ? 'en_operaciones' : 'rechazada',
-          operaciones: approved ? 'en_gerencia' : 'rechazada',
-          gerencia: approved ? 'en_seleccion' : 'rechazada',
-          seleccion: approved ? 'aprobada' : 'rechazada',
-        };
+      if (!isApprovalStepActiveForRequisition(reqData as any, step)) {
+        throw new Error('Este paso de aprobacion no esta activo para la requisicion.');
       }
 
-      updates.estado_requisicion = statusMap[step];
-
-      console.log('Final update payload:', updates);
+      const expectedStatus = getExpectedStatusForApprovalStep(step);
+      updates.estado_requisicion = getNextStatusForApprovalStep((reqData as any)?.autoriza, step, approved);
 
       const { data: result, error } = await supabase
         .from('personnel_requisitions')
         .update(updates as any)
         .eq('id', id)
+        .eq('estado_requisicion', expectedStatus)
         .select()
         .single();
 
@@ -451,9 +439,12 @@ export function useApproveRequisitionStep() {
       });
     },
     onError: (error) => {
+      const errorText = getSupabaseErrorText(error);
       toast({
         title: 'Error',
-        description: 'No se pudo registrar la aprobación.',
+        description: errorText.includes('paso de aprobacion') || errorText.includes('flujo de aprobacion')
+          ? 'No se puede aprobar este paso porque la requisicion aun no esta en esa etapa.'
+          : 'No se pudo registrar la aprobacion.',
         variant: 'destructive',
       });
       console.error('Error approving requisition:', error);

@@ -36,6 +36,11 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import {
+  getCurrentApprovalStepForRequisition,
+  requisitionApprovalStepPermissions,
+  RequisitionApprovalStep,
+} from '@/lib/requisitionApprovalFlow';
+import {
   RequisitionStatus,
   requisitionStatusLabels,
   requisitionStatusConfig,
@@ -55,7 +60,7 @@ export default function Requisiciones() {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editRequisition, setEditRequisition] = useState<PersonnelRequisition | null>(null);
-  const [approvalStep, setApprovalStep] = useState<'coordinadores' | 'operaciones' | 'rrhh' | 'juridico' | 'seleccion' | 'gerencia' | null>(null);
+  const [approvalStep, setApprovalStep] = useState<RequisitionApprovalStep | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PersonnelRequisition | null>(null);
 
@@ -134,16 +139,9 @@ export default function Requisiciones() {
   };
 
   const getCurrentApprovalStep = (req: PersonnelRequisition) => {
-    const status = req.estado_requisicion;
-    
-    if (status === 'en_coordinadores' && hasPermission('req_approve_coordinadores', 'approve')) return 'coordinadores';
-    if (status === 'en_rrhh' && hasPermission('req_approve_rh', 'approve')) return 'rrhh';
-    if (status === 'en_juridico' && hasPermission('req_approve_juridica', 'approve')) return 'juridico';
-    if (status === 'en_operaciones' && hasPermission('req_approve_ger_op', 'approve')) return 'operaciones';
-    if (status === 'en_gerencia' && hasPermission('req_approve_ger_adm', 'approve')) return 'gerencia';
-    if (status === 'en_seleccion' && hasPermission('req_approve_seleccion', 'approve')) return 'seleccion';
-    
-    return null;
+    const step = getCurrentApprovalStepForRequisition(req);
+    if (!step || !hasPermission(requisitionApprovalStepPermissions[step], 'approve')) return null;
+    return step;
   };
 
   const getApprovalProgress = (req: PersonnelRequisition) => {
