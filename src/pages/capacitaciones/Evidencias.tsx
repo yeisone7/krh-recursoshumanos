@@ -177,7 +177,7 @@ export default function Evidencias() {
 
   const getEmployeePosition = (completion: TrainingCompletion) => {
     const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
-    return completion.employee?.current_position || currentWorkInfo?.position_name || '-';
+    return currentWorkInfo?.position_name || '-';
   };
 
   const getCourseObjective = (completion: TrainingCompletion) => {
