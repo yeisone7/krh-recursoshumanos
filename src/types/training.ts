@@ -166,6 +166,7 @@ export interface TrainingCompletion {
     current_position: string | null;
     employee_work_info?: Array<{
       id: string;
+      employee_id: string;
       position_name: string | null;
       is_current: boolean | null;
     }>;
