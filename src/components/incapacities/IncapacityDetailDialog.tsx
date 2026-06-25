@@ -513,6 +513,7 @@ export function IncapacityDetailDialog({
                       entityId={incapacityId}
                       title="Certificado de Incapacidad"
                       allowUpload={true}
+                      allowDelete={true}
                       showVersionHistory={true}
                       compact
                     />
@@ -542,6 +543,7 @@ export function IncapacityDetailDialog({
                       entityId={incapacityId}
                       title="Historia Clínica"
                       allowUpload={true}
+                      allowDelete={true}
                       showVersionHistory={true}
                       compact
                     />

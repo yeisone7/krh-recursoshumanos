@@ -40,6 +40,10 @@ export interface UploadDocumentParams {
   notes?: string;
 }
 
+export interface DeleteDocumentParams {
+  document: DocumentVersion;
+}
+
 // Fetch document versions for an entity
 export function useDocumentVersions(entityType: EntityType, entityId: string | undefined) {
   return useQuery({
@@ -187,6 +191,119 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ['document_versions', data.entity_type, data.entity_id] });
       queryClient.invalidateQueries({ queryKey: ['current_document', data.entity_type, data.entity_id] });
       // Invalidate the entity queries
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_process'] });
+    },
+  });
+}
+
+function getEntityDocumentUpdate(entityType: EntityType, filePath: string | null) {
+  if (entityType === 'contract') {
+    return { table: 'contracts', values: { document_url: filePath } };
+  }
+  if (entityType === 'contract_extension') {
+    return { table: 'contract_extensions', values: { document_url: filePath } };
+  }
+  if (entityType === 'medical_exam') {
+    return { table: 'medical_exams', values: { document_url: filePath } };
+  }
+  if (entityType === 'dotation') {
+    return { table: 'dotation_deliveries', values: { document_url: filePath } };
+  }
+  if (entityType === 'incapacity') {
+    return { table: 'employee_incapacities', values: { certificate_url: filePath } };
+  }
+  if (entityType === 'incapacity_clinical_history') {
+    return { table: 'employee_incapacities', values: { clinical_history_url: filePath } };
+  }
+  if (entityType === 'disciplinary_opening') {
+    return { table: 'disciplinary_processes', values: { opening_document_url: filePath } };
+  }
+  if (entityType === 'disciplinary_notification') {
+    return { table: 'disciplinary_processes', values: { notification_document_url: filePath } };
+  }
+  if (entityType === 'disciplinary_hearing') {
+    return { table: 'disciplinary_processes', values: { hearing_document_url: filePath } };
+  }
+  if (entityType === 'disciplinary_decision') {
+    return { table: 'disciplinary_processes', values: { decision_document_url: filePath } };
+  }
+  if (entityType === 'disciplinary_appeal') {
+    return { table: 'disciplinary_processes', values: { appeal_document_url: filePath } };
+  }
+
+  return null;
+}
+
+// Delete a document version and keep the entity URL pointing to the latest remaining version.
+export function useDeleteDocumentVersion() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ document }: DeleteDocumentParams) => {
+      let replacement: DocumentVersion | null = null;
+
+      if (document.is_current) {
+        const { data: replacementData, error: replacementError } = await supabase
+          .from('document_versions')
+          .select('*')
+          .eq('entity_type', document.entity_type)
+          .eq('entity_id', document.entity_id)
+          .neq('id', document.id)
+          .order('version', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (replacementError) throw replacementError;
+        replacement = replacementData as DocumentVersion | null;
+      }
+
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove([document.file_path]);
+
+      if (storageError) throw storageError;
+
+      const { error: deleteError } = await supabase
+        .from('document_versions')
+        .delete()
+        .eq('id', document.id);
+
+      if (deleteError) throw deleteError;
+
+      if (document.is_current) {
+        if (replacement) {
+          const { error: replacementUpdateError } = await supabase
+            .from('document_versions')
+            .update({ is_current: true })
+            .eq('id', replacement.id);
+
+          if (replacementUpdateError) throw replacementUpdateError;
+        }
+
+        const updateTarget = getEntityDocumentUpdate(document.entity_type, replacement?.file_path ?? null);
+
+        if (updateTarget) {
+          const { error: entityUpdateError } = await supabase
+            .from(updateTarget.table as any)
+            .update(updateTarget.values)
+            .eq('id', document.entity_id);
+
+          if (entityUpdateError) throw entityUpdateError;
+        }
+      }
+
+      return document;
+    },
+    onSuccess: (document) => {
+      queryClient.invalidateQueries({ queryKey: ['document_versions', document.entity_type, document.entity_id] });
+      queryClient.invalidateQueries({ queryKey: ['current_document', document.entity_type, document.entity_id] });
+      queryClient.invalidateQueries({ queryKey: ['document_url', document.file_path] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });

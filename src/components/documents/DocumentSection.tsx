@@ -17,6 +17,7 @@ interface DocumentSectionProps {
   entityId: string;
   title?: string;
   allowUpload?: boolean;
+  allowDelete?: boolean;
   showVersionHistory?: boolean;
   compact?: boolean;
   className?: string;
@@ -27,6 +28,7 @@ export function DocumentSection({
   entityId,
   title = 'Documento de Soporte',
   allowUpload = true,
+  allowDelete = false,
   showVersionHistory = true,
   compact = false,
   className,
@@ -66,6 +68,7 @@ export function DocumentSection({
         <DocumentViewer
           entityType={entityType}
           entityId={entityId}
+          allowDelete={allowDelete}
           showVersionHistory={showVersionHistory}
         />
       </div>
@@ -104,6 +107,7 @@ export function DocumentSection({
         <DocumentViewer
           entityType={entityType}
           entityId={entityId}
+          allowDelete={allowDelete}
           showVersionHistory={showVersionHistory}
         />
       </CardContent>
