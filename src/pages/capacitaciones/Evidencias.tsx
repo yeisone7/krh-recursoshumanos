@@ -705,7 +705,10 @@ export default function Evidencias() {
             <p className="text-muted-foreground font-medium mt-1">Registro de capacitaciones completadas con firma digital</p>
           </div>
           <div className="flex gap-1 bg-background border border-border/50 rounded-xl p-1 shadow-inner shrink-0">
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg" onClick={handleOpenBulkDialog} title="Generar constancias masivas"><Files className="h-4 w-4" /></Button>
+            <Button variant="ghost" className="h-10 rounded-lg px-3 text-xs font-bold uppercase tracking-wider" onClick={handleOpenBulkDialog} title="Exportar evidencias">
+              <Files className="mr-2 h-4 w-4" />
+              Exportar evidencias
+            </Button>
             <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'table' ? 'shadow-md' : ''}`} onClick={() => setViewMode('table')}><List className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'tree' ? 'default' : 'ghost'} size="icon" className={`h-10 w-10 rounded-lg ${viewMode === 'tree' ? 'shadow-md' : ''}`} onClick={() => setViewMode('tree')}><FolderTree className="h-4 w-4" /></Button>
           </div>
