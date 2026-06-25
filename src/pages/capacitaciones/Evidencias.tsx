@@ -154,6 +154,12 @@ export default function Evidencias() {
     });
   };
 
+  const toValidDate = (value: string | null | undefined) => {
+    if (!value) return null;
+    const date = parseISO(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
   const drawContainedImage = async (
     doc: jsPDF,
     dataUrl: string,
@@ -186,8 +192,9 @@ export default function Evidencias() {
   const getCourseObjective = (completion: TrainingCompletion) => {
     const course = completion.course;
     const content = course?.content as TrainingCourseContent | null | undefined;
+    const objectives = Array.isArray(course?.objectives) ? course?.objectives.join(' ') : course?.objectives;
     return course?.objective
-      || course?.objectives
+      || objectives
       || content?.objetivos?.[0]
       || course?.description
       || 'Registrar la participacion y finalizacion de la capacitacion.';
@@ -205,7 +212,8 @@ export default function Evidencias() {
     doc.setFont('helvetica', options.bold ? 'bold' : 'normal');
     doc.setFontSize(options.size || 8);
     doc.setTextColor(0, 0, 0);
-    const lines = doc.splitTextToSize(value || '-', width - 3).slice(0, Math.max(1, Math.floor(height / 4)));
+    const safeValue = String(value || '-');
+    const lines = doc.splitTextToSize(safeValue, width - 3).slice(0, Math.max(1, Math.floor(height / 4)));
     const lineHeight = (options.size || 8) * 0.36 + 1.5;
     const totalHeight = lines.length * lineHeight;
     const textY = y + Math.max((height - totalHeight) / 2 + lineHeight - 1, 4);
@@ -390,7 +398,10 @@ export default function Evidencias() {
     const pages = Math.max(1, Math.ceil(sorted.length / rowsPerPage));
     const centerName = centerOptions.find(center => center.id === bulkCenter)?.name || getCompletionCenter(sorted[0]).name;
     const courseName = bulkCourseOptions.find(course => course.id === bulkCourse)?.name || sorted[0]?.course?.name || 'Capacitacion';
-    const dates = sorted.map(c => parseISO(c.completed_at)).sort((a, b) => a.getTime() - b.getTime());
+    const dates = sorted
+      .map(c => toValidDate(c.completed_at))
+      .filter((date): date is Date => Boolean(date))
+      .sort((a, b) => a.getTime() - b.getTime());
     const dateText = dates.length > 1
       ? `${format(dates[0], 'dd/MM/yyyy')} - ${format(dates[dates.length - 1], 'dd/MM/yyyy')}`
       : dates[0] ? format(dates[0], 'dd/MM/yyyy') : format(new Date(), 'dd/MM/yyyy');
@@ -516,7 +527,7 @@ export default function Evidencias() {
     y += 10;
     drawField('Capacitación:', completion.course?.name || 'N/A', y);
     y += 10;
-    drawField('Fecha:', format(parseISO(completion.completed_at), "dd 'de' MMMM 'de' yyyy - HH:mm", { locale: es }), y);
+    drawField('Fecha:', format(toValidDate(completion.completed_at) || new Date(), "dd 'de' MMMM 'de' yyyy - HH:mm", { locale: es }), y);
     y += 10;
     if (completion.quiz_score !== null && completion.quiz_score !== undefined) {
       drawField('Calificación:', `${completion.quiz_score}%`, y);
@@ -637,7 +648,8 @@ export default function Evidencias() {
       const courseName = bulkCourseOptions.find((course) => course.id === bulkCourse)?.name || 'capacitacion';
       doc.save(`registro-asistencia-${sanitizeFileName(centerName)}-${sanitizeFileName(courseName)}.pdf`);
       toast.success('Informe de asistencia generado');
-    } catch {
+    } catch (error) {
+      console.error('Attendance report generation failed', error);
       toast.error('No se pudo generar el informe de asistencia');
     } finally {
       setIsAttendanceReportGenerating(false);
@@ -772,7 +784,7 @@ export default function Evidencias() {
                     <TableCell>
                       <Badge variant="outline" className="text-primary border-primary/20">{c.course?.name || '-'}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
+                    <TableCell className="text-sm font-medium">{format(toValidDate(c.completed_at) || new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
@@ -873,7 +885,7 @@ export default function Evidencias() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold text-foreground">{completion.operator_name}</p>
                         <p className="mt-1 text-xs font-medium text-muted-foreground">
-                          {completion.operator_cedula || 'Sin cedula'} - {format(parseISO(completion.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                          {completion.operator_cedula || 'Sin cedula'} - {format(toValidDate(completion.completed_at) || new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}
                           {completion.quiz_score != null ? ` - ${completion.quiz_score}%` : ''}
                         </p>
                       </div>
