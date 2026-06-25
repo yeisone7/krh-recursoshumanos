@@ -795,13 +795,24 @@ export default function Evidencias() {
       </Dialog>
 
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Exportar evidencias por centro y capacitacion</DialogTitle>
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden rounded-[2rem] border-border/60 bg-background p-0 shadow-2xl [&>button]:right-6 [&>button]:top-6">
+          <DialogHeader className="border-b border-border/60 bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-5 pr-14 text-left">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+                <Files className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-xl font-black tracking-tight">Exportar evidencias</DialogTitle>
+                <p className="mt-1 text-sm font-medium text-muted-foreground">
+                  Genera constancias o informe de asistencia por centro y capacitacion.
+                </p>
+              </div>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <div className="flex max-h-[calc(90vh-96px)] flex-col">
+            <div className="space-y-5 overflow-y-auto px-6 py-5">
+              <div className="grid gap-3 rounded-2xl border border-border/50 bg-muted/20 p-3 sm:grid-cols-2">
               <Select
                 value={bulkCenter}
                 onValueChange={(value) => {
@@ -810,7 +821,7 @@ export default function Evidencias() {
                   setBulkSelected(new Set());
                 }}
               >
-                <SelectTrigger className="h-11 rounded-xl">
+                <SelectTrigger className="h-12 rounded-xl border-border/60 bg-background shadow-inner">
                   <SelectValue placeholder="Centro de operacion" />
                 </SelectTrigger>
                 <SelectContent>
@@ -828,7 +839,7 @@ export default function Evidencias() {
                 }}
                 disabled={!bulkCenter}
               >
-                <SelectTrigger className="h-11 rounded-xl">
+                <SelectTrigger className="h-12 rounded-xl border-border/60 bg-background shadow-inner">
                   <SelectValue placeholder="Capacitacion" />
                 </SelectTrigger>
                 <SelectContent>
@@ -837,31 +848,31 @@ export default function Evidencias() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+              </div>
 
-            <div className="rounded-xl border border-border/60">
-              <div className="flex items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+              <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm">
+                <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-background px-5 py-4">
                 <div>
-                  <p className="text-sm font-bold">Empleados capacitados</p>
-                  <p className="text-xs text-muted-foreground">{selectedBulkCompletions.length} de {bulkCandidates.length} seleccionados</p>
+                  <p className="text-sm font-black text-foreground">Empleados capacitados</p>
+                  <p className="text-xs font-medium text-muted-foreground">{selectedBulkCompletions.length} de {bulkCandidates.length} seleccionados</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={toggleBulkAll} disabled={bulkCandidates.length === 0}>
+                <Button variant="outline" size="sm" className="rounded-xl font-semibold" onClick={toggleBulkAll} disabled={bulkCandidates.length === 0}>
                   {bulkSelected.size === bulkCandidates.length && bulkCandidates.length > 0 ? 'Limpiar' : 'Seleccionar todos'}
                 </Button>
               </div>
 
-              <div className="max-h-80 overflow-y-auto">
+                <div className="max-h-[42vh] overflow-y-auto">
                 {bulkCandidates.length === 0 ? (
-                  <div className="px-4 py-10 text-center text-sm text-muted-foreground">
+                  <div className="px-6 py-12 text-center text-sm font-medium text-muted-foreground">
                     Selecciona un centro y una capacitacion con evidencias registradas.
                   </div>
                 ) : (
                   bulkCandidates.map((completion) => (
-                    <label key={completion.id} className="flex cursor-pointer items-center gap-3 border-b border-border/40 px-4 py-3 last:border-b-0 hover:bg-muted/40">
+                    <label key={completion.id} className="flex cursor-pointer items-center gap-4 border-b border-border/40 px-5 py-4 transition-colors last:border-b-0 hover:bg-primary/5">
                       <Checkbox checked={bulkSelected.has(completion.id)} onCheckedChange={() => toggleBulkSelect(completion.id)} />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{completion.operator_name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="truncate text-sm font-bold text-foreground">{completion.operator_name}</p>
+                        <p className="mt-1 text-xs font-medium text-muted-foreground">
                           {completion.operator_cedula || 'Sin cedula'} - {format(parseISO(completion.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}
                           {completion.quiz_score != null ? ` - ${completion.quiz_score}%` : ''}
                         </p>
@@ -869,22 +880,24 @@ export default function Evidencias() {
                     </label>
                   ))
                 )}
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={() => setBulkDialogOpen(false)} disabled={isBulkGenerating || isAttendanceReportGenerating}>
+            <div className="flex flex-col-reverse gap-2 border-t border-border/60 bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
+              <Button variant="outline" className="h-11 rounded-xl px-5 font-semibold" onClick={() => setBulkDialogOpen(false)} disabled={isBulkGenerating || isAttendanceReportGenerating}>
                 Cancelar
               </Button>
               <Button
                 variant="outline"
+                className="h-11 rounded-xl px-5 font-semibold"
                 onClick={handleAttendanceReportGenerate}
                 disabled={selectedBulkCompletions.length === 0 || isBulkGenerating || isAttendanceReportGenerating}
               >
                 {isAttendanceReportGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                 Informe asistencia
               </Button>
-              <Button onClick={handleBulkGenerate} disabled={selectedBulkCompletions.length === 0 || isBulkGenerating || isAttendanceReportGenerating}>
+              <Button className="h-11 rounded-xl px-5 font-bold shadow-lg shadow-primary/20" onClick={handleBulkGenerate} disabled={selectedBulkCompletions.length === 0 || isBulkGenerating || isAttendanceReportGenerating}>
                 {isBulkGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
                 Generar ZIP ({selectedBulkCompletions.length})
               </Button>
