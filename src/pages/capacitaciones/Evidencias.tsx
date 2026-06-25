@@ -296,7 +296,7 @@ export default function Evidencias() {
     });
 
     y += 28;
-    doc.rect(margin, y, contentWidth, 20);
+    doc.rect(margin, y, contentWidth, 27);
     drawCellText(doc, 'Departamento/area/proceso responsable', margin, y, contentWidth, 6, { bold: true, align: 'center', size: 8 });
     doc.line(margin, y + 6, pageWidth - margin, y + 6);
     const areas = [
@@ -316,9 +316,10 @@ export default function Evidencias() {
       const row = Math.floor(idx / 4);
       drawCheckbox(doc, label as string, Boolean(checked), margin + col * areaW, y + 6 + row * 7, areaW);
     });
-    drawCellText(doc, `Cual: ${course?.target_audience || course?.category || '-'}`, margin + areaW, y + 13, areaW * 3, 7, { size: 7 });
+    doc.line(margin, y + 20, pageWidth - margin, y + 20);
+    drawCellText(doc, `Cual: ${course?.target_audience || course?.category || '-'}`, margin, y + 20, contentWidth, 7, { size: 7 });
 
-    y += 24;
+    y += 31;
     doc.rect(margin, y, contentWidth, 8);
     drawCellText(doc, `Contrato/ Sede/ Ciudad: ${centerName}`, margin, y, contentWidth * 0.58, 8, { bold: true, size: 8 });
     doc.line(margin + contentWidth * 0.58, y, margin + contentWidth * 0.58, y + 8);
@@ -458,21 +459,26 @@ export default function Evidencias() {
     doc.rect(0, 38, pageWidth, 3, 'F');
 
     // Logo top-right on header
-    try {
-      const logoDataUrl = await loadImageAsDataUrl('/images/petrocasinos-logo-white.png');
-      const tmpImg = new Image();
-      tmpImg.src = logoDataUrl;
-      await new Promise(r => { tmpImg.onload = r; });
-      const logoH = 14;
-      const logoW = (tmpImg.naturalWidth / tmpImg.naturalHeight) * logoH;
-      doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 9, logoW, logoH);
-    } catch { /* skip logo */ }
+    const certificateLogoUrl = currentCompany?.horizontal_logo_url || currentCompany?.logo_url || null;
+    if (certificateLogoUrl) {
+      try {
+        const logoDataUrl = await loadImageAsDataUrl(certificateLogoUrl);
+        const image = await getImageSize(logoDataUrl);
+        const maxLogoWidth = 42;
+        const maxLogoHeight = 18;
+        const ratio = Math.min(maxLogoWidth / image.width, maxLogoHeight / image.height);
+        const logoW = image.width * ratio;
+        const logoH = image.height * ratio;
+        doc.addImage(logoDataUrl, 'PNG', pageWidth - margin - logoW, 9 + (maxLogoHeight - logoH) / 2, logoW, logoH);
+      } catch { /* skip logo */ }
+    }
 
     // Company name in header
+    const companyName = currentCompany?.name || 'Empresa';
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
+    doc.setFontSize(companyName.length > 26 ? 14 : 18);
     doc.setTextColor(255, 255, 255);
-    doc.text('PETROCASINOS S.A.', margin, 18);
+    doc.text(companyName.toUpperCase(), margin, 18, { maxWidth: pageWidth - margin * 2 - 60 });
 
     // Document title in header
     doc.setFontSize(11);
