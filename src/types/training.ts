@@ -163,7 +163,6 @@ export interface TrainingCompletion {
     first_name: string;
     last_name: string;
     document_number: string;
-    current_position: string | null;
     employee_work_info?: Array<{
       id: string;
       employee_id: string;
