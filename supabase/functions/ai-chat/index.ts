@@ -700,14 +700,16 @@ serve(async (req) => {
       .eq("config_key", "ai_config")
       .maybeSingle();
 
-    const { data: globalAiConfigRow } = companyAiConfigRow
-      ? { data: null }
-      : await adminClient
+    let globalAiConfigRow: { config_value?: unknown } | null = null;
+    if (!companyAiConfigRow) {
+      const { data } = await adminClient
           .from("system_config")
           .select("config_value")
           .is("company_id", null)
           .eq("config_key", "ai_config")
           .maybeSingle();
+      globalAiConfigRow = data;
+    }
 
     const aiConfigRow = companyAiConfigRow || globalAiConfigRow;
     const aiConfig = (aiConfigRow?.config_value || {}) as AIConfig;
