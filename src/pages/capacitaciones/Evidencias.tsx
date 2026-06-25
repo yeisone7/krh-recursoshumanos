@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, useTrainingCourses } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
@@ -22,8 +23,8 @@ import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 export default function Evidencias() {
   const { currentCompanyId, companies } = useAuth();
   const { data: selectedCompany } = useCompany(currentCompanyId || undefined);
-  const { data: completions = [] } = useTrainingCompletions();
-  const { data: courses = [] } = useTrainingCourses();
+  const { data: completions = [], isLoading: isLoadingCompletions, isFetching: isFetchingCompletions } = useTrainingCompletions();
+  const { data: courses = [], isLoading: isLoadingCourses } = useTrainingCourses();
   const deleteCompletion = useDeleteCompletion();
   const bulkDelete = useBulkDeleteCompletions();
   const [search, setSearch] = useState('');
@@ -39,6 +40,8 @@ export default function Evidencias() {
   const [isAttendanceReportGenerating, setIsAttendanceReportGenerating] = useState(false);
 
   const currentCompany = selectedCompany || companies.find(company => company.id === currentCompanyId);
+  const isInitialLoading = isLoadingCompletions || isLoadingCourses;
+  const isRefreshing = isFetchingCompletions && !isLoadingCompletions;
 
   const filtered = useMemo(() => {
     return (completions as TrainingCompletion[]).filter(c => {
@@ -641,6 +644,57 @@ export default function Evidencias() {
     }
   };
 
+  const FiltersSkeleton = () => (
+    <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
+      <div className="relative flex-1 w-full sm:max-w-md">
+        <Skeleton className="h-12 w-full rounded-xl bg-muted/70" />
+      </div>
+      <Skeleton className="h-12 w-full rounded-xl bg-muted/70 sm:w-64" />
+    </div>
+  );
+
+  const TreeSkeleton = () => (
+    <div className="rounded-md border bg-card p-4">
+      <div className="space-y-4">
+        {Array.from({ length: 11 }).map((_, index) => (
+          <div key={index} className="flex items-center gap-3">
+            <Skeleton className="h-3.5 w-3.5 rounded-sm bg-muted/70" />
+            <Skeleton className="h-4 w-4 rounded-sm bg-muted/70" />
+            <Skeleton className="h-4 bg-muted/70" style={{ width: `${150 + (index % 4) * 34}px` }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const TableSkeleton = () => (
+    <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+      <CardContent className="p-0">
+        <div className="space-y-0">
+          <div className="grid grid-cols-[48px_1fr_140px_220px_150px_120px] gap-4 border-b bg-background px-4 py-4">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-4 bg-muted/70" />
+            ))}
+          </div>
+          {Array.from({ length: 7 }).map((_, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-[48px_1fr_140px_220px_150px_120px] gap-4 border-b px-4 py-4 last:border-b-0">
+              <Skeleton className="h-5 w-5 rounded bg-muted/70" />
+              <Skeleton className="h-4 w-3/4 bg-muted/70" />
+              <Skeleton className="h-4 w-24 bg-muted/70" />
+              <Skeleton className="h-6 w-44 rounded-full bg-muted/70" />
+              <Skeleton className="h-4 w-28 bg-muted/70" />
+              <div className="flex justify-end gap-2">
+                <Skeleton className="h-8 w-8 rounded-lg bg-muted/70" />
+                <Skeleton className="h-8 w-8 rounded-lg bg-muted/70" />
+                <Skeleton className="h-8 w-8 rounded-lg bg-muted/70" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
@@ -658,6 +712,9 @@ export default function Evidencias() {
         </div>
       </div>
 
+      {isInitialLoading ? (
+        <FiltersSkeleton />
+      ) : (
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-background border border-border/50 rounded-[2rem] p-4 shadow-sm mb-6">
         <div className="relative flex-1 w-full sm:max-w-md">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -674,16 +731,21 @@ export default function Evidencias() {
         </Select>
         {selected.size > 0 && <Button variant="destructive" className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-destructive/20 w-full sm:w-auto" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-2" /> Eliminar ({selected.size})</Button>}
       </div>
+      )}
 
-      {viewMode === 'tree' ? (
-        <EvidenciasTreeView
-          completions={filtered}
-          onViewSignature={setSignatureView}
-          onExportPdf={exportPdf}
-          onDelete={handleDelete}
-        />
+      {isInitialLoading ? (
+        viewMode === 'tree' ? <TreeSkeleton /> : <TableSkeleton />
+      ) : viewMode === 'tree' ? (
+        <div className={`transition-opacity ${isRefreshing ? 'opacity-70' : ''}`}>
+          <EvidenciasTreeView
+            completions={filtered}
+            onViewSignature={setSignatureView}
+            onExportPdf={exportPdf}
+            onDelete={handleDelete}
+          />
+        </div>
       ) : (
-        <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+        <Card className={`rounded-[2rem] border-border/50 shadow-sm overflow-hidden transition-opacity ${isRefreshing ? 'opacity-70' : ''}`}>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-background">
