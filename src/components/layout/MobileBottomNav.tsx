@@ -12,6 +12,9 @@ const navItems = [
 ];
 
 const STORAGE_KEY = 'mobile-nav-prev-index';
+const MOBILE_NAV_COLOR = '#1192cb';
+const MOBILE_NAV_BORDER_COLOR = '#0f83b7';
+const MOBILE_NAV_SHADOW = 'rgba(17, 146, 203, 0.28)';
 
 export function MobileBottomNav() {
   const location = useLocation();
@@ -64,9 +67,9 @@ export function MobileBottomNav() {
         ref={containerRef}
         className="relative border-t"
         style={{
-          backgroundColor: '#5e656e',
-          borderColor: '#4d535a',
-          boxShadow: '0 -4px 12px -2px rgba(94, 101, 110, 0.22)',
+          backgroundColor: MOBILE_NAV_COLOR,
+          borderColor: MOBILE_NAV_BORDER_COLOR,
+          boxShadow: `0 -4px 12px -2px ${MOBILE_NAV_SHADOW}`,
         }}
       >
         {/* Floating active indicator */}
@@ -76,7 +79,7 @@ export function MobileBottomNav() {
             style={{
               left: `${indicatorX}px`,
               backgroundColor: 'hsl(var(--card))',
-              borderColor: '#5e656e',
+              borderColor: MOBILE_NAV_COLOR,
               borderWidth: '4px',
               borderStyle: 'solid',
               boxShadow: '0 6px 16px -3px rgba(0, 0, 0, 0.35)',
@@ -91,7 +94,7 @@ export function MobileBottomNav() {
                 <ActiveIcon
                   className="w-5 h-5"
                   strokeWidth={2.2}
-                  style={{ color: '#5e656e' }}
+                  style={{ color: MOBILE_NAV_COLOR }}
                 />
               ) : null;
             })()}
