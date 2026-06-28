@@ -138,6 +138,14 @@ function applyEmployeeCenterFilter(query: any, centerId?: string, allowedCenterI
   return query;
 }
 
+function applyRetiredVisibilityFilter(query: any, includeRetired?: boolean) {
+  if (includeRetired) return query;
+
+  return query
+    .not('status', 'eq', 'retired')
+    .or('is_active.eq.true,status.neq.active');
+}
+
 function getEmployeeSearchTerms(search?: string) {
   return search?.trim().toLowerCase().split(/\s+/).filter(Boolean) || [];
 }
@@ -299,14 +307,15 @@ export function useEmployeesPaginated(options: {
   search?: string;
   status?: string;
   centerId?: string;
+  includeRetired?: boolean;
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const { page = 1, pageSize = 12, search, status, centerId } = options;
+  const { page = 1, pageSize = 12, search, status, centerId, includeRetired = false } = options;
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, includeRetired, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
 
@@ -330,6 +339,7 @@ export function useEmployeesPaginated(options: {
       );
 
       query = applyEmployeeStatusFilter(query, status);
+      query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
 
       // 2. Pagination range
       const from = (page - 1) * pageSize;
@@ -367,14 +377,15 @@ export function useEmployeesInfinite(options: {
   search?: string;
   status?: string;
   centerId?: string;
+  includeRetired?: boolean;
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const { pageSize = 12, search, status, centerId } = options;
+  const { pageSize = 12, search, status, centerId, includeRetired = false } = options;
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useInfiniteQuery({
-    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, includeRetired, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
 
@@ -397,6 +408,7 @@ export function useEmployeesInfinite(options: {
         shouldLimitByAssignedCenters ? assignedCenterIds : []
       );
       query = applyEmployeeStatusFilter(query, status);
+      query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
 
       // 2. Pagination
       const from = pageParam * pageSize;
