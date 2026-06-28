@@ -175,7 +175,11 @@ const coreNavItems: NavItem[] = [
 
 const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
+];
+
+const contractsNavItems: NavItem[] = [
   { label: 'Contratos', icon: <FileText className="w-5 h-5" />, href: '/contratos', moduleCode: 'contratos' },
+  { label: 'Analitica de Contratos', icon: <BarChart3 className="w-5 h-5" />, href: '/contratos/analitica', moduleCode: 'analitica_contratos' },
 ];
 
 const seleccionNavItems: NavItem[] = [
@@ -330,6 +334,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
   const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);
+  const filteredContractsNavItems = useMemo(() => filterItems(contractsNavItems), [filterItems]);
   const filteredSucursalesNavItems = useMemo(() => filterItems(sucursalesNavItems), [filterItems]);
   const filteredSeleccionNavItems = useMemo(() => filterItems(seleccionNavItems), [filterItems]);
   const filteredTimeManagementNavItems = useMemo(() => filterItems(timeManagementNavItems), [filterItems]);
@@ -746,6 +751,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             <SectionLabel label="Personal" />
             <div className="space-y-0.5">
               {filteredPersonnelNavItems.map((item) =>
+                <NavLinkItem key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Contracts */}
+        {filteredContractsNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Contratos" />
+            <div className="space-y-0.5">
+              {filteredContractsNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
               )}
             </div>
