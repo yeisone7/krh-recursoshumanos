@@ -62,6 +62,7 @@ export function EmployeeCard({
   const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
   const isLegacyRetired = !employee.is_active && employee.status === 'active';
   const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || isLegacyRetired;
+  const isFinalRetired = employee.status === 'retired' || isLegacyRetired;
   const isEnRetiro = employee.status === 'en_retiro';
   const isSuspended = employee.status === 'suspended' || (!employee.is_active && !isRetired);
   const employeeName = getEmployeeFullName(employee);
@@ -73,7 +74,11 @@ export function EmployeeCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className="card-elevated p-5 group cursor-pointer hover:border-primary/30"
+      className={cn(
+        "card-elevated p-5 group cursor-pointer hover:border-primary/30",
+        isFinalRetired && "employee-retired-card"
+      )}
+      style={isFinalRetired ? { background: '#fff7f7', backgroundColor: '#fff7f7', borderColor: '#fee2e2' } : undefined}
       onClick={() => onOpenDetail(employee.id)}
     >
       <div className="flex items-start justify-between gap-3 mb-4">
@@ -213,7 +218,7 @@ export function EmployeeCard({
             isRetired
               ? isEnRetiro
                 ? 'bg-warning-light text-warning border-warning/20'
-                : 'bg-background text-muted-foreground border-muted-foreground/20'
+                : 'bg-red-100 text-red-700 border-red-200'
               : !isSuspended
                 ? 'bg-success-light text-success border-success/20'
                 : 'bg-rose-light text-rose border-rose/20'

@@ -268,6 +268,16 @@
     box-shadow: var(--shadow-card-hover);
   }
 
+  .employee-retired-card {
+    background-color: #fff7f7 !important;
+    border-color: #fee2e2 !important;
+  }
+
+  .employee-retired-card:hover {
+    background-color: #fff3f3 !important;
+    border-color: #fecaca !important;
+  }
+
   .kpi-card {
     @apply bg-card rounded-lg border border-border p-5;
     box-shadow: var(--shadow-card);
@@ -621,6 +631,16 @@ div.relative.overflow-hidden[class*="bg-gradient-"],
   border: 1px solid #e2e8f0 !important;
   border-radius: 0.5rem !important;
   background-color: #ffffff !important;
+}
+
+.card-elevated.employee-retired-card {
+  background-color: #fff7f7 !important;
+  border-color: #fee2e2 !important;
+}
+
+.card-elevated.employee-retired-card:hover {
+  background-color: #fff3f3 !important;
+  border-color: #fecaca !important;
 }
 
 /* Standardized Flat Cards inside UI */

@@ -79,6 +79,7 @@ export function EmployeeTable({
             const isNew = employee.created_at && (Date.now() - new Date(employee.created_at).getTime()) < 10 * 24 * 60 * 60 * 1000;
             const isLegacyRetired = !employee.is_active && employee.status === 'active';
             const isRetired = employee.status === 'retired' || employee.status === 'en_retiro' || isLegacyRetired;
+            const isFinalRetired = employee.status === 'retired' || isLegacyRetired;
             const isEnRetiro = employee.status === 'en_retiro';
             const isSuspended = employee.status === 'suspended' || (!employee.is_active && !isRetired);
             const hasProfesiograma = hasProfesiogramaFn(employee);
@@ -88,7 +89,11 @@ export function EmployeeTable({
             return (
               <TableRow 
                 key={employee.id} 
-                className="group cursor-pointer hover:bg-slate-50/50 transition-colors"
+                className={cn(
+                  "group cursor-pointer transition-colors",
+                  isFinalRetired ? "employee-retired-card" : "hover:bg-slate-50/50"
+                )}
+                style={isFinalRetired ? { background: '#fff7f7', backgroundColor: '#fff7f7' } : undefined}
                 onClick={() => onOpenDetail(employee.id)}
               >
                 <TableCell>
@@ -139,7 +144,7 @@ export function EmployeeTable({
                       isRetired
                         ? isEnRetiro
                           ? 'bg-warning-light text-warning border-warning/20'
-                          : 'bg-card text-muted-foreground border-muted-foreground/20'
+                          : 'bg-red-100 text-red-700 border-red-200'
                         : !isSuspended
                           ? 'bg-success-light text-success border-success/20'
                           : 'bg-rose-light text-rose border-rose/20'

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -94,6 +95,7 @@ export default function Empleados() {
   const [isTerminationOpen, setIsTerminationOpen] = useState(false);
   const [toggleEmployee, setToggleEmployee] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(getInitialEmployeesViewMode);
+  const [showRetiredEmployees, setShowRetiredEmployees] = useState(false);
   const [showDashboardSummary, setShowDashboardSummary] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const pageSize = 12;
@@ -127,6 +129,7 @@ export default function Empleados() {
     search: debouncedSearch,
     status: statusFilter,
     centerId: centerFilter,
+    includeRetired: showRetiredEmployees,
   });
 
   // Flatten the pages from infiniteData
@@ -272,6 +275,7 @@ export default function Empleados() {
     setSearchQuery('');
     setStatusFilter('all');
     setCenterFilter('all');
+    setShowRetiredEmployees(false);
     toast.success('Filtros limpiados');
   };
 
@@ -311,7 +315,11 @@ export default function Empleados() {
     }
   };
 
-  const isFiltered = searchQuery !== '' || statusFilter !== 'all' || centerFilter !== 'all';
+  const isFiltered = searchQuery !== '' || statusFilter !== 'all' || centerFilter !== 'all' || showRetiredEmployees;
+  const shouldIncludeRetired = showRetiredEmployees || statusFilter === 'retired';
+  const isFinalRetiredEmployee = useCallback((emp: any) => (
+    emp.status === 'retired' || (!emp.is_active && emp.status === 'active')
+  ), []);
 
   // We no longer need filteredEmployees for the list view as it's done server-side
   // But we still need it for EXPORT (to export what's filtered)
@@ -339,9 +347,10 @@ export default function Empleados() {
       } else if (statusFilter !== 'all') matchesStatus = true;
 
       const matchesCenter = centerFilter === 'all' || emp.work_info?.operation_center_id === centerFilter;
-      return matchesSearch && matchesStatus && matchesCenter;
+      const matchesRetiredVisibility = shouldIncludeRetired || !isFinalRetiredEmployee(emp);
+      return matchesSearch && matchesStatus && matchesCenter && matchesRetiredVisibility;
     });
-  }, [employees, searchQuery, statusFilter, centerFilter]);
+  }, [employees, searchQuery, statusFilter, centerFilter, shouldIncludeRetired, isFinalRetiredEmployee]);
 
   const stats = useMemo(() => {
     if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0 };
@@ -476,7 +485,7 @@ export default function Empleados() {
               className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-transparent focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all shadow-sm"
             />
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[150px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
@@ -503,6 +512,20 @@ export default function Empleados() {
                 ))}
               </SelectContent>
             </Select>
+            <div className="flex h-10 items-center gap-2 rounded-lg border border-border/70 bg-card px-3">
+              <Switch
+                id="show-retired-employees"
+                checked={showRetiredEmployees}
+                onCheckedChange={setShowRetiredEmployees}
+                aria-label="Mostrar empleados retirados"
+              />
+              <label
+                htmlFor="show-retired-employees"
+                className="whitespace-nowrap text-sm font-medium text-foreground"
+              >
+                Mostrar retirados
+              </label>
+            </div>
             <Button 
               variant={isFiltered ? "secondary" : "outline"} 
               size="icon" 
