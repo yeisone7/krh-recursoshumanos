@@ -66,9 +66,32 @@ function extractStoragePath(fileUrl: string): string {
   return fileUrl;
 }
 
+function extractFileNameFromUrl(fileUrl?: string | null, documentType?: string | null): string | null {
+  if (!fileUrl) return null;
+
+  const storagePath = extractStoragePath(fileUrl);
+  const rawFileName = storagePath.split(/[\\/]/).pop()?.split('?')[0];
+  if (!rawFileName) return null;
+
+  const decodedFileName = decodeURIComponent(rawFileName);
+  if (!documentType) return decodedFileName;
+
+  return decodedFileName.replace(new RegExp(`^${documentType}_\\d+_\\d+_`), '');
+}
+
+function getDocumentDisplayName(doc: any): string {
+  return (
+    doc.file_name ||
+    extractFileNameFromUrl(doc.file_url, doc.document_type) ||
+    doc.document_name ||
+    'Documento'
+  );
+}
+
 function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
   const { doc, source } = item;
   const [isLoading, setIsLoading] = useState(false);
+  const displayName = getDocumentDisplayName(doc);
 
   const handleView = async () => {
     if (!doc.file_url) return;
@@ -110,7 +133,7 @@ function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
       const url = URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = doc.file_name || 'documento';
+      a.download = displayName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -132,7 +155,7 @@ function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
           </div>
           <div className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">
-              {doc.document_name || doc.file_name || 'Documento'}
+              {displayName}
             </span>
             <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
