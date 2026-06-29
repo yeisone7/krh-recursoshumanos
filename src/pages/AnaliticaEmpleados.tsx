@@ -63,8 +63,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { useContracts } from '@/hooks/useContracts';
-import { useEmployees } from '@/hooks/useEmployees';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
@@ -169,17 +167,6 @@ function getMonthlyBuckets(period: PeriodFilter) {
   return months;
 }
 
-async function fetchRows(table: string, companyId: string, employeeIds: string[], select: string) {
-  if (employeeIds.length === 0) return [];
-  const { data, error } = await (supabase.from(table as any) as any)
-    .select(select)
-    .eq('company_id', companyId)
-    .in('employee_id', employeeIds);
-
-  if (error) throw error;
-  return data || [];
-}
-
 function indexCurrent(rows: any[]) {
   return rows.reduce<Record<string, any>>((acc, row) => {
     const existing = acc[row.employee_id];
@@ -198,54 +185,241 @@ interface RelatedData {
   documentCounts: Record<string, number>;
 }
 
-function useEmployeeAnalyticsRelated(employeeIds: string[]) {
-  const { currentCompanyId } = useAuth();
+interface EmployeeAnalyticsDataset {
+  employees: any[];
+  contracts: any[];
+  related: RelatedData;
+}
+
+const EMPTY_RELATED: RelatedData = {
+  socialByEmployee: {},
+  bankByEmployee: {},
+  familyByEmployee: {},
+  scheduleByEmployee: {},
+  documentCounts: {},
+};
+
+function keepAllowedRows(rows: any[], allowedEmployeeIds: Set<string>) {
+  return rows.filter((row) => allowedEmployeeIds.has(row.employee_id));
+}
+
+function AnaliticaEmpleadosSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-72 max-w-full" />
+              <Skeleton className="h-4 w-[620px] max-w-full" />
+              <Skeleton className="h-4 w-[460px] max-w-full" />
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-10 rounded-lg lg:w-[150px]" />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index} className="rounded-lg border-border shadow-sm">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+                <Skeleton className="h-11 w-11 rounded-lg" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index} className="rounded-lg border-border shadow-sm">
+            <CardContent className="space-y-3 p-4">
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Skeleton className="h-4 w-28" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Skeleton className="h-[360px] rounded-lg xl:col-span-2" />
+        <Skeleton className="h-[360px] rounded-lg" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-[340px] rounded-lg" />
+        <Skeleton className="h-[340px] rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
+function useEmployeeAnalyticsDataset() {
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const assignedCenterKey = assignedCenterIds.join(',');
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
 
   return useQuery({
-    queryKey: ['employee_analytics_related', currentCompanyId, employeeIds.join(',')],
-    queryFn: async (): Promise<RelatedData> => {
-      if (!currentCompanyId || employeeIds.length === 0) {
-        return { socialByEmployee: {}, bankByEmployee: {}, familyByEmployee: {}, scheduleByEmployee: {}, documentCounts: {} };
+    queryKey: ['employee_analytics_dataset', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryFn: async (): Promise<EmployeeAnalyticsDataset> => {
+      if (!currentCompanyId) {
+        return { employees: [], contracts: [], related: EMPTY_RELATED };
       }
 
-      const [socialRows, bankRows, familyRows, scheduleRows, documentRows] = await Promise.all([
-        fetchRows('employee_social_security', currentCompanyId, employeeIds, 'employee_id, eps, afp, arl, ccf, risk_level, is_current, created_at'),
-        fetchRows('employee_bank_info', currentCompanyId, employeeIds, 'employee_id, bank_name, account_type, account_registered, is_current, created_at'),
-        fetchRows('employee_family', currentCompanyId, employeeIds, 'employee_id, children_count, spouse_name, is_current, created_at'),
-        fetchRows('employee_schedule', currentCompanyId, employeeIds, 'employee_id, payroll_type, is_office_schedule, rest_day, is_current, created_at'),
-        fetchRows('employee_documents', currentCompanyId, employeeIds, 'employee_id, is_valid'),
+      const [
+        employeesResult,
+        workInfoResult,
+        contactResult,
+        socialResult,
+        bankResult,
+        familyResult,
+        scheduleResult,
+        documentsResult,
+        contractsResult,
+      ] = await Promise.all([
+        supabase
+          .from('employees_v2')
+          .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: false })
+          .range(0, 9999),
+        supabase
+          .from('employee_work_info')
+          .select('employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name)')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_contact')
+          .select('employee_id, email, personal_email, mobile, phone, is_current, created_at')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_social_security')
+          .select('employee_id, eps, afp, arl, ccf, risk_level, is_current, created_at')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_bank_info')
+          .select('employee_id, bank_name, account_type, account_registered, is_current, created_at')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_family')
+          .select('employee_id, children_count, spouse_name, is_current, created_at')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_schedule')
+          .select('employee_id, payroll_type, is_office_schedule, rest_day, is_current, created_at')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .range(0, 9999),
+        supabase
+          .from('employee_documents')
+          .select('employee_id, is_valid')
+          .eq('company_id', currentCompanyId)
+          .eq('is_valid', true)
+          .range(0, 9999),
+        supabase
+          .from('contracts')
+          .select('employee_id, salary, start_date, end_date, is_terminated, created_at')
+          .eq('company_id', currentCompanyId)
+          .order('created_at', { ascending: false })
+          .range(0, 9999),
       ]);
 
-      const documentCounts = documentRows.reduce<Record<string, number>>((acc, row: any) => {
-        if (row.is_valid) acc[row.employee_id] = (acc[row.employee_id] || 0) + 1;
+      const results = [
+        employeesResult,
+        workInfoResult,
+        contactResult,
+        socialResult,
+        bankResult,
+        familyResult,
+        scheduleResult,
+        documentsResult,
+        contractsResult,
+      ];
+
+      const failedResult = results.find((result) => result.error);
+      if (failedResult?.error) throw failedResult.error;
+
+      const workInfoByEmployee = indexCurrent(workInfoResult.data || []);
+      const contactByEmployee = indexCurrent(contactResult.data || []);
+
+      let employees = (employeesResult.data || []).map((employee: any) => {
+        const workInfo = workInfoByEmployee[employee.id] || null;
+        return {
+          ...employee,
+          contact: contactByEmployee[employee.id] || null,
+          work_info: workInfo,
+          operation_centers: workInfo?.operation_centers || null,
+          areas: workInfo?.areas || null,
+        };
+      });
+
+      if (shouldLimitByAssignedCenters) {
+        employees = employees.filter((employee: any) => {
+          const centerId = employee.work_info?.operation_center_id;
+          return centerId && assignedCenterIds.includes(centerId);
+        });
+      }
+
+      const allowedEmployeeIds = new Set(employees.map((employee: any) => employee.id));
+      const validDocumentRows = keepAllowedRows(documentsResult.data || [], allowedEmployeeIds);
+      const documentCounts = validDocumentRows.reduce<Record<string, number>>((acc, row: any) => {
+        acc[row.employee_id] = (acc[row.employee_id] || 0) + 1;
         return acc;
       }, {});
 
       return {
-        socialByEmployee: indexCurrent(socialRows),
-        bankByEmployee: indexCurrent(bankRows),
-        familyByEmployee: indexCurrent(familyRows),
-        scheduleByEmployee: indexCurrent(scheduleRows),
-        documentCounts,
+        employees,
+        contracts: keepAllowedRows(contractsResult.data || [], allowedEmployeeIds),
+        related: {
+          socialByEmployee: indexCurrent(keepAllowedRows(socialResult.data || [], allowedEmployeeIds)),
+          bankByEmployee: indexCurrent(keepAllowedRows(bankResult.data || [], allowedEmployeeIds)),
+          familyByEmployee: indexCurrent(keepAllowedRows(familyResult.data || [], allowedEmployeeIds)),
+          scheduleByEmployee: indexCurrent(keepAllowedRows(scheduleResult.data || [], allowedEmployeeIds)),
+          documentCounts,
+        },
       };
     },
     enabled: !!currentCompanyId,
-    staleTime: 60_000,
+    staleTime: 120_000,
   });
 }
 
 export default function AnaliticaEmpleados() {
-  const [period, setPeriod] = useState<PeriodFilter>('12m');
+  const [period, setPeriod] = useState<PeriodFilter>('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [centerFilter, setCenterFilter] = useState('all');
   const [ageFilter, setAgeFilter] = useState('all');
 
   const { canView, hasPermission } = useAuth();
-  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
-  const { data: contracts = [], isLoading: loadingContracts } = useContracts();
+  const { data: dataset = { employees: [], contracts: [], related: EMPTY_RELATED }, isLoading } = useEmployeeAnalyticsDataset();
   const { data: operationCenters = [] } = useOperationCenters();
-  const employeeIds = useMemo(() => employees.map((employee: any) => employee.id), [employees]);
-  const { data: related = { socialByEmployee: {}, bankByEmployee: {}, familyByEmployee: {}, scheduleByEmployee: {}, documentCounts: {} }, isLoading: loadingRelated } = useEmployeeAnalyticsRelated(employeeIds);
+  const employees = dataset.employees;
+  const contracts = dataset.contracts;
+  const related = dataset.related;
 
   const canViewCompensation =
     canView('salarios') ||
@@ -429,24 +603,14 @@ export default function AnaliticaEmpleados() {
   }, [filteredEmployees, period]);
 
   const resetFilters = () => {
-    setPeriod('12m');
+    setPeriod('all');
     setStatusFilter('all');
     setCenterFilter('all');
     setAgeFilter('all');
   };
 
-  const isLoading = loadingEmployees || loadingContracts || loadingRelated;
-
   if (isLoading) {
-    return (
-      <div className="space-y-5">
-        <Skeleton className="h-32 rounded-lg" />
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-28 rounded-lg" />)}
-        </div>
-        <Skeleton className="h-96 rounded-lg" />
-      </div>
-    );
+    return <AnaliticaEmpleadosSkeleton />;
   }
 
   return (
