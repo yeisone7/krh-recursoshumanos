@@ -175,7 +175,7 @@ const coreNavItems: NavItem[] = [
 
 const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
-  { label: 'Analitica de Empleados', icon: <BarChart3 className="w-5 h-5" />, href: '/empleados/analitica', moduleCode: 'empleados' },
+  { label: 'Analitica de Empleados', icon: <BarChart3 className="w-5 h-5" />, href: '/empleados/analitica', moduleCode: 'analitica_empleados' },
 ];
 
 const contractsNavItems: NavItem[] = [
