@@ -167,7 +167,7 @@ const App = () => (
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/empleados/:id/360" element={<P module="empleados"><Empleado360 /></P>} />
                         <Route path="/empleados" element={<P module="empleados"><Empleados /></P>} />
-                        <Route path="/empleados/analitica" element={<P module="empleados"><Suspense fallback={null}><AnaliticaEmpleados /></Suspense></P>} />
+                        <Route path="/empleados/analitica" element={<P module="analitica_empleados"><Suspense fallback={null}><AnaliticaEmpleados /></Suspense></P>} />
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
                         <Route path="/contratos/analitica" element={<P module="analitica_contratos"><Suspense fallback={null}><AnaliticaContratos /></Suspense></P>} />
                         <Route path="/incapacidades" element={<P module="incapacidades"><Incapacidades /></P>} />
