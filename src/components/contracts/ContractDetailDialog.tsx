@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  FileType,
 } from 'lucide-react';
 
 import {
@@ -46,7 +47,12 @@ import { GenerateContractDialog } from './GenerateContractDialog';
 import { useCreateContractExtension, useApproveContract, useContract } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useCompany } from '@/hooks/useCompanies';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
+import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
+import { generateAndDownloadOtrosiProrroga } from '@/lib/otrosiProrrogaDocumentGenerator';
+import { calculateInclusiveMonthSpan } from '@/lib/dateOnly';
 import {
   Contract,
   ContractExtension,
@@ -55,6 +61,7 @@ import {
   calculateDaysRemaining,
   ExtensionFormData,
 } from '@/types/contract';
+import type { TerminationDocumentData } from '@/types/termination';
 
 interface ContractDetailDialogProps {
   open: boolean;
@@ -82,13 +89,15 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
   const createExtension = useCreateContractExtension();
   const approveContract = useApproveContract();
-  const { isAdmin, isRRHH, isSuperAdmin, hasPermission, canView, canUpdate, canApprove: canApproveModule } = useAuth();
+  const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, hasPermission, canView, canUpdate, canApprove: canApproveModule } = useAuth();
   const canViewContractCompensation =
     canView('salarios') ||
     hasPermission('salarios', 'view') ||
     canView('compensaciones') ||
     hasPermission('compensaciones', 'view');
   const { data: contractTypes = [] } = useContractTypes();
+  const { data: company } = useCompany(currentCompanyId || undefined);
+  const { data: systemConfig } = useSystemConfig();
   const canUpdateContracts = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
   
@@ -183,6 +192,42 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         description: `La prórroga ${extensionLabel} #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
       
+      if (data.extensionType === 'pactada') {
+        if (!company) {
+          toast({
+            title: 'Otrosí pendiente',
+            description: 'La prórroga fue registrada, pero no se pudo cargar la empresa para generar el documento.',
+            variant: 'destructive',
+          });
+        } else {
+          const initialEndDate = contract.originalEndDate || contract.currentEndDate || data.startDate;
+          const initialMonths = calculateInclusiveMonthSpan(contract.startDate, initialEndDate);
+          const signatureConfig = systemConfig?.legal_signature_config;
+
+          await generateAndDownloadOtrosiProrroga({
+            companyName: company.name || 'Empresa',
+            employeeFullName: contract.employeeName,
+            employeeDocumentType: contract.employeeDocumentType || dbContract?.employees?.document_type || 'C.C.',
+            employeeDocumentNumber: contract.employeeDocument || dbContract?.employees?.document_number || 'SIN-DOC',
+            employeePosition: contract.position || 'Sin cargo',
+            contractStartDate: contract.startDate,
+            originalEndDate: contract.currentEndDate || initialEndDate,
+            extensionEndDate: data.endDate,
+            extensionNumber: data.extensionNumber,
+            initialDurationLabel: `${initialMonths} ${initialMonths === 1 ? 'mes' : 'meses'}`,
+            documentDate: new Date(),
+            documentCity: dbContract?.work_city || (company as any).city || 'Bucaramanga',
+            employerSignerName: signatureConfig?.signer_name || 'Representante Legal',
+            employerSignerPosition: signatureConfig?.signer_position || 'Representante de la Empresa',
+          });
+
+          toast({
+            title: 'Otrosí generado',
+            description: 'El documento de prórroga pactada fue descargado correctamente.',
+          });
+        }
+      }
+
       setShowExtensionForm(false);
     } catch (error) {
       console.error('Error creating extension:', error);
@@ -217,6 +262,16 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   
   // Approval status
   const canApproveContract = (isAdmin || isSuperAdmin || canApproveModule('contratos')) && !isApproved && !isTerminated;
+  const canGeneratePreaviso = isApproved && !isTerminated && contract.contractType === 'fixed' && !!contract.currentEndDate;
+  const preavisoBlockedReason = isTerminated
+    ? 'El contrato terminado no permite generar preavisos'
+    : !isApproved
+      ? 'El contrato debe estar aprobado para generar el preaviso'
+      : contract.contractType !== 'fixed'
+        ? 'El preaviso aplica para contratos a término fijo'
+        : !contract.currentEndDate
+          ? 'El contrato necesita una fecha fin vigente para generar el preaviso'
+          : undefined;
 
   const handleApproveContract = async () => {
     try {
@@ -238,6 +293,68 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const handleOpenPreviewBeforeApprove = () => {
     setPreviewOpenedBeforeApprove(true);
     setShowGenerateDialog(true);
+  };
+
+  const handleGeneratePreaviso = async () => {
+    if (!contract.currentEndDate) {
+      toast({
+        title: 'Falta fecha de fin',
+        description: 'Define la fecha fin del contrato antes de generar el preaviso.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!company) {
+      toast({
+        title: 'Empresa no disponible',
+        description: 'No se pudo cargar la información de la empresa para el preaviso.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const signatureConfig = systemConfig?.legal_signature_config;
+    const documentData: TerminationDocumentData = {
+      companyName: company.name || 'Empresa',
+      companyNit: company.nit || '',
+      companyAddress: company.address || undefined,
+      companyCity: 'Bucaramanga',
+      companyPhone: company.phone || undefined,
+      employeeFullName: contract.employeeName,
+      employeeDocumentType: contract.employeeDocumentType || dbContract?.employees?.document_type || 'C.C.',
+      employeeDocumentNumber: contract.employeeDocument || dbContract?.employees?.document_number || 'SIN-DOC',
+      employeePosition: contract.position || 'Sin cargo',
+      employeeArea: contract.area || undefined,
+      employeeOperationCenter: contract.operationCenter || undefined,
+      contractType: getContractTypeLabel(contract.contractType),
+      contractStartDate: contract.startDate,
+      contractEndDate: contract.currentEndDate,
+      salary: contract.salary,
+      terminationType: 'preaviso',
+      terminationDate: new Date(),
+      effectiveDate: contract.currentEndDate,
+      hrManagerName: signatureConfig?.signer_name || 'Representante Legal',
+      hrManagerPosition: signatureConfig?.signer_position || 'Líder de Talento Humano',
+      representativeSignatureUrl: signatureConfig?.signature_url || undefined,
+      documentDate: new Date(),
+      documentCity: 'Bucaramanga',
+    };
+
+    try {
+      await generateAndDownloadPreaviso(documentData);
+      toast({
+        title: 'Preaviso generado',
+        description: 'El documento DOCX fue descargado correctamente.',
+      });
+    } catch (error) {
+      console.error('Error generating preaviso:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el preaviso. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOpenExtensionForm = () => {
@@ -635,6 +752,17 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               >
                 <Download className="w-3.5 h-3.5" />
                 Generar Documento
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGeneratePreaviso}
+                className="h-9 rounded-xl gap-1 px-4 border-blue-200 text-blue-700 hover:bg-blue-50"
+                disabled={!canGeneratePreaviso}
+                title={preavisoBlockedReason}
+              >
+                <FileType className="w-3.5 h-3.5" />
+                Preaviso
               </Button>
               <Button 
                 size="sm"

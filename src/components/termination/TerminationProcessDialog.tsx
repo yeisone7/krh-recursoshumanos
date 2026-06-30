@@ -138,6 +138,7 @@ export function TerminationProcessDialog({
       reason: '',
     },
   });
+  const terminationTypeOptions = Object.entries(terminationTypeLabels).filter(([value]) => value !== 'preaviso');
 
   // Determine initial step based on existing termination
   useEffect(() => {
@@ -350,7 +351,7 @@ export function TerminationProcessDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(terminationTypeLabels).map(([value, label]) => (
+                            {terminationTypeOptions.map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {label}
                               </SelectItem>
@@ -506,12 +507,6 @@ export function TerminationProcessDialog({
                               <span className="font-medium">{doc.label}</span>
                               {doc.isRequired && (
                                 <Badge variant="secondary" className="text-xs">Requerido</Badge>
-                              )}
-                              {doc.type === 'preaviso' && (
-                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                  <FileType className="w-3 h-3 mr-1" />
-                                  PDF
-                                </Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
