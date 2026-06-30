@@ -51,6 +51,8 @@ import { useCompany } from '@/hooks/useCompanies';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
+import { generateAndDownloadOtrosiProrroga } from '@/lib/otrosiProrrogaDocumentGenerator';
+import { calculateInclusiveMonthSpan } from '@/lib/dateOnly';
 import {
   Contract,
   ContractExtension,
@@ -190,6 +192,42 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         description: `La prórroga ${extensionLabel} #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
       
+      if (data.extensionType === 'pactada') {
+        if (!company) {
+          toast({
+            title: 'Otrosí pendiente',
+            description: 'La prórroga fue registrada, pero no se pudo cargar la empresa para generar el documento.',
+            variant: 'destructive',
+          });
+        } else {
+          const initialEndDate = contract.originalEndDate || contract.currentEndDate || data.startDate;
+          const initialMonths = calculateInclusiveMonthSpan(contract.startDate, initialEndDate);
+          const signatureConfig = systemConfig?.legal_signature_config;
+
+          await generateAndDownloadOtrosiProrroga({
+            companyName: company.name || 'Empresa',
+            employeeFullName: contract.employeeName,
+            employeeDocumentType: contract.employeeDocumentType || dbContract?.employees?.document_type || 'C.C.',
+            employeeDocumentNumber: contract.employeeDocument || dbContract?.employees?.document_number || 'SIN-DOC',
+            employeePosition: contract.position || 'Sin cargo',
+            contractStartDate: contract.startDate,
+            originalEndDate: contract.currentEndDate || initialEndDate,
+            extensionEndDate: data.endDate,
+            extensionNumber: data.extensionNumber,
+            initialDurationLabel: `${initialMonths} ${initialMonths === 1 ? 'mes' : 'meses'}`,
+            documentDate: new Date(),
+            documentCity: dbContract?.work_city || (company as any).city || 'Bucaramanga',
+            employerSignerName: signatureConfig?.signer_name || 'Representante Legal',
+            employerSignerPosition: signatureConfig?.signer_position || 'Representante de la Empresa',
+          });
+
+          toast({
+            title: 'Otrosí generado',
+            description: 'El documento de prórroga pactada fue descargado correctamente.',
+          });
+        }
+      }
+
       setShowExtensionForm(false);
     } catch (error) {
       console.error('Error creating extension:', error);
