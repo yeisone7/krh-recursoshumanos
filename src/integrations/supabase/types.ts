@@ -9314,6 +9314,8 @@ export type Database = {
         | "sin_justa_causa"
         | "renuncia"
         | "traslado"
+        | "tiempo_pactado"
+        | "pension_vejez"
       training_modality: "presencial" | "virtual" | "mixto"
       training_status: "programado" | "en_curso" | "completado" | "cancelado"
       transfer_status: "pending" | "completed" | "cancelled"
@@ -9767,6 +9769,8 @@ export const Constants = {
         "sin_justa_causa",
         "renuncia",
         "traslado",
+        "tiempo_pactado",
+        "pension_vejez",
       ],
       training_modality: ["presencial", "virtual", "mixto"],
       training_status: ["programado", "en_curso", "completado", "cancelado"],
