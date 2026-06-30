@@ -76,6 +76,7 @@ import {
   useCompleteTermination,
 } from '@/hooks/useTerminations';
 import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
+import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
 import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
@@ -259,7 +260,11 @@ export function TerminationProcessDialog({
     documentData.documentDate = generatedAt;
 
     try {
-      await downloadTerminationDocument(docType, documentData);
+      if (docType === 'preaviso') {
+        await generateAndDownloadPreaviso(documentData);
+      } else {
+        await downloadTerminationDocument(docType, documentData);
+      }
       toast.success('Documento generado', {
         description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
       });
@@ -510,7 +515,7 @@ export function TerminationProcessDialog({
                               {doc.type === 'preaviso' && (
                                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
                                   <FileType className="w-3 h-3 mr-1" />
-                                  PDF
+                                  DOCX
                                 </Badge>
                               )}
                             </div>
@@ -539,7 +544,7 @@ export function TerminationProcessDialog({
                           ) : (
                             <Download className="w-4 h-4 mr-2" />
                           )}
-                          {isGenerated ? 'Descargar' : isLaborCertificate ? 'Expedir' : 'Generar PDF'}
+                          {isGenerated ? 'Descargar' : isLaborCertificate ? 'Expedir' : doc.type === 'preaviso' ? 'Generar DOCX' : 'Generar PDF'}
                         </Button>
                       </div>
                     );
