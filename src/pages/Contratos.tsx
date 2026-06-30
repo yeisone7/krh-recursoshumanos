@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useDeferredValue } from 'react';
+import { Fragment, useState, useMemo, useEffect, useDeferredValue } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,11 +23,13 @@ import {
   Infinity,
   RotateCw,
   Info,
+  MapPin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Select,
@@ -42,6 +44,7 @@ import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialo
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateInclusiveMonthSpan, parseDateOnly } from '@/lib/dateOnly';
@@ -175,6 +178,8 @@ export default function Contratos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [centerFilter, setCenterFilter] = useState('all');
+  const [showExpiredContracts, setShowExpiredContracts] = useState(false);
 
   const { currentCompanyId, hasPermission, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
@@ -185,6 +190,7 @@ export default function Contratos() {
   const isMobile = useIsMobile();
   const { data: contracts, isLoading, refetch } = useContracts();
   const { data: contractTypesConfig } = useContractTypes();
+  const { data: operationCenters } = useOperationCenters();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const canCreateContracts = isAdmin || isRRHH || isSuperAdmin || canCreate('contratos');
 
@@ -228,15 +234,18 @@ export default function Contratos() {
         contract.employees?.last_name,
         contract.employees?.second_last_name,
         contract.employees?.document_number,
+        contract.employees?.operation_centers?.name,
         contract.contract_number,
       ].filter(Boolean).join(' ').toLowerCase();
       const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
       const matchesType = typeFilter === 'all' || contract.contract_type === typeFilter;
+      const matchesCenter = centerFilter === 'all' || contract.employees?.operation_center_id === centerFilter;
       const status = getContractStatus(contract);
+      const matchesExpiredVisibility = showExpiredContracts || status !== 'expired';
       const matchesStatus = statusFilter === 'all' || status === statusFilter;
-      return matchesSearch && matchesType && matchesStatus;
+      return matchesSearch && matchesType && matchesCenter && matchesExpiredVisibility && matchesStatus;
     });
-  }, [contracts, deferredSearchQuery, typeFilter, statusFilter]);
+  }, [contracts, deferredSearchQuery, typeFilter, centerFilter, showExpiredContracts, statusFilter]);
 
   const {
     visibleItems: visibleContracts,
@@ -248,6 +257,23 @@ export default function Contratos() {
     items: filteredContracts,
     pageSize: isMobile ? 12 : 40,
   });
+
+  const groupedVisibleContracts = useMemo(() => {
+    const groups = new Map<string, { id: string; name: string; contracts: typeof visibleContracts }>();
+
+    visibleContracts.forEach((contract) => {
+      const centerId = contract.employees?.operation_center_id || 'unassigned';
+      const centerName = contract.employees?.operation_centers?.name || 'Sin centro asignado';
+
+      if (!groups.has(centerId)) {
+        groups.set(centerId, { id: centerId, name: centerName, contracts: [] as typeof visibleContracts });
+      }
+
+      groups.get(centerId)?.contracts.push(contract);
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [visibleContracts]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -374,6 +400,23 @@ export default function Contratos() {
               </SelectContent>
             </Select>
 
+            <Select value={centerFilter} onValueChange={setCenterFilter}>
+              <SelectTrigger className="w-full sm:w-[210px] h-10 bg-background border-none rounded-xl shadow-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <SelectValue placeholder="Centro" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-background rounded-xl">
+                <SelectItem value="all" className="rounded-lg">Todos los centros</SelectItem>
+                {operationCenters?.map((center) => (
+                  <SelectItem key={center.id} value={center.id} className="rounded-lg">
+                    {center.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[140px] h-10 bg-background border-none rounded-xl shadow-sm">
                 <SelectValue placeholder="Estado" />
@@ -385,6 +428,21 @@ export default function Contratos() {
                 <SelectItem value="expired" className="rounded-lg">Vencidos</SelectItem>
               </SelectContent>
             </Select>
+
+            <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 shadow-sm">
+              <Switch
+                id="show-expired-contracts"
+                checked={showExpiredContracts}
+                onCheckedChange={setShowExpiredContracts}
+                aria-label="Mostrar contratos vencidos"
+              />
+              <label
+                htmlFor="show-expired-contracts"
+                className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
+              >
+                Vencidos
+              </label>
+            </div>
 
             <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
               <span className="text-[11px] font-bold text-primary whitespace-nowrap">
@@ -407,11 +465,11 @@ export default function Contratos() {
             <FileText className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No hay contratos</h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery || typeFilter !== 'all' || statusFilter !== 'all'
+              {searchQuery || typeFilter !== 'all' || centerFilter !== 'all' || statusFilter !== 'all' || !showExpiredContracts
                 ? 'No se encontraron contratos con los filtros seleccionados'
                 : 'Comienza agregando tu primer contrato'}
             </p>
-            {!searchQuery && typeFilter === 'all' && statusFilter === 'all' && canCreateContracts && (
+            {!searchQuery && typeFilter === 'all' && centerFilter === 'all' && statusFilter === 'all' && showExpiredContracts && canCreateContracts && (
               <Button onClick={() => setIsFormOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Contrato
@@ -422,25 +480,36 @@ export default function Contratos() {
           <div className="p-3">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
               <div className="space-y-3">
-                {visibleContracts.map((contract, index) => {
-                  const status = getContractStatus(contract);
-                  const effectiveEndDate = getEffectiveEndDate(contract);
-                  const daysRemaining = calculateDaysRemaining(effectiveEndDate);
-                  const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
-                  const StatusIcon = statusConfig[status].icon;
-                  const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
-                  const extensionsCount = contract.contract_extensions?.length || 0;
+                {groupedVisibleContracts.map((group) => (
+                  <section key={group.id} className="space-y-3">
+                    <div className="flex items-center justify-between rounded-lg bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                        <span className="truncate">{group.name}</span>
+                      </span>
+                      <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
+                        {group.contracts.length}
+                      </Badge>
+                    </div>
+                    {group.contracts.map((contract, index) => {
+                      const status = getContractStatus(contract);
+                      const effectiveEndDate = getEffectiveEndDate(contract);
+                      const daysRemaining = calculateDaysRemaining(effectiveEndDate);
+                      const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
+                      const StatusIcon = statusConfig[status].icon;
+                      const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
+                      const extensionsCount = contract.contract_extensions?.length || 0;
 
-                  return (
-                    <motion.button
-                      key={contract.id}
-                      type="button"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.16, delay: Math.min(index * 0.01, 0.12) }}
-                      onClick={() => handleContractClick(contract.id)}
-                      className="w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all active:scale-[0.99]"
-                    >
+                      return (
+                        <motion.button
+                          key={contract.id}
+                          type="button"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.16, delay: Math.min(index * 0.01, 0.12) }}
+                          onClick={() => handleContractClick(contract.id)}
+                          className="w-full overflow-hidden rounded-lg border border-border bg-card text-left shadow-sm transition-all active:scale-[0.99]"
+                        >
                       <div className={cn('h-1 w-full', status === 'expired' ? 'bg-destructive' : status === 'expiring' ? 'bg-warning' : status === 'terminated' ? 'bg-background -foreground' : 'bg-success')} />
                       <div className="space-y-4 p-4">
                         <div className="flex items-start gap-3">
@@ -541,9 +610,11 @@ export default function Contratos() {
                           )}
                         </div>
                       </div>
-                    </motion.button>
-                  );
-                })}
+                        </motion.button>
+                      );
+                    })}
+                  </section>
+                ))}
                 {hasMore && (
                   <div ref={sentinelRef} className="flex justify-center py-4">
                     <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -568,24 +639,39 @@ export default function Contratos() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
-                {visibleContracts.map((contract, index) => {
-                  const status = getContractStatus(contract);
-                  const effectiveEndDate = getEffectiveEndDate(contract);
-                  const daysRemaining = calculateDaysRemaining(effectiveEndDate);
-                  const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
-                  const StatusIcon = statusConfig[status].icon;
-                  const extensionsCount = contract.contract_extensions?.length || 0;
-                  const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
-                  
-                  return (
-                    <motion.tr
-                      key={contract.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.12, delay: Math.min(index * 0.006, 0.08) }}
-                      onClick={() => handleContractClick(contract.id)}
-                      className="group hover:bg-primary/[0.02] transition-colors cursor-pointer"
-                    >
+                {groupedVisibleContracts.map((group) => (
+                  <Fragment key={group.id}>
+                    <tr className="bg-background/80">
+                      <td colSpan={8} className="px-4 py-2">
+                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                          <span className="flex min-w-0 items-center gap-2">
+                            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                            <span className="truncate">{group.name}</span>
+                          </span>
+                          <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
+                            {group.contracts.length}
+                          </Badge>
+                        </div>
+                      </td>
+                    </tr>
+                    {group.contracts.map((contract, index) => {
+                      const status = getContractStatus(contract);
+                      const effectiveEndDate = getEffectiveEndDate(contract);
+                      const daysRemaining = calculateDaysRemaining(effectiveEndDate);
+                      const durationLabel = getContractDurationLabel(contract.start_date, effectiveEndDate);
+                      const StatusIcon = statusConfig[status].icon;
+                      const extensionsCount = contract.contract_extensions?.length || 0;
+                      const ContractTypeIcon = getContractTypeIcon(contract.contract_type);
+                      
+                      return (
+                        <motion.tr
+                          key={contract.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.12, delay: Math.min(index * 0.006, 0.08) }}
+                          onClick={() => handleContractClick(contract.id)}
+                          className="group hover:bg-primary/[0.02] transition-colors cursor-pointer"
+                        >
                       <td className="p-4 hidden md:table-cell">
                         <div className="flex items-center gap-2">
                           <Coins className="w-3.5 h-3.5 text-primary/40" />
@@ -669,9 +755,11 @@ export default function Contratos() {
                            </Button>
                         </div>
                       </td>
-                    </motion.tr>
-                  );
-                })}
+                        </motion.tr>
+                      );
+                    })}
+                  </Fragment>
+                ))}
               </tbody>
             </table>
             {hasMore && (

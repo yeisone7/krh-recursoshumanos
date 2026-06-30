@@ -133,6 +133,7 @@ export function useContracts() {
             second_last_name: employee.second_last_name,
             document_number: employee.document_number,
             company_id: employee.company_id,
+            operation_center_id: currentWorkInfo?.operation_center_id || null,
             operation_centers: currentWorkInfo?.operation_centers || null
           } : null
         };
