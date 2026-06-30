@@ -29,6 +29,9 @@ const terminationTypeLabels: Record<string, string> = {
   obra_labor: 'Finalización Obra o Labor',
   sin_justa_causa: 'Sin Justa Causa',
   renuncia: 'Renuncia Voluntaria',
+  traslado: 'Traslado a Otra Empresa',
+  tiempo_pactado: 'Tiempo Pactado',
+  pension_vejez: 'Pensión de Vejez',
 };
 
 async function sendEmail(to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> {

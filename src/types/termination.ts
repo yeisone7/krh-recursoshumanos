@@ -8,7 +8,9 @@ export type TerminationType =
   | 'obra_labor'         // 04 - Terminación por obra labor
   | 'sin_justa_causa'    // 05 - Terminación sin justa causa
   | 'renuncia'           // 07 - Aceptación de renuncia
-  | 'traslado';          // 08 - Retiro por traslado a otra empresa
+  | 'traslado'           // 08 - Retiro por traslado a otra empresa
+  | 'tiempo_pactado'
+  | 'pension_vejez';
 
 // Termination document types enum
 export type TerminationDocumentType = 
@@ -30,6 +32,8 @@ export const terminationTypeLabels: Record<TerminationType, string> = {
   sin_justa_causa: 'Sin Justa Causa',
   renuncia: 'Renuncia Voluntaria',
   traslado: 'Traslado a Otra Empresa',
+  tiempo_pactado: 'Tiempo Pactado',
+  pension_vejez: 'Pensión de Vejez',
 };
 
 // Labels for document types
@@ -113,6 +117,22 @@ export const requiredDocumentsByType: Record<TerminationType, TerminationDocumen
     'examen_egreso',
     'retiro_cesantias',
   ],
+  tiempo_pactado: [
+    'acta_terminacion',
+    'notificacion_aportes',
+    'certificado_laboral',
+    'paz_y_salvo',
+    'examen_egreso',
+    'retiro_cesantias',
+  ],
+  pension_vejez: [
+    'acta_terminacion',
+    'notificacion_aportes',
+    'certificado_laboral',
+    'paz_y_salvo',
+    'examen_egreso',
+    'retiro_cesantias',
+  ],
 };
 
 // Termination document interface
@@ -160,6 +180,8 @@ export const initiateTerminationSchema = z.object({
     'sin_justa_causa',
     'renuncia',
     'traslado',
+    'tiempo_pactado',
+    'pension_vejez',
   ] as const, {
     required_error: 'Seleccione el tipo de terminación',
   }),
