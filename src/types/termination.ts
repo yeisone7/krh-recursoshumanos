@@ -67,7 +67,6 @@ export const requiredDocumentsByType: Record<TerminationType, TerminationDocumen
     'retiro_cesantias',
   ],
   preaviso: [
-    'preaviso',
     'notificacion_aportes',
     'certificado_laboral',
     'paz_y_salvo',

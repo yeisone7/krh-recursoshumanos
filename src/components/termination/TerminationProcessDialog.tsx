@@ -76,7 +76,6 @@ import {
   useCompleteTermination,
 } from '@/hooks/useTerminations';
 import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
-import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
 import type { TerminationDocumentData } from '@/types/termination';
 import { Contract, contractTypeLabels } from '@/types/contract';
 import { useAuth } from '@/contexts/AuthContext';
@@ -139,6 +138,7 @@ export function TerminationProcessDialog({
       reason: '',
     },
   });
+  const terminationTypeOptions = Object.entries(terminationTypeLabels).filter(([value]) => value !== 'preaviso');
 
   // Determine initial step based on existing termination
   useEffect(() => {
@@ -260,11 +260,7 @@ export function TerminationProcessDialog({
     documentData.documentDate = generatedAt;
 
     try {
-      if (docType === 'preaviso') {
-        await generateAndDownloadPreaviso(documentData);
-      } else {
-        await downloadTerminationDocument(docType, documentData);
-      }
+      await downloadTerminationDocument(docType, documentData);
       toast.success('Documento generado', {
         description: `${terminationDocumentLabels[docType]} descargado correctamente.`,
       });
@@ -355,7 +351,7 @@ export function TerminationProcessDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {Object.entries(terminationTypeLabels).map(([value, label]) => (
+                            {terminationTypeOptions.map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {label}
                               </SelectItem>
@@ -512,12 +508,6 @@ export function TerminationProcessDialog({
                               {doc.isRequired && (
                                 <Badge variant="secondary" className="text-xs">Requerido</Badge>
                               )}
-                              {doc.type === 'preaviso' && (
-                                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                                  <FileType className="w-3 h-3 mr-1" />
-                                  DOCX
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                           </div>
@@ -544,7 +534,7 @@ export function TerminationProcessDialog({
                           ) : (
                             <Download className="w-4 h-4 mr-2" />
                           )}
-                          {isGenerated ? 'Descargar' : isLaborCertificate ? 'Expedir' : doc.type === 'preaviso' ? 'Generar DOCX' : 'Generar PDF'}
+                          {isGenerated ? 'Descargar' : isLaborCertificate ? 'Expedir' : 'Generar PDF'}
                         </Button>
                       </div>
                     );
