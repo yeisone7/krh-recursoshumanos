@@ -114,7 +114,7 @@ export default function Empleados() {
     window.localStorage.setItem(EMPLOYEES_VIEW_MODE_STORAGE_KEY, nextViewMode);
   };
 
-  const { currentCompanyId, assignedCenterIds, canUpdate, hasPermission } = useAuth();
+  const { currentCompanyId, assignedCenterIds, hasPermission } = useAuth();
   const canManageRegistrationLinks = hasPermission('emp_registration_links', 'create');
   
   // Use infinite hook for the list view
@@ -278,8 +278,6 @@ export default function Empleados() {
     setShowRetiredEmployees(false);
     toast.success('Filtros limpiados');
   };
-
-  const canStartTermination = canUpdate('contratos') || canUpdate('empleados');
 
   const handleExport = () => {
     if (!filteredEmployeesForExport || filteredEmployeesForExport.length === 0) {
@@ -715,7 +713,7 @@ export default function Empleados() {
                   onTransfer={handleTransfer}
                   onIssueCertificate={handleIssueCertificate}
                   onToggleActive={setToggleEmployee}
-                  onStartTermination={canStartTermination ? handleStartTermination : undefined}
+                  onStartTermination={handleStartTermination}
                 />
               ))}
             </div>
@@ -732,7 +730,7 @@ export default function Empleados() {
                 onTransfer={handleTransfer}
                 onIssueCertificate={handleIssueCertificate}
                 onToggleActive={setToggleEmployee}
-                onStartTermination={canStartTermination ? handleStartTermination : undefined}
+                onStartTermination={handleStartTermination}
               />
             </div>
           )}
