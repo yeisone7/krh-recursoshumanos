@@ -24,6 +24,8 @@ import {
   RotateCw,
   Info,
   MapPin,
+  LayoutGrid,
+  Table2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +53,7 @@ import { calculateInclusiveMonthSpan, parseDateOnly } from '@/lib/dateOnly';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
+type ContractsViewMode = 'cards' | 'matrix';
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
@@ -113,6 +116,55 @@ function formatContractDate(date: string | null): string {
   return parseContractDate(date).toLocaleDateString('es-CO');
 }
 
+function formatMatrixDate(date: string | null): string {
+  if (!date) return '';
+  return formatContractDate(date);
+}
+
+function getEmployeeFullName(employee: any): string {
+  return [
+    employee?.first_name,
+    employee?.middle_name,
+    employee?.last_name,
+    employee?.second_last_name,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || 'Sin nombre';
+}
+
+function getMatrixDurationLabel(startDate: string, endDate: string | null): string {
+  if (!endDate) return 'INDEFINIDO';
+  const label = getContractDurationLabel(startDate, endDate);
+  return label.replace('Duración ', '').toUpperCase();
+}
+
+function getSortedExtensions(contract: {
+  contract_extensions?: Array<{
+    end_date: string;
+    extension_number?: number;
+  }>;
+}) {
+  return [...(contract.contract_extensions || [])].sort((a, b) => {
+    const numberA = Number(a.extension_number || 0);
+    const numberB = Number(b.extension_number || 0);
+
+    if (numberA !== numberB) return numberA - numberB;
+
+    return (parseDateOnly(a.end_date)?.getTime() ?? 0) - (parseDateOnly(b.end_date)?.getTime() ?? 0);
+  });
+}
+
+function getAdditionalContractTerms(contract: {
+  special_clauses?: string | null;
+  work_labor_description?: string | null;
+}) {
+  return [contract.special_clauses, contract.work_labor_description]
+    .map((value) => value?.trim())
+    .filter(Boolean)
+    .join(' | ');
+}
+
 function getContractDurationLabel(startDate: string, endDate: string | null): string {
   if (!endDate) return 'Duración indefinida';
 
@@ -170,6 +222,93 @@ function getContractTypeTone(type: string) {
   return 'bg-primary-light text-primary border-primary/20';
 }
 
+function ContractMatrixView({
+  contracts,
+  onOpenContract,
+}: {
+  contracts: any[];
+  onOpenContract: (contractId: string) => void;
+}) {
+  return (
+    <div className="overflow-x-auto bg-white dark:bg-card">
+      <table className="min-w-[1500px] w-full border-collapse text-sm">
+        <thead>
+          <tr className="bg-[#d9d9d9] text-black dark:bg-muted dark:text-foreground">
+            {[
+              'NOMBRES',
+              'DOCUMENTO',
+              'CARGO',
+              'FECHA INGRESO',
+              'TÉRMINO',
+              'FECHA TERMINACIÓN',
+              'PRÓRROGA 1',
+              'PRÓRROGA 2',
+              'PRÓRROGA 3',
+              'Estipulaciones Contractuales Adicionales',
+            ].map((header) => (
+              <th
+                key={header}
+                className={cn(
+                  'border border-[#c9c9c9] px-2 py-2 text-left text-xs font-semibold uppercase whitespace-nowrap dark:border-border',
+                  header === 'Estipulaciones Contractuales Adicionales' && 'normal-case',
+                )}
+              >
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {contracts.map((contract) => {
+            const extensions = getSortedExtensions(contract);
+            const additionalTerms = getAdditionalContractTerms(contract);
+
+            return (
+              <tr
+                key={contract.id}
+                onClick={() => onOpenContract(contract.id)}
+                className="cursor-pointer bg-white text-black transition-colors hover:bg-primary/5 dark:bg-card dark:text-foreground dark:hover:bg-primary/10"
+              >
+                <td className="min-w-[260px] border border-[#dddddd] px-2 py-1.5 font-medium uppercase dark:border-border">
+                  {getEmployeeFullName(contract.employees)}
+                </td>
+                <td className="min-w-[170px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                  {contract.employees?.document_number || ''}
+                </td>
+                <td className="min-w-[270px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
+                  {contract.employees?.position_name || 'Sin cargo'}
+                </td>
+                <td className="min-w-[140px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                  {formatMatrixDate(contract.start_date)}
+                </td>
+                <td className="min-w-[115px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
+                  {getMatrixDurationLabel(contract.start_date, contract.end_date)}
+                </td>
+                <td className="min-w-[175px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                  {formatMatrixDate(contract.end_date)}
+                </td>
+                {[0, 1, 2].map((index) => (
+                  <td
+                    key={`${contract.id}-extension-${index}`}
+                    className="min-w-[125px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border"
+                  >
+                    {formatMatrixDate(extensions[index]?.end_date || null)}
+                  </td>
+                ))}
+                <td className="min-w-[310px] max-w-[460px] border border-[#dddddd] px-2 py-1.5 text-xs dark:border-border">
+                  <span className="line-clamp-2" title={additionalTerms}>
+                    {additionalTerms}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function Contratos() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -180,6 +319,7 @@ export default function Contratos() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [centerFilter, setCenterFilter] = useState('all');
   const [showExpiredContracts, setShowExpiredContracts] = useState(false);
+  const [viewMode, setViewMode] = useState<ContractsViewMode>('cards');
 
   const { currentCompanyId, hasPermission, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
@@ -446,8 +586,31 @@ export default function Contratos() {
 
             <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
               <span className="text-[11px] font-bold text-primary whitespace-nowrap">
-                {visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
+                {viewMode === 'matrix' ? totalCount : visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
               </span>
+            </div>
+
+            <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-background p-1 shadow-sm">
+              <Button
+                type="button"
+                variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+              >
+                <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
+                Tarjetas
+              </Button>
+              <Button
+                type="button"
+                variant={viewMode === 'matrix' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('matrix')}
+                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+              >
+                <Table2 className="mr-1.5 h-3.5 w-3.5" />
+                Matriz
+              </Button>
             </div>
           </div>
         </div>
@@ -476,6 +639,11 @@ export default function Contratos() {
               </Button>
             )}
           </div>
+        ) : viewMode === 'matrix' ? (
+          <ContractMatrixView
+            contracts={filteredContracts}
+            onOpenContract={handleContractClick}
+          />
         ) : isMobile ? (
           <div className="p-3">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>

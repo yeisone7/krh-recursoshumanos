@@ -85,11 +85,13 @@ export function useContracts() {
           end_date,
           salary,
           salary_type,
+          special_clauses,
+          work_labor_description,
           is_terminated,
           is_approved,
           created_at,
           updated_at,
-          contract_extensions(id, extension_number, end_date),
+          contract_extensions(id, extension_number, start_date, end_date, extension_type, reason),
           employees:employees_v2!contracts_employee_id_fkey(
             id, 
             first_name, 
@@ -132,7 +134,9 @@ export function useContracts() {
             last_name: employee.last_name,
             second_last_name: employee.second_last_name,
             document_number: employee.document_number,
+            document_type: employee.document_type,
             company_id: employee.company_id,
+            position_name: currentWorkInfo?.position_name || null,
             operation_center_id: currentWorkInfo?.operation_center_id || null,
             operation_centers: currentWorkInfo?.operation_centers || null
           } : null
