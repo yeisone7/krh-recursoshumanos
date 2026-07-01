@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink, UserCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,17 +38,26 @@ const TRAINING_AREAS = ['Talento Humano', 'Bienestar y Desarrollo', 'Jur\u00eddi
 const TRAINING_PUBLICOS = ['Centros de Operaci\u00f3n', 'Supervisores', 'T\u00e9cnicos', 'Administrativos', 'Fincas', 'Transversal (Todo el personal)'];
 const TRAINING_MARCOS_LEGALES = ['ISO 9001', 'ISO 14001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
 
-const fileToBase64 = async (file: File): Promise<string> => {
-  const buffer = await file.arrayBuffer();
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunkSize = 0x8000;
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+const extractTextFromPdfFile = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const pages: string[] = [];
+
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) => ('str' in item ? item.str : ''))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (pageText) pages.push(pageText);
   }
 
-  return btoa(binary);
+  return pages.join('\n\n').trim();
 };
 
 export default function CrearCapacitacion() {
@@ -180,29 +191,11 @@ export default function CrearCapacitacion() {
       if (file.size > 10 * 1024 * 1024) {
         throw new Error('El PDF no puede superar 10MB');
       }
-      const fileBase64 = await fileToBase64(file);
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (!accessToken) throw new Error('Sesion requerida para procesar PDF');
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-pdf`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileBase64,
-          fileSize: file.size,
-        }),
-      });
-      if (!response.ok) throw new Error('Error extracting PDF');
-      const result = await response.json();
-      setPdfText(result.text || '');
+      const extractedText = await extractTextFromPdfFile(file);
+      setPdfText(extractedText || 'No se pudo extraer texto del PDF. El archivo puede contener solo imagenes.');
       toast.success('PDF procesado exitosamente');
-    } catch {
-      toast.error('Error al procesar el PDF');
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al procesar el PDF');
       setPdfName('');
     } finally {
       setIsExtractingPdf(false);
