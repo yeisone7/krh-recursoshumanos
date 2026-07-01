@@ -36,6 +36,19 @@ const TRAINING_AREAS = ['Talento Humano', 'Bienestar y Desarrollo', 'Jur\u00eddi
 const TRAINING_PUBLICOS = ['Centros de Operaci\u00f3n', 'Supervisores', 'T\u00e9cnicos', 'Administrativos', 'Fincas', 'Transversal (Todo el personal)'];
 const TRAINING_MARCOS_LEGALES = ['ISO 9001', 'ISO 14001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
 
+const fileToBase64 = async (file: File): Promise<string> => {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+
+  return btoa(binary);
+};
+
 export default function CrearCapacitacion() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -164,8 +177,10 @@ export default function CrearCapacitacion() {
     setIsExtractingPdf(true);
     setPdfName(file.name);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('El PDF no puede superar 10MB');
+      }
+      const fileBase64 = await fileToBase64(file);
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Sesion requerida para procesar PDF');
@@ -174,8 +189,13 @@ export default function CrearCapacitacion() {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
         },
-        body: formData,
+        body: JSON.stringify({
+          fileName: file.name,
+          fileBase64,
+          fileSize: file.size,
+        }),
       });
       if (!response.ok) throw new Error('Error extracting PDF');
       const result = await response.json();
