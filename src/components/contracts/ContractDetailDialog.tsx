@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Loader2,
   FileType,
+  RotateCw,
 } from 'lucide-react';
 
 import {
@@ -44,7 +45,8 @@ import { FourYearLimitGauge } from './FourYearLimitGauge';
 import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateContractDialog } from './GenerateContractDialog';
-import { useCreateContractExtension, useApproveContract, useContract } from '@/hooks/useContracts';
+import { AutomaticExtensionRegularizationDialog } from './AutomaticExtensionRegularizationDialog';
+import { useCreateContractExtension, useApproveContract, useContract, useRegularizeAutomaticContractExtensions } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useCompany } from '@/hooks/useCompanies';
@@ -53,6 +55,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { generateAndDownloadPreaviso } from '@/lib/preavisoDocumentGenerator';
 import { generateAndDownloadOtrosiProrroga } from '@/lib/otrosiProrrogaDocumentGenerator';
 import { calculateInclusiveMonthSpan } from '@/lib/dateOnly';
+import { calculateAutomaticExtensionRegularizationPlan } from '@/lib/contractExtensionRegularization';
 import {
   Contract,
   ContractExtension,
@@ -62,6 +65,7 @@ import {
   ExtensionFormData,
 } from '@/types/contract';
 import type { TerminationDocumentData } from '@/types/termination';
+import type { Database } from '@/integrations/supabase/types';
 
 interface ContractDetailDialogProps {
   open: boolean;
@@ -77,17 +81,21 @@ const statusConfig = {
   terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
 
+type DbContractExtension = Database['public']['Tables']['contract_extensions']['Row'];
+
 export function ContractDetailDialog({ open, onOpenChange, contractId, contract: initialContract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
+  const [showRegularizationDialog, setShowRegularizationDialog] = useState(false);
   const [previewOpenedBeforeApprove, setPreviewOpenedBeforeApprove] = useState(false);
   
   const { data: dbContract, isLoading: isDbContractLoading } = useContract(contractId || undefined);
 
   const createExtension = useCreateContractExtension();
+  const regularizeAutomaticExtensions = useRegularizeAutomaticContractExtensions();
   const approveContract = useApproveContract();
   const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, hasPermission, canView, canUpdate, canApprove: canApproveModule } = useAuth();
   const canViewContractCompensation =
@@ -102,51 +110,57 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
   
   // Map DB contract to UI Contract interface
-  const contract = initialContract || (dbContract ? {
-    id: dbContract.id,
-    employeeId: dbContract.employee_id,
-    employeeName: dbContract.employees ? `${dbContract.employees.first_name} ${dbContract.employees.last_name}` : 'Empleado',
-    employeeDocument: dbContract.employees?.document_number,
-    contractNumber: dbContract.contract_number,
-    contractType: (dbContract.contract_type === 'indefinido' ? 'indefinite' : 
+  const contract = initialContract || (dbContract ? (() => {
+    const contractType: Contract['contractType'] = dbContract.contract_type === 'indefinido' ? 'indefinite' :
                    dbContract.contract_type === 'fijo' ? 'fixed' :
                    dbContract.contract_type === 'obra_labor' ? 'work_labor' :
-                   dbContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services') as any,
-    startDate: new Date(dbContract.start_date + 'T00:00:00'),
-    originalEndDate: dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null,
-    currentEndDate: dbContract.contract_extensions?.length 
-      ? new Date([...dbContract.contract_extensions].sort((a, b) => new Date(b.end_date).getTime() - new Date(a.end_date).getTime())[0].end_date + 'T00:00:00')
-      : (dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null),
-    salary: Number(dbContract.salary),
-    salaryType: dbContract.salary_type === 'integral' ? 'integral' : 'monthly',
-    transportAllowance: (dbContract.transport_allowance || 0) > 0,
-    operationCenter: dbContract.employees?.operation_centers?.name || 'No asignado',
-    position: dbContract.employees?.employee_work_info?.[0]?.position_name || 'No asignada',
-    area: 'No asignada', 
-    extensions: (dbContract.contract_extensions || []).map((ext: any) => ({
+                   dbContract.contract_type === 'aprendizaje' ? 'apprenticeship' : 'services';
+    const extensions = ((dbContract.contract_extensions || []) as DbContractExtension[]).map((ext) => ({
       id: ext.id,
       extensionNumber: ext.extension_number,
       startDate: new Date(ext.start_date + 'T00:00:00'),
       endDate: new Date(ext.end_date + 'T00:00:00'),
-      extensionType: ext.extension_type as any,
+      extensionType: ext.extension_type === 'automatica' ? 'automatica' : 'pactada',
       createdAt: new Date(ext.created_at),
       notes: ext.reason
-    })),
-    status: getContractStatus({
-      contractType: (dbContract.contract_type === 'indefinido' ? 'indefinite' : 'fixed') as any, 
-      currentEndDate: dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null,
-      status: dbContract.is_terminated ? 'terminated' : undefined
-    }),
-    isApproved: dbContract.is_approved || false,
-    approvedBy: dbContract.approved_by,
-    approvedAt: dbContract.approved_at ? new Date(dbContract.approved_at) : undefined,
-    createdAt: new Date(dbContract.created_at),
-    updatedAt: new Date(dbContract.updated_at),
-    documentUrl: dbContract.document_url,
-    notes: dbContract.special_clauses,
-    hasNonCompeteClause: dbContract.has_non_compete_clause || false,
-    hasConfidentialityClause: dbContract.has_confidentiality_clause || false,
-  } as Contract : null);
+    } satisfies ContractExtension));
+    const currentEndDate = extensions.length
+      ? [...extensions].sort((a, b) => b.extensionNumber - a.extensionNumber)[0].endDate
+      : (dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null);
+
+    return {
+      id: dbContract.id,
+      employeeId: dbContract.employee_id,
+      employeeName: dbContract.employees ? `${dbContract.employees.first_name} ${dbContract.employees.last_name}` : 'Empleado',
+      employeeDocument: dbContract.employees?.document_number,
+      contractNumber: dbContract.contract_number,
+      contractType,
+      startDate: new Date(dbContract.start_date + 'T00:00:00'),
+      originalEndDate: dbContract.end_date ? new Date(dbContract.end_date + 'T00:00:00') : null,
+      currentEndDate,
+      salary: Number(dbContract.salary),
+      salaryType: dbContract.salary_type === 'integral' ? 'integral' : 'monthly',
+      transportAllowance: (dbContract.transport_allowance || 0) > 0,
+      operationCenter: dbContract.employees?.operation_centers?.name || 'No asignado',
+      position: dbContract.employees?.employee_work_info?.[0]?.position_name || 'No asignada',
+      area: 'No asignada',
+      extensions,
+      status: getContractStatus({
+        contractType,
+        currentEndDate,
+        status: dbContract.is_terminated ? 'terminated' : undefined
+      }),
+      isApproved: dbContract.is_approved || false,
+      approvedBy: dbContract.approved_by,
+      approvedAt: dbContract.approved_at ? new Date(dbContract.approved_at) : undefined,
+      createdAt: new Date(dbContract.created_at),
+      updatedAt: new Date(dbContract.updated_at),
+      documentUrl: dbContract.document_url,
+      notes: dbContract.special_clauses,
+      hasNonCompeteClause: dbContract.has_non_compete_clause || false,
+      hasConfidentialityClause: dbContract.has_confidentiality_clause || false,
+    } as Contract;
+  })() : null);
 
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
@@ -216,7 +230,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
             extensionNumber: data.extensionNumber,
             initialDurationLabel: `${initialMonths} ${initialMonths === 1 ? 'mes' : 'meses'}`,
             documentDate: new Date(),
-            documentCity: dbContract?.work_city || (company as any).city || 'Bucaramanga',
+            documentCity: dbContract?.work_city || (company as { city?: string | null }).city || 'Bucaramanga',
             employerSignerName: signatureConfig?.signer_name || 'Representante Legal',
             employerSignerPosition: signatureConfig?.signer_position || 'Representante de la Empresa',
           });
@@ -246,10 +260,26 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const isApproved = contract.isApproved;
   const canManageExtensions = canUpdateContracts && contract.contractType !== 'indefinite' && !isTerminated;
   const canAddExtension = canManageExtensions && isApproved && status !== 'expired' && !!contract.currentEndDate;
+  const regularizationPlan = calculateAutomaticExtensionRegularizationPlan({
+    id: contract.id,
+    contractType: contract.contractType,
+    isTerminated,
+    startDate: contract.startDate,
+    originalEndDate: contract.originalEndDate,
+    currentEndDate: contract.currentEndDate,
+    extensions: contract.extensions,
+  });
+  const canRegularizeAutomaticExtensions =
+    canManageExtensions &&
+    status === 'expired' &&
+    regularizationPlan.eligible &&
+    regularizationPlan.extensions.length > 0;
   const extensionBlockedReason = !isApproved
     ? 'El contrato debe estar aprobado para registrar una prórroga.'
     : status === 'expired'
-      ? 'No se pueden registrar prórrogas sobre contratos vencidos.'
+      ? canRegularizeAutomaticExtensions
+        ? 'Usa la regularizacion automatica para reconstruir las prorrogas anuales faltantes.'
+        : 'No se pueden registrar prórrogas sobre contratos vencidos.'
       : !contract.currentEndDate
         ? 'Define la fecha fin actual del contrato para registrar una prórroga.'
         : null;
@@ -394,6 +424,11 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     }
 
     if (status === 'expired') {
+      if (canRegularizeAutomaticExtensions) {
+        setShowRegularizationDialog(true);
+        return;
+      }
+
       toast({
         title: 'Contrato vencido',
         description: 'No se pueden registrar prórrogas sobre contratos vencidos. Revisa el estado contractual antes de continuar.',
@@ -412,6 +447,29 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     }
 
     setShowExtensionForm(true);
+  };
+
+  const handleConfirmRegularization = async () => {
+    try {
+      await regularizeAutomaticExtensions.mutateAsync({
+        contractId: contract.id,
+        extensions: regularizationPlan.extensions,
+      });
+
+      toast({
+        title: 'Prorrogas regularizadas',
+        description: `Se registraron ${regularizationPlan.extensions.length} prorrogas automaticas anuales y quedo evidencia en auditoria.`,
+      });
+
+      setShowRegularizationDialog(false);
+    } catch (error) {
+      console.error('Error regularizing automatic extensions:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron regularizar las prorrogas automaticas. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -560,16 +618,29 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                     )}
                   </div>
                   {canManageExtensions && (
-                    <Button
-                      size="sm"
-                      onClick={handleOpenExtensionForm}
-                      className="gap-1"
-                      variant={canAddExtension ? 'default' : 'outline'}
-                      title={extensionBlockedReason || undefined}
-                    >
-                      <Plus className="w-4 h-4" />
-                      Nueva Prórroga
-                    </Button>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {canRegularizeAutomaticExtensions && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowRegularizationDialog(true)}
+                          className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        >
+                          <RotateCw className="w-4 h-4" />
+                          Regularizar automaticas
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={handleOpenExtensionForm}
+                        className="gap-1"
+                        variant={canAddExtension ? 'default' : 'outline'}
+                        title={extensionBlockedReason || undefined}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Nueva Prórroga
+                      </Button>
+                    </div>
                   )}
                 </div>
 
@@ -852,6 +923,21 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         />
       )}
 
+      <AutomaticExtensionRegularizationDialog
+        open={showRegularizationDialog}
+        onOpenChange={setShowRegularizationDialog}
+        items={[
+          {
+            contractId: contract.id,
+            employeeName: contract.employeeName,
+            currentEndDate: contract.currentEndDate,
+            extensions: regularizationPlan.extensions,
+          },
+        ]}
+        isSubmitting={regularizeAutomaticExtensions.isPending}
+        onConfirm={handleConfirmRegularization}
+      />
+
       {/* Termination Process Dialog */}
       <TerminationProcessDialog
         open={showTerminationDialog}
@@ -987,7 +1073,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
           onOpenChange={setShowEditDialog}
           preselectedEmployeeId={dbContract.employee_id}
           preselectedEmployeeName={contract.employeeName}
-          contractToEdit={dbContract as any}
+          contractToEdit={dbContract}
           onSuccess={() => {
             // Close both dialogs and trigger refresh
             setShowEditDialog(false);

@@ -20,7 +20,7 @@ import {
   Coins,
   FileClock,
   Handshake,
-  Infinity,
+  Infinity as InfinityIcon,
   RotateCw,
   Info,
   MapPin,
@@ -43,17 +43,49 @@ import {
 import { cn } from '@/lib/utils';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { ContractDetailDialog } from '@/components/contracts/ContractDetailDialog';
+import { AutomaticExtensionRegularizationDialog, type AutomaticExtensionRegularizationItem } from '@/components/contracts/AutomaticExtensionRegularizationDialog';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
-import { useContracts } from '@/hooks/useContracts';
+import { useBulkRegularizeAutomaticContractExtensions, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
 import { calculateInclusiveMonthSpan, parseDateOnly } from '@/lib/dateOnly';
+import { calculateAutomaticExtensionRegularizationPlan } from '@/lib/contractExtensionRegularization';
+import { toast } from '@/hooks/use-toast';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
 type ContractsViewMode = 'cards' | 'matrix';
+type ContractListExtension = {
+  extension_number?: number | null;
+  start_date?: string | null;
+  end_date: string;
+};
+type ContractListEmployee = {
+  first_name?: string | null;
+  middle_name?: string | null;
+  last_name?: string | null;
+  second_last_name?: string | null;
+  document_number?: string | null;
+  position_name?: string | null;
+  operation_center_id?: string | null;
+  operation_centers?: { name?: string | null } | null;
+};
+type ContractListRow = {
+  id: string;
+  employees?: ContractListEmployee | null;
+  contract_extensions?: ContractListExtension[] | null;
+  contract_number?: string | null;
+  contract_type: string;
+  start_date: string;
+  end_date: string | null;
+  salary?: number | string | null;
+  is_terminated?: boolean | null;
+  is_approved?: boolean | null;
+  special_clauses?: string | null;
+  work_labor_description?: string | null;
+};
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
@@ -121,7 +153,7 @@ function formatMatrixDate(date: string | null): string {
   return formatContractDate(date);
 }
 
-function getEmployeeFullName(employee: any): string {
+function getEmployeeFullName(employee: ContractListEmployee | null | undefined): string {
   return [
     employee?.first_name,
     employee?.middle_name,
@@ -206,7 +238,7 @@ function getEffectiveEndDate(contract: {
 
 function getContractTypeIcon(type: string) {
   const normalized = type.toLowerCase();
-  if (normalized.includes('indefin')) return Infinity;
+  if (normalized.includes('indefin')) return InfinityIcon;
   if (normalized.includes('obra') || normalized.includes('labor')) return BriefcaseBusiness;
   if (normalized.includes('aprendiz')) return Handshake;
   if (normalized.includes('fijo')) return FileClock;
@@ -226,7 +258,7 @@ function ContractMatrixView({
   contracts,
   onOpenContract,
 }: {
-  contracts: any[];
+  contracts: ContractListRow[];
   onOpenContract: (contractId: string) => void;
 }) {
   return (
@@ -320,8 +352,9 @@ export default function Contratos() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [showExpiredContracts, setShowExpiredContracts] = useState(false);
   const [viewMode, setViewMode] = useState<ContractsViewMode>('cards');
+  const [isBulkRegularizationOpen, setIsBulkRegularizationOpen] = useState(false);
 
-  const { currentCompanyId, hasPermission, canView, canCreate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const { currentCompanyId, hasPermission, canView, canCreate, canUpdate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
     canView('salarios') ||
     hasPermission('salarios', 'view') ||
@@ -329,10 +362,12 @@ export default function Contratos() {
     hasPermission('compensaciones', 'view');
   const isMobile = useIsMobile();
   const { data: contracts, isLoading, refetch } = useContracts();
+  const bulkRegularizeAutomaticExtensions = useBulkRegularizeAutomaticContractExtensions();
   const { data: contractTypesConfig } = useContractTypes();
   const { data: operationCenters } = useOperationCenters();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const canCreateContracts = isAdmin || isRRHH || isSuperAdmin || canCreate('contratos');
+  const canManageContractExtensions = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
 
   // Helper to get contract type label from catalog
   const getContractTypeLabel = (type: string) => {
@@ -430,6 +465,60 @@ export default function Contratos() {
     }, { total: 0, active: 0, expiring: 0, expired: 0, withExtensions: 0 });
   }, [contracts]);
 
+  const bulkRegularizationItems = useMemo<AutomaticExtensionRegularizationItem[]>(() => {
+    if (!contracts) return [];
+
+    return contracts
+      .map((contract) => {
+        const effectiveEndDate = getEffectiveEndDate(contract);
+        const extensions = ((contract.contract_extensions || []) as ContractListExtension[]).map((extension) => ({
+          extensionNumber: Number(extension.extension_number || 0),
+          startDate: parseContractDate(extension.start_date || extension.end_date),
+          endDate: parseContractDate(extension.end_date),
+        }));
+        const plan = calculateAutomaticExtensionRegularizationPlan({
+          id: contract.id,
+          contractType: contract.contract_type,
+          isTerminated: contract.is_terminated,
+          startDate: parseContractDate(contract.start_date),
+          originalEndDate: contract.end_date ? parseContractDate(contract.end_date) : null,
+          currentEndDate: effectiveEndDate ? parseContractDate(effectiveEndDate) : null,
+          extensions,
+        });
+
+        if (!plan.eligible || plan.extensions.length === 0) return null;
+
+        return {
+          contractId: contract.id,
+          employeeName: getEmployeeFullName(contract.employees),
+          currentEndDate: effectiveEndDate ? parseContractDate(effectiveEndDate) : null,
+          extensions: plan.extensions,
+        };
+      })
+      .filter((item): item is AutomaticExtensionRegularizationItem => item !== null);
+  }, [contracts]);
+
+  const handleBulkRegularization = async () => {
+    try {
+      await bulkRegularizeAutomaticExtensions.mutateAsync(bulkRegularizationItems);
+
+      const totalExtensions = bulkRegularizationItems.reduce((total, item) => total + item.extensions.length, 0);
+      toast({
+        title: 'Regularizacion completada',
+        description: `Se registraron ${totalExtensions} prorrogas automaticas en ${bulkRegularizationItems.length} contratos.`,
+      });
+
+      setIsBulkRegularizationOpen(false);
+    } catch (error) {
+      console.error('Error regularizing automatic extensions in bulk:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo completar la regularizacion masiva. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleContractClick = (contractId: string) => {
     setSelectedContractId(contractId);
     setIsDetailOpen(true);
@@ -473,13 +562,31 @@ export default function Contratos() {
             </p>
           </div>
 
-          {canCreateContracts && (
-            <div className="flex gap-2 shrink-0">
+          {(canManageContractExtensions || canCreateContracts) && (
+            <div className="flex flex-wrap gap-2 shrink-0">
+              {canManageContractExtensions && bulkRegularizationItems.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl border-emerald-200 text-emerald-700 shadow-sm hover:bg-emerald-50"
+                  onClick={() => setIsBulkRegularizationOpen(true)}
+                  disabled={bulkRegularizeAutomaticExtensions.isPending}
+                >
+                  {bulkRegularizeAutomaticExtensions.isPending ? (
+                    <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+                  ) : (
+                    <RotateCw className="h-4 w-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">Regularizar ({bulkRegularizationItems.length})</span>
+                  <span className="sm:hidden">Regularizar</span>
+                </Button>
+              )}
+              {canCreateContracts && (
               <Button className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95" onClick={() => setIsFormOpen(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Nuevo Contrato</span>
                 <span className="sm:hidden">Nuevo</span>
               </Button>
+              )}
             </div>
           )}
         </div>
@@ -952,6 +1059,14 @@ export default function Contratos() {
           contractId={selectedContractId}
         />
       )}
+
+      <AutomaticExtensionRegularizationDialog
+        open={isBulkRegularizationOpen}
+        onOpenChange={setIsBulkRegularizationOpen}
+        items={bulkRegularizationItems}
+        isSubmitting={bulkRegularizeAutomaticExtensions.isPending}
+        onConfirm={handleBulkRegularization}
+      />
     </div>
   );
 }
