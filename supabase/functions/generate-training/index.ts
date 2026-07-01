@@ -20,6 +20,8 @@ interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  openai_model?: string;
 }
 
 async function requireTrainingPermission(req: Request, companyId: string | undefined) {
@@ -97,6 +99,42 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
     console.warn("Could not read AI config:", e);
     return {};
   }
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) return message;
+  }
+  if (typeof error === "string" && error.trim()) return error;
+  return "No se pudo generar la capacitacion";
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
+}
+
+function parseJsonContent(rawContent: string, provider: string) {
+  const cleaned = rawContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  if (!cleaned) throw new Error(`${provider} no devolvio contenido`);
+  return JSON.parse(cleaned);
 }
 
 function buildToolSchema() {
@@ -247,6 +285,143 @@ async function callGateway(apiKey: string, systemPrompt: string, userPrompt: str
   return JSON.parse(cleaned);
 }
 
+async function callGeminiTraining(apiKey: string, systemPrompt: string, userPrompt: string, preferredModel?: string): Promise<any> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("GEMINI_TRAINING_MODEL"),
+    Deno.env.get("GEMINI_CHAT_MODEL"),
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
+          { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}\n\nResponde UNICAMENTE con un JSON valido con las llaves: introduccion, objetivos, contenido, puntosClave, evaluacion. Sin texto adicional fuera del JSON.` }] },
+        ],
+        generationConfig: { temperature: 0.7 },
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`Gemini ${model}`, response.status, await response.text());
+      console.error("Gemini training error:", lastError);
+      if ([400, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text || "").join("") || "";
+    return parseJsonContent(text, `Gemini ${model}`);
+  }
+
+  throw new Error(lastError || "Gemini no pudo generar contenido.");
+}
+
+async function callOpenAITraining(apiKey: string, systemPrompt: string, userPrompt: string, preferredModel?: string): Promise<any> {
+  const tool = buildToolSchema();
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_TRAINING_MODEL"),
+    Deno.env.get("OPENAI_CHAT_MODEL"),
+    "gpt-4o-mini",
+    "gpt-4o",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.7,
+        tools: [tool],
+        tool_choice: { type: "function", function: { name: "generate_training_content" } },
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, await response.text());
+      console.error("OpenAI training error:", lastError);
+      if ([400, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const data = await response.json();
+    const message = data.choices?.[0]?.message;
+    const toolCall = message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      return JSON.parse(toolCall.function.arguments);
+    }
+    if (message?.content) return parseJsonContent(message.content, `OpenAI ${model}`);
+  }
+
+  throw new Error(lastError || "OpenAI no pudo generar contenido.");
+}
+
+async function callGatewayTraining(apiKey: string, systemPrompt: string, userPrompt: string): Promise<any> {
+  try {
+    return await callGateway(apiKey, systemPrompt, userPrompt);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+async function generateTrainingWithAI(aiConfig: AIConfig, systemPrompt: string, userPrompt: string): Promise<any> {
+  const providerOrder = uniqueStrings([
+    aiConfig.model === "lovable_ai" ? "gateway" : aiConfig.model,
+    aiConfig.model === "openai" ? "gemini" : "openai",
+    aiConfig.model === "gemini" ? "openai" : "gemini",
+    "gateway",
+  ]);
+  const failures: string[] = [];
+
+  for (const provider of providerOrder) {
+    try {
+      if (provider === "openai" && aiConfig.openai_api_key) {
+        console.log("Using OpenAI direct API");
+        return await callOpenAITraining(aiConfig.openai_api_key, systemPrompt, userPrompt, aiConfig.openai_model);
+      }
+      if (provider === "gemini" && aiConfig.gemini_api_key) {
+        console.log("Using Gemini direct API");
+        return await callGeminiTraining(aiConfig.gemini_api_key, systemPrompt, userPrompt, aiConfig.gemini_model);
+      }
+      if (provider === "gateway") {
+        const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+        if (!lovableApiKey) {
+          failures.push("Lovable AI no tiene clave global configurada");
+          continue;
+        }
+        console.log("Using Lovable AI Gateway with model:", DEFAULT_GATEWAY_MODEL);
+        return await callGatewayTraining(lovableApiKey, systemPrompt, userPrompt);
+      }
+    } catch (error) {
+      const message = getErrorMessage(error);
+      failures.push(message);
+      console.error("AI provider failed:", provider, message);
+    }
+  }
+
+  throw {
+    status: 502,
+    message: failures.length
+      ? `No pude conectar con los proveedores de IA configurados. Detalle: ${failures.join(" | ")}`
+      : "No hay proveedor de IA configurado. Configura OpenAI o Gemini en Configuracion > IA.",
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -285,21 +460,7 @@ ${additionalContext ? `\nContexto adicional proporcionado:\n${additionalContext}
 
 Genera el contenido de la capacitación usando la función generate_training_content. La evaluación debe tener mínimo 5 preguntas. La primera opción (índice 0) SIEMPRE debe ser la respuesta correcta y debe coincidir con respuestaCorrecta. El contenido principal debe ser en formato Markdown con títulos ##, listas, negritas. Mínimo 500 palabras.`;
 
-    let parsed;
-    const provider = aiConfig.model || "gateway";
-    
-    if (provider === "gemini" && aiConfig.gemini_api_key) {
-      console.log("Using Gemini direct API");
-      parsed = await callGeminiDirect(aiConfig.gemini_api_key, systemPrompt, userPrompt);
-    } else if (provider === "openai" && aiConfig.openai_api_key) {
-      console.log("Using OpenAI direct API");
-      parsed = await callOpenAIDirect(aiConfig.openai_api_key, systemPrompt, userPrompt);
-    } else {
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-      console.log("Using Lovable AI Gateway with model:", DEFAULT_GATEWAY_MODEL);
-      parsed = await callGateway(LOVABLE_API_KEY, systemPrompt, userPrompt);
-    }
+    const parsed = await generateTrainingWithAI(aiConfig, systemPrompt, userPrompt);
 
     if (!parsed.introduccion || !parsed.objetivos || !parsed.contenido || !parsed.puntosClave || !parsed.evaluacion) {
       throw new Error("AI response missing required fields");
