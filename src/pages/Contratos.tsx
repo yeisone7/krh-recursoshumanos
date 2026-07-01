@@ -68,6 +68,8 @@ type ContractListEmployee = {
   last_name?: string | null;
   second_last_name?: string | null;
   document_number?: string | null;
+  is_active?: boolean | null;
+  status?: string | null;
   position_name?: string | null;
   operation_center_id?: string | null;
   operation_centers?: { name?: string | null } | null;
@@ -470,6 +472,9 @@ export default function Contratos() {
 
     return contracts
       .map((contract) => {
+        const employeeIsActive =
+          contract.employees?.is_active === true &&
+          (contract.employees?.status || 'active') === 'active';
         const effectiveEndDate = getEffectiveEndDate(contract);
         const extensions = ((contract.contract_extensions || []) as ContractListExtension[]).map((extension) => ({
           extensionNumber: Number(extension.extension_number || 0),
@@ -479,6 +484,8 @@ export default function Contratos() {
         const plan = calculateAutomaticExtensionRegularizationPlan({
           id: contract.id,
           contractType: contract.contract_type,
+          isApproved: contract.is_approved,
+          isEmployeeActive: employeeIsActive,
           isTerminated: contract.is_terminated,
           startDate: parseContractDate(contract.start_date),
           originalEndDate: contract.end_date ? parseContractDate(contract.end_date) : null,
@@ -498,14 +505,14 @@ export default function Contratos() {
       .filter((item): item is AutomaticExtensionRegularizationItem => item !== null);
   }, [contracts]);
 
-  const handleBulkRegularization = async () => {
+  const handleBulkRegularization = async (selectedItems: AutomaticExtensionRegularizationItem[]) => {
     try {
-      await bulkRegularizeAutomaticExtensions.mutateAsync(bulkRegularizationItems);
+      await bulkRegularizeAutomaticExtensions.mutateAsync(selectedItems);
 
-      const totalExtensions = bulkRegularizationItems.reduce((total, item) => total + item.extensions.length, 0);
+      const totalExtensions = selectedItems.reduce((total, item) => total + item.extensions.length, 0);
       toast({
         title: 'Regularizacion completada',
-        description: `Se registraron ${totalExtensions} prorrogas automaticas en ${bulkRegularizationItems.length} contratos.`,
+        description: `Se registraron ${totalExtensions} prorrogas automaticas en ${selectedItems.length} contratos.`,
       });
 
       setIsBulkRegularizationOpen(false);
@@ -576,7 +583,7 @@ export default function Contratos() {
                   ) : (
                     <RotateCw className="h-4 w-4 sm:mr-2" />
                   )}
-                  <span className="hidden sm:inline">Regularizar ({bulkRegularizationItems.length})</span>
+                  <span className="hidden sm:inline">Regularizacion general ({bulkRegularizationItems.length})</span>
                   <span className="sm:hidden">Regularizar</span>
                 </Button>
               )}
@@ -1064,6 +1071,7 @@ export default function Contratos() {
         open={isBulkRegularizationOpen}
         onOpenChange={setIsBulkRegularizationOpen}
         items={bulkRegularizationItems}
+        selectable
         isSubmitting={bulkRegularizeAutomaticExtensions.isPending}
         onConfirm={handleBulkRegularization}
       />

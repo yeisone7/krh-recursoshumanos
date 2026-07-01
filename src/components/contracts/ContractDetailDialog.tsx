@@ -263,6 +263,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const regularizationPlan = calculateAutomaticExtensionRegularizationPlan({
     id: contract.id,
     contractType: contract.contractType,
+    isApproved,
+    isEmployeeActive: dbContract?.employees?.is_active ?? true,
     isTerminated,
     startDate: contract.startDate,
     originalEndDate: contract.originalEndDate,
@@ -271,7 +273,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   });
   const canRegularizeAutomaticExtensions =
     canManageExtensions &&
-    status === 'expired' &&
+    isApproved &&
     regularizationPlan.eligible &&
     regularizationPlan.extensions.length > 0;
   const extensionBlockedReason = !isApproved
@@ -458,7 +460,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
       toast({
         title: 'Prorrogas regularizadas',
-        description: `Se registraron ${regularizationPlan.extensions.length} prorrogas automaticas anuales y quedo evidencia en auditoria.`,
+        description: `Se registraron ${regularizationPlan.extensions.length} prorrogas automaticas y quedo evidencia en auditoria.`,
       });
 
       setShowRegularizationDialog(false);

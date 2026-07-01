@@ -1,6 +1,7 @@
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarClock, FileText, Loader2, RotateCw, ShieldCheck } from 'lucide-react';
+import { CalendarClock, CheckSquare, FileText, Loader2, RotateCw, ShieldCheck, Square } from 'lucide-react';
 
 import {
   Dialog,
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { AutomaticExtensionPreview } from '@/lib/contractExtensionRegularization';
@@ -27,8 +29,9 @@ interface AutomaticExtensionRegularizationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: AutomaticExtensionRegularizationItem[];
+  selectable?: boolean;
   isSubmitting?: boolean;
-  onConfirm: () => void;
+  onConfirm: (selectedItems: AutomaticExtensionRegularizationItem[]) => void;
 }
 
 function formatDate(date: Date | null): string {
@@ -40,14 +43,42 @@ export function AutomaticExtensionRegularizationDialog({
   open,
   onOpenChange,
   items,
+  selectable = false,
   isSubmitting = false,
   onConfirm,
 }: AutomaticExtensionRegularizationDialogProps) {
-  const totalExtensions = items.reduce((total, item) => total + item.extensions.length, 0);
-  const firstItem = items[0];
-  const title = items.length === 1
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (open) {
+      setSelectedIds(new Set(items.map((item) => item.contractId)));
+    }
+  }, [open, items]);
+
+  const selectedItems = useMemo(
+    () => selectable ? items.filter((item) => selectedIds.has(item.contractId)) : items,
+    [items, selectable, selectedIds]
+  );
+  const totalExtensions = selectedItems.reduce((total, item) => total + item.extensions.length, 0);
+  const firstItem = selectedItems[0];
+  const title = selectable
+    ? 'Regularizacion general'
+    : items.length === 1
     ? 'Regularizar prorrogas automaticas'
     : 'Regularizacion masiva de prorrogas';
+  const allSelected = items.length > 0 && selectedIds.size === items.length;
+
+  const toggleItem = (contractId: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(contractId)) {
+        next.delete(contractId);
+      } else {
+        next.add(contractId);
+      }
+      return next;
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -60,7 +91,7 @@ export function AutomaticExtensionRegularizationDialog({
             <div className="min-w-0">
               <DialogTitle className="text-xl font-black tracking-tight">{title}</DialogTitle>
               <DialogDescription className="mt-1 text-sm">
-                Se crearan {totalExtensions} prorroga{totalExtensions === 1 ? '' : 's'} automatica{totalExtensions === 1 ? '' : 's'} para {items.length} contrato{items.length === 1 ? '' : 's'}.
+                Se crearan {totalExtensions} prorroga{totalExtensions === 1 ? '' : 's'} automatica{totalExtensions === 1 ? '' : 's'} para {selectedItems.length} contrato{selectedItems.length === 1 ? '' : 's'}.
               </DialogDescription>
             </div>
           </div>
@@ -71,11 +102,74 @@ export function AutomaticExtensionRegularizationDialog({
             <ShieldCheck className="h-4 w-4" />
             <AlertTitle>Evidencia de regularizacion</AlertTitle>
             <AlertDescription className="text-sm">
-              Cada fila quedara como prorroga automatica anual, con observacion de regularizacion historica y registro de auditoria.
+              Cada fila quedara como prorroga automatica, con observacion de regularizacion por preaviso vencido y registro de auditoria.
             </AlertDescription>
           </Alert>
 
-          {items.length === 1 && firstItem && (
+          {selectable && (
+            <div className="rounded-xl border bg-background p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold">Contratos elegibles</p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedItems.length} de {items.length} contrato{items.length === 1 ? '' : 's'} seleccionado{selectedItems.length === 1 ? '' : 's'}.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={() => setSelectedIds(new Set(items.map((item) => item.contractId)))}
+                    disabled={allSelected || isSubmitting}
+                  >
+                    <CheckSquare className="h-3.5 w-3.5" />
+                    Todos
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="gap-1"
+                    onClick={() => setSelectedIds(new Set())}
+                    disabled={selectedIds.size === 0 || isSubmitting}
+                  >
+                    <Square className="h-3.5 w-3.5" />
+                    Limpiar
+                  </Button>
+                </div>
+              </div>
+
+              <div className="mt-3 max-h-56 space-y-2 overflow-y-auto pr-1">
+                {items.map((item) => {
+                  const checked = selectedIds.has(item.contractId);
+
+                  return (
+                    <label
+                      key={item.contractId}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border bg-card px-3 py-2 text-sm transition-colors hover:bg-muted/40"
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggleItem(item.contractId)}
+                        disabled={isSubmitting}
+                        className="mt-0.5"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{item.employeeName}</span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          Vigencia actual: {formatDate(item.currentEndDate)} · {item.extensions.length} prorroga{item.extensions.length === 1 ? '' : 's'}
+                        </span>
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {!selectable && items.length === 1 && firstItem && (
             <div className="grid gap-3 rounded-xl border bg-background p-4 text-sm sm:grid-cols-3">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Empleado</p>
@@ -95,7 +189,7 @@ export function AutomaticExtensionRegularizationDialog({
 
         <ScrollArea className="min-h-0 flex-1 border-y">
           <div className="space-y-4 px-5 py-4 sm:px-6">
-            {items.map((item) => (
+            {selectedItems.map((item) => (
               <div key={item.contractId} className="rounded-xl border bg-card p-4">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
@@ -130,7 +224,7 @@ export function AutomaticExtensionRegularizationDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="button" onClick={onConfirm} disabled={isSubmitting || totalExtensions === 0} className="gap-2">
+          <Button type="button" onClick={() => onConfirm(selectedItems)} disabled={isSubmitting || totalExtensions === 0} className="gap-2">
             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
             Confirmar regularizacion
           </Button>
