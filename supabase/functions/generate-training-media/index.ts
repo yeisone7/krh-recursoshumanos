@@ -8,12 +8,19 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const GATEWAY_IMAGE_MODEL = "openai/dall-e-3"; // Usamos DALL-E-3 via gateway por estabilidad
-const TRAINING_AI_CREATE_MODULES = ["capacitaciones", "capacitaciones_ia"];
+const TRAINING_AI_ALLOWED_PERMISSIONS = [
+  { module: "capacitaciones_ia", action: "view" },
+  { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "create" },
+];
 
 interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  openai_image_model?: string;
 }
 
 async function requireTrainingPermission(req: Request, companyId: string | undefined) {
@@ -41,18 +48,26 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
     .limit(1);
 
   const isSystemRole = Boolean(systemRole?.length);
+  const { data: legacyAdminRole } = await adminClient
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+
+  const isLegacyAdmin = Boolean(legacyAdminRole?.length);
   const permissionChecks = await Promise.all(
-    TRAINING_AI_CREATE_MODULES.map((moduleCode) =>
+    TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       adminClient.rpc("check_user_permission", {
         _user_id: userId,
-        _module_code: moduleCode,
-        _action: "create",
+        _module_code: permission.module,
+        _action: permission.action,
       })
     )
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole) {
+  if (!isSystemRole && !isLegacyAdmin) {
     const { data: assignment } = await adminClient
       .from("user_company_assignments")
       .select("id")
@@ -64,6 +79,26 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
       throw { status: 403, message: "No tienes permiso para generar medios de capacitación en esta empresa." };
     }
   }
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
 }
 
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
@@ -186,6 +221,58 @@ async function generateImageOpenAIDirect(apiKey: string, prompt: string): Promis
   return imageData;
 }
 
+async function generateImageOpenAIWithFallback(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_IMAGE_MODEL"),
+    "gpt-image-2",
+    "gpt-image-1.5",
+    "gpt-image-1",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    console.log("Generating media via OpenAI image model:", model);
+    const response = await fetchWithRetry("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: "1024x1024",
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, await response.text());
+      console.error("OpenAI direct image error:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const result = await response.json();
+    const imageData = result.data?.[0]?.url || result.data?.[0]?.b64_json;
+
+    if (!imageData) {
+      lastError = `OpenAI ${model}: no devolvio ninguna imagen`;
+      console.error("OpenAI response missing image data. Full JSON:", JSON.stringify(result).substring(0, 500));
+      continue;
+    }
+
+    if (result.data?.[0]?.b64_json && !imageData.startsWith("data:")) {
+      return `data:image/png;base64,${imageData}`;
+    }
+
+    return imageData;
+  }
+
+  throw new Error(lastError || "OpenAI no pudo generar la imagen.");
+}
+
 async function generateImageGateway(apiKey: string, prompt: string): Promise<string> {
   const response = await fetchWithRetry(GATEWAY_URL, {
     method: "POST",
@@ -289,7 +376,7 @@ Deno.serve(async (req) => {
     } else if (provider === "openai" && aiConfig.openai_api_key) {
       console.log("Generating media via OpenAI direct:", type);
       try {
-        imageData = await generateImageOpenAIDirect(aiConfig.openai_api_key, prompt);
+        imageData = await generateImageOpenAIWithFallback(aiConfig.openai_api_key, prompt, aiConfig.openai_image_model);
       } catch (openaiErr: any) {
         console.warn("OpenAI direct failed. Not falling back to avoid hiding errors.");
         throw openaiErr;
