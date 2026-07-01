@@ -37,7 +37,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateDocument } from '@/hooks/useEmployeeHealth';
@@ -368,25 +368,12 @@ export function DocumentFormDialog({
                       collisionPadding={16}
                       className="z-[90] w-[min(calc(100vw-2rem),20rem)] overflow-visible rounded-xl border-border bg-background p-0 shadow-2xl"
                     >
-                      <Calendar
-                        mode="single"
+                      <DatePickerWithDropdowns
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        className="pointer-events-auto p-2"
-                        classNames={{
-                          months: 'flex flex-col',
-                          month: 'space-y-2',
-                          caption: 'relative flex items-center justify-center px-9 pt-1',
-                          table: 'w-full border-collapse',
-                          head_row: 'grid grid-cols-7',
-                          head_cell: 'flex h-8 items-center justify-center rounded-md text-[0.75rem] font-medium text-muted-foreground',
-                          row: 'grid grid-cols-7',
-                          cell: 'relative flex h-8 items-center justify-center p-0 text-center text-sm focus-within:z-20',
-                          day: 'h-8 w-8 rounded-md p-0 font-normal aria-selected:opacity-100',
-                          nav_button_previous: 'absolute left-1 top-0',
-                          nav_button_next: 'absolute right-1 top-0',
-                        }}
+                        fromYear={new Date().getFullYear() - 5}
+                        toYear={new Date().getFullYear() + 30}
                       />
                     </PopoverContent>
                   </Popover>
