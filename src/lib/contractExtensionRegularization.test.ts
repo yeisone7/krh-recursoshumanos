@@ -6,41 +6,68 @@ function date(value: string): Date {
 }
 
 describe('calculateAutomaticExtensionRegularizationPlan', () => {
-  it('creates annual automatic extensions until the current period covers today', () => {
+  it('creates the second extension with the same 3-month term after the first extension preaviso is expired', () => {
     const plan = calculateAutomaticExtensionRegularizationPlan(
       {
         id: 'contract-1',
         contractType: 'fixed',
+        isApproved: true,
+        isEmployeeActive: true,
         isTerminated: false,
-        startDate: date('2023-01-01'),
-        originalEndDate: date('2023-03-31'),
-        currentEndDate: date('2026-03-31'),
+        startDate: date('2026-01-01'),
+        originalEndDate: date('2026-03-31'),
+        currentEndDate: date('2026-06-30'),
         extensions: [
-          { extensionNumber: 1, startDate: date('2023-04-01'), endDate: date('2023-06-30') },
-          { extensionNumber: 2, startDate: date('2023-07-01'), endDate: date('2023-09-30') },
-          { extensionNumber: 3, startDate: date('2023-10-01'), endDate: date('2024-03-31') },
-          { extensionNumber: 4, startDate: date('2024-04-01'), endDate: date('2025-03-31') },
-          { extensionNumber: 5, startDate: date('2025-04-01'), endDate: date('2026-03-31') },
+          { extensionNumber: 1, startDate: date('2026-04-01'), endDate: date('2026-06-30') },
         ],
       },
-      date('2026-07-01')
+      date('2026-06-01')
     );
 
     expect(plan.eligible).toBe(true);
     expect(plan.extensions).toHaveLength(1);
     expect(plan.extensions[0]).toMatchObject({
       contractId: 'contract-1',
-      extensionNumber: 6,
+      extensionNumber: 2,
     });
-    expect(plan.extensions[0].startDate).toEqual(date('2026-04-01'));
-    expect(plan.extensions[0].endDate).toEqual(date('2027-03-31'));
+    expect(plan.extensions[0].startDate).toEqual(date('2026-07-01'));
+    expect(plan.extensions[0].endDate).toEqual(date('2026-09-30'));
+  });
+
+  it('creates the fourth extension for one year after three short extensions', () => {
+    const plan = calculateAutomaticExtensionRegularizationPlan(
+      {
+        id: 'contract-2',
+        contractType: 'fixed',
+        isApproved: true,
+        isEmployeeActive: true,
+        isTerminated: false,
+        startDate: date('2025-07-01'),
+        originalEndDate: date('2025-09-30'),
+        currentEndDate: date('2026-06-30'),
+        extensions: [
+          { extensionNumber: 1, startDate: date('2025-10-01'), endDate: date('2025-12-31') },
+          { extensionNumber: 2, startDate: date('2026-01-01'), endDate: date('2026-03-31') },
+          { extensionNumber: 3, startDate: date('2026-04-01'), endDate: date('2026-06-30') },
+        ],
+      },
+      date('2026-06-01')
+    );
+
+    expect(plan.eligible).toBe(true);
+    expect(plan.extensions).toHaveLength(1);
+    expect(plan.extensions[0].extensionNumber).toBe(4);
+    expect(plan.extensions[0].startDate).toEqual(date('2026-07-01'));
+    expect(plan.extensions[0].endDate).toEqual(date('2027-06-30'));
   });
 
   it('creates multiple missing annual extensions for older imported contracts', () => {
     const plan = calculateAutomaticExtensionRegularizationPlan(
       {
-        id: 'contract-2',
+        id: 'contract-3',
         contractType: 'fijo',
+        isApproved: true,
+        isEmployeeActive: true,
         isTerminated: false,
         startDate: date('2021-01-01'),
         originalEndDate: date('2021-03-31'),
@@ -64,62 +91,43 @@ describe('calculateAutomaticExtensionRegularizationPlan', () => {
     ]);
   });
 
-  it('does not regularize terminated contracts', () => {
-    const plan = calculateAutomaticExtensionRegularizationPlan({
-      id: 'contract-3',
-      contractType: 'fixed',
-      isTerminated: true,
-      startDate: date('2023-01-01'),
-      originalEndDate: date('2023-03-31'),
-      currentEndDate: date('2024-03-31'),
-      extensions: [
-        { extensionNumber: 1, startDate: date('2023-04-01'), endDate: date('2023-06-30') },
-        { extensionNumber: 2, startDate: date('2023-07-01'), endDate: date('2023-09-30') },
-        { extensionNumber: 3, startDate: date('2023-10-01'), endDate: date('2024-03-31') },
-      ],
-    }, date('2026-07-01'));
-
-    expect(plan.eligible).toBe(false);
-    expect(plan.extensions).toHaveLength(0);
-  });
-
-  it('does not regularize contracts with fewer than three extensions', () => {
+  it('does not regularize contracts whose preaviso deadline has not expired', () => {
     const plan = calculateAutomaticExtensionRegularizationPlan({
       id: 'contract-4',
       contractType: 'fixed',
+      isApproved: true,
+      isEmployeeActive: true,
       isTerminated: false,
-      startDate: date('2023-01-01'),
-      originalEndDate: date('2023-03-31'),
-      currentEndDate: date('2023-09-30'),
+      startDate: date('2026-01-01'),
+      originalEndDate: date('2026-03-31'),
+      currentEndDate: date('2026-09-30'),
       extensions: [
-        { extensionNumber: 1, startDate: date('2023-04-01'), endDate: date('2023-06-30') },
-        { extensionNumber: 2, startDate: date('2023-07-01'), endDate: date('2023-09-30') },
+        { extensionNumber: 1, startDate: date('2026-04-01'), endDate: date('2026-06-30') },
+        { extensionNumber: 2, startDate: date('2026-07-01'), endDate: date('2026-09-30') },
       ],
-    }, date('2026-07-01'));
+    }, date('2026-08-01'));
 
     expect(plan.eligible).toBe(false);
     expect(plan.extensions).toHaveLength(0);
   });
 
-  it('does not regularize contracts whose latest end date is still current', () => {
-    const plan = calculateAutomaticExtensionRegularizationPlan({
+  it('does not regularize terminated, unapproved, or inactive-employee contracts', () => {
+    const baseContract = {
       id: 'contract-5',
       contractType: 'fixed',
       isTerminated: false,
-      startDate: date('2023-01-01'),
-      originalEndDate: date('2023-03-31'),
-      currentEndDate: date('2027-03-31'),
+      isApproved: true,
+      isEmployeeActive: true,
+      startDate: date('2026-01-01'),
+      originalEndDate: date('2026-03-31'),
+      currentEndDate: date('2026-06-30'),
       extensions: [
-        { extensionNumber: 1, startDate: date('2023-04-01'), endDate: date('2023-06-30') },
-        { extensionNumber: 2, startDate: date('2023-07-01'), endDate: date('2023-09-30') },
-        { extensionNumber: 3, startDate: date('2023-10-01'), endDate: date('2024-03-31') },
-        { extensionNumber: 4, startDate: date('2024-04-01'), endDate: date('2025-03-31') },
-        { extensionNumber: 5, startDate: date('2025-04-01'), endDate: date('2026-03-31') },
-        { extensionNumber: 6, startDate: date('2026-04-01'), endDate: date('2027-03-31') },
+        { extensionNumber: 1, startDate: date('2026-04-01'), endDate: date('2026-06-30') },
       ],
-    }, date('2026-07-01'));
+    };
 
-    expect(plan.eligible).toBe(false);
-    expect(plan.extensions).toHaveLength(0);
+    expect(calculateAutomaticExtensionRegularizationPlan({ ...baseContract, isTerminated: true }, date('2026-06-01')).eligible).toBe(false);
+    expect(calculateAutomaticExtensionRegularizationPlan({ ...baseContract, isApproved: false }, date('2026-06-01')).eligible).toBe(false);
+    expect(calculateAutomaticExtensionRegularizationPlan({ ...baseContract, isEmployeeActive: false }, date('2026-06-01')).eligible).toBe(false);
   });
 });

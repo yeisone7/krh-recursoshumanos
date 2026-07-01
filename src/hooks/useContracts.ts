@@ -51,6 +51,8 @@ async function getEmployeeV2Info(employeeId: string) {
       document_number,
       document_type,
       company_id,
+      is_active,
+      status,
       employee_work_info!inner(
         id,
         position_name,
@@ -102,6 +104,8 @@ export function useContracts() {
             document_number,
             document_type,
             company_id,
+            is_active,
+            status,
             employee_work_info(
               id,
               position_name,
@@ -137,6 +141,8 @@ export function useContracts() {
             document_number: employee.document_number,
             document_type: employee.document_type,
             company_id: employee.company_id,
+            is_active: employee.is_active,
+            status: employee.status,
             position_name: currentWorkInfo?.position_name || null,
             operation_center_id: currentWorkInfo?.operation_center_id || null,
             operation_centers: currentWorkInfo?.operation_centers || null
@@ -179,6 +185,8 @@ export function useContract(id: string | undefined) {
           second_last_name: employee.second_last_name,
           document_number: employee.document_number,
           document_type: employee.document_type,
+          is_active: employee.is_active,
+          status: employee.status,
           operation_centers: employee.employee_work_info?.[0]?.operation_centers || null,
           employee_work_info: employee.employee_work_info || []
         } : null
