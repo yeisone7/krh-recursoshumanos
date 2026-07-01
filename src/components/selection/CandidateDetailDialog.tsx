@@ -1173,8 +1173,8 @@ export function CandidateDetailDialog({
       <DocumentFormDialog
         open={isDocFormOpen}
         onOpenChange={setIsDocFormOpen}
-        entityId={resolvedEmployeeId || candidate.id}
-        entityType={resolvedEmployeeId ? 'employee' : 'candidate'}
+        entityId={candidate.id}
+        entityType="candidate"
         companyId={currentCompanyId!}
         entityName={`${candidate.first_name} ${candidate.last_name}`}
       />
