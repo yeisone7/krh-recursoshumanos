@@ -171,7 +171,10 @@ export default function CrearCapacitacion() {
       if (!accessToken) throw new Error('Sesion requerida para procesar PDF');
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-pdf`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
         body: formData,
       });
       if (!response.ok) throw new Error('Error extracting PDF');

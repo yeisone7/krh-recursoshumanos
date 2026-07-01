@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -9,6 +8,7 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const DEFAULT_GATEWAY_MODEL = "google/gemini-3-flash-preview";
+const TRAINING_AI_CREATE_MODULES = ["capacitaciones", "capacitaciones_ia"];
 
 interface AIConfig {
   model?: string;
@@ -41,11 +41,16 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
     .limit(1);
 
   const isSystemRole = Boolean(systemRole?.length);
-  const { data: hasPermission } = await adminClient.rpc("check_user_permission", {
-    _user_id: userId,
-    _module_code: "capacitaciones",
-    _action: "create",
-  });
+  const permissionChecks = await Promise.all(
+    TRAINING_AI_CREATE_MODULES.map((moduleCode) =>
+      adminClient.rpc("check_user_permission", {
+        _user_id: userId,
+        _module_code: moduleCode,
+        _action: "create",
+      })
+    )
+  );
+  const hasPermission = permissionChecks.some(({ data }) => data === true);
 
   if (!isSystemRole) {
     const { data: assignment } = await adminClient
@@ -228,7 +233,7 @@ async function callGateway(apiKey: string, systemPrompt: string, userPrompt: str
   return JSON.parse(cleaned);
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
