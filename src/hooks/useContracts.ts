@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
+import { formatDateForSupabase, type AutomaticExtensionPreview } from '@/lib/contractExtensionRegularization';
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
@@ -16,8 +17,8 @@ async function logAuditEvent(
   entityType: string,
   entityId?: string,
   entityName?: string,
-  oldValues?: Record<string, any>,
-  newValues?: Record<string, any>
+  oldValues?: Record<string, unknown>,
+  newValues?: Record<string, unknown>
 ) {
   try {
     await supabase.from('audit_logs').insert({
@@ -121,9 +122,9 @@ export function useContracts() {
       if (!data) return [];
 
       // Post-process to structure the data as expected by the UI
-      return data.map((contract: any) => {
+      return data.map((contract) => {
         const employee = contract.employees;
-        const currentWorkInfo = employee?.employee_work_info?.find((w: any) => w.is_current);
+        const currentWorkInfo = employee?.employee_work_info?.find((w) => w.is_current);
         
         return {
           ...contract,
@@ -373,6 +374,164 @@ export function useCreateContractExtension() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', data.contract_id] });
+    },
+  });
+}
+
+export function useRegularizeAutomaticContractExtensions() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      contractId,
+      extensions,
+    }: {
+      contractId: string;
+      extensions: AutomaticExtensionPreview[];
+    }) => {
+      if (!currentCompanyId) {
+        throw new Error('No hay empresa activa para registrar la regularizacion.');
+      }
+
+      if (extensions.length === 0) {
+        throw new Error('No hay prorrogas automaticas pendientes por regularizar.');
+      }
+
+      const { data: contract } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('id', contractId)
+        .single();
+
+      const rows: ContractExtensionInsert[] = extensions.map((extension) => ({
+        contract_id: contractId,
+        extension_number: extension.extensionNumber,
+        start_date: formatDateForSupabase(extension.startDate),
+        end_date: formatDateForSupabase(extension.endDate),
+        reason: extension.reason,
+        extension_type: 'automatica',
+        created_by: user?.id,
+        company_id: currentCompanyId,
+      }));
+
+      const { data, error } = await supabase
+        .from('contract_extensions')
+        .insert(rows)
+        .select();
+
+      if (error) throw error;
+
+      const employee = contract ? await getEmployeeV2Info(contract.employee_id) : null;
+
+      if (user && contract) {
+        const employeeName = employee
+          ? `${employee.first_name} ${employee.last_name}`
+          : 'Empleado';
+
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'regularize_contract_extensions',
+          'contract',
+          contractId,
+          `Regularizacion de prorrogas automaticas - ${employeeName}`,
+          undefined,
+          {
+            generated_extensions: rows.map((row) => ({
+              extension_number: row.extension_number,
+              start_date: row.start_date,
+              end_date: row.end_date,
+              extension_type: row.extension_type,
+              reason: row.reason,
+            })),
+            generated_count: rows.length,
+          }
+        );
+      }
+
+      return data || [];
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract', variables.contractId] });
+    },
+  });
+}
+
+export function useBulkRegularizeAutomaticContractExtensions() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (
+      items: Array<{
+        contractId: string;
+        employeeName: string;
+        extensions: AutomaticExtensionPreview[];
+      }>
+    ) => {
+      if (!currentCompanyId) {
+        throw new Error('No hay empresa activa para registrar la regularizacion.');
+      }
+
+      const rows: ContractExtensionInsert[] = items.flatMap((item) =>
+        item.extensions.map((extension) => ({
+          contract_id: item.contractId,
+          extension_number: extension.extensionNumber,
+          start_date: formatDateForSupabase(extension.startDate),
+          end_date: formatDateForSupabase(extension.endDate),
+          reason: extension.reason,
+          extension_type: 'automatica',
+          created_by: user?.id,
+          company_id: currentCompanyId,
+        }))
+      );
+
+      if (rows.length === 0) {
+        throw new Error('No hay prorrogas automaticas pendientes por regularizar.');
+      }
+
+      const { data, error } = await supabase
+        .from('contract_extensions')
+        .insert(rows)
+        .select();
+
+      if (error) throw error;
+
+      if (user) {
+        await Promise.all(
+          items.map((item) =>
+            logAuditEvent(
+              user.id,
+              user.email,
+              currentCompanyId,
+              'bulk_regularize_contract_extensions',
+              'contract',
+              item.contractId,
+              `Regularizacion masiva de prorrogas automaticas - ${item.employeeName}`,
+              undefined,
+              {
+                generated_extensions: item.extensions.map((extension) => ({
+                  extension_number: extension.extensionNumber,
+                  start_date: formatDateForSupabase(extension.startDate),
+                  end_date: formatDateForSupabase(extension.endDate),
+                  extension_type: 'automatica',
+                  reason: extension.reason,
+                })),
+                generated_count: item.extensions.length,
+              }
+            )
+          )
+        );
+      }
+
+      return data || [];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract'] });
     },
   });
 }
