@@ -197,7 +197,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
         const fileName = `${course.id}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from('training-media')
-          .upload(fileName, watermarkedBlob, { contentType: 'image/png', upsert: true });
+          .upload(fileName, watermarkedBlob, { contentType: 'image/png' });
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
         const finalUrl = urlData.publicUrl;
