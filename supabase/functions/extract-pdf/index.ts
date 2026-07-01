@@ -4,42 +4,47 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const maxPdfSize = 10 * 1024 * 1024;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+    const payload = await readPdfPayload(req);
 
-    if (!file) {
+    if (!payload) {
       return new Response(
         JSON.stringify({ error: "No file provided" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
+    if (!payload.fileName.toLowerCase().endsWith(".pdf")) {
       return new Response(
         JSON.stringify({ error: "Only PDF files are supported" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
+    if (payload.fileSize > maxPdfSize) {
+      return new Response(
+        JSON.stringify({ error: "PDF file exceeds 10MB" }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Extract text from PDF by parsing the raw bytes
     // We look for text between BT (Begin Text) and ET (End Text) markers
     // and also extract text from parentheses (Tj operator) and angle brackets
-    const textContent = extractTextFromPdfBytes(bytes);
+    const textContent = extractTextFromPdfBytes(payload.bytes);
 
     return new Response(
       JSON.stringify({ 
         text: textContent,
-        fileName: file.name,
-        fileSize: file.size 
+        fileName: payload.fileName,
+        fileSize: payload.fileSize
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -51,6 +56,49 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function readPdfPayload(req: Request): Promise<{ fileName: string; fileSize: number; bytes: Uint8Array } | null> {
+  const contentType = req.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return null;
+    }
+    const fileName = typeof body?.fileName === "string" ? body.fileName : "";
+    const fileBase64 = typeof body?.fileBase64 === "string" ? body.fileBase64 : "";
+    const fileSize = typeof body?.fileSize === "number" ? body.fileSize : 0;
+
+    if (!fileName || !fileBase64) return null;
+    if (fileSize > maxPdfSize) {
+      return { fileName, fileSize, bytes: new Uint8Array() };
+    }
+
+    const binary = atob(fileBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    return { fileName, fileSize: fileSize || bytes.byteLength, bytes };
+  }
+
+  const formData = await req.formData();
+  const file = formData.get("file") as File | null;
+  if (!file) return null;
+
+  if (file.size > maxPdfSize) {
+    return { fileName: file.name, fileSize: file.size, bytes: new Uint8Array() };
+  }
+
+  return {
+    fileName: file.name,
+    fileSize: file.size,
+    bytes: new Uint8Array(await file.arrayBuffer()),
+  };
+}
 
 function extractTextFromPdfBytes(bytes: Uint8Array): string {
   const raw = new TextDecoder("latin1").decode(bytes);
