@@ -1,0 +1,37 @@
+﻿fila_excel,documento,motivo,tipo,numero_incapacidad,dias_excel,fecha_inicio_parseada,fecha_final_parseada,cie10
+3,1051636928,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 2196154 | EIN6394201,2,2026-01-04,2026-01-05,A060
+5,1098768769,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-42609837,2,2026-01-05,2026-01-06,K528
+8,1096063689,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-42638353,2,2026-01-08,2026-01-09,A083
+13,1002362188,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 012734076,2,2026-01-13,2026-01-14,A099
+14,1095839002,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-42707492,2,2026-01-19,2026-01-20,N939
+19,1051636928,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 2232413 | EIN6436260,2,2026-01-23,2026-01-24,Z309
+21,1148692599,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-42763879,2,2026-01-26,2026-01-27,R520
+22,1117885840,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 61453349,1,2026-01-20,2026-01-20,G439
+23,1076501391,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 61466858,2,2026-01-28,2026-01-29,M796
+29,1098806770,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 61377815,5,2026-01-06,2026-01-10,A09X
+32,1098707745,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 61393766,3,2026-01-13,2026-01-15,J209
+36,1076501391,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 61408027,3,2026-01-13,2026-01-15,M545
+66,1007836097,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 1100682692,3,2026-01-30,2026-02-01,J00X
+81,37550561,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-42906665,2,2026-02-12,2026-02-13,R11X
+96,1007836097,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 1100690886 | (Rechazada) | Transcripcion: 1100696127,3,2026-02-04,2026-02-06,J00X
+103,1042213513,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 1100689458,3,2026-02-16,2026-02-18,B349
+105,39726357,"Días no coinciden con fechas: Excel=15, calculado=20",Enfermedad General,Transcripcion: 2279010 | INCP2279010,15,2026-02-17,2026-03-08,M518
+115,5945358,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 5945358 | Transcripcion: 5945358,3,2026-02-23,2026-02-25,M796
+130,1091678380,Fechas/días requeridos faltantes o inválidos,Licencia de Maternidad,Transcripcion: 2302945 | INCP2302945 | 12854912,126,,,O821
+131,1096247792,Fechas/días requeridos faltantes o inválidos,Licencia de Maternidad,Transcripcion: INC0141243,126,,2026-06-26,Z358
+136,1084866301,Documento no encontrado en empleados de Petrocasinos S.A.,Accidente Laboral,ASUMIDA POR PETROCASINOS,4,2026-02-11,2026-02-14,M624
+149,86064939,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 2351200 | INCP2351200,1,2026-03-06,2026-03-06,J22X
+203,1007441970,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 1100712459,3,2026-03-19,2026-03-21,A09X
+208,1079177536,"Días no coinciden con fechas: Excel=30, calculado=29",Enfermedad General,Transcripcion: 04012616912,30,2026-03-09,2026-04-06,C509
+211,1041632266,Documento con más de un empleado activo en Petrocasinos S.A.,Enfermedad General,Transcripcion: 04072615612 | P16816452,3,2026-03-14,2026-03-16,M940
+262,68251224,"Días no coinciden con fechas: Excel=8, calculado=10",Enfermedad General,Transcripcion: 2394193 | INCP2394193,8,2026-04-13,2026-04-22,G560
+318,1097911332,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 0-43581435,2,2026-05-12,2026-05-13,J00X
+341,1004225503,"Días no coinciden con fechas: Excel=15, calculado=1111",Accidente de Tránsito,Transcripcion: 2474066 | INCP2474066,15,2023-05-09,2026-05-23,S800
+344,21992375,"Días no coinciden con fechas: Excel=15, calculado=1111",Enfermedad General,Transcripcion: 2448993 | INCP2448993,15,2023-05-08,2026-05-22,K802
+367,1056780653,"Días no coinciden con fechas: Excel=28, calculado=-337",Enfermedad General,Transcripcion: 2490604 | ,28,2026-05-29,2025-06-25,I829
+384,68302142,Documento con más de un empleado activo en Petrocasinos S.A.,Accidente de Tránsito,OK DOC PARA RADICAR,2,2026-06-11,2026-06-12,M792
+392,1075283117,Documento no encontrado en empleados de Petrocasinos S.A.,Enfermedad General,Transcripcion: 2531893 | INCP2531893,1,2026-06-19,2026-06-19,K429
+396,1077722891,"Días no coinciden con fechas: Excel=2, calculado=367",Enfermedad General,Transcripcion: 2537597,2,2025-06-23,2026-06-24,N809
+403,68302142,Documento con más de un empleado activo en Petrocasinos S.A.,Accidente de Tránsito,FALTA FURIPS,3,2026-06-08,2026-06-10,T149
+408,37754652,"Días no coinciden con fechas: Excel=5, calculado=4",Enfermedad General,Transcripcion: 0622263249,5,2026-06-19,2026-06-22,T841
+416,1005338656,"Días no coinciden con fechas: Excel=126, calculado=125",Licencia de Maternidad,FALTA HC,126,2026-06-12,2026-10-14,O800

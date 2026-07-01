@@ -1,0 +1,14 @@
+﻿fila_excel,documento,motivo,tipo,numero_incapacidad,dias_excel,fecha_inicio_parseada,fecha_final_parseada,cie10
+3,1193096680,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 0120266289 | P16456404,1,2026-01-07,2026-01-07,R11X
+5,1193096680,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 01282618058 | P16495729,1,2026-01-16,2026-01-16,R51X
+8,1065591181,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 01282619847 | P16495835,1,2026-01-19,2026-01-19,A09X
+15,1003252248,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 0212262781 | P16566777,1,2026-02-07,2026-02-07,L600
+17,1193096680,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 0212262963 | P16566836,2,2026-02-05,2026-02-06,R104
+19,1003252248,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 0212263146 | P16566905,1,2026-02-08,2026-02-08,L031
+22,1003290103,Fechas/días requeridos faltantes o inválidos,Enfermedad General,Transcripcion: 0213261648 | P16573029,1,2026-02-09,,R102
+40,1003253384,"Días no coinciden con fechas: Excel=1, calculado=2",Enfermedad General,Transcripcion: 03132612451,1,2026-03-09,2026-03-10,L039
+57,1007892528,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: 0420264782 | P16874442,1,2026-03-30,2026-03-30,T784
+58,1007892528,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion:  | P16797548,1,2026-03-31,2026-03-31,T784
+61,3873403,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: OK,2,2026-03-24,2026-03-25,A09X
+62,3873403,Documento no encontrado en empleados de Cosecharte S.A.S.,Enfermedad General,Transcripcion: OK,1,2026-03-30,2026-03-30,R53X
+125,1065986009,"Días no coinciden con fechas: Excel=7, calculado=99",Enfermedad General,Transcripcion: 0622263448,7,2026-06-09,2026-09-15,Z359
