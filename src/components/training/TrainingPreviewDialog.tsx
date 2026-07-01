@@ -36,6 +36,26 @@ interface TrainingPreviewDialogProps {
   initialTab?: string;
 }
 
+const getFunctionErrorMessage = async (error: any, fallback: string): Promise<string> => {
+  const context = error?.context;
+  if (context && typeof context.clone === 'function') {
+    try {
+      const body = await context.clone().json();
+      const message = body?.error || body?.message;
+      if (typeof message === 'string' && message.trim()) return message;
+    } catch (_) {
+      try {
+        const text = await context.clone().text();
+        if (text.trim()) return text.slice(0, 240);
+      } catch (_) {
+        // Fall back to the Supabase error message below.
+      }
+    }
+  }
+
+  return error?.message || fallback;
+};
+
 const statusColors: Record<string, string> = {
   borrador: 'bg-amber-500 text-white',
   publicado: 'bg-green-600 text-white',
@@ -168,7 +188,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
           skipUpload: true,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await getFunctionErrorMessage(error, `Error al generar ${type}`));
       if (data?.error) throw new Error(data.error);
       
       if (data?.imageUrl) {

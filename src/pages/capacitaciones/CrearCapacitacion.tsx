@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
 import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
@@ -313,7 +314,8 @@ export default function CrearCapacitacion() {
           skipUpload: true,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await getFunctionErrorMessage(error, `Error al generar ${type}`));
+      if (data?.error) throw new Error(data.error);
       if (data?.imageUrl) {
         // Apply watermark client-side using system config
         const wmConfig = systemConfig?.watermark_config as WatermarkConfig | undefined;
@@ -598,9 +600,34 @@ export default function CrearCapacitacion() {
               </div>
 
               {/* 3. Contenido Principal */}
-              <div className="space-y-1.5">
-                <h3 className="font-semibold text-base">3. Contenido Principal</h3>
-                <Textarea value={content.contenido || ''} onChange={e => setContent({ ...content, contenido: e.target.value })} rows={12} />
+              <div className="space-y-3">
+                <div>
+                  <h3 className="font-semibold text-base">3. Contenido Principal</h3>
+                  <p className="text-xs text-muted-foreground">Revisa el formato y edita el Markdown si necesitas ajustar el contenido.</p>
+                </div>
+                <Tabs defaultValue="preview" className="w-full">
+                  <TabsList className="h-auto rounded-xl bg-muted/60 p-1">
+                    <TabsTrigger value="preview" className="rounded-lg px-4">Vista previa</TabsTrigger>
+                    <TabsTrigger value="edit" className="rounded-lg px-4">Editar</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="preview" className="mt-3">
+                    <div className="max-h-[420px] overflow-y-auto rounded-xl border border-border/70 bg-background p-6 shadow-inner">
+                      {content.contenido ? (
+                        <MarkdownContent content={content.contenido} />
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Sin contenido generado</p>
+                      )}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="edit" className="mt-3">
+                    <Textarea
+                      value={content.contenido || ''}
+                      onChange={e => setContent({ ...content, contenido: e.target.value })}
+                      rows={12}
+                      className="font-mono text-sm"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
 
               {/* 4. Puntos Clave */}
