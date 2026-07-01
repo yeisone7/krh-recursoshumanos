@@ -94,10 +94,17 @@ function getParagraphText(paragraphXml: string): string {
     .join('');
 }
 
+function stripHighlightFormatting(paragraphXml: string): string {
+  return paragraphXml
+    .replace(/<w:highlight\b[^>]*\/>/g, '')
+    .replace(/<w:shd\b[^>]*w:fill="(?:FFFF00|ffff00|yellow)"[^>]*\/>/g, '');
+}
+
 function replaceParagraphText(paragraphXml: string, lines: string[]): string {
   let textNodeIndex = 0;
+  const cleanParagraphXml = stripHighlightFormatting(paragraphXml);
 
-  return paragraphXml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/g, (textNode) => {
+  return cleanParagraphXml.replace(/<w:t(?:\s[^>]*)?>[\s\S]*?<\/w:t>/g, (textNode) => {
     if (textNodeIndex === 0) {
       textNodeIndex += 1;
       return lines
