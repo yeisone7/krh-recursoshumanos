@@ -70,7 +70,17 @@ interface DocumentFormDialogProps {
 }
 
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+function getFileExtension(fileName: string) {
+  return fileName.split('.').pop()?.toLowerCase() || '';
+}
+
+function isAllowedFile(file: File) {
+  const extension = getFileExtension(file.name);
+  return ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTENSIONS.includes(extension);
+}
 
 export function DocumentFormDialog({
   open,
@@ -108,7 +118,7 @@ export function DocumentFormDialog({
     if (!files.length) return;
 
     const validFiles = files.filter((file) => {
-      if (!ALLOWED_TYPES.includes(file.type)) {
+      if (!isAllowedFile(file)) {
         toast({
           title: 'Tipo de archivo no permitido',
           description: `${file.name}: solo se permiten PDF, JPG, PNG o WebP`,
@@ -267,7 +277,6 @@ export function DocumentFormDialog({
                   id="file-input"
                   type="file"
                   multiple
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
