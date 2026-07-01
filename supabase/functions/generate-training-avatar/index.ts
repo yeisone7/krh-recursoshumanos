@@ -4,6 +4,7 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+const TRAINING_AI_CREATE_MODULES = ['capacitaciones', 'capacitaciones_ia'];
 
 async function requireTrainingPermission(req: Request, supabase: any, companyId: string | undefined) {
   if (!companyId) throw { status: 400, message: 'companyId is required' };
@@ -27,11 +28,16 @@ async function requireTrainingPermission(req: Request, supabase: any, companyId:
     .limit(1);
 
   const isSystemRole = Boolean(systemRole?.length);
-  const { data: hasPermission } = await supabase.rpc('check_user_permission', {
-    _user_id: userId,
-    _module_code: 'capacitaciones',
-    _action: 'create',
-  });
+  const permissionChecks = await Promise.all(
+    TRAINING_AI_CREATE_MODULES.map((moduleCode) =>
+      supabase.rpc('check_user_permission', {
+        _user_id: userId,
+        _module_code: moduleCode,
+        _action: 'create',
+      })
+    )
+  );
+  const hasPermission = permissionChecks.some(({ data }) => data === true);
 
   if (!isSystemRole) {
     const { data: assignment } = await supabase
