@@ -60,6 +60,26 @@ const extractTextFromPdfFile = async (file: File): Promise<string> => {
   return pages.join('\n\n').trim();
 };
 
+const getFunctionErrorMessage = async (error: any, fallback: string): Promise<string> => {
+  const context = error?.context;
+  if (context && typeof context.clone === 'function') {
+    try {
+      const body = await context.clone().json();
+      const message = body?.error || body?.message;
+      if (typeof message === 'string' && message.trim()) return message;
+    } catch (_) {
+      try {
+        const text = await context.clone().text();
+        if (text.trim()) return text.slice(0, 240);
+      } catch (_) {
+        // Fall back to the Supabase error message below.
+      }
+    }
+  }
+
+  return error?.message || fallback;
+};
+
 export default function CrearCapacitacion() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -222,7 +242,7 @@ export default function CrearCapacitacion() {
           companyId: currentCompanyId,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar contenido'));
       setContent(data as TrainingCourseContent);
       setStep(2);
       toast.success('Contenido generado exitosamente');
