@@ -5,7 +5,7 @@ import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/e
 
 export interface UnifiedAlert {
   id: string;
-  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal' | 'document';
+  type: 'contract' | 'extension' | 'medical' | 'dotation' | 'certification' | 'incapacity' | 'vacation' | 'cesantias' | 'inventory_low_stock' | 'dotation_renewal' | 'document' | 'labor_disconnection';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -47,8 +47,38 @@ const certificationTypeLabels: Record<string, string> = {
   otro: 'Certificación',
 };
 
+type LooseDbError = { message?: string };
+type LooseQueryResult<T = unknown> = PromiseLike<{ data: T | null; error: LooseDbError | null }>;
+type LooseQueryBuilder = {
+  select: (columns?: string) => LooseQueryBuilder;
+  eq: (column: string, value: unknown) => LooseQueryBuilder;
+  ilike: (column: string, value: string) => LooseQueryBuilder;
+  neq: (column: string, value: unknown) => LooseQueryBuilder;
+  in: (column: string, values: readonly unknown[]) => LooseQueryBuilder;
+  limit: (count: number) => LooseQueryBuilder;
+  maybeSingle: <T = unknown>() => LooseQueryResult<T>;
+};
+type LooseSupabaseClient = {
+  from: (table: string) => LooseQueryBuilder;
+};
+type DisconnectionPolicyAlertRow = {
+  id: string;
+  enabled: boolean;
+  policy_name: string | null;
+  next_review_date: string | null;
+  created_at: string | null;
+};
+type ComplianceObligationAlertRow = {
+  id: string;
+  status: string;
+};
+type ComplianceEvidenceAlertRow = {
+  id: string;
+};
+
 export function useUnifiedAlerts() {
   const { currentCompanyId } = useAuth();
+  const looseSupabase = supabase as unknown as LooseSupabaseClient;
 
   return useQuery({
     queryKey: ['unified-alerts', currentCompanyId],
@@ -56,6 +86,70 @@ export function useUnifiedAlerts() {
       const alerts: UnifiedAlert[] = [];
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+
+      const { data: disconnectionPolicy } = await looseSupabase
+        .from('labor_disconnection_policies')
+        .select('id, enabled, policy_name, next_review_date, created_at')
+        .eq('company_id', currentCompanyId!)
+        .maybeSingle<DisconnectionPolicyAlertRow>();
+
+      if (disconnectionPolicy?.enabled) {
+        const reviewDays = calculateDaysRemaining(disconnectionPolicy.next_review_date);
+        let hasMissingEvidence = false;
+
+        const { data: obligations, error: obligationsError } = await looseSupabase
+          .from('compliance_obligations')
+          .select('id, status')
+          .eq('company_id', currentCompanyId!)
+          .eq('domain', 'juridico_laboral')
+          .ilike('title', '%desconexion laboral%')
+          .neq('status', 'no_aplica') as { data: ComplianceObligationAlertRow[] | null; error: LooseDbError | null };
+
+        if (!obligationsError) {
+          const obligationIds = (obligations || []).map((item) => item.id);
+          if (obligationIds.length === 0) {
+            hasMissingEvidence = true;
+          } else {
+            const { data: evidences, error: evidencesError } = await looseSupabase
+              .from('compliance_evidences')
+              .select('id')
+              .eq('company_id', currentCompanyId!)
+              .in('obligation_id', obligationIds)
+              .limit(1) as { data: ComplianceEvidenceAlertRow[] | null; error: LooseDbError | null };
+
+            hasMissingEvidence = !evidencesError && (!evidences || evidences.length === 0);
+          }
+        }
+
+        const reviewNeedsAttention = reviewDays !== null && reviewDays <= 15;
+        if (reviewNeedsAttention || hasMissingEvidence) {
+          const daysRemaining = reviewDays ?? 0;
+          const isExpired = reviewDays !== null && reviewDays < 0;
+          const title = isExpired
+            ? 'Revision de desconexion laboral vencida'
+            : hasMissingEvidence
+              ? 'Evidencia de desconexion laboral pendiente'
+              : 'Revision de desconexion laboral proxima';
+
+          alerts.push({
+            id: `labor-disconnection-${disconnectionPolicy.id}`,
+            type: 'labor_disconnection',
+            level: isExpired ? 'critical' : 'warning',
+            title,
+            description: isExpired
+              ? `La politica requiere revision desde hace ${Math.abs(daysRemaining)} dias`
+              : hasMissingEvidence
+                ? 'Registra la obligacion y evidencia de socializacion en cumplimiento laboral'
+                : `La politica requiere revision en ${daysRemaining} dias`,
+            daysRemaining,
+            entityName: disconnectionPolicy.policy_name || 'Politica de desconexion laboral',
+            entityId: disconnectionPolicy.id,
+            eventDate: disconnectionPolicy.next_review_date || '',
+            createdAt: disconnectionPolicy.created_at || new Date().toISOString(),
+            navigateTo: '/cumplimiento-laboral',
+          });
+        }
+      }
 
       // Fetch employees from employees_v2 for the current company
       const { data: employees } = await supabase

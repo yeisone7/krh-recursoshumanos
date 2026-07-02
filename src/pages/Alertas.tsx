@@ -38,6 +38,7 @@ const typeIcons: Record<UnifiedAlert['type'], React.ElementType> = {
   document: FileText,
   inventory_low_stock: Warehouse,
   dotation_renewal: Package,
+  labor_disconnection: ShieldAlert,
 };
 
 const typeLabels: Record<UnifiedAlert['type'], string> = {
@@ -52,6 +53,7 @@ const typeLabels: Record<UnifiedAlert['type'], string> = {
   document: 'Documento',
   inventory_low_stock: 'Stock Bajo',
   dotation_renewal: 'Renovación Dotación',
+  labor_disconnection: 'Desconexion Laboral',
 };
 
 const levelStyles = {
@@ -613,6 +615,7 @@ export default function Alertas({ embedded = false }: AlertasProps = {}) {
                 <SelectItem value="incapacity">INCAPACIDADES</SelectItem>
                 <SelectItem value="vacation">VACACIONES</SelectItem>
                 <SelectItem value="cesantias">CESANTÍAS</SelectItem>
+                <SelectItem value="labor_disconnection">DESCONEXION LABORAL</SelectItem>
               </SelectContent>
             </Select>
           </div>
