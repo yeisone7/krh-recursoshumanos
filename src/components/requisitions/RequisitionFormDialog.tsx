@@ -487,18 +487,18 @@ export function RequisitionFormDialog({
                       name="proceso_exclusivo_pcd"
                       render={({ field }) => (
                         <FormItem className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
-                          <div className="flex flex-col-reverse gap-3">
+                          <div className="flex flex-col-reverse gap-4">
                             <FormControl>
                               <RadioGroup
                                 value={field.value === true ? 'si' : field.value === false ? 'no' : ''}
                                 onValueChange={(value) => field.onChange(value === 'si')}
-                                className="flex flex-wrap gap-2"
+                                className="ml-0 flex w-fit flex-wrap gap-1.5 rounded-lg border border-amber-200 bg-background/80 p-1.5 shadow-sm sm:ml-6"
                               >
-                                <label className="flex h-9 w-24 cursor-pointer items-center justify-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                <label className="flex h-9 w-28 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
                                   <RadioGroupItem value="si" />
                                   Sí
                                 </label>
-                                <label className="flex h-9 w-24 cursor-pointer items-center justify-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                <label className="flex h-9 w-28 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
                                   <RadioGroupItem value="no" />
                                   No
                                 </label>
