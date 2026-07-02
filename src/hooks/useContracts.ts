@@ -6,6 +6,7 @@ import { formatDateForSupabase, type AutomaticExtensionPreview } from '@/lib/con
 
 type Contract = Database['public']['Tables']['contracts']['Row'];
 type ContractInsert = Database['public']['Tables']['contracts']['Insert'];
+type ContractExtension = Database['public']['Tables']['contract_extensions']['Row'];
 type ContractExtensionInsert = Database['public']['Tables']['contract_extensions']['Insert'];
 
 // Helper function to log audit events
@@ -382,6 +383,74 @@ export function useCreateContractExtension() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', data.contract_id] });
+    },
+  });
+}
+
+export function useUpdateContractExtension() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<ContractExtension> & { id: string }) => {
+      const { data: oldData, error: oldError } = await supabase
+        .from('contract_extensions')
+        .select('*, contracts(employee_id)')
+        .eq('id', id)
+        .single();
+
+      if (oldError) throw oldError;
+
+      const { data, error } = await supabase
+        .from('contract_extensions')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const contract = Array.isArray((oldData as any).contracts)
+        ? (oldData as any).contracts[0]
+        : (oldData as any).contracts;
+      const employee = contract?.employee_id ? await getEmployeeV2Info(contract.employee_id) : null;
+
+      if (user) {
+        const employeeName = employee
+          ? `${employee.first_name} ${employee.last_name}`
+          : 'Empleado';
+
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'update_contract_extension',
+          'contract_extension',
+          data.id,
+          `Prórroga #${oldData.extension_number} - ${employeeName}`,
+          {
+            extension_number: oldData.extension_number,
+            start_date: oldData.start_date,
+            end_date: oldData.end_date,
+            extension_type: oldData.extension_type,
+            reason: oldData.reason,
+          },
+          {
+            extension_number: data.extension_number,
+            start_date: data.start_date,
+            end_date: data.end_date,
+            extension_type: data.extension_type,
+            reason: data.reason,
+          }
+        );
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['contracts'] });
+      queryClient.invalidateQueries({ queryKey: ['contract', data.contract_id] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
     },
   });
 }
