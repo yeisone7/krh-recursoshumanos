@@ -492,13 +492,13 @@ export function RequisitionFormDialog({
                               <RadioGroup
                                 value={field.value === true ? 'si' : field.value === false ? 'no' : ''}
                                 onValueChange={(value) => field.onChange(value === 'si')}
-                                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+                                className="flex flex-wrap gap-2"
                               >
-                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 py-2 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                <label className="flex h-9 w-24 cursor-pointer items-center justify-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
                                   <RadioGroupItem value="si" />
                                   Sí
                                 </label>
-                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 py-2 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                <label className="flex h-9 w-24 cursor-pointer items-center justify-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
                                   <RadioGroupItem value="no" />
                                   No
                                 </label>
