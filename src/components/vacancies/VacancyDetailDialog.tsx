@@ -951,20 +951,20 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="flex flex-col gap-2 p-3 rounded-lg border bg-card hover:bg-background transition-colors cursor-pointer sm:flex-row sm:items-center sm:justify-between"
+                            className="grid gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-background lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-center"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-violet-light flex items-center justify-center">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-light">
                                 <span className="font-medium text-violet">
                                   {candidate.first_name[0]}{candidate.last_name[0]}
                                 </span>
                               </div>
                               <div className="min-w-0">
-                                <p className="font-medium">
+                                <p className="break-words text-base font-semibold leading-snug">
                                   {candidate.first_name} {candidate.last_name}
                                 </p>
-                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                                   <span>{candidate.document_number}</span>
                                   {candidate.mobile && (
                                     <>
@@ -976,10 +976,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-2 items-center gap-2 sm:flex sm:flex-nowrap sm:justify-end">
-                              <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
-                                {candidateStatusLabels[candidateStatus]}
-                              </Badge>
+                            <div className="grid gap-3 lg:min-w-[620px]">
+                              <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+                                <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
+                                  {candidateStatusLabels[candidateStatus]}
+                                </Badge>
+                              </div>
+
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
 
                               {candidateStatus === 'selected' && (
                                 <Tooltip>
@@ -987,6 +991,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                     <Button
                                       size="sm"
                                       variant="default"
+                                      className="w-full justify-center"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleConvertToEmployee(candidate.id);
@@ -1009,7 +1014,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="text-primary hover:text-primary"
+                                      className="w-full justify-center text-primary hover:text-primary"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setTransferCandidateTarget(candidate);
@@ -1027,14 +1032,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               )}
 
                               {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
-                                <div className="flex justify-end gap-1">
+                                <>
                                   {candidateStatus !== 'selected' && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
                                           size="sm"
                                           variant="outline"
-                                          className="text-success hover:text-success"
+                                          className="w-full justify-center text-success hover:text-success"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleCandidateStatusChange(candidate.id, 'selected');
@@ -1056,7 +1061,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="text-destructive hover:text-destructive"
+                                        className="w-full justify-center text-destructive hover:text-destructive"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setActingCandidate({ id: candidate.id, name: `${candidate.first_name} ${candidate.last_name}` });
@@ -1078,7 +1083,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        className="text-warning hover:text-warning"
+                                        className="w-full justify-center text-warning hover:text-warning"
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           setActingCandidate({ id: candidate.id, name: `${candidate.first_name} ${candidate.last_name}` });
@@ -1094,7 +1099,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                       <p>{isSelectionLimitReached && candidateStatus !== 'selected' ? `Límite de vacantes alcanzado (${positionsCount})` : 'Registrar que el candidato desistió'}</p>
                                     </TooltipContent>
                                   </Tooltip>
-                                </div>
+                                </>
                               )}
 
                               {canDeleteCandidateWithoutProcess(candidate) && (
@@ -1103,7 +1108,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="text-destructive hover:text-destructive"
+                                      className="w-full justify-center text-destructive hover:text-destructive"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         setDeleteCandidateTarget(candidate);
@@ -1119,6 +1124,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                   </TooltipContent>
                                 </Tooltip>
                               )}
+                              </div>
                             </div>
                           </div>
                         );
