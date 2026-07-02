@@ -232,7 +232,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
           courseId: course.id,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar audio'));
       if (data?.error) throw new Error(data.error);
 
       if (data?.audioUrl) {
