@@ -203,6 +203,7 @@ export const requisitionFormSchema = z.object({
   cargo_a_reemplazar: z.string().optional(),
   persona_a_reemplazar: z.array(z.string()).optional(),
   requiere_herramienta_trabajo: z.boolean().default(false),
+  proceso_exclusivo_pcd: z.boolean().default(false),
   horario_trabajo: z.string().optional(),
   dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', '2_dias', '4_dias', '7_dias'], { required_error: 'El día de descanso es requerido' }),
   // Contract type
