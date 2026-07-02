@@ -4218,6 +4218,7 @@ export type Database = {
             | Database["public"]["Enums"]["marital_status_type"]
             | null
           middle_name: string | null
+          proceso_exclusivo_pcd: boolean
           second_last_name: string | null
           status: Database["public"]["Enums"]["employee_status"]
           updated_at: string
@@ -4253,6 +4254,7 @@ export type Database = {
             | Database["public"]["Enums"]["marital_status_type"]
             | null
           middle_name?: string | null
+          proceso_exclusivo_pcd?: boolean
           second_last_name?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
@@ -4288,6 +4290,7 @@ export type Database = {
             | Database["public"]["Enums"]["marital_status_type"]
             | null
           middle_name?: string | null
+          proceso_exclusivo_pcd?: boolean
           second_last_name?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
