@@ -4,14 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { usePayrollConfig, useUpsertPayrollConfig } from '@/hooks/usePayrollConfig';
+import { useCompanyPolicyUsers, useLaborDisconnectionPolicy, useUpsertLaborDisconnectionPolicy } from '@/hooks/useLaborDisconnectionPolicy';
 import { toast } from '@/hooks/use-toast';
-import { Settings, Clock, Moon, Percent, Save, Loader2 } from 'lucide-react';
+import { Settings, Clock, Moon, Percent, Save, Loader2, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function ConfiguracionLaboral() {
   const { data: config, isLoading } = usePayrollConfig();
+  const { data: disconnectionPolicy, isLoading: isPolicyLoading } = useLaborDisconnectionPolicy();
+  const { data: policyUsers = [] } = useCompanyPolicyUsers();
   const upsert = useUpsertPayrollConfig();
+  const upsertDisconnection = useUpsertLaborDisconnectionPolicy();
 
   const [form, setForm] = useState({
     max_weekly_hours: '46',
@@ -26,6 +32,19 @@ export default function ConfiguracionLaboral() {
     surcharge_henf: '150',
     surcharge_rnf: '110',
     surcharge_dominical: '75',
+  });
+  const [disconnectionForm, setDisconnectionForm] = useState({
+    enabled: false,
+    policy_name: 'Politica de desconexion laboral',
+    legal_reference: 'Ley 2191 de 2022',
+    protected_start_time: '18:00',
+    protected_end_time: '07:00',
+    applies_weekends: true,
+    applies_holidays: true,
+    responsible_user_id: 'none',
+    last_review_date: '',
+    next_review_date: '',
+    exception_notes: '',
   });
 
   const sanitizeNonNegative = (value: string) => {
@@ -54,6 +73,24 @@ export default function ConfiguracionLaboral() {
     }
   }, [config]);
 
+  useEffect(() => {
+    if (disconnectionPolicy) {
+      setDisconnectionForm({
+        enabled: disconnectionPolicy.enabled,
+        policy_name: disconnectionPolicy.policy_name || 'Politica de desconexion laboral',
+        legal_reference: disconnectionPolicy.legal_reference || 'Ley 2191 de 2022',
+        protected_start_time: disconnectionPolicy.protected_start_time?.substring(0, 5) || '18:00',
+        protected_end_time: disconnectionPolicy.protected_end_time?.substring(0, 5) || '07:00',
+        applies_weekends: disconnectionPolicy.applies_weekends,
+        applies_holidays: disconnectionPolicy.applies_holidays,
+        responsible_user_id: disconnectionPolicy.responsible_user_id || 'none',
+        last_review_date: disconnectionPolicy.last_review_date || '',
+        next_review_date: disconnectionPolicy.next_review_date || '',
+        exception_notes: disconnectionPolicy.exception_notes || '',
+      });
+    }
+  }, [disconnectionPolicy]);
+
   const handleSave = async () => {
     try {
       await upsert.mutateAsync({
@@ -68,9 +105,23 @@ export default function ConfiguracionLaboral() {
         surcharge_rnf: Math.max(0, Number(form.surcharge_rnf || 0)),
         surcharge_dominical: Math.max(0, Number(form.surcharge_dominical || 0)),
       });
-      toast({ title: 'Configuración guardada correctamente' });
-    } catch (err: any) {
-      toast({ title: 'Error al guardar', description: err.message, variant: 'destructive' });
+      await upsertDisconnection.mutateAsync({
+        enabled: disconnectionForm.enabled,
+        policy_name: disconnectionForm.policy_name.trim() || 'Politica de desconexion laboral',
+        legal_reference: disconnectionForm.legal_reference.trim() || 'Ley 2191 de 2022',
+        protected_start_time: disconnectionForm.protected_start_time || '18:00',
+        protected_end_time: disconnectionForm.protected_end_time || '07:00',
+        applies_weekends: disconnectionForm.applies_weekends,
+        applies_holidays: disconnectionForm.applies_holidays,
+        responsible_user_id: disconnectionForm.responsible_user_id === 'none' ? null : disconnectionForm.responsible_user_id,
+        last_review_date: disconnectionForm.last_review_date || null,
+        next_review_date: disconnectionForm.next_review_date || null,
+        exception_notes: disconnectionForm.exception_notes.trim() || null,
+      });
+      toast({ title: 'Configuracion guardada correctamente' });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'No se pudo guardar la configuracion.';
+      toast({ title: 'Error al guardar', description: message, variant: 'destructive' });
     }
   };
 
@@ -84,7 +135,7 @@ export default function ConfiguracionLaboral() {
     { key: 'surcharge_dominical', label: 'Dominical/Festivo Trabajado (%)', desc: 'Día de descanso laborado' },
   ] as const;
 
-  if (isLoading) {
+  if (isLoading || isPolicyLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
@@ -119,12 +170,12 @@ export default function ConfiguracionLaboral() {
           </div>
           <Button 
             onClick={handleSave} 
-            disabled={upsert.isPending} 
+            disabled={upsert.isPending || upsertDisconnection.isPending} 
             size="lg"
             className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
           >
-            {upsert.isPending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
-            {upsert.isPending ? 'Guardando...' : 'Guardar Cambios'}
+            {upsert.isPending || upsertDisconnection.isPending ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Save className="w-5 h-5 mr-2" />}
+            {upsert.isPending || upsertDisconnection.isPending ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
         </div>
       </div>
@@ -175,7 +226,7 @@ export default function ConfiguracionLaboral() {
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unidad de visualización UI</Label>
-                <Select value={form.display_unit} onValueChange={v => setForm(f => ({ ...f, display_unit: v as any }))}>
+                <Select value={form.display_unit} onValueChange={v => setForm(f => ({ ...f, display_unit: v as 'hours' | 'days' }))}>
                   <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                     <SelectValue />
                   </SelectTrigger>
@@ -184,6 +235,145 @@ export default function ConfiguracionLaboral() {
                     <SelectItem value="days">Mostrar en Días</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
+            <CardHeader className="bg-background border-b border-border/50 pb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-black tracking-tight">Desconexion Laboral</CardTitle>
+                  <CardDescription className="text-xs">Politica, horarios protegidos y revision</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+              <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-background p-4">
+                <div>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Politica activa</Label>
+                  <p className="mt-1 text-xs text-muted-foreground">Habilita seguimiento operativo sin bloquear envios.</p>
+                </div>
+                <Switch
+                  checked={disconnectionForm.enabled}
+                  onCheckedChange={(checked) => setDisconnectionForm((prev) => ({ ...prev, enabled: checked }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Nombre de politica</Label>
+                <Input
+                  value={disconnectionForm.policy_name}
+                  onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, policy_name: event.target.value }))}
+                  className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Referencia legal</Label>
+                <Input
+                  value={disconnectionForm.legal_reference}
+                  onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, legal_reference: event.target.value }))}
+                  className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Inicio protegido</Label>
+                  <Input
+                    type="time"
+                    value={disconnectionForm.protected_start_time}
+                    onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, protected_start_time: event.target.value }))}
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fin protegido</Label>
+                  <Input
+                    type="time"
+                    value={disconnectionForm.protected_end_time}
+                    onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, protected_end_time: event.target.value }))}
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4">
+                  <span>
+                    <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Fines de semana</span>
+                    <span className="text-xs text-muted-foreground">Aplicar desconexion sabados y domingos.</span>
+                  </span>
+                  <Switch
+                    checked={disconnectionForm.applies_weekends}
+                    onCheckedChange={(checked) => setDisconnectionForm((prev) => ({ ...prev, applies_weekends: checked }))}
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background p-4">
+                  <span>
+                    <span className="block text-[10px] font-black uppercase tracking-widest text-muted-foreground">Festivos</span>
+                    <span className="text-xs text-muted-foreground">Aplicar desconexion en dias festivos.</span>
+                  </span>
+                  <Switch
+                    checked={disconnectionForm.applies_holidays}
+                    onCheckedChange={(checked) => setDisconnectionForm((prev) => ({ ...prev, applies_holidays: checked }))}
+                  />
+                </label>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Responsable</Label>
+                <Select
+                  value={disconnectionForm.responsible_user_id}
+                  onValueChange={(value) => setDisconnectionForm((prev) => ({ ...prev, responsible_user_id: value }))}
+                >
+                  <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-border">
+                    <SelectItem value="none">Sin responsable asignado</SelectItem>
+                    {policyUsers.map((policyUser) => (
+                      <SelectItem key={policyUser.id} value={policyUser.id}>
+                        {policyUser.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Ultima revision</Label>
+                  <Input
+                    type="date"
+                    value={disconnectionForm.last_review_date}
+                    onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, last_review_date: event.target.value }))}
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Proxima revision</Label>
+                  <Input
+                    type="date"
+                    value={disconnectionForm.next_review_date}
+                    onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, next_review_date: event.target.value }))}
+                    className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Excepciones documentadas</Label>
+                <Textarea
+                  value={disconnectionForm.exception_notes}
+                  onChange={(event) => setDisconnectionForm((prev) => ({ ...prev, exception_notes: event.target.value }))}
+                  placeholder="Cargos de direccion, disponibilidad permanente, urgencias, fuerza mayor..."
+                  className="min-h-28 rounded-2xl bg-background border-border focus:bg-background"
+                />
               </div>
             </CardContent>
           </Card>
