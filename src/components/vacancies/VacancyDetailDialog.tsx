@@ -951,7 +951,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                         return (
                           <div
                             key={candidate.id}
-                            className="grid gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-background lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-center"
+                            className="grid gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-background xl:grid-cols-[minmax(180px,0.9fr)_minmax(0,1.7fr)] xl:items-center"
                             onClick={() => openCandidateDetail(candidate.id)}
                           >
                             <div className="flex min-w-0 items-start gap-3">
@@ -976,14 +976,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                               </div>
                             </div>
 
-                            <div className="grid gap-3 lg:min-w-[620px]">
+                            <div className="grid min-w-0 gap-3">
                               <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
                                 <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                   {candidateStatusLabels[candidateStatus]}
                                 </Badge>
                               </div>
 
-                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                              <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
 
                               {candidateStatus === 'selected' && (
                                 <Tooltip>
