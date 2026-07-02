@@ -34,6 +34,7 @@ import {
   User,
   Trash2,
   UserX,
+  ArrowRightLeft,
 } from 'lucide-react';
 import {
   Dialog,
@@ -75,6 +76,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateCandidate, useConvertToEmployee, useDeleteCandidate } from '@/hooks/useCandidates';
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
+import { CandidateTransferDialog } from '@/components/selection/CandidateTransferDialog';
 import { CandidateReasonDialog } from '@/components/selection/CandidateReasonDialog';
 import { CandidateKanban } from '@/components/selection/CandidateKanban';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
@@ -119,6 +121,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [actingCandidate, setActingCandidate] = useState<{ id: string; name: string } | null>(null);
   const [deleteCandidateTarget, setDeleteCandidateTarget] = useState<any | null>(null);
+  const [transferCandidateTarget, setTransferCandidateTarget] = useState<any | null>(null);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -1000,6 +1003,29 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                 </Tooltip>
                               )}
 
+                              {candidateStatus !== 'hired' && !candidate.employee_id && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-primary hover:text-primary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setTransferCandidateTarget(candidate);
+                                      }}
+                                      disabled={status === 'cancelled'}
+                                    >
+                                      <ArrowRightLeft className="w-4 h-4 mr-1" />
+                                      Trasladar
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Trasladar candidato a otro proceso</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+
                               {candidateStatus !== 'hired' && candidateStatus !== 'withdrawn' && candidateStatus !== 'not_selected' && (
                                 <div className="flex justify-end gap-1">
                                   {candidateStatus !== 'selected' && (
@@ -1291,6 +1317,19 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
         open={showCandidateForm}
         onOpenChange={setShowCandidateForm}
         vacancyId={vacancyId}
+      />
+
+      <CandidateTransferDialog
+        open={!!transferCandidateTarget}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setTransferCandidateTarget(null);
+        }}
+        candidate={transferCandidateTarget}
+        currentVacancy={{
+          id: vacancy.id,
+          position_title: vacancy.position_title,
+          operation_centers: (vacancy as any).operation_centers,
+        }}
       />
 
       {/* Generate Registration Link Dialog */}

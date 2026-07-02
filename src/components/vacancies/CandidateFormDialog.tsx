@@ -327,7 +327,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Vacante *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={isEditMode}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar vacante" />
