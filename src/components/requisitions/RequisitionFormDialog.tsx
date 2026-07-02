@@ -20,6 +20,7 @@ import {
   Tool,
   Wrench,
   Loader2,
+  Accessibility,
   type LucideIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -43,6 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -134,6 +136,7 @@ export function RequisitionFormDialog({
       cantidad_vacantes_requeridas: 1,
       cargo_solicitado: '',
       requiere_herramienta_trabajo: false,
+      proceso_exclusivo_pcd: false,
       incluye_alimentacion: false,
       incluye_desplazamiento: false,
       motivo_solicitud: 'nuevo_cargo',
@@ -160,6 +163,7 @@ export function RequisitionFormDialog({
         cargo_a_reemplazar: requisition.cargo_a_reemplazar || undefined,
         persona_a_reemplazar: requisition.persona_a_reemplazar ? requisition.persona_a_reemplazar.split(', ') : [],
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
+        proceso_exclusivo_pcd: requisition.proceso_exclusivo_pcd || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
         dia_descanso_obligatorio: requisition.dia_descanso_obligatorio as DayOfWeek | undefined,
         
@@ -179,6 +183,7 @@ export function RequisitionFormDialog({
         cantidad_vacantes_requeridas: 1,
         cargo_solicitado: '',
         requiere_herramienta_trabajo: false,
+        proceso_exclusivo_pcd: false,
         incluye_alimentacion: false,
         incluye_desplazamiento: false,
         motivo_solicitud: 'nuevo_cargo',
@@ -199,6 +204,7 @@ export function RequisitionFormDialog({
       cargo_a_reemplazar: data.cargo_a_reemplazar || null,
       persona_a_reemplazar: data.persona_a_reemplazar && data.persona_a_reemplazar.length > 0 ? data.persona_a_reemplazar.join(', ') : null,
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
+      proceso_exclusivo_pcd: data.proceso_exclusivo_pcd,
       horario_trabajo: data.horario_trabajo || null,
       dia_descanso_obligatorio: data.dia_descanso_obligatorio || null,
       
@@ -473,6 +479,31 @@ export function RequisitionFormDialog({
                               {...field}
                             />
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="proceso_exclusivo_pcd"
+                      render={({ field }) => (
+                        <FormItem className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={(checked) => field.onChange(checked === true)}
+                                className="mt-0.5 h-5 w-5 rounded-md border-amber-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-white"
+                              />
+                            </FormControl>
+                            <div className="flex min-w-0 flex-1 items-start gap-2">
+                              <Accessibility className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+                              <FormLabel className="cursor-pointer text-sm font-bold leading-5 text-amber-950">
+                                Proceso de selección exclusivo para personas en situación de discapacidad (PcD)
+                              </FormLabel>
+                            </div>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}

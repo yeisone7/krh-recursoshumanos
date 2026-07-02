@@ -22,6 +22,7 @@ export interface PersonnelRequisition {
   cargo_a_reemplazar: string | null;
   persona_a_reemplazar: string | null;
   requiere_herramienta_trabajo: boolean;
+  proceso_exclusivo_pcd: boolean;
   horario_trabajo: string | null;
   dia_descanso_obligatorio: string | null;
   // New fields for salary and contract type
