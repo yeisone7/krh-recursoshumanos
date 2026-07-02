@@ -35,6 +35,7 @@ import {
   ExternalLink,
   Plus,
   Pencil,
+  ArrowRightLeft,
 } from 'lucide-react';
 
 import {
@@ -70,6 +71,7 @@ import { SelectionStepFormDialog } from './SelectionStepFormDialog';
 import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
+import { CandidateTransferDialog } from './CandidateTransferDialog';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
 import { generateExamOrderPdf } from '@/lib/examOrderPdf';
 import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
@@ -131,6 +133,7 @@ export function CandidateDetailDialog({
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [showThanksDialog, setShowThanksDialog] = useState(false);
+  const [showTransferDialog, setShowTransferDialog] = useState(false);
 
   const { data: candidate, isLoading } = useCandidate(candidateId);
   const updateCandidate = useUpdateCandidate();
@@ -378,6 +381,18 @@ export function CandidateDetailDialog({
                 </div>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {status !== 'hired' && !candidate.employee_id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-1.5 text-xs"
+                    onClick={() => setShowTransferDialog(true)}
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5" />
+                    Trasladar
+                  </Button>
+                )}
                 {canEditCandidate && (
                   <Button
                     type="button"
@@ -1167,6 +1182,13 @@ export function CandidateDetailDialog({
         vacancyId={candidate.vacancy_id}
         candidateToEdit={candidate as any}
         onSuccess={() => setFamilyRefreshKey((value) => value + 1)}
+      />
+
+      <CandidateTransferDialog
+        open={showTransferDialog}
+        onOpenChange={setShowTransferDialog}
+        candidate={candidate}
+        currentVacancy={vacancy}
       />
 
       {/* Document Form Dialog */}

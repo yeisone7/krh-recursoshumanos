@@ -170,6 +170,119 @@ export function useUpdateCandidate() {
   });
 }
 
+export interface TransferCandidateProcessParams {
+  candidateId: string;
+  targetVacancyId: string;
+  reason: string;
+}
+
+export function useTransferCandidateProcess() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ candidateId, targetVacancyId, reason }: TransferCandidateProcessParams) => {
+      if (!currentCompanyId) {
+        throw new Error('No hay una compañía activa para trasladar el candidato.');
+      }
+
+      const trimmedReason = reason.trim();
+      if (!trimmedReason) {
+        throw new Error('Debe ingresar el motivo del traslado.');
+      }
+
+      const { data: candidate, error: candidateError } = await supabase
+        .from('candidates')
+        .select(`
+          id,
+          company_id,
+          vacancy_id,
+          first_name,
+          last_name,
+          status,
+          employee_id,
+          vacancies:vacancy_id(id, position_title)
+        `)
+        .eq('id', candidateId)
+        .eq('company_id', currentCompanyId)
+        .single();
+
+      if (candidateError) throw candidateError;
+      if (!candidate) throw new Error('No se encontró el candidato en la empresa actual.');
+      if (candidate.status === 'hired' || candidate.employee_id) {
+        throw new Error('No se puede trasladar un candidato que ya fue vinculado como empleado.');
+      }
+      if (candidate.vacancy_id === targetVacancyId) {
+        throw new Error('Seleccione una vacante destino diferente a la actual.');
+      }
+
+      const { data: targetVacancy, error: vacancyError } = await supabase
+        .from('vacancies')
+        .select('id, position_title, company_id, status')
+        .eq('id', targetVacancyId)
+        .eq('company_id', currentCompanyId)
+        .in('status', ['open', 'in_process', 'paused'])
+        .single();
+
+      if (vacancyError) throw vacancyError;
+      if (!targetVacancy) {
+        throw new Error('La vacante destino no está disponible para traslado.');
+      }
+
+      const sourceVacancy = Array.isArray((candidate as any).vacancies)
+        ? (candidate as any).vacancies[0]
+        : (candidate as any).vacancies;
+
+      const { data: updatedCandidate, error: updateError } = await supabase
+        .from('candidates')
+        .update({ vacancy_id: targetVacancyId })
+        .eq('id', candidateId)
+        .eq('company_id', currentCompanyId)
+        .select()
+        .single();
+
+      if (updateError) throw updateError;
+
+      if (user) {
+        await supabase.from('audit_logs').insert({
+          user_id: user.id,
+          user_email: user.email,
+          company_id: currentCompanyId,
+          action: 'transfer_candidate_process',
+          entity_type: 'candidate',
+          entity_id: candidateId,
+          entity_name: `${candidate.first_name} ${candidate.last_name}`,
+          old_values: {
+            vacancy_id: candidate.vacancy_id,
+            vacancy_title: sourceVacancy?.position_title || null,
+          },
+          new_values: {
+            vacancy_id: targetVacancy.id,
+            vacancy_title: targetVacancy.position_title,
+            reason: trimmedReason,
+          },
+          user_agent: navigator.userAgent,
+        });
+      }
+
+      return {
+        candidate: updatedCandidate,
+        sourceVacancyId: candidate.vacancy_id,
+        targetVacancyId: targetVacancy.id,
+      };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['candidate', data.candidate.id] });
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['open_vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy', data.sourceVacancyId] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy', data.targetVacancyId] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+    },
+  });
+}
+
 export function useDeleteCandidate() {
   const queryClient = useQueryClient();
   const { currentCompanyId } = useAuth();
