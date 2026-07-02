@@ -336,11 +336,18 @@ export default function Requisiciones() {
                       <CardContent className="p-6 space-y-4">
                         <div className="flex justify-between items-start gap-4">
                           <div className="min-w-0 flex-1">
-                            <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
-                              {req.requisition_code || 'RQ-PEND'}
-                            </Badge>
+                            <div className="mb-2 flex flex-wrap items-center gap-2">
+                              <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
+                                {req.requisition_code || 'RQ-PEND'}
+                              </Badge>
+                              {req.proceso_exclusivo_pcd && (
+                                <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[9px] font-black tracking-widest text-amber-700">
+                                  PcD
+                                </Badge>
+                              )}
+                            </div>
                             {closedVacancies.length > 0 && (
-                              <Badge variant="outline" className="mb-2 ml-2 w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600">
+                              <Badge variant="outline" className="mb-2 w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600">
                                 Vacante cerrada
                               </Badge>
                             )}
@@ -433,18 +440,25 @@ export default function Requisiciones() {
                                 <FileText className="w-5 h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <Badge variant="outline" className="mb-2 w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
-                                  {req.requisition_code || 'RQ-PEND'}
-                                </Badge>
-                                {closedVacancies.length > 0 && (
-                                  <Badge
-                                    variant="outline"
-                                    title={closedVacancies.map(v => v.position_title).join(', ')}
-                                    className="mb-2 ml-2 w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600"
-                                  >
-                                    Vacante cerrada
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
+                                    {req.requisition_code || 'RQ-PEND'}
                                   </Badge>
-                                )}
+                                  {req.proceso_exclusivo_pcd && (
+                                    <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[9px] font-black tracking-widest text-amber-700">
+                                      PcD
+                                    </Badge>
+                                  )}
+                                  {closedVacancies.length > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      title={closedVacancies.map(v => v.position_title).join(', ')}
+                                      className="w-fit border-yellow-500/30 bg-yellow-400/15 text-[9px] font-black tracking-widest text-orange-600"
+                                    >
+                                      Vacante cerrada
+                                    </Badge>
+                                  )}
+                                </div>
                                 <p className="font-black tracking-tight text-foreground text-sm leading-none mb-1 uppercase truncate">{req.cargo_solicitado}</p>
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
                                   <Users className="w-3.5 h-3.5 text-primary/60" />

@@ -361,7 +361,7 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
                               )}
                               {filteredApprovedRequisitions.filter(req => !!req.id).map((req) => (
                                 <SelectItem key={req.id} value={req.id}>
-                                  {getRequisitionDisplayCode(req)} - {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
+                                  {getRequisitionDisplayCode(req)}{req.proceso_exclusivo_pcd ? ' - PcD' : ''} - {req.cargo_solicitado} - {req.cantidad_vacantes_requeridas} vacante(s)
                                   {req.operation_centers?.name && ` (${req.operation_centers.name})`}
                                 </SelectItem>
                               ))}

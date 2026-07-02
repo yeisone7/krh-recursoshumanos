@@ -262,9 +262,16 @@ export default function Seleccion() {
         title: vacancy.position_title,
         subtitle: `${vacancy.department_area || 'Sin área'} • ${vacancy.positions_count} posicion${vacancy.positions_count > 1 ? 'es' : ''}`,
         badge: (
-          <Badge variant="outline" className={cn('max-w-full truncate font-black uppercase tracking-widest text-[9px] px-2', statusStyle.bg, statusStyle.text, statusStyle.border)}>
-            {vacancyStatusLabels[status]}
-          </Badge>
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            {requisition?.proceso_exclusivo_pcd && (
+              <Badge variant="outline" className="border-amber-300 bg-amber-50 px-2 text-[9px] font-black uppercase tracking-widest text-amber-700">
+                PcD
+              </Badge>
+            )}
+            <Badge variant="outline" className={cn('max-w-full truncate font-black uppercase tracking-widest text-[9px] px-2', statusStyle.bg, statusStyle.text, statusStyle.border)}>
+              {vacancyStatusLabels[status]}
+            </Badge>
+          </div>
         ),
         fields: [
           { label: 'Requisición', value: requisitionCode },
@@ -551,9 +558,16 @@ export default function Seleccion() {
                           </TableCell>
                           <TableCell className="px-2 py-2.5">
                             <div className="flex flex-col gap-1">
-                              <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
-                                {requisitionCode}
-                              </Badge>
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                                  {requisitionCode}
+                                </Badge>
+                                {requisition?.proceso_exclusivo_pcd && (
+                                  <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-amber-700">
+                                    PcD
+                                  </Badge>
+                                )}
+                              </div>
                               <span className="truncate text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
                                 {requisition?.cargo_solicitado || 'Sin requisición'}
                               </span>

@@ -604,9 +604,16 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Codigo</p>
-                          <Badge variant="outline" className="border-primary/20 bg-primary/10 text-xs font-semibold text-primary">
-                            {requisition.requisition_code || 'RQ-PEND'}
-                          </Badge>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="outline" className="border-primary/20 bg-primary/10 text-xs font-semibold text-primary">
+                              {requisition.requisition_code || 'RQ-PEND'}
+                            </Badge>
+                            {requisition.proceso_exclusivo_pcd && (
+                              <Badge variant="outline" className="border-amber-300 bg-amber-50 text-[10px] font-black uppercase tracking-widest text-amber-700">
+                                PcD
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <p className="text-xs text-muted-foreground">Cargo Solicitado</p>
