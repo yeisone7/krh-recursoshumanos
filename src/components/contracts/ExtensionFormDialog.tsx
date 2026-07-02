@@ -2,8 +2,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, addMonths, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, FileText, Plus, AlertTriangle, Info, Scale } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CalendarIcon, FileText, Plus, AlertTriangle, Info, Scale, Pencil } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   Dialog,
@@ -64,6 +64,8 @@ interface ExtensionFormDialogProps {
   originalEndDate: Date | null;
   contractType: string;
   existingExtensions: ContractExtension[];
+  extensionToEdit?: ContractExtension | null;
+  maxEndDate?: Date | null;
   onSubmit?: (data: ExtensionFormData & { contractId: string; extensionNumber: number }) => void;
 }
 
@@ -78,6 +80,8 @@ export function ExtensionFormDialog({
   originalEndDate,
   contractType,
   existingExtensions,
+  extensionToEdit,
+  maxEndDate,
   onSubmit,
 }: ExtensionFormDialogProps) {
   const [validationResult, setValidationResult] = useState<{
@@ -104,28 +108,43 @@ export function ExtensionFormDialog({
   const legalStatus = getContractLegalStatus(contractData);
   const preavisoPassed = isPreavisoDeadlinePassed(currentEndDate);
 
-  // Start date is always the day after the current end date
-  const extensionStartDate = addDays(currentEndDate, 1);
+  const isEditMode = !!extensionToEdit;
+  const extensionStartDate = useMemo(
+    () => extensionToEdit?.startDate || addDays(currentEndDate, 1),
+    [extensionToEdit?.id, currentEndDate]
+  );
 
   const form = useForm<ExtensionFormData>({
     resolver: zodResolver(extensionFormSchema),
     defaultValues: {
       startDate: extensionStartDate,
-      extensionType: preavisoPassed ? 'automatica' : 'pactada',
-      notes: '',
+      endDate: extensionToEdit?.endDate,
+      extensionType: extensionToEdit?.extensionType || (preavisoPassed ? 'automatica' : 'pactada'),
+      notes: extensionToEdit?.notes || '',
     },
   });
 
   const watchedEndDate = form.watch('endDate');
   const watchedExtensionType = form.watch('extensionType');
 
+  useEffect(() => {
+    if (!open) return;
+
+    form.reset({
+      startDate: extensionStartDate,
+      endDate: extensionToEdit?.endDate,
+      extensionType: extensionToEdit?.extensionType || (preavisoPassed ? 'automatica' : 'pactada'),
+      notes: extensionToEdit?.notes || '',
+    });
+  }, [open, extensionToEdit?.id, extensionStartDate, preavisoPassed]);
+
   // When extension type changes to automatic, auto-calculate end date
   useEffect(() => {
-    if (watchedExtensionType === 'automatica') {
+    if (!isEditMode && watchedExtensionType === 'automatica') {
       const autoEndDate = calculateAutomaticExtensionEndDate(contractData, currentEndDate);
       form.setValue('endDate', autoEndDate);
     }
-  }, [watchedExtensionType]);
+  }, [watchedExtensionType, isEditMode]);
 
   // Validate extension whenever end date changes
   useEffect(() => {
@@ -136,9 +155,17 @@ export function ExtensionFormDialog({
         extensionNumber,
         currentEndDate
       );
-      setValidationResult(result);
+      const maxDateErrors = maxEndDate && watchedEndDate >= maxEndDate
+        ? [`La fecha fin debe ser anterior al inicio de la siguiente prórroga (${format(maxEndDate, 'PPP', { locale: es })}).`]
+        : [];
+
+      setValidationResult({
+        ...result,
+        isValid: result.isValid && maxDateErrors.length === 0,
+        errors: [...result.errors, ...maxDateErrors],
+      });
     }
-  }, [watchedEndDate, extensionNumber]);
+  }, [watchedEndDate, extensionNumber, maxEndDate]);
 
   // Helper function to calculate suggested end date (minimum 12 months if required)
   const getSuggestedMinEndDate = () => {
@@ -178,9 +205,9 @@ export function ExtensionFormDialog({
         <DialogHeader className="shrink-0 border-b bg-muted/30 px-5 py-4 pr-12 sm:px-6 sm:py-5">
           <DialogTitle className="font-display text-lg sm:text-xl flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Plus className="w-5 h-5" />
+              {isEditMode ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
             </span>
-            Nueva Prórroga
+            {isEditMode ? 'Editar Prórroga' : 'Nueva Prórroga'}
           </DialogTitle>
           <DialogDescription className="pl-[52px] text-sm">
             Prórroga #{extensionNumber} para el contrato de <strong>{employeeName}</strong>
@@ -290,7 +317,9 @@ export function ExtensionFormDialog({
                       </Button>
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Día siguiente a la vigencia actual (calculado automáticamente)
+                      {isEditMode
+                        ? 'La fecha de inicio se conserva para no romper la continuidad del historial'
+                        : 'Día siguiente a la vigencia actual (calculado automáticamente)'}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -311,7 +340,7 @@ export function ExtensionFormDialog({
                               'w-full pl-3 text-left font-normal',
                               !field.value && 'text-muted-foreground'
                             )}
-                            disabled={watchedExtensionType === 'automatica'}
+                            disabled={!isEditMode && watchedExtensionType === 'automatica'}
                           >
                             {field.value ? (
                               format(field.value, 'PPP', { locale: es })
@@ -327,14 +356,14 @@ export function ExtensionFormDialog({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
-                          disabled={(date) => date <= currentEndDate}
+                          disabled={(date) => date <= currentEndDate || (maxEndDate ? date >= maxEndDate : false)}
                           defaultMonth={currentEndDate}
                           initialFocus
                           className="pointer-events-auto"
                         />
                       </PopoverContent>
                     </Popover>
-                    {watchedExtensionType === 'automatica' && (
+                    {!isEditMode && watchedExtensionType === 'automatica' && (
                       <FormDescription className="text-xs text-muted-foreground">
                         Fecha calculada automáticamente según el término anterior
                       </FormDescription>
@@ -431,7 +460,7 @@ export function ExtensionFormDialog({
                 className="gradient-primary text-primary-foreground w-full sm:w-auto"
                 disabled={!validationResult.isValid}
               >
-                Registrar Prórroga
+                {isEditMode ? 'Guardar Cambios' : 'Registrar Prórroga'}
               </Button>
             </div>
           </form>

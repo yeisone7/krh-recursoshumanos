@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { format, differenceInDays } from 'date-fns';
+import { format, differenceInDays, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   FileText,
@@ -22,6 +22,7 @@ import {
   Loader2,
   FileType,
   RotateCw,
+  Pencil,
 } from 'lucide-react';
 
 import {
@@ -46,7 +47,7 @@ import { DocumentSection } from '@/components/documents/DocumentSection';
 import { TerminationProcessDialog } from '@/components/termination/TerminationProcessDialog';
 import { GenerateContractDialog } from './GenerateContractDialog';
 import { AutomaticExtensionRegularizationDialog } from './AutomaticExtensionRegularizationDialog';
-import { useCreateContractExtension, useApproveContract, useContract, useRegularizeAutomaticContractExtensions } from '@/hooks/useContracts';
+import { useCreateContractExtension, useUpdateContractExtension, useApproveContract, useContract, useRegularizeAutomaticContractExtensions } from '@/hooks/useContracts';
 import { useContractTerminationProcess } from '@/hooks/useTerminations';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useCompany } from '@/hooks/useCompanies';
@@ -85,6 +86,7 @@ type DbContractExtension = Database['public']['Tables']['contract_extensions']['
 
 export function ContractDetailDialog({ open, onOpenChange, contractId, contract: initialContract }: ContractDetailDialogProps) {
   const [showExtensionForm, setShowExtensionForm] = useState(false);
+  const [editingExtension, setEditingExtension] = useState<ContractExtension | null>(null);
   const [showTerminationDialog, setShowTerminationDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -95,6 +97,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const { data: dbContract, isLoading: isDbContractLoading } = useContract(contractId || undefined);
 
   const createExtension = useCreateContractExtension();
+  const updateExtension = useUpdateContractExtension();
   const regularizeAutomaticExtensions = useRegularizeAutomaticContractExtensions();
   const approveContract = useApproveContract();
   const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, hasPermission, canView, canUpdate, canApprove: canApproveModule } = useAuth();
@@ -285,6 +288,17 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       : !contract.currentEndDate
         ? 'Define la fecha fin actual del contrato para registrar una prórroga.'
         : null;
+  const sortedExtensions = [...contract.extensions].sort((a, b) => a.extensionNumber - b.extensionNumber);
+  const nextExtension = editingExtension
+    ? sortedExtensions.find((extension) => extension.extensionNumber > editingExtension.extensionNumber)
+    : null;
+  const extensionFormCurrentEndDate = editingExtension
+    ? addDays(editingExtension.startDate, -1)
+    : contract.currentEndDate;
+  const extensionFormNumber = editingExtension?.extensionNumber || contract.extensions.length + 1;
+  const extensionFormExistingExtensions = editingExtension
+    ? contract.extensions.filter((extension) => extension.id !== editingExtension.id)
+    : contract.extensions;
   
   // Check if there's a pending termination process (initiated but not completed)
   const hasPendingTermination = terminationProcess && !terminationProcess.isCompleted;
@@ -448,6 +462,30 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       return;
     }
 
+    setEditingExtension(null);
+    setShowExtensionForm(true);
+  };
+
+  const handleOpenEditExtension = (extension: ContractExtension) => {
+    if (!canUpdateContracts) {
+      toast({
+        title: 'Sin permiso',
+        description: 'No tienes permisos para editar prórrogas de contratos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isTerminated) {
+      toast({
+        title: 'Contrato terminado',
+        description: 'No se pueden editar prórrogas de un contrato terminado.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setEditingExtension(extension);
     setShowExtensionForm(true);
   };
 
@@ -469,6 +507,35 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       toast({
         title: 'Error',
         description: 'No se pudieron regularizar las prorrogas automaticas. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateExtension = async (data: ExtensionFormData & { contractId: string; extensionNumber: number }) => {
+    if (!editingExtension) return;
+
+    try {
+      await updateExtension.mutateAsync({
+        id: editingExtension.id,
+        start_date: format(data.startDate, 'yyyy-MM-dd'),
+        end_date: format(data.endDate, 'yyyy-MM-dd'),
+        reason: data.notes || null,
+        extension_type: data.extensionType,
+      });
+
+      toast({
+        title: 'Prórroga actualizada',
+        description: `La prórroga #${data.extensionNumber} fue actualizada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+      });
+
+      setEditingExtension(null);
+      setShowExtensionForm(false);
+    } catch (error) {
+      console.error('Error updating extension:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar la prórroga. Intente nuevamente.',
         variant: 'destructive',
       });
     }
@@ -707,11 +774,28 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                               <span className="text-xs font-bold text-accent">{ext.extensionNumber}</span>
                             </div>
                             <div className="flex-1 bg-accent-light/30 border border-accent/10 rounded-lg p-3">
-                              <div className="flex items-center justify-between mb-1">
+                              <div className="flex items-center justify-between gap-2 mb-1">
                                 <p className="font-medium text-sm">Prórroga #{ext.extensionNumber}</p>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(ext.createdAt, 'dd MMM yyyy', { locale: es })}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(ext.createdAt, 'dd MMM yyyy', { locale: es })}
+                                  </span>
+                                  {canUpdateContracts && !isTerminated && (
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 gap-1 px-2 text-xs text-primary hover:text-primary"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        handleOpenEditExtension(ext);
+                                      }}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                      Editar
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <span>{format(ext.startDate, 'dd/MM/yyyy')}</span>
@@ -906,22 +990,27 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       </Dialog>
 
       {/* Extension Form Dialog */}
-      {contract && contract.currentEndDate && (
+      {contract && extensionFormCurrentEndDate && (
         <ExtensionFormDialog
           open={showExtensionForm}
-          onOpenChange={setShowExtensionForm}
+          onOpenChange={(open) => {
+            setShowExtensionForm(open);
+            if (!open) setEditingExtension(null);
+          }}
           contractId={contract.id}
           employeeName={contract.employeeName}
-          currentEndDate={contract.currentEndDate}
-          extensionNumber={contract.extensions.length + 1}
+          currentEndDate={extensionFormCurrentEndDate}
+          extensionNumber={extensionFormNumber}
           contractStartDate={contract.startDate}
           originalEndDate={contract.originalEndDate}
           contractType={contract.contractType === 'fixed' ? 'fijo' : 
                         contract.contractType === 'indefinite' ? 'indefinido' :
                         contract.contractType === 'work_labor' ? 'obra_labor' :
                         contract.contractType === 'apprenticeship' ? 'aprendizaje' : 'servicios'}
-          existingExtensions={contract.extensions}
-          onSubmit={handleCreateExtension}
+          existingExtensions={extensionFormExistingExtensions}
+          extensionToEdit={editingExtension}
+          maxEndDate={nextExtension?.startDate || null}
+          onSubmit={editingExtension ? handleUpdateExtension : handleCreateExtension}
         />
       )}
 
