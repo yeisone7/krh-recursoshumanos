@@ -126,6 +126,7 @@ const fieldToTabMap: Record<string, string> = {
   isHeadOfHousehold: 'identity',
   disabilityType: 'identity',
   ethnicGroup: 'identity',
+  procesoExclusivoPcd: 'identity',
   isConflictVictim: 'identity',
   isDemobilized: 'identity',
 };
@@ -293,6 +294,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       isHeadOfHousehold: false,
       disabilityType: 'ninguna',
       ethnicGroup: 'ninguno',
+      procesoExclusivoPcd: false,
       isConflictVictim: false,
       isDemobilized: false,
       educationLevelIds: [],
@@ -396,6 +398,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         isHeadOfHousehold: (currentEmployeeData as any).is_head_of_household || false,
         disabilityType: (currentEmployeeData as any).disability_type || 'ninguna',
         ethnicGroup: (currentEmployeeData as any).ethnic_group || 'ninguno',
+        procesoExclusivoPcd: (currentEmployeeData as any).proceso_exclusivo_pcd || false,
         isConflictVictim: (currentEmployeeData as any).is_conflict_victim || false,
         isDemobilized: (currentEmployeeData as any).is_demobilized || false,
       });
@@ -416,6 +419,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         isHeadOfHousehold: false,
         disabilityType: 'ninguna',
         ethnicGroup: 'ninguno',
+        procesoExclusivoPcd: false,
         isConflictVictim: false,
         isDemobilized: false,
       });
@@ -951,6 +955,25 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                               </SelectContent>
                             </Select>
                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="procesoExclusivoPcd"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start justify-between gap-4 rounded-lg border border-amber-200 bg-amber-50/80 p-3 md:col-span-2">
+                            <div className="space-y-1">
+                              <FormLabel className="text-sm font-semibold text-amber-900 cursor-pointer">
+                                Vinculado por proceso exclusivo para personas en situación de discapacidad (PcD)
+                              </FormLabel>
+                              <p className="text-xs leading-relaxed text-amber-800/80">
+                                Activa esta opción solo cuando la vinculación corresponde a un proceso PcD.
+                              </p>
+                            </div>
+                            <FormControl>
+                              <Switch checked={field.value} onCheckedChange={field.onChange} />
+                            </FormControl>
                           </FormItem>
                         )}
                       />

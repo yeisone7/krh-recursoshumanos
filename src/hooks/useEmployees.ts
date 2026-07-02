@@ -146,6 +146,12 @@ function applyRetiredVisibilityFilter(query: any, includeRetired?: boolean) {
     .or('is_active.eq.true,status.neq.active');
 }
 
+function applyEmployeePcdFilter(query: any, pcdOnly?: boolean) {
+  if (!pcdOnly) return query;
+
+  return query.eq('proceso_exclusivo_pcd', true);
+}
+
 function getEmployeeSearchTerms(search?: string) {
   return search?.trim().toLowerCase().split(/\s+/).filter(Boolean) || [];
 }
@@ -308,14 +314,15 @@ export function useEmployeesPaginated(options: {
   status?: string;
   centerId?: string;
   includeRetired?: boolean;
+  pcdOnly?: boolean;
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const { page = 1, pageSize = 12, search, status, centerId, includeRetired = false } = options;
+  const { page = 1, pageSize = 12, search, status, centerId, includeRetired = false, pcdOnly = false } = options;
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, includeRetired, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['employees_v2_paginated', currentCompanyId, page, pageSize, search, status, centerId, includeRetired, pcdOnly, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
 
@@ -340,6 +347,7 @@ export function useEmployeesPaginated(options: {
 
       query = applyEmployeeStatusFilter(query, status);
       query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
+      query = applyEmployeePcdFilter(query, pcdOnly);
 
       // 2. Pagination range
       const from = (page - 1) * pageSize;
@@ -378,14 +386,15 @@ export function useEmployeesInfinite(options: {
   status?: string;
   centerId?: string;
   includeRetired?: boolean;
+  pcdOnly?: boolean;
 }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const { pageSize = 12, search, status, centerId, includeRetired = false } = options;
+  const { pageSize = 12, search, status, centerId, includeRetired = false, pcdOnly = false } = options;
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useInfiniteQuery({
-    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, includeRetired, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['employees_v2_infinite', currentCompanyId, pageSize, search, status, centerId, includeRetired, pcdOnly, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
 
@@ -409,6 +418,7 @@ export function useEmployeesInfinite(options: {
       );
       query = applyEmployeeStatusFilter(query, status);
       query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
+      query = applyEmployeePcdFilter(query, pcdOnly);
 
       // 2. Pagination
       const from = pageParam * pageSize;
@@ -571,6 +581,7 @@ export function useCreateEmployee() {
           is_head_of_household: data.isHeadOfHousehold || false,
           disability_type: data.disabilityType && data.disabilityType !== 'ninguna' ? data.disabilityType : null,
           ethnic_group: data.ethnicGroup && data.ethnicGroup !== 'ninguno' ? data.ethnicGroup : null,
+          proceso_exclusivo_pcd: data.procesoExclusivoPcd || false,
           is_conflict_victim: data.isConflictVictim || false,
           is_demobilized: data.isDemobilized || false,
           avatar_url: data.avatarUrl || null,
@@ -795,6 +806,7 @@ export function useUpdateEmployee() {
           is_head_of_household: data.isHeadOfHousehold || false,
           disability_type: data.disabilityType && data.disabilityType !== 'ninguna' ? data.disabilityType : null,
           ethnic_group: data.ethnicGroup && data.ethnicGroup !== 'ninguno' ? data.ethnicGroup : null,
+          proceso_exclusivo_pcd: data.procesoExclusivoPcd || false,
           is_conflict_victim: data.isConflictVictim || false,
           is_demobilized: data.isDemobilized || false,
           avatar_url: avatarUrl !== undefined ? avatarUrl : undefined,

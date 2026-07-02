@@ -213,7 +213,7 @@ export function EmployeeCard({
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-border">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className={cn(
             isRetired
               ? isEnRetiro
@@ -228,6 +228,11 @@ export function EmployeeCard({
           {isNew && (
             <Badge variant="outline" className="bg-warning-light text-warning border-warning/20 gap-1">
               ✨ Nuevo
+            </Badge>
+          )}
+          {employee.proceso_exclusivo_pcd && (
+            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 gap-1 font-semibold">
+              PcD
             </Badge>
           )}
           {hasProfesiograma && (

@@ -79,6 +79,7 @@ export default function Empleados() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
+  const [pcdFilter, setPcdFilter] = useState<string>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -130,6 +131,7 @@ export default function Empleados() {
     status: statusFilter,
     centerId: centerFilter,
     includeRetired: showRetiredEmployees,
+    pcdOnly: pcdFilter === 'pcd',
   });
 
   // Flatten the pages from infiniteData
@@ -275,6 +277,7 @@ export default function Empleados() {
     setSearchQuery('');
     setStatusFilter('all');
     setCenterFilter('all');
+    setPcdFilter('all');
     setShowRetiredEmployees(false);
     toast.success('Filtros limpiados');
   };
@@ -292,6 +295,7 @@ export default function Empleados() {
         'Número Documento': emp.document_number || '',
         'Cargo': emp.work_info?.position_name || 'N/A',
         'Centro de Operación': emp.operation_centers?.name || 'N/A',
+        'Proceso PcD': emp.proceso_exclusivo_pcd ? 'Sí' : 'No',
         'Estado': emp.status === 'en_retiro'
           ? 'En Retiro'
           : emp.status === 'retired' || (!emp.is_active && emp.status === 'active')
@@ -313,7 +317,7 @@ export default function Empleados() {
     }
   };
 
-  const isFiltered = searchQuery !== '' || statusFilter !== 'all' || centerFilter !== 'all' || showRetiredEmployees;
+  const isFiltered = searchQuery !== '' || statusFilter !== 'all' || centerFilter !== 'all' || pcdFilter !== 'all' || showRetiredEmployees;
   const shouldIncludeRetired = showRetiredEmployees || statusFilter === 'retired';
   const isFinalRetiredEmployee = useCallback((emp: any) => (
     emp.status === 'retired' || (!emp.is_active && emp.status === 'active')
@@ -345,18 +349,20 @@ export default function Empleados() {
       } else if (statusFilter !== 'all') matchesStatus = true;
 
       const matchesCenter = centerFilter === 'all' || emp.work_info?.operation_center_id === centerFilter;
+      const matchesPcd = pcdFilter === 'all' || emp.proceso_exclusivo_pcd === true;
       const matchesRetiredVisibility = shouldIncludeRetired || !isFinalRetiredEmployee(emp);
-      return matchesSearch && matchesStatus && matchesCenter && matchesRetiredVisibility;
+      return matchesSearch && matchesStatus && matchesCenter && matchesPcd && matchesRetiredVisibility;
     });
-  }, [employees, searchQuery, statusFilter, centerFilter, shouldIncludeRetired, isFinalRetiredEmployee]);
+  }, [employees, searchQuery, statusFilter, centerFilter, pcdFilter, shouldIncludeRetired, isFinalRetiredEmployee]);
 
   const stats = useMemo(() => {
-    if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0 };
+    if (!employees) return { total: 0, active: 0, inactive: 0, retired: 0, pcd: 0 };
     return {
       total: employees.length,
       active: employees.filter(e => e.is_active && e.status === 'active').length,
       inactive: employees.filter(e => e.status === 'suspended' || (!e.is_active && e.status !== 'retired' && e.status !== 'en_retiro' && e.status !== 'active')).length,
       retired: employees.filter(e => e.status === 'retired' || e.status === 'en_retiro').length,
+      pcd: employees.filter(e => e.proceso_exclusivo_pcd).length,
     };
   }, [employees]);
 
@@ -510,6 +516,15 @@ export default function Empleados() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={pcdFilter} onValueChange={setPcdFilter}>
+              <SelectTrigger className="w-[150px] h-10 text-sm border-border">
+                <SelectValue placeholder="Proceso PcD" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="pcd">Solo PcD</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="flex h-10 items-center gap-2 rounded-lg border border-border/70 bg-card px-3">
               <Switch
                 id="show-retired-employees"
@@ -633,6 +648,7 @@ export default function Empleados() {
                 { label: 'Activos', value: stats.active, color: 'success' },
                 { label: 'Inactivos', value: stats.inactive, color: 'rose' },
                 { label: 'Retirados', value: stats.retired, color: 'warning' },
+                { label: 'Empleados PcD', value: stats.pcd, color: 'warning' },
               ].map((stat, i) => (
                 <motion.div
                   key={stat.label}
@@ -679,11 +695,11 @@ export default function Empleados() {
           <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">No hay empleados</h3>
           <p className="text-muted-foreground mb-4">
-            {searchQuery || statusFilter !== 'all' || centerFilter !== 'all'
+            {searchQuery || statusFilter !== 'all' || centerFilter !== 'all' || pcdFilter !== 'all'
               ? 'No se encontraron empleados con los filtros seleccionados'
               : 'Comienza agregando tu primer empleado'}
           </p>
-          {!searchQuery && statusFilter === 'all' && centerFilter === 'all' && (
+          {!searchQuery && statusFilter === 'all' && centerFilter === 'all' && pcdFilter === 'all' && (
             <Button onClick={() => setIsFormOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Agregar Empleado

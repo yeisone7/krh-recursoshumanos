@@ -421,6 +421,7 @@ export function useConvertToEmployee() {
               id,
               area_id,
               cargo_solicitado,
+              proceso_exclusivo_pcd,
               juridico_tipo_contrato,
               juridico_duracion,
               tipo_contrato_solicitado,
@@ -439,6 +440,7 @@ export function useConvertToEmployee() {
       const vacancy = candidate.vacancies as any;
       const requisition = vacancy?.personnel_requisitions as any;
       const operationCenter = vacancy?.operation_centers as any;
+      const isPcdProcess = Boolean(requisition?.proceso_exclusivo_pcd);
       const hireDate = startDate || todayDateOnlyString();
       const employeeId = crypto.randomUUID();
       const effectiveContractType = (
@@ -471,6 +473,7 @@ export function useConvertToEmployee() {
         is_head_of_household: candidate.is_head_of_household ?? false,
         disability_type: candidate.disability_type,
         ethnic_group: candidate.ethnic_group,
+        proceso_exclusivo_pcd: isPcdProcess,
         is_conflict_victim: candidate.is_conflict_victim ?? false,
         is_demobilized: candidate.is_demobilized ?? false,
         profession_id: (candidate as any).profession_id,
@@ -498,6 +501,18 @@ export function useConvertToEmployee() {
 
         if (existingEmployeeError || !existingEmployee) throw createError;
         employee = existingEmployee;
+
+        if (isPcdProcess && !existingEmployee.proceso_exclusivo_pcd) {
+          const { data: updatedEmployee, error: updatePcdError } = await supabase
+            .from('employees_v2')
+            .update({ proceso_exclusivo_pcd: true })
+            .eq('id', existingEmployee.id)
+            .select()
+            .single();
+
+          if (updatePcdError) throw updatePcdError;
+          employee = updatedEmployee;
+        }
       } else {
         employee = employeePayload as Database['public']['Tables']['employees_v2']['Row'];
       }

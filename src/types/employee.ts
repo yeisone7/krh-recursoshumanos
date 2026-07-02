@@ -371,6 +371,7 @@ const baseFormSchema = z.object({
   isHeadOfHousehold: z.boolean().default(false),
   disabilityType: z.string().optional(),
   ethnicGroup: z.string().optional(),
+  procesoExclusivoPcd: z.boolean().default(false),
   isConflictVictim: z.boolean().default(false),
   isDemobilized: z.boolean().default(false),
 });
@@ -418,6 +419,7 @@ export interface EmployeeV2 {
   profession_id: string | null;
   status?: 'active' | 'suspended' | 'retired' | 'en_retiro';
   is_active: boolean;
+  proceso_exclusivo_pcd: boolean;
   avatar_url: string | null;
   created_by: string | null;
   created_at: string;
