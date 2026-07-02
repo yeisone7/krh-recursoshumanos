@@ -8,10 +8,21 @@ const corsHeaders = {
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const SCRIPT_MODEL = "google/gemini-1.5-flash";
-const TRAINING_AI_CREATE_MODULES = ["capacitaciones", "capacitaciones_ia"];
+const TRAINING_AI_ALLOWED_PERMISSIONS = [
+  { module: "capacitaciones_ia", action: "view" },
+  { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "create" },
+];
 
 interface AIConfig {
+  model?: string;
   openai_api_key?: string;
+  gemini_api_key?: string;
+  openai_model?: string;
+  openai_tts_model?: string;
+  openai_tts_voice?: string;
 }
 
 async function requireTrainingPermission(req: Request, companyId: string | undefined) {
@@ -39,18 +50,26 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
     .limit(1);
 
   const isSystemRole = Boolean(systemRole?.length);
+  const { data: legacyAdminRole } = await adminClient
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+
+  const isLegacyAdmin = Boolean(legacyAdminRole?.length);
   const permissionChecks = await Promise.all(
-    TRAINING_AI_CREATE_MODULES.map((moduleCode) =>
+    TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       adminClient.rpc("check_user_permission", {
         _user_id: userId,
-        _module_code: moduleCode,
-        _action: "create",
+        _module_code: permission.module,
+        _action: permission.action,
       })
     )
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole) {
+  if (!isSystemRole && !isLegacyAdmin) {
     const { data: assignment } = await adminClient
       .from("user_company_assignments")
       .select("id")
@@ -62,6 +81,33 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
       throw { status: 403, message: "No tienes permiso para generar audio de capacitación en esta empresa." };
     }
   }
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(
+    JSON.stringify(body),
+    { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
 }
 
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
@@ -83,6 +129,51 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   }
 }
 
+async function generateOpenAITTS(apiKey: string, scriptText: string, preferredModel?: string, preferredVoice?: string): Promise<Uint8Array> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_TTS_MODEL"),
+    "gpt-4o-mini-tts",
+    "tts-1-hd",
+    "tts-1",
+  ]);
+  const voice = preferredVoice || Deno.env.get("OPENAI_TTS_VOICE") || "coral";
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const body: Record<string, unknown> = {
+      model,
+      input: scriptText,
+      voice,
+      response_format: "mp3",
+    };
+
+    if (model === "gpt-4o-mini-tts") {
+      body.instructions = "Narra en espanol latinoamericano con tono profesional, claro y amable para una capacitacion empresarial.";
+    }
+
+    const ttsResponse = await fetch("https://api.openai.com/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!ttsResponse.ok) {
+      lastError = extractProviderError(`OpenAI TTS ${model}`, ttsResponse.status, await ttsResponse.text());
+      console.error("TTS error:", lastError);
+      if ([400, 403, 404].includes(ttsResponse.status)) continue;
+      throw { status: ttsResponse.status, message: lastError };
+    }
+
+    return new Uint8Array(await ttsResponse.arrayBuffer());
+  }
+
+  throw { status: 502, message: lastError || "OpenAI no pudo generar el audio." };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -92,12 +183,7 @@ Deno.serve(async (req) => {
     const { title, content, puntosClave, duration, companyId, courseId } = await req.json();
     await requireTrainingPermission(req, companyId);
 
-    if (!title) {
-      return new Response(
-        JSON.stringify({ error: "title is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    if (!title) return jsonResponse({ error: "title is required" }, 400);
 
     const aiConfig = await getAIConfig(companyId);
     const provider = aiConfig.model || "openai";
@@ -154,6 +240,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
         scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
       } else {
         console.log("Generating audio script via Gateway (fallback)...");
+        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
         if (!LOVABLE_API_KEY) throw new Error("No hay API Keys configuradas ni acceso al Gateway.");
         const res = await fetch(GATEWAY_URL, {
           method: "POST",
@@ -172,10 +259,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
       }
     } catch (err: any) {
       console.error("Script generation failed:", err);
-      return new Response(
-        JSON.stringify({ error: `Fallo al generar el guion: ${err.message}` }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: `Fallo al generar el guion: ${err.message}` }, err?.status || 502);
     }
 
     if (!scriptText) throw new Error("No se pudo generar el texto del guion.");
@@ -188,36 +272,16 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
 
     console.log(`Script generated: ${scriptText.split(/\s+/).length} words. Generating TTS...`);
 
-    // Step 2: Convert to speech using OpenAI TTS (requires user's own key)
-    const ttsResponse = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${aiConfig.openai_api_key}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "tts-1-hd",
-        input: scriptText,
-        voice: "nova",
-        response_format: "mp3",
-      }),
-    });
-
-    if (!ttsResponse.ok) {
-      if (ttsResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Límite de solicitudes de OpenAI excedido. Intente de nuevo en unos momentos." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const errorText = await ttsResponse.text();
-      console.error("TTS error:", ttsResponse.status, errorText);
-      throw new Error(`TTS generation failed: ${ttsResponse.status}`);
+    if (!aiConfig.openai_api_key) {
+      throw { status: 400, message: "No hay API Key de OpenAI configurada para generar audio." };
     }
 
-    // Step 3: Upload audio to storage
-    const audioBuffer = await ttsResponse.arrayBuffer();
-    const audioBytes = new Uint8Array(audioBuffer);
+    const audioBytes = await generateOpenAITTS(
+      aiConfig.openai_api_key,
+      scriptText,
+      aiConfig.openai_tts_model,
+      aiConfig.openai_tts_voice
+    );
 
     console.log(`Audio generated: ${audioBytes.length} bytes. Uploading...`);
 
@@ -230,7 +294,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
     const fileName = `${courseId}/audio_${duration}_${Date.now()}.mp3`;
     const { error: uploadError } = await supabase.storage
       .from("training-media")
-      .upload(fileName, audioBytes.buffer, { contentType: "audio/mpeg", upsert: true });
+      .upload(fileName, audioBytes.buffer, { contentType: "audio/mpeg" });
 
     if (uploadError) {
       console.warn("Upload failed:", uploadError);
@@ -239,15 +303,11 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
 
     const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
 
-    return new Response(
-      JSON.stringify({ audioUrl: urlData.publicUrl, script: scriptText }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return jsonResponse({ audioUrl: urlData.publicUrl, script: scriptText });
   } catch (error: any) {
     console.error("generate-training-audio error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Error generating audio" }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    const status = error?.status || 500;
+    const message = error?.message || (error instanceof Error ? error.message : "Error generating audio");
+    return jsonResponse({ error: message }, status);
   }
 });

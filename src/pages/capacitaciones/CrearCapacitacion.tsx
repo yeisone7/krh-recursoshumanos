@@ -359,7 +359,8 @@ export default function CrearCapacitacion() {
           courseId: editId,
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar audio'));
+      if (data?.error) throw new Error(data.error);
       if (data?.audioUrl) {
         await createMedia.mutateAsync({
           courseId: editId,
