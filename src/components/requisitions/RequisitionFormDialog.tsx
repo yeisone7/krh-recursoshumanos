@@ -44,7 +44,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -136,7 +136,6 @@ export function RequisitionFormDialog({
       cantidad_vacantes_requeridas: 1,
       cargo_solicitado: '',
       requiere_herramienta_trabajo: false,
-      proceso_exclusivo_pcd: false,
       incluye_alimentacion: false,
       incluye_desplazamiento: false,
       motivo_solicitud: 'nuevo_cargo',
@@ -183,7 +182,6 @@ export function RequisitionFormDialog({
         cantidad_vacantes_requeridas: 1,
         cargo_solicitado: '',
         requiere_herramienta_trabajo: false,
-        proceso_exclusivo_pcd: false,
         incluye_alimentacion: false,
         incluye_desplazamiento: false,
         motivo_solicitud: 'nuevo_cargo',
@@ -489,13 +487,22 @@ export function RequisitionFormDialog({
                       name="proceso_exclusivo_pcd"
                       render={({ field }) => (
                         <FormItem className="rounded-lg border border-amber-200 bg-amber-50/80 p-4 shadow-sm">
-                          <div className="flex items-start gap-3">
+                          <div className="flex flex-col-reverse gap-3">
                             <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={(checked) => field.onChange(checked === true)}
-                                className="mt-0.5 h-5 w-5 rounded-md border-amber-500 data-[state=checked]:bg-amber-500 data-[state=checked]:text-white"
-                              />
+                              <RadioGroup
+                                value={field.value === true ? 'si' : field.value === false ? 'no' : ''}
+                                onValueChange={(value) => field.onChange(value === 'si')}
+                                className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+                              >
+                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 py-2 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                  <RadioGroupItem value="si" />
+                                  Sí
+                                </label>
+                                <label className="flex cursor-pointer items-center gap-2 rounded-md border border-amber-200 bg-background/70 px-3 py-2 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-400">
+                                  <RadioGroupItem value="no" />
+                                  No
+                                </label>
+                              </RadioGroup>
                             </FormControl>
                             <div className="flex min-w-0 flex-1 items-start gap-2">
                               <Accessibility className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
