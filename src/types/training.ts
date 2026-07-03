@@ -167,6 +167,8 @@ export interface TrainingCompletion {
       id: string;
       employee_id: string;
       position_name: string | null;
+      operation_center_id?: string | null;
+      operation_centers?: { id: string; name: string } | null;
       is_current: boolean | null;
     }>;
   } | null;

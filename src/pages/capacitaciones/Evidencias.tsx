@@ -21,6 +21,13 @@ import type { TrainingCompletion, TrainingCourseContent } from '@/types/training
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
 
+type CompletionWithCenterToken = TrainingCompletion & {
+  token?: {
+    operation_center_id: string | null;
+    center?: { id: string; name: string } | null;
+  } | null;
+};
+
 export default function Evidencias() {
   const { currentCompanyId, companies } = useAuth();
   const { data: selectedCompany } = useCompany(currentCompanyId || undefined);
@@ -30,6 +37,7 @@ export default function Evidencias() {
   const bulkDelete = useBulkDeleteCompletions();
   const [search, setSearch] = useState('');
   const [filterCourse, setFilterCourse] = useState('all');
+  const [filterCenter, setFilterCenter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('tree');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [signatureView, setSignatureView] = useState<string | null>(null);
@@ -44,21 +52,47 @@ export default function Evidencias() {
   const isInitialLoading = isLoadingCompletions || isLoadingCourses;
   const isRefreshing = isFetchingCompletions && !isLoadingCompletions;
 
+  function getCompletionCenter(completion: TrainingCompletion) {
+    const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
+    const token = (completion as CompletionWithCenterToken).token;
+    if (currentWorkInfo?.operation_centers?.id && currentWorkInfo.operation_centers.name) {
+      return {
+        id: currentWorkInfo.operation_centers.id,
+        name: currentWorkInfo.operation_centers.name,
+      };
+    }
+    if (currentWorkInfo?.operation_center_id) {
+      return {
+        id: currentWorkInfo.operation_center_id,
+        name: 'Sin centro',
+      };
+    }
+
+    return {
+      id: token?.center?.id || token?.operation_center_id || 'sin-centro',
+      name: token?.center?.name || 'Sin centro',
+    };
+  }
+
   const filtered = useMemo(() => {
     return (completions as TrainingCompletion[]).filter(c => {
       const matchSearch = c.operator_name.toLowerCase().includes(search.toLowerCase()) || (c.operator_cedula || '').includes(search);
       const matchCourse = filterCourse === 'all' || c.course_id === filterCourse;
-      return matchSearch && matchCourse;
+      const matchCenter = viewMode !== 'table' || filterCenter === 'all' || getCompletionCenter(c).id === filterCenter;
+      return matchSearch && matchCourse && matchCenter;
     });
-  }, [completions, search, filterCourse]);
+  }, [completions, search, filterCourse, filterCenter, viewMode]);
 
-  const toggleSelect = (id: string) => setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(c => c.id)));
-
-  const getCompletionCenter = (completion: TrainingCompletion) => ({
-    id: (completion as any).token?.center?.id || (completion as any).token?.operation_center_id || 'sin-centro',
-    name: (completion as any).token?.center?.name || 'Sin centro',
+  const toggleSelect = (id: string) => setSelected(prev => {
+    const n = new Set(prev);
+    if (n.has(id)) {
+      n.delete(id);
+    } else {
+      n.add(id);
+    }
+    return n;
   });
+  const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(c => c.id)));
 
   const centerOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -70,6 +104,21 @@ export default function Evidencias() {
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [completions]);
+
+  useEffect(() => {
+    if (filterCenter === 'all') return;
+    const hasCenter = centerOptions.some((center) => center.id === filterCenter);
+    if (!hasCenter) setFilterCenter('all');
+  }, [centerOptions, filterCenter]);
+
+  useEffect(() => {
+    setSelected(prev => {
+      if (prev.size === 0) return prev;
+      const visibleIds = new Set(filtered.map((completion) => completion.id));
+      const next = new Set([...prev].filter((id) => visibleIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [filtered]);
 
   const bulkCourseOptions = useMemo(() => {
     const source = (completions as TrainingCompletion[]).filter((completion) => {
@@ -110,7 +159,11 @@ export default function Evidencias() {
   const toggleBulkSelect = (id: string) => {
     setBulkSelected(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -690,17 +743,18 @@ export default function Evidencias() {
     <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
       <CardContent className="p-0">
         <div className="space-y-0">
-          <div className="grid grid-cols-[48px_1fr_140px_220px_150px_120px] gap-4 border-b bg-background px-4 py-4">
-            {Array.from({ length: 6 }).map((_, index) => (
+          <div className="grid grid-cols-[48px_1fr_140px_180px_180px_150px_120px] gap-4 border-b bg-background px-4 py-4">
+            {Array.from({ length: 7 }).map((_, index) => (
               <Skeleton key={index} className="h-4 bg-muted/70" />
             ))}
           </div>
           {Array.from({ length: 7 }).map((_, rowIndex) => (
-            <div key={rowIndex} className="grid grid-cols-[48px_1fr_140px_220px_150px_120px] gap-4 border-b px-4 py-4 last:border-b-0">
+            <div key={rowIndex} className="grid grid-cols-[48px_1fr_140px_180px_180px_150px_120px] gap-4 border-b px-4 py-4 last:border-b-0">
               <Skeleton className="h-5 w-5 rounded bg-muted/70" />
               <Skeleton className="h-4 w-3/4 bg-muted/70" />
               <Skeleton className="h-4 w-24 bg-muted/70" />
               <Skeleton className="h-6 w-44 rounded-full bg-muted/70" />
+              <Skeleton className="h-6 w-36 rounded-full bg-muted/70" />
               <Skeleton className="h-4 w-28 bg-muted/70" />
               <div className="flex justify-end gap-2">
                 <Skeleton className="h-8 w-8 rounded-lg bg-muted/70" />
@@ -751,6 +805,17 @@ export default function Evidencias() {
             {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
+        {viewMode === 'table' && (
+          <Select value={filterCenter} onValueChange={setFilterCenter}>
+            <SelectTrigger className="w-full sm:w-64 h-10 rounded-xl border-border/50 bg-background shadow-inner text-sm">
+              <SelectValue placeholder="Centro de operacion" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all">Todos los centros</SelectItem>
+              {centerOptions.map(center => <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
         {selected.size > 0 && <Button variant="destructive" className="h-10 px-5 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-destructive/20 w-full sm:w-auto" onClick={handleBulkDelete}><Trash2 className="h-4 w-4 mr-2" /> Eliminar ({selected.size})</Button>}
       </div>
       )}
@@ -776,13 +841,14 @@ export default function Evidencias() {
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Cédula</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Capacitación</TableHead>
+                  <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Centro</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Fecha</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12 text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-16 h-32">No hay evidencias registradas</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16 h-32">No hay evidencias registradas</TableCell></TableRow>
                 ) : filtered.map(c => (
                   <TableRow key={c.id} className="hover:bg-background /10 transition-colors">
                     <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
@@ -790,6 +856,9 @@ export default function Evidencias() {
                     <TableCell className="text-sm text-muted-foreground font-medium">{c.operator_cedula || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-primary border-primary/20">{c.course?.name || '-'}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-semibold">{getCompletionCenter(c).name}</Badge>
                     </TableCell>
                     <TableCell className="text-sm font-medium">{format(toValidDate(c.completed_at) || new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                     <TableCell className="text-right">
