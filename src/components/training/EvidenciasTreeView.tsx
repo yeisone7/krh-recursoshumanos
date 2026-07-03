@@ -19,6 +19,18 @@ interface TreeNodeData {
   children?: TreeNodeData[];
   completion?: TrainingCompletion;
 }
+type CompletionWithCenterToken = TrainingCompletion & {
+  token?: {
+    operation_center_id: string | null;
+    center?: { id: string; name: string } | null;
+  } | null;
+};
+
+function getCompletionCenterName(completion: TrainingCompletion) {
+  const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
+  const token = (completion as CompletionWithCenterToken).token;
+  return currentWorkInfo?.operation_centers?.name || token?.center?.name || 'Sin centro';
+}
 
 function TreeNode({
   node,
@@ -130,7 +142,6 @@ function TreeNode({
     </div>
   );
 }
-
 export default function EvidenciasTreeView({ completions, onViewSignature, onExportPdf, onDelete }: EvidenciasTreeViewProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -138,7 +149,11 @@ export default function EvidenciasTreeView({ completions, onViewSignature, onExp
   const onToggle = useCallback((id: string) => {
     setExpanded(prev => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   }, []);
@@ -147,10 +162,10 @@ export default function EvidenciasTreeView({ completions, onViewSignature, onExp
     const centerMap = new Map<string, Map<string, Map<string, Map<string, TrainingCompletion[]>>>>();
 
     for (const c of completions) {
-      const center = (c as any).token?.center?.name || 'Sin centro';
+      const center = getCompletionCenterName(c);
       const category = c.course?.category || 'Sin categoría';
-      const legal = (c.course as any)?.legal_framework || 'Sin marco legal';
-      const area = (c.course as any)?.target_audience || 'Sin área';
+      const legal = c.course?.legal_framework || 'Sin marco legal';
+      const area = c.course?.target_audience || 'Sin área';
 
       if (!centerMap.has(center)) centerMap.set(center, new Map());
       const catMap = centerMap.get(center)!;

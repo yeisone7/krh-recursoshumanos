@@ -25,6 +25,12 @@ type CourseInsert = Database['public']['Tables']['training_courses']['Insert'];
 type SessionInsert = Database['public']['Tables']['training_sessions']['Insert'];
 type AttendanceInsert = Database['public']['Tables']['training_attendance']['Insert'];
 type CertificateInsert = Database['public']['Tables']['training_certificates']['Insert'];
+type CompletionWithCenterToken = TrainingCompletion & {
+  token?: {
+    operation_center_id: string | null;
+    center?: { id: string; name: string } | null;
+  } | null;
+};
 
 // =====================================================
 // COURSES HOOKS
@@ -720,7 +726,7 @@ export function useTrainingCompletions(courseId?: string) {
       if (employeeIds.length > 0) {
         const { data: workInfoRows, error: workInfoError } = await supabase
           .from('employee_work_info')
-          .select('id, employee_id, position_name, is_current')
+          .select('id, employee_id, position_name, operation_center_id, is_current, operation_centers(id, name)')
           .in('employee_id', employeeIds);
 
         if (!workInfoError && workInfoRows) {
@@ -741,9 +747,12 @@ export function useTrainingCompletions(courseId?: string) {
       if (!shouldLimitByAssignedCenters) return completions;
 
       return completions.filter((completion) => {
+        const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
+        const token = (completion as CompletionWithCenterToken).token;
         const centerId =
-          (completion as any).token?.operation_center_id ||
-          (completion as any).token?.center?.id ||
+          currentWorkInfo?.operation_center_id ||
+          token?.operation_center_id ||
+          token?.center?.id ||
           null;
 
         return centerId ? assignedCenterIds.includes(centerId) : false;
