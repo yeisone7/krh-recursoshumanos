@@ -246,7 +246,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : employee ? (
-          <div className="px-4 pb-12 pt-5 sm:px-8">
+          <div className="px-[18px] pb-12 pt-5 sm:px-[37px] lg:px-[9vw]">
             <div ref={cvRef} className="mx-auto w-full max-w-[1140px] overflow-hidden bg-white shadow-sm ring-1 ring-[#e8e8e8]">
               <div className="relative grid min-h-[180px] grid-cols-1 md:grid-cols-[460px_1fr]">
                 <div className="absolute left-0 top-0 hidden h-[180px] w-4 bg-[#06294f] md:block" />
@@ -261,15 +261,16 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
                 </aside>
 
-                <header className="relative flex min-h-[180px] items-center bg-[#06294f] px-8 py-8 text-white md:px-[54px]">
-                  <div className="absolute right-16 top-[30px] hidden h-[60px] min-w-[184px] items-center justify-center rounded-md bg-white px-3 py-2 shadow-sm md:flex">
+                <header className="relative flex min-h-[180px] items-center overflow-hidden px-8 py-8 text-white md:px-[54px]" style={{ backgroundColor: '#06294f' }}>
+                  <div className="absolute inset-0 bg-[#06294f]" />
+                  <div className="absolute right-16 top-[30px] z-10 hidden h-[60px] min-w-[184px] items-center justify-center rounded-md bg-white px-3 py-2 shadow-sm md:flex">
                     {companyLogoUrl ? (
                       <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[164px] object-contain" />
                     ) : (
                       <span className="max-w-[164px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
                     )}
                   </div>
-                  <div className="max-w-xl">
+                  <div className="relative z-10 max-w-xl">
                     <h1 className="text-[22px] font-bold leading-tight text-white">{employeeName}</h1>
                     <p className="mt-2 text-[18px] font-medium leading-snug text-white">{currentPosition}</p>
                   </div>
