@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,7 +34,6 @@ import {
   riskLevelLabels,
   type EmployeeDocument,
 } from '@/types/employee';
-import krhLogo from '@/assets/krh-logo.png';
 
 interface EmployeeCvDialogProps {
   open: boolean;
@@ -82,19 +82,19 @@ function TimelineItem({
   isLast?: boolean;
 }) {
   return (
-    <div className="relative flex gap-4 pb-7 last:pb-0">
-      {!isLast && <div className="absolute left-[8px] top-4 h-full w-px bg-[#e9e9e9]" />}
-      <div className="relative z-10 mt-1 h-4 w-4 rounded-full border-2 border-[#2f91d1] bg-white" />
+    <div className="relative flex gap-3 pb-5 last:pb-0">
+      {!isLast && <div className="absolute left-[7px] top-4 h-full w-px bg-[#e6e6e6]" />}
+      <div className="relative z-10 mt-1 h-3.5 w-3.5 rounded-full border-2 border-[#2f91d1] bg-white" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h4 className="text-base font-bold leading-snug text-[#2f86cc]">{title}</h4>
-            {subtitle && <p className="mt-1 text-sm font-medium leading-relaxed text-[#333333]">{subtitle}</p>}
+            <h4 className="text-[14px] font-bold leading-snug text-[#2f86cc]">{title}</h4>
+            {subtitle && <p className="mt-1 text-[12px] font-medium leading-relaxed text-[#333333]">{subtitle}</p>}
           </div>
-          {date && <span className="shrink-0 text-xs font-medium text-[#8a8a8a]">{date}</span>}
+          {date && <span className="shrink-0 text-[11px] font-medium text-[#8a8a8a]">{date}</span>}
         </div>
-        {detail && <p className="mt-2 text-sm leading-relaxed text-[#555555]">{detail}</p>}
-        {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
+        {detail && <p className="mt-1.5 text-[11px] leading-relaxed text-[#555555]">{detail}</p>}
+        {meta && <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">{meta}</div>}
       </div>
     </div>
   );
@@ -111,8 +111,8 @@ function SideInfo({
 
   return (
     <div className="min-w-0">
-      <p className="text-base font-bold leading-tight text-[#3f3f3f]">{label}</p>
-      <p className="mt-2 break-words text-sm leading-relaxed text-[#8a8a8a]">{value}</p>
+      <p className="text-[16px] font-bold leading-tight text-[#3f3f3f]">{label}</p>
+      <p className="mt-2 break-words text-[12px] leading-relaxed text-[#8a8a8a]">{value}</p>
     </div>
   );
 }
@@ -120,9 +120,9 @@ function SideInfo({
 function SectionTitle({ icon: Icon, children }: { icon: ElementType; children: ReactNode }) {
   return (
     <div className="mb-5">
-      <h3 className="text-2xl font-bold leading-tight text-[#3f3f3f]">{children}</h3>
-      <div className="mt-6 flex h-11 w-11 items-center justify-center rounded-full border border-[#e9e9e9] bg-white text-[#444444] shadow-sm">
-        <Icon className="h-5 w-5" />
+      <h3 className="text-[22px] font-bold leading-tight text-[#3f3f3f]">{children}</h3>
+      <div className="mt-6 flex h-10 w-10 items-center justify-center rounded-full border border-[#e9e9e9] bg-white text-[#444444] shadow-sm">
+        <Icon className="h-4 w-4" />
       </div>
     </div>
   );
@@ -133,6 +133,9 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
   const [isDownloading, setIsDownloading] = useState(false);
   const { data: employee, isLoading } = useEmployee(open && employeeId ? employeeId : undefined);
   const { data: workHistory = [] } = useWorkInfoHistory(open && employeeId ? employeeId : undefined);
+  const { companies, currentCompanyId } = useAuth();
+  const currentCompany = companies.find((company) => company.id === currentCompanyId);
+  const companyLogoUrl = currentCompany?.horizontal_logo_url || currentCompany?.logo_url || null;
 
   const { data: trainingCompletions = [] } = useQuery({
     queryKey: ['employee_cv_training_completions', employeeId, employee?.document_number],
@@ -225,14 +228,16 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
           <DialogDescription>Vista profesional del curriculum del empleado.</DialogDescription>
         </DialogHeader>
 
-        <div className="z-20 flex shrink-0 justify-end gap-3 border-b border-[#dedede] bg-[#f3f3f3] px-5 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 rounded-md bg-white px-8 text-base font-medium text-[#111111]">
-            Cerrar
-          </Button>
-          <Button onClick={downloadCv} disabled={!employee || isDownloading} className="h-12 rounded-md bg-[#3498db] px-8 text-base font-bold text-white hover:bg-[#2586c8]">
-            {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Descargar CV
-          </Button>
+        <div className="z-20 shrink-0 border-b border-[#dedede] bg-[#f3f3f3] px-4 py-4">
+          <div className="mx-auto flex w-full max-w-[1140px] justify-end gap-3">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="h-9 rounded-sm bg-white px-5 text-[13px] font-medium text-[#111111]">
+              Cerrar
+            </Button>
+            <Button onClick={downloadCv} disabled={!employee || isDownloading} className="h-9 rounded-sm bg-[#3f95d2] px-6 text-[13px] font-bold text-white hover:bg-[#2f86c4]">
+              {isDownloading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+              Descargar CV
+            </Button>
+          </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -241,13 +246,13 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : employee ? (
-          <div className="px-4 pb-9 pt-7 sm:px-8">
-            <div ref={cvRef} className="mx-auto w-full max-w-[1140px] overflow-hidden bg-white shadow-sm ring-1 ring-[#e5e5e5]">
-              <div className="relative grid min-h-[180px] grid-cols-1 md:grid-cols-[445px_1fr]">
+          <div className="px-4 pb-12 pt-5 sm:px-8">
+            <div ref={cvRef} className="mx-auto w-full max-w-[1140px] overflow-hidden bg-white shadow-sm ring-1 ring-[#e8e8e8]">
+              <div className="relative grid min-h-[180px] grid-cols-1 md:grid-cols-[460px_1fr]">
                 <div className="absolute left-0 top-0 hidden h-[180px] w-4 bg-[#06294f] md:block" />
-                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-10 py-8">
+                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-10 py-7">
                   <div className="flex justify-center">
-                    <Avatar className="h-36 w-36 border-4 border-white shadow-sm">
+                    <Avatar className="h-[144px] w-[144px] border-4 border-white shadow-sm">
                       <AvatarImage src={employee.avatar_url || undefined} alt={employeeName} />
                       <AvatarFallback className="bg-[#e8edf2] text-2xl font-bold text-[#3f3f3f]">
                         {getInitials(employee)}
@@ -256,19 +261,23 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
                 </aside>
 
-                <header className="relative flex min-h-[180px] items-center bg-[#06294f] px-8 py-8 text-white md:px-14">
-                  <div className="absolute right-10 top-5 hidden rounded-lg bg-white px-4 py-2 shadow-sm md:block">
-                    <img src={krhLogo} alt="KRH" className="h-10 w-auto max-w-[155px] object-contain" />
+                <header className="relative flex min-h-[180px] items-center bg-[#06294f] px-8 py-8 text-white md:px-[54px]">
+                  <div className="absolute right-16 top-[30px] hidden h-[60px] min-w-[184px] items-center justify-center rounded-md bg-white px-3 py-2 shadow-sm md:flex">
+                    {companyLogoUrl ? (
+                      <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[164px] object-contain" />
+                    ) : (
+                      <span className="max-w-[164px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
+                    )}
                   </div>
                   <div className="max-w-xl">
-                    <h1 className="text-2xl font-bold leading-tight text-white">{employeeName}</h1>
-                    <p className="mt-2 text-lg font-medium leading-snug text-white">{currentPosition}</p>
+                    <h1 className="text-[22px] font-bold leading-tight text-white">{employeeName}</h1>
+                    <p className="mt-2 text-[18px] font-medium leading-snug text-white">{currentPosition}</p>
                   </div>
                 </header>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[445px_1fr]">
-                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-12 py-16">
+              <div className="grid grid-cols-1 md:grid-cols-[460px_1fr]">
+                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-[60px] py-[72px]">
                   <div className="space-y-8">
                     <SideInfo label="Correo" value={employee.contact?.email || employee.contact?.personal_email} />
                     <SideInfo label="Teléfono" value={employee.contact?.mobile || employee.contact?.phone} />
@@ -278,8 +287,8 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
 
                   <div className="mt-9">
-                    <h3 className="text-base font-bold leading-tight text-[#3f3f3f]">Objetivo profesional</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-[#8a8a8a]">
+                    <h3 className="text-[16px] font-bold leading-tight text-[#3f3f3f]">Objetivo profesional</h3>
+                    <p className="mt-3 text-[12px] leading-relaxed text-[#8a8a8a]">
                       {profileSummary || 'Sin resumen profesional registrado.'}
                     </p>
                   </div>
@@ -295,7 +304,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
                 </aside>
 
-                <main className="px-8 py-9 md:px-11">
+                <main className="px-[44px] py-[38px]">
                   <section>
                     <SectionTitle icon={GraduationCap}>Educación</SectionTitle>
                     <div className="ml-[14px] border-l border-[#e9e9e9] pl-8">
@@ -303,13 +312,13 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                         title={educationName || 'Nivel educativo no registrado'}
                         subtitle={professionName || undefined}
                         detail={employee.is_first_job ? 'Marcado como primer empleo.' : undefined}
-                        meta={employee.is_head_of_household ? <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">Jefe(a) de hogar</Badge> : undefined}
+                        meta={employee.is_head_of_household ? <Badge variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">Jefe(a) de hogar</Badge> : undefined}
                         isLast
                       />
                     </div>
                   </section>
 
-                  <section className="mt-8">
+                  <section className="mt-6">
                     <SectionTitle icon={Briefcase}>Experiencia laboral</SectionTitle>
                     <div className="ml-[14px] border-l border-[#e9e9e9] pl-8">
                       {(workHistory.length > 0 ? workHistory : [employee.work_info]).filter(Boolean).map((item: any, index: number, items: any[]) => (
@@ -322,14 +331,14 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                             item.valid_to ? formatDate(item.valid_to, 'MMM yyyy') : item.is_current === false ? null : 'Actual',
                           ].filter(Boolean).join(' - ')}
                           detail={index === 0 && employee.work_info?.observations ? employee.work_info.observations : null}
-                          meta={employee.work_info?.link_type ? <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">{safeLabel(linkTypeLabels, employee.work_info.link_type)}</Badge> : undefined}
+                          meta={employee.work_info?.link_type ? <Badge variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">{safeLabel(linkTypeLabels, employee.work_info.link_type)}</Badge> : undefined}
                           isLast={index === items.length - 1}
                         />
                       ))}
                     </div>
                   </section>
 
-                  <section className="mt-8">
+                  <section className="mt-6">
                     <SectionTitle icon={Award}>Cursos y diplomados adicionales</SectionTitle>
                     <div className="ml-[14px] space-y-2 border-l border-[#e9e9e9] pl-8">
                       {trainingCompletions.slice(0, 5).map((completion: any, index: number, items: any[]) => (
@@ -339,7 +348,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                           subtitle={completion.course?.category || completion.course?.provider}
                           date={completion.completed_at ? format(new Date(completion.completed_at), 'dd MMM yyyy', { locale: es }) : null}
                           meta={completion.quiz_score != null ? (
-                            <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">Puntaje {completion.quiz_score}%</Badge>
+                            <Badge variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">Puntaje {completion.quiz_score}%</Badge>
                           ) : undefined}
                           isLast={index === items.length - 1 && employee.certifications?.length === 0}
                         />
@@ -359,33 +368,33 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                       ))}
 
                       {trainingCompletions.length === 0 && (!employee.certifications || employee.certifications.length === 0) && (
-                        <p className="rounded-lg border border-dashed border-[#dcdcdc] p-4 text-sm text-[#777777]">
+                        <p className="rounded-lg border border-dashed border-[#dcdcdc] p-3 text-[12px] text-[#777777]">
                           Sin cursos o certificaciones registradas.
                         </p>
                       )}
                     </div>
                   </section>
 
-                  <section className="mt-8">
+                  <section className="mt-6">
                     <SectionTitle icon={FileText}>Documentos de soporte</SectionTitle>
                     {documentSummary.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {documentSummary.map((documentName) => (
-                          <Badge key={documentName} variant="secondary" className="rounded-full bg-[#f0f0f0] px-3 py-1 text-[#555555]">
+                          <Badge key={documentName} variant="secondary" className="rounded-full bg-[#f0f0f0] px-2.5 py-1 text-[10px] font-medium text-[#555555]">
                             {documentName}
                           </Badge>
                         ))}
                       </div>
                     ) : (
-                      <p className="rounded-lg border border-dashed border-[#dcdcdc] p-4 text-sm text-[#777777]">
+                      <p className="rounded-lg border border-dashed border-[#dcdcdc] p-3 text-[12px] text-[#777777]">
                         Sin documentos de soporte cargados.
                       </p>
                     )}
                   </section>
 
-                  <section className="mt-8">
+                  <section className="mt-6">
                     <SectionTitle icon={User}>Idiomas</SectionTitle>
-                    <div className="inline-flex rounded-full border border-[#e0e0e0] bg-white px-5 py-2 text-sm text-[#777777]">
+                    <div className="inline-flex rounded-full border border-[#e0e0e0] bg-white px-5 py-2 text-[12px] text-[#777777]">
                       Sin idiomas registrados
                     </div>
                   </section>
