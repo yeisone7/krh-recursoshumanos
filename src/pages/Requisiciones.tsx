@@ -415,14 +415,14 @@ export default function Requisiciones() {
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md lg:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
-                  <Table className="w-full min-w-[900px] table-fixed">
+                  <Table className="w-full min-w-[760px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
-                      <TableHead className="h-14 w-[260px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-14 w-[210px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
-                      <TableHead className="h-14 w-[190px] px-2 text-center font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
-                      <TableHead className="h-14 w-[120px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="h-14 w-[190px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
+                      <TableHead className="h-14 w-[220px] px-3 font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[260px] 2xl:px-4">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-14 w-[175px] px-2 font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[210px] 2xl:px-3">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-14 w-[160px] px-1.5 text-center font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[190px] 2xl:px-2">Flujo</TableHead>
+                      <TableHead className="h-14 w-[110px] px-2 font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[120px] 2xl:px-3">Estado</TableHead>
+                      <TableHead className="h-14 w-[95px] px-2 text-right font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[190px] 2xl:px-4">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -434,10 +434,10 @@ export default function Requisiciones() {
                       const closedVacancies = getClosedVacancies(req);
                       return (
                         <TableRow key={req.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
-                          <TableCell className="px-4 py-4">
-                            <div className="flex items-center gap-4">
-                              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0">
-                                <FileText className="w-5 h-5" />
+                          <TableCell className="px-3 py-4 2xl:px-4">
+                            <div className="flex items-center gap-2.5 2xl:gap-4">
+                              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500 shrink-0 2xl:h-9 2xl:w-9">
+                                <FileText className="w-4 h-4 2xl:w-5 2xl:h-5" />
                               </div>
                               <div className="min-w-0 flex-1">
                                 <div className="mb-2 flex flex-wrap items-center gap-2">
@@ -469,7 +469,7 @@ export default function Requisiciones() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="px-3 py-4">
+                          <TableCell className="px-2 py-4 2xl:px-3">
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-2">
                                 <Building2 className="w-3.5 h-3.5 text-primary/60" />
@@ -485,7 +485,7 @@ export default function Requisiciones() {
                               </div>
                             </div>
                           </TableCell>
-                          <TableCell className="px-2 py-4">
+                          <TableCell className="px-1.5 py-4 2xl:px-2">
                             <TooltipProvider>
                               <div className="flex min-w-0 items-center justify-center gap-0.5">
                                 {progress.map((s, idx) => (
@@ -495,14 +495,14 @@ export default function Requisiciones() {
                                         <button
                                           type="button"
                                           className={cn(
-                                            'w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black transition-all duration-300 border-2 shrink-0',
+                                            'w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black transition-all duration-300 border-2 shrink-0 2xl:h-6 2xl:w-6 2xl:rounded-full',
                                             s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/10',
                                             s.approved === false && 'bg-red-500 text-white border-red-400 shadow-md shadow-red-500/10',
                                             s.approved === null && 'bg-background text-muted-foreground border-border hover:border-primary/30'
                                           )}
                                           onClick={e => e.stopPropagation()}
                                         >
-                                          {s.approved === true ? <CheckCircle className="w-3.5 h-3.5" /> : s.approved === false ? <XCircle className="w-3.5 h-3.5" /> : s.label}
+                                          {s.approved === true ? <CheckCircle className="w-3 h-3 2xl:w-3.5 2xl:h-3.5" /> : s.approved === false ? <XCircle className="w-3 h-3 2xl:w-3.5 2xl:h-3.5" /> : s.label}
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" className="text-xs bg-popover/90 border-primary/20 p-3 rounded-xl shadow-lg">
@@ -513,14 +513,14 @@ export default function Requisiciones() {
                                       </TooltipContent>
                                     </Tooltip>
                                       {idx < progress.length - 1 && (
-                                        <div className={cn('w-1.5 h-0.5 mx-0.5 rounded-full', s.approved === true ? 'bg-emerald-500' : 'bg-background ')} />
+                                        <div className={cn('w-1 h-0.5 mx-0.5 rounded-full 2xl:w-1.5', s.approved === true ? 'bg-emerald-500' : 'bg-background ')} />
                                       )}
                                   </div>
                                 ))}
                               </div>
                             </TooltipProvider>
                           </TableCell>
-                          <TableCell className="px-3 py-4">
+                          <TableCell className="px-2 py-4 2xl:px-3">
                             <div className="flex flex-col items-start gap-1.5">
                               <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
                                 {requisitionStatusLabels[status]}
@@ -536,17 +536,19 @@ export default function Requisiciones() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="px-4 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                          <TableCell className="px-2 py-4 text-right 2xl:px-4">
+                            <div className="flex max-w-full flex-wrap items-center justify-end gap-1 2xl:flex-nowrap 2xl:gap-2" onClick={e => e.stopPropagation()}>
                               {step && (
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 rounded-lg border-primary/20 bg-primary/5 px-2.5 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground"
+                                  title="Gestionar"
+                                  aria-label="Gestionar aprobación"
+                                  className="h-8 w-8 rounded-lg border-primary/20 bg-primary/5 px-0 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground 2xl:w-auto 2xl:px-2.5"
                                   onClick={() => { setSelectedId(req.id); setApprovalStep(step); }}
                                 >
-                                  <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
-                                  Gestionar
+                                  <CheckCircle className="h-3.5 w-3.5 2xl:mr-1.5" />
+                                  <span className="hidden 2xl:inline">Gestionar</span>
                                 </Button>
                               )}
                               <DropdownMenu>
