@@ -179,7 +179,7 @@
   }
 
   html {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   body {
@@ -229,7 +229,7 @@
     background-color: #ffffff !important;
     color: #475569 !important;
     font-weight: 600 !important;
-    font-size: 13px !important;
+    font-size: 12px !important;
     padding: 12px 16px !important;
     text-transform: none !important;
     letter-spacing: normal !important;
@@ -1020,7 +1020,7 @@ aside.bg-sidebar nav a > div.gap-2 {
   padding: 8px 12px !important; /* More compact nested dimensions */
   margin-top: 2px !important;
   margin-bottom: 2px !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   transition: all 0.2s ease-in-out !important;
 }
@@ -1120,7 +1120,7 @@ th, thead th {
   color: #475569 !important; /* Slate gray for header text */
   font-weight: 600 !important; /* Semibold font weight like mockup */
   text-transform: none !important; /* Normal capitalization */
-  font-size: 13px !important; /* Standard font size */
+  font-size: 12px !important; /* Standard font size */
   letter-spacing: normal !important;
   padding: 12px 16px !important;
   border-bottom: 1px solid #f1f5f9 !important;
@@ -1140,7 +1140,7 @@ td, tbody td {
   background-color: #ffffff !important; /* All rows are white */
   padding: 12px 16px !important;
   color: #334155 !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   vertical-align: middle !important;
 }
 
