@@ -9,6 +9,7 @@ import {
   Briefcase,
   MapPin,
   FileBadge,
+  FileText,
   UserCheck,
   UserX,
 } from 'lucide-react';
@@ -39,6 +40,7 @@ interface EmployeeTableProps {
   onEdit: (employee: any) => void;
   onViewContract: (id: string) => void;
   onViewDocuments: (id: string) => void;
+  onViewCv: (id: string) => void;
   onRehire?: (employee: any) => void;
   onTransfer?: (employee: any) => void;
   onIssueCertificate?: (employee: any) => void;
@@ -53,6 +55,7 @@ export function EmployeeTable({
   onEdit,
   onViewContract,
   onViewDocuments,
+  onViewCv,
   onRehire,
   onTransfer,
   onIssueCertificate,
@@ -178,7 +181,17 @@ export function EmployeeTable({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}
+                      title="Ver CV"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
                       onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}
+                      title="Ver 360"
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -215,6 +228,10 @@ export function EmployeeTable({
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                           Documentos
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}>
+                          <FileText className="w-4 h-4 mr-2 text-primary" />
+                          Ver CV
                         </DropdownMenuItem>
                         {onStartTermination && (!isRetired || isEnRetiro) && (
                           <DropdownMenuItem

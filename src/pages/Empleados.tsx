@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { EmployeeFormDialog } from '@/components/employees/EmployeeFormDialog';
 import { EmployeeDetailDialog } from '@/components/employees/EmployeeDetailDialog';
+import { EmployeeCvDialog } from '@/components/employees/EmployeeCvDialog';
 import { CertificationAlertsPanel } from '@/components/employees/CertificationAlertsPanel';
 import { EmployeeCard } from '@/components/employees/EmployeeCard';
 import { IssueCertificateDialog } from '@/components/employees/IssueCertificateDialog';
@@ -83,6 +84,8 @@ export default function Empleados() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [selectedCvEmployeeId, setSelectedCvEmployeeId] = useState<string | null>(null);
+  const [isCvOpen, setIsCvOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<any>(null);
   const [rehireEmployee, setRehireEmployee] = useState<any>(null);
   const [isRehireOpen, setIsRehireOpen] = useState(false);
@@ -227,6 +230,11 @@ export default function Empleados() {
 
   const handleViewDocuments = (employeeId: string) => {
     navigate(`/empleados/${employeeId}/360?tab=documentos`);
+  };
+
+  const handleViewCv = (employeeId: string) => {
+    setSelectedCvEmployeeId(employeeId);
+    setIsCvOpen(true);
   };
 
   const handleRehire = (employee: any) => {
@@ -443,6 +451,12 @@ export default function Empleados() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
         employeeId={selectedEmployeeId}
+      />
+
+      <EmployeeCvDialog
+        open={isCvOpen}
+        onOpenChange={setIsCvOpen}
+        employeeId={selectedCvEmployeeId}
       />
 
       <RehireEmployeeDialog
@@ -725,6 +739,7 @@ export default function Empleados() {
                   onEdit={handleEdit}
                   onViewContract={handleViewContract}
                   onViewDocuments={handleViewDocuments}
+                  onViewCv={handleViewCv}
                   onRehire={handleRehire}
                   onTransfer={handleTransfer}
                   onIssueCertificate={handleIssueCertificate}
@@ -742,6 +757,7 @@ export default function Empleados() {
                 onEdit={handleEdit}
                 onViewContract={handleViewContract}
                 onViewDocuments={handleViewDocuments}
+                onViewCv={handleViewCv}
                 onRehire={handleRehire}
                 onTransfer={handleTransfer}
                 onIssueCertificate={handleIssueCertificate}

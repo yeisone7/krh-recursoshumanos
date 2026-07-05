@@ -12,6 +12,7 @@ import {
   RotateCcw,
   ArrowRightLeft,
   FileBadge,
+  FileText,
   Eye,
   UserCheck,
   UserX,
@@ -36,6 +37,7 @@ interface EmployeeCardProps {
   onEdit: (employee: any) => void;
   onViewContract: (id: string) => void;
   onViewDocuments: (id: string) => void;
+  onViewCv: (id: string) => void;
   onRehire?: (employee: any) => void;
   onTransfer?: (employee: any) => void;
   onIssueCertificate?: (employee: any) => void;
@@ -51,6 +53,7 @@ export function EmployeeCard({
   onEdit,
   onViewContract,
   onViewDocuments,
+  onViewCv,
   onRehire,
   onTransfer,
   onIssueCertificate,
@@ -115,6 +118,15 @@ export function EmployeeCard({
             <Eye className="w-3.5 h-3.5 mr-1" />
             360
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2.5 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+            onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}
+          >
+            <FileText className="w-3.5 h-3.5 mr-1" />
+            CV
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-8 w-8 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
@@ -148,6 +160,10 @@ export function EmployeeCard({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewDocuments(employee.id); }}>
                 Documentos
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}>
+                <FileText className="w-4 h-4 mr-2 text-primary" />
+                Ver CV
               </DropdownMenuItem>
               {onStartTermination && (!isRetired || isEnRetiro) && (
                 <DropdownMenuItem
