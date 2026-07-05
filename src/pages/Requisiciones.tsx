@@ -248,26 +248,26 @@ export default function Requisiciones() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-5 py-3 sm:px-8 bg-background border-b border-border flex flex-col xl:flex-row xl:items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
-          <div className="relative w-full sm:w-72 xl:w-80 group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+      <div className="sticky top-0 z-30 border-b border-border bg-background px-4 py-3 sm:px-6">
+        <div className="grid gap-2 lg:grid-cols-[minmax(260px,340px)_minmax(420px,1fr)_auto_auto] lg:items-center">
+          <div className="group relative w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <input
               placeholder="Buscar por codigo, cargo, solicitante..."
-              className="w-full pl-10 h-10 rounded-xl bg-background border-border focus:bg-background focus:ring-4 focus:ring-primary/5 transition-all text-sm font-bold placeholder:font-normal outline-none"
+              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm font-medium text-foreground outline-none transition-all placeholder:font-normal placeholder:text-muted-foreground focus:bg-background focus:ring-4 focus:ring-primary/5"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 xl:grid-cols-4">
-             <SearchableSelect
+          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
+            <SearchableSelect
               options={statusOptions}
               value={statusFilter}
               onValueChange={setStatusFilter}
               placeholder="Filtrar por estado"
               searchPlaceholder="Buscar estado..."
-              triggerClassName="h-10 w-full sm:w-[210px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
             />
             <SearchableSelect
               options={centerOptions}
@@ -275,7 +275,7 @@ export default function Requisiciones() {
               onValueChange={setCenterFilter}
               placeholder="Centro de operacion"
               searchPlaceholder="Buscar centro..."
-              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
             />
             <SearchableSelect
               options={processLeaderOptions}
@@ -283,7 +283,7 @@ export default function Requisiciones() {
               onValueChange={setProcessLeaderFilter}
               placeholder="Lider de proceso"
               searchPlaceholder="Buscar lider..."
-              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
             />
             <SearchableSelect
               options={vacancyClosureOptions}
@@ -291,21 +291,19 @@ export default function Requisiciones() {
               onValueChange={setVacancyClosureFilter}
               placeholder="Cierre de vacante"
               searchPlaceholder="Buscar indicador..."
-              triggerClassName="h-10 w-full sm:w-[220px] rounded-xl bg-background border-border font-bold text-[11px] uppercase tracking-wider"
+              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="flex items-center px-4 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
-              <span className="text-sm font-black text-primary">{filtered.length}</span>
-            </div>
+          <div className="flex h-9 min-w-12 items-center justify-center rounded-lg border border-border bg-primary/10 px-3">
+            <span className="text-sm font-black text-primary">{filtered.length}</span>
           </div>
-        </div>
 
-        <Button className="h-10 w-full px-6 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-md shadow-primary/10 sm:w-auto xl:shrink-0" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
-          <Plus className="w-3.5 h-3.5 mr-2" />
-          Nueva Requisición
-        </Button>
+          <Button className="h-9 w-full justify-center rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-wide text-primary-foreground shadow-sm shadow-primary/10 sm:w-auto lg:justify-self-end" onClick={() => { setEditRequisition(null); setShowForm(true); }}>
+            <Plus className="mr-2 h-3.5 w-3.5" />
+            Nueva Requisición
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 px-1.5 py-6 sm:px-2.5 sm:py-8">
