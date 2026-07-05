@@ -323,8 +323,8 @@ export default function Requisiciones() {
             </div>
           ) : (
             <>
-              {/* Card Grid View (Mobile and Tablet/Small PC) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:hidden">
+              {/* Card Grid View (Mobile and tablet) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
                 {filtered.map(req => {
                   const status = req.estado_requisicion as RequisitionStatus;
                   const cfg = requisitionStatusConfig[status];
@@ -413,7 +413,7 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md xl:block">
+              <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md lg:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
                   <Table className="w-full min-w-[960px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
