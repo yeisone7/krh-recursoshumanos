@@ -929,11 +929,10 @@ export default function Contratos() {
           <div className="overflow-hidden">
             <table className="contracts-matrix-table w-full table-fixed">
               <colgroup>
-                <col className="hidden w-[9%] md:table-column" />
+                <col className="hidden w-[15%] md:table-column" />
                 <col className="w-[22%]" />
                 <col className="hidden w-[16%] sm:table-column" />
                 <col className="hidden w-[12%] lg:table-column" />
-                <col className="hidden w-[12%] md:table-column" />
                 <col className="hidden w-[13%] lg:table-column" />
                 <col className="w-[13%]" />
                 <col className="w-[3%]" />
@@ -944,7 +943,6 @@ export default function Contratos() {
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Empleado</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden sm:table-cell">Tipo</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Vigencia</th>
-                  <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Salario</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Aprobación</th>
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Estado</th>
                   <th className="text-right p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground"></th>
@@ -954,7 +952,7 @@ export default function Contratos() {
                 {groupedVisibleContracts.map((group) => (
                   <Fragment key={group.id}>
                     <tr className="bg-background/80">
-                      <td colSpan={8} className="px-4 py-2">
+                      <td colSpan={7} className="px-4 py-2">
                         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground">
                           <span className="flex min-w-0 items-center gap-2">
                             <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -987,7 +985,7 @@ export default function Contratos() {
                       <td className="hidden p-3 md:table-cell">
                         <div className="flex items-center gap-2">
                           <Coins className="w-3.5 h-3.5 text-primary/40" />
-                          <span className="truncate text-sm font-mono font-semibold text-primary/70">
+                          <span className="whitespace-nowrap text-sm font-mono font-semibold text-primary/70">
                             {contract.contract_number || 'S/C'}
                           </span>
                         </div>
@@ -1024,16 +1022,9 @@ export default function Contratos() {
                           <p className="text-[11px] font-medium text-foreground/60">
                             → {formatContractDate(effectiveEndDate)}
                           </p>
-                        </div>
-                      </td>
-                      <td className="hidden p-3 md:table-cell">
-                        <div className="space-y-0.5">
-                          <span className="text-sm font-bold text-foreground">
-                            {canViewContractCompensation ? formatCurrency(Number(contract.salary)) : '••••••'}
-                          </span>
                           {extensionsCount > 0 && (
-                            <p className="text-[10px] font-bold text-accent uppercase flex items-center gap-1">
-                              <RotateCw className="w-2.5 h-2.5" /> {extensionsCount} prórrogas
+                            <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-accent">
+                              <RotateCw className="h-2.5 w-2.5" /> {extensionsCount} prórrogas
                             </p>
                           )}
                         </div>

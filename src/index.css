@@ -1198,8 +1198,8 @@ tbody tr:hover td {
   padding: 0.6rem 0.65rem !important;
 }
 
-.contracts-matrix-table th:nth-child(7),
-.contracts-matrix-table td:nth-child(7) {
+.contracts-matrix-table th:nth-child(6),
+.contracts-matrix-table td:nth-child(6) {
   min-width: 8rem;
 }
 
