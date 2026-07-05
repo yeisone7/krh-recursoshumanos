@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
-  TrendingUp, Briefcase, Filter, ChevronRight, Trash2, AlertTriangle, MoreHorizontal
+  TrendingUp, Briefcase, Filter, ChevronDown, ChevronRight, Trash2, AlertTriangle, MoreHorizontal
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -63,6 +63,7 @@ export default function Requisiciones() {
   const [approvalStep, setApprovalStep] = useState<RequisitionApprovalStep | null>(null);
   const [exportingId, setExportingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PersonnelRequisition | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data: requisitions = [], isLoading } = useRequisitions();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -118,6 +119,13 @@ export default function Requisiciones() {
       return matchesSearch && matchesStatus && matchesCenter && matchesProcessLeader && matchesVacancyClosure;
     });
   }, [requisitions, searchQuery, statusFilter, centerFilter, processLeaderFilter, vacancyClosureFilter]);
+
+  const activeFiltersCount = [
+    statusFilter !== 'all',
+    centerFilter !== 'all',
+    processLeaderFilter !== 'all',
+    vacancyClosureFilter !== 'all',
+  ].filter(Boolean).length;
 
   const openDetail = (id: string) => { setSelectedId(id); setShowDetail(true); };
 
@@ -249,51 +257,34 @@ export default function Requisiciones() {
 
       {/* Sticky Filter Bar */}
       <div className="sticky top-0 z-30 border-b border-border bg-background px-4 py-3 sm:px-6">
-        <div className="grid gap-2 lg:grid-cols-[minmax(260px,340px)_minmax(420px,1fr)_auto_auto] lg:items-center">
+        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto] lg:items-center">
           <div className="group relative w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
             <input
               placeholder="Buscar por codigo, cargo, solicitante..."
-              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm font-medium text-foreground outline-none transition-all placeholder:font-normal placeholder:text-muted-foreground focus:bg-background focus:ring-4 focus:ring-primary/5"
+              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-3 text-sm font-medium text-foreground outline-none transition-all placeholder:text-xs placeholder:font-normal placeholder:text-muted-foreground focus:bg-background focus:ring-4 focus:ring-primary/5"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
-            <SearchableSelect
-              options={statusOptions}
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-              placeholder="Filtrar por estado"
-              searchPlaceholder="Buscar estado..."
-              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
-            />
-            <SearchableSelect
-              options={centerOptions}
-              value={centerFilter}
-              onValueChange={setCenterFilter}
-              placeholder="Centro de operacion"
-              searchPlaceholder="Buscar centro..."
-              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
-            />
-            <SearchableSelect
-              options={processLeaderOptions}
-              value={processLeaderFilter}
-              onValueChange={setProcessLeaderFilter}
-              placeholder="Lider de proceso"
-              searchPlaceholder="Buscar lider..."
-              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
-            />
-            <SearchableSelect
-              options={vacancyClosureOptions}
-              value={vacancyClosureFilter}
-              onValueChange={setVacancyClosureFilter}
-              placeholder="Cierre de vacante"
-              searchPlaceholder="Buscar indicador..."
-              triggerClassName="h-9 w-full rounded-lg bg-background border-border px-3 text-xs font-semibold text-foreground"
-            />
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 w-full justify-between rounded-lg border-border px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground sm:w-auto"
+            onClick={() => setFiltersOpen((open) => !open)}
+          >
+            <span className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5 text-primary" />
+              Filtros
+              {activeFiltersCount > 0 && (
+                <Badge className="h-4 min-w-4 rounded-full px-1.5 text-[9px] leading-none">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </span>
+            <ChevronDown className={cn("ml-2 h-3.5 w-3.5 transition-transform", filtersOpen && "rotate-180")} />
+          </Button>
 
           <div className="flex h-9 min-w-12 items-center justify-center rounded-lg border border-border bg-primary/10 px-3">
             <span className="text-sm font-black text-primary">{filtered.length}</span>
@@ -303,6 +294,43 @@ export default function Requisiciones() {
             <Plus className="mr-2 h-3.5 w-3.5" />
             Nueva Requisición
           </Button>
+        </div>
+
+        <div className={cn("overflow-hidden transition-all duration-200", filtersOpen ? "max-h-48 pt-3 opacity-100" : "max-h-0 opacity-0")}>
+          <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-muted/20 p-2 sm:grid-cols-2 xl:grid-cols-4">
+            <SearchableSelect
+              options={statusOptions}
+              value={statusFilter}
+              onValueChange={setStatusFilter}
+              placeholder="Filtrar por estado"
+              searchPlaceholder="Buscar estado..."
+              triggerClassName="h-8 w-full rounded-lg bg-background border-border px-3 text-[11px] font-medium text-muted-foreground"
+            />
+            <SearchableSelect
+              options={centerOptions}
+              value={centerFilter}
+              onValueChange={setCenterFilter}
+              placeholder="Centro de operacion"
+              searchPlaceholder="Buscar centro..."
+              triggerClassName="h-8 w-full rounded-lg bg-background border-border px-3 text-[11px] font-medium text-muted-foreground"
+            />
+            <SearchableSelect
+              options={processLeaderOptions}
+              value={processLeaderFilter}
+              onValueChange={setProcessLeaderFilter}
+              placeholder="Lider de proceso"
+              searchPlaceholder="Buscar lider..."
+              triggerClassName="h-8 w-full rounded-lg bg-background border-border px-3 text-[11px] font-medium text-muted-foreground"
+            />
+            <SearchableSelect
+              options={vacancyClosureOptions}
+              value={vacancyClosureFilter}
+              onValueChange={setVacancyClosureFilter}
+              placeholder="Cierre de vacante"
+              searchPlaceholder="Buscar indicador..."
+              triggerClassName="h-8 w-full rounded-lg bg-background border-border px-3 text-[11px] font-medium text-muted-foreground"
+            />
+          </div>
         </div>
       </div>
 
