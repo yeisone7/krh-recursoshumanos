@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   CheckCircle,
   ChevronRight,
+  ChevronDown,
   Calendar,
   User,
   Loader2,
@@ -355,6 +356,7 @@ export default function Contratos() {
   const [showExpiredContracts, setShowExpiredContracts] = useState(false);
   const [viewMode, setViewMode] = useState<ContractsViewMode>('cards');
   const [isBulkRegularizationOpen, setIsBulkRegularizationOpen] = useState(false);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
 
   const { currentCompanyId, hasPermission, canView, canCreate, canUpdate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
@@ -625,108 +627,124 @@ export default function Contratos() {
       </div>
 
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md pb-2">
-        <div className="flex flex-col lg:flex-row gap-2 p-2 rounded-xl border border-border bg-card shadow-sm">
-          <div className="relative flex-1 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input
-              placeholder="Buscar por empleado..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="h-10 pl-11 bg-background border-none rounded-xl shadow-sm focus-visible:ring-primary/20"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[180px] h-10 bg-background border-none rounded-xl shadow-sm">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <SelectValue placeholder="Tipo" />
-                </div>
-              </SelectTrigger>
-              <SelectContent className="bg-background rounded-xl">
-                <SelectItem value="all" className="rounded-lg">Todos los tipos</SelectItem>
-                {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
-                  <SelectItem key={ct.contract_type} value={ct.contract_type} className="rounded-lg">
-                    {ct.display_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="w-full sm:w-[210px] h-10 bg-background border-none rounded-xl shadow-sm">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                  <SelectValue placeholder="Centro" />
-                </div>
-              </SelectTrigger>
-              <SelectContent className="bg-background rounded-xl">
-                <SelectItem value="all" className="rounded-lg">Todos los centros</SelectItem>
-                {operationCenters?.map((center) => (
-                  <SelectItem key={center.id} value={center.id} className="rounded-lg">
-                    {center.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[140px] h-10 bg-background border-none rounded-xl shadow-sm">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent className="bg-background rounded-xl">
-                <SelectItem value="all" className="rounded-lg">Todos</SelectItem>
-                <SelectItem value="active" className="rounded-lg">Vigentes</SelectItem>
-                <SelectItem value="expiring" className="rounded-lg">Por vencer</SelectItem>
-                <SelectItem value="expired" className="rounded-lg">Vencidos</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 shadow-sm">
-              <Switch
-                id="show-expired-contracts"
-                checked={showExpiredContracts}
-                onCheckedChange={setShowExpiredContracts}
-                aria-label="Mostrar contratos vencidos"
-              />
-              <label
-                htmlFor="show-expired-contracts"
-                className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
-              >
-                Vencidos
-              </label>
-            </div>
-
-            <div className="flex items-center px-3 h-10 bg-primary/10 rounded-xl border border-border shrink-0">
-              <span className="text-[11px] font-bold text-primary whitespace-nowrap">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
+          <button
+            type="button"
+            onClick={() => setIsFiltersOpen((value) => !value)}
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+            aria-expanded={isFiltersOpen}
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Filter className="h-4 w-4 text-primary" />
+              Filtros de contratos
+            </span>
+            <span className="flex items-center gap-2">
+              <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
                 {viewMode === 'matrix' ? totalCount : visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
               </span>
-            </div>
+              <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isFiltersOpen && 'rotate-180')} />
+            </span>
+          </button>
 
-            <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-background p-1 shadow-sm">
-              <Button
-                type="button"
-                variant={viewMode === 'cards' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('cards')}
-                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
-              >
-                <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
-                Tarjetas
-              </Button>
-              <Button
-                type="button"
-                variant={viewMode === 'matrix' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('matrix')}
-                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
-              >
-                <Table2 className="mr-1.5 h-3.5 w-3.5" />
-                Matriz
-              </Button>
+          {isFiltersOpen && (
+            <div className="border-t border-border p-3">
+              <div className="grid gap-2 xl:grid-cols-[minmax(220px,1fr)_180px_210px_140px_auto_auto]">
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                  <Input
+                    placeholder="Buscar por empleado..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="h-10 rounded-xl border-none bg-background pl-11 shadow-sm focus-visible:ring-primary/20"
+                  />
+                </div>
+
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="h-10 w-full rounded-xl border-none bg-background shadow-sm">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Filter className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      <SelectValue placeholder="Tipo" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-background rounded-xl">
+                    <SelectItem value="all" className="rounded-lg">Todos los tipos</SelectItem>
+                    {contractTypesConfig?.filter(ct => ct.is_active).map((ct) => (
+                      <SelectItem key={ct.contract_type} value={ct.contract_type} className="rounded-lg">
+                        {ct.display_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={centerFilter} onValueChange={setCenterFilter}>
+                  <SelectTrigger className="h-10 w-full rounded-xl border-none bg-background shadow-sm">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      <SelectValue placeholder="Centro" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-background rounded-xl">
+                    <SelectItem value="all" className="rounded-lg">Todos los centros</SelectItem>
+                    {operationCenters?.map((center) => (
+                      <SelectItem key={center.id} value={center.id} className="rounded-lg">
+                        {center.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-10 w-full rounded-xl border-none bg-background shadow-sm">
+                    <SelectValue placeholder="Estado" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background rounded-xl">
+                    <SelectItem value="all" className="rounded-lg">Todos</SelectItem>
+                    <SelectItem value="active" className="rounded-lg">Vigentes</SelectItem>
+                    <SelectItem value="expiring" className="rounded-lg">Por vencer</SelectItem>
+                    <SelectItem value="expired" className="rounded-lg">Vencidos</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 shadow-sm">
+                  <Switch
+                    id="show-expired-contracts"
+                    checked={showExpiredContracts}
+                    onCheckedChange={setShowExpiredContracts}
+                    aria-label="Mostrar contratos vencidos"
+                  />
+                  <label
+                    htmlFor="show-expired-contracts"
+                    className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
+                  >
+                    Vencidos
+                  </label>
+                </div>
+
+                <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-background p-1 shadow-sm">
+                  <Button
+                    type="button"
+                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                    className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+                  >
+                    <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
+                    Tarjetas
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={viewMode === 'matrix' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('matrix')}
+                    className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+                  >
+                    <Table2 className="mr-1.5 h-3.5 w-3.5" />
+                    Matriz
+                  </Button>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -906,8 +924,18 @@ export default function Contratos() {
             </PullToRefresh>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-hidden">
+            <table className="contracts-matrix-table w-full table-fixed">
+              <colgroup>
+                <col className="hidden w-[9%] md:table-column" />
+                <col className="w-[22%]" />
+                <col className="hidden w-[16%] sm:table-column" />
+                <col className="hidden w-[12%] lg:table-column" />
+                <col className="hidden w-[12%] md:table-column" />
+                <col className="hidden w-[13%] lg:table-column" />
+                <col className="w-[13%]" />
+                <col className="w-[3%]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-border bg-background">
                   <th className="text-left p-4 font-bold text-[10px] uppercase tracking-wider text-muted-foreground hidden md:table-cell">Nº Contrato</th>
@@ -954,34 +982,34 @@ export default function Contratos() {
                           onClick={() => handleContractClick(contract.id)}
                           className="group hover:bg-primary/[0.02] transition-colors cursor-pointer"
                         >
-                      <td className="p-4 hidden md:table-cell">
+                      <td className="hidden p-3 md:table-cell">
                         <div className="flex items-center gap-2">
                           <Coins className="w-3.5 h-3.5 text-primary/40" />
-                          <span className="text-sm font-mono text-primary/70 font-semibold">
+                          <span className="truncate text-sm font-mono font-semibold text-primary/70">
                             {contract.contract_number || 'S/C'}
                           </span>
                         </div>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <User className="w-5 h-5 text-primary" />
+                      <td className="p-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-105">
+                            <User className="h-4 w-4 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <span className="font-bold text-foreground block truncate">
+                            <span className="block truncate font-bold text-foreground">
                               {contract.employees?.first_name} {contract.employees?.last_name}
                             </span>
-                            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">CC {contract.employees?.document_number}</p>
+                            <p className="truncate text-[11px] font-medium uppercase tracking-tight text-muted-foreground">CC {contract.employees?.document_number}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 hidden sm:table-cell">
-                        <div className="flex items-center gap-2">
-                          <ContractTypeIcon className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm font-medium text-foreground/80">{getContractTypeLabel(contract.contract_type)}</span>
+                      <td className="hidden p-3 sm:table-cell">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <ContractTypeIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="truncate text-sm font-medium text-foreground/80">{getContractTypeLabel(contract.contract_type)}</span>
                         </div>
                       </td>
-                      <td className="p-4 hidden lg:table-cell">
+                      <td className="hidden p-3 lg:table-cell">
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                             <Calendar className="w-3.5 h-3.5 text-primary/60" />
@@ -996,7 +1024,7 @@ export default function Contratos() {
                           </p>
                         </div>
                       </td>
-                      <td className="p-4 hidden md:table-cell">
+                      <td className="hidden p-3 md:table-cell">
                         <div className="space-y-0.5">
                           <span className="text-sm font-bold text-foreground">
                             {canViewContractCompensation ? formatCurrency(Number(contract.salary)) : '••••••'}
@@ -1008,7 +1036,7 @@ export default function Contratos() {
                           )}
                         </div>
                       </td>
-                      <td className="p-4 hidden lg:table-cell">
+                      <td className="hidden p-3 lg:table-cell">
                         {contract.is_approved ? (
                           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 text-[10px] font-bold uppercase py-0 px-2">
                             <CheckCircle2 className="w-3 h-3" />
@@ -1021,17 +1049,17 @@ export default function Contratos() {
                           </Badge>
                         )}
                       </td>
-                      <td className="p-4">
-                        <Badge variant="outline" className={cn("gap-1 text-[10px] font-bold uppercase py-0.5 px-2 border-border shadow-sm", statusConfig[status].class)}>
-                          <StatusIcon className="w-3 h-3" />
+                      <td className="p-3">
+                        <Badge variant="outline" className={cn("max-w-full gap-1 whitespace-nowrap text-[10px] font-bold uppercase py-0.5 px-2 border-border shadow-sm", statusConfig[status].class)}>
+                          <StatusIcon className="h-3 w-3 shrink-0" />
                           {statusConfig[status].label}
                           {daysRemaining !== null && daysRemaining > 0 && daysRemaining <= 30 && (
                             <span className="ml-1 opacity-70">({daysRemaining}d)</span>
                           )}
                         </Badge>
                       </td>
-                      <td className="p-4 text-right">
-                        <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end opacity-0 transition-opacity group-hover:opacity-100">
                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-xl hover:bg-primary/10 hover:text-primary">
                              <ChevronRight className="w-4 h-4" />
                            </Button>
