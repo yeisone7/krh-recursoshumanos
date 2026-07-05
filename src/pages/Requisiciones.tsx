@@ -415,14 +415,14 @@ export default function Requisiciones() {
 
               <div className="hidden rounded-[2.5rem] border border-border bg-background shadow-md lg:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-[2.5rem]">
-                  <Table className="w-full min-w-[960px] table-fixed">
+                  <Table className="w-full min-w-[900px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">
                     <TableRow className="bg-background border-b border-border hover:bg-background">
-                      <TableHead className="h-14 w-[300px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
-                      <TableHead className="h-14 w-[230px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
+                      <TableHead className="h-14 w-[260px] px-4 font-black text-[10px] uppercase tracking-[0.2em]">Cargo / Solicitante</TableHead>
+                      <TableHead className="h-14 w-[210px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Ubicación / Motivo</TableHead>
                       <TableHead className="h-14 w-[190px] px-2 text-center font-black text-[10px] uppercase tracking-[0.2em]">Flujo</TableHead>
-                      <TableHead className="h-14 w-[125px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
-                      <TableHead className="h-14 w-[155px] px-3 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
+                      <TableHead className="h-14 w-[120px] px-3 font-black text-[10px] uppercase tracking-[0.2em]">Estado</TableHead>
+                      <TableHead className="h-14 w-[190px] px-4 text-right font-black text-[10px] uppercase tracking-[0.2em]">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -536,7 +536,7 @@ export default function Requisiciones() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="px-3 py-4 text-right">
+                          <TableCell className="px-4 py-4 text-right">
                             <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
                               {step && (
                                 <Button
