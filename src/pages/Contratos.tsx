@@ -626,28 +626,69 @@ export default function Contratos() {
         ))}
       </div>
 
-      <div className="sticky top-0 z-10 space-y-2 bg-background/80 pb-2 backdrop-blur-md">
-        <div className="rounded-xl border border-border bg-card shadow-sm">
-          <button
-            type="button"
-            onClick={() => setIsFiltersOpen((value) => !value)}
-            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-            aria-expanded={isFiltersOpen}
-          >
-            <span className="flex items-center gap-2 text-sm font-bold text-foreground">
-              <Filter className="h-4 w-4 text-primary" />
-              Filtros de contratos
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
-                {viewMode === 'matrix' ? totalCount : visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
+      <div className="sticky top-0 z-10 bg-background/80 pb-2 backdrop-blur-md">
+        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto]">
+          <div className="rounded-xl border border-border bg-card shadow-sm">
+            <button
+              type="button"
+              onClick={() => setIsFiltersOpen((value) => !value)}
+              className="flex h-10 w-full items-center justify-between gap-3 px-4 text-left"
+              aria-expanded={isFiltersOpen}
+            >
+              <span className="flex items-center gap-2 text-sm font-bold text-foreground">
+                <Filter className="h-4 w-4 text-primary" />
+                Filtros de contratos
               </span>
-              <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isFiltersOpen && 'rotate-180')} />
-            </span>
-          </button>
+              <span className="flex items-center gap-2">
+                <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">
+                  {viewMode === 'matrix' ? totalCount : visibleCount < totalCount ? `${visibleCount}/${totalCount}` : totalCount}
+                </span>
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isFiltersOpen && 'rotate-180')} />
+              </span>
+            </button>
+          </div>
 
-          {isFiltersOpen && (
-            <div className="border-t border-border p-3">
+          <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 shadow-sm">
+            <Switch
+              id="show-expired-contracts"
+              checked={showExpiredContracts}
+              onCheckedChange={setShowExpiredContracts}
+              aria-label="Mostrar contratos vencidos"
+            />
+            <label
+              htmlFor="show-expired-contracts"
+              className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
+            >
+              Vencidos
+            </label>
+          </div>
+
+          <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-sm">
+            <Button
+              type="button"
+              variant={viewMode === 'cards' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('cards')}
+              className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+            >
+              <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
+              Tarjetas
+            </Button>
+            <Button
+              type="button"
+              variant={viewMode === 'matrix' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('matrix')}
+              className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+            >
+              <Table2 className="mr-1.5 h-3.5 w-3.5" />
+              Matriz
+            </Button>
+          </div>
+        </div>
+
+        {isFiltersOpen && (
+          <div className="mt-2 rounded-xl border border-border bg-card p-3 shadow-sm">
               <div className="grid gap-2 xl:grid-cols-[minmax(220px,1fr)_180px_210px_140px]">
                 <div className="relative group">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
@@ -705,49 +746,8 @@ export default function Contratos() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-          )}
-        </div>
-
-        <div className="grid gap-2 md:grid-cols-[minmax(220px,1fr)_auto]">
-          <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 shadow-sm">
-            <Switch
-              id="show-expired-contracts"
-              checked={showExpiredContracts}
-              onCheckedChange={setShowExpiredContracts}
-              aria-label="Mostrar contratos vencidos"
-            />
-            <label
-              htmlFor="show-expired-contracts"
-              className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
-            >
-              Vencidos
-            </label>
           </div>
-
-          <div className="flex h-10 overflow-hidden rounded-xl border border-border bg-card p-1 shadow-sm">
-            <Button
-              type="button"
-              variant={viewMode === 'cards' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('cards')}
-              className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
-            >
-              <LayoutGrid className="mr-1.5 h-3.5 w-3.5" />
-              Tarjetas
-            </Button>
-            <Button
-              type="button"
-              variant={viewMode === 'matrix' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('matrix')}
-              className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
-            >
-              <Table2 className="mr-1.5 h-3.5 w-3.5" />
-              Matriz
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Contracts Table */}
