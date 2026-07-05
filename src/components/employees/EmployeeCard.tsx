@@ -78,21 +78,21 @@ export function EmployeeCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={cn(
-        "card-elevated p-5 group cursor-pointer hover:border-primary/30",
+        "card-elevated p-4 group cursor-pointer hover:border-primary/30",
         isFinalRetired && "employee-retired-card"
       )}
       style={isFinalRetired ? { background: '#fff7f7', backgroundColor: '#fff7f7', borderColor: '#fee2e2' } : undefined}
       onClick={() => onOpenDetail(employee.id)}
     >
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative">
             <EmployeeAvatarZoom
               imageUrl={employee.avatar_url}
               name={employeeName}
               initials={initials}
-              avatarClassName="h-12 w-12"
-              fallbackClassName="bg-primary-light text-primary text-lg font-semibold"
+              avatarClassName="h-10 w-10"
+              fallbackClassName="bg-primary-light text-primary text-base font-semibold"
             />
             {isNew && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4">
@@ -102,17 +102,17 @@ export function EmployeeCard({
             )}
           </div>
           <div className="min-w-0">
-            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+            <h3 className="text-[15px] font-semibold text-foreground group-hover:text-primary transition-colors">
               {employeeName}
             </h3>
-            <p className="text-sm text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
+            <p className="text-xs text-muted-foreground">{employee.work_info?.position_name || 'Sin cargo'}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-2.5 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+            className="h-7 px-2 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}
           >
             <Eye className="w-3.5 h-3.5 mr-1" />
@@ -121,7 +121,7 @@ export function EmployeeCard({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 px-2.5 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+            className="h-7 px-2 text-xs font-medium opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
             onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}
           >
             <FileText className="w-3.5 h-3.5 mr-1" />
@@ -129,7 +129,7 @@ export function EmployeeCard({
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -203,21 +203,21 @@ export function EmployeeCard({
         </div>
       </div>
 
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-secondary-light flex items-center justify-center">
+      <div className="space-y-1.5 mb-3">
+        <div className="flex items-center gap-2 text-xs">
+          <div className="w-5 h-5 rounded-md bg-secondary-light flex items-center justify-center">
             <Briefcase className="w-3.5 h-3.5 text-secondary-foreground" />
           </div>
           <span className="text-foreground">{employee.areas?.name || 'Sin área'}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-tertiary-light flex items-center justify-center">
+        <div className="flex items-center gap-2 text-xs">
+          <div className="w-5 h-5 rounded-md bg-tertiary-light flex items-center justify-center">
             <MapPin className="w-3.5 h-3.5 text-tertiary" />
           </div>
           <span className="text-foreground">{employee.operation_centers?.name || 'Sin centro asignado'}</span>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-6 h-6 rounded-md bg-violet-light flex items-center justify-center">
+        <div className="flex items-center gap-2 text-xs">
+          <div className="w-5 h-5 rounded-md bg-violet-light flex items-center justify-center">
             <Calendar className="w-3.5 h-3.5 text-violet" />
           </div>
           <span className="text-foreground">
@@ -228,7 +228,7 @@ export function EmployeeCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-border">
+      <div className="flex items-center justify-between pt-3 border-t border-border">
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className={cn(
             isRetired

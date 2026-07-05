@@ -134,7 +134,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="professional-density flex h-screen bg-background overflow-hidden">
       {/* Mobile swipe indicator */}
       {isMobile && !mobileOpen && (
         <AnimatePresence>
@@ -180,7 +180,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Header
           onMobileMenuToggle={isMobile ? () => setMobileOpen(true) : undefined}
         />
-        <main ref={mainRef} className={`flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 ${isMobile ? 'pb-24' : ''}`}>
+        <main ref={mainRef} className={`flex-1 overflow-y-auto p-2.5 sm:p-3 md:p-4 ${isMobile ? 'pb-24' : ''}`}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={isAiAssistant ? 'ai-assistant' : location.pathname}
@@ -300,7 +300,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             }
             navigate('/asistente-ia');
           }}
-          className={`fixed ${isMobile ? aiPanelOpen && !isAiAssistant ? 'hidden' : '' : aiPanelOpen && !isAiAssistant ? 'hidden bottom-6 right-6' : 'bottom-6 right-6'} z-50 h-14 w-14 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-[1.575rem] sm:[&_svg]:size-[1.8rem]`}
+          className={`fixed ${isMobile ? aiPanelOpen && !isAiAssistant ? 'hidden' : '' : aiPanelOpen && !isAiAssistant ? 'hidden bottom-5 right-5' : 'bottom-5 right-5'} z-50 h-12 w-12 rounded-full shadow-lg transition-[bottom,right] duration-200 [&_svg]:size-6 sm:[&_svg]:size-7`}
           style={isMobile ? {
             bottom: `calc(env(safe-area-inset-bottom, 0px) + ${isAiAssistant ? '10rem' : aiButtonLifted ? '7.25rem' : '5.75rem'})`,
             right: 'calc(env(safe-area-inset-right, 0px) + 1rem)',

@@ -65,11 +65,11 @@ export function EmployeeTable({
   const navigate = useNavigate();
 
   return (
-    <div className="card-elevated overflow-hidden">
+    <div className="employee-document-table card-elevated overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-card hover:bg-card border-b border-border/50">
-            <TableHead className="w-[300px]">Empleado</TableHead>
+          <TableRow className="border-b border-border/50">
+            <TableHead className="w-[280px]">Empleado</TableHead>
             <TableHead>Cargo y Área</TableHead>
             <TableHead>Centro de Operación</TableHead>
             <TableHead>Estado</TableHead>
@@ -94,19 +94,19 @@ export function EmployeeTable({
                 key={employee.id} 
                 className={cn(
                   "group cursor-pointer transition-colors",
-                  isFinalRetired ? "employee-retired-card" : "hover:bg-slate-50/50"
+                  isFinalRetired ? "employee-retired-card" : "hover:bg-slate-50/80"
                 )}
                 style={isFinalRetired ? { background: '#fff7f7', backgroundColor: '#fff7f7' } : undefined}
                 onClick={() => onOpenDetail(employee.id)}
               >
                 <TableCell>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5">
                     <div className="relative">
                       <EmployeeAvatarZoom
                         imageUrl={employee.avatar_url}
                         name={employeeName}
                         initials={initials}
-                        avatarClassName="h-10 w-10 border border-border"
+                        avatarClassName="h-8 w-8 border border-border"
                         fallbackClassName="bg-primary-light text-primary text-sm font-semibold"
                       />
                       {isNew && (
@@ -116,7 +116,7 @@ export function EmployeeTable({
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                      <span className="text-[13px] font-semibold text-foreground group-hover:text-primary transition-colors">
                         {employeeName}
                       </span>
                       <span className="text-xs text-muted-foreground">C.C: {employee.document_number || 'N/A'}</span>
@@ -125,7 +125,7 @@ export function EmployeeTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-sm text-foreground font-medium">
+                    <div className="flex items-center gap-1.5 text-[13px] text-foreground font-medium">
                       <Briefcase className="w-3.5 h-3.5 text-muted-foreground" />
                       {employee.work_info?.position_name || 'Sin cargo'}
                     </div>
@@ -135,7 +135,7 @@ export function EmployeeTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1.5 text-sm">
+                  <div className="flex items-center gap-1.5 text-[13px]">
                     <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-foreground">{employee.operation_centers?.name || 'Sin asignar'}</span>
                   </div>
@@ -164,12 +164,12 @@ export function EmployeeTable({
                 <TableCell>
                   <div className="flex items-center gap-2">
                     {employee.contact?.email && (
-                      <div className="w-7 h-7 rounded-full bg-indigo-light flex items-center justify-center text-indigo" title={employee.contact.email}>
+                       <div className="w-6 h-6 rounded-md bg-indigo-light flex items-center justify-center text-indigo" title={employee.contact.email}>
                         <Mail className="w-3.5 h-3.5" />
                       </div>
                     )}
                     {employee.contact?.phone && (
-                      <div className="w-7 h-7 rounded-full bg-teal-light flex items-center justify-center text-teal" title={employee.contact.phone}>
+                       <div className="w-6 h-6 rounded-md bg-teal-light flex items-center justify-center text-teal" title={employee.contact.phone}>
                         <Phone className="w-3.5 h-3.5" />
                       </div>
                     )}
@@ -180,7 +180,7 @@ export function EmployeeTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                       className="h-7 w-7 text-muted-foreground hover:text-primary"
                       onClick={(e) => { e.stopPropagation(); onViewCv(employee.id); }}
                       title="Ver CV"
                     >
@@ -189,7 +189,7 @@ export function EmployeeTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                       className="h-7 w-7 text-muted-foreground hover:text-primary"
                       onClick={(e) => { e.stopPropagation(); navigate(`/empleados/${employee.id}/360`); }}
                       title="Ver 360"
                     >
@@ -197,7 +197,7 @@ export function EmployeeTable({
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                         <Button variant="ghost" size="icon" className="h-7 w-7">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
