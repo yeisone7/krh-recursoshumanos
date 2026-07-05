@@ -17,6 +17,7 @@ import {
   Building2,
   UserPlus,
   Filter,
+  ChevronDown,
   Trash2,
   AlertTriangle,
   FileCheck,
@@ -68,7 +69,6 @@ import { useCandidates } from '@/hooks/useCandidates';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { MobileCardList } from '@/components/shared/MobileCardList';
-import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
@@ -119,6 +119,7 @@ export default function Seleccion() {
   const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
   const [candidateVacancyFilter, setCandidateVacancyFilter] = useState('all');
   const [candidateStatusFilter, setCandidateStatusFilter] = useState('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   
   // Dialogs
   const [showVacancyForm, setShowVacancyForm] = useState(false);
@@ -247,6 +248,12 @@ export default function Seleccion() {
       return matchesSearch && matchesStatus && matchesCenter && matchesRequisition;
     });
   }, [vacancies, searchQuery, statusFilter, centerFilter, requisitionFilter]);
+
+  const activeFiltersCount = [
+    statusFilter !== 'all',
+    centerFilter !== 'all',
+    requisitionFilter !== 'all',
+  ].filter(Boolean).length;
 
   const vacancyItems = useMemo(
     () => filteredVacancies.map((vacancy) => {
@@ -418,47 +425,74 @@ export default function Seleccion() {
       </div>
 
       {/* Sticky Filter Bar */}
-      <div className="sticky top-0 z-30 px-4 py-2 sm:px-6 bg-background border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-2">
-        <div className="flex flex-col sm:flex-row items-center gap-2 flex-1">
-          <div className="relative w-full sm:w-72 group">
+      <div className="sticky top-0 z-30 border-b border-border bg-background px-4 py-3 sm:px-6">
+        <div className={cn("grid gap-2 lg:items-center", canCreateVacancy ? "lg:grid-cols-[minmax(260px,1fr)_auto_auto]" : "lg:grid-cols-[minmax(260px,1fr)_auto]")}>
+          <div className="relative w-full group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within:text-primary transition-colors" />
             <Input
               placeholder="Buscar por cargo, área o requisición..."
-              className="h-9 rounded-lg border-border bg-background pl-8 text-xs font-bold transition-all placeholder:font-normal focus:bg-background focus:ring-4 focus:ring-primary/5"
+              className="h-9 rounded-lg border-border bg-background pl-8 text-xs font-medium transition-all placeholder:text-[11px] placeholder:font-normal placeholder:text-muted-foreground focus:bg-background focus:ring-4 focus:ring-primary/5"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 w-full justify-between rounded-lg border-border px-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground sm:w-auto"
+            onClick={() => setFiltersOpen((open) => !open)}
+          >
+            <span className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5 text-primary" />
+              Filtros
+              {activeFiltersCount > 0 && (
+                <Badge className="h-4 min-w-4 rounded-full px-1.5 text-[9px] leading-none">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </span>
+            <ChevronDown className={cn("ml-2 h-3.5 w-3.5 transition-transform", filtersOpen && "rotate-180")} />
+          </Button>
+
+          {canCreateVacancy && (
+            <Button className="h-9 w-full justify-center rounded-lg bg-primary px-4 text-xs font-black uppercase tracking-wide text-primary-foreground shadow-sm shadow-primary/10 sm:w-auto lg:justify-self-end" onClick={() => setShowVacancyForm(true)}>
+              <Plus className="w-3.5 h-3.5 mr-1.5" />
+              Nueva Vacante
+            </Button>
+          )}
+        </div>
+
+        <div className={cn("overflow-hidden transition-all duration-200", filtersOpen ? "max-h-48 pt-3 opacity-100" : "max-h-0 opacity-0")}>
+          <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-muted/20 p-2 sm:grid-cols-2 xl:grid-cols-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-[11px] font-bold uppercase tracking-wider sm:w-[150px]">
+              <SelectTrigger className="h-8 w-full rounded-lg border-border bg-background px-3 text-[11px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Filter className="w-3.5 h-3.5 shrink-0 text-primary" />
                   <SelectValue placeholder="Estado" />
                 </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border shadow-md">
-                <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todos los estados</SelectItem>
-                <SelectItem value="open" className="p-2.5 text-xs font-bold uppercase text-emerald-600">Abierta</SelectItem>
-                <SelectItem value="in_process" className="p-2.5 text-xs font-bold uppercase text-amber-600">En Proceso</SelectItem>
-                <SelectItem value="pending_placed" className="p-2.5 text-xs font-bold uppercase text-red-700">Pendiente Colocado</SelectItem>
-                <SelectItem value="closed" className="p-2.5 text-xs font-bold uppercase text-blue-600">Cerrada</SelectItem>
-                <SelectItem value="cancelled" className="p-2.5 text-xs font-bold uppercase text-destructive">Cancelada</SelectItem>
+                <SelectItem value="all" className="p-2.5 text-xs font-medium">Todos los estados</SelectItem>
+                <SelectItem value="open" className="p-2.5 text-xs font-medium text-emerald-600">Abierta</SelectItem>
+                <SelectItem value="in_process" className="p-2.5 text-xs font-medium text-amber-600">En Proceso</SelectItem>
+                <SelectItem value="pending_placed" className="p-2.5 text-xs font-medium text-red-700">Pendiente Colocado</SelectItem>
+                <SelectItem value="closed" className="p-2.5 text-xs font-medium text-blue-600">Cerrada</SelectItem>
+                <SelectItem value="cancelled" className="p-2.5 text-xs font-medium text-destructive">Cancelada</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={centerFilter} onValueChange={setCenterFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-[11px] font-bold uppercase tracking-wider sm:w-[170px]">
+              <SelectTrigger className="h-8 w-full rounded-lg border-border bg-background px-3 text-[11px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Building2 className="w-3.5 h-3.5 shrink-0 text-primary" />
                   <SelectValue placeholder="Centro" />
                 </div>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-border shadow-md">
-                <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todos los centros</SelectItem>
+                <SelectItem value="all" className="p-2.5 text-xs font-medium">Todos los centros</SelectItem>
                 {operationCenters.map((center) => (
-                  <SelectItem key={center.id} value={center.id} className="p-2.5 text-xs font-bold uppercase">
+                  <SelectItem key={center.id} value={center.id} className="p-2.5 text-xs font-medium">
                     {center.name}
                   </SelectItem>
                 ))}
@@ -466,16 +500,16 @@ export default function Seleccion() {
             </Select>
 
             <Select value={requisitionFilter} onValueChange={setRequisitionFilter}>
-              <SelectTrigger className="h-9 w-full rounded-lg border-border bg-background text-[11px] font-bold uppercase tracking-wider sm:w-[190px]">
+              <SelectTrigger className="h-8 w-full rounded-lg border-border bg-background px-3 text-[11px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <FileCheck className="w-3.5 h-3.5 shrink-0 text-primary" />
                   <SelectValue placeholder="Requisición" />
                 </div>
               </SelectTrigger>
               <SelectContent className="max-h-72 rounded-xl border-border shadow-md">
-                <SelectItem value="all" className="p-2.5 text-xs font-bold uppercase">Todas las requisiciones</SelectItem>
+                <SelectItem value="all" className="p-2.5 text-xs font-medium">Todas las requisiciones</SelectItem>
                 {requisitionOptions.map((requisition) => (
-                  <SelectItem key={requisition.id} value={requisition.id} className="p-2.5 text-xs font-bold">
+                  <SelectItem key={requisition.id} value={requisition.id} className="p-2.5 text-xs font-medium">
                     {requisition.label}
                   </SelectItem>
                 ))}
@@ -483,13 +517,6 @@ export default function Seleccion() {
             </Select>
           </div>
         </div>
-
-        {canCreateVacancy && (
-          <Button className="h-9 w-full rounded-lg bg-primary px-5 text-[10px] font-black uppercase tracking-widest text-primary-foreground shadow-md shadow-primary/10 lg:w-auto" onClick={() => setShowVacancyForm(true)}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
-            Nueva Vacante
-          </Button>
-        )}
       </div>
 
       <ScrollArea className="flex-1 px-3 py-3 sm:px-6 sm:py-4">
