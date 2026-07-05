@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
-  FileText, Plus, Search, Clock, CheckCircle, XCircle,
+  FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
   TrendingUp, Briefcase, Filter, ChevronRight, Trash2, AlertTriangle, MoreHorizontal
 } from 'lucide-react';
@@ -422,7 +422,7 @@ export default function Requisiciones() {
                       <TableHead className="h-14 w-[175px] px-2 font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[210px] 2xl:px-3">Ubicación / Motivo</TableHead>
                       <TableHead className="h-14 w-[160px] px-1.5 text-center font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[190px] 2xl:px-2">Flujo</TableHead>
                       <TableHead className="h-14 w-[110px] px-2 font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[120px] 2xl:px-3">Estado</TableHead>
-                      <TableHead className="h-14 w-[56px] px-2 text-right font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[135px] 2xl:px-4">Acc.</TableHead>
+                      <TableHead className="h-14 w-[88px] px-2 text-right font-black text-[10px] uppercase tracking-[0.2em] 2xl:w-[170px] 2xl:px-4">Acc.</TableHead>
                     </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -537,7 +537,7 @@ export default function Requisiciones() {
                             </div>
                           </TableCell>
                           <TableCell className="px-2 py-4 text-right 2xl:px-4">
-                            <div className="flex max-w-full flex-wrap items-center justify-end gap-1 2xl:flex-nowrap 2xl:gap-2" onClick={e => e.stopPropagation()}>
+                            <div className="flex max-w-full flex-nowrap items-center justify-end gap-1 2xl:gap-2" onClick={e => e.stopPropagation()}>
                               {step && (
                                 <Button
                                   size="sm"
@@ -553,7 +553,7 @@ export default function Requisiciones() {
                               )}
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button size="icon" variant="ghost" aria-label="Acciones de requisición" className="hidden">
+                                  <Button size="icon" variant="ghost" aria-label="Acciones de requisición" className="h-8 w-8 rounded-lg bg-background hover:bg-primary hover:text-primary-foreground">
                                     <MoreHorizontal className="h-5 w-5" />
                                   </Button>
                                 </DropdownMenuTrigger>
