@@ -16,7 +16,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
@@ -24,13 +23,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatDateOnly, parseDateOnly } from '@/lib/dateOnly';
 import {
   certificationTypeLabels,
+  accountTypeLabels,
+  bloodTypeLabels,
   documentTypeLabels,
   employeeDocumentTypeLabels,
+  familyRelationshipLabels,
   genderLabels,
   getEmployeeFullName,
   linkTypeLabels,
   maritalStatusLabels,
   normalizeEmployeeDocumentFolder,
+  payrollTypeLabels,
   riskLevelLabels,
   type EmployeeDocument,
 } from '@/types/employee';
@@ -51,6 +54,24 @@ function safeLabel<T extends string>(labels: Record<T, string>, value: T | null 
 
 function formatDate(value: string | null | undefined, pattern = 'dd MMM yyyy') {
   return value ? formatDateOnly(value, pattern, { locale: es }) : '';
+}
+
+function joinText(values: unknown[], separator = ', ') {
+  const parts = values.filter(hasText).map((value) => String(value).trim());
+  return parts.length > 0 ? parts.join(separator) : null;
+}
+
+function maskAccountNumber(value: string | null | undefined) {
+  if (!hasText(value)) return null;
+  return `Cuenta terminada en ${value.slice(-4)}`;
+}
+
+function getEmployeeStatusLabel(employee: any) {
+  if (!employee) return null;
+  if (employee.status === 'en_retiro') return 'En retiro';
+  if (employee.status === 'retired' || (!employee.is_active && employee.status === 'active')) return 'Retirado';
+  if (employee.status === 'suspended' || !employee.is_active) return 'Inactivo';
+  return 'Activo';
 }
 
 function getInitials(employee: any) {
@@ -117,6 +138,17 @@ function SideInfo({
   );
 }
 
+function SideGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="space-y-6">
+      <h3 className="border-b border-[#dedede] pb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#2f86cc]">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
 function SectionTitle({ icon: Icon, children }: { icon: ElementType; children: ReactNode }) {
   return (
     <div className="mb-5">
@@ -172,6 +204,76 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
       employee?.areas?.name ? `Área: ${employee.areas.name}` : null,
       employee?.operation_centers?.name ? `Centro: ${employee.operation_centers.name}` : null,
     ].filter(Boolean).join('. ');
+  const identityInfo = joinText([safeLabel(documentTypeLabels, employee?.document_type), employee?.document_number], ' ');
+  const birthPlace = joinText([employee?.birth_city, employee?.birth_department, employee?.birth_country]);
+  const residence = joinText([
+    employee?.contact?.residence_address,
+    employee?.contact?.residence_neighborhood,
+    employee?.contact?.residence_city,
+    employee?.contact?.residence_department,
+  ]);
+  const emergencyContact = joinText([
+    employee?.contact?.emergency_contact_name,
+    employee?.contact?.emergency_contact_relationship,
+    employee?.contact?.emergency_contact_phone,
+  ], ' | ');
+  const workLocation = joinText([
+    employee?.operation_centers?.name,
+    employee?.areas?.name,
+    employee?.work_info?.work_city,
+  ], ' - ');
+  const employmentPeriod = joinText([
+    employee?.work_info?.hire_date ? `Ingreso ${formatDate(employee.work_info.hire_date, 'dd MMM yyyy')}` : null,
+    employee?.work_info?.termination_date ? `Retiro ${formatDate(employee.work_info.termination_date, 'dd MMM yyyy')}` : null,
+  ], ' | ');
+  const socialSecurityInfo = joinText([
+    employee?.social_security?.eps ? `EPS ${employee.social_security.eps}` : null,
+    employee?.social_security?.afp ? `AFP ${employee.social_security.afp}` : null,
+    employee?.social_security?.arl ? `ARL ${employee.social_security.arl}` : null,
+    employee?.social_security?.ccf ? `CCF ${employee.social_security.ccf}` : null,
+    employee?.social_security?.risk_level ? safeLabel(riskLevelLabels, employee.social_security.risk_level) : null,
+  ], ' | ');
+  const scheduleInfo = joinText([
+    employee?.schedule?.payroll_type ? payrollTypeLabels[employee.schedule.payroll_type] : null,
+    employee?.schedule?.is_office_schedule === true ? 'Horario administrativo' : null,
+    employee?.schedule?.is_office_schedule === false ? 'Turnos' : null,
+    employee?.schedule?.rest_day ? `Descanso ${employee.schedule.rest_day}` : null,
+  ], ' | ');
+  const timeModeInfo = joinText([
+    employee?.time_config?.mode === 'administrative' ? 'Modalidad administrativa' : null,
+    employee?.time_config?.mode === 'shift' ? 'Modalidad por turnos' : null,
+    employee?.time_config?.work_schedules?.name,
+    employee?.time_config?.shift_cycles?.name,
+    employee?.time_config?.start_date ? `Desde ${formatDate(employee.time_config.start_date, 'dd MMM yyyy')}` : null,
+  ], ' | ');
+  const bankInfo = joinText([
+    employee?.bank_info?.bank_name,
+    employee?.bank_info?.account_type ? accountTypeLabels[employee.bank_info.account_type] : null,
+    maskAccountNumber(employee?.bank_info?.account_number),
+    employee?.bank_info?.account_registered ? 'Cuenta registrada' : null,
+  ], ' | ');
+  const familyInfo = employee?.family_members && employee.family_members.length > 0
+    ? employee.family_members
+      .slice(0, 3)
+      .map((member) => joinText([
+        familyRelationshipLabels[member.relationship] || member.relationship,
+        member.full_name,
+        member.age != null ? `${member.age} años` : null,
+      ], ' - '))
+      .filter(Boolean)
+      .join(' | ')
+    : null;
+  const employmentBadges = [
+    employee?.work_info?.link_type ? safeLabel(linkTypeLabels, employee.work_info.link_type) : null,
+    employee?.work_info?.cost_center ? `Centro de costos ${employee.work_info.cost_center}` : null,
+    getEmployeeStatusLabel(employee),
+  ].filter(hasText);
+  const personalBadges = [
+    employee?.blood_type ? `RH ${safeLabel(bloodTypeLabels, employee.blood_type)}` : null,
+    (employee as any)?.is_first_job ? 'Primer empleo' : null,
+    (employee as any)?.is_head_of_household ? 'Jefe(a) de hogar' : null,
+    employee?.proceso_exclusivo_pcd ? 'Proceso PcD' : null,
+  ].filter(hasText);
 
   const documentSummary = useMemo(() => {
     const docs = employee?.documents || [];
@@ -261,47 +363,61 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
                 </aside>
 
-                <header className="relative flex min-h-[180px] items-center overflow-hidden px-8 py-8 text-white md:px-[54px]" style={{ backgroundColor: '#06294f' }}>
+                <header className="relative min-h-[180px] overflow-hidden px-8 py-8 text-white md:px-[50px]" style={{ backgroundColor: '#06294f' }}>
                   <div className="absolute inset-0 bg-[#06294f]" />
-                  <div className="absolute right-16 top-[30px] z-10 hidden h-[60px] min-w-[184px] items-center justify-center rounded-md bg-white px-3 py-2 shadow-sm md:flex">
-                    {companyLogoUrl ? (
-                      <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[164px] object-contain" />
-                    ) : (
-                      <span className="max-w-[164px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
-                    )}
-                  </div>
-                  <div className="relative z-10 max-w-xl">
-                    <h1 className="text-[22px] font-bold leading-tight text-white">{employeeName}</h1>
-                    <p className="mt-2 text-[18px] font-medium leading-snug text-white">{currentPosition}</p>
+                  <div className="relative z-10 grid min-h-[116px] w-full items-center gap-6 md:grid-cols-[minmax(0,1fr)_230px]">
+                    <div className="min-w-0">
+                      <h1 className="break-words text-[22px] font-bold leading-tight text-white">{employeeName}</h1>
+                      <p className="mt-2 text-[18px] font-medium leading-snug text-white">{currentPosition}</p>
+                    </div>
+                    <div className="hidden h-[60px] w-[220px] items-center justify-center justify-self-end rounded-md bg-white px-3 py-2 shadow-sm md:flex">
+                      {companyLogoUrl ? (
+                        <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[190px] object-contain" />
+                      ) : (
+                        <span className="max-w-[190px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
+                      )}
+                    </div>
                   </div>
                 </header>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-[460px_1fr]">
                 <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-[60px] py-[72px]">
-                  <div className="space-y-8">
-                    <SideInfo label="Correo" value={employee.contact?.email || employee.contact?.personal_email} />
-                    <SideInfo label="Teléfono" value={employee.contact?.mobile || employee.contact?.phone} />
-                    <SideInfo label="Domicilio (Calle, Número Interior, Número Exterior)" value={[employee.contact?.residence_address, employee.contact?.residence_city, employee.contact?.residence_department].filter(Boolean).join(', ')} />
-                    <SideInfo label="Fecha de nacimiento" value={age} />
-                    <SideInfo label="Género" value={safeLabel(genderLabels, employee.gender)} />
-                  </div>
+                  <div className="space-y-9">
+                    <SideGroup title="Contacto">
+                      <SideInfo label="Correo corporativo" value={employee.contact?.email} />
+                      <SideInfo label="Correo personal" value={employee.contact?.personal_email} />
+                      <SideInfo label="Teléfono / celular" value={joinText([employee.contact?.mobile, employee.contact?.phone], ' | ')} />
+                      <SideInfo label="Domicilio" value={residence} />
+                      <SideInfo label="Contacto de emergencia" value={emergencyContact} />
+                    </SideGroup>
 
-                  <div className="mt-9">
-                    <h3 className="text-[16px] font-bold leading-tight text-[#3f3f3f]">Objetivo profesional</h3>
-                    <p className="mt-3 text-[12px] leading-relaxed text-[#8a8a8a]">
-                      {profileSummary || 'Sin resumen profesional registrado.'}
-                    </p>
-                  </div>
+                    <SideGroup title="Perfil personal">
+                      <SideInfo label="Identificación" value={identityInfo} />
+                      <SideInfo label="Fecha de nacimiento" value={age} />
+                      <SideInfo label="Lugar de nacimiento" value={birthPlace} />
+                      <SideInfo label="Género" value={safeLabel(genderLabels, employee.gender)} />
+                      <SideInfo label="Estado civil" value={safeLabel(maritalStatusLabels, employee.marital_status)} />
+                      <SideInfo label="Grupo sanguíneo" value={employee.blood_type ? safeLabel(bloodTypeLabels, employee.blood_type) : null} />
+                      <SideInfo label="Familia" value={familyInfo} />
+                    </SideGroup>
 
-                  <Separator className="my-9 bg-[#e5e5e5]" />
+                    <SideGroup title="Perfil laboral">
+                      <SideInfo label="Estado" value={getEmployeeStatusLabel(employee)} />
+                      <SideInfo label="Ubicación laboral" value={workLocation} />
+                      <SideInfo label="Vinculación" value={joinText([employmentPeriod, employee.work_info?.link_type ? safeLabel(linkTypeLabels, employee.work_info.link_type) : null], ' | ')} />
+                      <SideInfo label="Centro de costos" value={employee.work_info?.cost_center} />
+                      <SideInfo label="Horario / nómina" value={joinText([scheduleInfo, timeModeInfo], ' | ')} />
+                      <SideInfo label="Seguridad social" value={socialSecurityInfo} />
+                      <SideInfo label="Banco" value={bankInfo} />
+                    </SideGroup>
 
-                  <div className="space-y-7">
-                    <SideInfo label="Identificación" value={`${safeLabel(documentTypeLabels, employee.document_type) || 'Documento'} ${employee.document_number}`} />
-                    <SideInfo label="Estado civil" value={safeLabel(maritalStatusLabels, employee.marital_status)} />
-                    <SideInfo label="Centro" value={employee.operation_centers?.name} />
-                    <SideInfo label="Área" value={employee.areas?.name} />
-                    <SideInfo label="Seguridad social" value={[employee.social_security?.eps, employee.social_security?.arl, safeLabel(riskLevelLabels, employee.social_security?.risk_level)].filter(Boolean).join(' | ')} />
+                    <div>
+                      <h3 className="text-[16px] font-bold leading-tight text-[#3f3f3f]">Perfil profesional</h3>
+                      <p className="mt-3 text-[12px] leading-relaxed text-[#8a8a8a]">
+                        {profileSummary || 'Sin resumen profesional registrado.'}
+                      </p>
+                    </div>
                   </div>
                 </aside>
 
@@ -312,8 +428,12 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                       <TimelineItem
                         title={educationName || 'Nivel educativo no registrado'}
                         subtitle={professionName || undefined}
-                        detail={employee.is_first_job ? 'Marcado como primer empleo.' : undefined}
-                        meta={employee.is_head_of_household ? <Badge variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">Jefe(a) de hogar</Badge> : undefined}
+                        detail={birthPlace ? `Origen: ${birthPlace}` : undefined}
+                        meta={personalBadges.length > 0 ? personalBadges.map((badge) => (
+                          <Badge key={badge} variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">
+                            {badge}
+                          </Badge>
+                        )) : undefined}
                         isLast
                       />
                     </div>
@@ -332,7 +452,11 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                             item.valid_to ? formatDate(item.valid_to, 'MMM yyyy') : item.is_current === false ? null : 'Actual',
                           ].filter(Boolean).join(' - ')}
                           detail={index === 0 && employee.work_info?.observations ? employee.work_info.observations : null}
-                          meta={employee.work_info?.link_type ? <Badge variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">{safeLabel(linkTypeLabels, employee.work_info.link_type)}</Badge> : undefined}
+                          meta={index === 0 && employmentBadges.length > 0 ? employmentBadges.map((badge) => (
+                            <Badge key={badge} variant="outline" className="h-5 border-[#d9dfe7] px-2 text-[10px] font-medium text-[#6b778c]">
+                              {badge}
+                            </Badge>
+                          )) : undefined}
                           isLast={index === items.length - 1}
                         />
                       ))}
