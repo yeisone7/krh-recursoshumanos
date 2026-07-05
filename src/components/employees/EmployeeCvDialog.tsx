@@ -363,20 +363,22 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                   </div>
                 </aside>
 
-                <header className="relative min-h-[180px] overflow-hidden px-8 py-8 text-white md:px-[50px]" style={{ backgroundColor: '#06294f' }}>
+                <header className="relative min-h-[180px] overflow-hidden px-8 py-8 text-white md:px-[50px] md:pr-[300px]" style={{ backgroundColor: '#06294f' }}>
                   <div className="absolute inset-0 bg-[#06294f]" />
-                  <div className="relative z-10 grid min-h-[116px] w-full items-center gap-6 md:grid-cols-[minmax(0,1fr)_230px]">
-                    <div className="min-w-0">
-                      <h1 className="break-words text-[22px] font-bold leading-tight text-white">{employeeName}</h1>
-                      <p className="mt-2 text-[18px] font-medium leading-snug text-white">{currentPosition}</p>
-                    </div>
-                    <div className="hidden h-[60px] w-[220px] items-center justify-center justify-self-end rounded-md bg-white px-3 py-2 shadow-sm md:flex">
-                      {companyLogoUrl ? (
-                        <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[190px] object-contain" />
-                      ) : (
-                        <span className="max-w-[190px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
-                      )}
-                    </div>
+                  <div className="absolute right-[50px] top-[28px] z-20 hidden h-[60px] w-[220px] items-center justify-center rounded-md bg-white px-3 py-2 shadow-sm md:flex">
+                    {companyLogoUrl ? (
+                      <img src={companyLogoUrl} alt={currentCompany?.name || 'Empresa'} crossOrigin="anonymous" className="max-h-11 max-w-[190px] object-contain" />
+                    ) : (
+                      <span className="max-w-[190px] truncate text-[20px] font-semibold text-[#666666]">{currentCompany?.name || 'Empresa'}</span>
+                    )}
+                  </div>
+                  <div className="relative z-10 flex min-h-[116px] max-w-full flex-col justify-center md:max-w-[calc(100%-260px)]">
+                    <h1 className="whitespace-normal break-words text-[22px] font-bold leading-tight text-white" style={{ overflowWrap: 'anywhere' }}>
+                      {employeeName}
+                    </h1>
+                    <p className="mt-2 whitespace-normal break-words text-[18px] font-medium leading-snug text-white" style={{ overflowWrap: 'anywhere' }}>
+                      {currentPosition}
+                    </p>
                   </div>
                 </header>
               </div>
