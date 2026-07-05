@@ -409,8 +409,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         className={cn(
           "flex items-center gap-3 rounded-md border border-transparent transition-colors duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isCollapsed
-            ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
-            : "px-4 py-2.5",
+            ? "mx-auto h-10 w-10 justify-center p-0 [&_svg]:size-4 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
+            : "px-3 py-2",
           isActive ?
           sidebarActiveTone :
           cn("text-sidebar-foreground font-medium", sidebarHoverTone)
@@ -423,7 +423,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className={cn("text-sm whitespace-nowrap overflow-hidden transition-all", isActive ? "font-semibold" : "font-medium")}>
+            <span className={cn("text-[13px] whitespace-nowrap overflow-hidden transition-all", isActive ? "font-semibold" : "font-medium")}>
               {item.label}
             </span>
           }
@@ -470,7 +470,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const SectionLabel = ({ label }: {label: string;}) => (
     !isCollapsed ? (
-      <p className="text-[10px] font-extrabold text-sidebar-foreground/45 uppercase tracking-[0.16em] px-3 pt-4 pb-1">
+      <p className="text-[10px] font-extrabold text-sidebar-foreground/45 uppercase tracking-[0.14em] px-3 pt-3 pb-1">
         {label}
       </p>
     ) : null
@@ -493,8 +493,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   className={cn(
                     "relative flex transition-colors duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
-                      ? "mx-auto h-10 w-10 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent text-sidebar-foreground [&_svg]:size-5"
-                      : "min-h-20 h-auto flex-col items-center justify-center gap-1.5 rounded-md border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
+                      ? "mx-auto h-9 w-9 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent text-sidebar-foreground [&_svg]:size-4"
+                      : "min-h-16 h-auto flex-col items-center justify-center gap-1 rounded-md border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
                     isActive && !isCollapsed && sidebarActiveTone,
                     isActive && isCollapsed && "bg-primary"
                   )}
@@ -504,7 +504,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     isCollapsed
                       ? "h-full w-full"
                       : cn(
-                          "h-8 w-8 rounded-md border",
+                           "h-7 w-7 rounded-md border",
                           isActive
                             ? "border-white/20 bg-white/15 text-white shadow-none"
                             : cn(colorClass, "group-hover:border-white/20 group-hover:bg-white/15 group-hover:text-white")
@@ -514,7 +514,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   </div>
                   {!isCollapsed && (
                     <span className={cn(
-                      "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
+                      "text-[8.5px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
                       isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-primary-foreground"
                     )}>
                       {item.label}
@@ -565,8 +565,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         "flex items-center gap-3 rounded-md transition-colors duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         "border border-transparent",
         isCollapsed
-          ? "mx-auto h-11 w-11 justify-center p-0 [&_svg]:size-5 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
-          : "px-4 py-2.5",
+          ? "mx-auto h-10 w-10 justify-center p-0 [&_svg]:size-4 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
+          : "px-3 py-2",
         isAnyChildActive ? sidebarActiveTone : cn("text-sidebar-foreground font-medium", sidebarHoverTone)
       )}>
 
@@ -577,7 +577,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className={cn("text-sm whitespace-nowrap overflow-hidden flex-1 transition-all", isAnyChildActive ? "font-semibold" : "font-medium")}>
+          <span className={cn("text-[13px] whitespace-nowrap overflow-hidden flex-1 transition-all", isAnyChildActive ? "font-semibold" : "font-medium")}>
             {item.label}
           </span>
         }
@@ -643,7 +643,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg border border-transparent transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-md border border-transparent transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ? sidebarActiveTone : cn("text-sidebar-foreground font-medium", sidebarHoverTone)
                     )}>
 
@@ -653,7 +653,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
                         {child.icon}
                       </span>
-                      <span className={cn("text-sm transition-all", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
+                      <span className={cn("text-[13px] transition-all", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
                     </motion.div>
                   </Link>);
 
@@ -678,7 +678,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     <TooltipProvider>
       <motion.aside
         initial={false}
-        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 80 : 260) }}
+        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 72 : 236) }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
           "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10",
@@ -689,7 +689,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       {!isMobileDrawer && (
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md flex items-center justify-center hover:bg-primary/90 transition-colors">
+          className="absolute top-[4.5rem] -right-3 z-50 w-6 h-6 rounded-full bg-primary text-primary-foreground shadow-md flex items-center justify-center hover:bg-primary/90 transition-colors">
           {collapsed ?
             <ChevronRight className="w-3.5 h-3.5" /> :
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -698,7 +698,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       )}
 
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
+      <div className="h-14 flex items-center px-3 border-b border-sidebar-border">
         <AnimatePresence mode="wait">
           {!isCollapsed ?
             <motion.div
@@ -708,12 +708,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               exit={{ opacity: 0 }}
               className="flex items-center gap-2">
 
-              <div className="w-12 h-12 rounded-md overflow-hidden flex items-center justify-center p-1 transition-colors group-hover:bg-primary/10">
+              <div className="w-10 h-10 rounded-md overflow-hidden flex items-center justify-center p-1 transition-colors group-hover:bg-primary/10">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col justify-center">
-                 <img src={empatiqTextLogo} alt="EmpatiQ" className="h-5 w-auto object-contain mb-0.5 object-left" />
-                 <span className="text-[10px] font-bold text-sidebar-foreground/60 leading-tight whitespace-nowrap uppercase tracking-wider">Talento Humano</span>
+                 <img src={empatiqTextLogo} alt="EmpatiQ" className="h-4 w-auto object-contain mb-0.5 object-left" />
+                 <span className="text-[9px] font-bold text-sidebar-foreground/60 leading-tight whitespace-nowrap uppercase tracking-wider">Talento Humano</span>
               </div>
             </motion.div> :
 
@@ -722,7 +722,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}>
-              <div className="w-12 h-12 rounded-md overflow-hidden flex items-center justify-center mx-auto p-1 hover:bg-primary/10 transition-colors">
+              <div className="w-10 h-10 rounded-md overflow-hidden flex items-center justify-center mx-auto p-1 hover:bg-primary/10 transition-colors">
                 <img src={sidebarLogo} alt="EmpatiQ Logo" className="w-full h-full object-contain" />
               </div>
             </motion.div>
@@ -734,7 +734,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2 px-3 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="flex-1 overflow-y-auto py-2 px-2.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Core */}
         {filteredCoreNavItems.length > 0 && (
           <div className="space-y-0.5">

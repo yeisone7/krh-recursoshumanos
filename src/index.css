@@ -1489,3 +1489,154 @@ html.dark [class~="bg-indigo-50"] {
   padding: 0 !important;
   justify-content: center !important;
 }
+
+/* Compact administrative density, inspired by document-heavy HR systems. */
+html:not(.dark) .professional-density {
+  color: #0f172a;
+}
+
+html:not(.dark) .professional-density main {
+  background: #f4f6f8;
+}
+
+html:not(.dark) .professional-density .card-elevated,
+html:not(.dark) .professional-density [class*="bg-card"][class*="rounded"] {
+  border: 1px solid #dbe3ec !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 20px rgb(15 23 42 / 0.06) !important;
+}
+
+html:not(.dark) .professional-density h1 {
+  color: #06142f;
+  font-size: 1.35rem !important;
+  line-height: 1.75rem !important;
+  letter-spacing: 0 !important;
+}
+
+html:not(.dark) .professional-density h2 {
+  color: #111827;
+  font-size: 1.05rem !important;
+  line-height: 1.45rem !important;
+  letter-spacing: 0 !important;
+}
+
+html:not(.dark) .professional-density h3 {
+  color: #111827;
+  letter-spacing: 0 !important;
+}
+
+html:not(.dark) .professional-density p,
+html:not(.dark) .professional-density span,
+html:not(.dark) .professional-density label {
+  letter-spacing: 0 !important;
+}
+
+html:not(.dark) .professional-density label,
+html:not(.dark) .professional-density [class*="FormLabel"] {
+  color: #5b6b80 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 650 !important;
+}
+
+html:not(.dark) .professional-density input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) .professional-density textarea,
+html:not(.dark) .professional-density select,
+html:not(.dark) .professional-density button[role="combobox"] {
+  min-height: 2.25rem !important;
+  border-color: #cfd8e3 !important;
+  border-radius: 6px !important;
+  color: #172033 !important;
+  font-size: 0.875rem !important;
+  box-shadow: none !important;
+}
+
+html:not(.dark) .professional-density input::placeholder,
+html:not(.dark) .professional-density textarea::placeholder {
+  color: #75859a !important;
+}
+
+html:not(.dark) .professional-density button {
+  border-radius: 6px;
+  letter-spacing: 0;
+}
+
+html:not(.dark) .professional-density [role="dialog"],
+html:not(.dark) .professional-density [class*="DialogContent"] {
+  border-radius: 10px !important;
+  border-color: #d8e0ea !important;
+  box-shadow: 0 24px 60px rgb(15 23 42 / 0.18) !important;
+}
+
+html:not(.dark) .professional-density [role="dialog"] header,
+html:not(.dark) .professional-density [role="dialog"] [class*="DialogHeader"] {
+  background: #f4f7fb !important;
+  border-bottom: 1px solid #dbe3ec !important;
+}
+
+html:not(.dark) .professional-density table {
+  border-collapse: collapse !important;
+}
+
+html:not(.dark) .professional-density thead,
+html:not(.dark) .professional-density thead tr,
+html:not(.dark) .professional-density thead th {
+  background: #30363c !important;
+}
+
+html:not(.dark) .professional-density th,
+html:not(.dark) .professional-density thead th {
+  height: 2.5rem !important;
+  padding: 0.55rem 0.875rem !important;
+  color: #ffffff !important;
+  font-size: 0.75rem !important;
+  font-weight: 750 !important;
+  line-height: 1rem !important;
+  vertical-align: middle !important;
+}
+
+html:not(.dark) .professional-density td,
+html:not(.dark) .professional-density tbody td {
+  padding: 0.55rem 0.875rem !important;
+  color: #101827 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid #dbe3ec !important;
+}
+
+html:not(.dark) .professional-density tbody tr:nth-child(odd) td {
+  background: #ffffff !important;
+}
+
+html:not(.dark) .professional-density tbody tr:nth-child(even) td {
+  background: #eef3f7 !important;
+}
+
+html:not(.dark) .professional-density tbody tr:hover td {
+  background: #e6f1f8 !important;
+}
+
+html:not(.dark) .professional-density .employee-document-table thead,
+html:not(.dark) .professional-density .employee-document-table thead tr,
+html:not(.dark) .professional-density .employee-document-table thead th {
+  background: #06294f !important;
+}
+
+html:not(.dark) .professional-density .employee-document-table {
+  border-radius: 6px !important;
+}
+
+html:not(.dark) .professional-density aside.bg-sidebar {
+  box-shadow: none !important;
+}
+
+html:not(.dark) .professional-density aside.bg-sidebar nav {
+  font-size: 0.8125rem;
+}
+
+html:not(.dark) .professional-density [class*="DropdownMenuContent"],
+html:not(.dark) .professional-density [data-radix-popper-content-wrapper] > div {
+  border-radius: 6px !important;
+  border-color: #d6dee8 !important;
+  box-shadow: 0 14px 32px rgb(15 23 42 / 0.12) !important;
+}

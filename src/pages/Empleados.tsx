@@ -68,10 +68,10 @@ const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 const EMPLOYEES_VIEW_MODE_STORAGE_KEY = 'krh.employees.viewMode';
 
 const getInitialEmployeesViewMode = (): 'grid' | 'table' => {
-  if (typeof window === 'undefined') return 'grid';
+  if (typeof window === 'undefined') return 'table';
 
   const storedViewMode = window.localStorage.getItem(EMPLOYEES_VIEW_MODE_STORAGE_KEY);
-  return storedViewMode === 'table' || storedViewMode === 'grid' ? storedViewMode : 'grid';
+  return storedViewMode === 'table' || storedViewMode === 'grid' ? storedViewMode : 'table';
 };
 
 export default function Empleados() {
@@ -395,7 +395,7 @@ export default function Empleados() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -404,8 +404,8 @@ export default function Empleados() {
         className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
       >
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Empleados</h1>
-          <p className="text-muted-foreground mt-1">Gestiona la información de todos los empleados</p>
+          <h1 className="font-display text-xl font-bold text-foreground">Empleados</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Gestiona la información de todos los empleados</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {canManageRegistrationLinks && (
@@ -490,9 +490,9 @@ export default function Empleados() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
-        className="bg-card rounded-xl shadow-sm p-4"
+        className="bg-card rounded-lg border border-border shadow-sm p-3"
       >
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
@@ -500,10 +500,10 @@ export default function Empleados() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por nombre, cargo o documento..."
-              className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-transparent focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all shadow-sm"
+              className="w-full h-9 pl-9 pr-3 rounded-md bg-card border border-border focus:border-primary focus:bg-card focus:outline-none focus:ring-2 focus:ring-primary/10 text-sm transition-all"
             />
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[150px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
@@ -539,7 +539,7 @@ export default function Empleados() {
                 <SelectItem value="pcd">Solo PcD</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex h-10 items-center gap-2 rounded-lg border border-border/70 bg-card px-3">
+            <div className="flex h-9 items-center gap-2 rounded-md border border-border/70 bg-card px-3">
               <Switch
                 id="show-retired-employees"
                 checked={showRetiredEmployees}
@@ -556,7 +556,7 @@ export default function Empleados() {
             <Button 
               variant={isFiltered ? "secondary" : "outline"} 
               size="icon" 
-              className={cn("h-10 w-10 transition-all", isFiltered && "bg-primary/10 border-primary/20 text-primary")}
+              className={cn("h-9 w-9 transition-all", isFiltered && "bg-primary/10 border-primary/20 text-primary")}
               onClick={handleResetFilters}
               title={isFiltered ? "Limpiar filtros" : "Filtrar"}
             >
@@ -565,14 +565,14 @@ export default function Empleados() {
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-10 w-10 hover:hover:text-primary transition-colors"
+              className="h-9 w-9 hover:hover:text-primary transition-colors"
               onClick={handleExport}
               title="Exportar a Excel"
             >
               <Download className="w-4 h-4" />
             </Button>
             
-            <div className="flex items-center bg-card rounded-lg p-1 border border-border/50 ml-2 shadow-sm">
+            <div className="flex items-center bg-card rounded-md p-0.5 border border-border/50 ml-1 shadow-sm">
               <Button
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
@@ -612,7 +612,7 @@ export default function Empleados() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <LayoutDashboard className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Resumen del Tablero</h2>
+              <h2 className="text-base font-semibold text-foreground">Resumen del Tablero</h2>
             </div>
             
             {/* Header Badges - Visible even when collapsed */}
@@ -721,14 +721,14 @@ export default function Empleados() {
           )}
         </motion.div>
       ) : (
-        <div className="space-y-6 relative">
+        <div className="space-y-4 relative">
           {isFetchingNextPage && viewMode === 'table' && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/40 backdrop-blur-[2px] rounded-xl">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           )}
           {viewMode === 'grid' ? (
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${isPagingLoading ? 'opacity-50' : ''}`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 ${isPagingLoading ? 'opacity-50' : ''}`}>
               {currentEmployees.map((employee, index) => (
                 <EmployeeCard
                   key={employee.id}

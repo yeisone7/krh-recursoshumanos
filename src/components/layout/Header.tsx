@@ -85,21 +85,21 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
 
   return (
     <>
-      <header className="h-14 sm:h-16 bg-card border-b border-border flex items-center justify-between px-3 sm:px-6 gap-2 sm:gap-4">
+      <header className="h-12 sm:h-14 bg-card border-b border-border flex items-center justify-between px-3 sm:px-4 gap-2 sm:gap-3">
         {/* Mobile menu button */}
         {onMobileMenuToggle && (
-          <Button variant="ghost" size="icon" className="h-9 w-9 shrink-0 md:hidden" onClick={onMobileMenuToggle}>
-            <Menu className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 md:hidden" onClick={onMobileMenuToggle}>
+            <Menu className="w-4 h-4" />
           </Button>
         )}
 
         {/* Search trigger - desktop: inline bar, mobile: icon button */}
-        <div className="flex-1 max-w-md hidden sm:block">
+        <div className="flex-1 max-w-[420px] hidden sm:block">
           <button
             onClick={() => setCommandOpen(true)}
-            className="w-full h-10 pl-10 pr-4 rounded-md bg-background border border-border/70 hover:border-primary/30 text-sm text-muted-foreground text-left transition-colors relative"
+            className="w-full h-9 pl-9 pr-4 rounded-md bg-background border border-border/70 hover:border-primary/30 text-sm text-muted-foreground text-left transition-colors relative"
           >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <span>Buscar empleados, módulos... </span>
             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-background px-1.5 text-[10px] font-medium text-muted-foreground">
               ⌘K
@@ -111,17 +111,17 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 sm:hidden"
+          className="h-8 w-8 sm:hidden"
           onClick={() => setCommandOpen(true)}
         >
-          <Search className="w-5 h-5 text-muted-foreground" />
+          <Search className="w-4 h-4 text-muted-foreground" />
         </Button>
 
         {/* Spacer for mobile */}
         <div className="flex-1 sm:hidden" />
 
         {/* Right section */}
-        <div className="flex items-center gap-1 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2.5">
           {/* Date & Time - desktop only */}
           <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
             <Clock className="w-3.5 h-3.5" />
@@ -145,7 +145,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 hidden sm:inline-flex"
+                className="h-8 w-8 hidden sm:inline-flex"
                 onClick={toggleFullscreen}
               >
                 {isFullscreen ? (
@@ -164,7 +164,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9"
+                className="h-8 w-8"
                 onClick={toggleTheme}
               >
                 {theme === 'dark' ? (
@@ -181,7 +181,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           {showChatButton && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9" asChild>
+                <Button variant="ghost" size="icon" className="relative h-8 w-8" asChild>
                   <Link to="/chat" aria-label="Abrir chat">
                     <MessageCircle className="w-4 h-4 text-muted-foreground" />
                     {chatUnreadCount > 0 && (
@@ -202,10 +202,10 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
           {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
