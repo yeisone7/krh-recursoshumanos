@@ -6,17 +6,10 @@ import { es } from 'date-fns/locale';
 import {
   Award,
   Briefcase,
-  Building2,
-  Calendar,
   Download,
   FileText,
   GraduationCap,
-  IdCard,
   Loader2,
-  Mail,
-  MapPin,
-  Phone,
-  Shield,
   User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,7 +20,6 @@ import { Separator } from '@/components/ui/separator';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
 import { supabase } from '@/integrations/supabase/client';
-import { cn } from '@/lib/utils';
 import { formatDateOnly, parseDateOnly } from '@/lib/dateOnly';
 import {
   certificationTypeLabels,
@@ -91,17 +83,17 @@ function TimelineItem({
 }) {
   return (
     <div className="relative flex gap-4 pb-7 last:pb-0">
-      {!isLast && <div className="absolute left-[7px] top-4 h-full w-px bg-slate-200" />}
-      <div className="relative z-10 mt-1 h-4 w-4 rounded-full border-2 border-sky-500 bg-white shadow-sm" />
+      {!isLast && <div className="absolute left-[8px] top-4 h-full w-px bg-[#e9e9e9]" />}
+      <div className="relative z-10 mt-1 h-4 w-4 rounded-full border-2 border-[#2f91d1] bg-white" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h4 className="text-sm font-semibold text-sky-700">{title}</h4>
-            {subtitle && <p className="mt-1 text-sm font-medium text-slate-700">{subtitle}</p>}
+            <h4 className="text-base font-bold leading-snug text-[#2f86cc]">{title}</h4>
+            {subtitle && <p className="mt-1 text-sm font-medium leading-relaxed text-[#333333]">{subtitle}</p>}
           </div>
-          {date && <span className="shrink-0 text-xs font-medium text-slate-500">{date}</span>}
+          {date && <span className="shrink-0 text-xs font-medium text-[#8a8a8a]">{date}</span>}
         </div>
-        {detail && <p className="mt-2 text-sm leading-relaxed text-slate-600">{detail}</p>}
+        {detail && <p className="mt-2 text-sm leading-relaxed text-[#555555]">{detail}</p>}
         {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
       </div>
     </div>
@@ -109,36 +101,29 @@ function TimelineItem({
 }
 
 function SideInfo({
-  icon: Icon,
   label,
   value,
 }: {
-  icon: ElementType;
   label: string;
   value?: string | null;
 }) {
   if (!hasText(value)) return null;
 
   return (
-    <div className="flex gap-3">
-      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 shadow-sm ring-1 ring-slate-200">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="mt-1 break-words text-sm leading-relaxed text-slate-700">{value}</p>
-      </div>
+    <div className="min-w-0">
+      <p className="text-base font-bold leading-tight text-[#3f3f3f]">{label}</p>
+      <p className="mt-2 break-words text-sm leading-relaxed text-[#8a8a8a]">{value}</p>
     </div>
   );
 }
 
 function SectionTitle({ icon: Icon, children }: { icon: ElementType; children: ReactNode }) {
   return (
-    <div className="mb-5 flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
+    <div className="mb-5">
+      <h3 className="text-2xl font-bold leading-tight text-[#3f3f3f]">{children}</h3>
+      <div className="mt-6 flex h-11 w-11 items-center justify-center rounded-full border border-[#e9e9e9] bg-white text-[#444444] shadow-sm">
         <Icon className="h-5 w-5" />
       </div>
-      <h3 className="text-xl font-bold text-slate-800">{children}</h3>
     </div>
   );
 }
@@ -234,111 +219,99 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-6xl overflow-y-auto bg-slate-100 p-0">
+      <DialogContent className="flex h-[96vh] max-h-[96vh] w-[calc(100vw-1.5rem)] max-w-none flex-col gap-0 overflow-hidden border-0 bg-[#f3f3f3] p-0 shadow-2xl sm:rounded-none [&>button:last-child]:hidden">
         <DialogHeader className="sr-only">
           <DialogTitle>Curriculum de {employeeName || 'empleado'}</DialogTitle>
           <DialogDescription>Vista profesional del curriculum del empleado.</DialogDescription>
         </DialogHeader>
 
-        <div className="sticky top-0 z-20 flex justify-end gap-2 border-b border-slate-200 bg-slate-100/95 px-5 py-4 backdrop-blur">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="z-20 flex shrink-0 justify-end gap-3 border-b border-[#dedede] bg-[#f3f3f3] px-5 py-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 rounded-md bg-white px-8 text-base font-medium text-[#111111]">
             Cerrar
           </Button>
-          <Button onClick={downloadCv} disabled={!employee || isDownloading} className="gap-2 bg-sky-600 text-white hover:bg-sky-700">
+          <Button onClick={downloadCv} disabled={!employee || isDownloading} className="h-12 rounded-md bg-[#3498db] px-8 text-base font-bold text-white hover:bg-[#2586c8]">
             {isDownloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
             Descargar CV
           </Button>
         </div>
 
-        {isLoading ? (
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          {isLoading ? (
           <div className="flex min-h-[520px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : employee ? (
-          <div className="px-4 pb-8 pt-5 sm:px-8">
-            <div ref={cvRef} className="mx-auto max-w-5xl overflow-hidden bg-white shadow-sm ring-1 ring-slate-200">
-              <div className="grid min-h-[220px] grid-cols-1 md:grid-cols-[330px_1fr]">
-                <aside className="border-r border-slate-200 bg-slate-50 px-8 py-8">
-                  <div className="flex flex-col items-center text-center">
-                    <Avatar className="h-32 w-32 border-4 border-white shadow-sm">
+          <div className="px-4 pb-9 pt-7 sm:px-8">
+            <div ref={cvRef} className="mx-auto w-full max-w-[1140px] overflow-hidden bg-white shadow-sm ring-1 ring-[#e5e5e5]">
+              <div className="relative grid min-h-[180px] grid-cols-1 md:grid-cols-[445px_1fr]">
+                <div className="absolute left-0 top-0 hidden h-[180px] w-4 bg-[#06294f] md:block" />
+                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-10 py-8">
+                  <div className="flex justify-center">
+                    <Avatar className="h-36 w-36 border-4 border-white shadow-sm">
                       <AvatarImage src={employee.avatar_url || undefined} alt={employeeName} />
-                      <AvatarFallback className="bg-slate-200 text-2xl font-bold text-slate-600">
+                      <AvatarFallback className="bg-[#e8edf2] text-2xl font-bold text-[#3f3f3f]">
                         {getInitials(employee)}
                       </AvatarFallback>
                     </Avatar>
-                    <h2 className="mt-5 text-xl font-bold text-slate-900">{employeeName}</h2>
-                    <p className="mt-1 text-sm font-medium text-sky-700">{currentPosition}</p>
                   </div>
                 </aside>
 
-                <header className="relative bg-slate-900 px-8 py-10 text-white md:px-12">
-                  <div className="absolute right-8 top-8 hidden rounded-lg bg-white px-4 py-2 shadow-sm md:block">
-                    <img src={krhLogo} alt="KRH" className="h-10 w-auto object-contain" />
+                <header className="relative flex min-h-[180px] items-center bg-[#06294f] px-8 py-8 text-white md:px-14">
+                  <div className="absolute right-10 top-5 hidden rounded-lg bg-white px-4 py-2 shadow-sm md:block">
+                    <img src={krhLogo} alt="KRH" className="h-10 w-auto max-w-[155px] object-contain" />
                   </div>
                   <div className="max-w-xl">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200">Curriculum vitae</p>
-                    <h1 className="mt-5 text-3xl font-bold leading-tight">{employeeName}</h1>
-                    <p className="mt-2 text-lg text-sky-100">{currentPosition}</p>
-                    <div className="mt-6 flex flex-wrap gap-2">
-                      <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">
-                        {employee.is_active ? 'Activo' : 'Inactivo'}
-                      </Badge>
-                      {employee.proceso_exclusivo_pcd && (
-                        <Badge className="border-amber-200/40 bg-amber-200/20 text-amber-50 hover:bg-amber-200/20">
-                          Proceso PcD
-                        </Badge>
-                      )}
-                    </div>
+                    <h1 className="text-2xl font-bold leading-tight text-white">{employeeName}</h1>
+                    <p className="mt-2 text-lg font-medium leading-snug text-white">{currentPosition}</p>
                   </div>
                 </header>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-[330px_1fr]">
-                <aside className="border-r border-slate-200 bg-slate-50 px-8 py-9">
-                  <div className="space-y-6">
-                    <SideInfo icon={Mail} label="Correo" value={employee.contact?.email || employee.contact?.personal_email} />
-                    <SideInfo icon={Phone} label="Teléfono" value={employee.contact?.mobile || employee.contact?.phone} />
-                    <SideInfo icon={MapPin} label="Domicilio" value={[employee.contact?.residence_address, employee.contact?.residence_city, employee.contact?.residence_department].filter(Boolean).join(', ')} />
-                    <SideInfo icon={Calendar} label="Fecha de nacimiento" value={age} />
-                    <SideInfo icon={User} label="Género" value={safeLabel(genderLabels, employee.gender)} />
-                    <SideInfo icon={IdCard} label="Identificación" value={`${safeLabel(documentTypeLabels, employee.document_type) || 'Documento'} ${employee.document_number}`} />
-                    <SideInfo icon={Shield} label="Seguridad social" value={[employee.social_security?.eps, employee.social_security?.arl, safeLabel(riskLevelLabels, employee.social_security?.risk_level)].filter(Boolean).join(' | ')} />
+              <div className="grid grid-cols-1 md:grid-cols-[445px_1fr]">
+                <aside className="border-r border-[#e5e5e5] bg-[#f7f7f7] px-12 py-16">
+                  <div className="space-y-8">
+                    <SideInfo label="Correo" value={employee.contact?.email || employee.contact?.personal_email} />
+                    <SideInfo label="Teléfono" value={employee.contact?.mobile || employee.contact?.phone} />
+                    <SideInfo label="Domicilio (Calle, Número Interior, Número Exterior)" value={[employee.contact?.residence_address, employee.contact?.residence_city, employee.contact?.residence_department].filter(Boolean).join(', ')} />
+                    <SideInfo label="Fecha de nacimiento" value={age} />
+                    <SideInfo label="Género" value={safeLabel(genderLabels, employee.gender)} />
                   </div>
 
-                  <Separator className="my-8" />
-
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Perfil profesional</h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                  <div className="mt-9">
+                    <h3 className="text-base font-bold leading-tight text-[#3f3f3f]">Objetivo profesional</h3>
+                    <p className="mt-3 text-sm leading-relaxed text-[#8a8a8a]">
                       {profileSummary || 'Sin resumen profesional registrado.'}
                     </p>
                   </div>
 
-                  <Separator className="my-8" />
+                  <Separator className="my-9 bg-[#e5e5e5]" />
 
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-slate-700">Datos adicionales</h3>
-                    <SideInfo icon={User} label="Estado civil" value={safeLabel(maritalStatusLabels, employee.marital_status)} />
-                    <SideInfo icon={Building2} label="Centro" value={employee.operation_centers?.name} />
-                    <SideInfo icon={Briefcase} label="Área" value={employee.areas?.name} />
+                  <div className="space-y-7">
+                    <SideInfo label="Identificación" value={`${safeLabel(documentTypeLabels, employee.document_type) || 'Documento'} ${employee.document_number}`} />
+                    <SideInfo label="Estado civil" value={safeLabel(maritalStatusLabels, employee.marital_status)} />
+                    <SideInfo label="Centro" value={employee.operation_centers?.name} />
+                    <SideInfo label="Área" value={employee.areas?.name} />
+                    <SideInfo label="Seguridad social" value={[employee.social_security?.eps, employee.social_security?.arl, safeLabel(riskLevelLabels, employee.social_security?.risk_level)].filter(Boolean).join(' | ')} />
                   </div>
                 </aside>
 
-                <main className="px-8 py-9 md:px-12">
+                <main className="px-8 py-9 md:px-11">
                   <section>
                     <SectionTitle icon={GraduationCap}>Educación</SectionTitle>
-                    <TimelineItem
-                      title={educationName || 'Nivel educativo no registrado'}
-                      subtitle={professionName || undefined}
-                      detail={employee.is_first_job ? 'Marcado como primer empleo.' : undefined}
-                      meta={employee.is_head_of_household ? <Badge variant="outline">Jefe(a) de hogar</Badge> : undefined}
-                      isLast
-                    />
+                    <div className="ml-[14px] border-l border-[#e9e9e9] pl-8">
+                      <TimelineItem
+                        title={educationName || 'Nivel educativo no registrado'}
+                        subtitle={professionName || undefined}
+                        detail={employee.is_first_job ? 'Marcado como primer empleo.' : undefined}
+                        meta={employee.is_head_of_household ? <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">Jefe(a) de hogar</Badge> : undefined}
+                        isLast
+                      />
+                    </div>
                   </section>
 
-                  <section className="mt-9">
+                  <section className="mt-8">
                     <SectionTitle icon={Briefcase}>Experiencia laboral</SectionTitle>
-                    <div>
+                    <div className="ml-[14px] border-l border-[#e9e9e9] pl-8">
                       {(workHistory.length > 0 ? workHistory : [employee.work_info]).filter(Boolean).map((item: any, index: number, items: any[]) => (
                         <TimelineItem
                           key={item.id || index}
@@ -349,16 +322,16 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                             item.valid_to ? formatDate(item.valid_to, 'MMM yyyy') : item.is_current === false ? null : 'Actual',
                           ].filter(Boolean).join(' - ')}
                           detail={index === 0 && employee.work_info?.observations ? employee.work_info.observations : null}
-                          meta={employee.work_info?.link_type ? <Badge variant="outline">{safeLabel(linkTypeLabels, employee.work_info.link_type)}</Badge> : undefined}
+                          meta={employee.work_info?.link_type ? <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">{safeLabel(linkTypeLabels, employee.work_info.link_type)}</Badge> : undefined}
                           isLast={index === items.length - 1}
                         />
                       ))}
                     </div>
                   </section>
 
-                  <section className="mt-9">
-                    <SectionTitle icon={Award}>Cursos, certificaciones y documentos</SectionTitle>
-                    <div className="space-y-2">
+                  <section className="mt-8">
+                    <SectionTitle icon={Award}>Cursos y diplomados adicionales</SectionTitle>
+                    <div className="ml-[14px] space-y-2 border-l border-[#e9e9e9] pl-8">
                       {trainingCompletions.slice(0, 5).map((completion: any, index: number, items: any[]) => (
                         <TimelineItem
                           key={completion.id}
@@ -366,7 +339,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                           subtitle={completion.course?.category || completion.course?.provider}
                           date={completion.completed_at ? format(new Date(completion.completed_at), 'dd MMM yyyy', { locale: es }) : null}
                           meta={completion.quiz_score != null ? (
-                            <Badge variant="outline">Puntaje {completion.quiz_score}%</Badge>
+                            <Badge variant="outline" className="border-[#d9dfe7] text-[#6b778c]">Puntaje {completion.quiz_score}%</Badge>
                           ) : undefined}
                           isLast={index === items.length - 1 && employee.certifications?.length === 0}
                         />
@@ -376,7 +349,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                         <TimelineItem
                           key={cert.id}
                           title={cert.certification_name || certificationTypeLabels[cert.certification_type] || 'Certificación'}
-                          subtitle={cert.license_category ? `Categoria ${cert.license_category}` : null}
+                          subtitle={cert.license_category ? `Categoría ${cert.license_category}` : null}
                           date={[
                             cert.issue_date ? formatDate(cert.issue_date, 'MMM yyyy') : null,
                             cert.expiry_date ? `Vence ${formatDate(cert.expiry_date, 'MMM yyyy')}` : null,
@@ -386,33 +359,33 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
                       ))}
 
                       {trainingCompletions.length === 0 && (!employee.certifications || employee.certifications.length === 0) && (
-                        <p className="rounded-lg border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                        <p className="rounded-lg border border-dashed border-[#dcdcdc] p-4 text-sm text-[#777777]">
                           Sin cursos o certificaciones registradas.
                         </p>
                       )}
                     </div>
                   </section>
 
-                  <section className="mt-9">
+                  <section className="mt-8">
                     <SectionTitle icon={FileText}>Documentos de soporte</SectionTitle>
                     {documentSummary.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {documentSummary.map((documentName) => (
-                          <Badge key={documentName} variant="secondary" className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                          <Badge key={documentName} variant="secondary" className="rounded-full bg-[#f0f0f0] px-3 py-1 text-[#555555]">
                             {documentName}
                           </Badge>
                         ))}
                       </div>
                     ) : (
-                      <p className="rounded-lg border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                      <p className="rounded-lg border border-dashed border-[#dcdcdc] p-4 text-sm text-[#777777]">
                         Sin documentos de soporte cargados.
                       </p>
                     )}
                   </section>
 
-                  <section className="mt-9">
+                  <section className="mt-8">
                     <SectionTitle icon={User}>Idiomas</SectionTitle>
-                    <div className={cn('inline-flex rounded-full border border-slate-200 bg-white px-5 py-2 text-sm text-slate-500')}>
+                    <div className="inline-flex rounded-full border border-[#e0e0e0] bg-white px-5 py-2 text-sm text-[#777777]">
                       Sin idiomas registrados
                     </div>
                   </section>
@@ -425,6 +398,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
             No se pudo cargar el empleado seleccionado.
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   );
