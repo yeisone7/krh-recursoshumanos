@@ -126,6 +126,7 @@ const CalendarCell = memo(({
           )}
           onMouseDown={(e) => {
             if (e.button === 0) {
+              e.preventDefault();
               onMouseDown(employeeId, dateStr);
             }
           }}
@@ -379,7 +380,10 @@ const CalendarCell = memo(({
          prevProps.isAdminMode === nextProps.isAdminMode &&
          prevProps.adminIsWorkDay === nextProps.adminIsWorkDay &&
          prevProps.adminSchedule?.id === nextProps.adminSchedule?.id &&
-         prevProps.activeShifts === nextProps.activeShifts;
+         prevProps.activeShifts === nextProps.activeShifts &&
+         prevProps.onMouseDown === nextProps.onMouseDown &&
+         prevProps.onMouseEnter === nextProps.onMouseEnter &&
+         prevProps.onMouseUp === nextProps.onMouseUp;
 });
 
 export function ShiftCalendar({ centerId: propCenterId, containedScroll = false }: ShiftCalendarProps) {
@@ -393,7 +397,9 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>('');
   const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState<{ employeeId: string; date: string } | null>(null);
+  const selectedCellsRef = useRef<{ employeeId: string; dates: string[] }[]>([]);
+  const isSelectingRef = useRef(false);
+  const selectionStartRef = useRef<{ employeeId: string; date: string } | null>(null);
 
   const { currentCompanyId, assignedCenterIds } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
@@ -706,17 +712,26 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   }, []);
 
   // Selection handling
-  const handleCellMouseDown = useCallback((employeeId: string, date: string) => {
-    setIsSelecting(true);
-    setSelectionStart({ employeeId, date });
-    setSelectedCells([{ employeeId, dates: [date] }]);
+  const updateSelectedCells = useCallback((cells: { employeeId: string; dates: string[] }[]) => {
+    selectedCellsRef.current = cells;
+    setSelectedCells(cells);
   }, []);
 
-  const handleCellMouseEnter = useCallback((employeeId: string, date: string) => {
-    if (!isSelecting || !selectionStart) return;
-    if (employeeId !== selectionStart.employeeId) return;
+  const handleCellMouseDown = useCallback((employeeId: string, date: string) => {
+    const start = { employeeId, date };
 
-    const startIdx = daysData.findIndex(d => d.dateStr === selectionStart.date);
+    isSelectingRef.current = true;
+    selectionStartRef.current = start;
+    setIsSelecting(true);
+    updateSelectedCells([{ employeeId, dates: [date] }]);
+  }, [updateSelectedCells]);
+
+  const handleCellMouseEnter = useCallback((employeeId: string, date: string) => {
+    const start = selectionStartRef.current;
+    if (!isSelectingRef.current || !start) return;
+    if (employeeId !== start.employeeId) return;
+
+    const startIdx = daysData.findIndex(d => d.dateStr === start.date);
     const endIdx = daysData.findIndex(d => d.dateStr === date);
     
     const minIdx = Math.min(startIdx, endIdx);
@@ -726,19 +741,31 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       .slice(minIdx, maxIdx + 1)
       .map(d => d.dateStr);
 
-    setSelectedCells([{ employeeId, dates: selectedDates }]);
-  }, [isSelecting, selectionStart, daysData]);
+    updateSelectedCells([{ employeeId, dates: selectedDates }]);
+  }, [daysData, updateSelectedCells]);
 
   const handleCellMouseUp = useCallback(() => {
+    const currentSelection = selectedCellsRef.current;
+
+    isSelectingRef.current = false;
     setIsSelecting(false);
-    if (selectedCells.length > 0 && selectedCells[0].dates.length > 0) {
+    if (currentSelection.length > 0 && currentSelection[0].dates.length > 0) {
       setShowAssignDialog(true);
     }
-  }, [selectedCells]);
+  }, []);
+
+  useEffect(() => {
+    if (!isSelecting) return;
+
+    window.addEventListener('mouseup', handleCellMouseUp);
+    return () => window.removeEventListener('mouseup', handleCellMouseUp);
+  }, [isSelecting, handleCellMouseUp]);
 
   const clearSelection = useCallback(() => {
+    selectedCellsRef.current = [];
+    selectionStartRef.current = null;
+    isSelectingRef.current = false;
     setSelectedCells([]);
-    setSelectionStart(null);
     setIsSelecting(false);
   }, []);
 
@@ -1136,14 +1163,14 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
         setShowAssignDialog(open);
         if (!open) clearSelection();
       }}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-sm max-h-[90vh] overflow-hidden flex flex-col p-4 sm:p-6">
-          <DialogHeader className="shrink-0">
-            <DialogTitle>Asignar Turno</DialogTitle>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-xl max-h-[90vh] overflow-hidden flex flex-col gap-0 p-0">
+          <DialogHeader className="shrink-0 border-b px-5 py-5 sm:px-7 sm:py-6">
+            <DialogTitle className="text-xl">Asignar Turno</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">
+          <div className="space-y-6 overflow-y-auto min-h-0 px-5 py-6 sm:px-7">
+            <div className="space-y-3">
+              <p className="text-sm leading-6 text-muted-foreground">
                 Se asignará el turno a <strong>{selectedCells[0]?.dates.length || 0}</strong> día(s).
               </p>
               
@@ -1154,7 +1181,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                 ) || [];
                 if (existingAssignments.length > 0) {
                   return (
-                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-5 text-amber-700">
                       ⚠️ {existingAssignments.length} día(s) ya tienen turno asignado y serán reemplazados.
                     </p>
                   );
@@ -1163,10 +1190,10 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
               })()}
             </div>
 
-            <div>
-              <label className="text-sm font-medium">Turno</label>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Turno</label>
               <Select value={selectedShiftId} onValueChange={setSelectedShiftId}>
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="h-14 rounded-xl px-4 text-base">
                   <SelectValue placeholder="Seleccione turno" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
@@ -1184,14 +1211,14 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
             </div>
           </div>
 
-          <DialogFooter className="shrink-0 flex-col-reverse sm:flex-row gap-2 pt-2">
+          <DialogFooter className="shrink-0 border-t bg-muted/20 px-5 py-4 sm:px-7 sm:py-5">
             {/* Delete button - only show when there are existing assignments */}
             {selectedCells.length > 0 && selectedCells[0]?.dates.some(date => 
               assignmentsMap[selectedCells[0].employeeId]?.[date]
             ) && (
               <Button 
                 variant="destructive" 
-                className="w-full sm:w-auto sm:mr-auto"
+                className="w-full sm:w-auto sm:mr-auto h-11 px-6"
                 onClick={async () => {
                   const assignmentsToDelete = selectedCells[0]?.dates
                     .map(date => assignmentsMap[selectedCells[0].employeeId]?.[date])
@@ -1222,10 +1249,10 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
             )}
             
             <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
+              <Button variant="outline" className="w-full sm:w-auto h-11 px-6" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
                 Cancelar
               </Button>
-              <Button className="w-full sm:w-auto" onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
+              <Button className="w-full sm:w-auto h-11 px-6" onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
                 {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Asignar
               </Button>
