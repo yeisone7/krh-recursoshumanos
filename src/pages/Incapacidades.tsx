@@ -1,20 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { formatDateOnly } from '@/lib/dateOnly';
+import { formatDateOnly, parseDateOnly } from '@/lib/dateOnly';
 import {
   Plus,
   Search,
-  Filter,
   Stethoscope,
   Calendar,
-  DollarSign,
-  Clock,
   TrendingUp,
   Users,
   AlertTriangle,
@@ -64,6 +59,8 @@ export default function Incapacidades() {
   const [searchTerm, setSearchTerm] = useState('');
   const [originFilter, setOriginFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [monthFilter, setMonthFilter] = useState<string>('all');
+  const [yearFilter, setYearFilter] = useState<string>('all');
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [selectedIncapacityId, setSelectedIncapacityId] = useState<string | null>(null);
@@ -79,6 +76,34 @@ export default function Incapacidades() {
     { bg: 'from-fuchsia-500/5', iconBg: 'bg-fuchsia-500/10', text: 'text-fuchsia-600' },
     { bg: 'from-cyan-500/5', iconBg: 'bg-cyan-500/10', text: 'text-cyan-600' },
   ];
+
+  const monthOptions = [
+    { value: '1', label: 'Enero' },
+    { value: '2', label: 'Febrero' },
+    { value: '3', label: 'Marzo' },
+    { value: '4', label: 'Abril' },
+    { value: '5', label: 'Mayo' },
+    { value: '6', label: 'Junio' },
+    { value: '7', label: 'Julio' },
+    { value: '8', label: 'Agosto' },
+    { value: '9', label: 'Septiembre' },
+    { value: '10', label: 'Octubre' },
+    { value: '11', label: 'Noviembre' },
+    { value: '12', label: 'Diciembre' },
+  ];
+
+  const yearOptions = useMemo(() => {
+    const years = new Set<number>();
+
+    for (const inc of incapacities || []) {
+      const startDate = parseDateOnly(inc.start_date);
+      if (startDate) years.add(startDate.getFullYear());
+    }
+
+    return Array.from(years)
+      .sort((a, b) => b - a)
+      .map((year) => year.toString());
+  }, [incapacities]);
   
   // Handle deep linking from dashboard
   useEffect(() => {
@@ -105,6 +130,7 @@ export default function Incapacidades() {
   
   // Filter incapacities
   const filteredIncapacities = incapacities?.filter((inc) => {
+    const startDate = parseDateOnly(inc.start_date);
     const matchesSearch =
       !searchTerm ||
       inc.employee?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,9 +140,17 @@ export default function Incapacidades() {
     
     const matchesOrigin = originFilter === 'all' || inc.origin === originFilter;
     const matchesStatus = statusFilter === 'all' || inc.recovery_status === statusFilter;
+    const matchesMonth = monthFilter === 'all' || (startDate && startDate.getMonth() + 1 === Number(monthFilter));
+    const matchesYear = yearFilter === 'all' || (startDate && startDate.getFullYear().toString() === yearFilter);
     
-    return matchesSearch && matchesOrigin && matchesStatus;
+    return matchesSearch && matchesOrigin && matchesStatus && matchesMonth && matchesYear;
   });
+
+  const activeFilterCount =
+    (originFilter !== 'all' ? 1 : 0) +
+    (statusFilter !== 'all' ? 1 : 0) +
+    (monthFilter !== 'all' ? 1 : 0) +
+    (yearFilter !== 'all' ? 1 : 0);
   
   return (
     <div className="space-y-6">
@@ -283,11 +317,9 @@ export default function Incapacidades() {
                     />
                   </div>
                   <CollapsibleFilters
-                    activeCount={
-                      (originFilter !== 'all' ? 1 : 0) + (statusFilter !== 'all' ? 1 : 0)
-                    }
+                    activeCount={activeFilterCount}
                   >
-                    <div className="grid gap-2 sm:grid-cols-2">
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
                       <Select value={originFilter} onValueChange={setOriginFilter}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Origen" />
@@ -296,6 +328,28 @@ export default function Incapacidades() {
                           <SelectItem value="all">Todos</SelectItem>
                           {incapacityOriginOptions.map((option) => (
                             <SelectItem key={option.value} value={option.value}>{option.shortLabel}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={monthFilter} onValueChange={setMonthFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Mes" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los meses</SelectItem>
+                          {monthOptions.map((month) => (
+                            <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={yearFilter} onValueChange={setYearFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Año" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos los años</SelectItem>
+                          {yearOptions.map((year) => (
+                            <SelectItem key={year} value={year}>{year}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -432,7 +486,7 @@ export default function Incapacidades() {
                   <Stethoscope className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold">No hay incapacidades</h3>
                   <p className="text-muted-foreground mb-4">
-                    {searchTerm || originFilter !== 'all' || statusFilter !== 'all'
+                    {searchTerm || activeFilterCount > 0
                       ? 'No se encontraron resultados con los filtros aplicados'
                       : 'Comienza registrando la primera incapacidad'}
                   </p>
