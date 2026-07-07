@@ -87,7 +87,10 @@ export function IncapacityDetailDialog({
       toast.success('Incapacidad eliminada');
       onOpenChange(false);
     } catch (error) {
-      toast.error('Error al eliminar la incapacidad');
+      console.error('Error deleting incapacity:', error);
+      toast.error('No se pudo eliminar la incapacidad', {
+        description: 'Revisa si tiene registros relacionados o intenta nuevamente.',
+      });
     }
   };
   
@@ -100,6 +103,10 @@ export function IncapacityDetailDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Cargando incapacidad</DialogTitle>
+            <DialogDescription>Estamos consultando el detalle de la incapacidad seleccionada.</DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>

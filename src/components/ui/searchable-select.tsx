@@ -19,6 +19,7 @@ import {
 export interface SearchableSelectOption {
   value: string;
   label: string;
+  keywords?: string;
   disabled?: boolean;
   suffix?: React.ReactNode;
 }
@@ -34,6 +35,12 @@ interface SearchableSelectProps {
   className?: string;
   triggerClassName?: string;
 }
+
+const normalizeSearchText = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 
 export function SearchableSelect({
   options,
@@ -54,10 +61,11 @@ export function SearchableSelect({
   // Filter options based on search - searches anywhere in the label
   const filteredOptions = React.useMemo(() => {
     if (!search) return options;
-    const searchLower = search.toLowerCase();
-    return options.filter((option) =>
-      option.label.toLowerCase().includes(searchLower)
-    );
+    const searchTerms = normalizeSearchText(search).split(/\s+/).filter(Boolean);
+    return options.filter((option) => {
+      const searchableText = normalizeSearchText(`${option.label} ${option.keywords || ""}`);
+      return searchTerms.every((term) => searchableText.includes(term));
+    });
   }, [options, search]);
 
   return (

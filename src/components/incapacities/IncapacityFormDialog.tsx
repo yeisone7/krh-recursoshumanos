@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format } from 'date-fns';
+import { addDays, differenceInCalendarDays, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { CalendarIcon, DollarSign, Loader2, Stethoscope, User } from 'lucide-react';
@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Select,
   SelectContent,
@@ -79,6 +80,7 @@ export function IncapacityFormDialog({
       employee_id: employeeId || '',
       origin: 'comun',
       start_date: new Date(),
+      duration_days: 1,
       end_date: new Date(),
       diagnosis: '',
       cie10_code: '',
@@ -94,6 +96,7 @@ export function IncapacityFormDialog({
   
   const watchEmployeeId = form.watch('employee_id');
   const watchStartDate = form.watch('start_date');
+  const watchDurationDays = form.watch('duration_days');
   const watchEndDate = form.watch('end_date');
   const { data: employeeIncapacities } = useEmployeeIncapacities(watchEmployeeId || undefined);
 
@@ -105,6 +108,40 @@ export function IncapacityFormDialog({
     incapacityId ? { type: 'incapacity', id: incapacityId } : undefined,
   );
   const hasIncapConflicts = incapConflicts.length > 0;
+  const employeeOptions = useMemo(() => (
+    (employees || [])
+      .filter(employee => employee.is_active)
+      .map(employee => {
+        const fullName = [
+          employee.first_name,
+          employee.middle_name,
+          employee.last_name,
+          employee.second_last_name,
+        ].filter(Boolean).join(' ');
+        const documentNumber = employee.document_number || 'Sin documento';
+        const positionName = employee.work_info?.position_name || '';
+        const centerName = employee.operation_centers?.name || '';
+        const areaName = employee.areas?.name || '';
+
+        return {
+          value: employee.id,
+          label: `${fullName} - ${documentNumber}`,
+          keywords: [
+            fullName,
+            documentNumber,
+            employee.document_type,
+            positionName,
+            centerName,
+            areaName,
+          ].filter(Boolean).join(' '),
+          suffix: positionName ? (
+            <span className="ml-auto max-w-[11rem] truncate pl-3 text-xs text-muted-foreground">
+              {positionName}
+            </span>
+          ) : undefined,
+        };
+      })
+  ), [employees]);
   
   // Load existing incapacity data for editing
   useEffect(() => {
@@ -113,6 +150,13 @@ export function IncapacityFormDialog({
         employee_id: incapacity.employee_id,
         origin: incapacity.origin,
         start_date: parseDateOnlyOr(incapacity.start_date, new Date()),
+        duration_days: Math.max(
+          1,
+          differenceInCalendarDays(
+            parseDateOnlyOr(incapacity.end_date, new Date()),
+            parseDateOnlyOr(incapacity.start_date, new Date())
+          ) + 1
+        ),
         end_date: parseDateOnlyOr(incapacity.end_date, new Date()),
         diagnosis: incapacity.diagnosis,
         cie10_code: incapacity.cie10_code || '',
@@ -134,6 +178,21 @@ export function IncapacityFormDialog({
       form.setValue('parent_incapacity_id', parentIncapacityId);
     }
   }, [isExtension, parentIncapacityId, form]);
+
+  useEffect(() => {
+    const durationDays = Number(watchDurationDays);
+    if (!watchStartDate || !Number.isFinite(durationDays) || durationDays < 1) return;
+
+    const calculatedEndDate = addDays(watchStartDate, durationDays - 1);
+    const currentEndDate = form.getValues('end_date');
+    if (currentEndDate?.getTime() === calculatedEndDate.getTime()) return;
+
+    form.setValue('end_date', calculatedEndDate, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+  }, [form, watchDurationDays, watchStartDate]);
   
   const onSubmit = async (data: IncapacityFormData) => {
     try {
@@ -210,28 +269,21 @@ export function IncapacityFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Empleado *</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value}
-                        disabled={isEditing || !!employeeId}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccione un empleado" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {loadingEmployees ? (
-                            <SelectItem value="__loading__" disabled>Cargando...</SelectItem>
-                          ) : (
-                            employees?.filter(e => e.is_active).map((emp) => (
-                              <SelectItem key={emp.id} value={emp.id}>
-                                {emp.first_name} {emp.last_name} - {emp.document_number}
-                              </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <SearchableSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          options={employeeOptions}
+                          placeholder={loadingEmployees ? 'Cargando empleados...' : 'Seleccione un empleado'}
+                          searchPlaceholder="Buscar por nombre, documento, cargo o centro..."
+                          emptyMessage="No se encontraron empleados activos."
+                          disabled={isEditing || !!employeeId || loadingEmployees}
+                          triggerClassName="h-10"
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Escriba nombre, apellido, documento, cargo o centro para filtrar.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -263,7 +315,7 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="start_date"
@@ -302,35 +354,47 @@ export function IncapacityFormDialog({
                   
                   <FormField
                     control={form.control}
+                    name="duration_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Días de incapacidad *</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={1}
+                            step={1}
+                            inputMode="numeric"
+                            placeholder="1"
+                            {...field}
+                            onChange={(event) => field.onChange(event.target.valueAsNumber || 0)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="end_date"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Fecha Fin *</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? format(field.value, "PPP", { locale: es }) : "Seleccionar"}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                              className="pointer-events-auto"
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <FormLabel>Fecha Fin</FormLabel>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled
+                            className={cn(
+                              "w-full pl-3 text-left font-normal opacity-100 disabled:cursor-default disabled:opacity-100",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP", { locale: es }) : "Calculada"}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                        <FormDescription>Se calcula automáticamente.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
