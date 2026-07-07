@@ -219,6 +219,7 @@ export const incapacityFormSchema = z.object({
   employee_id: z.string().min(1, 'Empleado requerido'),
   origin: z.enum(incapacityOriginValues),
   start_date: z.date({ required_error: 'Fecha de inicio requerida' }),
+  duration_days: z.coerce.number().int().min(1, 'Los días de incapacidad deben ser al menos 1'),
   end_date: z.date({ required_error: 'Fecha de fin requerida' }),
   
   // Clinical

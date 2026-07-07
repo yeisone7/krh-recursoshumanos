@@ -454,16 +454,62 @@ export function useDeleteIncapacity() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { data: target, error: targetError } = await supabase
         .from('employee_incapacities')
+        .select('id, employee_id')
+        .eq('id', id)
+        .single();
+
+      if (targetError) throw targetError;
+
+      const { data: employeeIncapacities, error: listError } = await supabase
+        .from('employee_incapacities')
+        .select('id, parent_incapacity_id')
+        .eq('employee_id', target.employee_id);
+
+      if (listError) throw listError;
+
+      const childIdsByParent = new Map<string, string[]>();
+      for (const incapacity of employeeIncapacities || []) {
+        if (!incapacity.parent_incapacity_id) continue;
+        const currentChildren = childIdsByParent.get(incapacity.parent_incapacity_id) || [];
+        currentChildren.push(incapacity.id);
+        childIdsByParent.set(incapacity.parent_incapacity_id, currentChildren);
+      }
+
+      const idsToDelete: string[] = [];
+      const collectDescendantsFirst = (currentId: string) => {
+        for (const childId of childIdsByParent.get(currentId) || []) {
+          collectDescendantsFirst(childId);
+        }
+        idsToDelete.push(currentId);
+      };
+
+      collectDescendantsFirst(id);
+
+      const { error: documentsError } = await supabase
+        .from('document_versions')
         .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
+        .in('entity_id', idsToDelete)
+        .in('entity_type', ['incapacity', 'incapacity_clinical_history']);
+
+      if (documentsError) throw documentsError;
+
+      for (const incapacityId of idsToDelete) {
+        const { error } = await supabase
+          .from('employee_incapacities')
+          .delete()
+          .eq('id', incapacityId);
+
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['document_versions'] });
+      queryClient.invalidateQueries({ queryKey: ['current_document'] });
     },
   });
 }
