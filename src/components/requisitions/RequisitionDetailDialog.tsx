@@ -33,6 +33,7 @@ import {
   ShieldCheck,
   UserCheck,
   Trash2,
+  Clock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -512,6 +513,15 @@ export function RequisitionDetailDialog({
                   <div>
                     <p className="text-sm text-muted-foreground">Horario de Trabajo</p>
                     <p className="font-medium">{requisition.horario_trabajo || 'No especificado'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Turno de Trabajo</p>
+                    <p className="font-medium flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      {requisition.shifts?.name
+                        ? `${requisition.shifts.name}${requisition.shifts.code ? ` (${requisition.shifts.code})` : ''}`
+                        : 'No especificado'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Día de Descanso</p>
