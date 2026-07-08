@@ -107,6 +107,9 @@ export function ExtensionFormDialog({
 
   const legalStatus = getContractLegalStatus(contractData);
   const preavisoPassed = isPreavisoDeadlinePassed(currentEndDate);
+  const isWorkLaborContract = contractType === 'obra_labor';
+  const extensionLabel = isWorkLaborContract ? 'Adición' : 'Prórroga';
+  const extensionLabelLower = isWorkLaborContract ? 'adición' : 'prórroga';
 
   const isEditMode = !!extensionToEdit;
   const extensionStartDate = useMemo(
@@ -156,7 +159,7 @@ export function ExtensionFormDialog({
         currentEndDate
       );
       const maxDateErrors = maxEndDate && watchedEndDate >= maxEndDate
-        ? [`La fecha fin debe ser anterior al inicio de la siguiente prórroga (${format(maxEndDate, 'PPP', { locale: es })}).`]
+        ? [`La fecha fin debe ser anterior al inicio de la siguiente ${extensionLabelLower} (${format(maxEndDate, 'PPP', { locale: es })}).`]
         : [];
 
       setValidationResult({
@@ -180,7 +183,7 @@ export function ExtensionFormDialog({
     if (!validationResult.isValid) {
       toast({
         title: 'Error de validación',
-        description: 'La prórroga no cumple con los requisitos legales. Revise los errores.',
+        description: `La ${extensionLabelLower} no cumple con los requisitos legales. Revise los errores.`,
         variant: 'destructive',
       });
       return;
@@ -191,8 +194,8 @@ export function ExtensionFormDialog({
     } else {
       console.log('Extension data:', data);
       toast({
-        title: 'Prórroga registrada',
-        description: `La prórroga #${extensionNumber} de ${employeeName} ha sido registrada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+        title: `${extensionLabel} registrada`,
+        description: `La ${extensionLabelLower} #${extensionNumber} de ${employeeName} ha sido registrada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
       onOpenChange(false);
     }
@@ -207,10 +210,10 @@ export function ExtensionFormDialog({
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
               {isEditMode ? <Pencil className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
             </span>
-            {isEditMode ? 'Editar Prórroga' : 'Nueva Prórroga'}
+            {isEditMode ? `Editar ${extensionLabel}` : `Nueva ${extensionLabel}`}
           </DialogTitle>
           <DialogDescription className="pl-[52px] text-sm">
-            Prórroga #{extensionNumber} para el contrato de <strong>{employeeName}</strong>
+            {extensionLabel} #{extensionNumber} para el contrato de <strong>{employeeName}</strong>
           </DialogDescription>
         </DialogHeader>
 
@@ -224,7 +227,7 @@ export function ExtensionFormDialog({
                 <span className="text-right font-medium">{format(currentEndDate, 'PPP', { locale: es })}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-muted-foreground">Número de prórroga:</span>
+                <span className="text-muted-foreground">Número de {extensionLabelLower}:</span>
                 <span className="font-medium text-primary">#{extensionNumber}</span>
               </div>
               {contractType === 'fijo' && (
@@ -266,11 +269,11 @@ export function ExtensionFormDialog({
               name="extensionType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo de Prórroga *</FormLabel>
+                  <FormLabel>Tipo de {extensionLabel} *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-auto min-h-12 py-2">
-                        <SelectValue placeholder="Seleccione el tipo de prórroga" />
+                        <SelectValue placeholder={`Seleccione el tipo de ${extensionLabelLower}`} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -430,7 +433,7 @@ export function ExtensionFormDialog({
                   <FormLabel>Observaciones</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Notas sobre esta prórroga..."
+                      placeholder={`Notas sobre esta ${extensionLabelLower}...`}
                       className="min-h-[76px]"
                       {...field}
                     />
@@ -444,7 +447,7 @@ export function ExtensionFormDialog({
               <div className="flex gap-2">
                 <FileText className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-warning-foreground">
-                  Recuerde adjuntar el documento de prórroga firmado desde la ficha del contrato una vez creada.
+                  Recuerde adjuntar el documento de {extensionLabelLower} firmado desde la ficha del contrato una vez creada.
                 </p>
               </div>
             </div>
@@ -460,7 +463,7 @@ export function ExtensionFormDialog({
                 className="gradient-primary text-primary-foreground w-full sm:w-auto"
                 disabled={!validationResult.isValid}
               >
-                {isEditMode ? 'Guardar Cambios' : 'Registrar Prórroga'}
+                {isEditMode ? 'Guardar Cambios' : `Registrar ${extensionLabel}`}
               </Button>
             </div>
           </form>

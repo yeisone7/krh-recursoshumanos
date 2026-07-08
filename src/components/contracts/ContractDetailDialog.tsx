@@ -203,17 +203,17 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
         extension_type: data.extensionType,
       });
       
-      const extensionLabel = data.extensionType === 'automatica' ? 'automática' : 'pactada';
+      const extensionTypeLabel = data.extensionType === 'automatica' ? 'automática' : 'pactada';
       toast({
-        title: 'Prórroga registrada',
-        description: `La prórroga ${extensionLabel} #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+        title: `${extensionLabel} registrada`,
+        description: `La ${extensionLabelLower} ${extensionTypeLabel} #${data.extensionNumber} ha sido guardada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
       
       if (data.extensionType === 'pactada') {
         if (!company) {
           toast({
             title: 'Otrosí pendiente',
-            description: 'La prórroga fue registrada, pero no se pudo cargar la empresa para generar el documento.',
+            description: `La ${extensionLabelLower} fue registrada, pero no se pudo cargar la empresa para generar el documento.`,
             variant: 'destructive',
           });
         } else {
@@ -240,7 +240,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
           toast({
             title: 'Otrosí generado',
-            description: 'El documento de prórroga pactada fue descargado correctamente.',
+            description: `El documento de ${extensionLabelLower} pactada fue descargado correctamente.`,
           });
         }
       }
@@ -250,7 +250,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       console.error('Error creating extension:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo registrar la prórroga. Intente nuevamente.',
+        description: `No se pudo registrar la ${extensionLabelLower}. Intente nuevamente.`,
         variant: 'destructive',
       });
     }
@@ -258,6 +258,11 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
   const status = getContractStatus(contract);
   const isTerminated = status === 'terminated';
+  const isWorkLaborContract = contract.contractType === 'work_labor';
+  const extensionLabel = isWorkLaborContract ? 'Adición' : 'Prórroga';
+  const extensionLabelLower = isWorkLaborContract ? 'adición' : 'prórroga';
+  const extensionLabelPlural = isWorkLaborContract ? 'Adiciones' : 'Prórrogas';
+  const extensionLabelPluralLower = isWorkLaborContract ? 'adiciones' : 'prórrogas';
   const daysRemaining = calculateDaysRemaining(contract.currentEndDate);
   const StatusIcon = statusConfig[status].icon;
   const isApproved = contract.isApproved;
@@ -280,13 +285,13 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     regularizationPlan.eligible &&
     regularizationPlan.extensions.length > 0;
   const extensionBlockedReason = !isApproved
-    ? 'El contrato debe estar aprobado para registrar una prórroga.'
+    ? `El contrato debe estar aprobado para registrar una ${extensionLabelLower}.`
     : status === 'expired'
       ? canRegularizeAutomaticExtensions
         ? 'Usa la regularizacion automatica para reconstruir las prorrogas anuales faltantes.'
-        : 'No se pueden registrar prórrogas sobre contratos vencidos.'
+        : `No se pueden registrar ${extensionLabelPluralLower} sobre contratos vencidos.`
       : !contract.currentEndDate
-        ? 'Define la fecha fin actual del contrato para registrar una prórroga.'
+        ? `Define la fecha fin actual del contrato para registrar una ${extensionLabelLower}.`
         : null;
   const sortedExtensions = [...contract.extensions].sort((a, b) => a.extensionNumber - b.extensionNumber);
   const nextExtension = editingExtension
@@ -407,7 +412,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (!canUpdateContracts) {
       toast({
         title: 'Sin permiso',
-        description: 'No tienes permisos para registrar prórrogas de contratos.',
+        description: `No tienes permisos para registrar ${extensionLabelPluralLower} de contratos.`,
         variant: 'destructive',
       });
       return;
@@ -416,7 +421,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (isTerminated) {
       toast({
         title: 'Contrato terminado',
-        description: 'No se pueden registrar prórrogas en un contrato terminado.',
+        description: `No se pueden registrar ${extensionLabelPluralLower} en un contrato terminado.`,
         variant: 'destructive',
       });
       return;
@@ -433,7 +438,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (!isApproved) {
       toast({
         title: 'Contrato pendiente de aprobación',
-        description: 'Para registrar una prórroga, el contrato debe estar aprobado.',
+        description: `Para registrar una ${extensionLabelLower}, el contrato debe estar aprobado.`,
         variant: 'destructive',
       });
       return;
@@ -447,7 +452,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
 
       toast({
         title: 'Contrato vencido',
-        description: 'No se pueden registrar prórrogas sobre contratos vencidos. Revisa el estado contractual antes de continuar.',
+        description: `No se pueden registrar ${extensionLabelPluralLower} sobre contratos vencidos. Revisa el estado contractual antes de continuar.`,
         variant: 'destructive',
       });
       return;
@@ -456,7 +461,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (!contract.currentEndDate) {
       toast({
         title: 'Falta fecha de fin',
-        description: 'Para crear una prórroga primero debes definir la fecha fin actual del contrato desde Editar Contrato.',
+        description: `Para crear una ${extensionLabelLower} primero debes definir la fecha fin actual del contrato desde Editar Contrato.`,
         variant: 'destructive',
       });
       return;
@@ -470,7 +475,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (!canUpdateContracts) {
       toast({
         title: 'Sin permiso',
-        description: 'No tienes permisos para editar prórrogas de contratos.',
+        description: `No tienes permisos para editar ${extensionLabelPluralLower} de contratos.`,
         variant: 'destructive',
       });
       return;
@@ -479,7 +484,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     if (isTerminated) {
       toast({
         title: 'Contrato terminado',
-        description: 'No se pueden editar prórrogas de un contrato terminado.',
+        description: `No se pueden editar ${extensionLabelPluralLower} de un contrato terminado.`,
         variant: 'destructive',
       });
       return;
@@ -525,8 +530,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       });
 
       toast({
-        title: 'Prórroga actualizada',
-        description: `La prórroga #${data.extensionNumber} fue actualizada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
+        title: `${extensionLabel} actualizada`,
+        description: `La ${extensionLabelLower} #${data.extensionNumber} fue actualizada. Nueva vigencia hasta ${format(data.endDate, 'PPP', { locale: es })}.`,
       });
 
       setEditingExtension(null);
@@ -535,7 +540,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       console.error('Error updating extension:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar la prórroga. Intente nuevamente.',
+        description: `No se pudo actualizar la ${extensionLabelLower}. Intente nuevamente.`,
         variant: 'destructive',
       });
     }
@@ -627,6 +632,19 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                     <p className="font-medium">{format(contract.startDate, 'dd MMM yyyy', { locale: es })}</p>
                   </div>
                 </div>
+                {isWorkLaborContract && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Final</p>
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <p className="font-medium">
+                        {contract.originalEndDate
+                          ? format(contract.originalEndDate, 'dd MMM yyyy', { locale: es })
+                          : 'Sin fecha fin'}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Vigencia Actual</p>
                   <div className="flex items-center gap-1.5">
@@ -668,7 +686,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                       <FileText className="w-4 h-4 text-primary" />
-                      Historial de Prórrogas
+                      Historial de {extensionLabelPlural}
                       {contract.extensions.length > 0 && (
                         <Badge variant="outline" className="bg-accent-light text-accent border-accent/20">
                           {contract.extensions.length}
@@ -707,7 +725,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                         title={extensionBlockedReason || undefined}
                       >
                         <Plus className="w-4 h-4" />
-                        Nueva Prórroga
+                        Nueva {extensionLabel}
                       </Button>
                     </div>
                   )}
@@ -716,7 +734,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 {contract.extensions.length === 0 ? (
                   <div className="text-center py-8 bg-background rounded-lg">
                     <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">No hay prórrogas registradas</p>
+                    <p className="text-muted-foreground">No hay {extensionLabelPluralLower} registradas</p>
                     {canManageExtensions && (
                       <Button
                         variant="outline"
@@ -726,7 +744,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                         title={extensionBlockedReason || undefined}
                       >
                         <Plus className="w-4 h-4" />
-                        Agregar primera prórroga
+                        Agregar primera {extensionLabelLower}
                       </Button>
                     )}
                     {canManageExtensions && extensionBlockedReason && (
@@ -775,7 +793,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                             </div>
                             <div className="flex-1 bg-accent-light/30 border border-accent/10 rounded-lg p-3">
                               <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className="font-medium text-sm">Prórroga #{ext.extensionNumber}</p>
+                                <p className="font-medium text-sm">{extensionLabel} #{ext.extensionNumber}</p>
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-muted-foreground">
                                     {format(ext.createdAt, 'dd MMM yyyy', { locale: es })}
@@ -849,7 +867,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                         </p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Vigencia actual (con prórrogas):</p>
+                        <p className="text-muted-foreground">Vigencia actual (con {extensionLabelPluralLower}):</p>
                         <p className="font-medium text-primary">
                           {contract.currentEndDate
                             ? format(contract.currentEndDate, 'dd MMM yyyy', { locale: es })
