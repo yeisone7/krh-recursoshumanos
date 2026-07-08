@@ -31,6 +31,7 @@ export type EmployeeDocumentType =
   | 'consulta_antecedentes'
   | 'dotacion'
   | 'contratos_otrosi'
+  | 'preavisos'
   | 'certificados_bancarios'
   | 'documentos_retiro'
   | 'inducciones_cursos'
@@ -138,6 +139,7 @@ export const employeeDocumentTypeLabels: Record<EmployeeDocumentType, string> = 
   consulta_antecedentes: 'Consulta de Antecedentes',
   dotacion: 'Dotación',
   contratos_otrosi: 'Contratos y Otro sí',
+  preavisos: 'Preavisos',
   certificados_bancarios: 'Certificados Bancarios',
   documentos_retiro: 'Documentos de Retiro',
   inducciones_cursos: 'Inducciones y Cursos',
@@ -155,6 +157,7 @@ export const employeeDocumentFolderOrder = [
   'consulta_antecedentes',
   'dotacion',
   'contratos_otrosi',
+  'preavisos',
   'certificados_bancarios',
   'documentos_retiro',
   'inducciones_cursos',
