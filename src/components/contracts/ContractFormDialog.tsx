@@ -192,7 +192,9 @@ export function ContractFormDialog({
   const selectedStartDate = form.watch('startDate');
   const selectedDurationMonths = form.watch('durationMonths');
   const contractTypeConfig = contractTypes.find(ct => ct.contract_type === selectedContractType);
-  const needsEndDate = contractTypeConfig?.requires_end_date ?? false;
+  const isWorkLaborContract = selectedContractType === 'obra_labor';
+  const needsEndDate = isWorkLaborContract || (contractTypeConfig?.requires_end_date ?? false);
+  const requiresDurationMonths = needsEndDate && !isWorkLaborContract;
 
   useEffect(() => {
     if (!selectedContractType) return;
@@ -203,23 +205,34 @@ export function ContractFormDialog({
       return;
     }
 
-    if (selectedStartDate && selectedDurationMonths && selectedDurationMonths > 0) {
+    if (requiresDurationMonths && selectedStartDate && selectedDurationMonths && selectedDurationMonths > 0) {
       form.setValue('endDate', addDays(addMonths(selectedStartDate, selectedDurationMonths), -1), {
         shouldDirty: true,
         shouldValidate: true,
       });
     }
-  }, [form, needsEndDate, selectedDurationMonths, selectedStartDate]);
+  }, [form, needsEndDate, requiresDurationMonths, selectedDurationMonths, selectedStartDate]);
 
   const handleSubmit = async (data: ContractFormData) => {
     try {
-      if (needsEndDate && (!data.durationMonths || !data.endDate)) {
+      if (requiresDurationMonths && !data.durationMonths) {
         form.setError('durationMonths', {
           type: 'manual',
           message: 'Ingrese la duración para calcular la fecha de finalización',
         });
         toast.error('Duración requerida', {
           description: 'Ingrese el número de meses que dura el contrato.',
+        });
+        return;
+      }
+
+      if (needsEndDate && !data.endDate) {
+        form.setError('endDate', {
+          type: 'manual',
+          message: 'Seleccione la fecha de finalización',
+        });
+        toast.error('Fecha final requerida', {
+          description: 'Seleccione la fecha final del contrato.',
         });
         return;
       }
@@ -540,7 +553,7 @@ export function ContractFormDialog({
                       )}
                     />
 
-                    {needsEndDate && (
+                    {requiresDurationMonths && (
                       <FormField
                         control={form.control}
                         name="durationMonths"
@@ -586,9 +599,10 @@ export function ContractFormDialog({
                                   <Button
                                     type="button"
                                     variant="outline"
-                                    disabled
+                                    disabled={requiresDurationMonths}
                                     className={cn(
-                                      'h-11 w-full rounded-lg border-border bg-muted/40 pl-4 text-left font-medium disabled:cursor-default disabled:opacity-100',
+                                      'h-11 w-full rounded-lg border-border pl-4 text-left font-medium disabled:cursor-default disabled:opacity-100',
+                                      requiresDurationMonths ? 'bg-muted/40' : 'bg-background',
                                       !field.value && 'text-muted-foreground font-normal'
                                     )}
                                   >
