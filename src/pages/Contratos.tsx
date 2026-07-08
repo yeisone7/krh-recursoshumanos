@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   FileText,
+  FileSpreadsheet,
+  Download,
   Search,
   Plus,
   Filter,
@@ -28,6 +30,8 @@ import {
   LayoutGrid,
   Table2,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +92,19 @@ type ContractListRow = {
   is_approved?: boolean | null;
   special_clauses?: string | null;
   work_labor_description?: string | null;
+};
+
+type ContractMatrixExportRow = {
+  'Nombres': string;
+  'Documento': string;
+  'Cargo': string;
+  'Fecha Ingreso': string;
+  'Termino': string;
+  'Fecha Terminacion': string;
+  'Prorroga 1': string;
+  'Prorroga 2': string;
+  'Prorroga 3': string;
+  'Estipulaciones Contractuales Adicionales': string;
 };
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
@@ -257,6 +274,142 @@ function getContractTypeTone(type: string) {
   return 'bg-primary-light text-primary border-primary/20';
 }
 
+function getExportTimestamp() {
+  const now = new Date();
+  const pad = (value: number) => value.toString().padStart(2, '0');
+  return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+}
+
+function buildContractMatrixRows(contracts: ContractListRow[]): ContractMatrixExportRow[] {
+  return contracts.map((contract) => {
+    const extensions = getSortedExtensions(contract);
+    return {
+      'Nombres': getEmployeeFullName(contract.employees).toUpperCase(),
+      'Documento': contract.employees?.document_number || '',
+      'Cargo': (contract.employees?.position_name || 'Sin cargo').toUpperCase(),
+      'Fecha Ingreso': formatMatrixDate(contract.start_date),
+      'Termino': getMatrixDurationLabel(contract.start_date, contract.end_date),
+      'Fecha Terminacion': formatMatrixDate(contract.end_date),
+      'Prorroga 1': formatMatrixDate(extensions[0]?.end_date || null),
+      'Prorroga 2': formatMatrixDate(extensions[1]?.end_date || null),
+      'Prorroga 3': formatMatrixDate(extensions[2]?.end_date || null),
+      'Estipulaciones Contractuales Adicionales': getAdditionalContractTerms(contract),
+    };
+  });
+}
+
+function exportContractMatrixToExcel(contracts: ContractListRow[]) {
+  const rows = buildContractMatrixRows(contracts);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 34 },
+    { wch: 18 },
+    { wch: 32 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 20 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 16 },
+    { wch: 52 },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Matriz Contratos');
+  XLSX.writeFile(wb, `matriz_contratos_${getExportTimestamp()}.xlsx`);
+}
+
+function exportContractMatrixToPDF(contracts: ContractListRow[]) {
+  const rows = buildContractMatrixRows(contracts);
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 8;
+  const headers: Array<keyof ContractMatrixExportRow> = [
+    'Nombres',
+    'Documento',
+    'Cargo',
+    'Fecha Ingreso',
+    'Termino',
+    'Fecha Terminacion',
+    'Prorroga 1',
+    'Prorroga 2',
+    'Prorroga 3',
+    'Estipulaciones Contractuales Adicionales',
+  ];
+  const widths = [36, 20, 32, 20, 18, 23, 20, 20, 20, 52];
+  const rowHeight = 11;
+  const headerHeight = 12;
+  let y = 28;
+
+  const drawHeader = () => {
+    doc.setFillColor(25, 151, 201);
+    doc.rect(0, 0, pageWidth, 16, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('Matriz de Contratos', margin, 10);
+
+    doc.setTextColor(95, 111, 130);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text(`Generado: ${new Date().toLocaleString('es-CO')} | Registros: ${rows.length}`, margin, 22);
+
+    let x = margin;
+    doc.setFillColor(217, 217, 217);
+    doc.setDrawColor(190, 196, 205);
+    doc.setTextColor(20, 28, 42);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.8);
+
+    headers.forEach((header, index) => {
+      doc.rect(x, y, widths[index], headerHeight, 'FD');
+      doc.text(String(header).toUpperCase(), x + 1.5, y + 5, { maxWidth: widths[index] - 3 });
+      x += widths[index];
+    });
+    y += headerHeight;
+  };
+
+  drawHeader();
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+
+  rows.forEach((row) => {
+    if (y + rowHeight > pageHeight - margin) {
+      doc.addPage();
+      y = 28;
+      drawHeader();
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(6.5);
+    }
+
+    let x = margin;
+    headers.forEach((header, index) => {
+      const value = String(row[header] || '');
+      const lines = doc.splitTextToSize(value, widths[index] - 3).slice(0, 2) as string[];
+      if (lines.length === 2 && value.length > lines.join(' ').length) {
+        lines[1] = `${lines[1].slice(0, Math.max(0, lines[1].length - 3))}...`;
+      }
+      doc.setDrawColor(220, 224, 230);
+      doc.setTextColor(25, 33, 48);
+      doc.rect(x, y, widths[index], rowHeight, 'S');
+      doc.text(lines, x + 1.5, y + 4, { lineHeightFactor: 1.1 });
+      x += widths[index];
+    });
+    y += rowHeight;
+  });
+
+  const totalPages = doc.getNumberOfPages();
+  for (let page = 1; page <= totalPages; page += 1) {
+    doc.setPage(page);
+    doc.setTextColor(95, 111, 130);
+    doc.setFontSize(7);
+    doc.text(`Pagina ${page} de ${totalPages}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+  }
+
+  doc.save(`matriz_contratos_${getExportTimestamp()}.pdf`);
+}
+
 function ContractMatrixView({
   contracts,
   onOpenContract,
@@ -265,9 +418,9 @@ function ContractMatrixView({
   onOpenContract: (contractId: string) => void;
 }) {
   return (
-    <div className="overflow-x-auto bg-white dark:bg-card">
+    <div className="max-h-[calc(100vh-220px)] overflow-auto bg-white dark:bg-card">
       <table className="min-w-[1500px] w-full border-collapse text-sm">
-        <thead>
+        <thead className="sticky top-0 z-[1]">
           <tr className="bg-[#d9d9d9] text-black dark:bg-muted dark:text-foreground">
             {[
               'NOMBRES',
@@ -534,6 +687,38 @@ export default function Contratos() {
     setIsDetailOpen(true);
   };
 
+  const handleExportMatrixExcel = () => {
+    if (filteredContracts.length === 0) {
+      toast({
+        title: 'Sin datos',
+        description: 'No hay contratos para exportar con los filtros actuales.',
+      });
+      return;
+    }
+
+    exportContractMatrixToExcel(filteredContracts);
+    toast({
+      title: 'Excel generado',
+      description: 'La matriz de contratos fue exportada correctamente.',
+    });
+  };
+
+  const handleExportMatrixPDF = () => {
+    if (filteredContracts.length === 0) {
+      toast({
+        title: 'Sin datos',
+        description: 'No hay contratos para exportar con los filtros actuales.',
+      });
+      return;
+    }
+
+    exportContractMatrixToPDF(filteredContracts);
+    toast({
+      title: 'PDF generado',
+      description: 'La matriz de contratos fue exportada correctamente.',
+    });
+  };
+
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -628,7 +813,7 @@ export default function Contratos() {
       </div>
 
       <div className="sticky top-0 z-10 bg-background/80 pb-2 backdrop-blur-md">
-        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto]">
+        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
           <div className="rounded-xl border border-border bg-card shadow-sm">
             <button
               type="button"
@@ -686,6 +871,31 @@ export default function Contratos() {
               Matriz
             </Button>
           </div>
+
+          {viewMode === 'matrix' && (
+            <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card p-1 shadow-sm">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleExportMatrixExcel}
+                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+              >
+                <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5 text-emerald-600" />
+                Excel
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleExportMatrixPDF}
+                className="h-8 rounded-lg px-3 text-[11px] font-bold uppercase tracking-wide"
+              >
+                <Download className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                PDF
+              </Button>
+            </div>
+          )}
         </div>
 
         {isFiltersOpen && (
