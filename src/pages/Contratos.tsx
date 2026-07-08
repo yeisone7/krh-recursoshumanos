@@ -40,6 +40,14 @@ import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -53,12 +61,15 @@ import { AutomaticExtensionRegularizationDialog, type AutomaticExtensionRegulari
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { useBulkRegularizeAutomaticContractExtensions, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
-import { useOperationCenters } from '@/hooks/useCompanies';
+import { useCompany, useOperationCenters } from '@/hooks/useCompanies';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { calculateInclusiveMonthSpan, parseDateOnly } from '@/lib/dateOnly';
 import { calculateAutomaticExtensionRegularizationPlan } from '@/lib/contractExtensionRegularization';
+import { downloadBulkPreavisoDocuments } from '@/lib/terminationPdfGenerator';
 import { toast } from '@/hooks/use-toast';
+import type { TerminationDocumentData } from '@/types/termination';
 
 // Contract type is now dynamic (text in DB) - no longer using enum
 type ContractStatus = 'active' | 'expiring' | 'expired' | 'terminated';
@@ -74,6 +85,7 @@ type ContractListEmployee = {
   last_name?: string | null;
   second_last_name?: string | null;
   document_number?: string | null;
+  document_type?: string | null;
   is_active?: boolean | null;
   status?: string | null;
   position_name?: string | null;
@@ -107,6 +119,38 @@ type ContractMatrixExportRow = {
   'Prorroga 3': string;
   'Estipulaciones Contractuales Adicionales': string;
 };
+
+type MonthlyExpirationRow = {
+  contract: ContractListRow;
+  employeeName: string;
+  documentNumber: string;
+  positionName: string;
+  centerId: string;
+  centerName: string;
+  contractTypeLabel: string;
+  effectiveEndDate: string;
+  effectiveEndDateValue: Date;
+  latestExtensionNumber: number;
+  daysRemaining: number;
+  preavisoDeadline: Date;
+  preavisoExpired: boolean;
+  canGeneratePreaviso: boolean;
+};
+
+const monthOptions = [
+  { value: 0, label: 'Enero' },
+  { value: 1, label: 'Febrero' },
+  { value: 2, label: 'Marzo' },
+  { value: 3, label: 'Abril' },
+  { value: 4, label: 'Mayo' },
+  { value: 5, label: 'Junio' },
+  { value: 6, label: 'Julio' },
+  { value: 7, label: 'Agosto' },
+  { value: 8, label: 'Septiembre' },
+  { value: 9, label: 'Octubre' },
+  { value: 10, label: 'Noviembre' },
+  { value: 11, label: 'Diciembre' },
+];
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
@@ -195,7 +239,7 @@ function getMatrixDurationLabel(startDate: string, endDate: string | null): stri
 function getSortedExtensions(contract: {
   contract_extensions?: Array<{
     end_date: string;
-    extension_number?: number;
+    extension_number?: number | null;
   }>;
 }) {
   return [...(contract.contract_extensions || [])].sort((a, b) => {
@@ -206,6 +250,24 @@ function getSortedExtensions(contract: {
 
     return (parseDateOnly(a.end_date)?.getTime() ?? 0) - (parseDateOnly(b.end_date)?.getTime() ?? 0);
   });
+}
+
+function getLatestContractExtension(contract: {
+  contract_extensions?: Array<{
+    end_date: string;
+    extension_number?: number | null;
+  }>;
+}) {
+  if (!contract.contract_extensions?.length) return null;
+
+  return [...contract.contract_extensions].sort((a, b) => {
+    const numberA = Number(a.extension_number || 0);
+    const numberB = Number(b.extension_number || 0);
+
+    if (numberA !== numberB) return numberB - numberA;
+
+    return (parseDateOnly(b.end_date)?.getTime() ?? 0) - (parseDateOnly(a.end_date)?.getTime() ?? 0);
+  })[0];
 }
 
 function getAdditionalContractTerms(contract: {
@@ -240,21 +302,41 @@ function getContractDurationLabel(startDate: string, endDate: string | null): st
 
 function getEffectiveEndDate(contract: { 
   end_date: string | null; 
-  contract_extensions?: Array<{ end_date: string; extension_number?: number }>;
+  contract_extensions?: Array<{ end_date: string; extension_number?: number | null }>;
 }): string | null {
-  if (contract.contract_extensions && contract.contract_extensions.length > 0) {
-    // Sort by extension_number (preferred) or by end_date as fallback
-    const sortedExtensions = [...contract.contract_extensions].sort((a, b) => {
-      // If both have extension_number, sort by that (highest first)
-      if (a.extension_number !== undefined && b.extension_number !== undefined) {
-        return b.extension_number - a.extension_number;
-      }
-      // Fallback to date comparison
-      return (parseDateOnly(b.end_date)?.getTime() ?? 0) - (parseDateOnly(a.end_date)?.getTime() ?? 0);
-    });
-    return sortedExtensions[0].end_date;
-  }
+  const latestExtension = getLatestContractExtension(contract);
+  if (latestExtension) return latestExtension.end_date;
+
   return contract.end_date;
+}
+
+function getMonthRange(year: number, month: number) {
+  const start = new Date(year, month, 1);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(year, month + 1, 0);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
+}
+
+function addCalendarDays(date: Date, days: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
+function formatYearMonth(year: number, month: number) {
+  return `${year}-${String(month + 1).padStart(2, '0')}`;
+}
+
+function sanitizeFilenameSegment(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .substring(0, 60) || 'Centro';
 }
 
 function getContractTypeIcon(type: string) {
@@ -513,6 +595,11 @@ export default function Contratos() {
   const [bulkRegularizationDate, setBulkRegularizationDate] = useState(() => new Date());
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isKpiGroupOpen, setIsKpiGroupOpen] = useState(false);
+  const [isMonthlyExpirationsOpen, setIsMonthlyExpirationsOpen] = useState(false);
+  const [expirationMonth, setExpirationMonth] = useState(() => new Date().getMonth());
+  const [expirationYear, setExpirationYear] = useState(() => new Date().getFullYear());
+  const [expirationCenterFilter, setExpirationCenterFilter] = useState('all');
+  const [isGeneratingBulkPreavisos, setIsGeneratingBulkPreavisos] = useState(false);
 
   const { currentCompanyId, hasPermission, canView, canCreate, canUpdate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
@@ -525,6 +612,8 @@ export default function Contratos() {
   const bulkRegularizeAutomaticExtensions = useBulkRegularizeAutomaticContractExtensions();
   const { data: contractTypesConfig } = useContractTypes();
   const { data: operationCenters } = useOperationCenters();
+  const { data: company } = useCompany(currentCompanyId || undefined);
+  const { data: systemConfig } = useSystemConfig();
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const canCreateContracts = isAdmin || isRRHH || isSuperAdmin || canCreate('contratos');
   const canManageContractExtensions = isAdmin || isRRHH || isSuperAdmin || canUpdate('contratos');
@@ -663,6 +752,94 @@ export default function Contratos() {
       .filter((item): item is AutomaticExtensionRegularizationItem => item !== null);
   }, [contracts, bulkRegularizationDate]);
 
+  const monthlyExpirationRows = useMemo<MonthlyExpirationRow[]>(() => {
+    if (!contracts) return [];
+
+    const { start, end } = getMonthRange(expirationYear, expirationMonth);
+
+    return contracts
+      .map((contract) => {
+        const employeeIsActive =
+          contract.employees?.is_active === true &&
+          (contract.employees?.status || 'active') === 'active';
+
+        if (!contract.is_approved || contract.is_terminated || !employeeIsActive) return null;
+
+        const effectiveEndDate = getEffectiveEndDate(contract);
+        const effectiveEndDateValue = effectiveEndDate ? parseDateOnly(effectiveEndDate) : null;
+
+        if (!effectiveEndDate || !effectiveEndDateValue) return null;
+        if (effectiveEndDateValue < start || effectiveEndDateValue > end) return null;
+
+        const latestExtension = getLatestContractExtension(contract);
+        const preavisoDeadline = addCalendarDays(effectiveEndDateValue, -30);
+
+        return {
+          contract,
+          employeeName: getEmployeeFullName(contract.employees),
+          documentNumber: contract.employees?.document_number || 'SIN-DOC',
+          positionName: contract.employees?.position_name || 'Sin cargo',
+          centerId: contract.employees?.operation_center_id || 'unassigned',
+          centerName: contract.employees?.operation_centers?.name || 'Sin centro asignado',
+          contractTypeLabel: getContractTypeLabel(contract.contract_type),
+          effectiveEndDate,
+          effectiveEndDateValue,
+          latestExtensionNumber: Number(latestExtension?.extension_number || 0),
+          daysRemaining: calculateDaysRemaining(effectiveEndDate) ?? 0,
+          preavisoDeadline,
+          preavisoExpired: preavisoDeadline < new Date(),
+          canGeneratePreaviso: contract.contract_type === 'fijo',
+        };
+      })
+      .filter((row): row is MonthlyExpirationRow => row !== null)
+      .sort((a, b) => a.effectiveEndDateValue.getTime() - b.effectiveEndDateValue.getTime());
+  }, [contracts, expirationMonth, expirationYear, contractTypesConfig]);
+
+  const visibleMonthlyExpirationRows = useMemo(() => {
+    if (expirationCenterFilter === 'all') return monthlyExpirationRows;
+    return monthlyExpirationRows.filter((row) => row.centerId === expirationCenterFilter);
+  }, [monthlyExpirationRows, expirationCenterFilter]);
+
+  const monthlyCenterSummaries = useMemo(() => {
+    const groups = new Map<string, {
+      id: string;
+      name: string;
+      count: number;
+      preavisoExpired: number;
+      earliestDate: Date | null;
+    }>();
+
+    monthlyExpirationRows.forEach((row) => {
+      if (!groups.has(row.centerId)) {
+        groups.set(row.centerId, {
+          id: row.centerId,
+          name: row.centerName,
+          count: 0,
+          preavisoExpired: 0,
+          earliestDate: null,
+        });
+      }
+
+      const group = groups.get(row.centerId)!;
+      group.count += 1;
+      if (row.preavisoExpired) group.preavisoExpired += 1;
+      if (!group.earliestDate || row.effectiveEndDateValue < group.earliestDate) {
+        group.earliestDate = row.effectiveEndDateValue;
+      }
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [monthlyExpirationRows]);
+
+  const selectedCenterName = expirationCenterFilter === 'all'
+    ? 'Todos los centros'
+    : operationCenters?.find((center) => center.id === expirationCenterFilter)?.name || 'Centro seleccionado';
+
+  const bulkPreavisoRows = useMemo(() => {
+    if (expirationCenterFilter === 'all') return [];
+    return visibleMonthlyExpirationRows.filter((row) => row.canGeneratePreaviso && row.centerId !== 'unassigned');
+  }, [visibleMonthlyExpirationRows, expirationCenterFilter]);
+
   const handleBulkRegularization = async (selectedItems: AutomaticExtensionRegularizationItem[]) => {
     try {
       await bulkRegularizeAutomaticExtensions.mutateAsync(selectedItems);
@@ -721,6 +898,83 @@ export default function Contratos() {
     });
   };
 
+  const handleGenerateBulkPreavisos = async () => {
+    if (expirationCenterFilter === 'all') {
+      toast({
+        title: 'Selecciona un centro',
+        description: 'El PDF masivo se genera por centro de operación.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (bulkPreavisoRows.length === 0) {
+      toast({
+        title: 'Sin preavisos para generar',
+        description: 'No hay contratos a término fijo elegibles en el centro y mes seleccionados.',
+      });
+      return;
+    }
+
+    if (!company) {
+      toast({
+        title: 'Empresa no disponible',
+        description: 'No se pudo cargar la información de la empresa para generar los preavisos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const signatureConfig = systemConfig?.legal_signature_config;
+    const documentDate = new Date();
+    const documentCity = company.city || 'Bucaramanga';
+    const preavisoData: TerminationDocumentData[] = bulkPreavisoRows.map((row) => ({
+      companyName: company.name || 'Empresa',
+      companyNit: company.nit || '',
+      companyAddress: company.address || undefined,
+      companyCity: company.city || undefined,
+      companyPhone: company.phone || undefined,
+      employeeFullName: row.employeeName,
+      employeeDocumentType: row.contract.employees?.document_type || 'C.C.',
+      employeeDocumentNumber: row.documentNumber,
+      employeePosition: row.positionName,
+      employeeOperationCenter: row.centerName,
+      contractType: row.contractTypeLabel,
+      contractStartDate: parseContractDate(row.contract.start_date),
+      contractEndDate: row.effectiveEndDateValue,
+      salary: Number(row.contract.salary || 0),
+      terminationType: 'preaviso',
+      terminationDate: documentDate,
+      effectiveDate: row.effectiveEndDateValue,
+      hrManagerName: signatureConfig?.signer_name || 'Representante Legal',
+      hrManagerPosition: signatureConfig?.signer_position || 'Líder de Talento Humano',
+      representativeSignatureUrl: signatureConfig?.signature_url || undefined,
+      documentDate,
+      documentCity,
+    }));
+
+    try {
+      setIsGeneratingBulkPreavisos(true);
+      await downloadBulkPreavisoDocuments(
+        preavisoData,
+        `Preavisos_${sanitizeFilenameSegment(selectedCenterName)}_${formatYearMonth(expirationYear, expirationMonth)}.pdf`
+      );
+      toast({
+        title: 'Preavisos generados',
+        description: `Se generó un PDF con ${bulkPreavisoRows.length} preaviso(s).`,
+      });
+    } catch (error) {
+      console.error('Error generating bulk preavisos:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo generar el PDF masivo de preavisos. Intente nuevamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGeneratingBulkPreavisos(false);
+    }
+  };
+
   if (!currentCompanyId) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
@@ -759,33 +1013,40 @@ export default function Contratos() {
             </p>
           </div>
 
-          {(canManageContractExtensions || canCreateContracts) && (
-            <div className="flex flex-wrap gap-2 shrink-0">
-              {canManageContractExtensions && bulkRegularizationItems.length > 0 && (
-                <Button
-                  variant="outline"
-                  className="h-11 rounded-xl border-emerald-200 text-emerald-700 shadow-sm hover:bg-emerald-50"
-                  onClick={() => setIsBulkRegularizationOpen(true)}
-                  disabled={bulkRegularizeAutomaticExtensions.isPending}
-                >
-                  {bulkRegularizeAutomaticExtensions.isPending ? (
-                    <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
-                  ) : (
-                    <RotateCw className="h-4 w-4 sm:mr-2" />
-                  )}
-                  <span className="hidden sm:inline">Regularizacion general ({bulkRegularizationItems.length})</span>
-                  <span className="sm:hidden">Regularizar</span>
-                </Button>
-              )}
-              {canCreateContracts && (
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl border-primary/20 text-primary shadow-sm hover:bg-primary/5"
+              onClick={() => setIsMonthlyExpirationsOpen(true)}
+            >
+              <Calendar className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Vencimientos mensuales</span>
+              <span className="sm:hidden">Vencimientos</span>
+            </Button>
+            {canManageContractExtensions && bulkRegularizationItems.length > 0 && (
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl border-emerald-200 text-emerald-700 shadow-sm hover:bg-emerald-50"
+                onClick={() => setIsBulkRegularizationOpen(true)}
+                disabled={bulkRegularizeAutomaticExtensions.isPending}
+              >
+                {bulkRegularizeAutomaticExtensions.isPending ? (
+                  <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
+                ) : (
+                  <RotateCw className="h-4 w-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">Regularizacion general ({bulkRegularizationItems.length})</span>
+                <span className="sm:hidden">Regularizar</span>
+              </Button>
+            )}
+            {canCreateContracts && (
               <Button className="h-11 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95" onClick={() => setIsFormOpen(true)}>
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Nuevo Contrato</span>
                 <span className="sm:hidden">Nuevo</span>
               </Button>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -1315,6 +1576,216 @@ export default function Contratos() {
         open={isFormOpen} 
         onOpenChange={setIsFormOpen} 
       />
+
+      <Dialog open={isMonthlyExpirationsOpen} onOpenChange={setIsMonthlyExpirationsOpen}>
+        <DialogContent className="flex max-h-[92vh] max-w-6xl flex-col overflow-hidden p-0">
+          <DialogHeader className="border-b border-border px-5 py-4">
+            <DialogTitle className="flex items-center gap-2 text-lg font-black">
+              <Calendar className="h-5 w-5 text-primary" />
+              Vencimientos mensuales
+            </DialogTitle>
+            <DialogDescription>
+              Consulta contratos y prórrogas con fecha de vencimiento efectiva en el mes seleccionado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            <div className="grid gap-3 lg:grid-cols-[180px_140px_minmax(240px,1fr)_auto]">
+              <Select value={String(expirationMonth)} onValueChange={(value) => setExpirationMonth(Number(value))}>
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="Mes" />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((month) => (
+                    <SelectItem key={month.value} value={String(month.value)}>
+                      {month.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Input
+                type="number"
+                min={2000}
+                max={2100}
+                value={expirationYear}
+                onChange={(event) => setExpirationYear(Number(event.target.value) || new Date().getFullYear())}
+                className="h-11 rounded-xl"
+                aria-label="Año de vencimiento"
+              />
+
+              <Select value={expirationCenterFilter} onValueChange={setExpirationCenterFilter}>
+                <SelectTrigger className="h-11 rounded-xl">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0 text-primary" />
+                    <SelectValue placeholder="Centro de operación" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los centros</SelectItem>
+                  {operationCenters?.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>
+                      {center.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button
+                type="button"
+                className="h-11 rounded-xl"
+                onClick={handleGenerateBulkPreavisos}
+                disabled={expirationCenterFilter === 'all' || bulkPreavisoRows.length === 0 || isGeneratingBulkPreavisos}
+                title={expirationCenterFilter === 'all' ? 'Selecciona un centro de operación' : undefined}
+              >
+                {isGeneratingBulkPreavisos ? (
+                  <Loader2 className="h-4 w-4 animate-spin lg:mr-2" />
+                ) : (
+                  <Download className="h-4 w-4 lg:mr-2" />
+                )}
+                <span className="hidden lg:inline">Generar preavisos PDF</span>
+              </Button>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              <Card className="rounded-xl border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Vencimientos visibles</p>
+                  <p className="mt-1 text-2xl font-black">{visibleMonthlyExpirationRows.length}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{selectedCenterName}</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-xl border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Preavisos en PDF</p>
+                  <p className="mt-1 text-2xl font-black">{bulkPreavisoRows.length}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Solo contratos a término fijo</p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-xl border-border shadow-sm">
+                <CardContent className="p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Preaviso vencido</p>
+                  <p className="mt-1 text-2xl font-black">
+                    {visibleMonthlyExpirationRows.filter((row) => row.preavisoExpired).length}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Fecha límite anterior a hoy</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {monthlyCenterSummaries.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">Resumen por centro</p>
+                <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {monthlyCenterSummaries.map((summary) => (
+                    <button
+                      key={summary.id}
+                      type="button"
+                      onClick={() => summary.id !== 'unassigned' && setExpirationCenterFilter(summary.id)}
+                      className={cn(
+                        'rounded-xl border border-border bg-card p-3 text-left shadow-sm transition-colors hover:bg-background',
+                        expirationCenterFilter === summary.id && 'border-primary bg-primary/5',
+                        summary.id === 'unassigned' && 'cursor-default opacity-80'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold">{summary.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Próximo: {summary.earliestDate ? summary.earliestDate.toLocaleDateString('es-CO') : 'N/A'}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className="rounded-md">
+                          {summary.count}
+                        </Badge>
+                      </div>
+                      {summary.preavisoExpired > 0 && (
+                        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-destructive">
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {summary.preavisoExpired} con preaviso vencido
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-hidden rounded-xl border border-border">
+              <div className="max-h-[46vh] overflow-auto">
+                <table className="w-full min-w-[980px] text-sm">
+                  <thead className="sticky top-0 z-[1] bg-background">
+                    <tr className="border-b border-border text-left text-[11px] font-black uppercase tracking-wide text-muted-foreground">
+                      <th className="px-3 py-3">Empleado</th>
+                      <th className="px-3 py-3">Centro</th>
+                      <th className="px-3 py-3">Tipo</th>
+                      <th className="px-3 py-3">Inicio</th>
+                      <th className="px-3 py-3">Vencimiento</th>
+                      <th className="px-3 py-3">Días</th>
+                      <th className="px-3 py-3">Preaviso límite</th>
+                      <th className="px-3 py-3">Prórroga</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleMonthlyExpirationRows.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-3 py-12 text-center text-muted-foreground">
+                          No hay contratos aprobados y activos que venzan en el mes seleccionado.
+                        </td>
+                      </tr>
+                    ) : (
+                      visibleMonthlyExpirationRows.map((row) => (
+                        <tr
+                          key={row.contract.id}
+                          className="border-b border-border/60 transition-colors hover:bg-background/70"
+                        >
+                          <td className="px-3 py-3">
+                            <button
+                              type="button"
+                              onClick={() => handleContractClick(row.contract.id)}
+                              className="max-w-[220px] text-left"
+                            >
+                              <span className="block truncate font-semibold text-primary">{row.employeeName}</span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {row.documentNumber} · {row.positionName}
+                              </span>
+                            </button>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className="block max-w-[180px] truncate">{row.centerName}</span>
+                          </td>
+                          <td className="px-3 py-3">{row.contractTypeLabel}</td>
+                          <td className="px-3 py-3">{formatContractDate(row.contract.start_date)}</td>
+                          <td className="px-3 py-3 font-semibold">{formatContractDate(row.effectiveEndDate)}</td>
+                          <td className="px-3 py-3">
+                            <Badge variant="outline" className={cn('rounded-md', row.daysRemaining < 0 && 'border-destructive text-destructive')}>
+                              {row.daysRemaining}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className={cn(row.preavisoExpired && 'font-semibold text-destructive')}>
+                              {row.preavisoDeadline.toLocaleDateString('es-CO')}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3">
+                            {row.latestExtensionNumber > 0 ? `#${row.latestExtensionNumber}` : 'Contrato inicial'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="border-t border-border px-5 py-4">
+            <Button variant="outline" onClick={() => setIsMonthlyExpirationsOpen(false)}>
+              Cerrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {selectedContractId && (
         <ContractDetailDialog

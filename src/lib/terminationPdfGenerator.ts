@@ -279,9 +279,7 @@ export function generateMutuoAcuerdoPDF(data: TerminationDocumentData): jsPDF {
 }
 
 // 02 - Aviso Previo (Preaviso)
-export function generatePreavisoPDF(data: TerminationDocumentData): jsPDF {
-  const doc = createBasePDF();
-  
+function addPreavisoContent(doc: jsPDF, data: TerminationDocumentData): void {
   const pageWidth = 216;
   const margin = 25;
   const textWidth = pageWidth - 2 * margin;
@@ -326,7 +324,12 @@ Agradeciendo de antemano los servicios prestados, el buen desempeño y la labor 
   y += 20;
   
   y = addRepresentativeSignatureBlock(doc, y, data, margin);
-  
+}
+
+export function generatePreavisoPDF(data: TerminationDocumentData): jsPDF {
+  const doc = createBasePDF();
+  addPreavisoContent(doc, data);
+
   return doc;
 }
 
@@ -844,4 +847,37 @@ export async function downloadTerminationDocument(
   }
   const defaultFilename = `${controls.folio}_${documentType}_${sanitizeDocument(data.employeeDocumentNumber)}.pdf`;
   doc.save(filename || defaultFilename);
+}
+
+export async function downloadBulkPreavisoDocuments(
+  dataItems: TerminationDocumentData[],
+  filename: string
+): Promise<void> {
+  if (dataItems.length === 0) {
+    throw new Error('No hay preavisos para generar.');
+  }
+
+  const signatureCache = new Map<string, string | undefined>();
+  const getSignatureDataUrl = async (url?: string) => {
+    if (!url) return undefined;
+    if (!signatureCache.has(url)) {
+      signatureCache.set(url, await fetchImageAsBase64(url));
+    }
+    return signatureCache.get(url);
+  };
+
+  const doc = createBasePDF();
+
+  for (let index = 0; index < dataItems.length; index += 1) {
+    if (index > 0) doc.addPage('letter', 'portrait');
+
+    const data = dataItems[index];
+    addPreavisoContent(doc, {
+      ...data,
+      representativeSignatureDataUrl:
+        data.representativeSignatureDataUrl || await getSignatureDataUrl(data.representativeSignatureUrl),
+    });
+  }
+
+  doc.save(filename);
 }
