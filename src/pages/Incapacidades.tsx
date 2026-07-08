@@ -131,12 +131,14 @@ export default function Incapacidades() {
   // Filter incapacities
   const filteredIncapacities = incapacities?.filter((inc) => {
     const startDate = parseDateOnly(inc.start_date);
+    const normalizedSearchTerm = searchTerm.trim().toLowerCase();
     const matchesSearch =
-      !searchTerm ||
-      inc.employee?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inc.employee?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inc.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inc.certificate_number?.toLowerCase().includes(searchTerm.toLowerCase());
+      !normalizedSearchTerm ||
+      inc.employee?.first_name?.toLowerCase().includes(normalizedSearchTerm) ||
+      inc.employee?.last_name?.toLowerCase().includes(normalizedSearchTerm) ||
+      inc.employee?.document_number?.toLowerCase().includes(normalizedSearchTerm) ||
+      inc.diagnosis.toLowerCase().includes(normalizedSearchTerm) ||
+      inc.certificate_number?.toLowerCase().includes(normalizedSearchTerm);
     
     const matchesOrigin = originFilter === 'all' || inc.origin === originFilter;
     const matchesStatus = statusFilter === 'all' || inc.recovery_status === statusFilter;
@@ -310,7 +312,7 @@ export default function Incapacidades() {
                   <div className="relative w-full sm:flex-1 xl:w-64 xl:flex-none">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Buscar..."
+                      placeholder="Buscar por nombre, documento, diagnóstico o certificado..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-8 w-full"
