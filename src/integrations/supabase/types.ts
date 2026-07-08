@@ -9155,6 +9155,7 @@ export type Database = {
         | "consulta_antecedentes"
         | "dotacion"
         | "contratos_otrosi"
+        | "preavisos"
         | "certificados_bancarios"
         | "documentos_retiro"
         | "inducciones_cursos"
@@ -9599,6 +9600,7 @@ export const Constants = {
         "consulta_antecedentes",
         "dotacion",
         "contratos_otrosi",
+        "preavisos",
         "certificados_bancarios",
         "documentos_retiro",
         "inducciones_cursos",
