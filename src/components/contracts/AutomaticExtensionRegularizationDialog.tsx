@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import type { AutomaticExtensionPreview } from '@/lib/contractExtensionRegularization';
 
 export interface AutomaticExtensionRegularizationItem {
@@ -30,6 +32,8 @@ interface AutomaticExtensionRegularizationDialogProps {
   onOpenChange: (open: boolean) => void;
   items: AutomaticExtensionRegularizationItem[];
   selectable?: boolean;
+  regularizationDate: Date;
+  onRegularizationDateChange: (date: Date) => void;
   isSubmitting?: boolean;
   onConfirm: (selectedItems: AutomaticExtensionRegularizationItem[]) => void;
 }
@@ -44,6 +48,8 @@ export function AutomaticExtensionRegularizationDialog({
   onOpenChange,
   items,
   selectable = false,
+  regularizationDate,
+  onRegularizationDateChange,
   isSubmitting = false,
   onConfirm,
 }: AutomaticExtensionRegularizationDialogProps) {
@@ -91,13 +97,41 @@ export function AutomaticExtensionRegularizationDialog({
             <div className="min-w-0">
               <DialogTitle className="text-xl font-black tracking-tight">{title}</DialogTitle>
               <DialogDescription className="mt-1 text-sm">
-                Se crearan {totalExtensions} prorroga{totalExtensions === 1 ? '' : 's'} automatica{totalExtensions === 1 ? '' : 's'} para {selectedItems.length} contrato{selectedItems.length === 1 ? '' : 's'}.
+                Se crearan {totalExtensions} prorroga{totalExtensions === 1 ? '' : 's'} automatica{totalExtensions === 1 ? '' : 's'} para {selectedItems.length} contrato{selectedItems.length === 1 ? '' : 's'} hasta {formatDate(regularizationDate)}.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-4 px-5 py-4 sm:px-6">
+          <div className="grid gap-3 rounded-xl border bg-background p-4 text-sm sm:grid-cols-[1fr_auto] sm:items-center">
+            <div>
+              <p className="text-sm font-bold">Fecha de corte</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Se reconstruiran las prorrogas automaticas cuyo preaviso ya hubiera vencido hasta esta fecha.
+              </p>
+            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" variant="outline" className="justify-start gap-2 rounded-xl font-semibold" disabled={isSubmitting}>
+                  <CalendarClock className="h-4 w-4 text-primary" />
+                  {formatDate(regularizationDate)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto rounded-lg border-border bg-background p-0 shadow-xl" align="end">
+                <DatePickerWithDropdowns
+                  selected={regularizationDate}
+                  onSelect={(date) => {
+                    if (date) onRegularizationDateChange(date);
+                  }}
+                  disabled={(date) => date > new Date()}
+                  fromYear={1940}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
           <Alert className="border-primary/20 bg-primary/5">
             <ShieldCheck className="h-4 w-4" />
             <AlertTitle>Evidencia de regularizacion</AlertTitle>

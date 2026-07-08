@@ -92,6 +92,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRegularizationDialog, setShowRegularizationDialog] = useState(false);
+  const [regularizationDate, setRegularizationDate] = useState(() => new Date());
   const [previewOpenedBeforeApprove, setPreviewOpenedBeforeApprove] = useState(false);
   
   const { data: dbContract, isLoading: isDbContractLoading } = useContract(contractId || undefined);
@@ -278,7 +279,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     originalEndDate: contract.originalEndDate,
     currentEndDate: contract.currentEndDate,
     extensions: contract.extensions,
-  });
+  }, regularizationDate);
   const canRegularizeAutomaticExtensions =
     canManageExtensions &&
     isApproved &&
@@ -1043,6 +1044,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
             extensions: regularizationPlan.extensions,
           },
         ]}
+        regularizationDate={regularizationDate}
+        onRegularizationDateChange={setRegularizationDate}
         isSubmitting={regularizeAutomaticExtensions.isPending}
         onConfirm={handleConfirmRegularization}
       />

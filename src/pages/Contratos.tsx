@@ -356,6 +356,7 @@ export default function Contratos() {
   const [showExpiredContracts, setShowExpiredContracts] = useState(false);
   const [viewMode, setViewMode] = useState<ContractsViewMode>('cards');
   const [isBulkRegularizationOpen, setIsBulkRegularizationOpen] = useState(false);
+  const [bulkRegularizationDate, setBulkRegularizationDate] = useState(() => new Date());
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { currentCompanyId, hasPermission, canView, canCreate, canUpdate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
@@ -493,7 +494,7 @@ export default function Contratos() {
           originalEndDate: contract.end_date ? parseContractDate(contract.end_date) : null,
           currentEndDate: effectiveEndDate ? parseContractDate(effectiveEndDate) : null,
           extensions,
-        });
+        }, bulkRegularizationDate);
 
         if (!plan.eligible || plan.extensions.length === 0) return null;
 
@@ -505,7 +506,7 @@ export default function Contratos() {
         };
       })
       .filter((item): item is AutomaticExtensionRegularizationItem => item !== null);
-  }, [contracts]);
+  }, [contracts, bulkRegularizationDate]);
 
   const handleBulkRegularization = async (selectedItems: AutomaticExtensionRegularizationItem[]) => {
     try {
@@ -1093,6 +1094,8 @@ export default function Contratos() {
         onOpenChange={setIsBulkRegularizationOpen}
         items={bulkRegularizationItems}
         selectable
+        regularizationDate={bulkRegularizationDate}
+        onRegularizationDateChange={setBulkRegularizationDate}
         isSubmitting={bulkRegularizeAutomaticExtensions.isPending}
         onConfirm={handleBulkRegularization}
       />
