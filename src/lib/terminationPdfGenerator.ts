@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import PizZip from 'pizzip';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
@@ -37,6 +38,45 @@ function capitalize(str: string): string {
 
 function sanitizeDocument(value: string): string {
   return (value || 'SIN-DOC').replace(/[^\w-]/g, '').toUpperCase();
+}
+
+let preavisoBackgroundPromise: Promise<string | undefined> | null = null;
+
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return btoa(binary);
+}
+
+async function loadPreavisoTemplateBackground(): Promise<string | undefined> {
+  if (!preavisoBackgroundPromise) {
+    preavisoBackgroundPromise = (async () => {
+      try {
+        const response = await fetch('/templates/preaviso-no-renovacion.docx');
+        if (!response.ok) return undefined;
+
+        const zip = new PizZip(await response.arrayBuffer());
+        const background = zip
+          .file(/^word\/media\/.*\.png$/)
+          .map((file) => ({ file, bytes: file.asUint8Array() }))
+          .sort((a, b) => b.bytes.length - a.bytes.length)[0];
+
+        if (!background) return undefined;
+
+        return `data:image/png;base64,${uint8ArrayToBase64(background.bytes)}`;
+      } catch (error) {
+        console.warn('No se pudo cargar el fondo de la plantilla de preaviso', error);
+        return undefined;
+      }
+    })();
+  }
+
+  return preavisoBackgroundPromise;
 }
 
 function getDocumentControls(data: TerminationDocumentData, documentType?: TerminationDocumentType) {
@@ -279,11 +319,24 @@ export function generateMutuoAcuerdoPDF(data: TerminationDocumentData): jsPDF {
 }
 
 // 02 - Aviso Previo (Preaviso)
-function addPreavisoContent(doc: jsPDF, data: TerminationDocumentData): void {
-  const pageWidth = 216;
+function addPreavisoContent(
+  doc: jsPDF,
+  data: TerminationDocumentData,
+  options: { backgroundDataUrl?: string } = {}
+): void {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 25;
   const textWidth = pageWidth - 2 * margin;
   let y = 30;
+
+  if (options.backgroundDataUrl) {
+    try {
+      doc.addImage(options.backgroundDataUrl, 'PNG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+    } catch (error) {
+      console.warn('No se pudo insertar el fondo de la plantilla de preaviso', error);
+    }
+  }
   
   // Date and location
   doc.setFontSize(10);
@@ -858,6 +911,7 @@ export async function downloadBulkPreavisoDocuments(
   }
 
   const signatureCache = new Map<string, string | undefined>();
+  const backgroundDataUrl = await loadPreavisoTemplateBackground();
   const getSignatureDataUrl = async (url?: string) => {
     if (!url) return undefined;
     if (!signatureCache.has(url)) {
@@ -876,6 +930,8 @@ export async function downloadBulkPreavisoDocuments(
       ...data,
       representativeSignatureDataUrl:
         data.representativeSignatureDataUrl || await getSignatureDataUrl(data.representativeSignatureUrl),
+    }, {
+      backgroundDataUrl,
     });
   }
 
