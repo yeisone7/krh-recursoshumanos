@@ -38,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   Select,
   SelectContent,
@@ -511,6 +512,7 @@ export default function Contratos() {
   const [isBulkRegularizationOpen, setIsBulkRegularizationOpen] = useState(false);
   const [bulkRegularizationDate, setBulkRegularizationDate] = useState(() => new Date());
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
+  const [isKpiGroupOpen, setIsKpiGroupOpen] = useState(false);
 
   const { currentCompanyId, hasPermission, canView, canCreate, canUpdate, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canViewContractCompensation =
@@ -787,8 +789,29 @@ export default function Contratos() {
         </div>
       </div>
 
-      {/* KPI Cards - Clean Sky Flat Design */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <Collapsible open={isKpiGroupOpen} onOpenChange={setIsKpiGroupOpen} className="rounded-2xl border border-border bg-card shadow-sm">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-background/70 sm:px-5"
+            aria-expanded={isKpiGroupOpen}
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <CheckCircle className="h-4 w-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-black uppercase tracking-wide text-foreground">Indicadores de contratos</span>
+                <span className="block truncate text-xs font-medium text-muted-foreground">
+                  {stats.active} vigentes · {stats.expiring} por vencer · {stats.expired} vencidos · {stats.withExtensions} con prorrogas
+                </span>
+              </span>
+            </span>
+            <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', isKpiGroupOpen && 'rotate-180')} />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down overflow-hidden">
+          <div className="grid grid-cols-2 gap-4 border-t border-border p-4 md:grid-cols-4">
         {[
           { label: 'Vigentes', value: stats.active, desc: 'Contratos activos', icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
           { label: 'Por Vencer', value: stats.expiring, desc: 'Próximos 30 días', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-500/10' },
@@ -810,7 +833,9 @@ export default function Contratos() {
             </CardContent>
           </Card>
         ))}
-      </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="sticky top-0 z-10 bg-background/80 pb-2 backdrop-blur-md">
         <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
