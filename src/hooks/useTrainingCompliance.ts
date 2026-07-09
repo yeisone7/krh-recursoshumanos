@@ -16,6 +16,8 @@ export interface ComplianceEmployee {
 export interface ComplianceCompletion {
   id: string;
   course_id: string;
+  course_name: string | null;
+  course_code: string | null;
   operator_cedula: string | null;
   employee_id: string | null;
   completed_at: string;
@@ -39,6 +41,19 @@ export interface CenterComplianceData {
   center_name: string;
   courses: CourseComplianceData[];
   totalEmployees: number;
+}
+
+function normalizeDocument(value: string | null | undefined) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function normalizeCourseKey(value: string | null | undefined) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
 
 function useActiveEmployeesByCenter(
@@ -155,23 +170,28 @@ function useTokenCenterAssociations(
 }
 
 function useAllCompletions(
+  companyId: string | undefined,
   assignedCenterIds: string[],
   shouldLimitByAssignedCenters: boolean,
   assignedCenterKey: string
 ) {
   return useQuery({
-    queryKey: ['compliance-completions', shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['compliance-completions', companyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('training_completions')
         .select(`
           id, course_id, operator_cedula, employee_id, completed_at, operator_name,
-          training_access_tokens!inner(operation_center_id)
-        `);
+          course:training_courses(id, name, code),
+          training_access_tokens(operation_center_id)
+        `)
+        .eq('company_id', companyId!);
       if (error) throw error;
-      return (data || []).map((c: any) => ({
+      const mapped = (data || []).map((c: any) => ({
         id: c.id,
         course_id: c.course_id,
+        course_name: c.course?.name || null,
+        course_code: c.course?.code || null,
         operator_cedula: c.operator_cedula,
         employee_id: c.employee_id,
         completed_at: c.completed_at,
@@ -187,6 +207,7 @@ function useAllCompletions(
           : false
       );
     },
+    enabled: !!companyId,
   });
 }
 
@@ -210,6 +231,7 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   );
   const courses = usePublishedCourses(currentCompanyId);
   const completions = useAllCompletions(
+    currentCompanyId,
     assignedCenterIds,
     shouldLimitByAssignedCenters,
     assignedCenterKey
@@ -259,17 +281,23 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       const coursesData: CourseComplianceData[] = [];
 
       for (const course of applicableCourses) {
-        const courseCompletions = completions.data.filter(
-          (c) => c.course_id === course.id
-        );
+        const courseNameKey = normalizeCourseKey(course.name);
+        const courseCodeKey = normalizeCourseKey(course.code);
+        const courseCompletions = completions.data.filter((completion) => {
+          if (completion.course_id === course.id) return true;
+          if (courseNameKey && normalizeCourseKey(completion.course_name) === courseNameKey) return true;
+          if (courseCodeKey && normalizeCourseKey(completion.course_code) === courseCodeKey) return true;
+          return false;
+        });
 
         const completed: { employee: ComplianceEmployee; completed_at: string }[] = [];
         const pending: ComplianceEmployee[] = [];
 
         for (const emp of centerEmployees) {
+          const employeeDocument = normalizeDocument(emp.document_number);
           const match = courseCompletions.find(
             (c) =>
-              (c.operator_cedula && c.operator_cedula === emp.document_number) ||
+              (normalizeDocument(c.operator_cedula) && normalizeDocument(c.operator_cedula) === employeeDocument) ||
               (c.employee_id && c.employee_id === emp.id)
           );
           if (match) {
