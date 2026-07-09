@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -158,8 +159,13 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
   const [uploadingMedia, setUploadingMedia] = useState<Record<string, boolean>>({});
   const [addingLink, setAddingLink] = useState<Record<string, boolean>>({});
   const [audioDuration, setAudioDuration] = useState('medium');
+  const [videoDuration, setVideoDuration] = useState('medium');
+  const [videoStyle, setVideoStyle] = useState('clasico');
+  const [videoScript, setVideoScript] = useState<any>(null);
+  const [videoImages, setVideoImages] = useState<string[]>([]);
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
+  const queryClient = useQueryClient();
   const publishCourse = usePublishCourse();
   const { data: media = [], isLoading: isMediaLoading, isError: isMediaError } = useTrainingMedia(course?.id);
   const createMedia = useCreateTrainingMedia();
@@ -250,6 +256,49 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       toast.error(err?.message || 'Error al generar audio');
     } finally {
       setGeneratingMedia(prev => ({ ...prev, audio: false }));
+    }
+  };
+
+  const handleGenerateStoryboard = async () => {
+    if (!course.id || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, video: true }));
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const session = (await supabase.auth.getSession()).data.session;
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-training-video`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({
+          courseId: course.id,
+          style: videoStyle,
+          duration: videoDuration,
+          title: course.name,
+          content: content.contenido?.substring(0, 2000),
+          puntosClave: content.puntosClave,
+          companyId: currentCompanyId,
+        }),
+        signal: AbortSignal.timeout(300000),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      setVideoScript(data?.script);
+      setVideoImages(data?.imageUrls || []);
+      await queryClient.invalidateQueries({ queryKey: ['training_media', course.id] });
+      await queryClient.invalidateQueries({ queryKey: ['training_courses'] });
+      toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al generar storyboard');
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, video: false }));
     }
   };
 
@@ -714,15 +763,79 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                       title="Storyboard"
                       description="Genera un guion narrado + secuencia de imágenes estilizadas con IA"
                       items={media.filter(m => m.type === 'video' || (isExternalLinkMedia(m) && (m.metadata as any)?.link_kind === 'video'))}
-                      isGenerating={false}
-                      onGenerate={() => {}}
+                      isGenerating={!!generatingMedia.video}
+                      onGenerate={handleGenerateStoryboard}
                       onDelete={handleDeleteMedia}
                       uploadAccept="video/*"
                       isUploading={!!uploadingMedia.video}
                       onUpload={(file) => handleUploadMedia('video', file)}
                       isAddingLink={!!addingLink.video}
                       onAddLink={(url, title) => handleAddMediaLink('video', url, title)}
-                    />
+                    >
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <span className="text-xs text-muted-foreground">Estilo visual:</span>
+                          <Select value={videoStyle} onValueChange={setVideoStyle}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="clasico">Clásico</SelectItem>
+                              <SelectItem value="pizarra">Pizarra</SelectItem>
+                              <SelectItem value="kawaii">Kawaii</SelectItem>
+                              <SelectItem value="anime">Anime</SelectItem>
+                              <SelectItem value="acuarela">Acuarela</SelectItem>
+                              <SelectItem value="retro">Dibujo Retro</SelectItem>
+                              <SelectItem value="legado">Legado</SelectItem>
+                              <SelectItem value="papiroflexia">Papiroflexia</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-xs text-muted-foreground">Escenas:</span>
+                          <Select value={videoDuration} onValueChange={setVideoDuration}>
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="short">Corto (3 escenas)</SelectItem>
+                              <SelectItem value="medium">Medio (4 escenas)</SelectItem>
+                              <SelectItem value="long">Largo (6 escenas)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </MediaTypeCard>
+                    {videoScript && (
+                      <div className="mt-4 rounded-lg border p-4">
+                        <StoryboardViewer
+                          scenes={videoScript.scenes || []}
+                          imageUrls={videoImages}
+                          audioUrl={media.filter(m => m.type === 'audio').at(-1)?.file_url || null}
+                          allowRegenerate
+                          courseId={course.id}
+                          courseTitle={course.name}
+                          companyId={currentCompanyId || undefined}
+                          style={videoStyle}
+                          contentText={content?.contenido}
+                          puntosClave={content?.puntosClave}
+                          onSceneRegenerated={async (idx, newUrl, newScene) => {
+                            setVideoImages(prev => {
+                              const copy = [...prev];
+                              copy[idx] = newUrl;
+                              return copy;
+                            });
+                            setVideoScript((prev: any) => {
+                              if (!prev?.scenes) return prev;
+                              const scenes = [...prev.scenes];
+                              scenes[idx] = newScene;
+                              return { ...prev, scenes };
+                            });
+                            await queryClient.invalidateQueries({ queryKey: ['training_media', course.id] });
+                          }}
+                        />
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>

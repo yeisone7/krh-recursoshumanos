@@ -9,7 +9,13 @@ const corsHeaders = {
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 const GATEWAY_TEXT_MODEL = "google/gemini-2.5-flash-lite";
 const GATEWAY_IMAGE_MODEL = "google/gemini-2.5-flash-image";
-const TRAINING_AI_CREATE_MODULES = ["capacitaciones", "capacitaciones_ia"];
+const TRAINING_AI_ALLOWED_PERMISSIONS = [
+  { module: "capacitaciones_ia", action: "view" },
+  { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "create" },
+];
 
 interface AIConfig {
   model?: string;
@@ -126,18 +132,26 @@ async function requireTrainingPermission(userId: string, companyId: string | und
     .limit(1);
 
   const isSystemRole = Boolean(systemRole?.length);
+  const { data: legacyAdminRole } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+
+  const isLegacyAdmin = Boolean(legacyAdminRole?.length);
   const permissionChecks = await Promise.all(
-    TRAINING_AI_CREATE_MODULES.map((moduleCode) =>
+    TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       supabase.rpc("check_user_permission", {
         _user_id: userId,
-        _module_code: moduleCode,
-        _action: "create",
+        _module_code: permission.module,
+        _action: permission.action,
       })
     )
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole) {
+  if (!isSystemRole && !isLegacyAdmin) {
     const { data: assignment } = await supabase
       .from("user_company_assignments")
       .select("id")

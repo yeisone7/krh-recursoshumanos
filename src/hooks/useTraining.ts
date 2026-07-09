@@ -70,6 +70,28 @@ export function useTrainingCourses() {
   });
 }
 
+export function useTrainingCourseOptions() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['training_course_options', currentCompanyId],
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+
+      const { data, error } = await supabase
+        .from('training_courses')
+        .select('id, name')
+        .eq('company_id', currentCompanyId)
+        .eq('is_active', true)
+        .order('name');
+
+      if (error) throw error;
+      return data as Array<{ id: string; name: string }>;
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
 export function useTrainingCoursePeriods(
   period?: TrainingPeriodInput | null,
   options?: { enabled?: boolean }
@@ -809,19 +831,24 @@ export function useDeleteAccessToken() {
 // COMPLETIONS HOOKS
 // =====================================================
 
-export function useTrainingCompletions(courseId?: string) {
+export function useTrainingCompletions(courseId?: string, options?: { includeSignatures?: boolean }) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
+  const includeSignatures = options?.includeSignatures ?? true;
 
   return useQuery({
-    queryKey: ['training_completions', currentCompanyId, courseId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['training_completions', currentCompanyId, courseId, shouldLimitByAssignedCenters, assignedCenterKey, includeSignatures],
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
+      const completionSelect = includeSignatures
+        ? `*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
+        : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
+
       let query = supabase
         .from('training_completions')
-        .select(`*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`)
+        .select(completionSelect)
         .eq('company_id', currentCompanyId)
         .order('completed_at', { ascending: false });
 
@@ -833,7 +860,10 @@ export function useTrainingCompletions(courseId?: string) {
 
       if (error) throw error;
 
-      const completions = (data || []) as unknown as TrainingCompletion[];
+      const completions = (data || []).map((completion) => ({
+        ...completion,
+        signature_data: includeSignatures ? (completion as { signature_data?: string }).signature_data : '',
+      })) as unknown as TrainingCompletion[];
       const employeeIds = [...new Set(completions.map(completion => completion.employee_id).filter(Boolean))] as string[];
 
       if (employeeIds.length > 0) {
