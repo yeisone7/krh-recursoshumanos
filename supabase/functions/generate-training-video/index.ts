@@ -12,10 +12,18 @@ const GATEWAY_IMAGE_MODEL = "google/gemini-2.5-flash-image";
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones_ia", action: "update" },
+  { module: "capacitaciones", action: "view" },
   { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones", action: "update" },
+  { module: "capacitaciones_manual", action: "view" },
   { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_manual", action: "update" },
+  { module: "capacitaciones_biblioteca", action: "view" },
   { module: "capacitaciones_biblioteca", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "update" },
 ];
+const ADMIN_ROLE_NAMES = ["administrador", "admin", "super admin", "superadmin"];
 
 interface AIConfig {
   model?: string;
@@ -140,6 +148,19 @@ async function requireTrainingPermission(userId: string, companyId: string | und
     .limit(1);
 
   const isLegacyAdmin = Boolean(legacyAdminRole?.length);
+  const { data: companyAdminRole } = await supabase
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(name,is_active,company_id)")
+    .eq("user_id", userId)
+    .eq("custom_roles.company_id", companyId)
+    .eq("custom_roles.is_active", true);
+
+  const isCompanyAdminRole = (companyAdminRole || []).some((row: any) =>
+    ADMIN_ROLE_NAMES.includes(String(row.custom_roles?.name || "").trim().toLowerCase())
+  );
+
+  if (isSystemRole || isLegacyAdmin || isCompanyAdminRole) return;
+
   const permissionChecks = await Promise.all(
     TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       supabase.rpc("check_user_permission", {
@@ -151,17 +172,15 @@ async function requireTrainingPermission(userId: string, companyId: string | und
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole && !isLegacyAdmin) {
-    const { data: assignment } = await supabase
-      .from("user_company_assignments")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("company_id", companyId)
-      .maybeSingle();
+  const { data: assignment } = await supabase
+    .from("user_company_assignments")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("company_id", companyId)
+    .maybeSingle();
 
-    if (!assignment || !hasPermission) {
-      throw { status: 403, message: "No tienes permiso para generar storyboard en esta empresa." };
-    }
+  if (!assignment || !hasPermission) {
+    throw { status: 403, message: "No tienes permiso para generar storyboard en esta empresa." };
   }
 }
 
