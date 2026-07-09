@@ -9307,6 +9307,7 @@ export type Database = {
         | "aprobado"
         | "rechazado"
         | "pagado"
+        | "asumido_empresa"
       recruitment_type: "externa" | "interna" | "mixta"
       requisition_reason:
         | "renuncia"
@@ -9756,6 +9757,7 @@ export const Constants = {
         "aprobado",
         "rechazado",
         "pagado",
+        "asumido_empresa",
       ],
       recruitment_type: ["externa", "interna", "mixta"],
       requisition_reason: [

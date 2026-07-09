@@ -13,7 +13,14 @@ export const incapacityOriginValues = [
 ] as const;
 
 export type IncapacityOrigin = typeof incapacityOriginValues[number];
-export type RecoveryStatus = 'pendiente' | 'radicado' | 'en_tramite' | 'aprobado' | 'rechazado' | 'pagado';
+export type RecoveryStatus =
+  | 'pendiente'
+  | 'radicado'
+  | 'en_tramite'
+  | 'aprobado'
+  | 'rechazado'
+  | 'pagado'
+  | 'asumido_empresa';
 export type IncapacityLegalStage =
   | 'employer'
   | 'eps_3_90'
@@ -119,6 +126,7 @@ export const recoveryStatusLabels: Record<RecoveryStatus, string> = {
   aprobado: 'Aprobado',
   rechazado: 'Rechazado',
   pagado: 'Pagado',
+  asumido_empresa: 'Asumido Empresa',
 };
 
 export const recoveryStatusColors: Record<RecoveryStatus, string> = {
@@ -128,6 +136,7 @@ export const recoveryStatusColors: Record<RecoveryStatus, string> = {
   aprobado: 'bg-green-100 text-green-800',
   rechazado: 'bg-red-100 text-red-800',
   pagado: 'bg-emerald-100 text-emerald-800',
+  asumido_empresa: 'bg-slate-100 text-slate-800',
 };
 
 // =====================================================
@@ -245,7 +254,7 @@ export const incapacityFormSchema = z.object({
 export type IncapacityFormData = z.infer<typeof incapacityFormSchema>;
 
 export const recoveryFormSchema = z.object({
-  recovery_status: z.enum(['pendiente', 'radicado', 'en_tramite', 'aprobado', 'rechazado', 'pagado'] as const),
+  recovery_status: z.enum(['pendiente', 'radicado', 'en_tramite', 'aprobado', 'rechazado', 'pagado', 'asumido_empresa'] as const),
   filing_date: z.date().optional(),
   filing_number: z.string().optional(),
   expected_payment_date: z.date().optional(),

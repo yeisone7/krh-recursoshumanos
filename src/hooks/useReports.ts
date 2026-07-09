@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInMonths, differenceInDays } from 'date-fns';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
-import { getIncapacityOriginShortLabel } from '@/types/incapacity';
+import { getIncapacityOriginShortLabel, recoveryStatusLabels } from '@/types/incapacity';
 
 export interface EmployeeReportRow {
   documento: string;
@@ -193,9 +193,7 @@ export function useIncapacityReport(startDate?: Date, endDate?: Date) {
         fecha_inicio: formatDateOnly(inc.start_date, 'dd/MM/yyyy'),
         fecha_fin: formatDateOnly(inc.end_date, 'dd/MM/yyyy'),
         dias_totales: inc.total_days,
-        estado_recobro: inc.recovery_status === 'pendiente' ? 'Pendiente' : 
-                        inc.recovery_status === 'radicado' ? 'Radicado' : 
-                        inc.recovery_status === 'pagado' ? 'Pagado' : 'No Aplica',
+        estado_recobro: recoveryStatusLabels[inc.recovery_status as keyof typeof recoveryStatusLabels] || inc.recovery_status,
         monto_total: Number(inc.total_amount) || 0,
         monto_recuperado: Number(inc.recovered_amount) || 0,
         pendiente: (Number(inc.total_amount) || 0) - (Number(inc.recovered_amount) || 0),
