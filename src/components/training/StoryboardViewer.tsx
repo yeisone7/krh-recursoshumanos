@@ -1,12 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, SkipForward, SkipBack, Volume2, Mic, RefreshCw, Loader2, Maximize, Minimize, X } from 'lucide-react';
+import { Play, Pause, SkipForward, SkipBack, Volume2, Mic, RefreshCw, Loader2, Maximize, X, Film } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageLightbox } from './ImageLightbox';
+import { renderStoryboardVideo } from '@/lib/storyboardVideoRenderer';
 
 interface Scene {
   title: string;
@@ -26,6 +27,7 @@ interface StoryboardViewerProps {
   contentText?: string;
   puntosClave?: string[];
   onSceneRegenerated?: (sceneIdx: number, newImageUrl: string, updatedScene: Scene) => void;
+  onVideoRendered?: (blob: Blob, mimeType: string, extension: string, duration: number) => Promise<void> | void;
 }
 
 export function StoryboardViewer({
@@ -40,6 +42,7 @@ export function StoryboardViewer({
   contentText,
   puntosClave,
   onSceneRegenerated,
+  onVideoRendered,
 }: StoryboardViewerProps) {
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -48,6 +51,7 @@ export function StoryboardViewer({
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [lightboxAlt, setLightboxAlt] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRenderingVideo, setIsRenderingVideo] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fullscreenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -138,6 +142,30 @@ export function StoryboardViewer({
     }
   };
 
+  const handleRenderVideo = async () => {
+    if (!audioUrl) {
+      toast.error('Primero genera el audio narrado del storyboard.');
+      return;
+    }
+    if (!onVideoRendered) return;
+
+    setIsRenderingVideo(true);
+    try {
+      const result = await renderStoryboardVideo({
+        scenes,
+        imageUrls,
+        audioUrl,
+        title: courseTitle || scenes[0]?.title || 'Storyboard',
+      });
+      await onVideoRendered(result.blob, result.mimeType, result.extension, result.duration);
+      toast.success(`Video ${result.extension.toUpperCase()} generado exitosamente`);
+    } catch (err: any) {
+      toast.error(err?.message || 'No se pudo generar el video del storyboard.');
+    } finally {
+      setIsRenderingVideo(false);
+    }
+  };
+
   if (!scenes.length) return null;
 
   // ─── Fullscreen Slideshow ────────────────────
@@ -223,6 +251,19 @@ export function StoryboardViewer({
             <Maximize className="h-3 w-3" /> Presentación
           </Button>
 
+          {onVideoRendered && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              disabled={isRenderingVideo || !audioUrl || imageUrls.length === 0}
+              onClick={handleRenderVideo}
+            >
+              {isRenderingVideo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Film className="h-3 w-3" />}
+              Video
+            </Button>
+          )}
+
           {audioUrl ? (
             <>
               <Badge variant="outline" className="gap-1 text-[10px] bg-accent/20">
@@ -258,6 +299,11 @@ export function StoryboardViewer({
 
       {/* Progress */}
       {isPlaying && <Progress value={audioProgress} className="h-1" />}
+      {isRenderingVideo && (
+        <p className="text-xs text-muted-foreground">
+          Renderizando video narrado. Mantenga esta ventana abierta hasta que finalice.
+        </p>
+      )}
 
       {/* Scene cards */}
       {scenes.map((scene, idx) => (
