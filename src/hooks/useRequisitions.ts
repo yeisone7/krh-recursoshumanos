@@ -21,6 +21,7 @@ export interface PersonnelRequisition {
   operation_center_id: string | null;
   cargo_a_reemplazar: string | null;
   persona_a_reemplazar: string | null;
+  is_confidential: boolean;
   requiere_herramienta_trabajo: boolean;
   proceso_exclusivo_pcd: boolean;
   horario_trabajo: string | null;
@@ -163,12 +164,10 @@ const getSubmitRequisitionErrorDescription = (error: unknown) => {
 };
 
 export function useRequisitions() {
-  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
-  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
-  const assignedCenterKey = assignedCenterIds.join(',');
+  const { currentCompanyId } = useAuth();
 
   return useQuery({
-    queryKey: ['requisitions', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['requisitions', currentCompanyId],
     queryFn: async () => {
       let query = supabase
         .from('personnel_requisitions')
@@ -180,10 +179,6 @@ export function useRequisitions() {
           vacancies(id, position_title, status, actual_close_date)
         `)
         .eq('company_id', currentCompanyId!);
-
-      if (shouldLimitByAssignedCenters) {
-        query = query.in('operation_center_id', assignedCenterIds);
-      }
 
       const { data, error } = await query.order('created_at', { ascending: false });
 

@@ -6205,6 +6205,7 @@ export type Database = {
           id: string
           incluye_alimentacion: boolean | null
           incluye_desplazamiento: boolean | null
+          is_confidential: boolean
           juridico_aprobado: boolean | null
           juridico_aprobador_id: string | null
           juridico_duracion: string | null
@@ -6285,6 +6286,7 @@ export type Database = {
           id?: string
           incluye_alimentacion?: boolean | null
           incluye_desplazamiento?: boolean | null
+          is_confidential?: boolean
           juridico_aprobado?: boolean | null
           juridico_aprobador_id?: string | null
           juridico_duracion?: string | null
@@ -6365,6 +6367,7 @@ export type Database = {
           id?: string
           incluye_alimentacion?: boolean | null
           incluye_desplazamiento?: boolean | null
+          is_confidential?: boolean
           juridico_aprobado?: boolean | null
           juridico_aprobador_id?: string | null
           juridico_duracion?: string | null
