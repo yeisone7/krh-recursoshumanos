@@ -47,6 +47,11 @@ import {
   requisitionReasonLabels,
   RequisitionReason,
 } from '@/types/requisition';
+import {
+  VacancyStatus,
+  vacancyStatusConfig,
+  vacancyStatusLabels,
+} from '@/types/vacancy';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -204,6 +209,14 @@ export default function Requisiciones() {
   const getClosedVacancies = (req: PersonnelRequisition) =>
     req.vacancies?.filter(vacancy => vacancy.status === 'closed') || [];
 
+  const getVacancyStatuses = (req: PersonnelRequisition) => {
+    const statuses = req.vacancies
+      ?.map((vacancy) => vacancy.status)
+      .filter((status): status is VacancyStatus => status in vacancyStatusLabels) || [];
+
+    return Array.from(new Set(statuses));
+  };
+
   const kpis = useMemo(() => ([
     { label: 'TOTAL REQUISICIONES', value: stats.total, desc: 'Historial completo', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-500/10' },
     { label: 'EN BORRADOR', value: stats.borrador, desc: 'Pendientes de envío', icon: Clock, color: 'text-muted-foreground', bg: 'bg-background ' },
@@ -356,9 +369,12 @@ export default function Requisiciones() {
                   const cfg = requisitionStatusConfig[status];
                   const progress = getApprovalProgress(req);
                   const closedVacancies = getClosedVacancies(req);
+                  const vacancyStatuses = getVacancyStatuses(req);
+                  const primaryVacancyStatus = vacancyStatuses[0];
+                  const stateBarClass = primaryVacancyStatus ? vacancyStatusConfig[primaryVacancyStatus].bg : cfg.bg;
                   return (
                     <Card key={req.id} className="group relative overflow-hidden rounded-[2rem] border border-border shadow-md bg-background " onClick={() => openDetail(req.id)}>
-                      <div className={cn("absolute left-0 top-0 h-full w-1.5", cfg.bg)} />
+                      <div className={cn("absolute left-0 top-0 h-full w-1.5", stateBarClass)} />
                       <CardContent className="p-6 space-y-4">
                         <div className="flex justify-between items-start gap-4">
                           <div className="min-w-0 flex-1">
@@ -391,9 +407,22 @@ export default function Requisiciones() {
                               <span className="truncate">{req.solicitante_nombre}</span>
                             </div>
                           </div>
-                          <Badge variant="outline" className={cn('shrink-0 text-[9px] font-black uppercase tracking-widest px-3 py-1 border-border shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
-                            {requisitionStatusLabels[status]}
-                          </Badge>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            {vacancyStatuses.length > 0 ? (
+                              vacancyStatuses.map((vacancyStatus) => {
+                                const vacancyCfg = vacancyStatusConfig[vacancyStatus];
+                                return (
+                                  <Badge key={vacancyStatus} variant="outline" className={cn('text-[9px] font-black uppercase tracking-widest px-3 py-1 border-border shadow-sm rounded-full', vacancyCfg.bg, vacancyCfg.text, vacancyCfg.border)}>
+                                    {vacancyStatusLabels[vacancyStatus]}
+                                  </Badge>
+                                );
+                              })
+                            ) : (
+                              <Badge variant="outline" className={cn('text-[9px] font-black uppercase tracking-widest px-3 py-1 border-border shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
+                                {requisitionStatusLabels[status]}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex flex-col gap-3 p-4 rounded-2xl bg-background border border-border ">
@@ -464,6 +493,7 @@ export default function Requisiciones() {
                       const step = getCurrentApprovalStep(req);
                       const progress = getApprovalProgress(req);
                       const closedVacancies = getClosedVacancies(req);
+                      const vacancyStatuses = getVacancyStatuses(req);
                       return (
                         <TableRow key={req.id} className="group border-b border-border hover:bg-primary/[0.02] transition-colors cursor-pointer" onClick={() => openDetail(req.id)}>
                           <TableCell className="px-3 py-4 2xl:px-4">
@@ -560,9 +590,20 @@ export default function Requisiciones() {
                           </TableCell>
                           <TableCell className="px-2 py-4 2xl:px-3">
                             <div className="flex flex-col items-start gap-1.5">
-                              <Badge variant="outline" title={requisitionStatusLabels[status]} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
-                                {requisitionStatusLabels[status]}
-                              </Badge>
+                              {vacancyStatuses.length > 0 ? (
+                                vacancyStatuses.map((vacancyStatus) => {
+                                  const vacancyCfg = vacancyStatusConfig[vacancyStatus];
+                                  return (
+                                    <Badge key={vacancyStatus} variant="outline" title={`Vacante: ${vacancyStatusLabels[vacancyStatus]}`} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', vacancyCfg.bg, vacancyCfg.text, vacancyCfg.border)}>
+                                      {vacancyStatusLabels[vacancyStatus]}
+                                    </Badge>
+                                  );
+                                })
+                              ) : (
+                                <Badge variant="outline" title={`Requisicion: ${requisitionStatusLabels[status]}`} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
+                                  {requisitionStatusLabels[status]}
+                                </Badge>
+                              )}
                               {closedVacancies.length > 0 && (
                                 <Badge
                                   variant="outline"
