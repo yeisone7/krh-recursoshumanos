@@ -79,6 +79,10 @@ const ACTION_ICONS: Record<string, any> = {
   export: FileDown,
 };
 
+const SENSITIVE_PERMISSION_MODULE_CODES = new Set([
+  'req_confidential_requisitions',
+]);
+
 const getPermissionLabel = (module: Module, permission?: Permission) => {
   if (!permission?.description) return module.name;
   return permission.description.replace(/\s+-\s+(Ver|Crear|Modificar|Eliminar)$/i, '').trim();
@@ -131,6 +135,18 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     });
     Object.values(map).forEach(children => children.sort((a, b) => a.sort_order - b.sort_order));
     return map;
+  }, [modules]);
+
+  useEffect(() => {
+    setExpandedModules(prev => {
+      const next = new Set(prev);
+      modules.forEach(module => {
+        if (module.parent_id && SENSITIVE_PERMISSION_MODULE_CODES.has(module.code)) {
+          next.add(module.parent_id);
+        }
+      });
+      return next.size === prev.size ? prev : next;
+    });
   }, [modules]);
 
   const topLevelModules = useMemo(
@@ -461,6 +477,11 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
                                         <Badge className="rounded-md bg-primary/10 px-1.5 py-0 text-[8px] font-black uppercase tracking-widest text-primary hover:bg-primary/10">
                                           Independiente
                                         </Badge>
+                                        {SENSITIVE_PERMISSION_MODULE_CODES.has(child.code) && (
+                                          <Badge className="rounded-md bg-red-50 px-1.5 py-0 text-[8px] font-black uppercase tracking-widest text-red-700 hover:bg-red-50">
+                                            Sensible
+                                          </Badge>
+                                        )}
                                       </div>
                                       <span className="block text-[9px] font-bold uppercase tracking-wide text-slate-500">
                                         {child.code}
