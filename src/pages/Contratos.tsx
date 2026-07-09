@@ -496,10 +496,33 @@ function exportContractMatrixToPDF(contracts: ContractListRow[]) {
 function ContractMatrixView({
   contracts,
   onOpenContract,
+  groupByCenter = false,
 }: {
   contracts: ContractListRow[];
   onOpenContract: (contractId: string) => void;
+  groupByCenter?: boolean;
 }) {
+  const displayGroups = useMemo(() => {
+    if (!groupByCenter) {
+      return [{ id: 'all', name: 'Todos los contratos', contracts }];
+    }
+
+    const groups = new Map<string, { id: string; name: string; contracts: ContractListRow[] }>();
+
+    contracts.forEach((contract) => {
+      const centerId = contract.employees?.operation_center_id || 'unassigned';
+      const centerName = contract.employees?.operation_centers?.name || 'Sin centro asignado';
+
+      if (!groups.has(centerId)) {
+        groups.set(centerId, { id: centerId, name: centerName, contracts: [] });
+      }
+
+      groups.get(centerId)?.contracts.push(contract);
+    });
+
+    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+  }, [contracts, groupByCenter]);
+
   return (
     <div className="max-h-[calc(100vh-220px)] overflow-auto bg-white dark:bg-card">
       <table className="min-w-[1500px] w-full border-collapse text-sm">
@@ -530,50 +553,67 @@ function ContractMatrixView({
           </tr>
         </thead>
         <tbody>
-          {contracts.map((contract) => {
-            const extensions = getSortedExtensions(contract);
-            const additionalTerms = getAdditionalContractTerms(contract);
-
-            return (
-              <tr
-                key={contract.id}
-                onClick={() => onOpenContract(contract.id)}
-                className="cursor-pointer bg-white text-black transition-colors hover:bg-primary/5 dark:bg-card dark:text-foreground dark:hover:bg-primary/10"
-              >
-                <td className="min-w-[260px] border border-[#dddddd] px-2 py-1.5 font-medium uppercase dark:border-border">
-                  {getEmployeeFullName(contract.employees)}
-                </td>
-                <td className="min-w-[170px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
-                  {contract.employees?.document_number || ''}
-                </td>
-                <td className="min-w-[270px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
-                  {contract.employees?.position_name || 'Sin cargo'}
-                </td>
-                <td className="min-w-[140px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
-                  {formatMatrixDate(contract.start_date)}
-                </td>
-                <td className="min-w-[115px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
-                  {getMatrixDurationLabel(contract.start_date, contract.end_date)}
-                </td>
-                <td className="min-w-[175px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
-                  {formatMatrixDate(contract.end_date)}
-                </td>
-                {[0, 1, 2].map((index) => (
-                  <td
-                    key={`${contract.id}-extension-${index}`}
-                    className="min-w-[125px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border"
-                  >
-                    {formatMatrixDate(extensions[index]?.end_date || null)}
+          {displayGroups.map((group) => (
+            <Fragment key={group.id}>
+              {groupByCenter && (
+                <tr className="bg-primary/10 text-primary dark:bg-primary/15">
+                  <td colSpan={10} className="border border-[#dddddd] px-2 py-2 text-xs font-bold uppercase tracking-wide dark:border-border">
+                    <span className="inline-flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {group.name}
+                      <Badge variant="outline" className="h-5 rounded-md bg-background px-1.5 text-[10px]">
+                        {group.contracts.length}
+                      </Badge>
+                    </span>
                   </td>
-                ))}
-                <td className="min-w-[310px] max-w-[460px] border border-[#dddddd] px-2 py-1.5 text-xs dark:border-border">
-                  <span className="line-clamp-2" title={additionalTerms}>
-                    {additionalTerms}
-                  </span>
-                </td>
-              </tr>
-            );
-          })}
+                </tr>
+              )}
+              {group.contracts.map((contract) => {
+                const extensions = getSortedExtensions(contract);
+                const additionalTerms = getAdditionalContractTerms(contract);
+
+                return (
+                  <tr
+                    key={contract.id}
+                    onClick={() => onOpenContract(contract.id)}
+                    className="cursor-pointer bg-white text-black transition-colors hover:bg-primary/5 dark:bg-card dark:text-foreground dark:hover:bg-primary/10"
+                  >
+                    <td className="min-w-[260px] border border-[#dddddd] px-2 py-1.5 font-medium uppercase dark:border-border">
+                      {getEmployeeFullName(contract.employees)}
+                    </td>
+                    <td className="min-w-[170px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                      {contract.employees?.document_number || ''}
+                    </td>
+                    <td className="min-w-[270px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
+                      {contract.employees?.position_name || 'Sin cargo'}
+                    </td>
+                    <td className="min-w-[140px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                      {formatMatrixDate(contract.start_date)}
+                    </td>
+                    <td className="min-w-[115px] border border-[#dddddd] px-2 py-1.5 uppercase dark:border-border">
+                      {getMatrixDurationLabel(contract.start_date, contract.end_date)}
+                    </td>
+                    <td className="min-w-[175px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border">
+                      {formatMatrixDate(contract.end_date)}
+                    </td>
+                    {[0, 1, 2].map((index) => (
+                      <td
+                        key={`${contract.id}-extension-${index}`}
+                        className="min-w-[125px] border border-[#dddddd] px-2 py-1.5 text-right tabular-nums dark:border-border"
+                      >
+                        {formatMatrixDate(extensions[index]?.end_date || null)}
+                      </td>
+                    ))}
+                    <td className="min-w-[310px] max-w-[460px] border border-[#dddddd] px-2 py-1.5 text-xs dark:border-border">
+                      <span className="line-clamp-2" title={additionalTerms}>
+                        {additionalTerms}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </Fragment>
+          ))}
         </tbody>
       </table>
     </div>
@@ -590,6 +630,7 @@ export default function Contratos() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [centerFilter, setCenterFilter] = useState('all');
   const [showExpiredContracts, setShowExpiredContracts] = useState(false);
+  const [groupByOperationCenter, setGroupByOperationCenter] = useState(false);
   const [viewMode, setViewMode] = useState<ContractsViewMode>('cards');
   const [isBulkRegularizationOpen, setIsBulkRegularizationOpen] = useState(false);
   const [bulkRegularizationDate, setBulkRegularizationDate] = useState(() => new Date());
@@ -682,7 +723,11 @@ export default function Contratos() {
     pageSize: isMobile ? 12 : 40,
   });
 
-  const groupedVisibleContracts = useMemo(() => {
+  const displayContractGroups = useMemo(() => {
+    if (!groupByOperationCenter) {
+      return [{ id: 'all', name: 'Todos los contratos', contracts: visibleContracts }];
+    }
+
     const groups = new Map<string, { id: string; name: string; contracts: typeof visibleContracts }>();
 
     visibleContracts.forEach((contract) => {
@@ -697,7 +742,7 @@ export default function Contratos() {
     });
 
     return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
-  }, [visibleContracts]);
+  }, [visibleContracts, groupByOperationCenter]);
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -1099,7 +1144,7 @@ export default function Contratos() {
       </Collapsible>
 
       <div className="sticky top-0 z-10 bg-background/80 pb-2 backdrop-blur-md">
-        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto]">
+        <div className="grid gap-2 lg:grid-cols-[minmax(260px,1fr)_auto_auto_auto_auto]">
           <div className="rounded-xl border border-border bg-card shadow-sm">
             <button
               type="button"
@@ -1132,6 +1177,21 @@ export default function Contratos() {
               className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
             >
               Vencidos
+            </label>
+          </div>
+
+          <div className="flex h-10 items-center gap-2 rounded-xl border border-border bg-card px-3 shadow-sm">
+            <Switch
+              id="group-contracts-by-center"
+              checked={groupByOperationCenter}
+              onCheckedChange={setGroupByOperationCenter}
+              aria-label="Agrupar contratos por centro de operacion"
+            />
+            <label
+              htmlFor="group-contracts-by-center"
+              className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-muted-foreground"
+            >
+              Centros
             </label>
           </div>
 
@@ -1274,22 +1334,25 @@ export default function Contratos() {
           <ContractMatrixView
             contracts={filteredContracts}
             onOpenContract={handleContractClick}
+            groupByCenter={groupByOperationCenter}
           />
         ) : isMobile ? (
           <div className="p-3">
             <PullToRefresh onRefresh={async () => { await refetch(); }}>
               <div className="space-y-3">
-                {groupedVisibleContracts.map((group) => (
+                {displayContractGroups.map((group) => (
                   <section key={group.id} className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        <span className="truncate">{group.name}</span>
-                      </span>
-                      <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
-                        {group.contracts.length}
-                      </Badge>
-                    </div>
+                    {groupByOperationCenter && (
+                      <div className="flex items-center justify-between rounded-lg bg-background px-3 py-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                          <span className="truncate">{group.name}</span>
+                        </span>
+                        <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
+                          {group.contracts.length}
+                        </Badge>
+                      </div>
+                    )}
                     {group.contracts.map((contract, index) => {
                       const status = getContractStatus(contract);
                       const effectiveEndDate = getEffectiveEndDate(contract);
@@ -1446,21 +1509,23 @@ export default function Contratos() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
-                {groupedVisibleContracts.map((group) => (
+                {displayContractGroups.map((group) => (
                   <Fragment key={group.id}>
-                    <tr className="bg-background/80">
-                      <td colSpan={7} className="px-4 py-2">
-                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                          <span className="flex min-w-0 items-center gap-2">
-                            <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
-                            <span className="truncate">{group.name}</span>
-                          </span>
-                          <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
-                            {group.contracts.length}
-                          </Badge>
-                        </div>
-                      </td>
-                    </tr>
+                    {groupByOperationCenter && (
+                      <tr className="bg-background/80">
+                        <td colSpan={7} className="px-4 py-2">
+                          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                            <span className="flex min-w-0 items-center gap-2">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                              <span className="truncate">{group.name}</span>
+                            </span>
+                            <Badge variant="outline" className="h-5 rounded-md px-1.5 text-[10px]">
+                              {group.contracts.length}
+                            </Badge>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                     {group.contracts.map((contract, index) => {
                       const status = getContractStatus(contract);
                       const effectiveEndDate = getEffectiveEndDate(contract);
