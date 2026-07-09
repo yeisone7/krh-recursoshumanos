@@ -7,19 +7,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
-import { getIncapacityOriginLabel, isWorkRelatedIncapacityOrigin } from '@/types/incapacity';
+import { getIncapacityOriginLabel, isWorkRelatedIncapacityOrigin, recoveryStatusColors, recoveryStatusLabels } from '@/types/incapacity';
 
 interface Tab360IncapacitiesProps {
   incapacities: any[];
   isLoading: boolean;
 }
-
-const recoveryStatusConfig: Record<string, { label: string; color: string }> = {
-  pendiente: { label: 'Pendiente', color: 'bg-warning-light text-warning' },
-  en_proceso: { label: 'En Proceso', color: 'bg-primary-light text-primary' },
-  cobrado: { label: 'Cobrado', color: 'bg-success-light text-success' },
-  rechazado: { label: 'Rechazado', color: 'bg-destructive/10 text-destructive' },
-};
 
 export function Tab360Incapacities({ incapacities, isLoading }: Tab360IncapacitiesProps) {
   if (isLoading) {
@@ -134,7 +127,8 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
       {/* Incapacity List */}
       <div className="space-y-3">
         {incapacities.map((inc, index) => {
-          const recoveryStatus = recoveryStatusConfig[inc.recovery_status] || recoveryStatusConfig.pendiente;
+          const recoveryStatusLabel = recoveryStatusLabels[inc.recovery_status as keyof typeof recoveryStatusLabels] || inc.recovery_status || 'Pendiente';
+          const recoveryStatusColor = recoveryStatusColors[inc.recovery_status as keyof typeof recoveryStatusColors] || recoveryStatusColors.pendiente;
 
           return (
             <motion.div
@@ -162,8 +156,8 @@ export function Tab360Incapacities({ incapacities, isLoading }: Tab360Incapaciti
                             Prórroga #{inc.extension_number}
                           </Badge>
                         )}
-                        <Badge variant="outline" className={recoveryStatus.color}>
-                          {recoveryStatus.label}
+                        <Badge variant="outline" className={recoveryStatusColor}>
+                          {recoveryStatusLabel}
                         </Badge>
                       </div>
 

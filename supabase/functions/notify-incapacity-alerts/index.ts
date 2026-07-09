@@ -38,6 +38,7 @@ const recoveryStatusLabels: Record<string, string> = {
   aprobado: 'Aprobado',
   rechazado: 'Rechazado',
   pagado: 'Pagado',
+  asumido_empresa: 'Asumido Empresa',
 };
 
 async function sendEmail(to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> {
