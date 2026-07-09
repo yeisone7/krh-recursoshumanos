@@ -70,7 +70,10 @@ export function useTrainingCourses() {
   });
 }
 
-export function useTrainingCoursePeriods(period?: TrainingPeriodInput | null) {
+export function useTrainingCoursePeriods(
+  period?: TrainingPeriodInput | null,
+  options?: { enabled?: boolean }
+) {
   const { currentCompanyId } = useAuth();
 
   return useQuery({
@@ -93,7 +96,7 @@ export function useTrainingCoursePeriods(period?: TrainingPeriodInput | null) {
       if (error) throw error;
       return data as TrainingCoursePeriod[];
     },
-    enabled: !!currentCompanyId,
+    enabled: !!currentCompanyId && (options?.enabled ?? true),
   });
 }
 
@@ -165,11 +168,11 @@ export function useSaveTrainingCoursePeriods() {
 
 export function useTrainingCoursesByPeriod(period?: TrainingPeriodInput | null) {
   const courses = useTrainingCourses();
-  const periods = useTrainingCoursePeriods(period);
+  const periods = useTrainingCoursePeriods(period, { enabled: !!period });
 
   return {
     ...courses,
-    isLoading: courses.isLoading || periods.isLoading,
+    isLoading: courses.isLoading || (!!period && periods.isLoading),
     data: !period
       ? courses.data
       : (courses.data || []).filter((course) =>
