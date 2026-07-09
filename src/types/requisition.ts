@@ -202,6 +202,7 @@ export const requisitionFormSchema = z.object({
   operation_center_id: z.string().min(1, 'El centro de operación es requerido'),
   cargo_a_reemplazar: z.string().optional(),
   persona_a_reemplazar: z.array(z.string()).optional(),
+  is_confidential: z.boolean().default(false),
   requiere_herramienta_trabajo: z.boolean().default(false),
   proceso_exclusivo_pcd: z.boolean({
     required_error: 'Indique si el proceso es exclusivo para personas en situación de discapacidad (PcD)',

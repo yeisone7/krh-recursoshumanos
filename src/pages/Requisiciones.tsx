@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import {
   FileText, Plus, Search, Eye, Clock, CheckCircle, XCircle,
   Building2, Users, Calendar, Send, ArrowRight, FileDown, Loader2,
-  TrendingUp, Briefcase, Filter, ChevronDown, ChevronRight, Trash2, AlertTriangle, MoreHorizontal
+  TrendingUp, Briefcase, Filter, ChevronDown, ChevronRight, Trash2, AlertTriangle, MoreHorizontal, Lock
 } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -366,6 +366,12 @@ export default function Requisiciones() {
                               <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
                                 {req.requisition_code || 'RQ-PEND'}
                               </Badge>
+                              {req.is_confidential && (
+                                <Badge variant="outline" className="w-fit border-slate-300 bg-slate-100 text-[9px] font-black tracking-widest text-slate-700">
+                                  <Lock className="mr-1 h-3 w-3" />
+                                  Confidencial
+                                </Badge>
+                              )}
                               {req.proceso_exclusivo_pcd && (
                                 <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[9px] font-black tracking-widest text-amber-700">
                                   PcD
@@ -470,6 +476,12 @@ export default function Requisiciones() {
                                   <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 text-[9px] font-black tracking-widest text-primary">
                                     {req.requisition_code || 'RQ-PEND'}
                                   </Badge>
+                                  {req.is_confidential && (
+                                    <Badge variant="outline" className="w-fit border-slate-300 bg-slate-100 text-[9px] font-black tracking-widest text-slate-700">
+                                      <Lock className="mr-1 h-3 w-3" />
+                                      Confidencial
+                                    </Badge>
+                                  )}
                                   {req.proceso_exclusivo_pcd && (
                                     <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-[9px] font-black tracking-widest text-amber-700">
                                       PcD

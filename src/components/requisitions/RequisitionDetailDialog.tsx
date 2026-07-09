@@ -34,6 +34,7 @@ import {
   UserCheck,
   Trash2,
   Clock,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -465,6 +466,12 @@ export function RequisitionDetailDialog({
                       <Badge variant="outline" className="border-primary/20 bg-primary/10 font-semibold text-primary">
                         {requisition.requisition_code || 'RQ-PEND'}
                       </Badge>
+                      {requisition.is_confidential && (
+                        <Badge variant="outline" className="border-slate-300 bg-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-700">
+                          <Lock className="mr-1 h-3 w-3" />
+                          Confidencial
+                        </Badge>
+                      )}
                       {requisition.proceso_exclusivo_pcd && (
                         <Badge variant="outline" className="border-amber-300 bg-amber-50 text-[10px] font-black uppercase tracking-widest text-amber-700">
                           PcD

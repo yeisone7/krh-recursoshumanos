@@ -15,6 +15,7 @@ import {
   FileEdit, 
   Briefcase,
   AlertCircle,
+  Lock,
   Truck,
   Coffee,
   Tool,
@@ -99,7 +100,7 @@ export function RequisitionFormDialog({
   requisition,
 }: RequisitionFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
-  const { user } = useAuth();
+  const { user, isAdmin, isSuperAdmin, canCreate, canUpdate } = useAuth();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -135,6 +136,7 @@ export function RequisitionFormDialog({
       fecha_requisicion: new Date(),
       cantidad_vacantes_requeridas: 1,
       cargo_solicitado: '',
+      is_confidential: false,
       requiere_herramienta_trabajo: false,
       incluye_alimentacion: false,
       incluye_desplazamiento: false,
@@ -161,6 +163,7 @@ export function RequisitionFormDialog({
         operation_center_id: requisition.operation_center_id || undefined,
         cargo_a_reemplazar: requisition.cargo_a_reemplazar || undefined,
         persona_a_reemplazar: requisition.persona_a_reemplazar ? requisition.persona_a_reemplazar.split(', ') : [],
+        is_confidential: requisition.is_confidential || false,
         requiere_herramienta_trabajo: requisition.requiere_herramienta_trabajo || false,
         proceso_exclusivo_pcd: requisition.proceso_exclusivo_pcd || false,
         horario_trabajo: requisition.horario_trabajo || undefined,
@@ -181,6 +184,7 @@ export function RequisitionFormDialog({
         fecha_requisicion: new Date(),
         cantidad_vacantes_requeridas: 1,
         cargo_solicitado: '',
+        is_confidential: false,
         requiere_herramienta_trabajo: false,
         incluye_alimentacion: false,
         incluye_desplazamiento: false,
@@ -201,6 +205,7 @@ export function RequisitionFormDialog({
       operation_center_id: data.operation_center_id || null,
       cargo_a_reemplazar: data.cargo_a_reemplazar || null,
       persona_a_reemplazar: data.persona_a_reemplazar && data.persona_a_reemplazar.length > 0 ? data.persona_a_reemplazar.join(', ') : null,
+      is_confidential: data.is_confidential,
       requiere_herramienta_trabajo: data.requiere_herramienta_trabajo,
       proceso_exclusivo_pcd: data.proceso_exclusivo_pcd,
       horario_trabajo: data.horario_trabajo || null,
@@ -226,6 +231,7 @@ export function RequisitionFormDialog({
   };
 
   const isLoading = createRequisition.isPending || updateRequisition.isPending;
+  const canMarkConfidential = isAdmin || isSuperAdmin || canCreate('requisiciones') || canUpdate('requisiciones');
 
   const tabItems = [
     { value: 'requisition', label: 'Solicitud', icon: FileEdit },
@@ -515,6 +521,34 @@ export function RequisitionFormDialog({
                         </FormItem>
                       )}
                     />
+
+                    {canMarkConfidential && (
+                      <FormField
+                        control={form.control}
+                        name="is_confidential"
+                        render={({ field }) => (
+                          <FormItem className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+                            <div className="flex items-center justify-between gap-4">
+                              <div className="flex min-w-0 items-start gap-2">
+                                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-slate-700" />
+                                <div className="min-w-0 space-y-1">
+                                  <FormLabel className="cursor-pointer text-sm font-bold leading-5 text-slate-950">
+                                    RequisiciÃ³n confidencial
+                                  </FormLabel>
+                                  <p className="text-xs leading-relaxed text-muted-foreground">
+                                    Solo serÃ¡ visible para el solicitante, administradores, usuarios autorizados y aprobadores de la etapa activa.
+                                  </p>
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} className="shrink-0" />
+                              </FormControl>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                   </div>
                 </TabsContent>
 

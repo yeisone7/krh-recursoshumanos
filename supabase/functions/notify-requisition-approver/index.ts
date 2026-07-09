@@ -23,6 +23,15 @@ const statusToNextRole: Record<string, { role: string; permissionModule?: string
   'en_seleccion': { role: 'rrhh', stepLabel: 'Selección' },
 };
 
+const statusToApprovalPermission: Record<string, string> = {
+  'en_coordinadores': 'req_approve_coordinadores',
+  'en_operaciones': 'req_approve_ger_op',
+  'en_rrhh': 'req_approve_rh',
+  'en_juridico': 'req_approve_juridica',
+  'en_gerencia': 'req_approve_ger_adm',
+  'en_seleccion': 'req_approve_seleccion',
+};
+
 serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,7 +68,7 @@ serve(async (req: Request): Promise<Response> => {
     // Get requisition details
     const { data: requisition, error: reqError } = await supabase
       .from('personnel_requisitions')
-      .select('company_id, cargo_solicitado, solicitante_nombre')
+      .select('company_id, operation_center_id, is_confidential, cargo_solicitado, solicitante_nombre, created_by, solicitante_id, estado_requisicion')
       .eq('id', requisitionId)
       .single();
 
@@ -122,6 +131,8 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const activeApprovalModule = nextApprover.permissionModule || statusToApprovalPermission[currentStep];
+
     // Find users with the legacy role and, when configured, the custom approval permission.
     const { data: usersWithRole, error: usersError } = await supabase
       .from('user_roles')
@@ -134,12 +145,12 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     let permissionUserIds: string[] = [];
-    if (nextApprover.permissionModule) {
+    if (activeApprovalModule) {
       const { data: usersWithPermission, error: permissionUsersError } = await supabase
         .from('user_custom_roles')
         .select('user_id, custom_roles!inner(role_permissions!inner(permissions!inner(modules!inner(code), action)))')
         .eq('custom_roles.is_active', true)
-        .eq('custom_roles.role_permissions.permissions.modules.code', nextApprover.permissionModule)
+        .eq('custom_roles.role_permissions.permissions.modules.code', activeApprovalModule)
         .eq('custom_roles.role_permissions.permissions.action', 'approve');
 
       if (permissionUsersError) {
@@ -149,6 +160,8 @@ serve(async (req: Request): Promise<Response> => {
 
       permissionUserIds = (usersWithPermission || []).map(u => u.user_id);
     }
+
+    const activeApprovalUserIds = new Set(permissionUserIds);
 
     const userIds = Array.from(new Set([
       ...(usersWithRole || []).map(u => u.user_id),
@@ -183,8 +196,76 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const companyUserIds = companyUsers.map(user => user.user_id);
+
+    const { data: adminRoles, error: adminRolesError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('user_id', companyUserIds)
+      .eq('role', 'admin');
+
+    if (adminRolesError) {
+      console.error('Error fetching admin users for notification filtering:', adminRolesError);
+      throw adminRolesError;
+    }
+
+    const { data: systemRoles, error: systemRolesError } = await supabase
+      .from('user_custom_roles')
+      .select('user_id, custom_roles!inner(is_system,is_active)')
+      .in('user_id', companyUserIds)
+      .eq('custom_roles.is_system', true)
+      .eq('custom_roles.is_active', true);
+
+    if (systemRolesError) {
+      console.error('Error fetching system roles for notification filtering:', systemRolesError);
+      throw systemRolesError;
+    }
+
+    const { data: centerAssignments, error: centerAssignmentsError } = requisition.operation_center_id
+      ? await supabase
+          .from('user_center_assignments')
+          .select('user_id')
+          .in('user_id', companyUserIds)
+          .eq('operation_center_id', requisition.operation_center_id)
+      : { data: [], error: null };
+
+    if (centerAssignmentsError) {
+      console.error('Error fetching center assignments for notification filtering:', centerAssignmentsError);
+      throw centerAssignmentsError;
+    }
+
+    const adminUserIds = new Set((adminRoles || []).map(row => row.user_id));
+    const systemUserIds = new Set((systemRoles || []).map(row => row.user_id));
+    const centerUserIds = new Set((centerAssignments || []).map(row => row.user_id));
+
+    const canReceiveRequisitionApprovalNotification = (candidateUserId: string) => {
+      const hasPrivilegedAccess = adminUserIds.has(candidateUserId) || systemUserIds.has(candidateUserId);
+      const hasCenterAccess = hasPrivilegedAccess || (
+        Boolean(requisition.operation_center_id) && centerUserIds.has(candidateUserId)
+      );
+
+      if (!hasCenterAccess) return false;
+      if (!requisition.is_confidential) return true;
+      if (hasPrivilegedAccess) return true;
+      if (candidateUserId === requisition.created_by || candidateUserId === requisition.solicitante_id) return true;
+
+      return activeApprovalUserIds.has(candidateUserId);
+    };
+
+    const authorizedCompanyUsers = companyUsers.filter(user =>
+      canReceiveRequisitionApprovalNotification(user.user_id)
+    );
+
+    if (authorizedCompanyUsers.length === 0) {
+      console.log('No authorized users can receive this requisition notification');
+      return new Response(
+        JSON.stringify({ message: 'No authorized users to notify for this requisition' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create in-app notifications for each user
-    const notifications = companyUsers.map(user => ({
+    const notifications = authorizedCompanyUsers.map(user => ({
       user_id: user.user_id,
       company_id: requisition.company_id,
       title: `Requisición pendiente de aprobación`,
@@ -205,13 +286,13 @@ serve(async (req: Request): Promise<Response> => {
       throw insertError;
     }
 
-    console.log(`Created ${companyUsers.length} in-app notifications for requisition ${requisitionId}`);
+    console.log(`Created ${authorizedCompanyUsers.length} in-app notifications for requisition ${requisitionId}`);
 
     // Send email notifications if Resend is configured
     let emailsSent = 0;
     if (resend) {
       // Get user preferences and emails
-      const userIdsToNotify = companyUsers.map(u => u.user_id);
+      const userIdsToNotify = authorizedCompanyUsers.map(u => u.user_id);
       
       // Get email preferences for these users
       const { data: userPreferences, error: prefsError } = await supabase
@@ -345,7 +426,7 @@ serve(async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        notifiedUsers: companyUsers.length,
+        notifiedUsers: authorizedCompanyUsers.length,
         emailsSent,
         step: nextApprover.stepLabel 
       }),
