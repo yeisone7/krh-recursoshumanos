@@ -163,6 +163,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
   const [videoStyle, setVideoStyle] = useState('clasico');
   const [videoScript, setVideoScript] = useState<any>(null);
   const [videoImages, setVideoImages] = useState<string[]>([]);
+  const [storyboardAudioUrl, setStoryboardAudioUrl] = useState<string | null>(null);
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
   const queryClient = useQueryClient();
@@ -242,6 +243,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       if (data?.error) throw new Error(data.error);
 
       if (data?.audioUrl) {
+        setStoryboardAudioUrl(data.audioUrl);
         await createMedia.mutateAsync({
           courseId: course.id,
           type: 'audio',
@@ -292,6 +294,44 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       const data = await response.json();
       setVideoScript(data?.script);
       setVideoImages(data?.imageUrls || []);
+
+      try {
+        setGeneratingMedia(prev => ({ ...prev, audio: true }));
+        const narrationText = (data?.script?.scenes || [])
+          .map((scene: any) => scene?.narration)
+          .filter(Boolean)
+          .join('\n\n');
+        const { data: audioData, error: audioError } = await supabase.functions.invoke('generate-training-audio', {
+          body: {
+            title: course.name,
+            content: (narrationText || content.contenido || '').substring(0, 4000),
+            puntosClave: content.puntosClave,
+            duration: videoDuration,
+            companyId: currentCompanyId,
+            courseId: course.id,
+          },
+        });
+
+        if (audioError) throw new Error(await getFunctionErrorMessage(audioError, 'Error al generar audio del storyboard'));
+        if (audioData?.error) throw new Error(audioData.error);
+
+        if (audioData?.audioUrl) {
+          setStoryboardAudioUrl(audioData.audioUrl);
+          await createMedia.mutateAsync({
+            courseId: course.id,
+            type: 'audio',
+            title: 'Audio Narrado',
+            fileUrl: audioData.audioUrl,
+            fileSize: 0,
+            description: audioData.script?.substring(0, 500),
+          });
+        }
+      } catch (audioErr: any) {
+        toast.warning(audioErr?.message || 'Storyboard generado, pero no se pudo generar el audio.');
+      } finally {
+        setGeneratingMedia(prev => ({ ...prev, audio: false }));
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['training_media', course.id] });
       await queryClient.invalidateQueries({ queryKey: ['training_courses'] });
       toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
@@ -811,7 +851,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         <StoryboardViewer
                           scenes={videoScript.scenes || []}
                           imageUrls={videoImages}
-                          audioUrl={media.filter(m => m.type === 'audio').at(-1)?.file_url || null}
+                          audioUrl={storyboardAudioUrl || media.filter(m => m.type === 'audio').at(-1)?.file_url || null}
                           allowRegenerate
                           courseId={course.id}
                           courseTitle={course.name}
@@ -920,7 +960,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                   }));
                   const imageUrls = storyboardScenes.map(m => m.file_url);
                   const audioItems = media.filter(m => m.type === 'audio');
-                  const audioUrl = audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null;
+                  const audioUrl = storyboardAudioUrl || (audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null);
                   
                   return (
                     <div className="mt-8 min-w-0 overflow-hidden space-y-4">
