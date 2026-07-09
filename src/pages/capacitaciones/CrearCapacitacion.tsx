@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -88,6 +88,9 @@ export default function CrearCapacitacion() {
   const editId = searchParams.get('id');
   const { currentCompanyId } = useAuth();
   const { data: systemConfig } = useSystemConfig();
+  const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
+  const activeCourseId = editId || createdCourseId;
+  const saveInProgressRef = useRef(false);
 
   const [step, setStep] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -139,12 +142,14 @@ export default function CrearCapacitacion() {
 
   const createCourse = useCreateFullCourse();
   const updateCourse = useUpdateFullCourse();
-  const { data: existingCourse } = useTrainingCourse(editId || undefined);
-  const { data: media = [] } = useTrainingMedia(editId || undefined);
+  const { data: existingCourse } = useTrainingCourse(activeCourseId || undefined);
+  const { data: media = [] } = useTrainingMedia(activeCourseId || undefined);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
   const savePeriods = useSaveTrainingCoursePeriods();
-  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(editId);
+  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(activeCourseId);
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const isSaving = isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
 
   // Load existing course for editing
   useEffect(() => {
@@ -198,12 +203,11 @@ export default function CrearCapacitacion() {
   }, [existingCourse]);
 
   useEffect(() => {
-    if (!editId) {
-      setPeriods([]);
+    if (!activeCourseId) {
       return;
     }
     setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
-  }, [editId, existingPeriods]);
+  }, [activeCourseId, existingPeriods]);
 
   // Load existing avatar video from media
   useEffect(() => {
@@ -267,6 +271,9 @@ export default function CrearCapacitacion() {
   };
 
   const handleSave = async (status: string) => {
+    if (saveInProgressRef.current) return;
+    saveInProgressRef.current = true;
+    setIsSavingCourse(true);
     try {
       const courseData = {
         name: title,
@@ -287,34 +294,38 @@ export default function CrearCapacitacion() {
         status,
       };
 
-      if (editId) {
-        await updateCourse.mutateAsync({ id: editId, ...courseData });
-        await savePeriods.mutateAsync({ courseId: editId, periods });
+      if (activeCourseId) {
+        await updateCourse.mutateAsync({ id: activeCourseId, ...courseData });
+        await savePeriods.mutateAsync({ courseId: activeCourseId, periods });
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        setCreatedCourseId(result.id);
+        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
-        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true });
       }
     } catch (err: any) {
       console.error("Error al guardar capacitación:", err);
       toast.error(`Error al guardar: ${err?.message || err}`);
+    } finally {
+      saveInProgressRef.current = false;
+      setIsSavingCourse(false);
     }
   };
 
   const handleMediaUploaded = async (url: string, fileName: string, fileSize: number) => {
-    if (!editId) return;
-    await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fileName, fileUrl: url, fileSize });
+    if (!activeCourseId) return;
+    await createMedia.mutateAsync({ courseId: activeCourseId, type: 'imagen', title: fileName, fileUrl: url, fileSize });
   };
 
   const handleDeleteMedia = async (id: string) => {
-    if (!editId) return;
-    await deleteMedia.mutateAsync({ id, courseId: editId });
+    if (!activeCourseId) return;
+    await deleteMedia.mutateAsync({ id, courseId: activeCourseId });
   };
 
   const handleGenerateMedia = async (type: string) => {
-    if (!editId || !content) return;
+    if (!activeCourseId || !content) return;
     setGeneratingMedia(prev => ({ ...prev, [type]: true }));
     try {
       const { data, error } = await supabase.functions.invoke('generate-training-media', {
@@ -324,7 +335,7 @@ export default function CrearCapacitacion() {
           content: content.contenido?.substring(0, 2000),
           puntosClave: content.puntosClave,
           companyId: currentCompanyId,
-          courseId: editId,
+          courseId: activeCourseId,
           skipUpload: true,
         },
       });
@@ -334,7 +345,7 @@ export default function CrearCapacitacion() {
         // Apply watermark client-side using system config
         const wmConfig = systemConfig?.watermark_config as WatermarkConfig | undefined;
         const watermarkedBlob = await applyWatermark(data.imageUrl, wmConfig);
-        const fileName = `${editId}/${type}_${Date.now()}.png`;
+        const fileName = `${activeCourseId}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from('training-media')
           .upload(fileName, watermarkedBlob, { contentType: 'image/png' });
@@ -344,7 +355,7 @@ export default function CrearCapacitacion() {
 
         setGeneratedMedia(prev => ({ ...prev, [type]: finalUrl }));
         await createMedia.mutateAsync({
-          courseId: editId,
+          courseId: activeCourseId,
           type: type === 'mapa_mental' ? 'imagen' : type === 'infografia' ? 'infografia' : 'imagen',
           title: type === 'imagen' ? 'Imagen Explicativa' : type === 'mapa_mental' ? 'Mapa Mental' : 'Infografía',
           fileUrl: finalUrl,
@@ -360,7 +371,7 @@ export default function CrearCapacitacion() {
   };
 
   const handleGenerateAudio = async () => {
-    if (!editId || !content) return;
+    if (!activeCourseId || !content) return;
     setGeneratingMedia(prev => ({ ...prev, audio: true }));
     try {
       const { data, error } = await supabase.functions.invoke('generate-training-audio', {
@@ -370,14 +381,14 @@ export default function CrearCapacitacion() {
           puntosClave: content.puntosClave,
           duration: audioDuration,
           companyId: currentCompanyId,
-          courseId: editId,
+          courseId: activeCourseId,
         },
       });
       if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar audio'));
       if (data?.error) throw new Error(data.error);
       if (data?.audioUrl) {
         await createMedia.mutateAsync({
-          courseId: editId,
+          courseId: activeCourseId,
           type: 'audio',
           title: 'Audio Narrado',
           fileUrl: data.audioUrl,
@@ -403,9 +414,9 @@ export default function CrearCapacitacion() {
           </Button>
           <div>
             <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
-              {editId ? 'EDICIÓN CON IA' : 'CREACIÓN CON IA'}
+              {activeCourseId ? 'EDICIÓN CON IA' : 'CREACIÓN CON IA'}
             </Badge>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación con IA</h1>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">{activeCourseId ? 'Editar' : 'Crear'} Capacitación con IA</h1>
             <p className="text-muted-foreground font-medium mt-1">Genera contenido estructurado y multimedia automáticamente</p>
           </div>
         </div>
@@ -753,7 +764,7 @@ export default function CrearCapacitacion() {
                 </div>
               </div>
 
-              {!editId ? (
+              {!activeCourseId ? (
                 <p className="text-sm text-muted-foreground text-center py-4">Guarda la capacitación como borrador primero para habilitar la generación multimedia.</p>
               ) : (
                 <div className="space-y-4">
@@ -890,9 +901,9 @@ export default function CrearCapacitacion() {
                       <Button
                         variant="outline"
                         className="w-full"
-                        disabled={!editId || generatingMedia['video']}
+                        disabled={!activeCourseId || generatingMedia['video']}
                         onClick={async () => {
-                          if (!editId || !content) return;
+                          if (!activeCourseId || !content) return;
                           setGeneratingMedia(prev => ({ ...prev, video: true }));
                           try {
                             const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -905,7 +916,7 @@ export default function CrearCapacitacion() {
                                 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
                               },
                               body: JSON.stringify({
-                                courseId: editId,
+                                courseId: activeCourseId,
                                 style: videoStyle,
                                 duration: videoDuration,
                                 title,
@@ -937,7 +948,7 @@ export default function CrearCapacitacion() {
                           <><Plus className="h-4 w-4 mr-2" /> {(media as any[]).filter((m: any) => m.type === 'video').length > 0 ? 'Generar otro' : 'Generar Storyboard'}</>
                         )}
                       </Button>
-                      {!editId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
+                      {!activeCourseId && <p className="text-xs text-destructive">Guarde como borrador primero para habilitar la generación</p>}
                       {videoScript && (
                         <div className="mt-3 border-t pt-3">
                           <StoryboardViewer
@@ -948,7 +959,7 @@ export default function CrearCapacitacion() {
                               return storyboardAudioUrl || (audioItems.length > 0 ? audioItems[audioItems.length - 1].file_url : null);
                             })()}
                             allowRegenerate
-                            courseId={editId || undefined}
+                            courseId={activeCourseId || undefined}
                             courseTitle={title}
                             companyId={currentCompanyId}
                             style={videoStyle}
@@ -978,7 +989,7 @@ export default function CrearCapacitacion() {
           </Card>
 
           {/* Subir Videos Manuales */}
-          {editId && (
+          {activeCourseId && (
             <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden mt-6">
               <div className="h-2 bg-gradient-to-r from-blue-500/40 to-blue-500/10 w-full" />
               <CardContent className="p-8">
@@ -995,10 +1006,10 @@ export default function CrearCapacitacion() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
                     <VideoUploader 
-                      courseId={editId} 
-                      onUploaded={async (url, fn, fs) => { 
-                        await createMedia.mutateAsync({ courseId: editId, type: 'video', title: fn, fileUrl: url, fileSize: fs }); 
-                      }} 
+                      courseId={activeCourseId}
+                      onUploaded={async (url, fn, fs) => {
+                        await createMedia.mutateAsync({ courseId: activeCourseId, type: 'video', title: fn, fileUrl: url, fileSize: fs });
+                      }}
                     />
                   </div>
                   <div className="flex items-center justify-center">
@@ -1019,7 +1030,7 @@ export default function CrearCapacitacion() {
           )}
 
           {/* Avatar Presentador */}
-          {editId && (
+          {activeCourseId && (
             <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden">
               <div className="h-2 bg-gradient-to-r from-fuchsia-500/40 to-fuchsia-500/10 w-full" />
               <CardContent className="p-8 space-y-6">
@@ -1040,7 +1051,7 @@ export default function CrearCapacitacion() {
                   <AvatarVideoPlayer
                     videoUrl={avatarVideoUrl}
                     videoId={avatarVideoId}
-                    courseId={editId}
+                    courseId={activeCourseId}
                     companyId={currentCompanyId || ''}
                     onVideoReady={(url) => setAvatarVideoUrl(url)}
                   />
@@ -1114,7 +1125,7 @@ export default function CrearCapacitacion() {
                             body: {
                               action: 'generate',
                               companyId: currentCompanyId,
-                              courseId: editId,
+                              courseId: activeCourseId,
                               script: script.substring(0, 3000),
                               avatarId: selectedAvatar || undefined,
                             },
@@ -1148,10 +1159,10 @@ export default function CrearCapacitacion() {
               <ArrowLeft className="h-4 w-4 mr-2" /> Editar Parámetros
             </Button>
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
-                <FileText className="h-4 w-4 mr-2" /> Guardar Borrador
+              <Button variant="outline" onClick={() => handleSave('borrador')} disabled={isSaving} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
+                {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />} Guardar Borrador
               </Button>
-              <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
+              <Button onClick={() => handleSave('publicado')} disabled={isSaving} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
                 Publicar Capacitación
               </Button>
             </div>
