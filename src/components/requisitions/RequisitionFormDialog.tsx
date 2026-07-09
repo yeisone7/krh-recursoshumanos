@@ -498,13 +498,13 @@ export function RequisitionFormDialog({
                               <RadioGroup
                                 value={field.value === true ? 'si' : field.value === false ? 'no' : ''}
                                 onValueChange={(value) => field.onChange(value === 'si')}
-                                className="mx-auto flex w-full max-w-sm flex-wrap justify-center gap-2 rounded-lg border border-amber-200 bg-background/80 p-1.5 shadow-sm"
+                                className="mx-auto flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-md border border-amber-200 bg-background/80 p-1 shadow-sm"
                               >
-                                <label className="flex h-9 w-32 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
+                                <label className="flex h-8 min-w-20 cursor-pointer items-center justify-center gap-2 rounded border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
                                   <RadioGroupItem value="si" />
                                   Sí
                                 </label>
-                                <label className="flex h-9 w-32 cursor-pointer items-center justify-center gap-2 rounded-md border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
+                                <label className="flex h-8 min-w-20 cursor-pointer items-center justify-center gap-2 rounded border border-transparent px-3 text-sm font-semibold text-amber-950 transition-colors hover:border-amber-300 hover:bg-amber-50">
                                   <RadioGroupItem value="no" />
                                   No
                                 </label>
@@ -533,10 +533,10 @@ export function RequisitionFormDialog({
                                 <Lock className="mt-0.5 h-4 w-4 shrink-0 text-slate-700" />
                                 <div className="min-w-0 space-y-1">
                                   <FormLabel className="cursor-pointer text-sm font-bold leading-5 text-slate-950">
-                                    RequisiciÃ³n confidencial
+                                    Requisición confidencial
                                   </FormLabel>
                                   <p className="text-xs leading-relaxed text-muted-foreground">
-                                    Solo serÃ¡ visible para el solicitante, administradores, usuarios autorizados y aprobadores de la etapa activa.
+                                    Solo será visible para el solicitante, administradores, usuarios autorizados y aprobadores de la etapa activa.
                                   </p>
                                 </div>
                               </div>
