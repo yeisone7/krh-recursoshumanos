@@ -268,7 +268,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const StatusIcon = statusConfig[status].icon;
   const isApproved = contract.isApproved;
   const canManageExtensions = canUpdateContracts && contract.contractType !== 'indefinite' && !isTerminated;
-  const canAddExtension = canManageExtensions && isApproved && status !== 'expired' && !!contract.currentEndDate;
+  const isExpired = status === 'expired';
+  const canAddExtension = canManageExtensions && isApproved && !!contract.currentEndDate;
   const regularizationPlan = calculateAutomaticExtensionRegularizationPlan({
     id: contract.id,
     contractType: contract.contractType,
@@ -287,13 +288,9 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     regularizationPlan.extensions.length > 0;
   const extensionBlockedReason = !isApproved
     ? `El contrato debe estar aprobado para registrar una ${extensionLabelLower}.`
-    : status === 'expired'
-      ? canRegularizeAutomaticExtensions
-        ? 'Usa la regularizacion automatica para reconstruir las prorrogas anuales faltantes.'
-        : `No se pueden registrar ${extensionLabelPluralLower} sobre contratos vencidos.`
-      : !contract.currentEndDate
-        ? `Define la fecha fin actual del contrato para registrar una ${extensionLabelLower}.`
-        : null;
+    : !contract.currentEndDate
+      ? `Define la fecha fin actual del contrato para registrar una ${extensionLabelLower}.`
+      : null;
   const sortedExtensions = [...contract.extensions].sort((a, b) => a.extensionNumber - b.extensionNumber);
   const nextExtension = editingExtension
     ? sortedExtensions.find((extension) => extension.extensionNumber > editingExtension.extensionNumber)
@@ -445,20 +442,6 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       return;
     }
 
-    if (status === 'expired') {
-      if (canRegularizeAutomaticExtensions) {
-        setShowRegularizationDialog(true);
-        return;
-      }
-
-      toast({
-        title: 'Contrato vencido',
-        description: `No se pueden registrar ${extensionLabelPluralLower} sobre contratos vencidos. Revisa el estado contractual antes de continuar.`,
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (!contract.currentEndDate) {
       toast({
         title: 'Falta fecha de fin',
@@ -469,6 +452,12 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
     }
 
     setEditingExtension(null);
+    if (isExpired) {
+      toast({
+        title: 'Vigencia vencida',
+        description: `Se registrara una ${extensionLabelLower} tardia desde el dia siguiente a la vigencia actual.`,
+      });
+    }
     setShowExtensionForm(true);
   };
 
@@ -731,6 +720,15 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                     </div>
                   )}
                 </div>
+
+                {canAddExtension && isExpired && (
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p>
+                      Esta vigencia ya esta vencida. Puedes registrar una {extensionLabelLower} tardia; el formulario iniciara la nueva vigencia desde el dia siguiente a la fecha fin actual.
+                    </p>
+                  </div>
+                )}
 
                 {contract.extensions.length === 0 ? (
                   <div className="text-center py-8 bg-background rounded-lg">
