@@ -51,9 +51,18 @@ function normalizeCourseKey(value: string | null | undefined) {
   return String(value || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+function getCourseMatchKeys(course: { id?: string | null; name?: string | null; code?: string | null }) {
+  return [
+    course.id ? `id:${course.id}` : '',
+    course.name ? `name:${normalizeCourseKey(course.name)}` : '',
+    course.code ? `code:${normalizeCourseKey(course.code)}` : '',
+  ].filter(Boolean);
 }
 
 function useActiveEmployeesByCenter(
@@ -178,16 +187,29 @@ function useAllCompletions(
   return useQuery({
     queryKey: ['compliance-completions', companyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('training_completions')
-        .select(`
-          id, course_id, operator_cedula, employee_id, completed_at, operator_name,
-          course:training_courses(id, name, code),
-          training_access_tokens(operation_center_id)
-        `)
-        .eq('company_id', companyId!);
-      if (error) throw error;
-      const mapped = (data || []).map((c: any) => ({
+      const pageSize = 1000;
+      const rows: any[] = [];
+
+      for (let from = 0; ; from += pageSize) {
+        const to = from + pageSize - 1;
+        const { data, error } = await supabase
+          .from('training_completions')
+          .select(`
+            id, course_id, operator_cedula, employee_id, completed_at, operator_name,
+            course:training_courses(id, name, code),
+            training_access_tokens(operation_center_id)
+          `)
+          .eq('company_id', companyId!)
+          .order('completed_at', { ascending: false })
+          .range(from, to);
+
+        if (error) throw error;
+
+        rows.push(...(data || []));
+        if (!data || data.length < pageSize) break;
+      }
+
+      const mapped = rows.map((c: any) => ({
         id: c.id,
         course_id: c.course_id,
         course_name: c.course?.name || null,
@@ -196,7 +218,9 @@ function useAllCompletions(
         employee_id: c.employee_id,
         completed_at: c.completed_at,
         operator_name: c.operator_name,
-        token_center_id: c.training_access_tokens?.operation_center_id || null,
+        token_center_id: Array.isArray(c.training_access_tokens)
+          ? c.training_access_tokens[0]?.operation_center_id || null
+          : c.training_access_tokens?.operation_center_id || null,
       })) as ComplianceCompletion[];
 
       if (!shouldLimitByAssignedCenters) return mapped;
@@ -281,13 +305,13 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       const coursesData: CourseComplianceData[] = [];
 
       for (const course of applicableCourses) {
-        const courseNameKey = normalizeCourseKey(course.name);
-        const courseCodeKey = normalizeCourseKey(course.code);
+        const targetCourseKeys = new Set(getCourseMatchKeys(course));
         const courseCompletions = completions.data.filter((completion) => {
-          if (completion.course_id === course.id) return true;
-          if (courseNameKey && normalizeCourseKey(completion.course_name) === courseNameKey) return true;
-          if (courseCodeKey && normalizeCourseKey(completion.course_code) === courseCodeKey) return true;
-          return false;
+          return getCourseMatchKeys({
+            id: completion.course_id,
+            name: completion.course_name,
+            code: completion.course_code,
+          }).some((key) => targetCourseKeys.has(key));
         });
 
         const completed: { employee: ComplianceEmployee; completed_at: string }[] = [];
