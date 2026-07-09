@@ -342,6 +342,30 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
     }
   };
 
+  const handleStoryboardVideoRendered = async (blob: Blob, mimeType: string, extension: string, duration: number) => {
+    if (!course.id) return;
+    const fileName = `${course.id}/storyboard_video_${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from('training-media')
+      .upload(fileName, blob, { contentType: mimeType, upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+    await createMedia.mutateAsync({
+      courseId: course.id,
+      type: 'video',
+      title: 'Video Storyboard Narrado',
+      fileUrl: urlData.publicUrl,
+      fileSize: blob.size,
+      duration,
+      metadata: {
+        is_storyboard_render: true,
+        format: extension,
+      },
+    });
+    await queryClient.invalidateQueries({ queryKey: ['training_media', course.id] });
+  };
+
   const handleDeleteMedia = async (id: string) => {
     await deleteMedia.mutateAsync({ id, courseId: course.id });
   };
@@ -859,6 +883,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                           style={videoStyle}
                           contentText={content?.contenido}
                           puntosClave={content?.puntosClave}
+                          onVideoRendered={handleStoryboardVideoRendered}
                           onSceneRegenerated={async (idx, newUrl, newScene) => {
                             setVideoImages(prev => {
                               const copy = [...prev];
@@ -972,6 +997,7 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         scenes={scenes}
                         imageUrls={imageUrls}
                         audioUrl={audioUrl}
+                        onVideoRendered={handleStoryboardVideoRendered}
                       />
                     </div>
                   );

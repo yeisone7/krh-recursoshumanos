@@ -405,6 +405,29 @@ export default function CrearCapacitacion() {
     }
   };
 
+  const handleStoryboardVideoRendered = async (blob: Blob, mimeType: string, extension: string, duration: number) => {
+    if (!activeCourseId) return;
+    const fileName = `${activeCourseId}/storyboard_video_${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from('training-media')
+      .upload(fileName, blob, { contentType: mimeType, upsert: true });
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
+    await createMedia.mutateAsync({
+      courseId: activeCourseId,
+      type: 'video',
+      title: 'Video Storyboard Narrado',
+      fileUrl: urlData.publicUrl,
+      fileSize: blob.size,
+      duration,
+      metadata: {
+        is_storyboard_render: true,
+        format: extension,
+      },
+    });
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
@@ -1002,6 +1025,7 @@ export default function CrearCapacitacion() {
                             style={videoStyle}
                             contentText={content?.contenido}
                             puntosClave={content?.puntosClave}
+                            onVideoRendered={handleStoryboardVideoRendered}
                             onSceneRegenerated={(idx, newUrl, newScene) => {
                               setVideoImages(prev => {
                                 const copy = [...prev];
