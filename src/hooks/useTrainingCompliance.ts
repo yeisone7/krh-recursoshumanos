@@ -194,6 +194,7 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
+  const hasPeriodFilter = !!period;
 
   const employees = useActiveEmployeesByCenter(
     currentCompanyId,
@@ -218,13 +219,13 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
     shouldLimitByAssignedCenters,
     assignedCenterKey
   );
-  const periodAssignments = useTrainingCoursePeriods(period);
+  const periodAssignments = useTrainingCoursePeriods(period, { enabled: hasPeriodFilter });
 
-  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || periodAssignments.isLoading;
+  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || (hasPeriodFilter && periodAssignments.isLoading);
 
   const complianceData: CenterComplianceData[] = [];
 
-  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && periodAssignments.data) {
+  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
     const periodCourseIds = period
       ? new Set(periodAssignments.data.map((assignment) => assignment.course_id))
       : null;
