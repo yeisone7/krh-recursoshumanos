@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTrainingCoursePeriods } from '@/hooks/useTraining';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 
 export interface ComplianceEmployee {
   id: string;
@@ -188,7 +190,7 @@ function useAllCompletions(
   });
 }
 
-export function useTrainingCompliance() {
+export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
@@ -216,12 +218,20 @@ export function useTrainingCompliance() {
     shouldLimitByAssignedCenters,
     assignedCenterKey
   );
+  const periodAssignments = useTrainingCoursePeriods(period);
 
-  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading;
+  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || periodAssignments.isLoading;
 
   const complianceData: CenterComplianceData[] = [];
 
-  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data) {
+  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && periodAssignments.data) {
+    const periodCourseIds = period
+      ? new Set(periodAssignments.data.map((assignment) => assignment.course_id))
+      : null;
+    const visibleCourses = periodCourseIds
+      ? courses.data.filter((course) => periodCourseIds.has(course.id))
+      : courses.data;
+
     // Build a map: center_id -> Set of course_ids that have tokens for that center
     const centerCourseMap = new Map<string, Set<string>>();
     for (const assoc of tokenAssociations.data) {
@@ -242,7 +252,7 @@ export function useTrainingCompliance() {
       const centerCourseIds = centerCourseMap.get(center.id);
       if (!centerCourseIds || centerCourseIds.size === 0) continue;
 
-      const applicableCourses = courses.data.filter((c) => centerCourseIds.has(c.id));
+      const applicableCourses = visibleCourses.filter((c) => centerCourseIds.has(c.id));
       if (applicableCourses.length === 0) continue;
 
       const coursesData: CourseComplianceData[] = [];
@@ -292,7 +302,9 @@ export function useTrainingCompliance() {
   return {
     complianceData,
     centers: centers.data || [],
-    courses: courses.data || [],
+    courses: period
+      ? (courses.data || []).filter((course) => (periodAssignments.data || []).some((assignment) => assignment.course_id === course.id))
+      : courses.data || [],
     isLoading,
   };
 }

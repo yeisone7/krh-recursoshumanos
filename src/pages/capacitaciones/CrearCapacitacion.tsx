@@ -14,9 +14,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer, TrainingPeriodSelector } from '@/components/training';
 import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
-import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
+import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
 import type { WatermarkConfig } from '@/lib/watermark';
@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { toast } from 'sonner';
 import type { TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 
 const STEPS = [
   { label: 'Parámetros' },
@@ -130,6 +131,7 @@ export default function CrearCapacitacion() {
   const [vigencia, setVigencia] = useState<number | undefined>();
   const [obligatorio, setObligatorio] = useState(false);
   const [certificacion, setCertificacion] = useState(false);
+  const [periods, setPeriods] = useState<TrainingPeriodInput[]>([]);
   const [additionalContext, setAdditionalContext] = useState('');
 
   // Content state
@@ -141,6 +143,8 @@ export default function CrearCapacitacion() {
   const { data: media = [] } = useTrainingMedia(editId || undefined);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
+  const savePeriods = useSaveTrainingCoursePeriods();
+  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(editId);
 
   // Load existing course for editing
   useEffect(() => {
@@ -192,6 +196,14 @@ export default function CrearCapacitacion() {
       }
     }
   }, [existingCourse]);
+
+  useEffect(() => {
+    if (!editId) {
+      setPeriods([]);
+      return;
+    }
+    setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
+  }, [editId, existingPeriods]);
 
   // Load existing avatar video from media
   useEffect(() => {
@@ -277,9 +289,11 @@ export default function CrearCapacitacion() {
 
       if (editId) {
         await updateCourse.mutateAsync({ id: editId, ...courseData });
+        await savePeriods.mutateAsync({ courseId: editId, periods });
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        await savePeriods.mutateAsync({ courseId: result.id, periods });
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
         navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true });
       }
@@ -490,6 +504,7 @@ export default function CrearCapacitacion() {
                   </SelectContent></Select>
                 </div>
               </div>
+              <TrainingPeriodSelector value={periods} onChange={setPeriods} />
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
                 <Textarea className="resize-none rounded-xl bg-background" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />

@@ -7824,6 +7824,58 @@ export type Database = {
           },
         ]
       }
+      training_course_periods: {
+        Row: {
+          company_id: string
+          course_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          year: number
+        }
+        Insert: {
+          company_id: string
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          year: number
+        }
+        Update: {
+          company_id?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_course_periods_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_course_periods_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_course_periods_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_plan_items: {
         Row: {
           company_id: string

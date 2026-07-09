@@ -16,13 +16,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { CourseFormDialog, CertificateAlertsCard, TrainingPreviewDialog } from '@/components/training';
-import { useTrainingCourses, useTrainingStats, useDeleteCourse, useDuplicateCourse } from '@/hooks/useTraining';
+import { CourseFormDialog, CertificateAlertsCard, TrainingPreviewDialog, TrainingPeriodFilter } from '@/components/training';
+import { useTrainingCoursesByPeriod, useTrainingStats, useDeleteCourse, useDuplicateCourse } from '@/hooks/useTraining';
 import { useToast } from '@/hooks/use-toast';
 import { toast as sonnerToast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import type { TrainingCourse, TrainingModality, TrainingCourseContent } from '@/types/training';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 import { cn } from '@/lib/utils';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
 
@@ -81,8 +82,9 @@ export default function Capacitaciones() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [editingCourse, setEditingCourse] = useState<TrainingCourse | null>(null);
+  const [periodFilter, setPeriodFilter] = useState<TrainingPeriodInput | null>(null);
 
-  const { data: courses, isLoading: loadingCourses, refetch } = useTrainingCourses();
+  const { data: courses, isLoading: loadingCourses, refetch } = useTrainingCoursesByPeriod(periodFilter);
   const deleteMutation = useDeleteCourse();
   const duplicateMutation = useDuplicateCourse();
 
@@ -222,6 +224,7 @@ export default function Capacitaciones() {
               Cumplimiento
             </Button>
           </div>
+          <TrainingPeriodFilter value={periodFilter} onChange={setPeriodFilter} className="w-full sm:w-[360px]" />
         </div>
 
         <div className="flex items-center gap-2">

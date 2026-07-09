@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion } from 'framer-motion';
@@ -15,7 +15,9 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { TrainingPeriodFilter } from '@/components/training';
 import { useTrainingCompliance, type CenterComplianceData, type CourseComplianceData } from '@/hooks/useTrainingCompliance';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 import * as XLSX from 'xlsx';
 
 type ViewMode = 'cards' | 'table';
@@ -463,12 +465,19 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
 }
 
 export default function Cumplimiento() {
-  const { complianceData, centers, courses, isLoading } = useTrainingCompliance();
+  const [periodFilter, setPeriodFilter] = useState<TrainingPeriodInput | null>(null);
+  const { complianceData, centers, courses, isLoading } = useTrainingCompliance(periodFilter);
   const [centerFilter, setCenterFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+
+  useEffect(() => {
+    if (courseFilter !== 'all' && !courses.some((course) => course.id === courseFilter)) {
+      setCourseFilter('all');
+    }
+  }, [courseFilter, courses]);
 
   const filteredData = useMemo(() => {
     let data = complianceData;
@@ -546,6 +555,7 @@ export default function Cumplimiento() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar centro, empleado o documento..." className="min-h-11 pl-10 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
+              <TrainingPeriodFilter value={periodFilter} onChange={setPeriodFilter} />
               <Select value={centerFilter} onValueChange={setCenterFilter}>
                 <SelectTrigger className="min-h-11 w-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background">
                   <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -607,6 +617,7 @@ export default function Cumplimiento() {
                 ))}
               </SelectContent>
             </Select>
+            <TrainingPeriodFilter value={periodFilter} onChange={setPeriodFilter} className="w-full sm:col-span-2 lg:col-span-1 lg:w-[360px]" />
             <div className="w-full sm:col-span-2 lg:col-span-1 lg:w-[220px]">
               <ComplianceViewToggle viewMode={viewMode} onChange={setViewMode} />
             </div>

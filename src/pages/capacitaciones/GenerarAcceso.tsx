@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Link2, QrCode, Copy, Trash2, Plus, Shield, Users, Clock, Building2, ClipboardCheck, ExternalLink, MapPin } from 'lucide-react';
+import { Link2, QrCode, Copy, Trash2, Shield, Users, Clock, Building2, ClipboardCheck, ExternalLink, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +10,17 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { QRCodeDialog } from '@/components/training';
-import { useTrainingCourses, useTrainingAccessTokens, useCreateAccessToken, useToggleAccessToken, useDeleteAccessToken } from '@/hooks/useTraining';
+import { useTrainingCourses, useTrainingAccessTokens, useCreateAccessToken, useToggleAccessToken } from '@/hooks/useTraining';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import type { TrainingAccessToken } from '@/types/training';
+import type { AccessType, TrainingAccessToken, UsageType } from '@/types/training';
+
+const DEFAULT_ACCESS_TYPE: AccessType = 'link_cedula';
+const DEFAULT_USAGE_TYPE: UsageType = 'multiple';
+const DEFAULT_MAX_USES: number | undefined = undefined;
+const DEFAULT_EXPIRES_IN_DAYS = 30;
+const DEFAULT_REQUIRES_EVALUATION = true;
 
 export default function GenerarAcceso() {
   const [searchParams] = useSearchParams();
@@ -23,23 +30,38 @@ export default function GenerarAcceso() {
   const { data: centers = [] } = useOperationCenters();
   const createToken = useCreateAccessToken();
   const toggleToken = useToggleAccessToken();
-  const deleteToken = useDeleteAccessToken();
+  const { isAdmin } = useAuth();
+  const canEditLinkSettings = isAdmin;
 
   const [courseId, setCourseId] = useState(preselectedCourseId);
-  const [accessType, setAccessType] = useState('solo_link');
-  const [usageType, setUsageType] = useState('multiple');
-  const [maxUses, setMaxUses] = useState<number | undefined>();
-  const [expiresInDays, setExpiresInDays] = useState(7);
-  const [requiresEvaluation, setRequiresEvaluation] = useState(false);
+  const [accessType, setAccessType] = useState<AccessType>(DEFAULT_ACCESS_TYPE);
+  const [usageType, setUsageType] = useState<UsageType>(DEFAULT_USAGE_TYPE);
+  const [maxUses, setMaxUses] = useState<number | undefined>(DEFAULT_MAX_USES);
+  const [expiresInDays, setExpiresInDays] = useState(DEFAULT_EXPIRES_IN_DAYS);
+  const [requiresEvaluation, setRequiresEvaluation] = useState(DEFAULT_REQUIRES_EVALUATION);
   const [operationCenterId, setOperationCenterId] = useState<string>('');
   const [qrDialog, setQrDialog] = useState<{ url: string; title: string } | null>(null);
 
   const publishedCourses = courses.filter(c => c.status === 'publicado');
 
   const handleCreate = async () => {
+    const effectiveAccessType = canEditLinkSettings ? accessType : DEFAULT_ACCESS_TYPE;
+    const effectiveUsageType = canEditLinkSettings ? usageType : DEFAULT_USAGE_TYPE;
+    const effectiveMaxUses = canEditLinkSettings ? maxUses : DEFAULT_MAX_USES;
+    const effectiveExpiresInDays = canEditLinkSettings ? expiresInDays : DEFAULT_EXPIRES_IN_DAYS;
+    const effectiveRequiresEvaluation = canEditLinkSettings ? requiresEvaluation : DEFAULT_REQUIRES_EVALUATION;
+
     if (!courseId) { toast.error('Seleccione una capacitación'); return; }
     try {
-      await createToken.mutateAsync({ courseId, accessType, usageType, maxUses, expiresInDays, requiresEvaluation, operationCenterId: operationCenterId && operationCenterId !== 'sin_centro' ? operationCenterId : undefined });
+      await createToken.mutateAsync({
+        courseId,
+        accessType: effectiveAccessType,
+        usageType: effectiveUsageType,
+        maxUses: effectiveUsageType === 'multiple' ? effectiveMaxUses : undefined,
+        expiresInDays: effectiveExpiresInDays,
+        requiresEvaluation: effectiveRequiresEvaluation,
+        operationCenterId: operationCenterId && operationCenterId !== 'sin_centro' ? operationCenterId : undefined,
+      });
       toast.success('Enlace creado');
     } catch { toast.error('Error al crear enlace'); }
   };
@@ -50,6 +72,15 @@ export default function GenerarAcceso() {
     navigator.clipboard.writeText(getAccessUrl(token));
     toast.success('Enlace copiado');
   };
+
+  const optionButtonClass = (selected: boolean) =>
+    `rounded-2xl border-2 p-4 text-left transition-all disabled:cursor-not-allowed disabled:opacity-100 ${
+      selected
+        ? 'border-primary bg-background shadow-inner'
+        : canEditLinkSettings
+          ? 'border-border/50 bg-background hover:border-primary/30'
+          : 'border-border/50 bg-muted/30 text-muted-foreground'
+    }`;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -115,7 +146,8 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setAccessType('solo_link')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'solo_link' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                disabled={!canEditLinkSettings}
+                className={optionButtonClass(accessType === 'solo_link')}
               >
                 <span className="font-bold text-sm">Solo Link</span>
                 <p className="text-xs text-muted-foreground mt-1">Acceso directo sin identificación</p>
@@ -123,7 +155,8 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setAccessType('link_cedula')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${accessType === 'link_cedula' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                disabled={!canEditLinkSettings}
+                className={optionButtonClass(accessType === 'link_cedula')}
               >
                 <span className="font-bold text-sm">Link + Cédula</span>
                 <p className="text-xs text-muted-foreground mt-1">Requiere nombre y cédula</p>
@@ -140,7 +173,8 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setUsageType('unico')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'unico' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                disabled={!canEditLinkSettings}
+                className={optionButtonClass(usageType === 'unico')}
               >
                 <span className="font-bold text-sm">Uso Único</span>
                 <p className="text-xs text-muted-foreground mt-1">Solo una persona puede usar el enlace</p>
@@ -148,7 +182,8 @@ export default function GenerarAcceso() {
               <button
                 type="button"
                 onClick={() => setUsageType('multiple')}
-                className={`rounded-2xl border-2 p-4 text-left transition-all ${usageType === 'multiple' ? 'border-primary shadow-inner' : 'border-border/50 hover:border-primary/30 bg-background'}`}
+                disabled={!canEditLinkSettings}
+                className={optionButtonClass(usageType === 'multiple')}
               >
                 <span className="font-bold text-sm">Múltiple</span>
                 <p className="text-xs text-muted-foreground mt-1">Varias personas pueden usar el enlace</p>
@@ -163,9 +198,11 @@ export default function GenerarAcceso() {
               <Input
                 type="number"
                 placeholder="Sin límite"
-                className="h-12 rounded-xl bg-background"
-                value={maxUses || ''}
+                className={`h-12 rounded-xl disabled:cursor-not-allowed disabled:opacity-100 ${canEditLinkSettings ? 'bg-background' : 'bg-muted/30'}`}
+                value={maxUses ?? ''}
                 onChange={e => setMaxUses(e.target.value ? Number(e.target.value) : undefined)}
+                readOnly={!canEditLinkSettings}
+                disabled={!canEditLinkSettings}
               />
               <p className="text-xs text-muted-foreground font-medium">Deja vacío para usos ilimitados</p>
             </div>
@@ -176,8 +213,8 @@ export default function GenerarAcceso() {
             <Label className="text-sm font-semibold flex items-center gap-1.5">
               <Clock className="h-4 w-4 text-muted-foreground" /> Expiración
             </Label>
-            <Select value={String(expiresInDays)} onValueChange={v => setExpiresInDays(Number(v))}>
-              <SelectTrigger className="h-12 rounded-xl bg-background"><SelectValue /></SelectTrigger>
+            <Select value={String(expiresInDays)} onValueChange={v => setExpiresInDays(Number(v))} disabled={!canEditLinkSettings}>
+              <SelectTrigger className={`h-12 rounded-xl disabled:cursor-not-allowed disabled:opacity-100 ${canEditLinkSettings ? 'bg-background' : 'bg-muted/30'}`}><SelectValue /></SelectTrigger>
               <SelectContent className="rounded-xl">
                 {[1, 3, 7, 14, 30, 90].map(d => <SelectItem key={d} value={String(d)}>{d} días</SelectItem>)}
               </SelectContent>
@@ -196,7 +233,7 @@ export default function GenerarAcceso() {
                   {requiresEvaluation ? 'El operador debe aprobar la evaluación' : 'El operador puede firmar directamente después de leer'}
                 </p>
               </div>
-              <Switch checked={requiresEvaluation} onCheckedChange={setRequiresEvaluation} />
+              <Switch checked={requiresEvaluation} onCheckedChange={setRequiresEvaluation} disabled={!canEditLinkSettings} />
             </div>
           </div>
 

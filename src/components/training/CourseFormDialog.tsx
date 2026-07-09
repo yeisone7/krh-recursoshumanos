@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,9 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateCourse, useUpdateCourse } from '@/hooks/useTraining';
+import { useCreateCourse, useUpdateCourse, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
 import { useToast } from '@/hooks/use-toast';
 import type { TrainingCourse, TrainingModality } from '@/types/training';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
+import { TrainingPeriodSelector } from './TrainingPeriodSelector';
 
 const formSchema = z.object({
   code: z.string().optional(),
@@ -78,7 +80,10 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
   const { toast } = useToast();
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse();
+  const savePeriods = useSaveTrainingCoursePeriods();
+  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(course?.id);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [periods, setPeriods] = useState<TrainingPeriodInput[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -99,14 +104,38 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
 
   const watchRequiresCert = form.watch('requiresCertification');
 
+  useEffect(() => {
+    if (!open) return;
+    form.reset({
+      code: course?.code || '',
+      name: course?.name || '',
+      category: course?.category || '',
+      description: course?.description || '',
+      modality: (course?.modality as TrainingModality) || 'presencial',
+      durationHours: course?.duration_hours || 1,
+      isMandatory: course?.is_mandatory || false,
+      requiresCertification: course?.requires_certification || false,
+      validityMonths: course?.validity_months || undefined,
+      provider: course?.provider || '',
+      prerequisites: course?.prerequisites || '',
+    });
+    if (!course) setPeriods([]);
+  }, [course, form, open]);
+
+  useEffect(() => {
+    if (!course) return;
+    setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
+  }, [course, existingPeriods]);
+
   async function onSubmit(data: FormData) {
     setIsSubmitting(true);
     try {
       if (course) {
         await updateCourse.mutateAsync({ id: course.id, ...data });
+        await savePeriods.mutateAsync({ courseId: course.id, periods });
         toast({ title: 'Curso actualizado correctamente' });
       } else {
-        await createCourse.mutateAsync({
+        const result = await createCourse.mutateAsync({
           name: data.name,
           code: data.code,
           category: data.category,
@@ -119,6 +148,7 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
           provider: data.provider,
           prerequisites: data.prerequisites,
         });
+        await savePeriods.mutateAsync({ courseId: result.id, periods });
         toast({ title: 'Curso creado correctamente' });
       }
       onOpenChange(false);
@@ -357,6 +387,8 @@ export function CourseFormDialog({ open, onOpenChange, course }: CourseFormDialo
                 </FormItem>
               )}
             />
+
+            <TrainingPeriodSelector value={periods} onChange={setPeriods} />
 
               </div>
 
