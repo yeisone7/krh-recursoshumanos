@@ -191,7 +191,7 @@ export function IncapacityAlertsPanel({
       </Card>
 
       <Dialog open={showAllDialogOpen} onOpenChange={setShowAllDialogOpen}>
-        <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden rounded-[2rem] border-border/50 p-0 shadow-2xl">
+        <DialogContent className="flex h-[90dvh] max-h-[90dvh] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden rounded-[2rem] border-border/50 p-0 shadow-2xl">
           <DialogHeader className="shrink-0 border-b border-border/50 px-6 py-5 text-left">
             <DialogTitle className="flex items-center gap-2 text-xl font-black">
               <Stethoscope className="h-5 w-5 text-primary" />
@@ -201,11 +201,11 @@ export function IncapacityAlertsPanel({
               {totalAlerts} alerta{totalAlerts !== 1 ? 's' : ''} pendiente{totalAlerts !== 1 ? 's' : ''} por revisar.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="space-y-3 p-4">
               {(alerts || []).map((alert) => renderAlertCard(alert, true))}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </>
