@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight, PenLine, X, Loader2, Target, Scale, Tag, LayoutGrid, BarChart3, Users, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, CircleDot, AlignLeft } from 'lucide-react';
@@ -29,6 +29,9 @@ export default function CrearManual() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
+  const [createdCourseId, setCreatedCourseId] = useState<string | null>(null);
+  const activeCourseId = editId || createdCourseId;
+  const saveInProgressRef = useRef(false);
   const [step, setStep] = useState(0);
 
   const [title, setTitle] = useState('');
@@ -56,14 +59,15 @@ export default function CrearManual() {
 
   const createCourse = useCreateFullCourse();
   const updateCourse = useUpdateFullCourse();
-  const { data: existingCourse } = useTrainingCourse(editId || undefined);
-  const { data: media = [] } = useTrainingMedia(editId || undefined);
+  const { data: existingCourse } = useTrainingCourse(activeCourseId || undefined);
+  const { data: media = [] } = useTrainingMedia(activeCourseId || undefined);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
   const savePeriods = useSaveTrainingCoursePeriods();
-  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(editId);
+  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(activeCourseId);
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
 
-  const isSaving = createCourse.isPending || updateCourse.isPending;
+  const isSaving = isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
 
   useEffect(() => {
     if (existingCourse) {
@@ -95,14 +99,16 @@ export default function CrearManual() {
   }, [existingCourse]);
 
   useEffect(() => {
-    if (!editId) {
-      setPeriods([]);
+    if (!activeCourseId) {
       return;
     }
     setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
-  }, [editId, existingPeriods]);
+  }, [activeCourseId, existingPeriods]);
 
   const handleSave = async (status: string) => {
+    if (saveInProgressRef.current) return;
+    saveInProgressRef.current = true;
+    setIsSavingCourse(true);
     try {
       const courseData = {
         name: title, category: tipo === 'Otro' ? tipoOtro : tipo, modality: modalidad,
@@ -114,17 +120,22 @@ export default function CrearManual() {
         legalFramework: marcoLegal === 'Otro' ? marcoLegalOtro : marcoLegal,
         riskLevel: riesgo, content, status,
       };
-      if (editId) {
-        await updateCourse.mutateAsync({ id: editId, ...courseData });
-        await savePeriods.mutateAsync({ courseId: editId, periods });
+      if (activeCourseId) {
+        await updateCourse.mutateAsync({ id: activeCourseId, ...courseData });
+        await savePeriods.mutateAsync({ courseId: activeCourseId, periods });
         toast.success(status === 'publicado' ? 'Publicada' : 'Cambios guardados');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        setCreatedCourseId(result.id);
+        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
         toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
-        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true });
       }
     } catch { toast.error('Error al guardar'); }
+    finally {
+      saveInProgressRef.current = false;
+      setIsSavingCourse(false);
+    }
   };
 
   const handleSaveChanges = () => handleSave(existingCourse?.status || 'borrador');
@@ -139,9 +150,9 @@ export default function CrearManual() {
           </Button>
           <div>
             <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
-              {editId ? 'EDICIÓN MANUAL' : 'CREACIÓN MANUAL'}
+              {activeCourseId ? 'EDICIÓN MANUAL' : 'CREACIÓN MANUAL'}
             </Badge>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">{editId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">{activeCourseId ? 'Editar' : 'Crear'} Capacitación Manual</h1>
             <p className="text-muted-foreground font-medium mt-1">Crea contenido y evaluaciones manualmente{existingCourse?.version ? ` · Versión ${existingCourse.version}` : ''}</p>
           </div>
         </div>
@@ -241,7 +252,7 @@ export default function CrearManual() {
                 <Textarea className="resize-none rounded-xl bg-background" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />
               </div>
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 border-t border-border/50">
-                {editId && <Button variant="outline" className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                {activeCourseId && <Button variant="outline" className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs" onClick={handleSaveChanges} disabled={!title || isSaving}>{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
                 <Button onClick={() => setStep(1)} disabled={!title} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
                   Siguiente <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -295,34 +306,34 @@ export default function CrearManual() {
                   <Button variant="outline" size="sm" className="rounded-xl border-dashed" onClick={() => setContent({ ...content, puntosClave: [...(content.puntosClave || []), ''] })}>+ Agregar Punto Clave</Button>
                 </div>
               </div>
-              {editId && (
+              {activeCourseId && (
                 <div className="pt-6 border-t border-border/50">
                   <Label className="text-base font-semibold">Multimedia</Label>
                   <p className="text-sm text-muted-foreground font-medium mb-4">Sube imágenes o videos para complementar el contenido</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
                       <ImageUploader 
-                        courseId={editId} 
-                        onUploaded={async (url, fn, fs) => { 
-                          await createMedia.mutateAsync({ courseId: editId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs }); 
-                        }} 
+                        courseId={activeCourseId}
+                        onUploaded={async (url, fn, fs) => {
+                          await createMedia.mutateAsync({ courseId: activeCourseId, type: 'imagen', title: fn, fileUrl: url, fileSize: fs });
+                        }}
                       />
                     </div>
                     <div className="p-4 rounded-xl border border-dashed border-border/50 bg-background">
                       <VideoUploader 
-                        courseId={editId} 
-                        onUploaded={async (url, fn, fs) => { 
-                          await createMedia.mutateAsync({ courseId: editId, type: 'video', title: fn, fileUrl: url, fileSize: fs }); 
-                        }} 
+                        courseId={activeCourseId}
+                        onUploaded={async (url, fn, fs) => {
+                          await createMedia.mutateAsync({ courseId: activeCourseId, type: 'video', title: fn, fileUrl: url, fileSize: fs });
+                        }}
                       />
                     </div>
                   </div>
                   <div className="mt-4">
                     <TrainingMediaGallery 
                       media={media as any} 
-                      onDelete={async (id) => { 
-                        await deleteMedia.mutateAsync({ id, courseId: editId }); 
-                      }} 
+                      onDelete={async (id) => {
+                        await deleteMedia.mutateAsync({ id, courseId: activeCourseId });
+                      }}
                     />
                   </div>
                 </div>
@@ -332,7 +343,7 @@ export default function CrearManual() {
                   <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
                 </Button>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  {editId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
+                  {activeCourseId && <Button variant="outline" onClick={handleSaveChanges} disabled={!title || isSaving} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">{isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Guardar cambios</Button>}
                   <Button onClick={() => setStep(2)} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
                     Siguiente <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -395,10 +406,10 @@ export default function CrearManual() {
                   <ArrowLeft className="h-4 w-4 mr-2" /> Anterior
                 </Button>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <Button variant="outline" onClick={() => handleSave('borrador')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
+                  <Button variant="outline" onClick={() => handleSave('borrador')} disabled={isSaving} className="h-12 px-6 rounded-2xl font-bold uppercase tracking-widest text-xs w-full sm:w-auto">
                     Guardar Borrador
                   </Button>
-                  <Button onClick={() => handleSave('publicado')} disabled={createCourse.isPending || updateCourse.isPending} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
+                  <Button onClick={() => handleSave('publicado')} disabled={isSaving} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-green-500/20 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto transition-all">
                     Publicar
                   </Button>
                 </div>
