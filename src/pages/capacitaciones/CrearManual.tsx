@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery } from '@/components/training';
-import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia } from '@/hooks/useTraining';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, TrainingPeriodSelector } from '@/components/training';
+import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
 import { toast } from 'sonner';
 import type { TrainingCourseContent } from '@/types/training';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 
 const STEPS = [{ label: 'Parámetros' }, { label: 'Contenido' }, { label: 'Evaluación' }];
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado'];
@@ -48,6 +49,7 @@ export default function CrearManual() {
   const [obligatorio, setObligatorio] = useState(false);
   const [certificacion, setCertificacion] = useState(false);
   const [vigencia, setVigencia] = useState<number | undefined>();
+  const [periods, setPeriods] = useState<TrainingPeriodInput[]>([]);
 
   const [descripcion, setDescripcion] = useState('');
   const [content, setContent] = useState<TrainingCourseContent>({ isManual: true, introduccion: '', objetivos: [''], contenido: '', puntosClave: [''], evaluacion: [] });
@@ -58,6 +60,8 @@ export default function CrearManual() {
   const { data: media = [] } = useTrainingMedia(editId || undefined);
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
+  const savePeriods = useSaveTrainingCoursePeriods();
+  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(editId);
 
   const isSaving = createCourse.isPending || updateCourse.isPending;
 
@@ -90,6 +94,14 @@ export default function CrearManual() {
     }
   }, [existingCourse]);
 
+  useEffect(() => {
+    if (!editId) {
+      setPeriods([]);
+      return;
+    }
+    setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
+  }, [editId, existingPeriods]);
+
   const handleSave = async (status: string) => {
     try {
       const courseData = {
@@ -104,9 +116,11 @@ export default function CrearManual() {
       };
       if (editId) {
         await updateCourse.mutateAsync({ id: editId, ...courseData });
+        await savePeriods.mutateAsync({ courseId: editId, periods });
         toast.success(status === 'publicado' ? 'Publicada' : 'Cambios guardados');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        await savePeriods.mutateAsync({ courseId: result.id, periods });
         toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
         navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true });
       }
@@ -221,6 +235,7 @@ export default function CrearManual() {
                   </SelectContent></Select>
                 </div>
               </div>
+              <TrainingPeriodSelector value={periods} onChange={setPeriods} />
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
                 <Textarea className="resize-none rounded-xl bg-background" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />

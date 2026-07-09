@@ -12,6 +12,7 @@ import type {
   TrainingAccessToken,
   TrainingCompletion,
   TrainingMedia,
+  TrainingCoursePeriod,
   CreateCourseData,
   CreateSessionData,
   EnrollEmployeeData,
@@ -20,6 +21,7 @@ import type {
   TrainingCourseContent,
 } from '@/types/training';
 import type { Database } from '@/integrations/supabase/types';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 
 type CourseInsert = Database['public']['Tables']['training_courses']['Insert'];
 type SessionInsert = Database['public']['Tables']['training_sessions']['Insert'];
@@ -66,6 +68,114 @@ export function useTrainingCourses() {
     },
     enabled: !!currentCompanyId,
   });
+}
+
+export function useTrainingCoursePeriods(period?: TrainingPeriodInput | null) {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['training_course_periods', currentCompanyId, period?.year ?? 'all', period?.month ?? 'all'],
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+
+      let query = supabase
+        .from('training_course_periods')
+        .select('*')
+        .eq('company_id', currentCompanyId)
+        .order('year', { ascending: false })
+        .order('month', { ascending: false });
+
+      if (period) {
+        query = query.eq('year', period.year).eq('month', period.month);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as TrainingCoursePeriod[];
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+export function useTrainingCoursePeriodAssignments(courseId?: string | null) {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['training_course_periods_by_course', currentCompanyId, courseId],
+    queryFn: async () => {
+      if (!currentCompanyId || !courseId) return [];
+
+      const { data, error } = await supabase
+        .from('training_course_periods')
+        .select('*')
+        .eq('company_id', currentCompanyId)
+        .eq('course_id', courseId)
+        .order('year', { ascending: true })
+        .order('month', { ascending: true });
+
+      if (error) throw error;
+      return data as TrainingCoursePeriod[];
+    },
+    enabled: !!currentCompanyId && !!courseId,
+  });
+}
+
+export function useSaveTrainingCoursePeriods() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId, user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ courseId, periods }: { courseId: string; periods: TrainingPeriodInput[] }) => {
+      if (!currentCompanyId || !user) throw new Error('No company assigned');
+
+      const { error: deleteError } = await supabase
+        .from('training_course_periods')
+        .delete()
+        .eq('company_id', currentCompanyId)
+        .eq('course_id', courseId);
+
+      if (deleteError) throw deleteError;
+
+      if (periods.length === 0) return;
+
+      const uniquePeriods = Array.from(
+        new Map(periods.map((period) => [`${period.year}-${period.month}`, period])).values()
+      );
+
+      const { error: insertError } = await supabase
+        .from('training_course_periods')
+        .insert(uniquePeriods.map((period) => ({
+          company_id: currentCompanyId,
+          course_id: courseId,
+          year: period.year,
+          month: period.month,
+          created_by: user.id,
+        })));
+
+      if (insertError) throw insertError;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['training_course_periods'] });
+      queryClient.invalidateQueries({ queryKey: ['training_course_periods_by_course', currentCompanyId, variables.courseId] });
+      queryClient.invalidateQueries({ queryKey: ['training_courses'] });
+      queryClient.invalidateQueries({ queryKey: ['training_compliance'] });
+    },
+  });
+}
+
+export function useTrainingCoursesByPeriod(period?: TrainingPeriodInput | null) {
+  const courses = useTrainingCourses();
+  const periods = useTrainingCoursePeriods(period);
+
+  return {
+    ...courses,
+    isLoading: courses.isLoading || periods.isLoading,
+    data: !period
+      ? courses.data
+      : (courses.data || []).filter((course) =>
+          (periods.data || []).some((assignment) => assignment.course_id === course.id)
+        ),
+  };
 }
 
 export function useCreateCourse() {

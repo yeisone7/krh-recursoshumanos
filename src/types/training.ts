@@ -56,6 +56,16 @@ export interface TrainingCourse {
   media_count?: number;
 }
 
+export interface TrainingCoursePeriod {
+  id: string;
+  company_id: string;
+  course_id: string;
+  year: number;
+  month: number;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface TrainingSession {
   id: string;
   course_id: string;

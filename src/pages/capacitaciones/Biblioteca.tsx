@@ -17,14 +17,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { TrainingPreviewDialog } from '@/components/training';
-import { useTrainingCourses, useDeleteCourse, useDuplicateCourse, usePublishCourse, useShareCourse } from '@/hooks/useTraining';
+import { TrainingPeriodFilter, TrainingPreviewDialog } from '@/components/training';
+import { useTrainingCoursesByPeriod, useDeleteCourse, useDuplicateCourse, usePublishCourse, useShareCourse } from '@/hooks/useTraining';
 import { useCompanies } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { TrainingCourse, TrainingCourseContent } from '@/types/training';
+import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -60,7 +61,8 @@ const MODALITY_LABELS: Record<string, string> = {
 
 export default function Biblioteca() {
   const navigate = useNavigate();
-  const { data: courses = [] } = useTrainingCourses();
+  const [periodFilter, setPeriodFilter] = useState<TrainingPeriodInput | null>(null);
+  const { data: courses = [] } = useTrainingCoursesByPeriod(periodFilter);
   const deleteCourse = useDeleteCourse();
   const duplicateCourse = useDuplicateCourse();
   const publishCourse = usePublishCourse();
@@ -95,7 +97,7 @@ export default function Biblioteca() {
     try { await deleteCourse.mutateAsync(id); toast.success('Eliminado'); } catch { toast.error('Error'); }
   };
 
-  const hasActiveFilters = filterType !== 'all' || filterStatus !== 'all';
+  const hasActiveFilters = filterType !== 'all' || filterStatus !== 'all' || periodFilter !== null;
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-12 px-4 sm:px-10">
@@ -122,6 +124,8 @@ export default function Biblioteca() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
+
+        <TrainingPeriodFilter value={periodFilter} onChange={setPeriodFilter} className="w-full sm:w-[360px]" />
 
         <Popover>
           <PopoverTrigger asChild>
@@ -157,7 +161,7 @@ export default function Biblioteca() {
               </Select>
             </div>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" className="w-full rounded-xl text-xs font-bold" onClick={() => { setFilterType('all'); setFilterStatus('all'); }}>
+              <Button variant="ghost" size="sm" className="w-full rounded-xl text-xs font-bold" onClick={() => { setFilterType('all'); setFilterStatus('all'); setPeriodFilter(null); }}>
                 Limpiar filtros
               </Button>
             )}
