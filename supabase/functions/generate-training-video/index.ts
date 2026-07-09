@@ -29,6 +29,30 @@ interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  gemini_image_model?: string;
+  openai_model?: string;
+  openai_image_model?: string;
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
 }
 
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
@@ -252,9 +276,18 @@ async function generateScriptGateway(apiKey: string, prompt: string): Promise<st
 
 // --- Image generation ---
 
-async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string | null> {
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+async function generateImageGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string | null> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("GEMINI_IMAGE_MODEL"),
+    "gemini-2.5-flash-image-preview",
+    "gemini-2.0-flash-preview-image-generation",
+    "gemini-3-flash-preview",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const response = await fetchWithRetry(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -263,19 +296,77 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string): Promis
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
       }),
     });
-    if (!response.ok) { console.warn("Gemini image failed:", response.status); return null; }
+
+    if (!response.ok) {
+      lastError = extractProviderError(`Gemini ${model}`, response.status, await response.text());
+      console.warn("Gemini image failed:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      return null;
+    }
+
     const data = await response.json();
     const parts = data.candidates?.[0]?.content?.parts || [];
     for (const part of parts) {
-      if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      const inlineData = part.inlineData || part.inline_data;
+      if (inlineData?.data) {
+        return `data:${inlineData.mimeType || inlineData.mime_type || "image/png"};base64,${inlineData.data}`;
+      }
+      const fileUri = part.fileData?.fileUri || part.file_data?.file_uri;
+      if (fileUri) {
+        return fileUri;
       }
     }
-    return null;
-  } catch (e) {
-    console.warn("Gemini image error:", e);
-    return null;
+    lastError = `Gemini ${model}: no devolvio ninguna imagen`;
   }
+
+  console.warn("Gemini image error:", lastError);
+  return null;
+}
+
+async function generateImageOpenAIDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string | null> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_IMAGE_MODEL"),
+    "gpt-image-2",
+    "gpt-image-1.5",
+    "gpt-image-1",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: "1024x1024",
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, await response.text());
+      console.warn("OpenAI image failed:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      return null;
+    }
+
+    const data = await response.json();
+    const imageData = data.data?.[0]?.url || data.data?.[0]?.b64_json;
+    if (data.data?.[0]?.b64_json && imageData && !imageData.startsWith("data:")) {
+      return `data:image/png;base64,${imageData}`;
+    }
+    if (imageData) return imageData;
+
+    lastError = `OpenAI ${model}: no devolvio ninguna imagen`;
+  }
+
+  console.warn("OpenAI image error:", lastError);
+  return null;
 }
 
 async function generateImageGateway(apiKey: string, prompt: string): Promise<string | null> {
@@ -299,6 +390,65 @@ async function generateImageGateway(apiKey: string, prompt: string): Promise<str
     console.warn("Gateway image error:", e);
     return null;
   }
+}
+
+async function storeGeneratedImage(
+  supabase: ReturnType<typeof createClient>,
+  source: string,
+  fileName: string
+) {
+  if (!source.startsWith("data:")) return source;
+
+  const base64Part = source.split(",")[1];
+  if (!base64Part) return source;
+
+  const mimeMatch = source.match(/^data:([^;]+);base64,/);
+  const contentType = mimeMatch?.[1] || "image/png";
+  const binaryStr = atob(base64Part);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let j = 0; j < binaryStr.length; j++) {
+    bytes[j] = binaryStr.charCodeAt(j);
+  }
+
+  const { error: uploadError } = await supabase.storage
+    .from("training-media")
+    .upload(fileName, bytes.buffer, { contentType, upsert: true });
+
+  if (uploadError) {
+    console.warn("Failed to upload generated image:", uploadError.message);
+    return source;
+  }
+
+  const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
+async function generateImageForConfiguredProvider(
+  aiConfig: AIConfig,
+  lovableApiKey: string | undefined,
+  prompt: string
+) {
+  const provider = aiConfig.model || "gateway";
+
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    return await withTimeout(
+      generateImageGeminiDirect(aiConfig.gemini_api_key, prompt, aiConfig.gemini_image_model || aiConfig.gemini_model),
+      IMAGE_TIMEOUT_MS
+    );
+  }
+
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    return await withTimeout(
+      generateImageOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_image_model),
+      IMAGE_TIMEOUT_MS
+    );
+  }
+
+  if ((provider === "gateway" || provider === "lovable_ai") && lovableApiKey) {
+    return await withTimeout(generateImageGateway(lovableApiKey, prompt), IMAGE_TIMEOUT_MS);
+  }
+
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -365,30 +515,14 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
 
       // Generate new image
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${newScene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
-      let imageBase64: string | null = null;
-      if (useGeminiDirect) {
-        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
-        if (!imageBase64 && LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      } else if (LOVABLE_API_KEY) {
-        imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-      }
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, LOVABLE_API_KEY || undefined, imagePrompt);
 
-      let finalUrl = imageBase64 || '';
-      if (imageBase64) {
+      let finalUrl = imageSource || '';
+      if (imageSource) {
         try {
-          const base64Part = imageBase64.split(",")[1];
-          const binaryStr = atob(base64Part);
-          const bytes = new Uint8Array(binaryStr.length);
-          for (let j = 0; j < binaryStr.length; j++) bytes[j] = binaryStr.charCodeAt(j);
           const fileName = `${courseId}/video_${style}_scene_regen_${regenerateScene}_${Date.now()}.png`;
-          const { error: uploadError } = await supabase.storage.from("training-media").upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
-            finalUrl = urlData.publicUrl;
-          }
-        } catch { /* keep base64 */ }
+          finalUrl = await storeGeneratedImage(supabase, imageSource, fileName);
+        } catch { /* keep provider URL/data */ }
 
         // Update media record
         try {
@@ -467,41 +601,15 @@ Responde en formato JSON con esta estructura exacta:
     const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
 
-      let imageBase64: string | null = null;
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, LOVABLE_API_KEY || undefined, imagePrompt);
 
-      if (useGeminiDirect) {
-        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
-        // Fallback to gateway if Gemini direct fails
-        if (!imageBase64 && LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      } else {
-        // OpenAI selected or no direct key: use Gateway for images
-        if (LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      }
-
-      if (!imageBase64) return null;
+      if (!imageSource) return null;
 
       try {
-        const base64Part = imageBase64.split(",")[1];
-        const binaryStr = atob(base64Part);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let j = 0; j < binaryStr.length; j++) {
-          bytes[j] = binaryStr.charCodeAt(j);
-        }
         const fileName = `${courseId}/video_${style}_scene_${i + 1}_${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from("training-media")
-          .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
-          return urlData.publicUrl;
-        }
-        return imageBase64;
+        return await storeGeneratedImage(supabase, imageSource, fileName);
       } catch {
-        return imageBase64;
+        return imageSource;
       }
     });
 
