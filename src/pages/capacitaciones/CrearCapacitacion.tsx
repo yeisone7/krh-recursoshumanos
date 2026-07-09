@@ -387,6 +387,7 @@ export default function CrearCapacitacion() {
       if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar audio'));
       if (data?.error) throw new Error(data.error);
       if (data?.audioUrl) {
+        setStoryboardAudioUrl(data.audioUrl);
         await createMedia.mutateAsync({
           courseId: activeCourseId,
           type: 'audio',
@@ -934,6 +935,42 @@ export default function CrearCapacitacion() {
                             
             setVideoScript(data?.script);
                             setVideoImages(data?.imageUrls || []);
+                            try {
+                              setGeneratingMedia(prev => ({ ...prev, audio: true }));
+                              const narrationText = (data?.script?.scenes || [])
+                                .map((scene: any) => scene?.narration)
+                                .filter(Boolean)
+                                .join('\n\n');
+                              const { data: audioData, error: audioError } = await supabase.functions.invoke('generate-training-audio', {
+                                body: {
+                                  title,
+                                  content: (narrationText || content.contenido || '').substring(0, 4000),
+                                  puntosClave: content.puntosClave,
+                                  duration: videoDuration,
+                                  companyId: currentCompanyId,
+                                  courseId: activeCourseId,
+                                },
+                              });
+
+                              if (audioError) throw new Error(await getFunctionErrorMessage(audioError, 'Error al generar audio del storyboard'));
+                              if (audioData?.error) throw new Error(audioData.error);
+
+                              if (audioData?.audioUrl) {
+                                setStoryboardAudioUrl(audioData.audioUrl);
+                                await createMedia.mutateAsync({
+                                  courseId: activeCourseId,
+                                  type: 'audio',
+                                  title: 'Audio Narrado',
+                                  fileUrl: audioData.audioUrl,
+                                  fileSize: 0,
+                                  description: audioData.script?.substring(0, 500),
+                                });
+                              }
+                            } catch (audioErr: any) {
+                              toast.warning(audioErr?.message || 'Storyboard generado, pero no se pudo generar el audio.');
+                            } finally {
+                              setGeneratingMedia(prev => ({ ...prev, audio: false }));
+                            }
                             toast.success(`Storyboard generado: ${data?.sceneCount} escenas con estilo ${data?.style}`);
                           } catch (err: any) {
                             toast.error(err?.message || 'Error al generar video');

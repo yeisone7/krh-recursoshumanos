@@ -11,10 +11,18 @@ const SCRIPT_MODEL = "google/gemini-1.5-flash";
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones_ia", action: "update" },
+  { module: "capacitaciones", action: "view" },
   { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones", action: "update" },
+  { module: "capacitaciones_manual", action: "view" },
   { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_manual", action: "update" },
+  { module: "capacitaciones_biblioteca", action: "view" },
   { module: "capacitaciones_biblioteca", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "update" },
 ];
+const ADMIN_ROLE_NAMES = ["administrador", "admin", "super admin", "superadmin"];
 
 interface AIConfig {
   model?: string;
@@ -23,6 +31,9 @@ interface AIConfig {
   openai_model?: string;
   openai_tts_model?: string;
   openai_tts_voice?: string;
+  gemini_model?: string;
+  gemini_tts_model?: string;
+  gemini_tts_voice?: string;
 }
 
 async function requireTrainingPermission(req: Request, companyId: string | undefined) {
@@ -58,6 +69,17 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
     .limit(1);
 
   const isLegacyAdmin = Boolean(legacyAdminRole?.length);
+  const { data: companyAdminRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(name,is_active,company_id)")
+    .eq("user_id", userId)
+    .eq("custom_roles.company_id", companyId)
+    .eq("custom_roles.is_active", true);
+
+  const isCompanyAdminRole = (companyAdminRole || []).some((row: any) =>
+    ADMIN_ROLE_NAMES.includes(String(row.custom_roles?.name || "").trim().toLowerCase())
+  );
+
   const permissionChecks = await Promise.all(
     TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       adminClient.rpc("check_user_permission", {
@@ -69,7 +91,7 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole && !isLegacyAdmin) {
+  if (!isSystemRole && !isLegacyAdmin && !isCompanyAdminRole) {
     const { data: assignment } = await adminClient
       .from("user_company_assignments")
       .select("id")
@@ -174,6 +196,103 @@ async function generateOpenAITTS(apiKey: string, scriptText: string, preferredMo
   throw { status: 502, message: lastError || "OpenAI no pudo generar el audio." };
 }
 
+function createWavFromPcm(pcmBytes: Uint8Array, sampleRate = 24000, channels = 1, bitsPerSample = 16): Uint8Array {
+  const headerSize = 44;
+  const dataSize = pcmBytes.length;
+  const buffer = new ArrayBuffer(headerSize + dataSize);
+  const view = new DataView(buffer);
+  const writeString = (offset: number, value: string) => {
+    for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
+  };
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * channels * bitsPerSample / 8, true);
+  view.setUint16(32, channels * bitsPerSample / 8, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeString(36, "data");
+  view.setUint32(40, dataSize, true);
+  new Uint8Array(buffer, headerSize).set(pcmBytes);
+
+  return new Uint8Array(buffer);
+}
+
+async function generateGeminiTTS(
+  apiKey: string,
+  scriptText: string,
+  preferredModel?: string,
+  preferredVoice?: string
+): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("GEMINI_TTS_MODEL"),
+    "gemini-3.1-flash-tts-preview",
+    "gemini-2.5-flash-preview-tts",
+    "gemini-2.5-pro-preview-tts",
+  ]);
+  const voice = preferredVoice || Deno.env.get("GEMINI_TTS_VOICE") || "Kore";
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        model,
+        input: `Narra en espanol latinoamericano, con tono profesional, claro y amable para una capacitacion empresarial: ${scriptText}`,
+        response_format: { type: "audio" },
+        generation_config: {
+          speech_config: [{ voice }],
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`Gemini TTS ${model}`, response.status, await response.text());
+      console.error("Gemini TTS error:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      throw { status: response.status, message: lastError };
+    }
+
+    const data = await response.json();
+    const outputAudio = data.output_audio || data.outputAudio;
+    const base64Audio = outputAudio?.data;
+    if (base64Audio) {
+      const binary = atob(base64Audio);
+      const pcmBytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) pcmBytes[i] = binary.charCodeAt(i);
+
+      const mimeType = outputAudio.mime_type || outputAudio.mimeType || "audio/pcm";
+      if (mimeType.includes("wav") || mimeType.includes("mpeg") || mimeType.includes("mp3")) {
+        return {
+          bytes: pcmBytes,
+          contentType: mimeType.includes("mpeg") || mimeType.includes("mp3") ? "audio/mpeg" : "audio/wav",
+          extension: mimeType.includes("mpeg") || mimeType.includes("mp3") ? "mp3" : "wav",
+        };
+      }
+
+      return {
+        bytes: createWavFromPcm(pcmBytes),
+        contentType: "audio/wav",
+        extension: "wav",
+      };
+    }
+
+    lastError = `Gemini TTS ${model}: no devolvio audio`;
+  }
+
+  throw { status: 502, message: lastError || "Gemini no pudo generar el audio." };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -216,7 +335,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini",
+            model: aiConfig.openai_model || Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini",
             messages: [{ role: "user", content: scriptPrompt }],
           }),
         });
@@ -228,7 +347,8 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
         scriptText = data.choices?.[0]?.message?.content?.trim();
       } else if (provider === "gemini" && aiConfig.gemini_api_key) {
         console.log("Generating audio script via Gemini direct...");
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${aiConfig.gemini_api_key}`, {
+        const scriptModel = aiConfig.gemini_model || Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash";
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${scriptModel}:generateContent?key=${aiConfig.gemini_api_key}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -272,18 +392,36 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
 
     console.log(`Script generated: ${scriptText.split(/\s+/).length} words. Generating TTS...`);
 
-    if (!aiConfig.openai_api_key) {
-      throw { status: 400, message: "No hay API Key de OpenAI configurada para generar audio." };
+    let audioResult: { bytes: Uint8Array; contentType: string; extension: string };
+
+    if (provider === "gemini") {
+      if (!aiConfig.gemini_api_key) {
+        throw { status: 400, message: "No hay API Key de Gemini configurada para generar audio." };
+      }
+      audioResult = await generateGeminiTTS(
+        aiConfig.gemini_api_key,
+        scriptText,
+        aiConfig.gemini_tts_model,
+        aiConfig.gemini_tts_voice
+      );
+    } else {
+      if (!aiConfig.openai_api_key) {
+        throw { status: 400, message: "No hay API Key de OpenAI configurada para generar audio." };
+      }
+      const audioBytes = await generateOpenAITTS(
+        aiConfig.openai_api_key,
+        scriptText,
+        aiConfig.openai_tts_model,
+        aiConfig.openai_tts_voice
+      );
+      audioResult = {
+        bytes: audioBytes,
+        contentType: "audio/mpeg",
+        extension: "mp3",
+      };
     }
 
-    const audioBytes = await generateOpenAITTS(
-      aiConfig.openai_api_key,
-      scriptText,
-      aiConfig.openai_tts_model,
-      aiConfig.openai_tts_voice
-    );
-
-    console.log(`Audio generated: ${audioBytes.length} bytes. Uploading...`);
+    console.log(`Audio generated: ${audioResult.bytes.length} bytes. Uploading...`);
 
     if (!courseId) throw new Error("courseId is required to store audio");
 
@@ -291,10 +429,10 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const fileName = `${courseId}/audio_${duration}_${Date.now()}.mp3`;
+    const fileName = `${courseId}/audio_${duration}_${Date.now()}.${audioResult.extension}`;
     const { error: uploadError } = await supabase.storage
       .from("training-media")
-      .upload(fileName, audioBytes.buffer, { contentType: "audio/mpeg" });
+      .upload(fileName, audioResult.bytes.buffer, { contentType: audioResult.contentType });
 
     if (uploadError) {
       console.warn("Upload failed:", uploadError);

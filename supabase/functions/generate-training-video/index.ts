@@ -280,6 +280,9 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string, preferr
   const modelCandidates = uniqueStrings([
     preferredModel,
     Deno.env.get("GEMINI_IMAGE_MODEL"),
+    "gemini-3.1-flash-image",
+    "gemini-3.1-flash-lite-image",
+    "gemini-3.1-pro-image",
     "gemini-2.5-flash-image-preview",
     "gemini-2.0-flash-preview-image-generation",
     "gemini-3-flash-preview",
@@ -287,6 +290,37 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string, preferr
   let lastError = "";
 
   for (const model of modelCandidates) {
+    const interactionResponse = await fetchWithRetry("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        model,
+        input: [{ type: "text", text: prompt }],
+      }),
+    });
+
+    if (interactionResponse.ok) {
+      const data = await interactionResponse.json();
+      const outputImage = data.output_image || data.outputImage;
+      if (outputImage?.data) {
+        return `data:${outputImage.mime_type || outputImage.mimeType || "image/png"};base64,${outputImage.data}`;
+      }
+
+      const steps = Array.isArray(data.steps) ? data.steps : [];
+      for (const step of steps) {
+        const image = step.output_image || step.outputImage || step.image;
+        if (image?.data) {
+          return `data:${image.mime_type || image.mimeType || "image/png"};base64,${image.data}`;
+        }
+      }
+    } else {
+      lastError = extractProviderError(`Gemini Interactions ${model}`, interactionResponse.status, await interactionResponse.text());
+      console.warn("Gemini interactions image failed:", lastError);
+    }
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const response = await fetchWithRetry(url, {
       method: "POST",
@@ -327,9 +361,8 @@ async function generateImageOpenAIDirect(apiKey: string, prompt: string, preferr
   const modelCandidates = uniqueStrings([
     preferredModel,
     Deno.env.get("OPENAI_IMAGE_MODEL"),
-    "gpt-image-2",
-    "gpt-image-1.5",
     "gpt-image-1",
+    "dall-e-3",
   ]);
   let lastError = "";
 
