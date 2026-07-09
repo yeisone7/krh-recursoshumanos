@@ -137,6 +137,12 @@ type MonthlyExpirationRow = {
   canGeneratePreaviso: boolean;
 };
 
+type ContractCenterGroup<T extends ContractListRow> = {
+  id: string;
+  name: string;
+  contracts: T[];
+};
+
 const monthOptions = [
   { value: 0, label: 'Enero' },
   { value: 1, label: 'Febrero' },
@@ -151,6 +157,45 @@ const monthOptions = [
   { value: 10, label: 'Noviembre' },
   { value: 11, label: 'Diciembre' },
 ];
+
+function normalizeOperationCenterName(value?: string | null): string | null {
+  const normalized = value?.trim().replace(/\s+/g, ' ');
+  return normalized || null;
+}
+
+function getOperationCenterGroup(contract: ContractListRow): { id: string; name: string } {
+  const centerName = normalizeOperationCenterName(contract.employees?.operation_centers?.name);
+
+  if (centerName) {
+    return {
+      id: `center-name:${centerName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()}`,
+      name: centerName,
+    };
+  }
+
+  const centerId = contract.employees?.operation_center_id;
+
+  return {
+    id: centerId ? `center-id:${centerId}` : 'unassigned',
+    name: 'Sin centro asignado',
+  };
+}
+
+function groupContractsByOperationCenter<T extends ContractListRow>(contracts: T[]): ContractCenterGroup<T>[] {
+  const groups = new Map<string, ContractCenterGroup<T>>();
+
+  contracts.forEach((contract) => {
+    const center = getOperationCenterGroup(contract);
+
+    if (!groups.has(center.id)) {
+      groups.set(center.id, { ...center, contracts: [] });
+    }
+
+    groups.get(center.id)?.contracts.push(contract);
+  });
+
+  return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
@@ -507,20 +552,7 @@ function ContractMatrixView({
       return [{ id: 'all', name: 'Todos los contratos', contracts }];
     }
 
-    const groups = new Map<string, { id: string; name: string; contracts: ContractListRow[] }>();
-
-    contracts.forEach((contract) => {
-      const centerId = contract.employees?.operation_center_id || 'unassigned';
-      const centerName = contract.employees?.operation_centers?.name || 'Sin centro asignado';
-
-      if (!groups.has(centerId)) {
-        groups.set(centerId, { id: centerId, name: centerName, contracts: [] });
-      }
-
-      groups.get(centerId)?.contracts.push(contract);
-    });
-
-    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    return groupContractsByOperationCenter(contracts);
   }, [contracts, groupByCenter]);
 
   return (
@@ -728,20 +760,7 @@ export default function Contratos() {
       return [{ id: 'all', name: 'Todos los contratos', contracts: visibleContracts }];
     }
 
-    const groups = new Map<string, { id: string; name: string; contracts: typeof visibleContracts }>();
-
-    visibleContracts.forEach((contract) => {
-      const centerId = contract.employees?.operation_center_id || 'unassigned';
-      const centerName = contract.employees?.operation_centers?.name || 'Sin centro asignado';
-
-      if (!groups.has(centerId)) {
-        groups.set(centerId, { id: centerId, name: centerName, contracts: [] as typeof visibleContracts });
-      }
-
-      groups.get(centerId)?.contracts.push(contract);
-    });
-
-    return Array.from(groups.values()).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    return groupContractsByOperationCenter(visibleContracts);
   }, [visibleContracts, groupByOperationCenter]);
 
   // Calculate stats
