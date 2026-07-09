@@ -8,7 +8,7 @@ import type { TrainingCompletion } from '@/types/training';
 
 interface EvidenciasTreeViewProps {
   completions: TrainingCompletion[];
-  onViewSignature: (signatureData: string | null) => void;
+  onViewSignature: (completion: TrainingCompletion) => void;
   onExportPdf: (completion: TrainingCompletion) => void;
   onDelete: (id: string) => void;
 }
@@ -49,7 +49,7 @@ function TreeNode({
   onSelect: (id: string) => void;
   expanded: Set<string>;
   onToggle: (id: string) => void;
-  onViewSignature: (s: string | null) => void;
+  onViewSignature: (completion: TrainingCompletion) => void;
   onExportPdf: (c: TrainingCompletion) => void;
   onDelete: (id: string) => void;
 }) {
@@ -98,7 +98,7 @@ function TreeNode({
         {/* Leaf actions */}
         {node.completion && (
           <div className="flex gap-0.5 ml-auto shrink-0 opacity-0 group-hover/leaf:opacity-100" style={{ opacity: isSelected ? 1 : undefined }}>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); onViewSignature(node.completion!.signature_data); }}><Eye className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); onViewSignature(node.completion!); }}><Eye className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={e => { e.stopPropagation(); onExportPdf(node.completion!); }}><Download className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={e => { e.stopPropagation(); onDelete(node.completion!.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>

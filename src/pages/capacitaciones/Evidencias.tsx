@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Search, Trash2, Eye, Download, List, FolderTree, Files, Loader2, FileText } from 'lucide-react';
@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, useTrainingCourses } from '@/hooks/useTraining';
+import { useTrainingCompletions, useDeleteCompletion, useBulkDeleteCompletions, useTrainingCourseOptions } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
@@ -20,6 +20,7 @@ import PizZip from 'pizzip';
 import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
+import { supabase } from '@/integrations/supabase/client';
 
 type CompletionWithCenterToken = TrainingCompletion & {
   token?: {
@@ -31,8 +32,8 @@ type CompletionWithCenterToken = TrainingCompletion & {
 export default function Evidencias() {
   const { currentCompanyId, companies } = useAuth();
   const { data: selectedCompany } = useCompany(currentCompanyId || undefined);
-  const { data: completions = [], isLoading: isLoadingCompletions, isFetching: isFetchingCompletions } = useTrainingCompletions();
-  const { data: courses = [], isLoading: isLoadingCourses } = useTrainingCourses();
+  const { data: completions = [], isLoading: isLoadingCompletions, isFetching: isFetchingCompletions } = useTrainingCompletions(undefined, { includeSignatures: false });
+  const { data: courses = [], isLoading: isLoadingCourses } = useTrainingCourseOptions();
   const deleteCompletion = useDeleteCompletion();
   const bulkDelete = useBulkDeleteCompletions();
   const [search, setSearch] = useState('');
@@ -41,6 +42,7 @@ export default function Evidencias() {
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('tree');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [signatureView, setSignatureView] = useState<string | null>(null);
+  const [signatureCache, setSignatureCache] = useState<Record<string, string>>({});
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkCenter, setBulkCenter] = useState('');
   const [bulkCourse, setBulkCourse] = useState('');
@@ -51,6 +53,33 @@ export default function Evidencias() {
   const currentCompany = selectedCompany || companies.find(company => company.id === currentCompanyId);
   const isInitialLoading = isLoadingCompletions || isLoadingCourses;
   const isRefreshing = isFetchingCompletions && !isLoadingCompletions;
+
+  const getCompletionWithSignature = useCallback(async (completion: TrainingCompletion) => {
+    const cachedSignature = signatureCache[completion.id];
+    if (cachedSignature) return { ...completion, signature_data: cachedSignature };
+    if (completion.signature_data) return completion;
+
+    const { data, error } = await supabase
+      .from('training_completions')
+      .select('signature_data')
+      .eq('id', completion.id)
+      .single();
+
+    if (error) throw error;
+
+    const signature = data?.signature_data || '';
+    setSignatureCache(prev => ({ ...prev, [completion.id]: signature }));
+    return { ...completion, signature_data: signature };
+  }, [signatureCache]);
+
+  const handleViewSignature = async (completion: TrainingCompletion) => {
+    try {
+      const hydratedCompletion = await getCompletionWithSignature(completion);
+      setSignatureView(hydratedCompletion.signature_data || null);
+    } catch {
+      toast.error('No se pudo cargar la firma');
+    }
+  };
 
   function getCompletionCenter(completion: TrainingCompletion) {
     const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
@@ -654,8 +683,13 @@ export default function Evidencias() {
   );
 
   const exportPdf = async (completion: TrainingCompletion) => {
-    const doc = await buildCertificatePdf(completion);
-    doc.save(`constancia-${sanitizeFileName(completion.operator_name)}.pdf`);
+    try {
+      const hydratedCompletion = await getCompletionWithSignature(completion);
+      const doc = await buildCertificatePdf(hydratedCompletion);
+      doc.save(`constancia-${sanitizeFileName(completion.operator_name)}.pdf`);
+    } catch {
+      toast.error('No se pudo generar la constancia');
+    }
   };
 
   const handleOpenBulkDialog = () => {
@@ -669,7 +703,8 @@ export default function Evidencias() {
     try {
       const zip = new PizZip();
       for (const completion of selectedBulkCompletions) {
-        const doc = await buildCertificatePdf(completion);
+        const hydratedCompletion = await getCompletionWithSignature(completion);
+        const doc = await buildCertificatePdf(hydratedCompletion);
         const fileName = [
           'constancia',
           sanitizeFileName(completion.course?.name || 'capacitacion'),
@@ -703,7 +738,8 @@ export default function Evidencias() {
     if (selectedBulkCompletions.length === 0) return;
     setIsAttendanceReportGenerating(true);
     try {
-      const doc = await buildAttendanceReportPdf(selectedBulkCompletions);
+      const hydratedCompletions = await Promise.all(selectedBulkCompletions.map(getCompletionWithSignature));
+      const doc = await buildAttendanceReportPdf(hydratedCompletions);
       const centerName = centerOptions.find((center) => center.id === bulkCenter)?.name || 'centro';
       const courseName = bulkCourseOptions.find((course) => course.id === bulkCourse)?.name || 'capacitacion';
       doc.save(`registro-asistencia-${sanitizeFileName(centerName)}-${sanitizeFileName(courseName)}.pdf`);
@@ -826,7 +862,7 @@ export default function Evidencias() {
         <div className={`transition-opacity ${isRefreshing ? 'opacity-70' : ''}`}>
           <EvidenciasTreeView
             completions={filtered}
-            onViewSignature={setSignatureView}
+            onViewSignature={handleViewSignature}
             onExportPdf={exportPdf}
             onDelete={handleDelete}
           />
@@ -863,7 +899,7 @@ export default function Evidencias() {
                     <TableCell className="text-sm font-medium">{format(toValidDate(c.completed_at) || new Date(), 'dd/MM/yyyy HH:mm', { locale: es })}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setSignatureView(c.signature_data)}><Eye className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleViewSignature(c)}><Eye className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10" onClick={() => exportPdf(c)}><Download className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4" /></Button>
                       </div>
