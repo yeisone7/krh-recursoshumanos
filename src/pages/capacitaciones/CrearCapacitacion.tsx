@@ -151,6 +151,13 @@ export default function CrearCapacitacion() {
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const isSaving = isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
 
+  useEffect(() => {
+    setVideoScript(null);
+    setVideoImages([]);
+    setStoryboardAudioUrl(null);
+    setGeneratingMedia({});
+  }, [activeCourseId]);
+
   // Load existing course for editing
   useEffect(() => {
     if (existingCourse) {
@@ -403,29 +410,6 @@ export default function CrearCapacitacion() {
     } finally {
       setGeneratingMedia(prev => ({ ...prev, audio: false }));
     }
-  };
-
-  const handleStoryboardVideoRendered = async (blob: Blob, mimeType: string, extension: string, duration: number) => {
-    if (!activeCourseId) return;
-    const fileName = `${activeCourseId}/storyboard_video_${Date.now()}.${extension}`;
-    const { error: uploadError } = await supabase.storage
-      .from('training-media')
-      .upload(fileName, blob, { contentType: mimeType, upsert: true });
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = supabase.storage.from('training-media').getPublicUrl(fileName);
-    await createMedia.mutateAsync({
-      courseId: activeCourseId,
-      type: 'video',
-      title: 'Video Storyboard Narrado',
-      fileUrl: urlData.publicUrl,
-      fileSize: blob.size,
-      duration,
-      metadata: {
-        is_storyboard_render: true,
-        format: extension,
-      },
-    });
   };
 
   return (
@@ -1025,7 +1009,6 @@ export default function CrearCapacitacion() {
                             style={videoStyle}
                             contentText={content?.contenido}
                             puntosClave={content?.puntosClave}
-                            onVideoRendered={handleStoryboardVideoRendered}
                             onSceneRegenerated={(idx, newUrl, newScene) => {
                               setVideoImages(prev => {
                                 const copy = [...prev];
