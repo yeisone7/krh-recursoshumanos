@@ -100,7 +100,7 @@ export function RequisitionFormDialog({
   requisition,
 }: RequisitionFormDialogProps) {
   const [activeTab, setActiveTab] = useState('requisition');
-  const { user, isAdmin, isSuperAdmin, canCreate, canUpdate } = useAuth();
+  const { user, isAdmin, isSuperAdmin, canCreate, canUpdate, hasPermission } = useAuth();
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -231,7 +231,12 @@ export function RequisitionFormDialog({
   };
 
   const isLoading = createRequisition.isPending || updateRequisition.isPending;
-  const canMarkConfidential = isAdmin || isSuperAdmin || canCreate('requisiciones') || canUpdate('requisiciones');
+  const canMarkConfidential =
+    isAdmin ||
+    isSuperAdmin ||
+    canCreate('requisiciones') ||
+    canUpdate('requisiciones') ||
+    hasPermission('req_confidential_requisitions', 'view');
 
   const tabItems = [
     { value: 'requisition', label: 'Solicitud', icon: FileEdit },
