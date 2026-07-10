@@ -12,11 +12,12 @@ import {
   BookOpen, Clock, Users, Shield, Globe, Target, Scale, Send,
   GraduationCap, Sparkles, ChevronRight, CircleHelp, Image as ImageIcon,
   Lightbulb, FileText, CheckCircle2, Calendar, Network, LayoutPanelTop,
-  Mic, Video, ExternalLink, Trash2, AlertCircle, Loader2,
+  Mic, Video, ExternalLink, Trash2, AlertCircle, Loader2, Presentation,
 } from 'lucide-react';
 import { MarkdownContent } from './MarkdownContent';
 import { MediaTypeCard } from './MediaTypeCard';
 import { StoryboardViewer } from './StoryboardViewer';
+import { isSlideDeck, SlideDeckViewer } from './SlideDeckViewer';
 import { useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, usePublishCourse } from '@/hooks/useTraining';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
@@ -83,6 +84,7 @@ const riskIcons: Record<string, React.ReactNode> = {
 };
 
 const isExternalLinkMedia = (item: TrainingMedia) => (item.metadata as any)?.is_external_link === true;
+const isSlideDeckMedia = (item: TrainingMedia) => (item.metadata as any)?.is_slide_deck === true && isSlideDeck((item.metadata as any)?.slide_deck);
 
 const mediaKindLabel: Record<string, string> = {
   imagen: 'Imagen Explicativa',
@@ -231,6 +233,44 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
       toast.error(err?.message || `Error al generar ${type}`);
     } finally {
       setGeneratingMedia(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleGenerateSlides = async () => {
+    if (!course.id || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, diapositivas: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-training-media', {
+        body: {
+          type: 'diapositivas',
+          title: course.name,
+          content: content.contenido?.substring(0, 4000),
+          puntosClave: content.puntosClave,
+          companyId: currentCompanyId,
+          courseId: course.id,
+        },
+      });
+      if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar diapositivas'));
+      if (data?.error) throw new Error(data.error);
+      if (!isSlideDeck(data?.deck)) throw new Error('La IA no devolvió una presentación válida.');
+
+      await createMedia.mutateAsync({
+        courseId: course.id,
+        type: 'documento',
+        title: 'Presentación IA',
+        description: `${data.deck.slides.length} diapositivas`,
+        fileUrl: `slides://${course.id}/${Date.now()}`,
+        fileSize: 0,
+        metadata: {
+          is_slide_deck: true,
+          slide_deck: data.deck,
+        },
+      });
+      toast.success('Presentación IA generada exitosamente');
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al generar diapositivas');
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, diapositivas: false }));
     }
   };
 
@@ -806,6 +846,15 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                           </Select>
                         </div>
                       </MediaTypeCard>
+                      <MediaTypeCard
+                        icon={<Presentation className="h-5 w-5 text-muted-foreground" />}
+                        title="Presentación IA"
+                        description="Genera diapositivas navegables para el link público"
+                        items={media.filter(isSlideDeckMedia)}
+                        isGenerating={!!generatingMedia.diapositivas}
+                        onGenerate={handleGenerateSlides}
+                        onDelete={handleDeleteMedia}
+                      />
                     </div>
                     <MediaTypeCard
                       icon={<Video className="h-5 w-5 text-muted-foreground" />}
@@ -885,6 +934,11 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         />
                       </div>
                     )}
+                    {media.filter(isSlideDeckMedia).map((item) => (
+                      <div key={item.id} className="mt-4 rounded-lg border p-4">
+                        <SlideDeckViewer deck={(item.metadata as any).slide_deck} />
+                      </div>
+                    ))}
                   </>
                 ) : (
                   <>
@@ -916,6 +970,12 @@ export function TrainingPreviewDialog({ open, onOpenChange, course, onPublish, i
                         items={media.filter(m => m.title === 'Audio Narrado')}
                       />
                     </div>
+                    <MediaReadOnlyCard
+                      icon={<Presentation className="h-5 w-5 text-muted-foreground" />}
+                      title="Presentación IA"
+                      description="Diapositivas navegables para el link público"
+                      items={media.filter(isSlideDeckMedia)}
+                    />
                     <MediaReadOnlyCard
                       icon={<Video className="h-5 w-5 text-primary" />}
                       title="Storyboard"

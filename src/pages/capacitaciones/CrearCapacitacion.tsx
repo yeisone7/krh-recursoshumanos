@@ -4,7 +4,7 @@ import { format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink, UserCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Sparkles, Loader2, Upload, FileText, X, Target, Scale, Tag, LayoutGrid, Users, BarChart3, Clock, Monitor, ShieldAlert, CalendarCheck, BookOpen, Globe, CircleDot, AlignLeft, Trash2, ImageIcon, Network, LayoutPanelTop, Mic, Video, Plus, ExternalLink, UserCircle, Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer, TrainingPeriodSelector } from '@/components/training';
+import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer, TrainingPeriodSelector, SlideDeckViewer, isSlideDeck } from '@/components/training';
 import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
 import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,6 +39,7 @@ const TRAINING_TIPOS = ['Charla 5 min', 'Calidad', 'HSEQ', 'Reinducci\u00f3n', '
 const TRAINING_AREAS = ['Talento Humano', 'Bienestar y Desarrollo', 'Jur\u00eddica y Relacionamiento Laboral', 'SGI', 'SST', 'Ambiental', 'Seguridad Alimentaria', 'Contabilidad', 'PESV', 'Otro'];
 const TRAINING_PUBLICOS = ['Centros de Operaci\u00f3n', 'Supervisores', 'T\u00e9cnicos', 'Administrativos', 'Fincas', 'Transversal (Todo el personal)'];
 const TRAINING_MARCOS_LEGALES = ['ISO 9001', 'ISO 14001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
+const isSlideDeckMedia = (item: any) => item?.metadata?.is_slide_deck === true && isSlideDeck(item.metadata?.slide_deck);
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -374,6 +375,44 @@ export default function CrearCapacitacion() {
       toast.error(err?.message || `Error al generar ${type}`);
     } finally {
       setGeneratingMedia(prev => ({ ...prev, [type]: false }));
+    }
+  };
+
+  const handleGenerateSlides = async () => {
+    if (!activeCourseId || !content) return;
+    setGeneratingMedia(prev => ({ ...prev, diapositivas: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-training-media', {
+        body: {
+          type: 'diapositivas',
+          title,
+          content: content.contenido?.substring(0, 4000),
+          puntosClave: content.puntosClave,
+          companyId: currentCompanyId,
+          courseId: activeCourseId,
+        },
+      });
+      if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar diapositivas'));
+      if (data?.error) throw new Error(data.error);
+      if (!isSlideDeck(data?.deck)) throw new Error('La IA no devolvió una presentación válida.');
+
+      await createMedia.mutateAsync({
+        courseId: activeCourseId,
+        type: 'documento',
+        title: 'Presentación IA',
+        description: `${data.deck.slides.length} diapositivas`,
+        fileUrl: `slides://${activeCourseId}/${Date.now()}`,
+        fileSize: 0,
+        metadata: {
+          is_slide_deck: true,
+          slide_deck: data.deck,
+        },
+      });
+      toast.success('Presentación IA generada exitosamente');
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al generar diapositivas');
+    } finally {
+      setGeneratingMedia(prev => ({ ...prev, diapositivas: false }));
     }
   };
 
@@ -832,6 +871,15 @@ export default function CrearCapacitacion() {
                         </Select>
                       </div>
                     </MediaTypeCard>
+                    <MediaTypeCard
+                      icon={<Presentation className="h-5 w-5 text-muted-foreground" />}
+                      title="Presentación IA"
+                      description="Genera diapositivas navegables para el link público"
+                      items={(media as any[]).filter(isSlideDeckMedia)}
+                      isGenerating={!!generatingMedia.diapositivas}
+                      onGenerate={handleGenerateSlides}
+                      onDelete={handleDeleteMedia}
+                    />
                   </div>
 
                   <Card className="border">
@@ -1025,6 +1073,11 @@ export default function CrearCapacitacion() {
                           />
                         </div>
                       )}
+                      {(media as any[]).filter(isSlideDeckMedia).map((item: any) => (
+                        <div key={item.id} className="mt-3 border-t pt-3">
+                          <SlideDeckViewer deck={item.metadata.slide_deck} />
+                        </div>
+                      ))}
                     </CardContent>
                   </Card>
                 </div>

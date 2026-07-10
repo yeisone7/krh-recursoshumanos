@@ -12,6 +12,7 @@ export { QRCodeDialog } from './QRCodeDialog';
 export { TrainingStepIndicator } from './TrainingStepIndicator';
 export { MediaTypeCard } from './MediaTypeCard';
 export { StoryboardViewer } from './StoryboardViewer';
+export { SlideDeckViewer, isSlideDeck } from './SlideDeckViewer';
 export { VideoUploader } from './VideoUploader';
 export { TrainingPeriodSelector } from './TrainingPeriodSelector';
 export { TrainingPeriodFilter } from './TrainingPeriodFilter';

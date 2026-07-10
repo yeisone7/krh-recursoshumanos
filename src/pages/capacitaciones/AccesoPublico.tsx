@@ -11,6 +11,7 @@ import { MarkdownContent } from '@/components/training/MarkdownContent';
 import { EvaluationQuiz } from '@/components/training/EvaluationQuiz';
 import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import { StoryboardViewer } from '@/components/training/StoryboardViewer';
+import { isSlideDeck, SlideDeckViewer } from '@/components/training/SlideDeckViewer';
 import { ImageLightbox } from '@/components/training/ImageLightbox';
 import {
   GraduationCap, Clock, BookOpen, CheckCircle2, AlertTriangle,
@@ -229,7 +230,8 @@ export default function AccesoPublico() {
   };
 
   const content = course?.content as TrainingCourseContent | null;
-  const externalLinks = media.filter(m => (m.metadata as any)?.is_external_link === true || m.type === 'documento');
+  const slideDecks = media.filter(m => (m.metadata as any)?.is_slide_deck === true && isSlideDeck((m.metadata as any)?.slide_deck));
+  const externalLinks = media.filter(m => ((m.metadata as any)?.is_external_link === true || m.type === 'documento') && !slideDecks.some(deck => deck.id === m.id));
   const playableMedia = media.filter(m => !externalLinks.some(link => link.id === m.id));
   const images = playableMedia.filter(m => m.type === 'imagen' || m.type === 'infografia');
   const audios = playableMedia.filter(m => m.type === 'audio');
@@ -508,6 +510,23 @@ export default function AccesoPublico() {
 
             {/* Media Gallery */}
             <ImageLightbox src={lightboxSrc} alt={lightboxAlt} onClose={() => setLightboxSrc(null)} />
+
+            {slideDecks.length > 0 && (
+              <div className="space-y-6">
+                {slideDecks.map((item) => (
+                  <Card key={item.id}>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BookOpen className="h-5 w-5 text-primary" /> {item.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <SlideDeckViewer deck={(item.metadata as any).slide_deck} />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             {images.length > 0 && (
               <Card>

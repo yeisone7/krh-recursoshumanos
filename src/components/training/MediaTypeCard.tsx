@@ -1,6 +1,6 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { ExternalLink, Trash2, Plus, Loader2, Upload, Link2 } from 'lucide-react';
+import { ExternalLink, Trash2, Plus, Loader2, Upload, Link2, Presentation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,7 +85,11 @@ export function MediaTypeCard({
                   <span className="max-w-[180px] truncate text-xs font-medium">
                     {item.title}
                   </span>
-                  {item.file_url?.endsWith('.mp3') || item.file_url?.endsWith('.wav') ? (
+                  {(item.metadata as any)?.is_slide_deck ? (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                      <Presentation className="h-3.5 w-3.5" /> Diapositivas
+                    </span>
+                  ) : item.file_url?.endsWith('.mp3') || item.file_url?.endsWith('.wav') ? (
                     <audio controls className="h-8 max-w-[180px]" src={item.file_url}>
                       Tu navegador no soporta audio.
                     </audio>
