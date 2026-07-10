@@ -1,10 +1,11 @@
 import React from 'react';
 import { format, parseISO } from 'date-fns';
-import { ExternalLink, Trash2, Plus, Loader2, Upload, Link2, Presentation } from 'lucide-react';
+import { ExternalLink, Trash2, Plus, Loader2, Upload, Link2, Presentation, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { TrainingMedia } from '@/types/training';
+import { isSlideDeck, SlideDeckViewer } from './SlideDeckViewer';
 
 interface MediaTypeCardProps {
   icon: React.ReactNode;
@@ -40,6 +41,7 @@ export function MediaTypeCard({
   const [showLinkForm, setShowLinkForm] = React.useState(false);
   const [linkUrl, setLinkUrl] = React.useState('');
   const [linkTitle, setLinkTitle] = React.useState('');
+  const [expandedSlideDeckId, setExpandedSlideDeckId] = React.useState<string | null>(null);
 
   const handleAddLink = async () => {
     if (!linkUrl.trim() || !onAddLink) return;
@@ -73,53 +75,70 @@ export function MediaTypeCard({
 
         {items.length > 0 && (
           <div className="space-y-1.5">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-md border px-3 py-2"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xs text-muted-foreground">
-                    {format(parseISO(item.created_at), 'dd/M/yyyy')}
-                  </span>
-                  <span className="max-w-[180px] truncate text-xs font-medium">
-                    {item.title}
-                  </span>
-                  {(item.metadata as any)?.is_slide_deck ? (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                      <Presentation className="h-3.5 w-3.5" /> Diapositivas
-                    </span>
-                  ) : item.file_url?.endsWith('.mp3') || item.file_url?.endsWith('.wav') ? (
-                    <audio controls className="h-8 max-w-[180px]" src={item.file_url}>
-                      Tu navegador no soporta audio.
-                    </audio>
-                  ) : (
+            {items.map((item) => {
+              const slideDeck = (item.metadata as any)?.slide_deck;
+              const canPreviewSlides = (item.metadata as any)?.is_slide_deck && isSlideDeck(slideDeck);
+              const isExpanded = expandedSlideDeckId === item.id;
+
+              return (
+                <div key={item.id} className="space-y-2">
+                  <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xs text-muted-foreground">
+                        {format(parseISO(item.created_at), 'dd/M/yyyy')}
+                      </span>
+                      <span className="max-w-[180px] truncate text-xs font-medium">
+                        {item.title}
+                      </span>
+                      {canPreviewSlides ? (
+                        <Button
+                          type="button"
+                          variant={isExpanded ? 'secondary' : 'outline'}
+                          size="sm"
+                          className="h-7 gap-1 px-2 text-xs"
+                          onClick={() => setExpandedSlideDeckId(isExpanded ? null : item.id)}
+                        >
+                          {isExpanded ? <Presentation className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          {isExpanded ? 'Ocultar' : 'Ver'}
+                        </Button>
+                      ) : item.file_url?.endsWith('.mp3') || item.file_url?.endsWith('.wav') ? (
+                        <audio controls className="h-8 max-w-[180px]" src={item.file_url}>
+                          Tu navegador no soporta audio.
+                        </audio>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (item.file_url.startsWith('data:')) {
+                              const w = window.open();
+                              if (w) {
+                                w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
+                                w.document.title = 'Vista previa';
+                              }
+                            } else {
+                              window.open(item.file_url, '_blank');
+                            }
+                          }}
+                          className="text-primary hover:text-primary/80 p-1"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <button
-                      onClick={() => {
-                        if (item.file_url.startsWith('data:')) {
-                          const w = window.open();
-                          if (w) {
-                            w.document.write(`<img src="${item.file_url}" style="max-width:100%;height:auto;" />`);
-                            w.document.title = 'Vista previa';
-                          }
-                        } else {
-                          window.open(item.file_url, '_blank');
-                        }
-                      }}
-                      className="text-primary hover:text-primary/80 p-1"
+                      onClick={() => onDelete(item.id)}
+                      className="text-destructive hover:text-destructive/80 p-1"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
+                  </div>
+                  {canPreviewSlides && isExpanded && (
+                    <div className="rounded-lg border bg-background p-3">
+                      <SlideDeckViewer deck={slideDeck} compact />
+                    </div>
                   )}
                 </div>
-                <button
-                  onClick={() => onDelete(item.id)}
-                  className="text-destructive hover:text-destructive/80 p-1"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
