@@ -11,15 +11,25 @@ const GATEWAY_IMAGE_MODEL = "openai/dall-e-3"; // Usamos DALL-E-3 via gateway po
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones_ia", action: "update" },
+  { module: "capacitaciones", action: "view" },
   { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones", action: "update" },
+  { module: "capacitaciones_manual", action: "view" },
   { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_manual", action: "update" },
+  { module: "capacitaciones_biblioteca", action: "view" },
   { module: "capacitaciones_biblioteca", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "update" },
 ];
+const ADMIN_ROLE_NAMES = ["administrador", "admin", "super admin", "superadmin"];
 
 interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  openai_model?: string;
   openai_image_model?: string;
 }
 
@@ -56,6 +66,17 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
     .limit(1);
 
   const isLegacyAdmin = Boolean(legacyAdminRole?.length);
+  const { data: companyAdminRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(name,is_active,company_id)")
+    .eq("user_id", userId)
+    .eq("custom_roles.company_id", companyId)
+    .eq("custom_roles.is_active", true);
+
+  const isCompanyAdminRole = (companyAdminRole || []).some((row: any) =>
+    ADMIN_ROLE_NAMES.includes(String(row.custom_roles?.name || "").trim().toLowerCase())
+  );
+
   const permissionChecks = await Promise.all(
     TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
       adminClient.rpc("check_user_permission", {
@@ -67,7 +88,7 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
   );
   const hasPermission = permissionChecks.some(({ data }) => data === true);
 
-  if (!isSystemRole && !isLegacyAdmin) {
+  if (!isSystemRole && !isLegacyAdmin && !isCompanyAdminRole) {
     const { data: assignment } = await adminClient
       .from("user_company_assignments")
       .select("id")
@@ -305,6 +326,88 @@ async function generateImageGateway(apiKey: string, prompt: string): Promise<str
   return imageData;
 }
 
+async function generateTextGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const model = preferredModel || Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash";
+  const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.5 },
+    }),
+  });
+  if (!response.ok) throw new Error(extractProviderError(`Gemini ${model}`, response.status, await response.text()));
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+async function generateTextOpenAIDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const model = preferredModel || Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini";
+  const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.5,
+    }),
+  });
+  if (!response.ok) throw new Error(extractProviderError(`OpenAI ${model}`, response.status, await response.text()));
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+async function generateTextGateway(apiKey: string, prompt: string): Promise<string> {
+  const response = await fetchWithRetry(GATEWAY_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash-lite",
+      messages: [{ role: "user", content: prompt }],
+    }),
+  });
+  if (!response.ok) throw new Error(extractProviderError("Gateway", response.status, await response.text()));
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+async function generateSlidesText(aiConfig: AIConfig, lovableApiKey: string | undefined, prompt: string) {
+  const provider = aiConfig.model || "gateway";
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    return await generateTextGeminiDirect(aiConfig.gemini_api_key, prompt, aiConfig.gemini_model);
+  }
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    return await generateTextOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_model);
+  }
+  if (!lovableApiKey) throw new Error("No hay proveedores de IA configurados. Por favor configure sus API keys de OpenAI o Gemini.");
+  return await generateTextGateway(lovableApiKey, prompt);
+}
+
+function parseSlidesResponse(text: string, title: string) {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  const slides = Array.isArray(parsed?.slides) ? parsed.slides : [];
+  return {
+    title: String(parsed?.title || title),
+    subtitle: parsed?.subtitle ? String(parsed.subtitle) : undefined,
+    slides: slides.slice(0, 12).map((slide: any) => ({
+      title: String(slide?.title || "Diapositiva"),
+      subtitle: slide?.subtitle ? String(slide.subtitle) : undefined,
+      body: slide?.body ? String(slide.body).slice(0, 420) : undefined,
+      bullets: Array.isArray(slide?.bullets)
+        ? slide.bullets.slice(0, 5).map((bullet: unknown) => String(bullet).slice(0, 180))
+        : [],
+      footer: slide?.footer ? String(slide.footer) : undefined,
+    })),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -340,6 +443,48 @@ Deno.serve(async (req) => {
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
     const spanishTextRule = "Idioma obligatorio: español latinoamericano. Si la imagen incluye texto, títulos, etiquetas, rótulos, ramas, iconos con palabras o secciones, TODO debe estar escrito únicamente en español, sin palabras en inglés. Revisa ortografía y tildes en español.";
     let prompt = "";
+
+    if (type === "diapositivas") {
+      const slidePrompt = `Eres un disenador instruccional experto en capacitaciones empresariales.
+Genera una presentacion tipo PowerPoint para ser vista dentro de una app.
+
+Tema: "${title}"
+Contenido base: ${content?.substring(0, 3200) || "No disponible"}
+Puntos clave: ${keyPoints || "No especificados"}
+
+Requisitos:
+- Espanol latinoamericano.
+- 7 a 9 diapositivas.
+- Cada diapositiva debe tener titulo claro, subtitulo opcional, cuerpo corto y bullets concretos.
+- Evita parrafos largos y texto decorativo.
+- Incluye portada, objetivos, desarrollo, buenas practicas, errores comunes y cierre.
+- No uses markdown.
+
+Responde SOLO JSON valido con esta estructura exacta:
+{
+  "title": "Titulo de la presentacion",
+  "subtitle": "Subtitulo breve",
+  "slides": [
+    {
+      "title": "Titulo",
+      "subtitle": "Subtitulo opcional",
+      "body": "Texto breve",
+      "bullets": ["Punto 1", "Punto 2", "Punto 3"],
+      "footer": "Texto opcional"
+    }
+  ]
+}`;
+
+      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+      const text = await generateSlidesText(aiConfig, LOVABLE_API_KEY || undefined, slidePrompt);
+      const deck = parseSlidesResponse(text, title);
+      if (!deck.slides.length) throw new Error("La IA no devolvio diapositivas validas.");
+
+      return new Response(
+        JSON.stringify({ type, deck }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     switch (type) {
       case "imagen":
