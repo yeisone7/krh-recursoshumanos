@@ -37,6 +37,9 @@ interface LeaveRequestDetailDialogProps {
   request: LeaveRequest | null;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
 export function LeaveRequestDetailDialog({
   open,
   onOpenChange,
@@ -79,8 +82,8 @@ export function LeaveRequestDetailDialog({
       });
       toast.success('Solicitud aprobada exitosamente');
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Error al aprobar la solicitud');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al aprobar la solicitud'));
     }
   };
 
@@ -96,8 +99,8 @@ export function LeaveRequestDetailDialog({
       });
       toast.success('Solicitud rechazada');
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Error al rechazar la solicitud');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al rechazar la solicitud'));
     }
   };
 
@@ -113,8 +116,8 @@ export function LeaveRequestDetailDialog({
       });
       toast.success('Solicitud cancelada');
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Error al cancelar la solicitud');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al cancelar la solicitud'));
     }
   };
 
@@ -147,8 +150,8 @@ export function LeaveRequestDetailDialog({
       request.document_name = file.name;
 
       toast.success('Documento adjuntado exitosamente');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al subir el documento');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al subir el documento'));
     } finally {
       setIsUploading(false);
     }
@@ -164,7 +167,7 @@ export function LeaveRequestDetailDialog({
 
       if (error) throw error;
       window.open(data.signedUrl, '_blank');
-    } catch (error: any) {
+    } catch {
       toast.error('Error al descargar el documento');
     }
   };
@@ -175,60 +178,66 @@ export function LeaveRequestDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <div className="flex flex-col gap-2 pr-6 sm:flex-row sm:items-center sm:justify-between sm:pr-0">
-            <DialogTitle>Detalle de Solicitud</DialogTitle>
-            <Badge className="w-fit" variant={getStatusBadgeVariant(request.status)}>
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-h-[90dvh]">
+        <DialogHeader className="shrink-0 border-b border-border/70 bg-slate-50/70 px-5 py-4 pr-12 dark:bg-slate-900/70 sm:px-6 sm:py-5 sm:pr-14">
+          <div className="flex items-center justify-between gap-4">
+            <DialogTitle className="flex items-center gap-3 text-left text-lg font-semibold tracking-tight sm:text-xl">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <FileText className="h-[18px] w-[18px]" />
+              </span>
+              Detalle de solicitud
+            </DialogTitle>
+            <Badge className="w-fit shrink-0 rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide" variant={getStatusBadgeVariant(request.status)}>
               {LEAVE_STATUS_LABELS[request.status]}
             </Badge>
           </div>
         </DialogHeader>
 
-        <div className="space-y-5 sm:space-y-6">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
           {/* Employee Info */}
-          <div className="flex items-center gap-3 p-4 bg-background rounded-lg">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="w-6 h-6 text-primary" />
+          <section className="rounded-xl border border-border/70 bg-slate-50/60 p-4 dark:bg-slate-900/50 sm:p-5">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background text-primary ring-1 ring-border/70">
+                <User className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Empleado</p>
+                <p className="mt-1 truncate text-lg font-semibold text-foreground">{employeeName}</p>
+                <p className="text-sm text-muted-foreground">
+                  Documento {request.employees_v2?.document_number}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold">{employeeName}</p>
-              <p className="text-sm text-muted-foreground">
-                {request.employees_v2?.document_number}
-              </p>
-            </div>
-          </div>
 
-          {/* Leave Type & Duration */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Tipo de Permiso</p>
-              <p className="font-medium">{LEAVE_TYPE_LABELS[request.leave_type]}</p>
+            {/* Leave Type & Duration */}
+            <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tipo de permiso</p>
+                <p className="mt-1 font-semibold text-foreground">{LEAVE_TYPE_LABELS[request.leave_type]}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tipo de duración</p>
+                <p className="mt-1 font-semibold text-foreground">{LEAVE_DURATION_TYPE_LABELS[request.duration_type]}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Tipo de Duración</p>
-              <p className="font-medium">{LEAVE_DURATION_TYPE_LABELS[request.duration_type]}</p>
-            </div>
-          </div>
-
-          <Separator />
+          </section>
 
           {/* Dates */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex items-center gap-3 rounded-xl border border-border/70 p-4">
+              <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Fecha de Inicio</p>
-                <p className="font-medium">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Fecha de inicio</p>
+                <p className="mt-1 font-semibold tabular-nums">
                   {formatDateOnly(request.start_date, 'PPP', { locale: es })}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-3 rounded-xl border border-border/70 p-4">
+              <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">Fecha de Fin</p>
-                <p className="font-medium">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Fecha de finalización</p>
+                <p className="mt-1 font-semibold tabular-nums">
                   {formatDateOnly(request.end_date, 'PPP', { locale: es })}
                 </p>
               </div>
@@ -237,29 +246,29 @@ export function LeaveRequestDetailDialog({
 
           {/* Time if applicable */}
           {request.start_time && request.end_time && (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex items-center gap-3 rounded-xl border border-border/70 p-4">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Hora de Inicio</p>
-                  <p className="font-medium">{request.start_time}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Hora de inicio</p>
+                  <p className="mt-1 font-semibold tabular-nums">{request.start_time}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3 rounded-xl border border-border/70 p-4">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Hora de Fin</p>
-                  <p className="font-medium">{request.end_time}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Hora de finalización</p>
+                  <p className="mt-1 font-semibold tabular-nums">{request.end_time}</p>
                 </div>
               </div>
             </div>
           )}
 
           {/* Total Days/Hours */}
-          <div className="p-4 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Total</span>
-              <span className="text-xl font-bold">
+          <div className="rounded-xl bg-primary/10 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm font-medium text-muted-foreground">Duración total</span>
+              <span className="text-xl font-bold tabular-nums text-primary">
                 {request.total_hours 
                   ? `${request.total_hours} horas`
                   : `${request.total_days} días`}
@@ -267,24 +276,22 @@ export function LeaveRequestDetailDialog({
             </div>
           </div>
 
-          <Separator />
-
           {/* Reason */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
+          <section className="rounded-xl border border-border/70 p-4">
+            <div className="mb-2 flex items-center gap-2">
               <FileText className="w-4 h-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Motivo</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Motivo</p>
             </div>
-            <p className="p-3 bg-background rounded-lg">{request.reason}</p>
-          </div>
+            <p className="text-sm leading-relaxed text-foreground sm:text-base">{request.reason}</p>
+          </section>
 
           {/* Document Section */}
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">Documento de Soporte</p>
+          <section className="rounded-xl border border-border/70 p-4">
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Documento de soporte</p>
             {request.document_url ? (
-            <div className="flex flex-col gap-3 p-3 border rounded-lg bg-background sm:flex-row sm:items-center sm:gap-2">
-                <FileText className="h-4 w-4 text-primary shrink-0" />
-                <span className="text-sm truncate flex-1">{request.document_name || 'Documento adjunto'}</span>
+              <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:gap-2">
+                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                <span className="min-w-0 flex-1 truncate text-sm">{request.document_name || 'Documento adjunto'}</span>
                 <Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={handleDownloadDocument}>
                   <Download className="w-4 h-4 mr-1" />
                   Descargar
@@ -309,7 +316,7 @@ export function LeaveRequestDetailDialog({
                 />
               </label>
             )}
-          </div>
+          </section>
 
           {/* Review Info */}
           {request.reviewed_at && (
@@ -317,7 +324,7 @@ export function LeaveRequestDetailDialog({
               <Separator />
               <div className="space-y-2">
                 <p className="text-sm font-medium">Información de Revisión</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                   <div>
                     <p className="text-muted-foreground">Revisado por</p>
                     <p>{request.reviewer_name || 'N/A'}</p>
@@ -371,25 +378,27 @@ export function LeaveRequestDetailDialog({
               <Separator />
               
               {!showRejectForm && !showCancelForm && (
-                <div className="space-y-4">
+                <section className="space-y-4 rounded-xl border border-border/70 bg-slate-50/50 p-4 dark:bg-slate-900/40">
                   <div>
-                    <Label>Notas de Revisión (opcional)</Label>
+                    <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Notas de revisión (opcional)</Label>
                     <Textarea
                       value={reviewNotes}
                       onChange={(e) => setReviewNotes(e.target.value)}
                       placeholder="Agregue notas sobre la revisión..."
-                      className="mt-1"
+                      className="mt-2 min-h-[88px] resize-y bg-background"
                     />
                   </div>
                   
-                  <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                     <Button 
+                      className="w-full"
                       variant="outline" 
                       onClick={() => setShowCancelForm(true)}
                     >
                       Cancelar Solicitud
                     </Button>
                     <Button 
+                      className="w-full"
                       variant="destructive" 
                       onClick={() => setShowRejectForm(true)}
                     >
@@ -397,6 +406,7 @@ export function LeaveRequestDetailDialog({
                       Rechazar
                     </Button>
                     <Button 
+                      className="w-full"
                       onClick={handleApprove}
                       disabled={approveRequest.isPending}
                     >
@@ -404,18 +414,18 @@ export function LeaveRequestDetailDialog({
                       {approveRequest.isPending ? 'Aprobando...' : 'Aprobar'}
                     </Button>
                   </div>
-                </div>
+                </section>
               )}
 
               {showRejectForm && (
-                <div className="space-y-4">
+                <div className="space-y-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
                   <div>
                     <Label>Motivo del Rechazo *</Label>
                     <Textarea
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
                       placeholder="Indique el motivo del rechazo..."
-                      className="mt-1"
+                      className="mt-2 min-h-[88px] resize-y bg-background"
                     />
                   </div>
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
@@ -435,14 +445,14 @@ export function LeaveRequestDetailDialog({
               )}
 
               {showCancelForm && (
-                <div className="space-y-4">
+                <div className="space-y-4 rounded-xl border border-border/70 bg-slate-50/50 p-4 dark:bg-slate-900/40">
                   <div>
                     <Label>Motivo de la Cancelación *</Label>
                     <Textarea
                       value={cancellationReason}
                       onChange={(e) => setCancellationReason(e.target.value)}
                       placeholder="Indique el motivo de la cancelación..."
-                      className="mt-1"
+                      className="mt-2 min-h-[88px] resize-y bg-background"
                     />
                   </div>
                   <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
