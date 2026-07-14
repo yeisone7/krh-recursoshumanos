@@ -137,77 +137,112 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Calendar className="h-5 w-5 text-primary" />
-            Detalle de Vacaciones
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-h-[90dvh]">
+        <DialogHeader className="shrink-0 border-b border-border/70 bg-slate-50/70 px-5 py-4 pr-12 dark:bg-slate-900/70 sm:px-6 sm:py-5 sm:pr-14">
+          <DialogTitle className="flex items-center gap-3 text-left text-lg font-semibold tracking-tight sm:text-xl">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Calendar className="h-[18px] w-[18px]" />
+            </span>
+            Detalle de vacaciones
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="interruption">Interrupción</TabsTrigger>
-            <TabsTrigger value="actions">Acciones</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="general" className="flex min-h-0 w-full flex-1 flex-col">
+          <div className="shrink-0 border-b border-border/60 px-4 py-3 sm:px-6">
+            <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border-0 bg-slate-100 p-1 dark:bg-slate-900">
+              <TabsTrigger
+                className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
+                value="general"
+              >
+                General
+              </TabsTrigger>
+              <TabsTrigger
+                className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
+                value="interruption"
+              >
+                Interrupción
+              </TabsTrigger>
+              <TabsTrigger
+                className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
+                value="actions"
+              >
+                Acciones
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          {/* General Tab */}
-          <TabsContent value="general" className="space-y-4">
-            {/* Header with badges */}
-            <div className="flex flex-wrap gap-2">
-              <Badge className={STATUS_COLORS[request.status]}>
-                {STATUS_LABELS[request.status]}
-              </Badge>
-              <Badge className={REQUEST_TYPE_COLORS[request.request_type]}>
-                {REQUEST_TYPE_LABELS[request.request_type]}
-              </Badge>
-            </div>
-
-            {/* Employee Info */}
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center gap-3 mb-3">
-                <User className="h-5 w-5 text-muted-foreground" />
-                <h3 className="font-semibold">Empleado</h3>
-              </div>
-              <p className="text-lg font-medium">{employeeName}</p>
-              {request.employee && (
-                <p className="text-sm text-muted-foreground">
-                  Doc: {request.employee.document_number}
-                </p>
-              )}
-            </div>
-
-            {/* Dates and Days */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Fecha inicio</span>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
+            {/* General Tab */}
+            <TabsContent value="general" className="mt-0 space-y-4">
+            {/* Employee and request state */}
+            <section className="rounded-xl border border-border/70 bg-slate-50/60 p-4 dark:bg-slate-900/50 sm:p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-background text-muted-foreground ring-1 ring-border/70">
+                    <User className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Empleado</p>
+                    <h3 className="mt-1 truncate text-lg font-semibold text-foreground">{employeeName}</h3>
+                    {request.employee && (
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        Documento {request.employee.document_number}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <p className="font-medium">
+                <div className="flex shrink-0 flex-wrap gap-2 sm:max-w-[45%] sm:justify-end">
+                  <Badge
+                    className={cn(
+                      'rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide',
+                      STATUS_COLORS[request.status]
+                    )}
+                  >
+                    {STATUS_LABELS[request.status]}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      'rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide',
+                      REQUEST_TYPE_COLORS[request.request_type]
+                    )}
+                  >
+                    {REQUEST_TYPE_LABELS[request.request_type]}
+                  </Badge>
+                </div>
+              </div>
+            </section>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-border/70 p-4">
+                <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Fecha de inicio</span>
+                </div>
+                <p className="font-semibold tabular-nums text-foreground">
                   {formatDateOnly(request.start_date, "dd 'de' MMMM, yyyy", { locale: es })}
                 </p>
               </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Fecha fin</span>
+              <div className="rounded-xl border border-border/70 p-4">
+                <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-xs font-medium uppercase tracking-wide">Fecha de finalización</span>
                 </div>
-                <p className="font-medium">
+                <p className="font-semibold tabular-nums text-foreground">
                   {formatDateOnly(request.end_date, "dd 'de' MMMM, yyyy", { locale: es })}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg bg-primary/10 p-4">
-                <p className="text-sm text-muted-foreground">Días hábiles</p>
-                <p className="text-2xl font-bold text-primary">{request.business_days}</p>
+            {/* Duration summary */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-primary/10 p-4">
+                <p className="text-xs font-medium text-muted-foreground">Días hábiles</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-primary">{request.business_days}</p>
               </div>
-              <div className="rounded-lg bg-background p-4">
-                <p className="text-sm text-muted-foreground">Días calendario</p>
-                <p className="text-2xl font-bold">{request.calendar_days ?? '-'}</p>
+              <div className="rounded-xl bg-slate-100 p-4 dark:bg-slate-800/60">
+                <p className="text-xs font-medium text-muted-foreground">Días calendario</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{request.calendar_days ?? '-'}</p>
               </div>
             </div>
 
@@ -234,8 +269,8 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
             {/* Approval Info */}
             {request.approved_at && (
-              <div className="rounded-lg bg-green-50 dark:bg-green-900/20 p-4">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="rounded-xl bg-green-50 p-4 dark:bg-green-900/20">
+                <div className="mb-2 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                   <span className="text-sm font-medium text-green-600">Aprobado</span>
                 </div>
@@ -247,7 +282,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
           </TabsContent>
 
           {/* Interruption Tab */}
-          <TabsContent value="interruption" className="space-y-4">
+          <TabsContent value="interruption" className="mt-0 space-y-4">
             {request.status === 'interrumpido' ? (
               <>
                 <div className="rounded-lg bg-orange-50 dark:bg-orange-900/20 p-4">
@@ -272,7 +307,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                       Reprogramar días pendientes
                     </h4>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label>Nueva fecha inicio</Label>
                         <Popover>
@@ -409,7 +444,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
           </TabsContent>
 
           {/* Actions Tab */}
-          <TabsContent value="actions" className="space-y-4">
+          <TabsContent value="actions" className="mt-0 space-y-4">
             <div className="space-y-3">
               {/* Approve */}
               {request.status === 'borrador' && (
@@ -472,6 +507,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
               </p>
             </div>
           </TabsContent>
+          </div>
         </Tabs>
       </DialogContent>
     </Dialog>
