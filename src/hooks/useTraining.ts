@@ -182,6 +182,7 @@ export function useSaveTrainingCoursePeriods() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['training_course_periods'] });
       queryClient.invalidateQueries({ queryKey: ['training_course_periods_by_course', currentCompanyId, variables.courseId] });
+      queryClient.invalidateQueries({ queryKey: ['training_courses_by_period'] });
       queryClient.invalidateQueries({ queryKey: ['training_courses'] });
       queryClient.invalidateQueries({ queryKey: ['training_compliance'] });
     },
@@ -190,16 +191,50 @@ export function useSaveTrainingCoursePeriods() {
 
 export function useTrainingCoursesByPeriod(period?: TrainingPeriodInput | null) {
   const courses = useTrainingCourses();
-  const periods = useTrainingCoursePeriods(period, { enabled: !!period });
+  const { currentCompanyId } = useAuth();
+  const periodCourses = useQuery({
+    queryKey: ['training_courses_by_period', currentCompanyId, period?.year ?? 'all', period?.month ?? 'all'],
+    queryFn: async () => {
+      if (!currentCompanyId || !period) return [];
+
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('training_course_periods')
+        .select('course_id')
+        .eq('company_id', currentCompanyId)
+        .eq('year', period.year)
+        .eq('month', period.month);
+
+      if (assignmentsError) throw assignmentsError;
+
+      const courseIds = Array.from(new Set((assignments || []).map((assignment) => assignment.course_id)));
+      if (courseIds.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('training_courses')
+        .select(`
+          *,
+          media_count:training_media(count)
+        `)
+        .eq('company_id', currentCompanyId)
+        .eq('is_active', true)
+        .in('id', courseIds)
+        .order('name');
+
+      if (error) throw error;
+
+      return data.map((course) => ({
+        ...course,
+        media_count: (course.media_count as any)?.[0]?.count || 0,
+      })) as TrainingCourse[];
+    },
+    enabled: !!currentCompanyId && !!period,
+  });
 
   return {
     ...courses,
-    isLoading: courses.isLoading || (!!period && periods.isLoading),
-    data: !period
-      ? courses.data
-      : (courses.data || []).filter((course) =>
-          (periods.data || []).some((assignment) => assignment.course_id === course.id)
-        ),
+    isLoading: period ? periodCourses.isLoading : courses.isLoading,
+    error: period ? periodCourses.error : courses.error,
+    data: period ? periodCourses.data : courses.data,
   };
 }
 

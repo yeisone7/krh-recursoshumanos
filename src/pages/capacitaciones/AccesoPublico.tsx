@@ -38,6 +38,7 @@ interface MediaItem {
 export default function AccesoPublico() {
   const [searchParams] = useSearchParams();
   const tokenParam = searchParams.get('token');
+  const normalizeCedula = (value: string) => value.replace(/\D/g, '');
 
   const [step, setStep] = useState<Step>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -131,13 +132,14 @@ export default function AccesoPublico() {
   };
 
   const verifyCedula = async (cedula: string) => {
-    if (!cedula.trim() || !tokenData) return;
+    const normalizedCedula = normalizeCedula(cedula);
+    if (!normalizedCedula || !tokenData) return;
     setVerifyingCedula(true);
     setCedulaError('');
 
     try {
       const { data, error } = await supabase.rpc('verify_employee_cedula', {
-        p_cedula: cedula.trim(),
+        p_cedula: normalizedCedula,
         p_company_id: tokenData.company_id,
       });
 
@@ -151,7 +153,7 @@ export default function AccesoPublico() {
         const { data: alreadyCompleted, error: completionCheckError } = await (supabase as any).rpc('has_training_completion', {
           p_token: tokenParam,
           p_employee_id: emp.employee_id,
-          p_operator_cedula: cedula.trim(),
+          p_operator_cedula: normalizedCedula,
         });
 
         if (completionCheckError) throw completionCheckError;
@@ -206,7 +208,7 @@ export default function AccesoPublico() {
         p_token: tokenParam,
         p_employee_id: employeeId,
         p_operator_name: operatorName,
-        p_operator_cedula: operatorCedula || null,
+        p_operator_cedula: normalizeCedula(operatorCedula) || null,
         p_signature_data: dataUrl,
         p_quiz_score: quizScore,
         p_user_agent: navigator.userAgent,
@@ -400,7 +402,7 @@ export default function AccesoPublico() {
                   id="cedula"
                   value={operatorCedula}
                   onChange={(e) => {
-                    setOperatorCedula(e.target.value);
+                    setOperatorCedula(normalizeCedula(e.target.value));
                     setCedulaVerified(false);
                     setCedulaError('');
                     setOperatorName('');
