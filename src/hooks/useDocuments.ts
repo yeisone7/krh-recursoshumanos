@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logAuditEvent } from '@/lib/auditService';
 
 export type EntityType = 
   | 'contract' 
@@ -185,6 +186,25 @@ export function useUploadDocument() {
         console.warn('Could not update entity document_url:', updateError);
       }
 
+      if (entityType === 'incapacity' || entityType === 'incapacity_clinical_history') {
+        await logAuditEvent({
+          company_id: currentCompanyId,
+          action: 'update',
+          entity_type: 'incapacity',
+          module: 'incapacidades',
+          entity_id: entityId,
+          entity_name: `Documento ${file.name}`,
+          description: `Se adjuntó la versión ${newVersion} de un documento de la incapacidad o prórroga.`,
+          new_values: {
+            document_id: docVersion.id,
+            document_type: entityType,
+            file_name: file.name,
+            version: newVersion,
+            notes: notes || null,
+          },
+        });
+      }
+
       return docVersion as DocumentVersion;
     },
     onSuccess: (data) => {
@@ -198,6 +218,8 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_process'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', data.entity_id] });
     },
   });
 }
@@ -290,12 +312,34 @@ export function useDeleteDocumentVersion() {
 
         if (updateTarget) {
           const { error: entityUpdateError } = await supabase
+            // The table and value pair is constrained by getEntityDocumentUpdate.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .from(updateTarget.table as any)
             .update(updateTarget.values)
             .eq('id', document.entity_id);
 
           if (entityUpdateError) throw entityUpdateError;
         }
+      }
+
+      if (document.entity_type === 'incapacity' || document.entity_type === 'incapacity_clinical_history') {
+        await logAuditEvent({
+          company_id: document.company_id,
+          action: 'delete',
+          entity_type: 'incapacity',
+          module: 'incapacidades',
+          entity_id: document.entity_id,
+          entity_name: `Documento ${document.file_name}`,
+          description: `Se eliminó la versión ${document.version} de un documento de la incapacidad o prórroga.`,
+          old_values: {
+            document_id: document.id,
+            document_type: document.entity_type,
+            file_name: document.file_name,
+            version: document.version,
+            notes: document.notes,
+          },
+          severity: 'warning',
+        });
       }
 
       return document;
@@ -311,6 +355,8 @@ export function useDeleteDocumentVersion() {
       queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_process'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', document.entity_id] });
     },
   });
 }

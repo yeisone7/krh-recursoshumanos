@@ -23,6 +23,7 @@ export type RecoveryStatus =
   | 'asumido_empresa';
 export type IncapacityLegalStage =
   | 'employer'
+  | 'eps_maternity'
   | 'eps_3_90'
   | 'eps_91_180'
   | 'afp_181_540'
@@ -49,6 +50,31 @@ export interface IncapacityLegalMilestone {
   level: 'info' | 'warning' | 'critical';
   isReached: boolean;
   daysRemaining: number;
+}
+
+export const COLOMBIA_LEGAL_MINIMUM_MONTHLY_WAGES: Record<number, number> = {
+  2024: 1_300_000,
+  2025: 1_423_500,
+  2026: 1_750_905,
+};
+
+export function getLegalMinimumMonthlyWage(date: Date | string = new Date()): number {
+  const parsedDate = date instanceof Date ? date : new Date(`${date}T00:00:00`);
+  const requestedYear = Number.isNaN(parsedDate.getTime())
+    ? new Date().getFullYear()
+    : parsedDate.getFullYear();
+  const configuredYears = Object.keys(COLOMBIA_LEGAL_MINIMUM_MONTHLY_WAGES)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const applicableYear = [...configuredYears]
+    .reverse()
+    .find((year) => year <= requestedYear) ?? configuredYears[0];
+
+  return COLOMBIA_LEGAL_MINIMUM_MONTHLY_WAGES[applicableYear];
+}
+
+export function getLegalMinimumDailyWage(date: Date | string = new Date()): number {
+  return getLegalMinimumMonthlyWage(date) / 30;
 }
 
 export const incapacityOriginOptions: Array<{
@@ -270,17 +296,15 @@ export type RecoveryFormData = z.infer<typeof recoveryFormSchema>;
 // =====================================================
 
 /**
- * Calculate payment responsibility according to Colombian law:
- * - Common illness: Employer pays days 1-2, EPS days 3-90 at 66.67%, EPS days 91-180 at 50%.
- * - From day 181 to 540, the pension fund may assume payment when legal conditions apply.
- * - From day 541, EPS/adapted entity may restart payment when the Decreto 1427 de 2022 cases apply.
- * - Work-related: ARL pays 100% from day 1.
+ * Calculates the payment distribution for an incapacity. Every covered day
+ * has the applicable legal minimum daily wage as its payment floor.
  */
 export function calculatePaymentDistribution(
   origin: IncapacityOrigin,
   totalDays: number,
   dailyBaseSalary: number,
-  accumulatedDays: number = 0 // Days from previous incapacities in the same event
+  accumulatedDays: number = 0,
+  minimumMonthlyWage: number = getLegalMinimumMonthlyWage()
 ): {
   employerDays: number;
   epsDays: number;
@@ -295,13 +319,48 @@ export function calculatePaymentDistribution(
   afpAmount: number;
   epsAfter540Amount: number;
   totalAmount: number;
+  minimumDailySalary: number;
+  usesMinimumWageFloor: boolean;
   segments: IncapacityPaymentSegment[];
 } {
   const roundMoney = (value: number) => Math.round(value * 100) / 100;
+  const minimumDailySalary = minimumMonthlyWage / 30;
+  const amountFor = (days: number, rate: number) =>
+    roundMoney(days * Math.max(dailyBaseSalary * rate, minimumDailySalary));
+
+  if (origin === 'licencia_maternidad') {
+    const epsAmount = amountFor(totalDays, 1);
+    return {
+      employerDays: 0,
+      epsDays: totalDays,
+      arlDays: 0,
+      afpDays: 0,
+      epsInitialDays: totalDays,
+      epsReducedDays: 0,
+      epsAfter540Days: 0,
+      employerAmount: 0,
+      epsAmount,
+      arlAmount: 0,
+      afpAmount: 0,
+      epsAfter540Amount: 0,
+      totalAmount: epsAmount,
+      minimumDailySalary,
+      usesMinimumWageFloor: dailyBaseSalary < minimumDailySalary,
+      segments: [{
+        stage: 'eps_maternity',
+        label: 'EPS - licencia de maternidad',
+        responsible: 'eps',
+        fromDay: accumulatedDays + 1,
+        toDay: accumulatedDays + totalDays,
+        days: totalDays,
+        rate: 1,
+        amount: epsAmount,
+      }],
+    };
+  }
 
   if (isWorkRelatedIncapacityOrigin(origin)) {
-    // ARL pays 100% from day 1
-    const arlAmount = roundMoney(totalDays * dailyBaseSalary);
+    const arlAmount = amountFor(totalDays, 1);
     return {
       employerDays: 0,
       epsDays: 0,
@@ -316,6 +375,8 @@ export function calculatePaymentDistribution(
       afpAmount: 0,
       epsAfter540Amount: 0,
       totalAmount: arlAmount,
+      minimumDailySalary,
+      usesMinimumWageFloor: dailyBaseSalary < minimumDailySalary,
       segments: [{
         stage: 'arl',
         label: 'ARL - origen laboral',
@@ -329,41 +390,32 @@ export function calculatePaymentDistribution(
     };
   }
 
-  // Common illness logic
   const startDay = accumulatedDays + 1;
   const endDay = accumulatedDays + totalDays;
-  
   let employerDays = 0;
   let epsInitialDays = 0;
   let epsReducedDays = 0;
   let afpDays = 0;
   let epsAfter540Days = 0;
-  
+
   for (let day = startDay; day <= endDay; day++) {
-    if (day <= 2) {
-      employerDays++;
-    } else if (day <= 90) {
-      epsInitialDays++;
-    } else if (day <= 180) {
-      epsReducedDays++;
-    } else if (day <= 540) {
-      afpDays++;
-    } else {
-      epsAfter540Days++;
-    }
+    if (day <= 2) employerDays++;
+    else if (day <= 90) epsInitialDays++;
+    else if (day <= 180) epsReducedDays++;
+    else if (day <= 540) afpDays++;
+    else epsAfter540Days++;
   }
-  
-  // Calculate amounts
-  const employerAmount = roundMoney(employerDays * dailyBaseSalary); // 100%
-  const epsInitialAmount = roundMoney(epsInitialDays * dailyBaseSalary * 0.6667); // 66.67%
-  const epsReducedAmount = roundMoney(epsReducedDays * dailyBaseSalary * 0.5); // 50%
-  const afpAmount = roundMoney(afpDays * dailyBaseSalary * 0.5); // 50%
-  const epsAfter540Amount = roundMoney(epsAfter540Days * dailyBaseSalary * 0.5); // 50% by default; subject to case validation.
+
+  const employerAmount = amountFor(employerDays, 0.6667);
+  const epsInitialAmount = amountFor(epsInitialDays, 0.6667);
+  const epsReducedAmount = amountFor(epsReducedDays, 0.5);
+  const afpAmount = amountFor(afpDays, 0.5);
+  const epsAfter540Amount = amountFor(epsAfter540Days, 0.5);
   const epsAmount = roundMoney(epsInitialAmount + epsReducedAmount + epsAfter540Amount);
   const totalAmount = roundMoney(employerAmount + epsAmount + afpAmount);
 
   const segmentDefinitions: Array<Omit<IncapacityPaymentSegment, 'days' | 'amount'>> = [
-    { stage: 'employer', label: 'Empleador - días 1 a 2', responsible: 'empleador', fromDay: Math.max(startDay, 1), toDay: Math.min(endDay, 2), rate: 1 },
+    { stage: 'employer', label: 'Empleador - días 1 a 2', responsible: 'empleador', fromDay: Math.max(startDay, 1), toDay: Math.min(endDay, 2), rate: 0.6667 },
     { stage: 'eps_3_90', label: 'EPS - días 3 a 90', responsible: 'eps', fromDay: Math.max(startDay, 3), toDay: Math.min(endDay, 90), rate: 0.6667 },
     { stage: 'eps_91_180', label: 'EPS - días 91 a 180', responsible: 'eps', fromDay: Math.max(startDay, 91), toDay: Math.min(endDay, 180), rate: 0.5 },
     { stage: 'afp_181_540', label: 'AFP - días 181 a 540', responsible: 'afp', fromDay: Math.max(startDay, 181), toDay: Math.min(endDay, 540), rate: 0.5 },
@@ -373,14 +425,10 @@ export function calculatePaymentDistribution(
   const segments = segmentDefinitions
     .map((segment) => {
       const days = segment.toDay >= segment.fromDay ? segment.toDay - segment.fromDay + 1 : 0;
-      return {
-        ...segment,
-        days,
-        amount: roundMoney(days * dailyBaseSalary * segment.rate),
-      };
+      return { ...segment, days, amount: amountFor(days, segment.rate) };
     })
     .filter((segment) => segment.days > 0);
-  
+
   return {
     employerDays,
     epsDays: epsInitialDays + epsReducedDays + epsAfter540Days,
@@ -395,6 +443,10 @@ export function calculatePaymentDistribution(
     afpAmount,
     epsAfter540Amount,
     totalAmount,
+    minimumDailySalary,
+    usesMinimumWageFloor: segments.some(
+      (segment) => dailyBaseSalary * segment.rate < minimumDailySalary
+    ),
     segments,
   };
 }
@@ -406,6 +458,10 @@ export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: 
 } {
   if (isWorkRelatedIncapacityOrigin(origin)) {
     return { stage: 'arl', label: 'Origen laboral', responsible: 'ARL' };
+  }
+
+  if (origin === 'licencia_maternidad') {
+    return { stage: 'eps_maternity', label: 'Licencia de maternidad', responsible: 'EPS (100%)' };
   }
 
   if (accumulatedDays <= 2) return { stage: 'employer', label: 'Días 1 a 2', responsible: 'Empleador' };
@@ -427,6 +483,8 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       daysRemaining: 0,
     }];
   }
+
+  if (origin === 'licencia_maternidad') return [];
 
   const definitions: Array<Omit<IncapacityLegalMilestone, 'isReached' | 'daysRemaining'>> = [
     {
@@ -473,22 +531,56 @@ export function getAccumulatedDays(incapacity: EmployeeIncapacity, allIncapaciti
   if (!incapacity.is_extension || !incapacity.parent_incapacity_id) {
     return 0;
   }
-  
-  // Find all previous incapacities in the chain
-  let accumulated = 0;
-  let currentParentId: string | null = incapacity.parent_incapacity_id;
-  
-  while (currentParentId) {
-    const parent = allIncapacities.find(inc => inc.id === currentParentId);
-    if (parent) {
-      accumulated += parent.total_days;
-      currentParentId = parent.parent_incapacity_id;
-    } else {
-      break;
-    }
+
+  const rootId = getRootIncapacity(incapacity, allIncapacities).id;
+  const chain = getIncapacityChain(rootId, allIncapacities);
+  const targetIndex = chain.findIndex((item) => item.id === incapacity.id);
+  const previousRecords = targetIndex >= 0 ? chain.slice(0, targetIndex) : chain;
+
+  return previousRecords.reduce((total, item) => total + item.total_days, 0);
+}
+
+export function getRootIncapacity(
+  incapacity: EmployeeIncapacity,
+  allIncapacities: EmployeeIncapacity[]
+): EmployeeIncapacity {
+  let current = incapacity;
+  const visited = new Set<string>();
+
+  while (current.parent_incapacity_id && !visited.has(current.id)) {
+    visited.add(current.id);
+    const parent = allIncapacities.find((item) => item.id === current.parent_incapacity_id);
+    if (!parent) break;
+    current = parent;
   }
-  
-  return accumulated;
+
+  return current;
+}
+
+export function getIncapacityChain(
+  rootId: string,
+  allIncapacities: EmployeeIncapacity[]
+): EmployeeIncapacity[] {
+  return allIncapacities
+    .filter((item) => getRootIncapacity(item, allIncapacities).id === rootId)
+    .sort((a, b) => {
+      if (a.id === rootId) return -1;
+      if (b.id === rootId) return 1;
+      const extensionOrder = (a.extension_number || 0) - (b.extension_number || 0);
+      return extensionOrder || a.start_date.localeCompare(b.start_date);
+    });
+}
+
+export function getAccumulatedDaysForNewExtension(
+  parentIncapacityId: string,
+  allIncapacities: EmployeeIncapacity[]
+): number {
+  const parent = allIncapacities.find((item) => item.id === parentIncapacityId);
+  if (!parent) return 0;
+  const root = getRootIncapacity(parent, allIncapacities);
+
+  return getIncapacityChain(root.id, allIncapacities)
+    .reduce((total, item) => total + item.total_days, 0);
 }
 
 /**
