@@ -5,6 +5,7 @@ import { format, differenceInDays, addDays, isBefore, isAfter } from 'date-fns';
 import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
+import { logAuditEvent } from '@/lib/auditService';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
@@ -16,7 +17,11 @@ import type {
 import {
   calculatePaymentDistribution,
   getAccumulatedDays,
+  getAccumulatedDaysForNewExtension,
+  getIncapacityChain,
   getLegalMilestones,
+  getLegalMinimumMonthlyWage,
+  getRootIncapacity,
   getTotalChainDays,
   incapacityOriginValues,
   requiresReintegrationExam,
@@ -138,8 +143,13 @@ export function useCreateIncapacity() {
         .eq('is_current', true)
         .single();
       
-      // Get accumulated days if it's an extension
+      // Extensions always inherit the IBC and origin from the initial incapacity.
       let accumulatedDays = 0;
+      let dailySalary = formData.daily_base_salary || 0;
+      let calculationOrigin = formData.origin;
+      let normalizedParentId = formData.parent_incapacity_id || null;
+      let extensionNumber = 0;
+
       if (formData.is_extension && formData.parent_incapacity_id) {
         const { data: allIncapacities } = await supabase
           .from('employee_incapacities')
@@ -147,38 +157,34 @@ export function useCreateIncapacity() {
           .eq('employee_id', formData.employee_id);
         
         if (allIncapacities) {
-          const parent = allIncapacities.find(inc => inc.id === formData.parent_incapacity_id);
+          const typedIncapacities = allIncapacities as EmployeeIncapacity[];
+          const parent = typedIncapacities.find(inc => inc.id === formData.parent_incapacity_id);
           if (parent) {
-            accumulatedDays = getAccumulatedDays(parent as EmployeeIncapacity, allIncapacities as EmployeeIncapacity[]);
-            accumulatedDays += parent.total_days;
+            const root = getRootIncapacity(parent, typedIncapacities);
+            accumulatedDays = getAccumulatedDaysForNewExtension(root.id, typedIncapacities);
+            dailySalary = root.daily_base_salary || 0;
+            calculationOrigin = root.origin;
+            normalizedParentId = root.id;
+            extensionNumber = getIncapacityChain(root.id, typedIncapacities)
+              .reduce((maximum, item) => Math.max(maximum, item.extension_number || 0), 0) + 1;
           }
         }
       }
       
       // Calculate payment distribution
       const totalDays = differenceInDays(formData.end_date, formData.start_date) + 1;
-      const dailySalary = formData.daily_base_salary || 0;
       const distribution = calculatePaymentDistribution(
-        formData.origin,
+        calculationOrigin,
         totalDays,
         dailySalary,
-        accumulatedDays
+        accumulatedDays,
+        getLegalMinimumMonthlyWage(formData.start_date)
       );
-      
-      // Get extension number
-      let extensionNumber = 0;
-      if (formData.is_extension && formData.parent_incapacity_id) {
-        const { count } = await supabase
-          .from('employee_incapacities')
-          .select('*', { count: 'exact', head: true })
-          .eq('parent_incapacity_id', formData.parent_incapacity_id);
-        extensionNumber = (count || 0) + 1;
-      }
       
       const insertData = {
         employee_id: formData.employee_id,
         company_id: currentCompanyId,
-        origin: formData.origin,
+        origin: calculationOrigin,
         start_date: format(formData.start_date, 'yyyy-MM-dd'),
         end_date: format(formData.end_date, 'yyyy-MM-dd'),
         
@@ -204,7 +210,7 @@ export function useCreateIncapacity() {
         total_amount: distribution.totalAmount,
         
         is_extension: formData.is_extension,
-        parent_incapacity_id: formData.parent_incapacity_id || null,
+        parent_incapacity_id: normalizedParentId,
         extension_number: extensionNumber,
         
         requires_reintegration_exam: requiresReintegrationExam(totalDays, accumulatedDays),
@@ -220,6 +226,26 @@ export function useCreateIncapacity() {
         .single();
       
       if (error) throw error;
+
+      await logAuditEvent({
+        company_id: currentCompanyId!,
+        action: 'create',
+        entity_type: 'incapacity',
+        module: 'incapacidades',
+        entity_id: data.id,
+        entity_name: formData.is_extension
+          ? `Prórroga #${extensionNumber}`
+          : `Incapacidad ${formData.diagnosis}`,
+        description: formData.is_extension
+          ? 'Se registró una prórroga con control independiente.'
+          : 'Se registró una incapacidad.',
+        new_values: insertData,
+        metadata: {
+          is_extension: formData.is_extension,
+          inherited_ibc_from: formData.is_extension ? normalizedParentId : null,
+          minimum_wage_floor_applied: distribution.usesMinimumWageFloor,
+        },
+      });
       
       // Auto-create reintegration exam if incapacity exceeds 30 days
       const totalChainDays = totalDays + accumulatedDays;
@@ -282,6 +308,8 @@ export function useCreateIncapacity() {
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_trail'] });
     },
   });
 }
@@ -291,9 +319,46 @@ export function useUpdateIncapacity() {
   
   return useMutation({
     mutationFn: async ({ id, data: formData }: { id: string; data: Partial<IncapacityFormData> }) => {
+      const { data: currentRecord, error: currentError } = await supabase
+        .from('employee_incapacities')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (currentError) throw currentError;
+
+      const { data: employeeRecords, error: employeeRecordsError } = await supabase
+        .from('employee_incapacities')
+        .select('*')
+        .eq('employee_id', currentRecord.employee_id);
+
+      if (employeeRecordsError) throw employeeRecordsError;
+
+      const typedRecords = employeeRecords as unknown as EmployeeIncapacity[];
+      const typedCurrent = currentRecord as unknown as EmployeeIncapacity;
+      const root = getRootIncapacity(typedCurrent, typedRecords);
+      const effectiveOrigin = typedCurrent.is_extension
+        ? root.origin
+        : (formData.origin || typedCurrent.origin);
+      const effectiveDailySalary = typedCurrent.is_extension
+        ? (root.daily_base_salary || 0)
+        : (formData.daily_base_salary ?? typedCurrent.daily_base_salary ?? 0);
+      const effectiveStartDate = formData.start_date || parseDateOnlyOr(typedCurrent.start_date, new Date());
+      const effectiveEndDate = formData.end_date || parseDateOnlyOr(typedCurrent.end_date, effectiveStartDate);
+      const accumulatedDays = typedCurrent.is_extension
+        ? getAccumulatedDays(typedCurrent, typedRecords)
+        : 0;
+      const totalDays = differenceInDays(effectiveEndDate, effectiveStartDate) + 1;
+      const distribution = calculatePaymentDistribution(
+        effectiveOrigin,
+        totalDays,
+        effectiveDailySalary,
+        accumulatedDays,
+        getLegalMinimumMonthlyWage(effectiveStartDate)
+      );
       const updateData: Record<string, unknown> = {};
       
-      if (formData.origin) updateData.origin = formData.origin;
+      updateData.origin = effectiveOrigin;
       if (formData.start_date) updateData.start_date = format(formData.start_date, 'yyyy-MM-dd');
       if (formData.end_date) updateData.end_date = format(formData.end_date, 'yyyy-MM-dd');
       if (formData.cie10_code !== undefined) updateData.cie10_code = formData.cie10_code || null;
@@ -301,28 +366,21 @@ export function useUpdateIncapacity() {
       if (formData.treating_doctor !== undefined) updateData.treating_doctor = formData.treating_doctor || null;
       if (formData.certificate_number !== undefined) updateData.certificate_number = formData.certificate_number || null;
       if (formData.medical_entity !== undefined) updateData.medical_entity = formData.medical_entity || null;
-      if (formData.daily_base_salary !== undefined) updateData.daily_base_salary = formData.daily_base_salary;
+      updateData.daily_base_salary = effectiveDailySalary;
       if (formData.observations !== undefined) updateData.observations = formData.observations || null;
-      
-      // Recalculate payment if dates or origin changed
-      if (formData.start_date && formData.end_date && formData.origin !== undefined) {
-        const totalDays = differenceInDays(formData.end_date, formData.start_date) + 1;
-        const dailySalary = formData.daily_base_salary || 0;
-        const distribution = calculatePaymentDistribution(formData.origin, totalDays, dailySalary, 0);
-        
-        Object.assign(updateData, {
-          employer_days: distribution.employerDays,
-          eps_days: distribution.epsDays,
-          arl_days: distribution.arlDays,
-          afp_days: distribution.afpDays,
-          employer_amount: distribution.employerAmount,
-          eps_amount: distribution.epsAmount,
-          arl_amount: distribution.arlAmount,
-          afp_amount: distribution.afpAmount,
-          total_amount: distribution.totalAmount,
-          requires_reintegration_exam: requiresReintegrationExam(totalDays),
-        });
-      }
+
+      Object.assign(updateData, {
+        employer_days: distribution.employerDays,
+        eps_days: distribution.epsDays,
+        arl_days: distribution.arlDays,
+        afp_days: distribution.afpDays,
+        employer_amount: distribution.employerAmount,
+        eps_amount: distribution.epsAmount,
+        arl_amount: distribution.arlAmount,
+        afp_amount: distribution.afpAmount,
+        total_amount: distribution.totalAmount,
+        requires_reintegration_exam: requiresReintegrationExam(totalDays, accumulatedDays),
+      });
       
       const { data, error } = await supabase
         .from('employee_incapacities')
@@ -332,12 +390,85 @@ export function useUpdateIncapacity() {
         .single();
       
       if (error) throw error;
+
+      // Recalculate the whole chain so later extensions stay aligned with the
+      // initial IBC and with any edited duration in a previous record.
+      const { data: refreshedRecords, error: refreshedError } = await supabase
+        .from('employee_incapacities')
+        .select('*')
+        .eq('employee_id', currentRecord.employee_id);
+
+      if (refreshedError) throw refreshedError;
+
+      const refreshed = refreshedRecords as unknown as EmployeeIncapacity[];
+      const refreshedCurrent = refreshed.find((item) => item.id === id)!;
+      const refreshedRoot = getRootIncapacity(refreshedCurrent, refreshed);
+      const rootIbc = refreshedRoot.daily_base_salary || 0;
+      let chainAccumulatedDays = 0;
+
+      for (const item of getIncapacityChain(refreshedRoot.id, refreshed)) {
+        const itemOrigin = item.is_extension ? refreshedRoot.origin : item.origin;
+        const itemIbc = item.is_extension ? rootIbc : (item.daily_base_salary || 0);
+        const itemDistribution = calculatePaymentDistribution(
+          itemOrigin,
+          item.total_days,
+          itemIbc,
+          chainAccumulatedDays,
+          getLegalMinimumMonthlyWage(item.start_date)
+        );
+
+        const { error: chainUpdateError } = await supabase
+          .from('employee_incapacities')
+          .update({
+            origin: itemOrigin,
+            daily_base_salary: itemIbc,
+            employer_days: itemDistribution.employerDays,
+            eps_days: itemDistribution.epsDays,
+            arl_days: itemDistribution.arlDays,
+            afp_days: itemDistribution.afpDays,
+            employer_amount: itemDistribution.employerAmount,
+            eps_amount: itemDistribution.epsAmount,
+            arl_amount: itemDistribution.arlAmount,
+            afp_amount: itemDistribution.afpAmount,
+            total_amount: itemDistribution.totalAmount,
+            requires_reintegration_exam: requiresReintegrationExam(item.total_days, chainAccumulatedDays),
+          })
+          .eq('id', item.id);
+
+        if (chainUpdateError) throw chainUpdateError;
+        chainAccumulatedDays += item.total_days;
+      }
+
+      await logAuditEvent({
+        company_id: currentRecord.company_id,
+        action: 'update',
+        entity_type: 'incapacity',
+        module: 'incapacidades',
+        entity_id: id,
+        entity_name: currentRecord.is_extension
+          ? `Prórroga #${currentRecord.extension_number || 0}`
+          : `Incapacidad ${currentRecord.diagnosis}`,
+        description: currentRecord.is_extension
+          ? 'Se actualizaron los datos y valores independientes de la prórroga.'
+          : 'Se actualizó la incapacidad y se recalculó su cadena de prórrogas.',
+        old_values: currentRecord,
+        new_values: { ...data, ...updateData },
+        metadata: {
+          is_extension: currentRecord.is_extension,
+          minimum_wage_floor_applied: distribution.usesMinimumWageFloor,
+        },
+      });
+
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', variables.id] });
     },
   });
 }
@@ -347,16 +478,23 @@ export function useUpdateRecoveryStatus() {
   
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: RecoveryFormData }) => {
+      const { data: currentRecord, error: currentError } = await supabase
+        .from('employee_incapacities')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (currentError) throw currentError;
+
       const updateData: Record<string, unknown> = {
         recovery_status: data.recovery_status,
+        filing_date: data.filing_date ? format(data.filing_date, 'yyyy-MM-dd') : null,
+        filing_number: data.filing_number || null,
+        expected_payment_date: data.expected_payment_date ? format(data.expected_payment_date, 'yyyy-MM-dd') : null,
+        actual_payment_date: data.actual_payment_date ? format(data.actual_payment_date, 'yyyy-MM-dd') : null,
+        recovered_amount: data.recovered_amount ?? 0,
+        recovery_notes: data.recovery_notes || null,
       };
-      
-      if (data.filing_date) updateData.filing_date = format(data.filing_date, 'yyyy-MM-dd');
-      if (data.filing_number !== undefined) updateData.filing_number = data.filing_number || null;
-      if (data.expected_payment_date) updateData.expected_payment_date = format(data.expected_payment_date, 'yyyy-MM-dd');
-      if (data.actual_payment_date) updateData.actual_payment_date = format(data.actual_payment_date, 'yyyy-MM-dd');
-      if (data.recovered_amount !== undefined) updateData.recovered_amount = data.recovered_amount;
-      if (data.recovery_notes !== undefined) updateData.recovery_notes = data.recovery_notes || null;
       
       const { data: result, error } = await supabase
         .from('employee_incapacities')
@@ -366,12 +504,42 @@ export function useUpdateRecoveryStatus() {
         .single();
       
       if (error) throw error;
+
+      await logAuditEvent({
+        company_id: currentRecord.company_id,
+        action: 'update',
+        entity_type: 'incapacity',
+        module: 'incapacidades',
+        entity_id: id,
+        entity_name: currentRecord.is_extension
+          ? `Prórroga #${currentRecord.extension_number || 0}`
+          : `Incapacidad ${currentRecord.diagnosis}`,
+        description: currentRecord.is_extension
+          ? `Se actualizó el radicado independiente de la prórroga #${currentRecord.extension_number || 0}.`
+          : 'Se actualizó el recobro de la incapacidad inicial.',
+        old_values: {
+          recovery_status: currentRecord.recovery_status,
+          filing_date: currentRecord.filing_date,
+          filing_number: currentRecord.filing_number,
+          expected_payment_date: currentRecord.expected_payment_date,
+          actual_payment_date: currentRecord.actual_payment_date,
+          recovered_amount: currentRecord.recovered_amount,
+          recovery_notes: currentRecord.recovery_notes,
+        },
+        new_values: updateData,
+        metadata: { is_extension: currentRecord.is_extension },
+      });
+
       return result;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', variables.id] });
     },
   });
 }
@@ -456,7 +624,7 @@ export function useDeleteIncapacity() {
     mutationFn: async (id: string) => {
       const { data: target, error: targetError } = await supabase
         .from('employee_incapacities')
-        .select('id, employee_id')
+        .select('id, employee_id, company_id, diagnosis, is_extension, extension_number')
         .eq('id', id)
         .single();
 
@@ -503,11 +671,30 @@ export function useDeleteIncapacity() {
 
         if (error) throw error;
       }
+
+      await logAuditEvent({
+        company_id: target.company_id,
+        action: 'delete',
+        entity_type: 'incapacity',
+        module: 'incapacidades',
+        entity_id: target.id,
+        entity_name: target.is_extension
+          ? `Prórroga #${target.extension_number || 0}`
+          : `Incapacidad ${target.diagnosis}`,
+        description: target.is_extension
+          ? 'Se eliminó una prórroga y sus controles independientes.'
+          : `Se eliminó la incapacidad y ${Math.max(0, idsToDelete.length - 1)} prórroga(s).`,
+        old_values: target,
+        metadata: { deleted_record_ids: idsToDelete },
+        severity: 'warning',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
+      queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
       queryClient.invalidateQueries({ queryKey: ['document_versions'] });
       queryClient.invalidateQueries({ queryKey: ['current_document'] });
     },

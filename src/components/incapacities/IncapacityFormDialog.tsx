@@ -45,7 +45,13 @@ import { cn } from '@/lib/utils';
 
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateIncapacity, useUpdateIncapacity, useIncapacity, useEmployeeIncapacities } from '@/hooks/useIncapacities';
-import { incapacityFormSchema, type IncapacityFormData, incapacityOriginOptions } from '@/types/incapacity';
+import {
+  getLegalMinimumMonthlyWage,
+  getRootIncapacity,
+  incapacityFormSchema,
+  type IncapacityFormData,
+  incapacityOriginOptions,
+} from '@/types/incapacity';
 
 interface IncapacityFormDialogProps {
   open: boolean;
@@ -73,6 +79,7 @@ export function IncapacityFormDialog({
   
   const isEditing = !!incapacityId;
   const isExtension = !!parentIncapacityId;
+  const isControlledExtension = isExtension || !!incapacity?.is_extension;
   
   const form = useForm<IncapacityFormData>({
     resolver: zodResolver(incapacityFormSchema),
@@ -178,6 +185,19 @@ export function IncapacityFormDialog({
       form.setValue('parent_incapacity_id', parentIncapacityId);
     }
   }, [isExtension, parentIncapacityId, form]);
+
+  useEffect(() => {
+    if (!isControlledExtension || !employeeIncapacities?.length) return;
+    const parentId = parentIncapacityId || incapacity?.parent_incapacity_id;
+    if (!parentId) return;
+
+    const parent = employeeIncapacities.find((item) => item.id === parentId);
+    if (!parent) return;
+    const root = getRootIncapacity(parent, employeeIncapacities);
+
+    form.setValue('daily_base_salary', root.daily_base_salary || 0);
+    form.setValue('origin', root.origin);
+  }, [employeeIncapacities, form, incapacity?.parent_incapacity_id, isControlledExtension, parentIncapacityId]);
 
   useEffect(() => {
     const durationDays = Number(watchDurationDays);
@@ -295,7 +315,7 @@ export function IncapacityFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Origen *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={isControlledExtension}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -308,7 +328,9 @@ export function IncapacityFormDialog({
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        El origen determina quién asume el pago (EPS vs ARL)
+                        {isControlledExtension
+                          ? 'La prórroga conserva el origen de la incapacidad inicial.'
+                          : 'El origen determina quién asume el pago (EPS vs ARL).'}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -576,16 +598,19 @@ export function IncapacityFormDialog({
                     <FormItem>
                       <FormLabel>Salario Base Diario (IBC)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
+                        <Input
+                          type="number"
                           step="0.01"
                           placeholder="0.00"
+                          disabled={isControlledExtension}
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
                       <FormDescription>
-                        Ingreso Base de Cotización diario para calcular el valor de la incapacidad
+                        {isControlledExtension
+                          ? 'La prórroga toma automáticamente el IBC diario de la incapacidad inicial.'
+                          : `Ingreso Base de Cotización diario. El pago nunca será inferior al piso diario del SMLMV ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(getLegalMinimumMonthlyWage(watchStartDate))}.`}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -597,7 +622,7 @@ export function IncapacityFormDialog({
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p><strong>Origen Común:</strong></p>
                     <ul className="list-disc list-inside ml-2">
-                      <li>Días 1-2: Empleador (100%)</li>
+                      <li>Días 1-2: Empleador (66.67%)</li>
                       <li>Días 3-90: EPS (66.67%)</li>
                       <li>Días 91-180: EPS (50%)</li>
                       <li>Días 181-540: AFP (50%, sujeto a concepto de rehabilitación)</li>
@@ -607,6 +632,13 @@ export function IncapacityFormDialog({
                     <ul className="list-disc list-inside ml-2">
                       <li>Desde día 1: ARL (100%)</li>
                     </ul>
+                    <p className="mt-2"><strong>Licencia de Maternidad:</strong></p>
+                    <ul className="list-disc list-inside ml-2">
+                      <li>Desde día 1: EPS (100%)</li>
+                    </ul>
+                    <p className="mt-2 text-xs">
+                      Todo valor diario calculado por debajo del SMLMV diario se ajusta automáticamente a ese piso.
+                    </p>
                   </div>
                 </div>
                   </div>

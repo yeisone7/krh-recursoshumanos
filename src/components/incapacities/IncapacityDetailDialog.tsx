@@ -17,7 +17,8 @@ import {
   XCircle,
   Loader2,
   Upload,
-  File
+  File,
+  History,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,11 +54,13 @@ import {
   recoveryStatusColors,
   getCurrentLegalStage,
   getLegalMilestones,
+  getLegalMinimumDailyWage,
   getTotalChainDays 
 } from '@/types/incapacity';
 import { IncapacityFormDialog } from './IncapacityFormDialog';
 import { RecoveryFormDialog } from './RecoveryFormDialog';
-import { DocumentSection } from '@/components/documents/DocumentSection';
+import { DocumentIndicator, DocumentSection } from '@/components/documents/DocumentSection';
+import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 
 interface IncapacityDetailDialogProps {
   open: boolean;
@@ -74,6 +77,7 @@ export function IncapacityDetailDialog({
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
   const deleteMutation = useDeleteIncapacity();
@@ -126,6 +130,7 @@ export function IncapacityDetailDialog({
   const endDate = parseDateOnlyOr(incapacity.end_date, new Date());
   const isActive = endDate >= today && parseDateOnlyOr(incapacity.start_date, new Date()) <= today;
   const daysRemaining = differenceInDays(endDate, today);
+  const minimumDailyWage = getLegalMinimumDailyWage(incapacity.start_date);
   
   return (
     <>
@@ -147,7 +152,7 @@ export function IncapacityDetailDialog({
                       DETALLE
                     </Badge>
                     <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
-                      Incapacidad - {employeeName}
+                      {incapacity.is_extension ? `Prórroga #${incapacity.extension_number}` : 'Incapacidad'} - {employeeName}
                     </DialogTitle>
                     <DialogDescription className="font-medium mt-1">
                       {formatDateOnly(incapacity.start_date, "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
@@ -176,6 +181,7 @@ export function IncapacityDetailDialog({
                 <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
                 <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
                 <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
+                <TabsTrigger value="audit" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><History className="h-4 w-4 shrink-0" />Trazabilidad</TabsTrigger>
               </TabsList>
               <ScrollArea className="-mx-4 min-h-0 flex-1 px-4 pb-4 sm:-mx-8 sm:px-8 sm:pb-6">
               
@@ -375,6 +381,9 @@ export function IncapacityDetailDialog({
                       <div>
                         <p className="text-sm text-muted-foreground">Salario Base Diario (IBC)</p>
                         <p className="text-lg font-bold">{formatCurrency(incapacity.daily_base_salary)}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Piso diario SMLMV aplicado: {formatCurrency(minimumDailyWage)}
+                        </p>
                       </div>
                       
                       <Separator />
@@ -393,7 +402,7 @@ export function IncapacityDetailDialog({
                             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10">
                               <div>
                                 <p className="font-medium">Empleador</p>
-                                <p className="text-sm text-muted-foreground">{incapacity.employer_days} días al 100%</p>
+                                <p className="text-sm text-muted-foreground">{incapacity.employer_days} días al 66.67%</p>
                               </div>
                               <p className="text-lg font-bold">{formatCurrency(incapacity.employer_amount)}</p>
                             </div>
@@ -403,7 +412,9 @@ export function IncapacityDetailDialog({
                             <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10">
                               <div>
                                 <p className="font-medium">EPS - {incapacity.eps_name || 'No registrada'}</p>
-                                <p className="text-sm text-muted-foreground">{incapacity.eps_days} días según tramo legal aplicable</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {incapacity.eps_days} días {incapacity.origin === 'licencia_maternidad' ? 'al 100%' : 'según tramo legal aplicable'}
+                                </p>
                               </div>
                               <p className="text-lg font-bold">{formatCurrency(incapacity.eps_amount)}</p>
                             </div>
@@ -599,19 +610,30 @@ export function IncapacityDetailDialog({
                       {/* Extensions */}
                       {incapacity.extensions && incapacity.extensions.length > 0 ? (
                         incapacity.extensions.map((ext, index) => (
-                          <div key={ext.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                          <div key={ext.id} className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center">
                             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-sm font-bold">
                               {index + 2}
                             </div>
-                            <div className="flex-1">
+                            <div className="min-w-0 flex-1">
                               <p className="font-medium">Prórroga #{ext.extension_number}</p>
                               <p className="text-sm text-muted-foreground">
                                 {formatDateOnly(ext.start_date, 'dd/MM/yyyy')} - {formatDateOnly(ext.end_date, 'dd/MM/yyyy')} ({ext.total_days} días)
                               </p>
+                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                <span>Valor: {formatCurrency(ext.total_amount)}</span>
+                                <span>Recobrado: {formatCurrency(ext.recovered_amount)}</span>
+                                <span>Radicado: {ext.filing_number || 'Sin radicar'}</span>
+                                <DocumentIndicator entityType="incapacity" entityId={ext.id} />
+                              </div>
                             </div>
-                            <Badge className={recoveryStatusColors[ext.recovery_status]}>
-                              {recoveryStatusLabels[ext.recovery_status]}
-                            </Badge>
+                            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                              <Badge className={recoveryStatusColors[ext.recovery_status]}>
+                                {recoveryStatusLabels[ext.recovery_status]}
+                              </Badge>
+                              <Button size="sm" variant="outline" onClick={() => setSelectedExtensionId(ext.id)}>
+                                Gestionar
+                              </Button>
+                            </div>
                           </div>
                         ))
                       ) : !incapacity.is_extension ? (
@@ -628,6 +650,10 @@ export function IncapacityDetailDialog({
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="audit" className="mt-0 space-y-4">
+                <AuditLogViewer entityType="incapacity" entityId={incapacity.id} compact />
               </TabsContent>
               </ScrollArea>
             </Tabs>
@@ -679,7 +705,9 @@ export function IncapacityDetailDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar incapacidad?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminará la incapacidad y todas sus prórrogas asociadas.
+              {incapacity.is_extension
+                ? 'Esta acción no se puede deshacer. Se eliminará únicamente esta prórroga y sus documentos.'
+                : 'Esta acción no se puede deshacer. Se eliminará la incapacidad y todas sus prórrogas asociadas.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -690,6 +718,12 @@ export function IncapacityDetailDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <IncapacityDetailDialog
+        open={!!selectedExtensionId}
+        onOpenChange={(extensionOpen) => !extensionOpen && setSelectedExtensionId(null)}
+        incapacityId={selectedExtensionId}
+      />
     </>
   );
 }
