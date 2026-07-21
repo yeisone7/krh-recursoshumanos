@@ -59,6 +59,7 @@ interface IncapacityFormDialogProps {
   incapacityId?: string | null;
   employeeId?: string; // Pre-select employee
   parentIncapacityId?: string; // For creating extensions
+  initialTab?: 'general' | 'clinical' | 'payment';
   onSuccess?: () => void;
 }
 
@@ -68,6 +69,7 @@ export function IncapacityFormDialog({
   incapacityId,
   employeeId,
   parentIncapacityId,
+  initialTab = 'general',
   onSuccess,
 }: IncapacityFormDialogProps) {
   const [activeTab, setActiveTab] = useState('general');
@@ -149,6 +151,10 @@ export function IncapacityFormDialog({
         };
       })
   ), [employees]);
+
+  useEffect(() => {
+    if (open) setActiveTab(initialTab);
+  }, [initialTab, open]);
   
   // Load existing incapacity data for editing
   useEffect(() => {

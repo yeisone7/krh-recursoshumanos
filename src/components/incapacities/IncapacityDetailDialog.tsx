@@ -74,6 +74,8 @@ export function IncapacityDetailDialog({
   incapacityId,
 }: IncapacityDetailDialogProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<string | null>(null);
+  const [editInitialTab, setEditInitialTab] = useState<'general' | 'payment'>('general');
   const [showExtensionDialog, setShowExtensionDialog] = useState(false);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -96,6 +98,15 @@ export function IncapacityDetailDialog({
         description: 'Revisa si tiene registros relacionados o intenta nuevamente.',
       });
     }
+  };
+
+  const openEditDialog = (
+    targetId: string,
+    initialTab: 'general' | 'payment' = 'general',
+  ) => {
+    setEditTargetId(targetId);
+    setEditInitialTab(initialTab);
+    setShowEditDialog(true);
   };
   
   const formatCurrency = (amount: number | null) => {
@@ -368,13 +379,32 @@ export function IncapacityDetailDialog({
               <TabsContent value="payment" className="mt-0 space-y-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
-                      Distribución de Pago
-                    </CardTitle>
-                    <CardDescription>
-                      Cálculo según Decreto 780 de 2016, Decreto 1427 de 2022 y reglas por origen.
-                    </CardDescription>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="space-y-1.5">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <DollarSign className="h-4 w-4" />
+                          Distribución de Pago
+                        </CardTitle>
+                        <CardDescription>
+                          Cálculo según Decreto 780 de 2016, Decreto 1427 de 2022 y reglas por origen.
+                        </CardDescription>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full shrink-0 sm:w-auto"
+                        onClick={() => openEditDialog(
+                          incapacity.is_extension
+                            ? incapacity.parent_incapacity_id || incapacity.id
+                            : incapacity.id,
+                          'payment',
+                        )}
+                      >
+                        <Edit className="mr-2 h-4 w-4" />
+                        {incapacity.is_extension ? 'Editar IBC inicial' : 'Editar IBC'}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -382,7 +412,9 @@ export function IncapacityDetailDialog({
                         <p className="text-sm text-muted-foreground">Salario Base Diario (IBC)</p>
                         <p className="text-lg font-bold">{formatCurrency(incapacity.daily_base_salary)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Piso diario SMLMV aplicado: {formatCurrency(minimumDailyWage)}
+                          {incapacity.is_extension
+                            ? 'Este valor se hereda de la incapacidad inicial.'
+                            : `Piso diario SMLMV aplicado: ${formatCurrency(minimumDailyWage)}`}
                         </p>
                       </div>
                       
@@ -668,7 +700,7 @@ export function IncapacityDetailDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
                 Cerrar
               </Button>
-              <Button onClick={() => setShowEditDialog(true)} className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
+              <Button onClick={() => openEditDialog(incapacity.id)} className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
                 <Edit className="h-4 w-4 mr-2" />
                 Editar
               </Button>
@@ -681,7 +713,8 @@ export function IncapacityDetailDialog({
       <IncapacityFormDialog
         open={showEditDialog}
         onOpenChange={setShowEditDialog}
-        incapacityId={incapacityId}
+        incapacityId={editTargetId}
+        initialTab={editInitialTab}
       />
       
       {/* Extension Dialog */}
