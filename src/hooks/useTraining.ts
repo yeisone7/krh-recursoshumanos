@@ -34,6 +34,14 @@ type CompletionWithCenterToken = TrainingCompletion & {
   } | null;
 };
 
+type TrainingCompletionPageRow = Record<string, unknown> & {
+  id: string;
+  completed_at: string;
+  signature_data?: string;
+};
+
+const TRAINING_COMPLETIONS_PAGE_SIZE = 1000;
+
 // =====================================================
 // COURSES HOOKS
 // =====================================================
@@ -881,23 +889,47 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
         ? `*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
         : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
 
-      let query = supabase
-        .from('training_completions')
-        .select(completionSelect)
-        .eq('company_id', currentCompanyId)
-        .order('completed_at', { ascending: false });
+      const completionRows: TrainingCompletionPageRow[] = [];
+      let cursor: Pick<TrainingCompletionPageRow, 'completed_at' | 'id'> | null = null;
 
-      if (courseId) {
-        query = query.eq('course_id', courseId);
+      for (;;) {
+        let query = supabase
+          .from('training_completions')
+          .select(completionSelect)
+          .eq('company_id', currentCompanyId)
+          .order('completed_at', { ascending: false })
+          .order('id', { ascending: false })
+          .limit(TRAINING_COMPLETIONS_PAGE_SIZE);
+
+        if (courseId) {
+          query = query.eq('course_id', courseId);
+        }
+
+        if (cursor) {
+          const completedAt = `"${cursor.completed_at.replace(/"/g, '\\"')}"`;
+          query = query.or(
+            `completed_at.lt.${completedAt},and(completed_at.eq.${completedAt},id.lt.${cursor.id})`
+          );
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        const page = (data || []) as unknown as TrainingCompletionPageRow[];
+        completionRows.push(...page);
+
+        if (page.length < TRAINING_COMPLETIONS_PAGE_SIZE) break;
+
+        const lastCompletion = page[page.length - 1];
+        cursor = {
+          completed_at: lastCompletion.completed_at,
+          id: lastCompletion.id,
+        };
       }
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const completions = (data || []).map((completion) => ({
+      const completions = completionRows.map((completion) => ({
         ...completion,
-        signature_data: includeSignatures ? (completion as { signature_data?: string }).signature_data : '',
+        signature_data: includeSignatures ? completion.signature_data : '',
       })) as unknown as TrainingCompletion[];
       const employeeIds = [...new Set(completions.map(completion => completion.employee_id).filter(Boolean))] as string[];
 
