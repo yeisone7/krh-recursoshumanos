@@ -361,12 +361,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Jornadas', icon: <Clock className="size-5 shrink-0" strokeWidth={2} />, href: '/jornadas', moduleCode: 'jornadas' },
   ].filter(canViewQuickAccessItem), [canViewQuickAccessItem]);
 
-  const quickAccessColors: Record<string, string> = {
-    Empleados: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-    Contratos: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    Requisiciones: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-    Jornadas: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
-  };
+  const quickAccessColor = 'bg-primary/10 text-primary border-primary/20';
 
   const sidebarHoverTone = 'hover:bg-primary hover:border-primary hover:text-primary-foreground';
   const sidebarActiveTone = 'bg-primary border-primary text-primary-foreground';
@@ -483,7 +478,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         <div className={cn("gap-2", isCollapsed ? "flex flex-col mt-1" : "grid grid-cols-2 mt-2 px-1")}>
           {quickAccessItems.map((item) => {
             const isActive = location.pathname === item.href;
-            const colorClass = quickAccessColors[item.label] || 'bg-primary/10 text-primary border-primary/20';
+            const colorClass = quickAccessColor;
             
             const content = (
               <Link key={item.href} to={item.href} onClick={handleNavClick}>
@@ -514,7 +509,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   </div>
                   {!isCollapsed && (
                     <span className={cn(
-                      "text-[8.5px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
+                      "w-full max-w-full break-words px-0.5 text-xs font-semibold leading-tight transition-colors",
                       isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-primary-foreground"
                     )}>
                       {item.label}
@@ -866,15 +861,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             )}>
               {toolsNavItems.map((item) => {
                 const isActive = location.pathname === item.href;
-                const toolColors: Record<string, string> = {
-                  'Calendario': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-                  'Reportes': 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-                  'Organigrama': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-                  'Asistente IA': 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
-                  'Alertas': 'bg-rose-500/10 text-rose-500 border-rose-500/20',
-                  'Notificaciones': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-                };
-                const colorClass = toolColors[item.label] || 'bg-primary/10 text-primary border-primary/20';
+                const colorClass = 'bg-primary/10 text-primary border-primary/20';
 
                 const content = (
                   <Link key={item.href} to={item.href} onClick={handleNavClick}>
@@ -910,7 +897,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
                       {!isCollapsed && (
                         <span className={cn(
-                          "text-[9px] font-extrabold uppercase tracking-wide leading-tight transition-colors w-full px-0.5 max-w-full break-words",
+                          "w-full max-w-full break-words px-0.5 text-xs font-semibold leading-tight transition-colors",
                           isActive ? "text-primary-foreground" : "text-sidebar-foreground/80 group-hover:text-primary-foreground"
                         )}>
                           {item.label}

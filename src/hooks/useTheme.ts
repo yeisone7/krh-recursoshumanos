@@ -1,54 +1,66 @@
 import { useState, useEffect, useCallback } from 'react';
-
-type Theme = 'light' | 'dark';
-const THEME_KEY = 'empatiq-theme';
-
-const getInitialTheme = (): Theme => {
-  if (typeof window === 'undefined') return 'light';
-  const savedTheme = localStorage.getItem(THEME_KEY) as Theme | null;
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
-
-const applyTheme = (theme: Theme) => {
-  const root = document.documentElement;
-  root.classList.remove('light', 'dark');
-  root.classList.add(theme);
-  root.style.colorScheme = theme;
-};
+import {
+  THEME_CHANGE_EVENT,
+  THEME_KEY,
+  applyThemePreference,
+  getStoredThemePreference,
+  isThemePreference,
+  resolveTheme,
+  type Theme,
+  type ThemePreference,
+} from '@/lib/theme';
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
+  const [preference, setPreference] = useState<ThemePreference>(getStoredThemePreference);
+  const [theme, setResolvedTheme] = useState<Theme>(() => resolveTheme(getStoredThemePreference()));
 
   useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme]);
+    const syncResolvedTheme = () => setResolvedTheme(applyThemePreference(preference));
+    syncResolvedTheme();
+
+    if (preference !== 'system') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', syncResolvedTheme);
+    return () => mediaQuery.removeEventListener('change', syncResolvedTheme);
+  }, [preference]);
 
   useEffect(() => {
-    const syncTheme = () => setThemeState(getInitialTheme());
-    window.addEventListener('storage', syncTheme);
-    window.addEventListener('empatiq-theme-change', syncTheme);
+    const syncFromStorage = (event: StorageEvent) => {
+      if (event.key === THEME_KEY || event.key === null) {
+        setPreference(getStoredThemePreference());
+      }
+    };
+    const syncFromApp = (event: Event) => {
+      const nextPreference = (event as CustomEvent<ThemePreference>).detail;
+      setPreference(isThemePreference(nextPreference) ? nextPreference : getStoredThemePreference());
+    };
+
+    window.addEventListener('storage', syncFromStorage);
+    window.addEventListener(THEME_CHANGE_EVENT, syncFromApp);
     return () => {
-      window.removeEventListener('storage', syncTheme);
-      window.removeEventListener('empatiq-theme-change', syncTheme);
+      window.removeEventListener('storage', syncFromStorage);
+      window.removeEventListener(THEME_CHANGE_EVENT, syncFromApp);
     };
   }, []);
 
+  const setTheme = useCallback((nextPreference: ThemePreference) => {
+    window.localStorage.setItem(THEME_KEY, nextPreference);
+    setPreference(nextPreference);
+    window.dispatchEvent(
+      new CustomEvent<ThemePreference>(THEME_CHANGE_EVENT, { detail: nextPreference }),
+    );
+  }, []);
+
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      localStorage.setItem(THEME_KEY, next);
-      window.dispatchEvent(new Event('empatiq-theme-change'));
-      return next;
-    });
-  }, []);
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [setTheme, theme]);
 
-  const setTheme = useCallback((t: Theme) => {
-    localStorage.setItem(THEME_KEY, t);
-    setThemeState(t);
-    window.dispatchEvent(new Event('empatiq-theme-change'));
-  }, []);
-
-  return { theme, toggleTheme, setTheme };
+  return {
+    theme,
+    preference,
+    isSystemTheme: preference === 'system',
+    toggleTheme,
+    setTheme,
+  };
 }

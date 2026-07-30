@@ -38,6 +38,9 @@ const registerSchema = z.object({
   path: ['confirm_password']
 });
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error && error.message ? error.message : fallback;
+
 type LoginFormData = z.infer<typeof loginSchema>;
 type RecoveryFormData = z.infer<typeof recoverySchema>;
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -110,7 +113,7 @@ const preloadHeroLogo = () => {
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = 'image';
-  link.href = empatiqLogo;
+  link.href = empatiqLogoLeft;
   link.setAttribute('fetchpriority', 'high');
   link.setAttribute('data-hero-logo-preload', 'empatiq-login');
   document.head.appendChild(link);
@@ -323,12 +326,12 @@ export default function Auth() {
       setCountdown(60);
       loginForm.reset();
       registerForm.reset();
-    } catch (err: any) {
+    } catch (err) {
       setIsRegisterFlowActive(false);
       toast({
         variant: 'destructive',
         title: 'Error de registro',
-        description: err?.message || 'No fue posible crear la cuenta. Intenta nuevamente.'
+        description: getErrorMessage(err, 'No fue posible crear la cuenta. Intenta nuevamente.')
       });
     } finally {
       setIsSubmitting(false);
@@ -367,8 +370,8 @@ export default function Auth() {
         }
       }
       toast({ title: '¡Correo reenviado!', description: 'Hemos enviado un nuevo mensaje a tu correo.' });
-    } catch (e: any) {
-      toast({ variant: 'destructive', title: 'Error', description: e.message || 'Error inesperado.' });
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Error', description: getErrorMessage(error, 'Error inesperado.') });
     }
   };
 
@@ -405,7 +408,7 @@ export default function Auth() {
               <img
                 src={empatiqLogoLeft}
                 alt="Logo EmpatiQ"
-                className="h-full max-w-full object-contain"
+                className="theme-aware-logo h-full max-w-full object-contain"
                 width={320}
                 height={320}
                 decoding="async"
@@ -482,7 +485,7 @@ export default function Auth() {
               onClick={() => setIsBrandPanelOpen((open) => !open)}
             >
               <span className="flex items-center gap-2 min-w-0">
-                <img src={empatiqIcon} alt="EmpatiQ" className="h-20 w-20 shrink-0 object-contain" />
+                <img src={empatiqIcon} alt="EmpatiQ" className="theme-aware-logo h-20 w-20 shrink-0 object-contain" />
                 <span className="min-w-0">
                   <span className="block text-xs text-muted-foreground">Plataforma EmpatiQ</span>
                 </span>
@@ -502,7 +505,7 @@ export default function Auth() {
                   <div className="relative border-t border-border px-4 py-4">
                     <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:20px_20px] opacity-10" aria-hidden="true" />
                     <div className="relative space-y-3">
-                      <img src={empatiqLogo} alt="Logo EmpatiQ" className="h-14 max-w-full object-contain sm:h-16" />
+                      <img src={empatiqLogo} alt="Logo EmpatiQ" className="theme-aware-logo h-14 max-w-full object-contain sm:h-16" />
                       <p className="text-sm font-semibold text-foreground">Gestión de Recursos Humanos</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">Administra empleados, contratos, dotación y exámenes médicos en una sola plataforma.</p>
                     </div>
@@ -559,7 +562,7 @@ export default function Auth() {
                       href="https://mail.google.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-355 rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-xs font-semibold text-foreground shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:border-input hover:shadow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg" alt="Gmail" className="w-4 h-4 shrink-0" />
                       <span>Gmail</span>
@@ -568,7 +571,7 @@ export default function Auth() {
                       href="https://outlook.live.com"
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-355 rounded-xl transition-all shadow-sm hover:shadow active:scale-95"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2.5 text-xs font-semibold text-foreground shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:border-input hover:shadow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg" alt="Outlook" className="w-4 h-4 shrink-0" />
                       <span>Outlook</span>
@@ -621,7 +624,7 @@ export default function Auth() {
                 {/* Header */}
                 <div className="text-center mb-4">
                   <div className="hidden lg:flex flex-col items-center mb-2">
-                    <img src={empatiqIcon} alt="EmpatiQ" className="w-24 h-24 object-contain" />
+                    <img src={empatiqIcon} alt="EmpatiQ" className="theme-aware-logo w-24 h-24 object-contain" />
                     
                     <span className="text-xs font-semibold text-primary/80 leading-tight text-center mt-1">Gestión de Talento Humano</span>
                   </div>
@@ -636,7 +639,7 @@ export default function Auth() {
                       <h2 className="text-xl font-bold text-foreground">
                         {isRecoveryMode ? 'Recuperar contraseña' : isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}
                       </h2>
-                      <p className="text-muted-foreground text-[10px] mt-0.5">
+                      <p className="text-muted-foreground text-xs mt-1">
                         {isRecoveryMode ?
                         'Te enviaremos un enlace seguro a tu correo' :
                         isLogin ?

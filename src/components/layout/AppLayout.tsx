@@ -134,7 +134,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   };
 
   return (
-    <div className="professional-density flex h-screen bg-background overflow-hidden">
+    <div className="professional-density flex h-[100dvh] bg-background overflow-hidden">
       {/* Mobile swipe indicator */}
       {isMobile && !mobileOpen && (
         <AnimatePresence>

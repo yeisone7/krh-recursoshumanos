@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Moon, Sun, Maximize, Minimize, Clock, MessageCircle } from 'lucide-react';
+import { Search, Building2, LogOut, User, Settings, BookOpen, Menu, Monitor, Moon, Sun, Maximize, Minimize, Clock, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,6 +7,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -29,7 +31,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
   const { user, profile, companies, roles, signOut, permissionsLoaded, hasPermission } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, preference, setTheme } = useTheme();
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
   const showChatButton = permissionsLoaded && hasPermission('chat', 'view');
   const { data: chatUnreadCount = 0 } = useChatUnreadCount(showChatButton);
@@ -147,6 +149,7 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
                 size="icon"
                 className="h-8 w-8 hidden sm:inline-flex"
                 onClick={toggleFullscreen}
+                aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Entrar en pantalla completa'}
               >
                 {isFullscreen ? (
                   <Minimize className="w-4 h-4 text-muted-foreground" />
@@ -158,24 +161,50 @@ export function Header({ onMobileMenuToggle }: HeaderProps) {
             <TooltipContent>{isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}</TooltipContent>
           </Tooltip>
 
-          {/* Theme toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
+          {/* Theme preference */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={toggleTheme}
+                aria-label={`Tema: ${preference === 'system' ? 'sistema' : preference === 'dark' ? 'oscuro' : 'claro'}`}
               >
-                {theme === 'dark' ? (
-                  <Sun className="w-4 h-4 text-muted-foreground" />
-                ) : (
+                {preference === 'system' ? (
+                  <Monitor className="w-4 h-4 text-muted-foreground" />
+                ) : theme === 'dark' ? (
                   <Moon className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Sun className="w-4 h-4 text-muted-foreground" />
                 )}
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>{theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}</TooltipContent>
-          </Tooltip>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuLabel>Apariencia</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup
+                value={preference}
+                onValueChange={(value) => {
+                  if (value === 'light' || value === 'dark' || value === 'system') {
+                    setTheme(value);
+                  }
+                }}
+              >
+                <DropdownMenuRadioItem value="light" className="gap-2">
+                  <Sun className="h-4 w-4" />
+                  Claro
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="dark" className="gap-2">
+                  <Moon className="h-4 w-4" />
+                  Oscuro
+                </DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="system" className="gap-2">
+                  <Monitor className="h-4 w-4" />
+                  Sistema
+                </DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Internal chat */}
           {showChatButton && (
