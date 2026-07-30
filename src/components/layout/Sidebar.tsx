@@ -291,6 +291,8 @@ const adminNavItems: NavItem[] = [
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 
+const sidebarItemTransition = { duration: 0.1, ease: 'easeOut' as const };
+
 export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
@@ -398,11 +400,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
     const linkContent =
     <Link to={item.href} onClick={handleNavClick}>
-        <motion.div
+      <motion.div
         whileHover={{ x: 4 }}
         whileTap={{ scale: 0.98 }}
+        transition={sidebarItemTransition}
         className={cn(
-          "flex items-center gap-3 rounded-md border border-transparent transition-colors duration-200 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+          "flex items-center gap-3 rounded-md border border-transparent transition-colors duration-100 group relative [&_svg]:shrink-0 [&_svg]:stroke-[2]",
           isCollapsed
             ? "mx-auto h-10 w-10 justify-center p-0 [&_svg]:size-4 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
             : "px-3 py-2",
@@ -418,7 +421,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className={cn("text-[13px] whitespace-nowrap overflow-hidden transition-all", isActive ? "font-semibold" : "font-medium")}>
+            <span className={cn("text-[13px] whitespace-nowrap overflow-hidden transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>
               {item.label}
             </span>
           }
@@ -485,8 +488,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                 <motion.div
                   whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                   whileTap={{ scale: 0.97 }}
+                  transition={sidebarItemTransition}
                   className={cn(
-                    "relative flex transition-colors duration-200 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
+                    "relative flex transition-colors duration-100 group [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]",
                     isCollapsed 
                       ? "mx-auto h-9 w-9 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent text-sidebar-foreground [&_svg]:size-4"
                       : "min-h-16 h-auto flex-col items-center justify-center gap-1 rounded-md border border-sidebar-border bg-sidebar-accent/15 p-2 px-1 text-center hover:bg-primary hover:border-primary/30 hover:text-primary-foreground",
@@ -495,7 +499,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   )}
                 >
                   <div className={cn(
-                    "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
+                    "flex items-center justify-center shrink-0 transition-colors duration-100 [&_svg]:size-[18px]",
                     isCollapsed
                       ? "h-full w-full"
                       : cn(
@@ -555,9 +559,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     <motion.div
       whileHover={{ x: 4 }}
       whileTap={{ scale: 0.98 }}
+      transition={sidebarItemTransition}
       onClick={() => !isCollapsed && setIsOpen(!isOpen)}
       className={cn(
-        "flex items-center gap-3 rounded-md transition-colors duration-200 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+        "flex items-center gap-3 rounded-md transition-colors duration-100 group relative cursor-pointer [&_svg]:shrink-0 [&_svg]:stroke-[2]",
         "border border-transparent",
         isCollapsed
           ? "mx-auto h-10 w-10 justify-center p-0 [&_svg]:size-4 [&_svg]:block [&_svg]:shape-geometricPrecision [&_svg]:[vector-effect:non-scaling-stroke]"
@@ -572,7 +577,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className={cn("text-[13px] whitespace-nowrap overflow-hidden flex-1 transition-all", isAnyChildActive ? "font-semibold" : "font-medium")}>
+          <span className={cn("text-[13px] whitespace-nowrap overflow-hidden flex-1 transition-colors duration-100", isAnyChildActive ? "font-semibold" : "font-medium")}>
             {item.label}
           </span>
         }
@@ -634,11 +639,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
               const isActive = location.pathname === child.href;
               return (
                 <Link key={child.href} to={child.href} onClick={handleNavClick}>
-                    <motion.div
+                  <motion.div
                     whileHover={{ x: 4 }}
                     whileTap={{ scale: 0.98 }}
+                    transition={sidebarItemTransition}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-md border border-transparent transition-all duration-200 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
+                      "flex items-center gap-2 px-3 py-1.5 rounded-md border border-transparent transition-colors duration-100 group [&_svg]:shrink-0 [&_svg]:stroke-[2]",
                       isActive ? sidebarActiveTone : cn("text-sidebar-foreground font-medium", sidebarHoverTone)
                     )}>
 
@@ -648,7 +654,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
                         {child.icon}
                       </span>
-                      <span className={cn("text-[13px] transition-all", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
+                      <span className={cn("text-[13px] transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
                     </motion.div>
                   </Link>);
 
@@ -673,7 +679,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     <TooltipProvider>
       <motion.aside
         initial={false}
-        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? 72 : 236) }}
+        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14.75rem') }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
           "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10",
@@ -868,8 +874,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     <motion.div
                       whileHover={isCollapsed ? { x: 4 } : { scale: 1.02, y: -2 }}
                       whileTap={{ scale: 0.98 }}
+                      transition={sidebarItemTransition}
                       className={cn(
-                        "relative flex transition-all duration-200 group",
+                        "relative flex transition-colors duration-100 group",
                         isCollapsed 
                           ? "mx-auto h-10 w-10 items-center justify-center rounded-md p-0"
                           : cn(
@@ -882,7 +889,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     >
                       {/* Icon Container */}
                       <div className={cn(
-                        "flex items-center justify-center shrink-0 transition-all duration-300 [&_svg]:size-[18px]",
+                        "flex items-center justify-center shrink-0 transition-colors duration-100 [&_svg]:size-[18px]",
                         isCollapsed 
                           ? "h-full w-full" 
                           : cn(
