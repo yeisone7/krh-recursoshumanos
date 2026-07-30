@@ -67,7 +67,7 @@ export function MultiSelect({
                   <Badge
                     key={option.value}
                     variant="default"
-                    className="rounded-md px-2 py-0.5 font-medium bg-[#004a7c] hover:bg-[#003a62] text-white flex items-center gap-1 border-none shadow-sm animate-in zoom-in-95 duration-200"
+                    className="flex items-center gap-1 rounded-md border-none bg-primary px-2 py-0.5 font-medium text-primary-foreground shadow-sm animate-in zoom-in-95 duration-200 hover:bg-primary-hover"
                   >
                     {option.label}
                     <button
