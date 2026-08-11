@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(16);
 
 select has_table('public', 'employee_employment_cycles', 'employment cycles table exists');
 
@@ -54,6 +54,39 @@ select is(
   ),
   0::bigint,
   'backfill creates no orphan employment cycles'
+);
+
+create temporary table document_cycle_fixture as
+select
+  gen_random_uuid() as company_id,
+  gen_random_uuid() as employee_id,
+  gen_random_uuid() as cycle_id,
+  gen_random_uuid() as document_id;
+
+insert into public.companies (id, name, nit)
+select company_id, 'Document cycle test', 'DOC-CYCLE-' || company_id::text
+from document_cycle_fixture;
+
+insert into public.employees_v2 (id, company_id, document_number, first_name, last_name)
+select employee_id, company_id, 'DOC-' || employee_id::text, 'Test', 'Document'
+from document_cycle_fixture;
+
+insert into public.employee_employment_cycles (
+  id, company_id, employee_id, cycle_number, status, source, start_date
+)
+select cycle_id, company_id, employee_id, 1, 'active', 'manual', current_date - 30
+from document_cycle_fixture;
+
+insert into public.employee_documents (
+  id, company_id, employee_id, document_type, file_url, upload_date, is_valid
+)
+select document_id, company_id, employee_id, 'otro', 'tests/document.pdf', current_date, true
+from document_cycle_fixture;
+
+select is(
+  (select employment_cycle_id from public.employee_documents where id = (select document_id from document_cycle_fixture)),
+  (select cycle_id from document_cycle_fixture),
+  'new employee documents inherit the matching employment cycle'
 );
 
 select * from finish();
