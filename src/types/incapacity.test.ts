@@ -4,6 +4,9 @@ import {
   getAccumulatedDays,
   getAccumulatedDaysForNewExtension,
   getCurrentLegalStage,
+  getFollowUpDocumentAvailability,
+  getIncapacityRootId,
+  getLegalMilestones,
   type EmployeeIncapacity,
 } from './incapacity';
 
@@ -82,6 +85,59 @@ describe('calculatePaymentDistribution', () => {
     expect(result.totalAmount).toBe(1_000_000);
     expect(getCurrentLegalStage('licencia_maternidad', 10).responsible).toBe('EPS (100%)');
   });
+
+  it('carga solo el primer día laboral a la empresa y los demás a la ARL al 100%', () => {
+    const result = calculatePaymentDistribution('laboral', 3, 100_000, 0, 1);
+
+    expect(result.employerDays).toBe(1);
+    expect(result.arlDays).toBe(2);
+    expect(result.employerAmount).toBe(100_000);
+    expect(result.arlAmount).toBe(200_000);
+    expect(result.totalAmount).toBe(300_000);
+  });
+
+  it('carga las prórrogas laborales completamente a la ARL', () => {
+    const result = calculatePaymentDistribution('laboral', 4, 100_000, 3, 1);
+
+    expect(result.employerDays).toBe(0);
+    expect(result.arlDays).toBe(4);
+    expect(result.employerAmount).toBe(0);
+    expect(result.arlAmount).toBe(400_000);
+  });
+
+  it('carga la licencia de paternidad completa a la EPS al 100%', () => {
+    const result = calculatePaymentDistribution('licencia_paternidad', 14, 100_000, 0, 1);
+
+    expect(result.employerDays).toBe(0);
+    expect(result.epsDays).toBe(14);
+    expect(result.epsAmount).toBe(1_400_000);
+    expect(result.totalAmount).toBe(1_400_000);
+    expect(getCurrentLegalStage('licencia_paternidad', 14)).toEqual({
+      stage: 'eps_paternity',
+      label: 'Licencia de paternidad',
+      responsible: 'EPS (100%)',
+    });
+  });
+});
+
+describe('incapacity follow-up documents', () => {
+  it('habilita el concepto de rehabilitación desde el día 120', () => {
+    expect(getFollowUpDocumentAvailability('comun', 119)[0].isAvailable).toBe(false);
+    expect(getFollowUpDocumentAvailability('comun', 119)[0].daysRemaining).toBe(1);
+    expect(getFollowUpDocumentAvailability('comun', 120)[0].isAvailable).toBe(true);
+  });
+
+  it('habilita la calificación PCL desde el día 540', () => {
+    expect(getFollowUpDocumentAvailability('comun', 539)[1].isAvailable).toBe(false);
+    expect(getFollowUpDocumentAvailability('comun', 540)[1].isAvailable).toBe(true);
+  });
+
+  it('excluye los hitos y documentos para orígenes distintos al común', () => {
+    for (const origin of ['laboral', 'accidente_transito', 'licencia_maternidad', 'licencia_paternidad'] as const) {
+      expect(getLegalMilestones(origin, 600)).toEqual([]);
+      expect(getFollowUpDocumentAvailability(origin, 600)).toEqual([]);
+    }
+  });
 });
 
 describe('incapacity extension chains', () => {
@@ -109,5 +165,6 @@ describe('incapacity extension chains', () => {
 
     expect(getAccumulatedDays(secondExtension, chain)).toBe(15);
     expect(getAccumulatedDaysForNewExtension(root.id, chain)).toBe(20);
+    expect(getIncapacityRootId(secondExtension)).toBe(root.id);
   });
 });

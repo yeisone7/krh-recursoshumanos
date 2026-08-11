@@ -320,6 +320,7 @@ export default function RegistroPublico() {
   const [formData, setFormData] = useState<Record<string, any>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
+  const [rehireEmployeeId, setRehireEmployeeId] = useState<string | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   // Catalog data for dropdowns
@@ -676,7 +677,55 @@ export default function RegistroPublico() {
           ? parseFloat(formData.salaryExpectation.replace(/[^0-9.-]+/g, '')) 
           : null;
 
-        const { data, error } = await supabase.rpc('submit_candidate_registration', {
+        let data: any;
+        let error: any;
+        if (rehireEmployeeId) {
+          const response = await (supabase as any).rpc('submit_employee_rehire_registration', {
+            p_token: tokenParam!,
+            p_profile: {
+              first_name: formData.firstName || '',
+              last_name: formData.lastName || '',
+              document_type: formData.documentType || 'CC',
+              document_number: formData.documentNumber || '',
+              email: formData.email || null,
+              phone: formData.phone || null,
+              mobile: formData.mobile || null,
+              address: formData.address || null,
+              neighborhood: formData.neighborhood || null,
+              city: formData.city || null,
+              department: formData.department || null,
+              birth_date: formData.birthDate || null,
+              gender: mapGender(formData.gender),
+              gender_identity: formData.genderIdentity || null,
+              gender_identity_other: formData.genderIdentityOther || null,
+              document_issue_date: formData.documentIssueDate || null,
+              document_issue_city: formData.documentIssueCity || null,
+              marital_status: formData.maritalStatus || null,
+              blood_type: formData.bloodType || null,
+              emergency_contact_name: formData.emergencyContactName || null,
+              emergency_contact_phone: formData.emergencyContactPhone || null,
+              emergency_contact_relationship: formData.emergencyContactRelationship || null,
+              education_level_id: formData.educationLevelId || null,
+              profession_id: formData.professionId || null,
+              experience_years: formData.experienceYears ? parseInt(formData.experienceYears) : 0,
+              current_company: formData.currentCompany || null,
+              current_position: formData.currentPosition || null,
+              salary_expectation: isNaN(parsedSalary as any) ? null : parsedSalary,
+              general_notes: formData.generalNotes || null,
+              is_first_job: formData.isFirstJob === 'true',
+              is_head_of_household: formData.isHeadOfHousehold === 'true',
+              disability_type: formData.disabilityType || null,
+              ethnic_group: formData.ethnicGroup || null,
+              is_conflict_victim: formData.isConflictVictim === 'true',
+              is_demobilized: formData.isDemobilized === 'true',
+              identification_type_id: formData.identificationTypeId || null,
+              family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers : [],
+            },
+          });
+          data = response.data;
+          error = response.error;
+        } else {
+          const response = await supabase.rpc('submit_candidate_registration', {
           p_token: tokenParam!,
           p_first_name: formData.firstName || '',
           p_last_name: formData.lastName || '',
@@ -719,7 +768,10 @@ export default function RegistroPublico() {
             document_type: m.document_type || 'CC',
             document_number: m.document_number || ''
           })) : [],
-        } as any);
+          } as any);
+          data = response.data;
+          error = response.error;
+        }
         if (error) {
           throw new Error(getRpcErrorMessage(error, 'Error al crear el candidato'));
         }
@@ -1296,6 +1348,7 @@ export default function RegistroPublico() {
             const candidateLookup = candidateLookupData as any;
             if (candidateLookup?.success && candidateLookup?.found && candidateLookup?.candidate) {
               const candidate = candidateLookup.candidate;
+              setRehireEmployeeId(candidateLookup.rehire ? candidateLookup.rehire_employee_id : null);
               const updates: Record<string, any> = {
                 candidateId: candidate.id,
                 firstName: candidate.first_name,
@@ -1347,9 +1400,13 @@ export default function RegistroPublico() {
 
               setFormData(prev => ({ ...prev, ...updates }));
               setPrefilled(true);
-              toast.info('Se encontro informacion previa asociada a este documento. Los campos han sido pre-llenados.');
+              toast.info(candidateLookup.rehire
+                ? 'Reingreso detectado. Solo precargamos tu identidad, datos personales y contacto; la nueva selección comienza limpia.'
+                : 'Se encontró información previa asociada a este documento. Los campos han sido prellenados.');
               return;
             }
+
+            setRehireEmployeeId(null);
 
             const { data } = await supabase.rpc('check_candidate_background', {
               p_document_number: docNum,

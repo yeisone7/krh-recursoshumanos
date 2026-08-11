@@ -713,7 +713,6 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
             {/* ── CANDIDATE HISTORY ── */}
             <div className="space-y-3 px-4 pt-3 sm:px-6">
-              <CandidateHistoryLink employeeId={employeeId} />
               <ExpiringItemsAlert employee={employee} />
             </div>
 
@@ -744,6 +743,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                   </TabsTrigger>
                   <TabsTrigger value="onboarding" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-warning data-[state=active]:text-warning-foreground">
                     ✨ Onboarding
+                  </TabsTrigger>
+                  <TabsTrigger value="cycles" className="text-xs rounded-md px-3 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                    Ciclos laborales
                   </TabsTrigger>
                 </TabsList>
 
@@ -1244,6 +1246,9 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                 {/* ── ONBOARDING TAB ── */}
                 <TabsContent value="onboarding" className="mt-4">
                   <OnboardingChecklist employeeId={employee.id} />
+                </TabsContent>
+                <TabsContent value="cycles" className="mt-4">
+                  <CandidateHistoryLink employeeId={employeeId} />
                 </TabsContent>
               </Tabs>
             </div>

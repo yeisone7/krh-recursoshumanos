@@ -203,11 +203,22 @@ export function useCreateContract() {
 
   return useMutation({
     mutationFn: async (contract: Omit<ContractInsert, 'created_by' | 'company_id'>) => {
+      const { data: activeCycle, error: cycleError } = await supabase
+        .from('employee_employment_cycles')
+        .select('id')
+        .eq('employee_id', contract.employee_id)
+        .eq('company_id', currentCompanyId!)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (cycleError) throw cycleError;
+      if (!activeCycle) throw new Error('El empleado no tiene un ciclo laboral activo.');
+
       // Check if employee already has an active contract
       const { data: existingContracts, error: checkError } = await supabase
         .from('contracts')
         .select('id, contract_number, contract_type, is_terminated')
         .eq('employee_id', contract.employee_id)
+        .eq('employment_cycle_id', activeCycle.id)
         .or('is_terminated.is.null,is_terminated.eq.false');
 
       if (checkError) throw checkError;
@@ -245,6 +256,7 @@ export function useCreateContract() {
           created_by: user?.id,
           contract_number: contractNumber,
           company_id: currentCompanyId!,
+          employment_cycle_id: activeCycle.id,
         })
         .select()
         .single();

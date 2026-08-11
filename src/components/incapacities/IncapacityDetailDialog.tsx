@@ -19,6 +19,7 @@ import {
   Upload,
   File,
   History,
+  LockKeyhole,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,6 +54,8 @@ import {
   recoveryStatusLabels, 
   recoveryStatusColors,
   getCurrentLegalStage,
+  getFollowUpDocumentAvailability,
+  getIncapacityRootId,
   getLegalMilestones,
   getLegalMinimumDailyWage,
   getTotalChainDays 
@@ -82,6 +85,8 @@ export function IncapacityDetailDialog({
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
+  const chainRootId = incapacity ? getIncapacityRootId(incapacity) : undefined;
+  const { data: chainRoot, isLoading: isLoadingChainRoot } = useIncapacity(chainRootId);
   const deleteMutation = useDeleteIncapacity();
   const createReintegrationExamMutation = useCreateReintegrationExam();
   
@@ -134,9 +139,12 @@ export function IncapacityDetailDialog({
     ? `${incapacity.employee.first_name} ${incapacity.employee.last_name}`
     : 'Empleado';
   
-  const totalChainDays = getTotalChainDays(incapacity);
-  const legalStage = getCurrentLegalStage(incapacity.origin, totalChainDays);
-  const legalMilestones = getLegalMilestones(incapacity.origin, totalChainDays);
+  const chainRootIncapacity = chainRoot || incapacity;
+  const totalChainDays = getTotalChainDays(chainRootIncapacity);
+  const legalStage = getCurrentLegalStage(chainRootIncapacity.origin, totalChainDays);
+  const legalMilestones = getLegalMilestones(chainRootIncapacity.origin, totalChainDays);
+  const followUpDocuments = getFollowUpDocumentAvailability(chainRootIncapacity.origin, totalChainDays);
+  const followUpDocumentEntityId = chainRootId || incapacity.id;
   const today = new Date();
   const endDate = parseDateOnlyOr(incapacity.end_date, new Date());
   const isActive = endDate >= today && parseDateOnlyOr(incapacity.start_date, new Date()) <= today;
@@ -421,13 +429,26 @@ export function IncapacityDetailDialog({
                       <Separator />
                       
                       {isWorkRelatedIncapacityOrigin(incapacity.origin) ? (
-                        <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
-                          <div>
-                            <p className="font-medium">ARL - {incapacity.arl_name || 'No registrada'}</p>
-                            <p className="text-sm text-muted-foreground">{incapacity.arl_days} días al 100%</p>
-                          </div>
-                          <p className="text-lg font-bold">{formatCurrency(incapacity.arl_amount)}</p>
-                        </div>
+                        <>
+                          {incapacity.employer_days > 0 && (
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10">
+                              <div>
+                                <p className="font-medium">Empleador</p>
+                                <p className="text-sm text-muted-foreground">{incapacity.employer_days} día al 100%</p>
+                              </div>
+                              <p className="text-lg font-bold">{formatCurrency(incapacity.employer_amount)}</p>
+                            </div>
+                          )}
+                          {incapacity.arl_days > 0 && (
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-destructive/10">
+                              <div>
+                                <p className="font-medium">ARL - {incapacity.arl_name || 'No registrada'}</p>
+                                <p className="text-sm text-muted-foreground">{incapacity.arl_days} días al 100%</p>
+                              </div>
+                              <p className="text-lg font-bold">{formatCurrency(incapacity.arl_amount)}</p>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <>
                           {incapacity.employer_days > 0 && (
@@ -445,7 +466,7 @@ export function IncapacityDetailDialog({
                               <div>
                                 <p className="font-medium">EPS - {incapacity.eps_name || 'No registrada'}</p>
                                 <p className="text-sm text-muted-foreground">
-                                  {incapacity.eps_days} días {incapacity.origin === 'licencia_maternidad' ? 'al 100%' : 'según tramo legal aplicable'}
+                                  {incapacity.eps_days} días {['licencia_maternidad', 'licencia_paternidad'].includes(incapacity.origin) ? 'al 100%' : 'según tramo legal aplicable'}
                                 </p>
                               </div>
                               <p className="text-lg font-bold">{formatCurrency(incapacity.eps_amount)}</p>
@@ -544,6 +565,7 @@ export function IncapacityDetailDialog({
                     )}
                   </CardContent>
                 </Card>
+
               </TabsContent>
               
               {/* Documents Tab */}
@@ -600,6 +622,56 @@ export function IncapacityDetailDialog({
                     />
                   </CardContent>
                 </Card>
+
+                {followUpDocuments.map((documentAvailability) => (
+                  <Card key={documentAvailability.entityType}>
+                    <CardHeader>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            {documentAvailability.title}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            {documentAvailability.description}
+                          </CardDescription>
+                        </div>
+                        <Badge variant={documentAvailability.isAvailable ? 'default' : 'secondary'}>
+                          Día {documentAvailability.thresholdDays}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {!documentAvailability.isAvailable && (
+                        <div className="flex items-start gap-3 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                          <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" />
+                          <div>
+                            <p className="font-medium text-foreground">Carga aún no habilitada</p>
+                            <p>
+                              Faltan {documentAvailability.daysRemaining} día(s) acumulados para habilitar nuevas versiones.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {isLoadingChainRoot ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Consultando expediente principal...
+                        </div>
+                      ) : (
+                        <DocumentSection
+                          entityType={documentAvailability.entityType}
+                          entityId={followUpDocumentEntityId}
+                          title={documentAvailability.title}
+                          allowUpload={documentAvailability.isAvailable}
+                          allowDelete={true}
+                          showVersionHistory={true}
+                          compact
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
               </TabsContent>
               
               {/* History Tab */}

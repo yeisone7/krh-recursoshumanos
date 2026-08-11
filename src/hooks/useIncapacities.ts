@@ -659,7 +659,12 @@ export function useDeleteIncapacity() {
         .from('document_versions')
         .delete()
         .in('entity_id', idsToDelete)
-        .in('entity_type', ['incapacity', 'incapacity_clinical_history']);
+        .in('entity_type', [
+          'incapacity',
+          'incapacity_clinical_history',
+          'incapacity_rehabilitation_concept',
+          'incapacity_capacity_loss_rating',
+        ]);
 
       if (documentsError) throw documentsError;
 

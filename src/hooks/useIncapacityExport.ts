@@ -12,6 +12,7 @@ import {
   incapacityOriginOptions,
   incapacityOriginShortLabels,
   type IncapacityOrigin,
+  type RecoveryStatus,
   recoveryStatusLabels,
 } from '@/types/incapacity';
 
@@ -89,7 +90,7 @@ export function useIncapacityExport() {
       }
 
       if (recoveryStatus && recoveryStatus !== 'all') {
-        query = query.eq('recovery_status', recoveryStatus as any);
+        query = query.eq('recovery_status', recoveryStatus as RecoveryStatus);
       }
 
       const { data, error } = await query;
@@ -101,9 +102,12 @@ export function useIncapacityExport() {
       }
 
       // Transform data for Excel
-      const excelData: IncapacityExportRow[] = data.map((inc: any) => {
+      const excelData: IncapacityExportRow[] = data.map((inc) => {
         const statusKey = inc.recovery_status as keyof typeof recoveryStatusLabels;
-        const legalStage = getCurrentLegalStage(inc.origin, inc.total_days || 0);
+        const legalStageDays = inc.origin === 'laboral' && inc.is_extension
+          ? Math.max(2, inc.total_days || 0)
+          : (inc.total_days || 0);
+        const legalStage = getCurrentLegalStage(inc.origin, legalStageDays);
         
         return {
           'Empleado': `${inc.employee?.first_name || ''} ${inc.employee?.last_name || ''}`,
@@ -155,7 +159,7 @@ export function useIncapacityExport() {
         recovered: number 
       }> = {};
 
-      data.forEach((inc: any) => {
+      data.forEach((inc) => {
         const monthKey = formatDateOnly(inc.start_date, 'yyyy-MM');
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = { count: 0, days: 0, origins: emptyOrigins(), total: 0, recovered: 0 };

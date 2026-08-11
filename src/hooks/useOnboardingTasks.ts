@@ -13,6 +13,17 @@ const PREDEFINED_TASKS = [
   { task_key: 'accesos_herramientas', task_label: 'Accesos y herramientas', task_description: 'Credenciales, correo, herramientas y accesos configurados', sort_order: 8 },
 ];
 
+async function getActiveEmploymentCycleId(employeeId: string) {
+  const { data, error } = await supabase
+    .from('employee_employment_cycles')
+    .select('id')
+    .eq('employee_id', employeeId)
+    .eq('status', 'active')
+    .maybeSingle();
+  if (error) throw error;
+  return data?.id || null;
+}
+
 export function useOnboardingTasks(employeeId: string | null) {
   const { currentCompanyId } = useAuth();
 
@@ -20,11 +31,16 @@ export function useOnboardingTasks(employeeId: string | null) {
     queryKey: ['onboarding-tasks', employeeId],
     enabled: !!employeeId && !!currentCompanyId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const employmentCycleId = await getActiveEmploymentCycleId(employeeId!);
+      let query = supabase
         .from('employee_onboarding_tasks')
         .select('*')
         .eq('employee_id', employeeId!)
         .order('sort_order');
+      query = employmentCycleId
+        ? query.eq('employment_cycle_id', employmentCycleId)
+        : query.is('employment_cycle_id', null);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -37,10 +53,13 @@ export function useCreateOnboardingTasks() {
 
   return useMutation({
     mutationFn: async (employeeId: string) => {
+      const employmentCycleId = await getActiveEmploymentCycleId(employeeId);
+      if (!employmentCycleId) throw new Error('El empleado no tiene un ciclo laboral activo.');
       const tasks = PREDEFINED_TASKS.map(t => ({
         ...t,
         employee_id: employeeId,
         company_id: currentCompanyId!,
+        employment_cycle_id: employmentCycleId,
       }));
 
       const { error } = await supabase
@@ -83,11 +102,14 @@ export function useAddCustomOnboardingTask() {
 
   return useMutation({
     mutationFn: async ({ employeeId, label, description }: { employeeId: string; label: string; description?: string }) => {
+      const employmentCycleId = await getActiveEmploymentCycleId(employeeId);
+      if (!employmentCycleId) throw new Error('El empleado no tiene un ciclo laboral activo.');
       // Get max sort_order for this employee
       const { data: existing } = await supabase
         .from('employee_onboarding_tasks')
         .select('sort_order')
         .eq('employee_id', employeeId)
+        .eq('employment_cycle_id', employmentCycleId)
         .order('sort_order', { ascending: false })
         .limit(1);
       
@@ -98,6 +120,7 @@ export function useAddCustomOnboardingTask() {
         .insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
           task_key: `custom_${Date.now()}`,
           task_label: label,
           task_description: description || null,
