@@ -26,6 +26,7 @@ import {
   countBy,
   filterIncapacityOperationsRows,
   getUniqueDiagnosisCount,
+  summarizeByOperationCenter,
   summarizeIncapacityOperationsRows,
   type IncapacityOperationsRow,
 } from '@/lib/incapacityOperationsReport';
@@ -118,6 +119,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
       diagnoses: getUniqueDiagnosisCount(filtered),
       affectedEmployees: new Set(filtered.map((row) => row.employeeId)).size,
       summaries: summarizeIncapacityOperationsRows(filtered),
+      centerSummaries: summarizeByOperationCenter(filtered),
       conceptData,
       positionData,
       diagnosisData,
@@ -146,7 +148,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden border-slate-200 bg-slate-900 text-white shadow-sm">
+      <Card className="overflow-hidden border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 shadow-sm">
         <CardContent className="p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
@@ -154,12 +156,12 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
                 <Building2 className="h-4 w-4" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Informe operativo</span>
               </div>
-              <h2 className="mt-2 text-2xl font-black">Incapacidades por centro de operación</h2>
-              <p className="mt-1 max-w-2xl text-sm font-medium text-slate-300">
+              <h2 className="mt-2 text-2xl font-black !text-white">Incapacidades por centro de operación</h2>
+              <p className="mt-1 max-w-2xl text-sm font-medium !text-slate-200">
                 Réplica del informe de Data Studio. “Campo” corresponde al centro de operación del colaborador.
               </p>
             </div>
-            <Button variant="outline" onClick={resetFilters} className="border-slate-600 bg-transparent text-white hover:bg-slate-800 hover:text-white">
+            <Button variant="outline" onClick={resetFilters} className="border-slate-500 bg-white/10 !text-white hover:bg-white/20 hover:!text-white">
               <RotateCcw className="mr-2 h-4 w-4" />
               Restablecer filtros
             </Button>
@@ -167,28 +169,28 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
 
           <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             <Select value={month} onValueChange={setMonth}>
-              <SelectTrigger className="border-slate-600 bg-slate-800 text-white"><SelectValue placeholder="Periodo" /></SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white !text-slate-950 shadow-sm [&>span]:!text-slate-950 [&>svg]:text-slate-500"><SelectValue placeholder="Periodo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los meses</SelectItem>
                 {months.map((value) => <SelectItem key={value} value={value}>{format(parseISO(`${value}-01T00:00:00`), 'MMMM yyyy', { locale: es })}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={operationCenterId} onValueChange={setOperationCenterId}>
-              <SelectTrigger className="border-slate-600 bg-slate-800 text-white"><SelectValue placeholder="Centro de operación" /></SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white !text-slate-950 shadow-sm [&>span]:!text-slate-950 [&>svg]:text-slate-500"><SelectValue placeholder="Centro de operación" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los centros</SelectItem>
                 {centers.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={positionName} onValueChange={setPositionName}>
-              <SelectTrigger className="border-slate-600 bg-slate-800 text-white"><SelectValue placeholder="Cargo" /></SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white !text-slate-950 shadow-sm [&>span]:!text-slate-950 [&>svg]:text-slate-500"><SelectValue placeholder="Cargo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los cargos</SelectItem>
                 {positions.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={employeeId} onValueChange={setEmployeeId}>
-              <SelectTrigger className="border-slate-600 bg-slate-800 text-white"><SelectValue placeholder="Colaborador" /></SelectTrigger>
+              <SelectTrigger className="border-slate-300 bg-white !text-slate-950 shadow-sm [&>span]:!text-slate-950 [&>svg]:text-slate-500"><SelectValue placeholder="Colaborador" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los colaboradores</SelectItem>
                 {employees.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
@@ -224,17 +226,17 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
               <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Detalle por colaborador</h3>
               <p className="mt-1 text-xs font-semibold text-slate-500">Días agrupados por persona, centro, cargo y concepto</p>
             </div>
-            <div className="max-h-[340px] overflow-auto">
+            <div className="[&>div]:max-h-[340px] [&>div]:overflow-auto">
               <Table>
-                <TableHeader className="sticky top-0 z-10 bg-slate-900">
+                <TableHeader className="bg-slate-900">
                   <TableRow className="border-slate-700 hover:bg-slate-900">
                     {['Colaborador', 'Centro de operación', 'Cargo', 'Concepto', 'Casos', 'Días'].map((label) => (
-                      <TableHead key={label} className="h-10 whitespace-nowrap text-[10px] font-black uppercase tracking-wider text-white">{label}</TableHead>
+                      <TableHead key={label} className="sticky top-0 z-20 h-10 whitespace-nowrap bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">{label}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {report.summaries.slice(0, 100).map((row) => (
+                  {report.summaries.map((row) => (
                     <TableRow key={row.key}>
                       <TableCell className="whitespace-nowrap py-2.5 text-xs font-bold">{row.employeeName}</TableCell>
                       <TableCell className="whitespace-nowrap py-2.5 text-xs">{row.operationCenterName}</TableCell>
@@ -251,6 +253,36 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardContent className="p-0">
+          <div className="border-b border-slate-200 p-4">
+            <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Días por centro de operación</h3>
+            <p className="mt-1 text-xs font-semibold text-slate-500">Casos y días acumulados para los filtros seleccionados</p>
+          </div>
+          <div className="[&>div]:max-h-[360px] [&>div]:overflow-auto">
+            <Table>
+              <TableHeader className="bg-slate-900">
+                <TableRow className="border-slate-700 hover:bg-slate-900">
+                  {['Centro de operación', 'Casos', 'Días'].map((label) => (
+                    <TableHead key={label} className="sticky top-0 z-20 h-10 bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white last:text-right [&:nth-child(2)]:text-right">{label}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {report.centerSummaries.map((row) => (
+                  <TableRow key={row.key}>
+                    <TableCell className="py-2.5 text-xs font-bold">{row.operationCenterName}</TableCell>
+                    <TableCell className="py-2.5 text-right text-xs font-bold">{integerFormatter.format(row.cases)}</TableCell>
+                    <TableCell className="py-2.5 text-right text-xs font-black">{integerFormatter.format(row.totalDays)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {report.centerSummaries.length === 0 && <p className="p-8 text-center text-sm font-semibold text-slate-500">No hay centros para estos filtros.</p>}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ReportChart title="Cantidad de incapacidades según el cargo" subtitle="Diez cargos con más registros">
@@ -313,7 +345,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
       <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
         <span className="flex items-center gap-1.5"><Building2 className="h-4 w-4 text-cyan-700" /> Campo = centro de operación</span>
         <span className="flex items-center gap-1.5"><BriefcaseBusiness className="h-4 w-4 text-orange-600" /> Cargo vigente del colaborador</span>
-        {report.summaries.length > 100 && <span>Se muestran los primeros 100 de {report.summaries.length} grupos en la tabla.</span>}
+        <span>La tabla incluye los {integerFormatter.format(report.summaries.length)} grupos resultantes del filtro.</span>
       </div>
     </div>
   );
