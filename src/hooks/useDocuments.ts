@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAuditEvent } from '@/lib/auditService';
+import { buildDocumentStoragePath } from './documentStoragePath';
 
 export type EntityType = 
   | 'contract' 
@@ -129,10 +130,15 @@ export function useUploadDocument() {
         ? existingVersions[0].version + 1 
         : 1;
 
-      // Create file path: {company_id}/{entity_type}/{entity_id}/{version}_{filename}
-      const fileExt = file.name.split('.').pop();
-      const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-      const filePath = `${currentCompanyId}/${entityType}/${entityId}/v${newVersion}_${sanitizedFileName}`;
+      // A unique suffix makes retries safe when a previous upload reached Storage
+      // but its document_versions insert failed.
+      const filePath = buildDocumentStoragePath({
+        companyId: currentCompanyId,
+        entityType,
+        entityId,
+        version: newVersion,
+        fileName: file.name,
+      });
 
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -172,7 +178,19 @@ export function useUploadDocument() {
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        // Storage and Postgres are separate operations. Compensate a failed
+        // metadata insert so a partial upload does not leave another orphan.
+        const { error: cleanupError } = await supabase.storage
+          .from('documents')
+          .remove([filePath]);
+
+        if (cleanupError) {
+          console.error('Could not remove orphaned document upload:', cleanupError);
+        }
+
+        throw insertError;
+      }
 
       // Update the entity's document_url field based on entity type
       try {
