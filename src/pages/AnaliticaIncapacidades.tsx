@@ -62,6 +62,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useIncapacities } from '@/hooks/useIncapacities';
 import { cn } from '@/lib/utils';
@@ -89,6 +90,14 @@ const palette = {
 };
 
 const chartColors = [palette.teal, palette.orange, palette.amber, palette.navy, palette.aqua, palette.violet, palette.green, palette.sky];
+
+const operationsConceptLabels: Record<string, string> = {
+  comun: 'E.G.',
+  laboral: 'A.L.',
+  accidente_transito: 'A.TTO',
+  licencia_maternidad: 'L.M.',
+  licencia_paternidad: 'L.P.',
+};
 
 const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -186,13 +195,24 @@ function getMonthLabel(key: string) {
   return format(parseISO(`${key}-01T00:00:00`), 'MMM yy', { locale: es });
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+interface ChartTooltipEntry {
+  name?: string;
+  dataKey?: string | number;
+  value?: string | number;
+  color?: string;
+}
+
+function CustomTooltip({ active, payload, label }: {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: string | number;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
       {label && <p className="mb-1 font-black uppercase tracking-wide text-slate-800">{label}</p>}
       <div className="space-y-1">
-        {payload.map((item: any) => (
+        {payload.map((item) => (
           <div key={`${item.name}-${item.dataKey}`} className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
             <span className="text-slate-500">{item.name}:</span>
@@ -556,7 +576,29 @@ function SexInfographicBlock({
   );
 }
 
-function IncapacityInfographicsTab({ analytics }: { analytics: any }) {
+interface IncapacityInfographicsAnalytics {
+  total: number;
+  totalDays: number;
+  active: number;
+  avgDays: number;
+  recovered: number;
+  recoveryRate: number;
+  incidenceRate: number;
+  longCases: number;
+  legalRisk: number;
+  originData: Array<{ name: string; value: number }>;
+  recoveryData: Array<{ name: string; value: number }>;
+  legalData: Array<{ name: string; value: number }>;
+  monthly: Array<{ mes: string; Dias: number; Incapacidades: number }>;
+  sexData: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+  insights: {
+    topDiagnosis?: { name: string; value: number };
+    topEntity?: { name: string; value: number };
+    strongestMonth?: { mes: string; Dias: number };
+  };
+}
+
+function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfographicsAnalytics }) {
   const originCircleData = [
     ...analytics.originData.map((item: { name: string; value: number }, index: number) => ({
       label: item.name,
@@ -773,6 +815,26 @@ export default function AnaliticaIncapacidades() {
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
     const employeeData = groupBy(filtered, (item) => item.employeeName, (item) => item.total_days || 0).slice(0, 8);
     const entityData = groupBy(filtered, (item) => item.origin === 'laboral' ? item.arl_name || 'ARL no registrada' : item.eps_name || 'EPS no registrada', (item) => item.total_days || 0).slice(0, 8);
+    const operationsReportRows = filtered.map((item) => {
+      const employee = employeeById.get(item.employee_id);
+      const center = employee?.operation_centers;
+      const diagnosis = item.diagnosis?.trim() || 'Sin diagnóstico';
+      const diagnosisCode = item.cie10_code?.trim();
+
+      return {
+        id: item.id,
+        employeeId: item.employee_id,
+        employeeName: item.employeeName,
+        operationCenterId: center?.id || 'sin-centro',
+        operationCenterName: center?.name || 'Sin centro asignado',
+        positionName: employee?.work_info?.position_name?.trim() || 'Sin cargo asignado',
+        concept: operationsConceptLabels[item.origin] || item.origin,
+        startDate: item.start_date,
+        totalDays: item.total_days || 0,
+        diagnosisKey: diagnosisCode || diagnosis.toLocaleLowerCase('es'),
+        diagnosisLabel: diagnosisCode ? `${diagnosisCode} - ${diagnosis}` : diagnosis,
+      };
+    });
     const sexSeed: Record<'F' | 'M' | 'sin_dato', { key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employeeIds: Set<string> }> = {
       F: { key: 'F', label: 'Femenino', color: palette.orange, cases: 0, days: 0, employeeIds: new Set<string>() },
       M: { key: 'M', label: 'Masculino', color: palette.teal, cases: 0, days: 0, employeeIds: new Set<string>() },
@@ -839,6 +901,7 @@ export default function AnaliticaIncapacidades() {
       diagnosisData,
       employeeData,
       entityData,
+      operationsReportRows,
       sexData,
       scatterData,
       weekdayData,
@@ -941,7 +1004,7 @@ export default function AnaliticaIncapacidades() {
       </motion.div>
 
       <Tabs defaultValue="ejecutivo" className="space-y-5">
-        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-white p-1 sm:w-[470px]">
+        <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 lg:w-[720px]">
           <TabsTrigger value="ejecutivo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
             <Gauge className="h-4 w-4" />
             Ejecutivo
@@ -949,6 +1012,10 @@ export default function AnaliticaIncapacidades() {
           <TabsTrigger value="infografias" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
             <Sparkles className="h-4 w-4" />
             Infografias
+          </TabsTrigger>
+          <TabsTrigger value="operativo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+            <BarChart3 className="h-4 w-4" />
+            Centros de operación
           </TabsTrigger>
         </TabsList>
 
@@ -1178,6 +1245,10 @@ export default function AnaliticaIncapacidades() {
 
         <TabsContent value="infografias" className="mt-0">
           <IncapacityInfographicsTab analytics={analytics} />
+        </TabsContent>
+
+        <TabsContent value="operativo" className="mt-0">
+          <IncapacityOperationsReport rows={analytics.operationsReportRows} />
         </TabsContent>
       </Tabs>
 
