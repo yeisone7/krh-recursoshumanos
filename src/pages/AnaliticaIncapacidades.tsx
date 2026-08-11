@@ -63,8 +63,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useIncapacities } from '@/hooks/useIncapacities';
+import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
+import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
 import { cn } from '@/lib/utils';
 import {
   getCurrentLegalStage,
@@ -115,6 +115,8 @@ type FlatIncapacity = IncapacityWithEmployee & {
   employeeName: string;
   legalStageLabel: string;
   legalResponsible: string;
+  startDate: Date | null;
+  endDate: Date | null;
 };
 
 function safeDate(value: string | null | undefined) {
@@ -157,6 +159,8 @@ function flattenIncapacities(items: IncapacityWithEmployee[]) {
       employeeName,
       legalStageLabel: stage.label,
       legalResponsible: stage.responsible,
+      startDate: safeDate(root.start_date),
+      endDate: safeDate(root.end_date),
     };
 
     const extensions = (root.extensions || []).map((extension) => ({
@@ -167,6 +171,8 @@ function flattenIncapacities(items: IncapacityWithEmployee[]) {
       employeeName,
       legalStageLabel: stage.label,
       legalResponsible: stage.responsible,
+      startDate: safeDate(extension.start_date),
+      endDate: safeDate(extension.end_date),
     })) as FlatIncapacity[];
 
     return [rootFlat, ...extensions];
@@ -707,20 +713,64 @@ function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfogra
   );
 }
 
+function IncapacityAnalyticsSkeleton() {
+  return (
+    <div className="space-y-5 pb-6" aria-label="Cargando analítica de incapacidades" aria-busy="true">
+      <div className="rounded-xl border border-slate-200 bg-[#F7F7F1] p-5 sm:p-6">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-start gap-4">
+            <Skeleton className="h-14 w-14 shrink-0 rounded-lg" />
+            <div className="space-y-3">
+              <Skeleton className="h-5 w-40 rounded-full" />
+              <Skeleton className="h-8 w-72 max-w-[70vw]" />
+              <Skeleton className="h-4 w-[520px] max-w-[70vw]" />
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-4 xl:w-[720px]">
+            {[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-11 rounded-lg" />)}
+          </div>
+        </div>
+      </div>
+
+      <Skeleton className="h-12 w-full rounded-xl lg:w-[720px]" />
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <Skeleton key={item} className="h-32 rounded-lg" />)}
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        {[0, 1, 2].map((item) => <Skeleton key={item} className="h-36 rounded-lg" />)}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        {[0, 1, 2].map((item) => <Skeleton key={item} className="h-[360px] rounded-lg" />)}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Skeleton className="h-[360px] rounded-lg xl:col-span-2" />
+        <Skeleton className="h-[360px] rounded-lg" />
+      </div>
+    </div>
+  );
+}
+
 export default function AnaliticaIncapacidades() {
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
   const [recoveryStatus, setRecoveryStatus] = useState('all');
 
-  const { data: incapacityRoots = [], isLoading: loadingIncapacities } = useIncapacities();
-  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const { data: incapacityRoots = [], isPending: loadingIncapacities } = useIncapacityAnalyticsData();
+  const { data: employees = [], isPending: loadingEmployees } = useIncapacityAnalyticsEmployees();
+
+  const flatIncapacities = useMemo(() => flattenIncapacities(incapacityRoots), [incapacityRoots]);
+  const employeeById = useMemo(() => new Map(employees.map((employee) => [employee.id, employee])), [employees]);
+  const activeEmployees = useMemo(
+    () => employees.filter((employee) => employee.is_active && employee.status !== 'retired').length,
+    [employees]
+  );
 
   const analytics = useMemo(() => {
     const range = getRange(period);
     const today = new Date();
-    const all = flattenIncapacities(incapacityRoots);
-    const activeEmployees = employees.filter((employee) => employee.is_active && employee.status !== 'retired').length;
-    const employeeById = new Map(employees.map((employee) => [employee.id, employee]));
+    const all = flatIncapacities;
+    const rootById = new Map(all.filter((item) => item.id === item.rootId).map((item) => [item.rootId, item]));
 
     const matchesStaticFilters = (item: FlatIncapacity) => (
       (origin === 'all' || item.origin === origin) &&
@@ -729,9 +779,8 @@ export default function AnaliticaIncapacidades() {
 
     const matchesPeriod = (item: FlatIncapacity, targetRange: ReturnType<typeof getRange>) => {
       if (!targetRange) return true;
-      const start = safeDate(item.start_date);
-      if (!start) return false;
-      return isWithinInterval(start, { start: targetRange.start, end: targetRange.end });
+      if (!item.startDate) return false;
+      return isWithinInterval(item.startDate, { start: targetRange.start, end: targetRange.end });
     };
 
     const filtered = all.filter((item) => matchesStaticFilters(item) && matchesPeriod(item, range));
@@ -752,36 +801,40 @@ export default function AnaliticaIncapacidades() {
     const pendingRecovery = Math.max(0, expectedRecovery - recovered);
     const affectedEmployees = new Set(filtered.map((item) => item.employee_id)).size;
     const activeItems = filtered.filter((item) => {
-      const start = safeDate(item.start_date);
-      const end = safeDate(item.end_date);
-      return !!start && !!end && !isAfter(start, today) && !isBefore(end, today);
+      return !!item.startDate && !!item.endDate && !isAfter(item.startDate, today) && !isBefore(item.endDate, today);
     });
 
     const longCases = incapacityRoots.filter((root) => {
-      const start = safeDate(root.start_date);
-      return matchesStaticFilters(flattenIncapacities([root])[0]) && (!range || (start && isWithinInterval(start, { start: range.start, end: range.end }))) && getTotalChainDays(root) > 30;
+      const rootFlat = rootById.get(root.id);
+      return !!rootFlat && matchesStaticFilters(rootFlat) && matchesPeriod(rootFlat, range) && rootFlat.chainDays > 30;
     });
 
     const legalRisk = incapacityRoots.filter((root) => {
       if (root.origin !== 'comun') return false;
-      const rootFlat = flattenIncapacities([root])[0];
-      if (!matchesStaticFilters(rootFlat)) return false;
-      const start = safeDate(root.start_date);
-      if (range && (!start || !isWithinInterval(start, { start: range.start, end: range.end }))) return false;
-      const chainDays = getTotalChainDays(root);
-      return getLegalMilestones(root.origin, chainDays).some((milestone) => milestone.isReached || milestone.daysRemaining <= 20);
+      const rootFlat = rootById.get(root.id);
+      if (!rootFlat || !matchesStaticFilters(rootFlat) || !matchesPeriod(rootFlat, range)) return false;
+      return getLegalMilestones(root.origin, rootFlat.chainDays).some((milestone) => milestone.isReached || milestone.daysRemaining <= 20);
     });
 
     const months = range
       ? eachMonthOfInterval({ start: startOfMonth(range.start), end: endOfMonth(range.end) })
       : eachMonthOfInterval({
-          start: all.length ? startOfMonth(safeDate(all[all.length - 1].start_date) || subMonths(today, 11)) : subMonths(today, 11),
+          start: all.length ? startOfMonth(all[all.length - 1].startDate || subMonths(today, 11)) : subMonths(today, 11),
           end: today,
         });
 
+    const itemsByMonth = new Map<string, FlatIncapacity[]>();
+    filtered.forEach((item) => {
+      if (!item.start_date) return;
+      const key = item.start_date.slice(0, 7);
+      const monthItems = itemsByMonth.get(key);
+      if (monthItems) monthItems.push(item);
+      else itemsByMonth.set(key, [item]);
+    });
+
     const monthly = months.map((month) => {
       const key = format(month, 'yyyy-MM');
-      const monthItems = filtered.filter((item) => item.start_date?.startsWith(key));
+      const monthItems = itemsByMonth.get(key) || [];
       const originDays = incapacityOriginOptions.reduce(
         (acc, option) => {
           acc[option.shortLabel] = monthItems
@@ -821,7 +874,7 @@ export default function AnaliticaIncapacidades() {
       const diagnosis = item.diagnosis?.trim() || 'Sin diagnóstico';
       const diagnosisCode = item.cie10_code?.trim();
       const rawGender = String(item.employee?.gender || employee?.gender || '').trim().toUpperCase();
-      const gender = rawGender === 'F' || rawGender.startsWith('FEM')
+      const gender: 'F' | 'M' | 'sin_dato' = rawGender === 'F' || rawGender.startsWith('FEM')
         ? 'F'
         : rawGender === 'M' || rawGender.startsWith('MAS')
           ? 'M'
@@ -875,11 +928,14 @@ export default function AnaliticaIncapacidades() {
         name: item.employeeName,
       }));
 
-    const weekdayData = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day, index) => {
-      const isoIndex = index === 6 ? 0 : index + 1;
-      const dayItems = filtered.filter((item) => safeDate(item.start_date)?.getDay() === isoIndex);
-      return { day, value: dayItems.reduce((sum, item) => sum + item.total_days, 0), count: dayItems.length };
+    const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day) => ({ day, value: 0, count: 0 }));
+    filtered.forEach((item) => {
+      if (!item.startDate) return;
+      const weekdayIndex = item.startDate.getDay() === 0 ? 6 : item.startDate.getDay() - 1;
+      weekdays[weekdayIndex].value += item.total_days || 0;
+      weekdays[weekdayIndex].count += 1;
     });
+    const weekdayData = weekdays;
 
     const recoveryRate = percent(recovered, expectedRecovery);
     const incidenceRate = percent(affectedEmployees, activeEmployees || employees.length);
@@ -923,23 +979,12 @@ export default function AnaliticaIncapacidades() {
         strongestMonth,
       },
     };
-  }, [employees, incapacityRoots, origin, period, recoveryStatus]);
+  }, [activeEmployees, employeeById, employees.length, flatIncapacities, incapacityRoots, origin, period, recoveryStatus]);
 
   const isLoading = loadingIncapacities || loadingEmployees;
 
   if (isLoading) {
-    return (
-      <div className="space-y-5">
-        <Skeleton className="h-28 rounded-xl" />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-32 rounded-lg" />)}
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Skeleton className="h-80 rounded-lg" />
-          <Skeleton className="h-80 rounded-lg" />
-        </div>
-      </div>
-    );
+    return <IncapacityAnalyticsSkeleton />;
   }
 
   return (

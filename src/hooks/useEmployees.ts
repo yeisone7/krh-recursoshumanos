@@ -360,6 +360,59 @@ export function useEmployees() {
   });
 }
 
+export function useIncapacityAnalyticsEmployees() {
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
+
+  return useQuery({
+    queryKey: ['employees_v2', 'incapacity-analytics', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+
+      const scopedEmployeeIds = shouldLimitByAssignedCenters
+        ? await getEmployeeIdsForActiveCenters(currentCompanyId, assignedCenterIds)
+        : null;
+      if (scopedEmployeeIds && scopedEmployeeIds.length === 0) return [];
+
+      let query = supabase
+        .from('employees_v2')
+        .select(`
+          id,
+          is_active,
+          status,
+          gender,
+          employee_employment_cycles(id, status),
+          employee_work_info(
+            employment_cycle_id, position_name, is_current,
+            operation_centers(id, name)
+          )
+        `)
+        .eq('company_id', currentCompanyId)
+        .eq('employee_work_info.is_current', true);
+
+      if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
+
+      const { data: employees, error } = await query;
+      if (error) throw error;
+
+      return (employees || []).map((employee) => {
+        const workInfo = getDisplayWorkInfo(employee);
+        return {
+          id: employee.id,
+          is_active: employee.is_active,
+          status: employee.status,
+          gender: employee.gender,
+          work_info: workInfo,
+          operation_centers: workInfo?.operation_centers || null,
+        };
+      });
+    },
+    enabled: !!currentCompanyId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // =====================================================
 // LIST EMPLOYEES PAGINATED (OPTIMIZED FOR LIST VIEW)
 // =====================================================
