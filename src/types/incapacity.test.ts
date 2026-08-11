@@ -128,8 +128,25 @@ describe('incapacity follow-up documents', () => {
   });
 
   it('habilita la calificación PCL desde el día 540', () => {
-    expect(getFollowUpDocumentAvailability('comun', 539)[1].isAvailable).toBe(false);
-    expect(getFollowUpDocumentAvailability('comun', 540)[1].isAvailable).toBe(true);
+    const beforeThreshold = getFollowUpDocumentAvailability('comun', 539)
+      .find((document) => document.entityType === 'incapacity_capacity_loss_rating');
+    const atThreshold = getFollowUpDocumentAvailability('comun', 540)
+      .find((document) => document.entityType === 'incapacity_capacity_loss_rating');
+
+    expect(beforeThreshold?.isAvailable).toBe(false);
+    expect(atThreshold?.isAvailable).toBe(true);
+  });
+
+  it('asigna una categoría documental independiente a cada hito legal', () => {
+    expect(getLegalMilestones('comun', 540).map((milestone) => [
+      milestone.key,
+      milestone.documentEntityType,
+    ])).toEqual([
+      ['day_120', 'incapacity_rehabilitation_concept'],
+      ['day_150', 'incapacity_afp_follow_up'],
+      ['day_180', 'incapacity_economic_responsibility'],
+      ['day_540', 'incapacity_capacity_loss_rating'],
+    ]);
   });
 
   it('excluye los hitos y documentos para orígenes distintos al común', () => {

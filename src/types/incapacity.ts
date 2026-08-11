@@ -48,6 +48,7 @@ export interface IncapacityLegalMilestone {
   day: number;
   title: string;
   description: string;
+  documentEntityType: IncapacityFollowUpDocumentType;
   level: 'info' | 'warning' | 'critical';
   isReached: boolean;
   daysRemaining: number;
@@ -55,6 +56,8 @@ export interface IncapacityLegalMilestone {
 
 export type IncapacityFollowUpDocumentType =
   | 'incapacity_rehabilitation_concept'
+  | 'incapacity_afp_follow_up'
+  | 'incapacity_economic_responsibility'
   | 'incapacity_capacity_loss_rating';
 
 export interface IncapacityFollowUpDocumentAvailability {
@@ -526,6 +529,7 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       day: 120,
       title: 'Concepto de rehabilitación',
       description: 'La EPS debe expedir concepto de rehabilitación antes del día 120.',
+      documentEntityType: 'incapacity_rehabilitation_concept',
       level: accumulatedDays >= 120 ? 'critical' : accumulatedDays >= 105 ? 'warning' : 'info',
     },
     {
@@ -533,6 +537,7 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       day: 150,
       title: 'Seguimiento ante AFP',
       description: 'Revise envío del concepto y preparación para reconocimiento después del día 180.',
+      documentEntityType: 'incapacity_afp_follow_up',
       level: accumulatedDays >= 150 ? 'critical' : accumulatedDays >= 135 ? 'warning' : 'info',
     },
     {
@@ -540,6 +545,7 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       day: 180,
       title: 'Cambio de responsable económico',
       description: 'Desde el día 181, valide responsabilidad de AFP según concepto de rehabilitación.',
+      documentEntityType: 'incapacity_economic_responsibility',
       level: accumulatedDays >= 180 ? 'critical' : accumulatedDays >= 165 ? 'warning' : 'info',
     },
     {
@@ -547,6 +553,7 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       day: 540,
       title: 'Umbral de 540 días',
       description: 'Revise calificación, concepto desfavorable o causales para pago EPS desde el día 541.',
+      documentEntityType: 'incapacity_capacity_loss_rating',
       level: accumulatedDays >= 540 ? 'critical' : accumulatedDays >= 510 ? 'warning' : 'info',
     },
   ];
@@ -570,6 +577,18 @@ export function getFollowUpDocumentAvailability(
       title: 'Concepto de rehabilitación',
       description: 'Concepto favorable o desfavorable emitido para el seguimiento de la rehabilitación.',
       thresholdDays: 120,
+    },
+    {
+      entityType: 'incapacity_afp_follow_up',
+      title: 'Seguimiento ante AFP',
+      description: 'Constancias de envío, radicación y comunicaciones del seguimiento ante la AFP.',
+      thresholdDays: 150,
+    },
+    {
+      entityType: 'incapacity_economic_responsibility',
+      title: 'Cambio de responsable económico',
+      description: 'Conceptos y soportes que acreditan el cambio de responsable económico.',
+      thresholdDays: 180,
     },
     {
       entityType: 'incapacity_capacity_loss_rating',
