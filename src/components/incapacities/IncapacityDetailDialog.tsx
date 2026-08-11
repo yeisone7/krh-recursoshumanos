@@ -20,6 +20,7 @@ import {
   File,
   History,
   LockKeyhole,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,6 +37,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,17 +64,98 @@ import {
   getIncapacityRootId,
   getLegalMilestones,
   getLegalMinimumDailyWage,
-  getTotalChainDays 
+  getTotalChainDays,
+  type IncapacityFollowUpDocumentType,
 } from '@/types/incapacity';
 import { IncapacityFormDialog } from './IncapacityFormDialog';
 import { RecoveryFormDialog } from './RecoveryFormDialog';
 import { DocumentIndicator, DocumentSection } from '@/components/documents/DocumentSection';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
+import { useCurrentDocument } from '@/hooks/useDocuments';
 
 interface IncapacityDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   incapacityId: string | null;
+}
+
+interface MilestoneDocumentAttachmentProps {
+  entityType: IncapacityFollowUpDocumentType;
+  entityId: string;
+  title: string;
+  thresholdDays: number;
+  allowUpload: boolean;
+  isLoadingEntity: boolean;
+}
+
+function MilestoneDocumentAttachment({
+  entityType,
+  entityId,
+  title,
+  thresholdDays,
+  allowUpload,
+  isLoadingEntity,
+}: MilestoneDocumentAttachmentProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { data: currentDocument, isLoading: isLoadingDocument } = useCurrentDocument(entityType, entityId);
+
+  return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="mt-3 border-t border-border/60 pt-2"
+    >
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+          <File className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">
+            {isLoadingDocument
+              ? 'Consultando documentos...'
+              : currentDocument
+                ? currentDocument.file_name
+                : allowUpload
+                  ? 'Sin documento adjunto'
+                  : `Disponible desde el día ${thresholdDays}`}
+          </span>
+        </div>
+        <CollapsibleTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-full justify-between px-2 text-xs text-primary hover:text-primary sm:w-auto sm:justify-center"
+            disabled={isLoadingEntity}
+          >
+            <span className="flex items-center gap-1.5">
+              <Upload className="h-3.5 w-3.5" />
+              Documentos
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+
+      <CollapsibleContent className="pt-3">
+        {!allowUpload && (
+          <div className="mb-3 flex items-start gap-2 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+            <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p>La carga se habilita al alcanzar {thresholdDays} días acumulados.</p>
+          </div>
+        )}
+        <DocumentSection
+          entityType={entityType}
+          entityId={entityId}
+          title={`Soportes de ${title}`}
+          allowUpload={allowUpload}
+          allowDelete
+          showVersionHistory
+          compact
+        />
+      </CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 export function IncapacityDetailDialog({
@@ -277,6 +364,14 @@ export function IncapacityDetailDialog({
                             {milestone.isReached ? 'Alcanzado' : `Faltan ${milestone.daysRemaining} dias`}
                           </Badge>
                         </div>
+                        <MilestoneDocumentAttachment
+                          entityType={milestone.documentEntityType}
+                          entityId={followUpDocumentEntityId}
+                          title={milestone.title}
+                          thresholdDays={milestone.day}
+                          allowUpload={milestone.isReached}
+                          isLoadingEntity={isLoadingChainRoot}
+                        />
                       </div>
                     ))}
                   </CardContent>
