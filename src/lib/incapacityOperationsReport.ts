@@ -10,6 +10,7 @@ export interface IncapacityOperationsRow {
   totalDays: number;
   diagnosisKey: string;
   diagnosisLabel: string;
+  gender: 'F' | 'M' | 'sin_dato';
 }
 
 export interface IncapacityOperationsFilters {

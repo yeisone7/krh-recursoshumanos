@@ -34,7 +34,13 @@ import {
 const reportColors = ['#0EA5B7', '#F97316', '#334155', '#EAB308', '#8B5CF6', '#22C55E', '#3B82F6', '#EC4899'];
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
 
-function ReportMetric({ label, value, detail, icon: Icon, color }: {
+const sexDefinitions = [
+  { key: 'F' as const, label: 'Femenino', color: '#EC4899' },
+  { key: 'M' as const, label: 'Masculino', color: '#0891B2' },
+  { key: 'sin_dato' as const, label: 'Sin dato', color: '#64748B' },
+];
+
+function MetricBubble({ label, value, detail, icon: Icon, color }: {
   label: string;
   value: number;
   detail: string;
@@ -42,16 +48,107 @@ function ReportMetric({ label, value, detail, icon: Icon, color }: {
   color: string;
 }) {
   return (
-    <Card className="border-slate-200 bg-white shadow-sm">
-      <CardContent className="flex items-center justify-between gap-4 p-4">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{label}</p>
-          <p className="mt-1 text-3xl font-black text-slate-950">{integerFormatter.format(value)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">{detail}</p>
+    <div className="group relative mx-auto flex aspect-square w-full max-w-[176px] items-center justify-center rounded-full p-5 text-center shadow-xl transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: color }}>
+      <div className="absolute inset-2 rounded-full border border-white/25" />
+      <div className="relative z-10 text-white">
+        <Icon className="mx-auto mb-2 h-5 w-5 opacity-90" aria-hidden="true" />
+        <p className="text-[10px] font-black uppercase leading-tight tracking-wider text-white/90">{label}</p>
+        <p className="mt-1 text-3xl font-black tracking-tight text-white">{integerFormatter.format(value)}</p>
+        <p className="mt-1 text-[10px] font-semibold text-white/75">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function OperationalSnapshotInfographic({ cases, days, diagnoses, affectedEmployees }: {
+  cases: number;
+  days: number;
+  diagnoses: number;
+  affectedEmployees: number;
+}) {
+  return (
+    <Card className="overflow-hidden border-0 shadow-lg" style={{ background: 'linear-gradient(145deg, #0F172A 0%, #172554 58%, #083344 100%)' }}>
+      <CardContent className="relative p-5 sm:p-6">
+        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-400/10 blur-2xl" />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] !text-cyan-300">Resumen visual</p>
+              <h3 className="mt-1 text-xl font-black !text-white">Panorama de incapacidades</h3>
+              <p className="mt-1 text-xs font-medium !text-slate-300">Indicadores principales para los filtros seleccionados</p>
+            </div>
+            <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider !text-white">
+              {integerFormatter.format(affectedEmployees)} colaboradores
+            </span>
+          </div>
+          <div className="mt-6 grid grid-cols-1 gap-4 min-[420px]:grid-cols-3">
+            <MetricBubble label="Incapacidades" value={cases} detail="casos registrados" icon={BarChart3} color="#F97316" />
+            <MetricBubble label="Días totales" value={days} detail="días acumulados" icon={CalendarDays} color="#06A7B9" />
+            <MetricBubble label="Diagnósticos" value={diagnoses} detail="diagnósticos únicos" icon={Stethoscope} color="#8B5CF6" />
+          </div>
         </div>
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ color, backgroundColor: `${color}18` }}>
-          <Icon className="h-5 w-5" />
-        </span>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface SexInfographicItem {
+  key: 'F' | 'M' | 'sin_dato';
+  label: string;
+  color: string;
+  cases: number;
+  days: number;
+  employees: number;
+  percentage: number;
+}
+
+function SexDistributionInfographic({ data, totalCases }: { data: SexInfographicItem[]; totalCases: number }) {
+  return (
+    <Card className="overflow-hidden border-slate-200 bg-white shadow-lg">
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-pink-600">Distribución por sexo</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">Participación de los casos</h3>
+            <p className="mt-1 text-xs font-medium text-slate-500">Casos, días y colaboradores afectados</p>
+          </div>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-50 text-pink-600">
+            <Users className="h-5 w-5" aria-hidden="true" />
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-[190px_1fr] sm:items-center">
+          <div className="relative mx-auto h-[190px] w-[190px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="cases" nameKey="label" innerRadius={58} outerRadius={84} paddingAngle={3} stroke="none">
+                  {data.map((item) => <Cell key={item.key} fill={item.color} />)}
+                </Pie>
+                <Tooltip content={<ReportTooltip />} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-black text-slate-950">{integerFormatter.format(totalCases)}</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">casos</span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            {data.map((item) => (
+              <div key={item.key} className="rounded-xl border border-slate-200 bg-slate-50 p-3" style={{ borderLeftColor: item.color, borderLeftWidth: 5 }}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-black uppercase tracking-wide text-slate-800">{item.label}</span>
+                  <span className="rounded-full px-2 py-0.5 text-xs font-black text-white" style={{ backgroundColor: item.color }}>{item.percentage}%</span>
+                </div>
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                  <span className="text-[10px] font-bold text-slate-500"><strong className="block text-sm text-slate-950">{integerFormatter.format(item.cases)}</strong>casos</span>
+                  <span className="text-[10px] font-bold text-slate-500"><strong className="block text-sm text-slate-950">{integerFormatter.format(item.days)}</strong>días</span>
+                  <span className="text-[10px] font-bold text-slate-500"><strong className="block text-sm text-slate-950">{integerFormatter.format(item.employees)}</strong>personas</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -112,6 +209,16 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
     const timelineData = countBy(filtered, (row) => row.startDate)
       .map((item) => ({ date: item.name, label: format(parseISO(`${item.name}T00:00:00`), 'dd MMM yy', { locale: es }), cases: item.value }))
       .sort((left, right) => left.date.localeCompare(right.date));
+    const sexData = sexDefinitions.map((definition) => {
+      const matchingRows = filtered.filter((row) => row.gender === definition.key);
+      return {
+        ...definition,
+        cases: matchingRows.length,
+        days: matchingRows.reduce((total, row) => total + row.totalDays, 0),
+        employees: new Set(matchingRows.map((row) => row.employeeId)).size,
+        percentage: filtered.length ? Math.round((matchingRows.length / filtered.length) * 100) : 0,
+      };
+    });
 
     return {
       filtered,
@@ -125,6 +232,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
       diagnosisData,
       centerData,
       timelineData,
+      sexData,
     };
   }, [employeeId, month, operationCenterId, positionName, rows]);
 
@@ -200,11 +308,14 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
         </CardContent>
       </Card>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <ReportMetric label="Cantidad de incapacidades" value={report.filtered.length} detail="Registros en el filtro" icon={BarChart3} color="#0EA5B7" />
-        <ReportMetric label="Días de incapacidad" value={report.totalDays} detail="Días totales acumulados" icon={CalendarDays} color="#F97316" />
-        <ReportMetric label="Diagnósticos detectados" value={report.diagnoses} detail="Diagnósticos únicos" icon={Stethoscope} color="#8B5CF6" />
-        <ReportMetric label="Colaboradores afectados" value={report.affectedEmployees} detail="Personas con registros" icon={Users} color="#334155" />
+      <div className="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
+        <OperationalSnapshotInfographic
+          cases={report.filtered.length}
+          days={report.totalDays}
+          diagnoses={report.diagnoses}
+          affectedEmployees={report.affectedEmployees}
+        />
+        <SexDistributionInfographic data={report.sexData} totalCases={report.filtered.length} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
