@@ -16,7 +16,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { BarChart3, BriefcaseBusiness, Building2, CalendarDays, RotateCcw, Stethoscope, Users } from 'lucide-react';
+import { BarChart3, Building2, CalendarDays, RotateCcw, Stethoscope, Users } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -148,20 +148,20 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
 
   return (
     <div className="space-y-5">
-      <Card className="overflow-hidden border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-950 shadow-sm">
+      <Card className="overflow-hidden border-slate-200 !bg-slate-50 shadow-sm">
         <CardContent className="p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <div className="flex items-center gap-2 text-cyan-300">
+              <div className="flex items-center gap-2 !text-cyan-700">
                 <Building2 className="h-4 w-4" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">Informe operativo</span>
               </div>
-              <h2 className="mt-2 text-2xl font-black !text-white">Incapacidades por centro de operación</h2>
-              <p className="mt-1 max-w-2xl text-sm font-medium !text-slate-200">
+              <h2 className="mt-2 text-2xl font-black !text-slate-950">Incapacidades por centro de operación</h2>
+              <p className="mt-1 max-w-2xl text-sm font-medium !text-slate-600">
                 Réplica del informe de Data Studio. “Campo” corresponde al centro de operación del colaborador.
               </p>
             </div>
-            <Button variant="outline" onClick={resetFilters} className="border-slate-500 bg-white/10 !text-white hover:bg-white/20 hover:!text-white">
+            <Button onClick={resetFilters} className="border border-slate-900 !bg-slate-900 !text-white shadow-sm hover:!bg-slate-700 hover:!text-white">
               <RotateCcw className="mr-2 h-4 w-4" />
               Restablecer filtros
             </Button>
@@ -264,8 +264,14 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
             <Table>
               <TableHeader className="bg-slate-900">
                 <TableRow className="border-slate-700 hover:bg-slate-900">
-                  {['Centro de operación', 'Casos', 'Días'].map((label) => (
-                    <TableHead key={label} className="sticky top-0 z-20 h-10 bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white last:text-right [&:nth-child(2)]:text-right">{label}</TableHead>
+                  {['Centro de operación', 'Casos', 'Días'].map((label, index) => (
+                    <TableHead
+                      key={label}
+                      className="sticky top-0 z-20 h-10 bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white"
+                      style={{ textAlign: index === 0 ? 'left' : 'right' }}
+                    >
+                      {label}
+                    </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -342,11 +348,6 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
         </ReportChart>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-600">
-        <span className="flex items-center gap-1.5"><Building2 className="h-4 w-4 text-cyan-700" /> Campo = centro de operación</span>
-        <span className="flex items-center gap-1.5"><BriefcaseBusiness className="h-4 w-4 text-orange-600" /> Cargo vigente del colaborador</span>
-        <span>La tabla incluye los {integerFormatter.format(report.summaries.length)} grupos resultantes del filtro.</span>
-      </div>
     </div>
   );
 }
