@@ -820,6 +820,12 @@ export default function AnaliticaIncapacidades() {
       const center = employee?.operation_centers;
       const diagnosis = item.diagnosis?.trim() || 'Sin diagnóstico';
       const diagnosisCode = item.cie10_code?.trim();
+      const rawGender = String(item.employee?.gender || employee?.gender || '').trim().toUpperCase();
+      const gender = rawGender === 'F' || rawGender.startsWith('FEM')
+        ? 'F'
+        : rawGender === 'M' || rawGender.startsWith('MAS')
+          ? 'M'
+          : 'sin_dato';
 
       return {
         id: item.id,
@@ -833,6 +839,7 @@ export default function AnaliticaIncapacidades() {
         totalDays: item.total_days || 0,
         diagnosisKey: diagnosisCode || diagnosis.toLocaleLowerCase('es'),
         diagnosisLabel: diagnosisCode ? `${diagnosisCode} - ${diagnosis}` : diagnosis,
+        gender,
       };
     });
     const sexSeed: Record<'F' | 'M' | 'sin_dato', { key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employeeIds: Set<string> }> = {
