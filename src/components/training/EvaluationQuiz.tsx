@@ -60,7 +60,7 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
     setCorrectCount(0);
   }, []);
 
-  // Failure screen with review
+  // Failure screen without answer review so the employee can retry the evaluation.
   if (finished && !passed) {
     return (
       <div className="space-y-6">
@@ -73,33 +73,6 @@ export function EvaluationQuiz({ questions, onComplete, onGoBack }: EvaluationQu
           <p className="text-sm text-destructive font-medium">
             Se requiere un mínimo de 80% para aprobar la evaluación.
           </p>
-        </div>
-
-        {/* Review answers */}
-        <div className="space-y-4">
-          <h4 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Revisión de respuestas</h4>
-          {questions.map((q, i) => {
-            const userAnswer = answers[i];
-            const isCorrect = userAnswer === q.respuestaCorrecta;
-            return (
-              <div key={i} className={`p-4 rounded-lg border ${isCorrect ? 'border-success/30 bg-success-light' : 'border-destructive/30 bg-destructive-light'}`}>
-                <div className="flex items-start gap-2 mb-2">
-                  {isCorrect ? (
-                    <CheckCircle2 className="h-5 w-5 text-success mt-0.5 shrink-0" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
-                  )}
-                  <p className="font-medium text-sm">{q.pregunta}</p>
-                </div>
-                {!isCorrect && (
-                  <div className="ml-7 space-y-1 text-sm">
-                    <p className="text-destructive">Tu respuesta: {userAnswer || 'Sin respuesta'}</p>
-                    <p className="text-success">Respuesta correcta: {q.respuestaCorrecta}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
         </div>
 
         <div className="flex gap-3 justify-center pt-2">
