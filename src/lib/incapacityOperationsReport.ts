@@ -29,6 +29,13 @@ export interface IncapacityOperationsSummaryRow {
   totalDays: number;
 }
 
+export interface IncapacityOperationCenterSummaryRow {
+  key: string;
+  operationCenterName: string;
+  cases: number;
+  totalDays: number;
+}
+
 export function filterIncapacityOperationsRows(
   rows: IncapacityOperationsRow[],
   filters: IncapacityOperationsFilters
@@ -82,6 +89,32 @@ export function summarizeIncapacityOperationsRows(rows: IncapacityOperationsRow[
 
   return [...summaries.values()].sort((left, right) => (
     right.totalDays - left.totalDays || left.employeeName.localeCompare(right.employeeName, 'es')
+  ));
+}
+
+export function summarizeByOperationCenter(rows: IncapacityOperationsRow[]) {
+  const summaries = new Map<string, IncapacityOperationCenterSummaryRow>();
+
+  rows.forEach((row) => {
+    const key = row.operationCenterId || row.operationCenterName;
+    const current = summaries.get(key);
+
+    if (current) {
+      current.cases += 1;
+      current.totalDays += row.totalDays;
+      return;
+    }
+
+    summaries.set(key, {
+      key,
+      operationCenterName: row.operationCenterName,
+      cases: 1,
+      totalDays: row.totalDays,
+    });
+  });
+
+  return [...summaries.values()].sort((left, right) => (
+    right.totalDays - left.totalDays || left.operationCenterName.localeCompare(right.operationCenterName, 'es')
   ));
 }
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterIncapacityOperationsRows,
   getUniqueDiagnosisCount,
+  summarizeByOperationCenter,
   summarizeIncapacityOperationsRows,
   type IncapacityOperationsRow,
 } from './incapacityOperationsReport';
@@ -40,5 +41,13 @@ describe('incapacity operations report', () => {
 
   it('counts diagnoses without duplicating repeated codes', () => {
     expect(getUniqueDiagnosisCount(rows)).toBe(2);
+  });
+
+  it('groups cases and days by operation center', () => {
+    const summary = summarizeByOperationCenter(rows);
+    expect(summary).toEqual([
+      { key: 'c1', operationCenterName: 'Centro Norte', cases: 2, totalDays: 5 },
+      { key: 'c2', operationCenterName: 'Centro Sur', cases: 1, totalDays: 1 },
+    ]);
   });
 });
