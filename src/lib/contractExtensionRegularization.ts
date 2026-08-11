@@ -58,9 +58,9 @@ function calculateNextAutomaticExtensionEndDate(
   previousStartDate: Date,
   previousEndDate: Date
 ): Date {
-  const minimumMonths = isOriginalContractUnderOneYear(contract) && nextExtensionNumber >= 4 ? 12 : 1;
+  const requiresAnnualExtension = isOriginalContractUnderOneYear(contract) && nextExtensionNumber >= 4;
   const previousMonths = calculateInclusiveMonthSpan(previousStartDate, previousEndDate);
-  const months = Math.max(previousMonths, minimumMonths);
+  const months = requiresAnnualExtension ? 12 : Math.max(previousMonths, 1);
   const nextStartDate = addDays(previousEndDate, 1);
 
   return addDays(addMonths(nextStartDate, months), -1);
