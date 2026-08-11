@@ -199,7 +199,7 @@ function groupContractsByOperationCenter<T extends ContractListRow>(contracts: T
 
 const statusConfig: Record<ContractStatus, { label: string; class: string; icon: typeof CheckCircle }> = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
-  expiring: { label: 'Por vencer', class: 'bg-warning-light text-warning-foreground border-warning/20', icon: Clock },
+  expiring: { label: 'Por vencer', class: 'bg-warning-light text-warning border-warning/20', icon: Clock },
   expired: { label: 'Vencido', class: 'bg-destructive-light text-destructive border-destructive/20', icon: AlertTriangle },
   terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
