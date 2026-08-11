@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, X, GraduationCap, BookOpen } from 'lucide-react';
+import { CalendarIcon, User, Briefcase, MapPin, Shield, Users, X, GraduationCap, BookOpen, RotateCcw, AlertTriangle } from 'lucide-react';
 
 import {
   Dialog,
@@ -75,6 +75,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
   const updateCandidate = useUpdateCandidate();
   const { background, loading: bgLoading, checkBackground } = useCandidateBackground();
   const [prefilled, setPrefilled] = useState(false);
+  const [detectedRehireId, setDetectedRehireId] = useState<string | null>(null);
+  const [activeEmployeeBlock, setActiveEmployeeBlock] = useState(false);
   const isEditMode = !!candidateToEdit;
 
   const form = useForm<CandidateFormData>({
@@ -113,6 +115,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
       });
       setActiveTab('personal');
       setPrefilled(false);
+      setDetectedRehireId(null);
+      setActiveEmployeeBlock(false);
       return;
     }
 
@@ -318,6 +322,26 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
 
               <ScrollArea className="h-[calc(92dvh-250px)] px-4 py-4 sm:h-[calc(90vh-260px)] sm:px-6">
                 <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+                {detectedRehireId && (
+                  <div className="mb-4 flex gap-2 rounded-lg border border-info/30 bg-info/5 p-3 text-sm">
+                    <RotateCcw className="mt-0.5 h-4 w-4 shrink-0 text-info" />
+                    <div>
+                      <p className="font-medium">Reingreso detectado</p>
+                      <p className="text-xs text-muted-foreground">
+                        Solo se precargaron identidad, datos personales y último contacto. El nuevo proceso de selección comienza limpio.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {activeEmployeeBlock && (
+                  <div className="mb-4 flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                    <div>
+                      <p className="font-medium">Empleado activo</p>
+                      <p className="text-xs text-muted-foreground">Este documento debe gestionarse mediante traslado interno.</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Personal Tab */}
                 <TabsContent value="personal" className="mt-0 space-y-4">
@@ -420,8 +444,81 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
                                 field.onBlur();
                                 const docNum = e.target.value.trim();
                                 if (docNum.length >= 4) {
+                                  const documentType = form.getValues('documentType');
+                                  const { data: priorEmployee, error: employeeError } = await supabase
+                                    .from('employees_v2')
+                                    .select('*')
+                                    .eq('company_id', currentCompanyId!)
+                                    .eq('document_type', documentType as any)
+                                    .ilike('document_number', docNum)
+                                    .maybeSingle();
+
+                                  if (employeeError) {
+                                    toast.error('No se pudo validar el documento', { description: employeeError.message });
+                                    return;
+                                  }
+
+                                  if (priorEmployee?.is_active || ['active', 'en_retiro'].includes(priorEmployee?.status || '')) {
+                                    setActiveEmployeeBlock(true);
+                                    setDetectedRehireId(null);
+                                    toast.error('El empleado todavía está activo', {
+                                      description: 'Use el flujo de traslado interno en lugar de crear una postulación.',
+                                    });
+                                    return;
+                                  }
+
+                                  setActiveEmployeeBlock(false);
+                                  if (priorEmployee && !isEditMode) {
+                                    const { data: lastContact } = await supabase
+                                      .from('employee_contact')
+                                      .select('*')
+                                      .eq('employee_id', priorEmployee.id)
+                                      .order('created_at', { ascending: false })
+                                      .limit(1)
+                                      .maybeSingle();
+
+                                    form.setValue('firstName', priorEmployee.first_name || '');
+                                    form.setValue('lastName', priorEmployee.last_name || '');
+                                    form.setValue('documentIssueCity', priorEmployee.document_issue_city || '');
+                                    form.setValue('documentIssueDate', priorEmployee.document_issue_date ? new Date(`${priorEmployee.document_issue_date}T00:00:00`) : undefined);
+                                    form.setValue('birthDate', priorEmployee.birth_date ? new Date(`${priorEmployee.birth_date}T00:00:00`) : undefined);
+                                    form.setValue('gender', priorEmployee.gender || '');
+                                    form.setValue('genderIdentity', priorEmployee.gender_identity || '');
+                                    form.setValue('genderIdentityOther', priorEmployee.gender_identity_other || '');
+                                    form.setValue('bloodType', priorEmployee.blood_type || '');
+                                    form.setValue('maritalStatus', priorEmployee.marital_status || '');
+                                    form.setValue('isFirstJob', priorEmployee.is_first_job || false);
+                                    form.setValue('isHeadOfHousehold', priorEmployee.is_head_of_household || false);
+                                    form.setValue('disabilityType', priorEmployee.disability_type || '');
+                                    form.setValue('ethnicGroup', priorEmployee.ethnic_group || '');
+                                    form.setValue('isConflictVictim', priorEmployee.is_conflict_victim || false);
+                                    form.setValue('isDemobilized', priorEmployee.is_demobilized || false);
+                                    form.setValue('email', lastContact?.email || lastContact?.personal_email || '');
+                                    form.setValue('phone', lastContact?.phone || '');
+                                    form.setValue('mobile', lastContact?.mobile || '');
+                                    form.setValue('address', lastContact?.residence_address || '');
+                                    form.setValue('neighborhood', lastContact?.residence_neighborhood || '');
+                                    form.setValue('city', lastContact?.residence_city || '');
+                                    form.setValue('department', lastContact?.residence_department || '');
+                                    form.setValue('emergencyContactName', lastContact?.emergency_contact_name || '');
+                                    form.setValue('emergencyContactPhone', lastContact?.emergency_contact_phone || '');
+                                    form.setValue('emergencyContactRelationship', lastContact?.emergency_contact_relationship || '');
+                                    form.setValue('educationLevel', '');
+                                    form.setValue('educationLevelId', undefined);
+                                    form.setValue('profession', '');
+                                    form.setValue('professionId', undefined);
+                                    form.setValue('experienceYears', 0);
+                                    form.setValue('currentCompany', '');
+                                    form.setValue('currentPosition', '');
+                                    form.setValue('salaryExpectation', '');
+                                    form.setValue('generalNotes', '');
+                                    form.setValue('familyMembers', []);
+                                    setDetectedRehireId(priorEmployee.id);
+                                    setPrefilled(true);
+                                  }
+
                                   const result = await checkBackground(docNum, currentCompanyId);
-                                  if (!isEditMode && result?.previous_candidacies?.length > 0 && !prefilled) {
+                                  if (!priorEmployee && !isEditMode && result?.previous_candidacies?.length > 0 && !prefilled) {
                                     const latest = result.previous_candidacies[0];
                                     const current = form.getValues();
                                     if (!current.firstName && latest.first_name) form.setValue('firstName', latest.first_name);
@@ -1255,7 +1352,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
               <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={createCandidate.isPending || updateCandidate.isPending}>
+              <Button type="submit" className="w-full sm:w-auto" disabled={activeEmployeeBlock || createCandidate.isPending || updateCandidate.isPending}>
                 {createCandidate.isPending || updateCandidate.isPending
                   ? (isEditMode ? 'Guardando...' : 'Registrando...')
                   : (isEditMode ? 'Guardar Cambios' : 'Registrar Candidato')}

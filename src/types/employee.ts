@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { Database } from '@/integrations/supabase/types';
 
 // =====================================================
 // ENUMS AND TYPES - Matching database schema
@@ -38,6 +39,9 @@ export type EmployeeDocumentType =
   | 'licencia_cursos';
 export type LinkType = 'indefinido' | 'fijo' | 'obra_labor' | 'aprendizaje' | 'servicios' | 'temporal';
 export type DocumentType = 'CC' | 'CE' | 'TI' | 'PA' | 'PEP';
+export type EmploymentCycleStatus = Database['public']['Enums']['employment_cycle_status'];
+export type EmploymentCycleSource = Database['public']['Enums']['employment_cycle_source'];
+export type EmployeeEmploymentCycle = Database['public']['Tables']['employee_employment_cycles']['Row'];
 
 // =====================================================
 // LABEL CONFIGURATIONS
@@ -281,6 +285,7 @@ export const familyRelationshipLabels: Record<string, string> = {
 // D. Work Info Schema
 export const employeeWorkInfoSchema = z.object({
   operationCenterId: z.string().uuid({ message: 'Seleccione el centro de operación' }),
+  operationCenterIds: z.array(z.string().uuid()).default([]),
   costCenter: z.string().min(1, 'El centro de costos es requerido').max(50),
   areaId: z.string().uuid({ message: 'Seleccione el área' }),
   positionId: z.string().uuid().optional(),
@@ -431,6 +436,7 @@ export interface EmployeeV2 {
 
 export interface EmployeeContact {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   residence_department: string | null;
   residence_city: string | null;
@@ -454,6 +460,7 @@ export interface EmployeeContact {
 
 export interface EmployeeFamily {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   spouse_name: string | null;
   spouse_gender: GenderType | null;
@@ -469,6 +476,7 @@ export interface EmployeeFamily {
 
 export interface EmployeeFamilyMember {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   company_id: string;
   relationship: string;
@@ -482,6 +490,7 @@ export interface EmployeeFamilyMember {
 
 export interface EmployeeWorkInfo {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   company_id: string;
   operation_center_id: string | null;
@@ -502,8 +511,21 @@ export interface EmployeeWorkInfo {
   updated_at: string;
 }
 
+export interface EmployeeOperationCenterAssignment {
+  id: string;
+  employment_cycle_id?: string | null;
+  employee_id: string;
+  company_id: string;
+  operation_center_id: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  operation_centers?: { id: string; name: string; city?: string | null } | null;
+}
+
 export interface EmployeeSocialSecurity {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   risk_level: RiskLevel | null;
   arl: string | null;
@@ -521,6 +543,7 @@ export interface EmployeeSocialSecurity {
 
 export interface EmployeeBankInfo {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   bank_name: string | null;
   account_type: AccountType | null;
@@ -536,6 +559,7 @@ export interface EmployeeBankInfo {
 
 export interface EmployeeDocument {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   company_id: string;
   document_type: EmployeeDocumentType;
@@ -584,6 +608,7 @@ export interface EmployeeVaccination {
 
 export interface EmployeeSchedule {
   id: string;
+  employment_cycle_id?: string | null;
   employee_id: string;
   payroll_type: PayrollType;
   shift_type_id: string | null;
@@ -601,11 +626,14 @@ export interface EmployeeSchedule {
 // =====================================================
 
 export interface EmployeeV2WithRelations extends EmployeeV2 {
+  active_employment_cycle?: EmployeeEmploymentCycle | null;
+  employee_employment_cycles?: EmployeeEmploymentCycle[];
   identification_types?: { id: string; name: string; code: string } | null;
   contact?: EmployeeContact | null;
   family?: EmployeeFamily | null;
   family_members?: EmployeeFamilyMember[];
   work_info?: EmployeeWorkInfo | null;
+  operation_center_assignments?: EmployeeOperationCenterAssignment[];
   social_security?: EmployeeSocialSecurity | null;
   bank_info?: EmployeeBankInfo | null;
   schedule?: EmployeeSchedule | null;

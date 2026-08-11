@@ -127,13 +127,49 @@ export function useCreateCandidate() {
 
   return useMutation({
     mutationFn: async (candidate: Omit<CandidateInsert, 'created_by' | 'company_id'>) => {
+      const normalizedDocument = candidate.document_number?.trim();
+      let rehireEmployeeId: string | null = null;
+
+      if (normalizedDocument) {
+        const { data: existingApplication, error: existingApplicationError } = await supabase
+          .from('candidates')
+          .select('*')
+          .eq('company_id', currentCompanyId!)
+          .eq('vacancy_id', candidate.vacancy_id)
+          .eq('document_type', candidate.document_type)
+          .ilike('document_number', normalizedDocument)
+          .not('status', 'in', '(hired,not_selected,withdrawn)')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingApplicationError) throw existingApplicationError;
+        if (existingApplication) return existingApplication;
+
+        const { data: priorEmployee, error: priorEmployeeError } = await supabase
+          .from('employees_v2')
+          .select('id, is_active, status')
+          .eq('company_id', currentCompanyId!)
+          .eq('document_type', candidate.document_type)
+          .ilike('document_number', normalizedDocument)
+          .maybeSingle();
+
+        if (priorEmployeeError) throw priorEmployeeError;
+        if (priorEmployee?.is_active || ['active', 'en_retiro'].includes(priorEmployee?.status || '')) {
+          throw new Error('Este documento pertenece a un empleado activo. Use el flujo de traslado interno.');
+        }
+        rehireEmployeeId = priorEmployee?.id || null;
+      }
+
       const { data, error } = await supabase
         .from('candidates')
         .insert({
           ...candidate,
+          rehire_employee_id: rehireEmployeeId,
+          source: rehireEmployeeId ? 'reingreso' : candidate.source,
           company_id: currentCompanyId!,
           created_by: user?.id,
-        })
+        } as any)
         .select()
         .single();
 
@@ -495,7 +531,7 @@ export interface ConvertToEmployeeParams {
   createEntryExam?: boolean;
 }
 
-export function useConvertToEmployee() {
+export function useLegacyConvertToEmployee() {
   const queryClient = useQueryClient();
   const { user, currentCompanyId } = useAuth();
 
@@ -1079,6 +1115,177 @@ export function useConvertToEmployee() {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['medical_exams'] });
       queryClient.invalidateQueries({ queryKey: ['employee_documents'] });
+    },
+  });
+}
+
+interface CompleteHiringResult {
+  employee_id: string;
+  employment_cycle_id: string;
+  contract_id: string;
+  entry_exam_id: string;
+  existing: boolean;
+}
+
+// The database owns the hiring transaction. This prevents partial rehires and
+// duplicate cycles when the action is retried or submitted concurrently.
+export function useConvertToEmployee() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      candidateId,
+      operationCenterId,
+      contractType,
+      startDate,
+      endDate,
+      salary,
+      transportAllowance,
+      trialPeriodDays,
+    }: ConvertToEmployeeParams) => {
+      if (!currentCompanyId) throw new Error('No hay una compañía activa.');
+
+      const { data: candidate, error: candidateError } = await supabase
+        .from('candidates')
+        .select(`
+          id, first_name, last_name, salary_expectation,
+          vacancies(
+            id, position_id, position_title, operation_center_id,
+            salary_type, salary_range_min, includes_transport,
+            operation_centers(id, city, address),
+            personnel_requisitions:requisition_id(
+              area_id, proceso_exclusivo_pcd, juridico_tipo_contrato,
+              juridico_duracion, tipo_contrato_solicitado,
+              rrhh_asignacion_salarial, salario_propuesto,
+              dia_descanso_obligatorio, rrhh_condiciones_adicionales
+            )
+          )
+        `)
+        .eq('id', candidateId)
+        .eq('company_id', currentCompanyId)
+        .single();
+
+      if (candidateError) throw candidateError;
+
+      const vacancy = candidate.vacancies as any;
+      const requisition = vacancy?.personnel_requisitions as any;
+      const operationCenter = vacancy?.operation_centers as any;
+      const hireDate = startDate || todayDateOnlyString();
+      const effectiveContractType = (
+        contractType || requisition?.juridico_tipo_contrato || requisition?.tipo_contrato_solicitado || 'indefinido'
+      ) as ContractType;
+      const durationMonths = endDate ? null : parseDurationMonths(requisition?.juridico_duracion);
+      const derivedEndDate = endDate || (durationMonths ? calculateEndDateFromMonths(hireDate, durationMonths) : null);
+      const contractSalary = salary
+        ?? parseNumericValue(requisition?.rrhh_asignacion_salarial)
+        ?? parseNumericValue(requisition?.salario_propuesto)
+        ?? parseNumericValue(candidate.salary_expectation)
+        ?? parseNumericValue(vacancy?.salary_range_min)
+        ?? 0;
+      const contractTransport = transportAllowance
+        ?? (vacancy?.includes_transport ? 140606 : 0);
+
+      const { PREDEFINED_TASKS } = await import('@/hooks/useOnboardingTasks');
+      const { fetchPositionTemplates } = await import('@/hooks/useOnboardingTemplates');
+      const positionTasks = vacancy?.position_id
+        ? await fetchPositionTemplates(currentCompanyId, vacancy.position_id)
+        : [];
+      const onboardingTasks = (positionTasks.length ? positionTasks : PREDEFINED_TASKS).map((task: any) => ({
+        task_key: task.task_key,
+        task_label: task.task_label,
+        task_description: task.task_description || null,
+        sort_order: task.sort_order,
+      }));
+
+      const linkTypeMap: Record<string, LinkType> = {
+        indefinido: 'indefinido',
+        fijo: 'fijo',
+        obra_labor: 'obra_labor',
+        aprendizaje: 'aprendizaje',
+        servicios: 'servicios',
+      };
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc('complete_candidate_hiring', {
+        p_candidate_id: candidateId,
+        p_hiring: {
+          hire_date: hireDate,
+          end_date: derivedEndDate,
+          operation_center_id: operationCenterId || vacancy?.operation_center_id,
+          position_id: vacancy?.position_id || null,
+          area_id: requisition?.area_id || null,
+          position_name: vacancy?.position_title || 'Por definir',
+          link_type: linkTypeMap[effectiveContractType] || 'indefinido',
+          contract_type: effectiveContractType,
+          salary: contractSalary,
+          salary_type: vacancy?.salary_type || 'mensual',
+          transport_allowance: contractTransport,
+          trial_period_days: trialPeriodDays ?? 60,
+          work_city: operationCenter?.city || null,
+          work_address: operationCenter?.address || null,
+          rest_day: requisition?.dia_descanso_obligatorio || null,
+          special_clauses: requisition?.rrhh_condiciones_adicionales || null,
+          is_pcd_process: Boolean(requisition?.proceso_exclusivo_pcd),
+          onboarding_tasks: onboardingTasks,
+        },
+      } as never);
+
+      if (rpcError) throw rpcError;
+      const result = rpcData as unknown as CompleteHiringResult;
+
+      const [employeeResponse, contractResponse, examResponse] = await Promise.all([
+        supabase.from('employees_v2').select('*').eq('id', result.employee_id).single(),
+        supabase.from('contracts').select('*').eq('id', result.contract_id).single(),
+        supabase.from('medical_exams').select('*').eq('id', result.entry_exam_id).single(),
+      ]);
+      if (employeeResponse.error) throw employeeResponse.error;
+      if (contractResponse.error) throw contractResponse.error;
+      if (examResponse.error) throw examResponse.error;
+
+      if (!result.existing) {
+        try {
+          const { data: configData } = await supabase
+            .from('system_config')
+            .select('config_value')
+            .eq('company_id', currentCompanyId)
+            .eq('config_key', 'hiring_notification_role')
+            .maybeSingle();
+          const roleId = (configData?.config_value as any)?.role_id;
+          if (roleId) {
+            const { data: roleUsers } = await supabase.from('user_custom_roles').select('user_id').eq('role_id', roleId);
+            if (roleUsers?.length) {
+              await supabase.from('notifications').insert(roleUsers.map(({ user_id }) => ({
+                user_id,
+                company_id: currentCompanyId,
+                title: 'Nuevo empleado contratado',
+                message: `${employeeResponse.data.first_name} ${employeeResponse.data.last_name} ha sido contratado como ${vacancy?.position_title || 'nuevo empleado'}.`,
+                type: 'success' as const,
+                category: 'hiring',
+                entity_type: 'employee',
+                entity_id: result.employee_id,
+                action_url: `/empleados?detail=${result.employee_id}`,
+              })));
+            }
+          }
+        } catch (notificationError) {
+          console.error('Error sending hiring notifications:', notificationError);
+        }
+      }
+
+      return {
+        employee: employeeResponse.data,
+        contract: contractResponse.data,
+        entryExam: examResponse.data,
+        employmentCycleId: result.employment_cycle_id,
+        existing: result.existing,
+      };
+    },
+    onSuccess: () => {
+      [
+        'candidates', 'employees', 'employees_v2', 'vacancies', 'contracts',
+        'medical_exams', 'employee_documents', 'employee-employment-cycles',
+        'employee-candidate-history', 'onboarding-tasks',
+      ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
     },
   });
 }

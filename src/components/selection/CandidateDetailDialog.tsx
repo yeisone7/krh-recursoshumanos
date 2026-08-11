@@ -141,24 +141,22 @@ export function CandidateDetailDialog({
   const updateStep = useUpdateSelectionStep();
 
   const candidateEmployeeId = candidate?.employee_id || undefined;
-  const { data: matchedEmployee } = useQuery({
-    queryKey: ['candidate-matched-employee', candidate?.document_number, currentCompanyId],
+  const rehireEmployeeId = (candidate as any)?.rehire_employee_id as string | null | undefined;
+  // Historical employee documents must never satisfy a new selection process.
+  const resolvedEmployeeId = candidateEmployeeId;
+  const { data: priorCycles = [] } = useQuery({
+    queryKey: ['candidate-rehire-history', rehireEmployeeId],
     queryFn: async () => {
-      if (!candidate?.document_number || !currentCompanyId) return null;
-
       const { data, error } = await supabase
-        .from('employees_v2')
-        .select('id')
-        .eq('company_id', currentCompanyId)
-        .eq('document_number', candidate.document_number)
-        .maybeSingle();
-
+        .from('employee_employment_cycles')
+        .select('id, cycle_number, start_date, end_date, status, employee_work_info(position_name)')
+        .eq('employee_id', rehireEmployeeId!)
+        .order('cycle_number', { ascending: false });
       if (error) throw error;
-      return data as { id: string } | null;
+      return data;
     },
-    enabled: open && !!candidate?.document_number && !!currentCompanyId && !candidateEmployeeId,
+    enabled: open && !!rehireEmployeeId,
   });
-  const resolvedEmployeeId = candidateEmployeeId || matchedEmployee?.id;
   const { data: sharedDocs = [], isLoading: loadingSharedDocs } = useEmployeeDocuments(resolvedEmployeeId);
   const { data: candidateDocs = [], isLoading: loadingDocs } = useCandidateDocuments(candidateId);
   const deleteCandidateDoc = useDeleteCandidateDocument();
@@ -274,8 +272,22 @@ export function CandidateDetailDialog({
   const hasApprovedMedicalExam = steps.some(
     (s: any) => s.step_type === 'examenes_medicos' && s.status === 'passed' && ['apto', 'apto_restricciones', 'favorable'].includes(s.result)
   );
+  const requiredSelectionSteps = [
+    'prefiltro', 'entrevista_seleccion', 'entrevista_jefe',
+    'validacion_antecedentes', 'pruebas_psicotecnicas', 'pruebas_conocimiento',
+    'validacion_academica', 'validacion_referencias', 'examenes_medicos',
+  ];
+  const hasCompletedSelection = requiredSelectionSteps.every((stepType) =>
+    steps.some((step: any) => step.step_type === stepType && ['passed', 'not_applicable'].includes(step.status))
+  );
 
   const handleConvert = async () => {
+    if (!hasCompletedSelection) {
+      toast.error('El proceso de selección está incompleto', {
+        description: 'Debe aprobar o marcar como no aplicable cada etapa antes de contratar.',
+      });
+      return;
+    }
     if (!hasApprovedMedicalExam) {
       toast.error('Se requiere examen médico de ingreso aprobado', {
         description: 'Registre la etapa de Exámenes Médicos con concepto "Apto" o "Favorable" antes de contratar.',
@@ -408,6 +420,11 @@ export function CandidateDetailDialog({
                 <Badge className={cn('max-w-full self-start truncate', statusStyle.bg, statusStyle.text)}>
                   {candidateStatusLabels[status]}
                 </Badge>
+                {rehireEmployeeId && (
+                  <Badge variant="outline" className="border-info/40 bg-info/10 text-info">
+                    Reingreso
+                  </Badge>
+                )}
               </div>
             </div>
           </DialogHeader>
@@ -415,6 +432,22 @@ export function CandidateDetailDialog({
           {/* Background alerts */}
           <div className="shrink-0 px-4 sm:px-6">
             <CandidateBackgroundAlerts background={background} loading={bgLoading} compact />
+            {rehireEmployeeId && (
+              <div className="mb-2 rounded-lg border border-info/30 bg-info/5 p-3 text-xs">
+                <p className="font-semibold text-foreground">Historial laboral previo (solo consulta)</p>
+                <p className="mt-1 text-muted-foreground">
+                  {priorCycles.length > 0
+                    ? priorCycles.map((cycle: any) => {
+                        const workInfo = Array.isArray(cycle.employee_work_info)
+                          ? cycle.employee_work_info[0]
+                          : cycle.employee_work_info;
+                        return `Ciclo ${cycle.cycle_number}: ${workInfo?.position_name || 'cargo sin registrar'} · ${formatDateOnly(cycle.start_date, 'PP')}${cycle.end_date ? ` a ${formatDateOnly(cycle.end_date, 'PP')}` : ''}`;
+                      }).join(' | ')
+                    : 'Existe un vínculo histórico legado sin datos suficientes para agruparlo.'}
+                </p>
+                <p className="mt-1 text-muted-foreground">La información anterior no completa etapas, documentos ni evaluaciones de esta postulación.</p>
+              </div>
+            )}
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">

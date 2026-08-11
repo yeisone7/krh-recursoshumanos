@@ -7,22 +7,47 @@ import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
-function getEmployeeWorkInfoSelect(centerId?: string, requireCenterScope = false) {
-  const joinType = (centerId && centerId !== 'all') || requireCenterScope ? '!inner' : '';
-
+function getEmployeeWorkInfoSelect() {
   return `
-          employee_work_info${joinType}(
-            id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
+          employee_work_info(
+            id, employment_cycle_id, operation_center_id, position_id, position_name, hire_date, link_type, area_id, is_current,
             operation_centers(id, name, city),
             areas(id, name)
           )
         `;
 }
 
+function getEmployeeCenterAssignmentsSelect(centerId?: string, requireCenterScope = false) {
+  const joinType = (centerId && centerId !== 'all') || requireCenterScope ? '!inner' : '';
+
+  return `
+          employee_operation_center_assignments${joinType}(
+            id, employee_id, company_id, employment_cycle_id, operation_center_id, created_at, updated_at,
+            operation_centers(id, name, city)
+          )
+        `;
+}
+
 function getDisplayWorkInfo(employee: any) {
   const workInfoRows = employee.employee_work_info || [];
+  const activeCycle = (employee.employee_employment_cycles || []).find((cycle: any) => cycle.status === 'active');
+  if (activeCycle) {
+    const cycleRows = workInfoRows.filter((row: any) => row.employment_cycle_id === activeCycle.id);
+    if (cycleRows.length > 0) return pickBestRelatedRecord(cycleRows, 'is_current');
+  }
 
   return pickBestRelatedRecord(workInfoRows, 'is_current');
+}
+
+function getActiveEmploymentCycle(employee: any) {
+  return (employee.employee_employment_cycles || []).find((cycle: any) => cycle.status === 'active') || null;
+}
+
+function getActiveCenterAssignments(employee: any) {
+  const activeCycle = getActiveEmploymentCycle(employee);
+  const assignments = employee.employee_operation_center_assignments || [];
+  if (!activeCycle) return assignments.filter((assignment: any) => !assignment.employment_cycle_id);
+  return assignments.filter((assignment: any) => assignment.employment_cycle_id === activeCycle.id);
 }
 
 function hasMeaningfulValue(value: unknown) {
@@ -71,11 +96,14 @@ async function fetchBestEmployeeRelatedRecord(
   table: string,
   select: string,
   employeeId: string,
-  currentColumn = 'is_current'
+  currentColumn = 'is_current',
+  employmentCycleId?: string | null
 ) {
-  const { data: rows, error } = await (supabase.from(table as any) as any)
+  let query = (supabase.from(table as any) as any)
     .select(select)
     .eq('employee_id', employeeId);
+  if (employmentCycleId) query = query.eq('employment_cycle_id', employmentCycleId);
+  const { data: rows, error } = await query;
 
   if (error) throw error;
 
@@ -119,20 +147,7 @@ function applyEmployeeStatusFilter(query: any, status?: string) {
   }
 
   if (status === 'new') {
-    const threshold = new Date(Date.now() - NEW_EMPLOYEE_WINDOW_MS).toISOString();
-    return query.gte('created_at', threshold);
-  }
-
-  return query;
-}
-
-function applyEmployeeCenterFilter(query: any, centerId?: string, allowedCenterIds: string[] = []) {
-  if (centerId && centerId !== 'all') {
-    query = query.eq('employee_work_info.operation_center_id', centerId);
-  }
-
-  if (allowedCenterIds.length > 0) {
-    query = query.in('employee_work_info.operation_center_id', allowedCenterIds);
+    return query;
   }
 
   return query;
@@ -146,10 +161,44 @@ function applyRetiredVisibilityFilter(query: any, includeRetired?: boolean) {
     .or('is_active.eq.true,status.neq.active');
 }
 
+async function getEmployeeIdsForActiveCenters(companyId: string, centerIds: string[]) {
+  if (centerIds.length === 0) return null;
+  const { data, error } = await supabase
+    .from('employee_operation_center_assignments')
+    .select('employee_id, employee_employment_cycles!inner(status)')
+    .eq('company_id', companyId)
+    .in('operation_center_id', centerIds)
+    .eq('employee_employment_cycles.status', 'active');
+  if (error) throw error;
+  return [...new Set((data || []).map((assignment: any) => assignment.employee_id))];
+}
+
+async function getNewCycleEmployeeIds(companyId: string) {
+  const threshold = new Date(Date.now() - NEW_EMPLOYEE_WINDOW_MS).toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('employee_employment_cycles')
+    .select('employee_id')
+    .eq('company_id', companyId)
+    .eq('status', 'active')
+    .gte('start_date', threshold);
+  if (error) throw error;
+  return [...new Set((data || []).map((cycle) => cycle.employee_id))];
+}
+
+function intersectEmployeeScopes(...scopes: Array<string[] | null>) {
+  const activeScopes = scopes.filter((scope): scope is string[] => scope !== null);
+  if (activeScopes.length === 0) return null;
+  return activeScopes.reduce((intersection, scope) => intersection.filter((id) => scope.includes(id)));
+}
+
 function applyEmployeePcdFilter(query: any, pcdOnly?: boolean) {
   if (!pcdOnly) return query;
 
   return query.eq('proceso_exclusivo_pcd', true);
+}
+
+function getAssignedOperationCenterIds(data: Pick<EmployeeFullFormData, 'operationCenterId' | 'operationCenterIds'>) {
+  return [...new Set([data.operationCenterId, ...(data.operationCenterIds || [])].filter(Boolean))];
 }
 
 function getEmployeeSearchTerms(search?: string) {
@@ -183,10 +232,13 @@ function employeeMatchesSearch(employee: EmployeeV2WithRelations, search?: strin
 function transformEmployees(data: any[] | null | undefined) {
   return (data || []).map((emp: any) => {
     const workInfo = getDisplayWorkInfo(emp);
+    const activeCycle = getActiveEmploymentCycle(emp);
 
     return {
       ...emp,
       work_info: workInfo,
+      active_employment_cycle: activeCycle,
+      operation_center_assignments: getActiveCenterAssignments(emp),
       operation_centers: workInfo?.operation_centers || null,
       areas: workInfo?.areas || null,
     };
@@ -257,6 +309,10 @@ export function useEmployees() {
     queryKey: ['employees_v2', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
+      const scopedEmployeeIds = shouldLimitByAssignedCenters
+        ? await getEmployeeIdsForActiveCenters(currentCompanyId, assignedCenterIds)
+        : null;
+      if (scopedEmployeeIds && scopedEmployeeIds.length === 0) return [];
 
       // Get employees with their current related data
       // Use left joins so retired employees (without is_current records) still appear
@@ -265,21 +321,19 @@ export function useEmployees() {
         .select(`
           *,
           identification_types(id, name, code),
+          employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
           employee_contact(
             id, email, mobile, phone, residence_city, residence_department,
             residence_address, emergency_contact_name, emergency_contact_phone
           ),
-          ${getEmployeeWorkInfoSelect(undefined, shouldLimitByAssignedCenters)}
+          ${getEmployeeWorkInfoSelect()},
+          ${getEmployeeCenterAssignmentsSelect(undefined, shouldLimitByAssignedCenters)}
         `)
         .eq('company_id', currentCompanyId)
         .eq('employee_contact.is_current', true)
         .eq('employee_work_info.is_current', true);
 
-      query = applyEmployeeCenterFilter(
-        query,
-        undefined,
-        shouldLimitByAssignedCenters ? assignedCenterIds : []
-      );
+      if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
 
       const { data: employees, error } = await query
         .order('last_name', { ascending: true });
@@ -289,11 +343,14 @@ export function useEmployees() {
       // Transform data to include nested relations
       return (employees || []).map((emp: any) => {
         const workInfo = getDisplayWorkInfo(emp);
+        const activeCycle = getActiveEmploymentCycle(emp);
 
         return {
           ...emp,
           contact: pickBestRelatedRecord(emp.employee_contact || [], 'is_current'),
           work_info: workInfo,
+          active_employment_cycle: activeCycle,
+          operation_center_assignments: getActiveCenterAssignments(emp),
           operation_centers: workInfo?.operation_centers || null,
           areas: workInfo?.areas || null,
         };
@@ -326,7 +383,18 @@ export function useEmployeesPaginated(options: {
     queryFn: async () => {
       if (!currentCompanyId) return { data: [], count: 0 };
 
-      const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
+      const requestedCenterIds = centerId && centerId !== 'all'
+        ? (shouldLimitByAssignedCenters ? assignedCenterIds.filter((id) => id === centerId) : [centerId])
+        : (shouldLimitByAssignedCenters ? assignedCenterIds : []);
+      const scopedEmployeeIds = requestedCenterIds.length
+        ? await getEmployeeIdsForActiveCenters(currentCompanyId, requestedCenterIds)
+        : null;
+      const newEmployeeIds = status === 'new' ? await getNewCycleEmployeeIds(currentCompanyId) : null;
+      const effectiveEmployeeIds = intersectEmployeeScopes(scopedEmployeeIds, newEmployeeIds);
+      if (effectiveEmployeeIds && effectiveEmployeeIds.length === 0) return { data: [], count: 0 };
+
+      const workInfoSelect = getEmployeeWorkInfoSelect();
+      const centerAssignmentsSelect = getEmployeeCenterAssignmentsSelect(centerId, shouldLimitByAssignedCenters);
 
       // Base query with essential fields only for better performance
       let query = supabase
@@ -334,16 +402,14 @@ export function useEmployeesPaginated(options: {
         .select(`
           *,
           identification_types(id, name, code),
-          ${workInfoSelect}
+          employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
+          ${workInfoSelect},
+          ${centerAssignmentsSelect}
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
       // 1. Server-side filtering
-      query = applyEmployeeCenterFilter(
-        query,
-        centerId,
-        shouldLimitByAssignedCenters ? assignedCenterIds : []
-      );
+      if (effectiveEmployeeIds) query = query.in('id', effectiveEmployeeIds);
 
       query = applyEmployeeStatusFilter(query, status);
       query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
@@ -398,7 +464,20 @@ export function useEmployeesInfinite(options: {
     queryFn: async ({ pageParam = 0 }) => {
       if (!currentCompanyId) return { data: [], nextCursor: null, totalCount: 0 };
 
-      const workInfoSelect = getEmployeeWorkInfoSelect(centerId, shouldLimitByAssignedCenters);
+      const requestedCenterIds = centerId && centerId !== 'all'
+        ? (shouldLimitByAssignedCenters ? assignedCenterIds.filter((id) => id === centerId) : [centerId])
+        : (shouldLimitByAssignedCenters ? assignedCenterIds : []);
+      const scopedEmployeeIds = requestedCenterIds.length
+        ? await getEmployeeIdsForActiveCenters(currentCompanyId, requestedCenterIds)
+        : null;
+      const newEmployeeIds = status === 'new' ? await getNewCycleEmployeeIds(currentCompanyId) : null;
+      const effectiveEmployeeIds = intersectEmployeeScopes(scopedEmployeeIds, newEmployeeIds);
+      if (effectiveEmployeeIds && effectiveEmployeeIds.length === 0) {
+        return { data: [], nextCursor: null, totalCount: 0 };
+      }
+
+      const workInfoSelect = getEmployeeWorkInfoSelect();
+      const centerAssignmentsSelect = getEmployeeCenterAssignmentsSelect(centerId, shouldLimitByAssignedCenters);
 
       // Base query
       let query = supabase
@@ -406,16 +485,14 @@ export function useEmployeesInfinite(options: {
         .select(`
           *,
           identification_types(id, name, code),
-          ${workInfoSelect}
+          employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
+          ${workInfoSelect},
+          ${centerAssignmentsSelect}
         `, { count: 'exact' })
         .eq('company_id', currentCompanyId);
 
       // 1. Filters
-      query = applyEmployeeCenterFilter(
-        query,
-        centerId,
-        shouldLimitByAssignedCenters ? assignedCenterIds : []
-      );
+      if (effectiveEmployeeIds) query = query.in('id', effectiveEmployeeIds);
       query = applyEmployeeStatusFilter(query, status);
       query = applyRetiredVisibilityFilter(query, includeRetired || status === 'retired');
       query = applyEmployeePcdFilter(query, pcdOnly);
@@ -469,11 +546,40 @@ export function useEmployee(id: string | undefined) {
       // Get core employee
       const { data: employee, error: empError } = await supabase
         .from('employees_v2')
-        .select('*, identification_types(id, name, code), professions(id, name), education_levels(id, name)')
+        .select('*, identification_types(id, name, code), professions(id, name), education_levels(id, name), employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id)')
         .eq('id', id)
         .single();
 
       if (empError) throw empError;
+      const activeCycle = getActiveEmploymentCycle(employee);
+      const activeCycleId = activeCycle?.id || null;
+
+      const documentsQuery = supabase
+        .from('employee_documents')
+        .select('*')
+        .eq('employee_id', id)
+        .eq('is_valid', true)
+        .order('upload_date', { ascending: false });
+      const familyMembersQuery = supabase
+        .from('employee_family_members')
+        .select('*')
+        .eq('employee_id', id)
+        .order('created_at', { ascending: true });
+      const centerAssignmentsQuery = supabase
+        .from('employee_operation_center_assignments')
+        .select('*, operation_centers(id, name, city)')
+        .eq('employee_id', id)
+        .order('created_at', { ascending: true });
+
+      if (activeCycleId) {
+        documentsQuery.eq('employment_cycle_id', activeCycleId);
+        familyMembersQuery.eq('employment_cycle_id', activeCycleId);
+        centerAssignmentsQuery.eq('employment_cycle_id', activeCycleId);
+      } else {
+        documentsQuery.is('employment_cycle_id', null);
+        familyMembersQuery.is('employment_cycle_id', null);
+        centerAssignmentsQuery.is('employment_cycle_id', null);
+      }
 
       // Get all related data in parallel
       const [
@@ -488,37 +594,41 @@ export function useEmployee(id: string | undefined) {
         { data: vaccinations },
         timeConfig,
         { data: familyMembers },
+        { data: operationCenterAssignments },
       ] = await Promise.all([
-        fetchBestEmployeeRelatedRecord('employee_contact', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_family', '*', id),
+        fetchBestEmployeeRelatedRecord('employee_contact', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_family', '*', id, 'is_current', activeCycleId),
         fetchBestEmployeeRelatedRecord('employee_work_info', `
           *,
           operation_centers(id, name, city),
           areas(id, name),
           positions(id, name)
-        `, id),
-        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id),
-        supabase.from('employee_documents').select('*').eq('employee_id', id).eq('is_valid', true).order('upload_date', { ascending: false }),
+        `, id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id, 'is_current', activeCycleId),
+        documentsQuery,
         supabase.from('employee_certifications').select('*').eq('employee_id', id).eq('is_valid', true).order('expiry_date', { ascending: true }),
         supabase.from('employee_vaccinations').select('*').eq('employee_id', id).order('application_date', { ascending: false }),
         fetchBestEmployeeRelatedRecord('employee_time_config', `
           *,
           work_schedules(id, name, days_of_week, start_time, end_time, break_minutes),
           shift_cycles(id, name, code, total_days)
-        `, id, 'is_active'),
-        supabase.from('employee_family_members').select('*').eq('employee_id', id).order('created_at', { ascending: true }),
+        `, id, 'is_active', activeCycleId),
+        familyMembersQuery,
+        centerAssignmentsQuery,
       ]);
 
 
 
       return {
         ...employee,
+        active_employment_cycle: activeCycle,
         contact: contact || null,
         family: family || null,
         family_members: familyMembers || [],
         work_info: workInfo || null,
+        operation_center_assignments: operationCenterAssignments || [],
         social_security: socialSecurity || null,
         bank_info: bankInfo || null,
         schedule: schedule || null,
@@ -551,6 +661,19 @@ export function useCreateEmployee() {
         throw new Error('No hay empresa o usuario activo');
       }
       const validShiftTypeId = await resolveValidShiftTypeId(data.shiftTypeId, currentCompanyId);
+      const { data: existingIdentity, error: identityError } = await supabase
+        .from('employees_v2')
+        .select('id, is_active, status')
+        .eq('company_id', currentCompanyId)
+        .eq('document_type', data.documentType || 'CC')
+        .ilike('document_number', data.documentNumber.trim())
+        .maybeSingle();
+      if (identityError) throw identityError;
+      if (existingIdentity) {
+        throw new Error(existingIdentity.is_active || ['active', 'en_retiro'].includes(existingIdentity.status || '')
+          ? 'Ya existe un empleado activo con este documento.'
+          : 'Este documento pertenece a un empleado retirado. Inicie el reingreso desde Selección.');
+      }
 
       // 1. Create core employee
       const { data: employee, error: empError } = await supabase
@@ -594,8 +717,22 @@ export function useCreateEmployee() {
       if (empError) throw empError;
 
       const employeeId = employee.id;
-
-
+      const hireDate = format(data.hireDate, 'yyyy-MM-dd');
+      const { data: employmentCycle, error: cycleError } = await supabase
+        .from('employee_employment_cycles')
+        .insert({
+          employee_id: employeeId,
+          company_id: currentCompanyId,
+          cycle_number: 1,
+          status: 'active',
+          source: 'manual',
+          start_date: hireDate,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+      if (cycleError) throw cycleError;
+      const employmentCycleId = employmentCycle.id;
 
       // 2. Create related records in parallel
       const relatedInserts = [
@@ -603,6 +740,8 @@ export function useCreateEmployee() {
         supabase.from('employee_contact').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
+          valid_from: hireDate,
           residence_department: data.residenceDepartment || null,
           residence_city: data.residenceCity || null,
           residence_address: data.residenceAddress || null,
@@ -620,6 +759,8 @@ export function useCreateEmployee() {
         supabase.from('employee_family').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
+          valid_from: hireDate,
           spouse_name: null,
           spouse_gender: null,
           spouse_birth_date: null,
@@ -633,6 +774,7 @@ export function useCreateEmployee() {
               data.familyMembers.filter(m => m.fullName && m.relationship).map(m => ({
                 employee_id: employeeId,
                 company_id: currentCompanyId!,
+                employment_cycle_id: employmentCycleId,
                 relationship: m.relationship,
                 full_name: m.fullName,
                 age: m.age || null,
@@ -645,22 +787,35 @@ export function useCreateEmployee() {
         supabase.from('employee_work_info').insert({
           employee_id: employeeId,
           company_id: currentCompanyId,
+          employment_cycle_id: employmentCycleId,
           operation_center_id: data.operationCenterId || null,
           cost_center: data.costCenter || null,
           area_id: data.areaId || null,
           position_id: data.positionId || null,
           position_name: data.positionName,
           work_city: data.workCity || null,
-          hire_date: format(data.hireDate, 'yyyy-MM-dd'),
+          hire_date: hireDate,
+          valid_from: hireDate,
           link_type: data.linkType || 'indefinido',
           observations: data.observations || null,
           is_current: true,
           created_by: user.id,
         }),
+        supabase.from('employee_operation_center_assignments').insert(
+          getAssignedOperationCenterIds(data).map((operationCenterId) => ({
+            employee_id: employeeId,
+            company_id: currentCompanyId,
+            employment_cycle_id: employmentCycleId,
+            operation_center_id: operationCenterId,
+            created_by: user.id,
+          }))
+        ),
         // E. Social Security
         supabase.from('employee_social_security').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
+          valid_from: hireDate,
           risk_level: data.riskLevel || null,
           arl: data.arl || null,
           eps: data.eps || null,
@@ -674,6 +829,8 @@ export function useCreateEmployee() {
         supabase.from('employee_bank_info').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
+          valid_from: hireDate,
           bank_name: data.bankName || null,
           account_type: data.accountType || null,
           account_number: data.accountNumber || null,
@@ -684,6 +841,8 @@ export function useCreateEmployee() {
         supabase.from('employee_schedule').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
+          valid_from: hireDate,
           payroll_type: data.payrollType || 'quincenal',
           shift_type_id: validShiftTypeId,
           is_office_schedule: data.isOfficeSchedule ?? true,
@@ -694,6 +853,7 @@ export function useCreateEmployee() {
         supabase.from('employee_time_config').insert({
           employee_id: employeeId,
           company_id: currentCompanyId!,
+          employment_cycle_id: employmentCycleId,
           mode: data.timeMode,
           work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
           shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
@@ -728,6 +888,7 @@ export function useCreateEmployee() {
         sort_order: t.sort_order,
         employee_id: employeeId,
         company_id: currentCompanyId,
+        employment_cycle_id: employmentCycleId,
       }));
       const { error: onboardingError } = await supabase
         .from('employee_onboarding_tasks')
@@ -735,6 +896,40 @@ export function useCreateEmployee() {
       if (onboardingError) {
         console.error('Error creating onboarding tasks:', onboardingError);
       }
+
+      const periodEnd = new Date(`${hireDate}T00:00:00`);
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+      periodEnd.setDate(periodEnd.getDate() - 1);
+      const leaveTypes = [
+        'calamidad_domestica', 'cita_medica', 'licencia_maternidad', 'licencia_paternidad',
+        'licencia_luto', 'permiso_sindical', 'permiso_estudio', 'permiso_personal',
+        'licencia_no_remunerada', 'otro',
+      ] as const;
+      const [{ error: vacationError }, { error: leaveError }] = await Promise.all([
+        supabase.from('vacation_balances').insert({
+          employee_id: employeeId,
+          company_id: currentCompanyId,
+          employment_cycle_id: employmentCycleId,
+          period_start: hireDate,
+          period_end: format(periodEnd, 'yyyy-MM-dd'),
+          days_accrued: 0,
+          days_taken: 0,
+          days_compensated: 0,
+          notes: 'Saldo inicial del ciclo laboral',
+        }),
+        supabase.from('leave_balances').insert(leaveTypes.map((leaveType) => ({
+          employee_id: employeeId,
+          company_id: currentCompanyId,
+          employment_cycle_id: employmentCycleId,
+          leave_type: leaveType,
+          year: new Date(`${hireDate}T00:00:00`).getFullYear(),
+          entitled_days: 0,
+          used_days: 0,
+          pending_days: 0,
+        }))),
+      ]);
+      if (vacationError) throw vacationError;
+      if (leaveError) throw leaveError;
 
       // Audit log
       await logAuditEvent(
@@ -1077,6 +1272,25 @@ export function useUpdateEmployee() {
           throw new Error(`Error guardando datos relacionados: ${result.error.message}`);
         }
       }
+
+      const assignedCenterIds = getAssignedOperationCenterIds(data);
+      const { error: removeAssignmentsError } = await supabase
+        .from('employee_operation_center_assignments')
+        .delete()
+        .eq('employee_id', id);
+
+      if (removeAssignmentsError) throw removeAssignmentsError;
+
+      const { error: insertAssignmentsError } = await supabase
+        .from('employee_operation_center_assignments')
+        .insert(assignedCenterIds.map((operationCenterId) => ({
+          employee_id: id,
+          company_id: currentCompanyId!,
+          operation_center_id: operationCenterId,
+          created_by: user.id,
+        })));
+
+      if (insertAssignmentsError) throw insertAssignmentsError;
 
       // Audit log
       await logAuditEvent(

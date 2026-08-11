@@ -1,12 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOperationCenters } from '@/hooks/useCompanies';
-import { usePositions, useAreas } from '@/hooks/useSystemConfig';
-import { getEmployeeFullName } from '@/types/employee';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+
+import { supabase } from '@/integrations/supabase/client';
+import { useOpenVacancies } from '@/hooks/useVacancies';
+import { getEmployeeFullName } from '@/types/employee';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -25,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, RotateCcw } from 'lucide-react';
 
 interface RehireEmployeeDialogProps {
   open: boolean;
@@ -33,195 +31,95 @@ interface RehireEmployeeDialogProps {
   employee: any;
 }
 
+interface StartRehireResult {
+  candidate_id: string;
+  vacancy_id: string;
+  existing: boolean;
+}
+
 export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmployeeDialogProps) {
-  const { user, currentCompanyId } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: operationCenters } = useOperationCenters();
-  const { data: positions } = usePositions();
-  const { data: areas } = useAreas();
+  const { data: vacancies = [], isLoading } = useOpenVacancies();
+  const [vacancyId, setVacancyId] = useState('');
 
-  const [operationCenterId, setOperationCenterId] = useState('');
-  const [positionId, setPositionId] = useState('');
-  const [positionName, setPositionName] = useState('');
-  const [areaId, setAreaId] = useState('');
-  const [hireDate, setHireDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [linkType, setLinkType] = useState('indefinido');
+  useEffect(() => {
+    if (!open) setVacancyId('');
+  }, [open]);
 
-  const rehireMutation = useMutation({
+  const startRehire = useMutation({
     mutationFn: async () => {
-      if (!currentCompanyId || !user || !employee) throw new Error('Datos incompletos');
-
-      const selectedPosition = positions?.find(p => p.id === positionId);
-      const finalPositionName = positionName || selectedPosition?.name || 'Sin cargo';
-
-      // 1. Reactivate employee
-      const { error: empError } = await supabase
-        .from('employees_v2')
-        .update({ is_active: true, status: 'active' as any })
-        .eq('id', employee.id);
-      if (empError) throw empError;
-
-      // 2. Create new work_info record
-      const { error: workError } = await supabase
-        .from('employee_work_info')
-        .insert([{
-          employee_id: employee.id,
-          company_id: currentCompanyId,
-          operation_center_id: operationCenterId || null,
-          position_id: positionId || null,
-          position_name: finalPositionName,
-          area_id: areaId || null,
-          hire_date: hireDate,
-          link_type: linkType as any,
-          is_current: true,
-          created_by: user.id,
-        }]);
-      if (workError) throw workError;
-
-      // 3. Recreate current contact record if none exists
-      const { data: existingContact } = await supabase
-        .from('employee_contact')
-        .select('id')
-        .eq('employee_id', employee.id)
-        .eq('is_current', true)
-        .maybeSingle();
-
-      if (!existingContact) {
-        // Get the last contact record to copy data
-        const { data: lastContact } = await supabase
-          .from('employee_contact')
-          .select('*')
-          .eq('employee_id', employee.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        await supabase.from('employee_contact').insert({
-          employee_id: employee.id,
-          company_id: currentCompanyId!,
-          email: lastContact?.email || null,
-          mobile: lastContact?.mobile || null,
-          phone: lastContact?.phone || null,
-          residence_city: lastContact?.residence_city || null,
-          residence_department: lastContact?.residence_department || null,
-          residence_address: lastContact?.residence_address || null,
-          emergency_contact_name: lastContact?.emergency_contact_name || null,
-          emergency_contact_phone: lastContact?.emergency_contact_phone || null,
-          is_current: true,
-        });
+      if (!employee?.id || !vacancyId) {
+        throw new Error('Seleccione la vacante para iniciar el reingreso.');
       }
 
-      // 4. Audit log
-      await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        user_email: user.email,
-        company_id: currentCompanyId,
-        action: 'rehire',
-        entity_type: 'employee_v2',
-        entity_id: employee.id,
-        entity_name: getEmployeeFullName(employee),
-        new_values: { position: finalPositionName, operation_center_id: operationCenterId, hire_date: hireDate },
-        user_agent: navigator.userAgent,
-      });
+      const { data, error } = await supabase.rpc('start_employee_rehire', {
+        p_employee_id: employee.id,
+        p_vacancy_id: vacancyId,
+      } as never);
+
+      if (error) throw error;
+      return data as unknown as StartRehireResult;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['employees_v2'] });
-      toast.success('Empleado recontratado', {
-        description: `${getEmployeeFullName(employee)} ha sido reactivado exitosamente.`,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-candidate-history', employee.id] });
+      toast.success(result.existing ? 'Postulación de reingreso retomada' : 'Reingreso iniciado', {
+        description: result.existing
+          ? 'Ya existía una postulación activa para esta vacante.'
+          : 'Se creó una postulación limpia. El empleado permanecerá retirado hasta completar Selección.',
       });
       onOpenChange(false);
+      navigate(`/seleccion?candidate=${result.candidate_id}`);
     },
-    onError: (error) => {
-      toast.error('Error al recontratar', { description: error.message });
+    onError: (error: Error) => {
+      toast.error('No se pudo iniciar el reingreso', { description: error.message });
     },
   });
-
-  const handlePositionChange = (value: string) => {
-    setPositionId(value);
-    const selected = positions?.find(p => p.id === value);
-    if (selected) setPositionName(selected.name);
-  };
 
   if (!employee) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="w-5 h-5 text-primary" />
-            Recontratar Empleado
+            <RotateCcw className="h-5 w-5 text-primary" />
+            Iniciar proceso de reingreso
           </DialogTitle>
           <DialogDescription>
-            Reactivar a <strong>{getEmployeeFullName(employee)}</strong> con nueva información laboral.
+            <strong>{getEmployeeFullName(employee)}</strong> iniciará una postulación nueva y deberá
+            completar nuevamente todo el proceso de selección y el examen médico.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-3 py-4">
+          <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+            La identidad, los datos personales y el último contacto se precargarán para confirmación.
+            Etapas, evaluaciones, documentos, familia y resultados comenzarán vacíos.
+          </div>
+
           <div className="space-y-2">
-            <Label>Centro de Operación *</Label>
-            <Select value={operationCenterId} onValueChange={setOperationCenterId}>
+            <Label>Vacante vigente *</Label>
+            <Select value={vacancyId} onValueChange={setVacancyId} disabled={isLoading}>
               <SelectTrigger>
-                <SelectValue placeholder="Seleccionar centro" />
+                <SelectValue placeholder={isLoading ? 'Cargando vacantes…' : 'Seleccionar vacante'} />
               </SelectTrigger>
               <SelectContent>
-                {operationCenters?.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                {vacancies.map((vacancy: any) => (
+                  <SelectItem key={vacancy.id} value={vacancy.id}>
+                    {vacancy.position_title}
+                    {vacancy.operation_centers?.name ? ` · ${vacancy.operation_centers.name}` : ''}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Cargo *</Label>
-            <Select value={positionId} onValueChange={handlePositionChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar cargo" />
-              </SelectTrigger>
-              <SelectContent>
-                {positions?.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Área</Label>
-            <Select value={areaId} onValueChange={setAreaId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar área" />
-              </SelectTrigger>
-              <SelectContent>
-                {areas?.map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tipo de Vinculación</Label>
-            <Select value={linkType} onValueChange={setLinkType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="indefinido">Indefinido</SelectItem>
-                <SelectItem value="fijo">Fijo</SelectItem>
-                <SelectItem value="obra_labor">Obra o Labor</SelectItem>
-                <SelectItem value="prestacion_servicios">Prestación de Servicios</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Fecha de Reingreso *</Label>
-            <Input
-              type="date"
-              value={hireDate}
-              onChange={(e) => setHireDate(e.target.value)}
-            />
+            {!isLoading && vacancies.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                No hay vacantes disponibles. Cree o habilite una vacante antes de iniciar el reingreso.
+              </p>
+            )}
           </div>
         </div>
 
@@ -230,12 +128,11 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
             Cancelar
           </Button>
           <Button
-            onClick={() => rehireMutation.mutate()}
-            disabled={rehireMutation.isPending || !operationCenterId || !positionId}
-            className="gradient-primary text-primary-foreground"
+            onClick={() => startRehire.mutate()}
+            disabled={!vacancyId || startRehire.isPending}
           >
-            {rehireMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Recontratar
+            {startRehire.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Ir a Selección
           </Button>
         </DialogFooter>
       </DialogContent>

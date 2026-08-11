@@ -10,12 +10,25 @@ export type EntityType =
   | 'dotation' 
   | 'incapacity' 
   | 'incapacity_clinical_history'
+  | 'incapacity_rehabilitation_concept'
+  | 'incapacity_capacity_loss_rating'
   | 'disciplinary_opening'
   | 'disciplinary_notification'
   | 'disciplinary_hearing'
   | 'disciplinary_decision'
   | 'disciplinary_appeal'
   | 'vacation_request';
+
+const incapacityDocumentTypes: EntityType[] = [
+  'incapacity',
+  'incapacity_clinical_history',
+  'incapacity_rehabilitation_concept',
+  'incapacity_capacity_loss_rating',
+];
+
+function isIncapacityDocumentType(entityType: EntityType) {
+  return incapacityDocumentTypes.includes(entityType);
+}
 
 export interface DocumentVersion {
   id: string;
@@ -186,7 +199,7 @@ export function useUploadDocument() {
         console.warn('Could not update entity document_url:', updateError);
       }
 
-      if (entityType === 'incapacity' || entityType === 'incapacity_clinical_history') {
+      if (isIncapacityDocumentType(entityType)) {
         await logAuditEvent({
           company_id: currentCompanyId,
           action: 'update',
@@ -322,7 +335,7 @@ export function useDeleteDocumentVersion() {
         }
       }
 
-      if (document.entity_type === 'incapacity' || document.entity_type === 'incapacity_clinical_history') {
+      if (isIncapacityDocumentType(document.entity_type)) {
         await logAuditEvent({
           company_id: document.company_id,
           action: 'delete',

@@ -88,6 +88,7 @@ const fieldToTabMap: Record<string, string> = {
   familyMembers: 'family',
   // Labor tab
   operationCenterId: 'labor',
+  operationCenterIds: 'labor',
   costCenter: 'labor',
   areaId: 'labor',
   positionId: 'labor',
@@ -355,6 +356,9 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         
         // D. Work Info
         operationCenterId: currentEmployeeData.work_info?.operation_center_id || undefined,
+        operationCenterIds: (currentEmployeeData.operation_center_assignments || [])
+          .map((assignment) => assignment.operation_center_id)
+          .filter((centerId) => centerId !== currentEmployeeData.work_info?.operation_center_id),
         costCenter: currentEmployeeData.work_info?.cost_center || undefined,
         areaId: currentEmployeeData.work_info?.area_id || undefined,
         positionId: resolvedPositionId || undefined,
@@ -406,6 +410,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
       form.reset({
         birthCountry: 'Colombia',
         linkType: 'indefinido',
+        operationCenterIds: [],
         payrollType: 'quincenal',
         isOfficeSchedule: true,
         familyMembers: [],
@@ -1388,12 +1393,23 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Centro de Operación</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select
+                              onValueChange={(centerId) => {
+                                field.onChange(centerId);
+                                const additionalCenters = form.getValues('operationCenterIds') || [];
+                                form.setValue(
+                                  'operationCenterIds',
+                                  additionalCenters.filter((id) => id !== centerId),
+                                  { shouldDirty: true }
+                                );
+                              }}
+                              value={field.value}
+                            >
                               <FormControl>
                                 <SelectTrigger><SelectValue placeholder="Seleccionar centro" /></SelectTrigger>
                               </FormControl>
                               <SelectContent className="bg-background">
-                                  {operationCenters?.filter(c => !!c.id).map((center) => (
+                                  {operationCenters?.filter(c => !!c.id && c.is_active !== false).map((center) => (
                                     <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
                                   ))}
                               </SelectContent>
@@ -1401,6 +1417,46 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                             <FormMessage />
                           </FormItem>
                         )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="operationCenterIds"
+                        render={({ field }) => {
+                          const primaryCenterId = form.watch('operationCenterId');
+                          const selectedCenterIds = field.value || [];
+                          const additionalCenters = operationCenters?.filter(
+                            (center) => !!center.id && center.is_active !== false && center.id !== primaryCenterId
+                          ) || [];
+
+                          return (
+                            <FormItem className="md:col-span-2">
+                              <FormLabel>Centros de Operación Adicionales</FormLabel>
+                              <div className="rounded-md border border-input p-3 space-y-2 max-h-44 overflow-y-auto">
+                                {additionalCenters.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">No hay otros centros activos disponibles.</p>
+                                ) : additionalCenters.map((center) => (
+                                  <label key={center.id} className="flex items-center gap-3 cursor-pointer text-sm">
+                                    <Checkbox
+                                      checked={selectedCenterIds.includes(center.id)}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(
+                                          checked
+                                            ? [...selectedCenterIds, center.id]
+                                            : selectedCenterIds.filter((id) => id !== center.id)
+                                        );
+                                      }}
+                                    />
+                                    <span>{center.name}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                El centro principal se conserva para contratos y documentos. Los filtros encontrarán al empleado en cualquiera de sus centros.
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                       <FormField
                         control={form.control}

@@ -636,9 +636,10 @@ export function IncapacityFormDialog({
                     </ul>
                     <p className="mt-2"><strong>Origen Laboral:</strong></p>
                     <ul className="list-disc list-inside ml-2">
-                      <li>Desde día 1: ARL (100%)</li>
+                      <li>Día 1 de la cadena: Empleador (100%)</li>
+                      <li>Desde el día 2: ARL (100%)</li>
                     </ul>
-                    <p className="mt-2"><strong>Licencia de Maternidad:</strong></p>
+                    <p className="mt-2"><strong>Licencias de Maternidad y Paternidad:</strong></p>
                     <ul className="list-disc list-inside ml-2">
                       <li>Desde día 1: EPS (100%)</li>
                     </ul>

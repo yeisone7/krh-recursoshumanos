@@ -1,4 +1,5 @@
-import { useState, useMemo, type MouseEvent } from 'react';
+import { useEffect, useState, useMemo, type MouseEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -111,6 +112,7 @@ const getCandidateFullName = (candidate: CandidateListItem) =>
   `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Candidato sin nombre';
 
 export default function Seleccion() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
@@ -130,6 +132,23 @@ export default function Seleccion() {
   const [showCandidateDetail, setShowCandidateDetail] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VacancyListItem | null>(null);
+
+  useEffect(() => {
+    const candidateId = searchParams.get('candidate');
+    if (candidateId) {
+      setSelectedCandidateId(candidateId);
+      setShowCandidateDetail(true);
+    }
+  }, [searchParams]);
+
+  const handleCandidateDetailOpenChange = (nextOpen: boolean) => {
+    setShowCandidateDetail(nextOpen);
+    if (!nextOpen && searchParams.has('candidate')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('candidate');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
 
   const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
   const { data: candidates = [] } = useCandidates();
@@ -880,7 +899,7 @@ export default function Seleccion() {
       <VacancyFormDialog open={showVacancyForm} onOpenChange={setShowVacancyForm} />
       {selectedVacancyId && <VacancyDetailDialog open={showVacancyDetail} onOpenChange={setShowVacancyDetail} vacancyId={selectedVacancyId} />}
       <CandidateFormDialog open={showCandidateForm} onOpenChange={(open) => { setShowCandidateForm(open); if (!open) { setTimeout(() => setCandidateFormVacancyId(null), 200); } }} vacancyId={candidateFormVacancyId || undefined} />
-      {selectedCandidateId && <CandidateDetailDialog open={showCandidateDetail} onOpenChange={setShowCandidateDetail} candidateId={selectedCandidateId} />}
+      {selectedCandidateId && <CandidateDetailDialog open={showCandidateDetail} onOpenChange={handleCandidateDetailOpenChange} candidateId={selectedCandidateId} />}
 
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className="z-[80] max-w-[calc(100vw-2rem)] rounded-[2rem] border border-destructive/20 sm:max-w-lg">

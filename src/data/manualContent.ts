@@ -4,10 +4,30 @@
 // en MODULE_DOCS con el moduleCode correspondiente.
 // ====================================================================
 
-export interface ManualContentItem {
-  type: 'paragraph' | 'list' | 'table' | 'formula' | 'alert' | 'heading';
-  data: any;
+interface ManualTableData {
+  headers: string[];
+  rows: string[][];
 }
+
+interface ManualFormulaData {
+  name: string;
+  formula: string;
+  variables?: string[];
+  example?: string;
+}
+
+interface ManualAlertData {
+  variant: string;
+  title: string;
+  message: string;
+}
+
+export type ManualContentItem =
+  | { type: 'paragraph' | 'heading'; data: string }
+  | { type: 'list'; data: string[] }
+  | { type: 'table'; data: ManualTableData }
+  | { type: 'formula'; data: ManualFormulaData }
+  | { type: 'alert'; data: ManualAlertData };
 
 export interface ManualSection {
   id: string;
@@ -321,11 +341,11 @@ export const MODULE_DOCS: ModuleDoc[] = [
     moduleCode: 'incapacidades',
     title: 'Incapacidades',
     icon: 'HeartPulse',
-    description: 'Registro y seguimiento de incapacidades médicas: origen (común, laboral, maternidad), días, transcripción a EPS/ARL, recuperación de dinero.',
-    actions: ['Registrar incapacidad', 'Registrar prórroga', 'Marcar como transcrita', 'Registrar recuperación de dinero', 'Exportar reporte'],
-    validations: ['Fechas coherentes (inicio ≤ fin)', 'Diagnóstico y tipo de origen obligatorios', 'Número de días se calcula automáticamente'],
+    description: 'Registro y seguimiento de incapacidades médicas y licencias de maternidad/paternidad: días, responsables de pago, transcripción, documentos y recuperación de dinero.',
+    actions: ['Registrar incapacidad', 'Registrar prórroga', 'Cargar concepto de rehabilitación y calificación PCL cuando corresponda', 'Marcar como transcrita', 'Registrar recuperación de dinero', 'Exportar reporte'],
+    validations: ['Fechas coherentes (inicio ≤ fin)', 'Diagnóstico y tipo de origen obligatorios', 'Número de días se calcula automáticamente', 'Los documentos de rehabilitación y PCL se habilitan según los días acumulados de origen común'],
     restrictions: ['Solo empleados activos', 'Las prórrogas deben ser consecutivas'],
-    alerts: ['Incapacidades no transcritas', 'Dinero pendiente de recuperar', 'Incapacidades de larga duración (>180 días)'],
+    alerts: ['Incapacidades no transcritas', 'Dinero pendiente de recuperar', 'Concepto de rehabilitación o calificación PCL próximos a su hito', 'Incapacidades de larga duración (>180 días)'],
     dependencies: ['Empleados', 'EPS', 'ARL'],
   },
   {

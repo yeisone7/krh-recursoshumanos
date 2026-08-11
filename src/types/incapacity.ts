@@ -24,6 +24,7 @@ export type RecoveryStatus =
 export type IncapacityLegalStage =
   | 'employer'
   | 'eps_maternity'
+  | 'eps_paternity'
   | 'eps_3_90'
   | 'eps_91_180'
   | 'afp_181_540'
@@ -49,6 +50,19 @@ export interface IncapacityLegalMilestone {
   description: string;
   level: 'info' | 'warning' | 'critical';
   isReached: boolean;
+  daysRemaining: number;
+}
+
+export type IncapacityFollowUpDocumentType =
+  | 'incapacity_rehabilitation_concept'
+  | 'incapacity_capacity_loss_rating';
+
+export interface IncapacityFollowUpDocumentAvailability {
+  entityType: IncapacityFollowUpDocumentType;
+  title: string;
+  description: string;
+  thresholdDays: number;
+  isAvailable: boolean;
   daysRemaining: number;
 }
 
@@ -328,8 +342,9 @@ export function calculatePaymentDistribution(
   const amountFor = (days: number, rate: number) =>
     roundMoney(days * Math.max(dailyBaseSalary * rate, minimumDailySalary));
 
-  if (origin === 'licencia_maternidad') {
+  if (origin === 'licencia_maternidad' || origin === 'licencia_paternidad') {
     const epsAmount = amountFor(totalDays, 1);
+    const isPaternityLeave = origin === 'licencia_paternidad';
     return {
       employerDays: 0,
       epsDays: totalDays,
@@ -347,8 +362,8 @@ export function calculatePaymentDistribution(
       minimumDailySalary,
       usesMinimumWageFloor: dailyBaseSalary < minimumDailySalary,
       segments: [{
-        stage: 'eps_maternity',
-        label: 'EPS - licencia de maternidad',
+        stage: isPaternityLeave ? 'eps_paternity' : 'eps_maternity',
+        label: `EPS - licencia de ${isPaternityLeave ? 'paternidad' : 'maternidad'}`,
         responsible: 'eps',
         fromDay: accumulatedDays + 1,
         toDay: accumulatedDays + totalDays,
@@ -360,33 +375,57 @@ export function calculatePaymentDistribution(
   }
 
   if (isWorkRelatedIncapacityOrigin(origin)) {
-    const arlAmount = amountFor(totalDays, 1);
+    const startDay = accumulatedDays + 1;
+    const endDay = accumulatedDays + totalDays;
+    const employerDays = startDay === 1 ? 1 : 0;
+    const arlDays = totalDays - employerDays;
+    const employerAmount = amountFor(employerDays, 1);
+    const arlAmount = amountFor(arlDays, 1);
+    const segments: IncapacityPaymentSegment[] = [];
+
+    if (employerDays > 0) {
+      segments.push({
+        stage: 'employer',
+        label: 'Empleador - día 1 de origen laboral',
+        responsible: 'empleador',
+        fromDay: 1,
+        toDay: 1,
+        days: 1,
+        rate: 1,
+        amount: employerAmount,
+      });
+    }
+
+    if (arlDays > 0) {
+      segments.push({
+        stage: 'arl',
+        label: 'ARL - origen laboral desde el día 2',
+        responsible: 'arl',
+        fromDay: Math.max(startDay, 2),
+        toDay: endDay,
+        days: arlDays,
+        rate: 1,
+        amount: arlAmount,
+      });
+    }
+
     return {
-      employerDays: 0,
+      employerDays,
       epsDays: 0,
-      arlDays: totalDays,
+      arlDays,
       afpDays: 0,
       epsInitialDays: 0,
       epsReducedDays: 0,
       epsAfter540Days: 0,
-      employerAmount: 0,
+      employerAmount,
       epsAmount: 0,
       arlAmount,
       afpAmount: 0,
       epsAfter540Amount: 0,
-      totalAmount: arlAmount,
+      totalAmount: roundMoney(employerAmount + arlAmount),
       minimumDailySalary,
       usesMinimumWageFloor: dailyBaseSalary < minimumDailySalary,
-      segments: [{
-        stage: 'arl',
-        label: 'ARL - origen laboral',
-        responsible: 'arl',
-        fromDay: accumulatedDays + 1,
-        toDay: accumulatedDays + totalDays,
-        days: totalDays,
-        rate: 1,
-        amount: arlAmount,
-      }],
+      segments,
     };
   }
 
@@ -457,11 +496,18 @@ export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: 
   responsible: string;
 } {
   if (isWorkRelatedIncapacityOrigin(origin)) {
-    return { stage: 'arl', label: 'Origen laboral', responsible: 'ARL' };
+    if (accumulatedDays <= 1) {
+      return { stage: 'employer', label: 'Día 1 de origen laboral', responsible: 'Empleador (100%)' };
+    }
+    return { stage: 'arl', label: 'Origen laboral desde el día 2', responsible: 'ARL (100%)' };
   }
 
   if (origin === 'licencia_maternidad') {
     return { stage: 'eps_maternity', label: 'Licencia de maternidad', responsible: 'EPS (100%)' };
+  }
+
+  if (origin === 'licencia_paternidad') {
+    return { stage: 'eps_paternity', label: 'Licencia de paternidad', responsible: 'EPS (100%)' };
   }
 
   if (accumulatedDays <= 2) return { stage: 'employer', label: 'Días 1 a 2', responsible: 'Empleador' };
@@ -472,19 +518,7 @@ export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: 
 }
 
 export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: number): IncapacityLegalMilestone[] {
-  if (isWorkRelatedIncapacityOrigin(origin)) {
-    return [{
-      key: 'day_120',
-      day: 1,
-      title: 'Validar reporte laboral',
-      description: 'Confirme FURAT/FUREL, ARL responsable y calificación de origen cuando aplique.',
-      level: 'warning',
-      isReached: true,
-      daysRemaining: 0,
-    }];
-  }
-
-  if (origin === 'licencia_maternidad') return [];
+  if (origin !== 'comun') return [];
 
   const definitions: Array<Omit<IncapacityLegalMilestone, 'isReached' | 'daysRemaining'>> = [
     {
@@ -524,6 +558,34 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
   }));
 }
 
+export function getFollowUpDocumentAvailability(
+  origin: IncapacityOrigin,
+  accumulatedDays: number
+): IncapacityFollowUpDocumentAvailability[] {
+  if (origin !== 'comun') return [];
+
+  const definitions: Array<Omit<IncapacityFollowUpDocumentAvailability, 'isAvailable' | 'daysRemaining'>> = [
+    {
+      entityType: 'incapacity_rehabilitation_concept',
+      title: 'Concepto de rehabilitación',
+      description: 'Concepto favorable o desfavorable emitido para el seguimiento de la rehabilitación.',
+      thresholdDays: 120,
+    },
+    {
+      entityType: 'incapacity_capacity_loss_rating',
+      title: 'Calificación de pérdida de capacidad laboral',
+      description: 'Dictamen o calificación de pérdida de capacidad laboral (PCL).',
+      thresholdDays: 540,
+    },
+  ];
+
+  return definitions.map((definition) => ({
+    ...definition,
+    isAvailable: accumulatedDays >= definition.thresholdDays,
+    daysRemaining: Math.max(0, definition.thresholdDays - accumulatedDays),
+  }));
+}
+
 /**
  * Calculate accumulated days from previous incapacities in the same event chain
  */
@@ -555,6 +617,10 @@ export function getRootIncapacity(
   }
 
   return current;
+}
+
+export function getIncapacityRootId(incapacity: EmployeeIncapacity): string {
+  return incapacity.parent_incapacity_id || incapacity.id;
 }
 
 export function getIncapacityChain(

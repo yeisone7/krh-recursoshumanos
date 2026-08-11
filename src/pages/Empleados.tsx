@@ -356,7 +356,9 @@ export default function Empleados() {
         matchesStatus = !!emp.created_at && (Date.now() - new Date(emp.created_at).getTime()) < TEN_DAYS_MS;
       } else if (statusFilter !== 'all') matchesStatus = true;
 
-      const matchesCenter = centerFilter === 'all' || emp.work_info?.operation_center_id === centerFilter;
+      const matchesCenter = centerFilter === 'all'
+        || emp.operation_center_assignments?.some((assignment) => assignment.operation_center_id === centerFilter)
+        || emp.work_info?.operation_center_id === centerFilter;
       const matchesPcd = pcdFilter === 'all' || emp.proceso_exclusivo_pcd === true;
       const matchesRetiredVisibility = shouldIncludeRetired || !isFinalRetiredEmployee(emp);
       return matchesSearch && matchesStatus && matchesCenter && matchesPcd && matchesRetiredVisibility;

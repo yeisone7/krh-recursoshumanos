@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import type { Database } from '@/integrations/supabase/types';
+
+export type Candidate = Database['public']['Tables']['candidates']['Row'];
 
 // Vacancy Status
 export type VacancyStatus = 'open' | 'in_process' | 'paused' | 'pending_placed' | 'closed' | 'cancelled';
