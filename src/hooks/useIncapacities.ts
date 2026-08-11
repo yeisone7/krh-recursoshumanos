@@ -473,6 +473,72 @@ export function useUpdateIncapacity() {
   });
 }
 
+export function useIncapacityAnalyticsData() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['incapacities', 'analytics', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_incapacities')
+        .select(`
+          id,
+          employee_id,
+          company_id,
+          origin,
+          start_date,
+          end_date,
+          total_days,
+          cie10_code,
+          diagnosis,
+          eps_name,
+          arl_name,
+          afp_name,
+          eps_amount,
+          arl_amount,
+          afp_amount,
+          total_amount,
+          recovery_status,
+          recovered_amount,
+          is_extension,
+          parent_incapacity_id,
+          extension_number,
+          employee:employees_v2(id, first_name, last_name, document_number, gender)
+        `)
+        .eq('company_id', currentCompanyId!)
+        .order('start_date', { ascending: false });
+
+      if (error) throw error;
+
+      const incapacityMap = new Map<string, IncapacityWithEmployee>();
+      const extensions: IncapacityWithEmployee[] = [];
+
+      for (const incapacity of (data as unknown as IncapacityWithEmployee[])) {
+        if (incapacity.is_extension && incapacity.parent_incapacity_id) {
+          extensions.push(incapacity);
+        } else {
+          incapacityMap.set(incapacity.id, { ...incapacity, extensions: [] });
+        }
+      }
+
+      for (const extension of extensions) {
+        const parent = incapacityMap.get(extension.parent_incapacity_id!);
+        if (parent) {
+          parent.extensions = parent.extensions || [];
+          parent.extensions.push(extension);
+          parent.extensions.sort((a, b) => a.extension_number - b.extension_number);
+        } else {
+          incapacityMap.set(extension.id, extension);
+        }
+      }
+
+      return Array.from(incapacityMap.values());
+    },
+    enabled: !!currentCompanyId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useUpdateRecoveryStatus() {
   const queryClient = useQueryClient();
   
