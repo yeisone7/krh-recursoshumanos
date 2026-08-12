@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(18);
 
 select has_table('public', 'employee_employment_cycles', 'employment cycles table exists');
 
@@ -32,6 +32,11 @@ select ok(to_regprocedure('public.complete_candidate_hiring(uuid,jsonb)') is not
 select ok(
   not (select prosecdef from pg_proc where oid = 'public.complete_candidate_hiring(uuid,jsonb)'::regprocedure),
   'public hiring operation is security invoker'
+);
+select ok(
+  pg_get_functiondef('private.complete_candidate_hiring(uuid,jsonb)'::regprocedure)
+    like '%document.document_type::text::public.employee_document_type%',
+  'hiring safely converts candidate document categories'
 );
 select ok(
   not (select prosecdef from pg_proc where oid = 'public.start_employee_rehire(uuid,uuid)'::regprocedure),
@@ -87,6 +92,39 @@ select is(
   (select employment_cycle_id from public.employee_documents where id = (select document_id from document_cycle_fixture)),
   (select cycle_id from document_cycle_fixture),
   'new employee documents inherit the matching employment cycle'
+);
+
+select is(
+  (
+    with single_cycle_employees as (
+      select cycle.employee_id
+      from public.employee_employment_cycles cycle
+      group by cycle.employee_id
+      having count(*) = 1
+    ), unscoped_records as (
+      select employee_id from public.contracts where employment_cycle_id is null
+      union all select employee_id from public.employee_work_info where employment_cycle_id is null
+      union all select employee_id from public.employee_terminations where employment_cycle_id is null
+      union all select employee_id from public.employee_contact where employment_cycle_id is null
+      union all select employee_id from public.employee_family where employment_cycle_id is null
+      union all select employee_id from public.employee_family_members where employment_cycle_id is null
+      union all select employee_id from public.employee_bank_info where employment_cycle_id is null
+      union all select employee_id from public.employee_social_security where employment_cycle_id is null
+      union all select employee_id from public.employee_schedule where employment_cycle_id is null
+      union all select employee_id from public.employee_time_config where employment_cycle_id is null
+      union all select employee_id from public.employee_operation_center_assignments where employment_cycle_id is null
+      union all select employee_id from public.employee_documents where employment_cycle_id is null
+      union all select employee_id from public.medical_exams where employment_cycle_id is null
+      union all select employee_id from public.employee_onboarding_tasks where employment_cycle_id is null
+      union all select employee_id from public.vacation_balances where employment_cycle_id is null
+      union all select employee_id from public.leave_balances where employment_cycle_id is null
+    )
+    select count(*)::bigint
+    from unscoped_records record
+    join single_cycle_employees employee using (employee_id)
+  ),
+  0::bigint,
+  'single-cycle employees have no unscoped preview records after backfill'
 );
 
 select * from finish();

@@ -1,6 +1,7 @@
 import { toDateOnlyString, todayDateOnlyString } from '@/lib/dateOnly';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { selectOnboardingTasks } from '@/lib/onboardingTaskSelection';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -1191,7 +1192,7 @@ export function useConvertToEmployee() {
       const positionTasks = vacancy?.position_id
         ? await fetchPositionTemplates(currentCompanyId, vacancy.position_id)
         : [];
-      const onboardingTasks = (positionTasks.length ? positionTasks : PREDEFINED_TASKS).map((task: any) => ({
+      const onboardingTasks = selectOnboardingTasks(positionTasks, PREDEFINED_TASKS).map((task: any) => ({
         task_key: task.task_key,
         task_label: task.task_label,
         task_description: task.task_description || null,
