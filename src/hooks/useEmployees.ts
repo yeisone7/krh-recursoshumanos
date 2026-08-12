@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/employee';
 import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
+import { scopeToEmploymentCycle, withEmploymentCycle } from '@/hooks/employeeCycleScope';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -102,7 +103,9 @@ async function fetchBestEmployeeRelatedRecord(
   let query = (supabase.from(table as any) as any)
     .select(select)
     .eq('employee_id', employeeId);
-  if (employmentCycleId) query = query.eq('employment_cycle_id', employmentCycleId);
+  if (employmentCycleId !== undefined) {
+    query = scopeToEmploymentCycle(query, employmentCycleId);
+  }
   const { data: rows, error } = await query;
 
   if (error) throw error;
@@ -114,15 +117,20 @@ async function deactivateOtherCurrentRecords(
   table: string,
   employeeId: string,
   keepId: string | null | undefined,
-  currentColumn = 'is_current'
+  currentColumn = 'is_current',
+  employmentCycleId?: string | null,
 ) {
   if (!keepId) return;
 
-  const { error } = await (supabase.from(table as any) as any)
+  let query = (supabase.from(table as any) as any)
     .update({ [currentColumn]: false })
     .eq('employee_id', employeeId)
     .eq(currentColumn, true)
     .neq('id', keepId);
+  if (employmentCycleId !== undefined) {
+    query = scopeToEmploymentCycle(query, employmentCycleId);
+  }
+  const { error } = await query;
 
   if (error) throw error;
 }
@@ -751,7 +759,7 @@ export function useCreateEmployee() {
           gender_identity_other: (data as any).genderIdentity === 'otro' ? ((data as any).genderIdentityOther || null) : null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
-          education_level_id: data.educationLevelId || null,
+          education_level_id: data.educationLevelIds?.[0] || null,
           profession_id: data.professionId || null,
           is_first_job: data.isFirstJob || false,
           is_head_of_household: data.isHeadOfHousehold || false,
@@ -1048,7 +1056,7 @@ export function useUpdateEmployee() {
           gender_identity_other: (data as any).genderIdentity === 'otro' ? ((data as any).genderIdentityOther || null) : null,
           blood_type: data.bloodType || null,
           marital_status: data.maritalStatus || null,
-          education_level_id: data.educationLevelId || null,
+          education_level_id: data.educationLevelIds?.[0] || null,
           profession_id: data.professionId || null,
           is_first_job: data.isFirstJob || false,
           is_head_of_household: data.isHeadOfHousehold || false,
@@ -1065,7 +1073,14 @@ export function useUpdateEmployee() {
 
       if (empError) throw empError;
 
-
+      const { data: activeCycle, error: activeCycleError } = await supabase
+        .from('employee_employment_cycles')
+        .select('id')
+        .eq('employee_id', id)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (activeCycleError) throw activeCycleError;
+      const activeCycleId = activeCycle?.id || null;
 
       // 2. Update or insert related records
       // First, check which records exist
@@ -1078,23 +1093,23 @@ export function useUpdateEmployee() {
         existingSchedule,
         existingTimeConfig,
       ] = await Promise.all([
-        fetchBestEmployeeRelatedRecord('employee_contact', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_family', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_work_info', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id),
-        fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active'),
+        fetchBestEmployeeRelatedRecord('employee_contact', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_family', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_work_info', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active', activeCycleId),
       ]);
 
       await Promise.all([
-        deactivateOtherCurrentRecords('employee_contact', id, existingContact?.id),
-        deactivateOtherCurrentRecords('employee_family', id, existingFamily?.id),
-        deactivateOtherCurrentRecords('employee_work_info', id, existingWorkInfo?.id),
-        deactivateOtherCurrentRecords('employee_social_security', id, existingSocialSecurity?.id),
-        deactivateOtherCurrentRecords('employee_bank_info', id, existingBankInfo?.id),
-        deactivateOtherCurrentRecords('employee_schedule', id, existingSchedule?.id),
-        deactivateOtherCurrentRecords('employee_time_config', id, existingTimeConfig?.id, 'is_active'),
+        deactivateOtherCurrentRecords('employee_contact', id, existingContact?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_family', id, existingFamily?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_work_info', id, existingWorkInfo?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_social_security', id, existingSocialSecurity?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_bank_info', id, existingBankInfo?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_schedule', id, existingSchedule?.id, 'is_current', activeCycleId),
+        deactivateOtherCurrentRecords('employee_time_config', id, existingTimeConfig?.id, 'is_active', activeCycleId),
       ]);
 
       // Prepare upsert operations
@@ -1119,10 +1134,11 @@ export function useUpdateEmployee() {
               is_current: true,
             })
             .eq('id', existingContact.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_contact').insert({
+          supabase.from('employee_contact').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             residence_department: data.residenceDepartment || null,
@@ -1137,16 +1153,21 @@ export function useUpdateEmployee() {
             emergency_contact_phone: data.emergencyContactPhone || null,
             emergency_contact_relationship: data.emergencyContactRelationship || null,
             is_current: true,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
       // Family Members - delete existing and re-insert (separate from Promise.all)
-      await supabase.from('employee_family_members').delete().eq('employee_id', id);
+      const familyMembersDelete = scopeToEmploymentCycle(
+        supabase.from('employee_family_members').delete().eq('employee_id', id),
+        activeCycleId,
+      );
+      const { error: familyMembersDeleteError } = await familyMembersDelete;
+      if (familyMembersDeleteError) throw familyMembersDeleteError;
       const members = (data.familyMembers || []).filter(m => m.fullName && m.relationship);
       if (members.length > 0) {
-        await supabase.from('employee_family_members').insert(
-          members.map(m => ({
+        const { error: familyMembersInsertError } = await supabase.from('employee_family_members').insert(
+          members.map(m => withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             relationship: m.relationship,
@@ -1154,8 +1175,9 @@ export function useUpdateEmployee() {
             age: m.age || null,
             gender: m.gender || null,
             observations: m.observations || null,
-          }))
+          }, activeCycleId))
         );
+        if (familyMembersInsertError) throw familyMembersInsertError;
       }
 
       // Work Info
@@ -1175,10 +1197,11 @@ export function useUpdateEmployee() {
               is_current: true,
             })
             .eq('id', existingWorkInfo.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_work_info').insert({
+          supabase.from('employee_work_info').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId,
             operation_center_id: data.operationCenterId || null,
@@ -1192,7 +1215,7 @@ export function useUpdateEmployee() {
             observations: data.observations || null,
             is_current: true,
             created_by: user.id,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
@@ -1211,10 +1234,11 @@ export function useUpdateEmployee() {
               is_current: true,
             })
             .eq('id', existingSocialSecurity.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_social_security').insert({
+          supabase.from('employee_social_security').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             risk_level: data.riskLevel || null,
@@ -1225,7 +1249,7 @@ export function useUpdateEmployee() {
             afc: data.afc || null,
             ips: data.ips || null,
             is_current: true,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
@@ -1241,10 +1265,11 @@ export function useUpdateEmployee() {
               is_current: true,
             })
             .eq('id', existingBankInfo.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_bank_info').insert({
+          supabase.from('employee_bank_info').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             bank_name: data.bankName || null,
@@ -1252,7 +1277,7 @@ export function useUpdateEmployee() {
             account_number: data.accountNumber || null,
             account_registered: data.accountRegistered || false,
             is_current: true,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
@@ -1268,10 +1293,11 @@ export function useUpdateEmployee() {
               is_current: true,
             })
             .eq('id', existingSchedule.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_schedule').insert({
+          supabase.from('employee_schedule').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             payroll_type: data.payrollType || 'quincenal',
@@ -1279,7 +1305,7 @@ export function useUpdateEmployee() {
             is_office_schedule: data.isOfficeSchedule ?? true,
             rest_day: data.restDay || null,
             is_current: true,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
@@ -1297,10 +1323,11 @@ export function useUpdateEmployee() {
               is_active: true,
             })
             .eq('id', existingTimeConfig.id)
+            .select('id')
         );
       } else {
         upsertOperations.push(
-          supabase.from('employee_time_config').insert({
+          supabase.from('employee_time_config').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
             mode: data.timeMode,
@@ -1311,7 +1338,7 @@ export function useUpdateEmployee() {
             notes: data.timeModeNotes || null,
             is_active: true,
             created_by: user.id,
-          })
+          }, activeCycleId)).select('id')
         );
       }
 
@@ -1324,26 +1351,32 @@ export function useUpdateEmployee() {
           console.error('Error in upsert operation:', result.error);
           throw new Error(`Error guardando datos relacionados: ${result.error.message}`);
         }
+        if (!result.data || result.data.length === 0) {
+          throw new Error('No se modificaron los datos relacionados del empleado');
+        }
       }
 
       const assignedCenterIds = getAssignedOperationCenterIds(data);
-      const { error: removeAssignmentsError } = await supabase
-        .from('employee_operation_center_assignments')
-        .delete()
-        .eq('employee_id', id);
+      const assignmentsDelete = scopeToEmploymentCycle(
+        supabase.from('employee_operation_center_assignments').delete().eq('employee_id', id),
+        activeCycleId,
+      );
+      const { error: removeAssignmentsError } = await assignmentsDelete;
 
       if (removeAssignmentsError) throw removeAssignmentsError;
 
-      const { error: insertAssignmentsError } = await supabase
-        .from('employee_operation_center_assignments')
-        .insert(assignedCenterIds.map((operationCenterId) => ({
-          employee_id: id,
-          company_id: currentCompanyId!,
-          operation_center_id: operationCenterId,
-          created_by: user.id,
-        })));
+      if (assignedCenterIds.length > 0) {
+        const { error: insertAssignmentsError } = await supabase
+          .from('employee_operation_center_assignments')
+          .insert(assignedCenterIds.map((operationCenterId) => withEmploymentCycle({
+            employee_id: id,
+            company_id: currentCompanyId!,
+            operation_center_id: operationCenterId,
+            created_by: user.id,
+          }, activeCycleId)));
 
-      if (insertAssignmentsError) throw insertAssignmentsError;
+        if (insertAssignmentsError) throw insertAssignmentsError;
+      }
 
       // Audit log
       await logAuditEvent(
