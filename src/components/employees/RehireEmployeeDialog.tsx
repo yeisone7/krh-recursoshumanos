@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { BriefcaseBusiness, Loader2, RotateCcw, UserSearch } from 'lucide-react';
+import { BriefcaseBusiness, Check, Info, Loader2, RotateCcw, UserSearch } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -294,76 +294,134 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-[760px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <RotateCcw className="h-5 w-5 text-primary" />
-            Recontratar empleado
-          </DialogTitle>
-          <DialogDescription>
-            Seleccione cómo iniciará el nuevo ciclo laboral de <strong>{getEmployeeFullName(employee)}</strong>.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            type="button"
-            onClick={() => setRoute('selection')}
-            className={cn(
-              'rounded-xl border p-4 text-left transition-colors',
-              route === 'selection' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-            )}
-          >
-            <UserSearch className="mb-2 h-5 w-5 text-primary" />
-            <p className="font-semibold">Proceso de selección</p>
-            <p className="mt-1 text-xs text-muted-foreground">Crea una postulación y recorre nuevamente todas las etapas.</p>
-          </button>
-          {canDirectRehire && (
-            <button
-              type="button"
-              onClick={() => setRoute('direct')}
-              className={cn(
-                'rounded-xl border p-4 text-left transition-colors',
-                route === 'direct' ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
-              )}
-            >
-              <BriefcaseBusiness className="mb-2 h-5 w-5 text-primary" />
-              <p className="font-semibold">Recontratación directa</p>
-              <p className="mt-1 text-xs text-muted-foreground">Activa un nuevo ciclo sin vacante ni etapas de Selección.</p>
-            </button>
-          )}
-        </div>
-
-        {route === 'selection' ? (
-          <div className="space-y-4 py-2">
-            <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
-              Identidad, datos personales y último contacto se precargarán. Etapas, documentos, familia y resultados comenzarán vacíos.
+      <DialogContent className="max-h-[calc(100dvh-1.5rem)] gap-0 overflow-hidden border-border/70 p-0 shadow-2xl sm:max-w-[820px] sm:rounded-2xl">
+        <DialogHeader className="border-b bg-background px-5 pb-5 pt-5 pr-12 sm:px-7 sm:pb-6 sm:pt-6 sm:pr-14">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <RotateCcw className="h-5 w-5" />
             </div>
-            <div className="space-y-2">
-              <Label>Vacante vigente *</Label>
-              <Select value={vacancyId} onValueChange={setVacancyId} disabled={vacanciesLoading}>
-                <SelectTrigger><SelectValue placeholder={vacanciesLoading ? 'Cargando vacantes…' : 'Seleccionar vacante'} /></SelectTrigger>
-                <SelectContent>
-                  {vacancies.map((vacancy) => (
-                    <SelectItem key={vacancy.id} value={vacancy.id}>
-                      {vacancy.position_title}{vacancy.operation_centers?.name ? ` · ${vacancy.operation_centers.name}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!vacanciesLoading && vacancies.length === 0 && <p className="text-xs text-muted-foreground">No hay vacantes disponibles.</p>}
+            <div className="min-w-0 space-y-1">
+              <DialogTitle className="text-xl font-semibold tracking-tight sm:text-2xl">
+                Recontratar empleado
+              </DialogTitle>
+              <DialogDescription className="max-w-[58ch] text-sm leading-relaxed">
+                Inicia un nuevo ciclo laboral para <strong className="font-semibold text-foreground">{getEmployeeFullName(employee)}</strong>.
+              </DialogDescription>
             </div>
           </div>
-        ) : (
-          <div className="space-y-5 py-2">
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-muted-foreground">
-              El empleado se activará inmediatamente. El examen médico de ingreso y su tarea de onboarding quedarán pendientes.
+        </DialogHeader>
+
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-muted/20 px-4 py-5 sm:px-7 sm:py-6">
+          <section aria-labelledby="rehire-route-label" className="space-y-3">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p id="rehire-route-label" className="text-sm font-semibold text-foreground">Tipo de recontratación</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">Elige la ruta que corresponde a este caso.</p>
+              </div>
+              <span className="hidden text-[11px] font-medium text-muted-foreground sm:block">Paso 1 de 2</span>
             </div>
+
+            <div className={cn('grid gap-2 rounded-xl bg-muted/70 p-1.5', canDirectRehire && 'sm:grid-cols-2')}>
+              <button
+                type="button"
+                aria-pressed={route === 'selection'}
+                onClick={() => setRoute('selection')}
+                className={cn(
+                  'group flex min-h-[72px] items-center gap-3 rounded-lg px-3.5 py-3 text-left outline-none transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                  route === 'selection'
+                    ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
+                    : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                )}
+              >
+                <span className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                  route === 'selection' ? 'bg-primary text-primary-foreground' : 'bg-background text-primary ring-1 ring-border'
+                )}>
+                  <UserSearch className="h-4.5 w-4.5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">Con proceso de selección</span>
+                  <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">Nueva postulación y todas las etapas.</span>
+                </span>
+                {route === 'selection' && <Check className="h-4 w-4 shrink-0 text-primary" />}
+              </button>
+
+              {canDirectRehire && (
+                <button
+                  type="button"
+                  aria-pressed={route === 'direct'}
+                  onClick={() => setRoute('direct')}
+                  className={cn(
+                    'group flex min-h-[72px] items-center gap-3 rounded-lg px-3.5 py-3 text-left outline-none transition-all duration-200 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                    route === 'direct'
+                      ? 'bg-background text-foreground shadow-sm ring-1 ring-border/60'
+                      : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+                  )}
+                >
+                  <span className={cn(
+                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                    route === 'direct' ? 'bg-primary text-primary-foreground' : 'bg-background text-primary ring-1 ring-border'
+                  )}>
+                    <BriefcaseBusiness className="h-4.5 w-4.5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold">Recontratación directa</span>
+                    <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">Activa el ciclo sin pasar por Selección.</span>
+                  </span>
+                  {route === 'direct' && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                </button>
+              )}
+            </div>
+          </section>
+
+          {route === 'selection' ? (
+            <section aria-labelledby="selection-route-title" className="mt-6 rounded-2xl border bg-background p-4 shadow-sm sm:p-5">
+              <div className="mb-5 flex gap-3 border-b pb-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Info className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 id="selection-route-title" className="text-sm font-semibold">Configura la nueva postulación</h3>
+                  <p className="mt-1 max-w-[62ch] text-xs leading-relaxed text-muted-foreground">
+                    Conservaremos la identidad y el contacto. Las etapas, documentos, familia y evaluaciones comenzarán desde cero.
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                <Label className="text-sm font-medium">Vacante vigente <span className="text-destructive">*</span></Label>
+                <Select value={vacancyId} onValueChange={setVacancyId} disabled={vacanciesLoading}>
+                  <SelectTrigger className="h-11 bg-background"><SelectValue placeholder={vacanciesLoading ? 'Cargando vacantes…' : 'Seleccionar vacante'} /></SelectTrigger>
+                  <SelectContent>
+                    {vacancies.map((vacancy) => (
+                      <SelectItem key={vacancy.id} value={vacancy.id}>
+                        {vacancy.position_title}{vacancy.operation_centers?.name ? ` · ${vacancy.operation_centers.name}` : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!vacanciesLoading && vacancies.length === 0 && (
+                  <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">No hay vacantes vigentes disponibles.</p>
+                )}
+              </div>
+            </section>
+          ) : (
+            <section aria-labelledby="direct-route-title" className="mt-6 space-y-5 rounded-2xl border bg-background p-4 shadow-sm sm:p-5">
+              <div className="flex gap-3 border-b border-amber-500/20 pb-4">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-700">
+                  <Info className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 id="direct-route-title" className="text-sm font-semibold">Datos del nuevo ciclo laboral</h3>
+                  <p className="mt-1 max-w-[62ch] text-xs leading-relaxed text-muted-foreground">
+                    La activación será inmediata. El examen médico de ingreso quedará creado como pendiente.
+                  </p>
+                </div>
+              </div>
             {previousEmploymentLoading ? (
-              <div className="flex items-center justify-center py-8 text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Cargando último ciclo…</div>
+              <div className="flex items-center justify-center rounded-xl bg-muted/50 py-12 text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Cargando último ciclo…</div>
             ) : (
               <>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Centro de operación *</Label>
                     <Select value={directForm.operationCenterId} onValueChange={(value) => updateDirectField('operationCenterId', value)}>
@@ -435,28 +493,29 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
                     <Input value={directForm.restDay} onChange={(event) => updateDirectField('restDay', event.target.value)} placeholder="Ej. domingo" />
                   </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 border-t pt-5">
                   <Label>Cláusulas adicionales</Label>
-                  <Textarea value={directForm.specialClauses} onChange={(event) => updateDirectField('specialClauses', event.target.value)} />
+                  <Textarea className="min-h-[88px]" value={directForm.specialClauses} onChange={(event) => updateDirectField('specialClauses', event.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Motivo de la recontratación directa *</Label>
-                  <Textarea value={directForm.reason} onChange={(event) => updateDirectField('reason', event.target.value)} placeholder="Explique por qué este caso no requiere un nuevo proceso de selección" />
+                  <Textarea className="min-h-[96px]" value={directForm.reason} onChange={(event) => updateDirectField('reason', event.target.value)} placeholder="Explique por qué este caso no requiere un nuevo proceso de selección" />
                   <p className="text-xs text-muted-foreground">Mínimo 10 caracteres. Este motivo quedará en la auditoría del ciclo.</p>
                 </div>
               </>
             )}
-          </div>
-        )}
+            </section>
+          )}
+        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <DialogFooter className="shrink-0 border-t bg-background px-4 py-4 sm:px-7 sm:py-5">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancelar</Button>
           {route === 'selection' ? (
-            <Button onClick={() => startRehire.mutate()} disabled={!vacancyId || startRehire.isPending}>
+            <Button className="min-w-[148px]" onClick={() => startRehire.mutate()} disabled={!vacancyId || startRehire.isPending}>
               {startRehire.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Ir a Selección
             </Button>
           ) : (
-            <Button onClick={() => completeDirectRehire.mutate()} disabled={directPending || previousEmploymentLoading}>
+            <Button className="min-w-[220px]" onClick={() => completeDirectRehire.mutate()} disabled={directPending || previousEmploymentLoading}>
               {directPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Confirmar recontratación directa
             </Button>
           )}
