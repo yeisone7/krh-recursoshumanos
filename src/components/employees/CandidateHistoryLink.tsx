@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { BriefcaseBusiness, ExternalLink, History, UserSearch } from 'lucide-react';
+import { BriefcaseBusiness, ExternalLink, History, RotateCcw, UserSearch } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
           .select(`
             *,
             candidates(id, status, application_date, vacancies(position_title)),
-            employee_work_info(id, position_name, hire_date, link_type, operation_centers(name)),
+            employee_work_info(id, position_name, hire_date, link_type, observations, operation_centers(name)),
             contracts(id, contract_number, contract_type, start_date, end_date, salary),
             employee_terminations(id, effective_date, is_completed, termination_types(name)),
             employee_documents(id),
@@ -88,6 +88,10 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
           const candidate = cycle.candidates;
           const onboarding = cycle.employee_onboarding_tasks || [];
           const completedTasks = onboarding.filter((task: any) => task.is_completed).length;
+          const isDirectRehire = cycle.source === 'direct_rehire';
+          const pendingEntryExam = cycle.medical_exams?.some(
+            (exam: any) => exam.exam_type === 'ingreso' && exam.result === 'pendiente'
+          );
 
           return (
             <Card key={cycle.id} className="shadow-none">
@@ -103,9 +107,13 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
                       </p>
                     </div>
                   </div>
-                  <Badge variant={cycle.status === 'active' ? 'default' : 'secondary'}>
-                    {cycle.status === 'active' ? 'Activo' : 'Finalizado'}
-                  </Badge>
+                  <div className="flex flex-wrap gap-2">
+                    {isDirectRehire && <Badge variant="outline" className="gap-1"><RotateCcw className="h-3 w-3" />Recontratación directa</Badge>}
+                    {pendingEntryExam && <Badge variant="outline" className="border-amber-500/40 text-amber-700">Examen pendiente</Badge>}
+                    <Badge variant={cycle.status === 'active' ? 'default' : 'secondary'}>
+                      {cycle.status === 'active' ? 'Activo' : 'Finalizado'}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
@@ -122,6 +130,13 @@ export function CandidateHistoryLink({ employeeId }: CandidateHistoryLinkProps) 
                   <span>·</span>
                   <span>Saldos: {cycle.vacation_balances?.length || 0} vacaciones / {cycle.leave_balances?.length || 0} permisos</span>
                 </div>
+
+                {isDirectRehire && workInfo?.observations && (
+                  <div className="rounded-md border bg-muted/30 p-2 text-xs">
+                    <span className="font-medium">Motivo de recontratación directa:</span>{' '}
+                    <span className="text-muted-foreground">{workInfo.observations}</span>
+                  </div>
+                )}
 
                 {candidate && (
                   <Button variant="outline" size="sm" className="h-8 gap-2" onClick={() => setSelectedCandidateId(candidate.id)}>
