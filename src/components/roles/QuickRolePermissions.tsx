@@ -22,6 +22,7 @@ const QUICK_MODULE_CODES = [
   'permisos',
   'novedades',
   'seleccion',
+  'recontratacion_directa',
   'requisiciones',
   'capacitaciones',
   'alertas',

@@ -11099,6 +11099,14 @@ export type Database = {
       }
       normalize_document_number: { Args: { p_value: string }; Returns: string }
       purge_expired_chat_messages: { Args: never; Returns: number }
+      complete_direct_employee_rehire: {
+        Args: { p_employee_id: string; p_hiring: Json }
+        Returns: Json
+      }
+      get_direct_employee_rehire_prefill: {
+        Args: { p_employee_id: string }
+        Returns: Json
+      }
       start_employee_rehire: {
         Args: { p_employee_id: string; p_vacancy_id: string }
         Returns: Json
@@ -11592,7 +11600,12 @@ export type Database = {
         | "preavisos"
       employee_status: "active" | "suspended" | "retired" | "en_retiro"
       employee_time_mode: "administrative" | "shift"
-      employment_cycle_source: "selection" | "rehire" | "manual" | "backfill"
+      employment_cycle_source:
+        | "selection"
+        | "rehire"
+        | "direct_rehire"
+        | "manual"
+        | "backfill"
       employment_cycle_status: "active" | "terminated"
       evaluation_cycle_status: "draft" | "active" | "completed" | "cancelled"
       evaluation_status:
@@ -12121,7 +12134,13 @@ export const Constants = {
       ],
       employee_status: ["active", "suspended", "retired", "en_retiro"],
       employee_time_mode: ["administrative", "shift"],
-      employment_cycle_source: ["selection", "rehire", "manual", "backfill"],
+      employment_cycle_source: [
+        "selection",
+        "rehire",
+        "direct_rehire",
+        "manual",
+        "backfill",
+      ],
       employment_cycle_status: ["active", "terminated"],
       evaluation_cycle_status: ["draft", "active", "completed", "cancelled"],
       evaluation_status: [
