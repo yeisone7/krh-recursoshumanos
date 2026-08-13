@@ -9849,6 +9849,147 @@ export type Database = {
           },
         ]
       }
+      training_group_assignments: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          company_id: string
+          course_id: string
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          name: string
+          requires_evaluation: boolean
+          status: string
+          token_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id: string
+          course_id: string
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          name: string
+          requires_evaluation?: boolean
+          status?: string
+          token_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          company_id?: string
+          course_id?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          name?: string
+          requires_evaluation?: boolean
+          status?: string
+          token_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_group_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_group_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_group_assignments_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "training_access_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_group_participants: {
+        Row: {
+          added_by: string
+          assignment_id: string
+          company_id: string
+          completion_id: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          is_active: boolean
+          removed_at: string | null
+          removed_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          added_by: string
+          assignment_id: string
+          company_id: string
+          completion_id?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string
+          assignment_id?: string
+          company_id?: string
+          completion_id?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_group_participants_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "training_group_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_group_participants_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_group_participants_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "training_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_group_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_media: {
         Row: {
           company_id: string
@@ -10948,6 +11089,10 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_login_attempts: { Args: never; Returns: undefined }
+      close_training_group_assignment: {
+        Args: { assignment_id_value: string }
+        Returns: Json
+      }
       complete_candidate_hiring: {
         Args: { p_candidate_id: string; p_hiring: Json }
         Returns: Json
@@ -10962,6 +11107,10 @@ export type Database = {
           p_token: string
           p_user_agent: string
         }
+        Returns: Json
+      }
+      create_training_group_assignment: {
+        Args: { payload: Json }
         Returns: Json
       }
       create_role_based_notifications: {
@@ -10985,6 +11134,10 @@ export type Database = {
           p_start_date: string
         }
         Returns: number
+      }
+      delete_training_group_link: {
+        Args: { assignment_id_value: string }
+        Returns: Json
       }
       enqueue_hr_automation_runs: {
         Args: {
@@ -11106,6 +11259,21 @@ export type Database = {
       get_direct_employee_rehire_prefill: {
         Args: { p_employee_id: string }
         Returns: Json
+      }
+      regenerate_training_group_link: {
+        Args: { assignment_id_value: string; expires_at_value: string }
+        Returns: Json
+      }
+      get_training_group_compliance: {
+        Args: { assignment_id_value: string }
+        Returns: Json
+      }
+      resolve_training_group_token: {
+        Args: { token_value: string }
+        Returns: {
+          assignment_id: string
+          group_name: string
+        }[]
       }
       start_employee_rehire: {
         Args: { p_employee_id: string; p_vacancy_id: string }
@@ -11440,6 +11608,10 @@ export type Database = {
         }
         Returns: Json
       }
+      update_training_group_assignment: {
+        Args: { assignment_id_value: string; payload: Json }
+        Returns: Json
+      }
       user_can_read_requisition:
         | {
             Args: {
@@ -11463,6 +11635,15 @@ export type Database = {
         Returns: {
           employee_id: string
           employee_name: string
+        }[]
+      }
+      verify_training_group_participant: {
+        Args: { document_value: string; token_value: string }
+        Returns: {
+          assignment_id: string
+          employee_id: string
+          employee_name: string
+          group_name: string
         }[]
       }
     }

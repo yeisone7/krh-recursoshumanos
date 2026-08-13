@@ -38,6 +38,7 @@ import GenerarAcceso from "./pages/capacitaciones/GenerarAcceso";
 import EvidenciasCapacitaciones from "./pages/capacitaciones/Evidencias";
 import AnaliticasCapacitaciones from "./pages/capacitaciones/Analiticas";
 import CumplimientoCapacitaciones from "./pages/capacitaciones/Cumplimiento";
+import GruposCapacitaciones from "./pages/capacitaciones/Grupos";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import DescargosPublico from "./pages/DescargosPublico";
 import RegistroPublico from "./pages/RegistroPublico";
@@ -136,6 +137,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
+            <Route path="/capacitacion/grupo" element={<AccesoPublico groupMode />} />
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
             <Route path="/verificar-certificado/:token" element={<VerificarCertificado />} />
@@ -200,6 +202,7 @@ const App = () => (
                         <Route path="/capacitaciones/evidencias" element={<P module={TRAINING_PERMISSION_CODES.evidence}><EvidenciasCapacitaciones /></P>} />
                         <Route path="/capacitaciones/analiticas" element={<P module={TRAINING_PERMISSION_CODES.analytics}><AnaliticasCapacitaciones /></P>} />
                         <Route path="/capacitaciones/cumplimiento" element={<P module={TRAINING_PERMISSION_CODES.compliance}><CumplimientoCapacitaciones /></P>} />
+                        <Route path="/capacitaciones/grupos" element={<P module={TRAINING_PERMISSION_CODES.groups}><GruposCapacitaciones /></P>} />
                         <Route path="/evaluaciones" element={<P module="evaluaciones"><Evaluaciones /></P>} />
                         <Route path="/evaluaciones/analiticas" element={<P module="analitica_evaluaciones"><AnaliticasEvaluaciones /></P>} />
                         <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />

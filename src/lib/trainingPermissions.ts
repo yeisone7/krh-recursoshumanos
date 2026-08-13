@@ -5,6 +5,7 @@ export const TRAINING_PERMISSION_CODES = {
   manual: 'capacitaciones_manual',
   library: 'capacitaciones_biblioteca',
   links: 'capacitaciones_enlaces',
+  groups: 'capacitaciones_grupos',
   compliance: 'capacitaciones_cumplimiento',
   evidence: 'capacitaciones_evidencias',
   analytics: 'analitica_capacitaciones',
