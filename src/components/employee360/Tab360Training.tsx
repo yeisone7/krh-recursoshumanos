@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { GraduationCap, Calendar, Award, FileCheck, Building2 } from 'lucide-react';
+import { GraduationCap, Calendar, Award, FileCheck, Building2, UsersRound } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -93,6 +93,11 @@ export function Tab360Training({ training, isLoading }: Tab360TrainingProps) {
                       <FileCheck className="w-4 h-4 text-success" />
                       <h4 className="font-medium">{completion.course?.name || 'Capacitación'}</h4>
                       <Badge variant="outline" className="bg-success-light text-success">Completada</Badge>
+                      {completion.trainingGroups?.length > 0 && (
+                        <Badge variant="outline" className="gap-1 bg-primary/5 text-primary">
+                          <UsersRound className="h-3 w-3" /> Asignación grupal
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -108,12 +113,19 @@ export function Tab360Training({ training, isLoading }: Tab360TrainingProps) {
                           <span>{completion.token.center.name}</span>
                         </div>
                       )}
+                      {completion.trainingGroups?.map((group: { id: string; name: string }) => (
+                        <span key={group.id} className="flex items-center gap-1">
+                          <UsersRound className="h-3 w-3" />
+                          {group.name}
+                        </span>
+                      ))}
                     </div>
                     {completion.course?.legal_framework && (
                       <p className="text-xs text-muted-foreground">📋 Marco legal: {completion.course.legal_framework}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    {completion.signature_data && <Badge variant="secondary">Firma registrada</Badge>}
                     {completion.quiz_score != null && (
                       <Badge variant="outline" className={cn(
                         completion.quiz_score >= 80 ? 'bg-success-light text-success' :

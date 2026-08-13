@@ -35,7 +35,7 @@ interface MediaItem {
   metadata?: Record<string, unknown> | null;
 }
 
-export default function AccesoPublico() {
+export default function AccesoPublico({ groupMode = false }: { groupMode?: boolean }) {
   const [searchParams] = useSearchParams();
   const tokenParam = searchParams.get('token');
   const normalizeCedula = (value: string) => value.replace(/\D/g, '');
@@ -77,6 +77,19 @@ export default function AccesoPublico() {
 
       if (error || !validation?.valid || !data) {
         setErrorMsg('El enlace de acceso no es válido o ha sido desactivado.');
+        setStep('error');
+        return;
+      }
+
+      const { data: groupContext, error: groupContextError } = await supabase.rpc('resolve_training_group_token', {
+        token_value: token,
+      });
+      if (groupContextError) throw groupContextError;
+      const isGroupToken = Boolean(groupContext?.length);
+      if (isGroupToken !== groupMode) {
+        setErrorMsg(isGroupToken
+          ? 'Este enlace debe abrirse desde el acceso de capacitación grupal.'
+          : 'Este enlace no corresponde a una capacitación grupal.');
         setStep('error');
         return;
       }
@@ -138,10 +151,15 @@ export default function AccesoPublico() {
     setCedulaError('');
 
     try {
-      const { data, error } = await supabase.rpc('verify_employee_cedula', {
-        p_cedula: normalizedCedula,
-        p_company_id: tokenData.company_id,
-      });
+      const { data, error } = groupMode
+        ? await supabase.rpc('verify_training_group_participant', {
+            token_value: tokenParam,
+            document_value: normalizedCedula,
+          })
+        : await supabase.rpc('verify_employee_cedula', {
+            p_cedula: normalizedCedula,
+            p_company_id: tokenData.company_id,
+          });
 
       if (error || !data || (data as any[]).length === 0) {
         setCedulaError('No se encontró un empleado activo con esta cédula.');

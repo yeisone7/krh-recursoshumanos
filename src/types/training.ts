@@ -154,6 +154,55 @@ export interface TrainingAccessToken {
   center?: { id: string; name: string; code: string | null };
 }
 
+export type TrainingGroupStatus = 'active' | 'closed';
+
+export interface TrainingGroupParticipant {
+  id: string;
+  assignment_id: string;
+  company_id: string;
+  employee_id: string;
+  completion_id: string | null;
+  is_active: boolean;
+  removed_at: string | null;
+  employee?: {
+    id: string;
+    first_name: string;
+    middle_name?: string | null;
+    last_name: string;
+    second_last_name?: string | null;
+    document_number: string;
+    is_active: boolean;
+    status: string;
+    employee_work_info?: Array<{
+      operation_center_id: string | null;
+      area_id: string | null;
+      position_id: string | null;
+      position_name: string | null;
+      operation_centers?: { id: string; name: string } | null;
+      areas?: { id: string; name: string } | null;
+    }>;
+  };
+  completion?: Pick<TrainingCompletion, 'id' | 'completed_at' | 'quiz_score'> | null;
+}
+
+export interface TrainingGroupAssignment {
+  id: string;
+  company_id: string;
+  course_id: string;
+  token_id: string | null;
+  name: string;
+  status: TrainingGroupStatus;
+  expires_at: string;
+  requires_evaluation: boolean;
+  created_by: string;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  course?: Pick<TrainingCourse, 'id' | 'name' | 'code' | 'category'>;
+  token?: Pick<TrainingAccessToken, 'id' | 'token' | 'is_active' | 'expires_at'> | null;
+  participants?: TrainingGroupParticipant[];
+}
+
 export interface TrainingCompletion {
   id: string;
   company_id: string;

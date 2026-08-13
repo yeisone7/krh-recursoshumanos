@@ -391,8 +391,32 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           query = query.eq('employee_id', employeeId!);
         }
 
-        const { data, error } = await query;
+        const [completionResponse, originResponse] = await Promise.all([
+          query,
+          supabase
+            .from('training_group_participants')
+            .select('completion_id, assignment:training_group_assignments(id,name)')
+            .eq('employee_id', employeeId!)
+            .not('completion_id', 'is', null),
+        ]);
+        const { data, error } = completionResponse;
         if (!error) completions = data || [];
+        const groupOrigins = originResponse.data;
+
+        if (groupOrigins?.length) {
+          const originsByCompletion = new Map<string, Array<{ id: string; name: string }>>();
+          for (const origin of groupOrigins) {
+            const assignment = Array.isArray(origin.assignment) ? origin.assignment[0] : origin.assignment;
+            if (!origin.completion_id || !assignment) continue;
+            const current = originsByCompletion.get(origin.completion_id) || [];
+            if (!current.some((item) => item.id === assignment.id)) current.push(assignment);
+            originsByCompletion.set(origin.completion_id, current);
+          }
+          completions = completions.map((completion) => ({
+            ...completion,
+            trainingGroups: originsByCompletion.get(completion.id) || [],
+          }));
+        }
       }
       
       return { sessions: employeeSessions, courses: [], completions };
