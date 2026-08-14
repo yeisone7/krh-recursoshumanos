@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { TrainingGroupAssignment } from '@/types/training';
+import type { TrainingCompletion, TrainingGroupAssignment } from '@/types/training';
 
 const groupsTable = () => supabase.from('training_group_assignments');
 const participantsTable = () => supabase.from('training_group_participants');
@@ -28,7 +28,7 @@ export function useTrainingGroupAssignments() {
     enabled: !!currentCompanyId,
     queryFn: async () => {
       const { data: assignments, error } = await groupsTable()
-        .select('*, course:training_courses(id,name,code,category), token:training_access_tokens(id,token,is_active,expires_at)')
+        .select('*, course:training_courses(*), token:training_access_tokens(id,token,is_active,expires_at)')
         .eq('company_id', currentCompanyId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -60,6 +60,18 @@ export function useTrainingGroupAssignments() {
       })) as TrainingGroupAssignment[];
     },
   });
+}
+
+export async function fetchTrainingGroupReportCompletions(completionIds: string[]) {
+  if (!completionIds.length) return [] as TrainingCompletion[];
+
+  const { data, error } = await supabase
+    .from('training_completions')
+    .select('id,company_id,course_id,token_id,employee_id,completed_at,operator_name,operator_cedula,signature_data,quiz_score,ip_address,user_agent')
+    .in('id', completionIds);
+
+  if (error) throw error;
+  return (data || []) as TrainingCompletion[];
 }
 
 export function useTrainingGroupEmployeeOptions() {

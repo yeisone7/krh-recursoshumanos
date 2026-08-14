@@ -198,7 +198,7 @@ export interface TrainingGroupAssignment {
   closed_at: string | null;
   created_at: string;
   updated_at: string;
-  course?: Pick<TrainingCourse, 'id' | 'name' | 'code' | 'category'>;
+  course?: TrainingCourse;
   token?: Pick<TrainingAccessToken, 'id' | 'token' | 'is_active' | 'expires_at'> | null;
   participants?: TrainingGroupParticipant[];
 }
