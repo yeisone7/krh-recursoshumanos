@@ -2,14 +2,14 @@ import { useMemo, useState } from 'react';
 import { addDays, format, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
 import {
-  CheckCircle2, ClipboardCheck, Copy, Download, ExternalLink, Link2, Pencil,
-  Plus, QrCode, Search, Trash2, UsersRound, XCircle,
+  ArrowRight, Check, CheckCircle2, ClipboardCheck, Copy, Download, ExternalLink,
+  Link2, Pencil, Plus, QrCode, Search, SlidersHorizontal, Trash2, UserPlus,
+  UsersRound, X, XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { QRCodeDialog } from '@/components/training';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrainingCourses } from '@/hooks/useTraining';
@@ -30,6 +32,8 @@ import type { TrainingGroupAssignment, TrainingGroupParticipant } from '@/types/
 const defaultExpiry = () => format(addDays(new Date(), 30), 'yyyy-MM-dd');
 const employeeName = (employee: TrainingGroupEmployeeOption) =>
   [employee.first_name, employee.middle_name, employee.last_name, employee.second_last_name].filter(Boolean).join(' ');
+const employeeInitials = (employee: TrainingGroupEmployeeOption) =>
+  `${employee.first_name?.[0] || ''}${employee.last_name?.[0] || ''}`.toUpperCase();
 const participantName = (participant: TrainingGroupParticipant) =>
   [participant.employee?.first_name, participant.employee?.middle_name, participant.employee?.last_name, participant.employee?.second_last_name].filter(Boolean).join(' ');
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Ocurrió un error inesperado';
@@ -100,14 +104,29 @@ function GroupFormDialog({
         && (position === 'all' || employee.positionId === position);
     });
   }, [area, center, employees, position, search]);
+  const selectedIdSet = useMemo(() => new Set(form.employeeIds), [form.employeeIds]);
+  const availableEmployees = useMemo(
+    () => filteredEmployees.filter((employee) => !selectedIdSet.has(employee.id)),
+    [filteredEmployees, selectedIdSet],
+  );
+  const selectedEmployees = useMemo(() => {
+    const byId = new Map(employees.map((employee) => [employee.id, employee]));
+    return form.employeeIds.flatMap((id) => {
+      const employee = byId.get(id);
+      return employee ? [employee] : [];
+    });
+  }, [employees, form.employeeIds]);
   const centers = useMemo(() => Array.from(new Map(employees.map((item) => [item.centerId, item.centerName])).entries()).filter(([id]) => !!id), [employees]);
   const areas = useMemo(() => Array.from(new Map(employees.map((item) => [item.areaId, item.areaName])).entries()).filter(([id]) => !!id), [employees]);
   const positions = useMemo(() => Array.from(new Map(employees.map((item) => [item.positionId, item.positionName])).entries()).filter(([id]) => !!id), [employees]);
 
-  const toggleEmployee = (id: string) => setForm((current) => ({
-    ...current,
-    employeeIds: current.employeeIds.includes(id) ? current.employeeIds.filter((value) => value !== id) : [...current.employeeIds, id],
+  const addEmployee = (id: string) => setForm((current) => current.employeeIds.includes(id) ? current : ({
+    ...current, employeeIds: [...current.employeeIds, id],
   }));
+  const removeEmployee = (id: string) => setForm((current) => ({
+    ...current, employeeIds: current.employeeIds.filter((value) => value !== id),
+  }));
+  const clearSelected = () => setForm((current) => ({ ...current, employeeIds: [] }));
   const selectVisible = () => setForm((current) => ({
     ...current,
     employeeIds: Array.from(new Set([...current.employeeIds, ...filteredEmployees.map((item) => item.id)])),
@@ -132,35 +151,89 @@ function GroupFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (next) resetFromInitial(); onOpenChange(next); }}>
-      <DialogContent className="w-[calc(100vw-1rem)] max-w-5xl p-0 overflow-hidden rounded-3xl">
-        <DialogHeader className="border-b bg-muted/30 px-6 py-5 text-left">
-          <DialogTitle className="text-2xl font-black">{initial ? 'Editar capacitación grupal' : 'Nueva capacitación grupal'}</DialogTitle>
-          <DialogDescription>Configura el enlace y define exactamente quiénes deben realizarla.</DialogDescription>
+      <DialogContent className="w-[calc(100vw-1rem)] max-w-6xl overflow-hidden rounded-3xl border-primary/15 p-0 shadow-2xl shadow-primary/10">
+        <DialogHeader className="relative overflow-hidden border-b border-primary/10 bg-gradient-to-r from-primary/15 via-primary/7 to-background px-6 py-6 text-left">
+          <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+          <div className="relative flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <UsersRound className="h-6 w-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-black tracking-tight">{initial ? 'Editar capacitación grupal' : 'Nueva capacitación grupal'}</DialogTitle>
+              <DialogDescription className="mt-1 max-w-2xl text-sm">Configura el enlace y arma el grupo con las personas que deben completar esta capacitación.</DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="max-h-[72vh] overflow-y-auto p-6 space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
+        <div className="max-h-[76vh] space-y-6 overflow-y-auto bg-muted/10 p-6">
+          <section className="grid gap-4 rounded-2xl border border-border/70 bg-background p-5 shadow-sm md:grid-cols-2">
             <div className="space-y-2"><Label>Nombre del grupo *</Label><Input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Ej. Inducción supervisores agosto" /></div>
             <div className="space-y-2"><Label>Capacitación *</Label><Select value={form.courseId} onValueChange={(value) => setForm({ ...form, courseId: value })} disabled={!!initial}><SelectTrigger><SelectValue placeholder="Seleccionar capacitación" /></SelectTrigger><SelectContent>{courses.filter((course) => course.status === 'publicado').map((course) => <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="space-y-2"><Label>Vencimiento *</Label><Input type="date" min={format(new Date(), 'yyyy-MM-dd')} value={form.expiresAt} onChange={(event) => setForm({ ...form, expiresAt: event.target.value })} /></div>
-            <div className="flex items-center justify-between rounded-xl border p-4"><div><Label>Evaluación requerida</Label><p className="text-xs text-muted-foreground">Exige aprobar antes de firmar.</p></div><Switch checked={form.requiresEvaluation} onCheckedChange={(value) => setForm({ ...form, requiresEvaluation: value })} /></div>
-          </div>
-          <div className="rounded-2xl border overflow-hidden">
-            <div className="border-b bg-muted/30 p-4 space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-bold">Participantes</h3><p className="text-xs text-muted-foreground">{form.employeeIds.length} seleccionados</p></div><Button type="button" variant="outline" size="sm" onClick={selectVisible}>Seleccionar visibles</Button></div>
-              <div className="grid gap-2 md:grid-cols-4">
-                <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre o cédula" /></div>
-                <Select value={center} onValueChange={setCenter}><SelectTrigger><SelectValue placeholder="Centro" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los centros</SelectItem>{centers.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
-                <Select value={area} onValueChange={setArea}><SelectTrigger><SelectValue placeholder="Área" /></SelectTrigger><SelectContent><SelectItem value="all">Todas las áreas</SelectItem>{areas.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
-                <Select value={position} onValueChange={setPosition}><SelectTrigger><SelectValue placeholder="Cargo" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los cargos</SelectItem>{positions.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
+            <div className="flex items-center justify-between rounded-xl border border-primary/15 bg-primary/5 p-4"><div><Label>Evaluación requerida</Label><p className="text-xs text-muted-foreground">Exige aprobar antes de firmar.</p></div><Switch checked={form.requiresEvaluation} onCheckedChange={(value) => setForm({ ...form, requiresEvaluation: value })} /></div>
+          </section>
+
+          <section className="overflow-hidden rounded-2xl border border-primary/15 bg-background shadow-sm">
+            <div className="border-b border-primary/10 bg-gradient-to-r from-primary/10 to-transparent p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserPlus className="h-5 w-5" /></div>
+                  <div><h3 className="font-bold">Armar grupo de participantes</h3><p className="text-sm text-muted-foreground">Busca a una persona y agrégala al grupo de la derecha.</p></div>
+                </div>
+                <Badge className="w-fit gap-1.5 px-3 py-1.5"><Check className="h-3.5 w-3.5" />{form.employeeIds.length} seleccionados</Badge>
               </div>
             </div>
-            <div className="max-h-80 overflow-y-auto divide-y">
-              {filteredEmployees.map((employee) => <label key={employee.id} className="flex cursor-pointer items-center gap-3 p-3 hover:bg-muted/30"><Checkbox checked={form.employeeIds.includes(employee.id)} onCheckedChange={() => toggleEmployee(employee.id)} /><div className="min-w-0 flex-1"><p className="font-semibold truncate">{employeeName(employee)}</p><p className="text-xs text-muted-foreground truncate">{employee.document_number} · {employee.centerName} · {employee.positionName}</p></div></label>)}
-              {!filteredEmployees.length ? <p className="p-8 text-center text-sm text-muted-foreground">No hay empleados activos con estos filtros.</p> : null}
+            <div className="space-y-3 border-b bg-muted/20 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"><SlidersHorizontal className="h-3.5 w-3.5" />Filtrar empleados disponibles</div>
+              <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="bg-background pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre o cédula" /></div>
+                <Select value={center} onValueChange={setCenter}><SelectTrigger className="bg-background"><SelectValue placeholder="Centro" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los centros</SelectItem>{centers.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
+                <Select value={area} onValueChange={setArea}><SelectTrigger className="bg-background"><SelectValue placeholder="Área" /></SelectTrigger><SelectContent><SelectItem value="all">Todas las áreas</SelectItem>{areas.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
+                <Select value={position} onValueChange={setPosition}><SelectTrigger className="bg-background"><SelectValue placeholder="Cargo" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los cargos</SelectItem>{positions.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
+              </div>
             </div>
-          </div>
+            <div className="grid min-h-[25rem] lg:grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.75fr)]">
+              <div className="border-b lg:border-b-0 lg:border-r">
+                <div className="flex items-center justify-between border-b px-4 py-3">
+                  <div><p className="font-semibold">Empleados disponibles</p><p className="text-xs text-muted-foreground">{availableEmployees.length} coinciden con los filtros</p></div>
+                  <Button type="button" variant="outline" size="sm" className="border-primary/20 text-primary hover:bg-primary/5" onClick={selectVisible} disabled={!availableEmployees.length}>
+                    Agregar visibles <ArrowRight className="ml-1.5 h-4 w-4" />
+                  </Button>
+                </div>
+                <ScrollArea className="h-[22rem]">
+                  <div className="divide-y p-2">
+                    {availableEmployees.map((employee) => (
+                      <button key={employee.id} type="button" onClick={() => addEmployee(employee.id)} className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                        <Avatar className="h-10 w-10 rounded-xl"><AvatarFallback className="rounded-xl bg-primary/10 text-xs font-bold text-primary">{employeeInitials(employee)}</AvatarFallback></Avatar>
+                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{employeeName(employee)}</p><p className="truncate text-xs text-muted-foreground">{employee.document_number} · {employee.centerName} · {employee.positionName}</p></div>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/15 text-primary transition-all group-hover:bg-primary group-hover:text-primary-foreground"><Plus className="h-4 w-4" /></span>
+                      </button>
+                    ))}
+                    {!availableEmployees.length ? <div className="flex min-h-56 flex-col items-center justify-center px-6 text-center"><CheckCircle2 className="mb-3 h-9 w-9 text-primary/60" /><p className="font-semibold">No hay más personas por agregar</p><p className="mt-1 text-sm text-muted-foreground">Cambia los filtros o revisa la lista seleccionada.</p></div> : null}
+                  </div>
+                </ScrollArea>
+              </div>
+              <aside className="bg-primary/[0.035]">
+                <div className="flex items-center justify-between border-b border-primary/10 px-4 py-3">
+                  <div><p className="font-semibold text-primary">Grupo seleccionado</p><p className="text-xs text-muted-foreground">Lista final para esta capacitación</p></div>
+                  {selectedEmployees.length ? <Button type="button" variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={clearSelected}>Limpiar</Button> : null}
+                </div>
+                <ScrollArea className="h-[22rem]">
+                  <div className="space-y-2 p-3">
+                    {selectedEmployees.map((employee, index) => (
+                      <div key={employee.id} className="flex items-center gap-3 rounded-xl border border-primary/10 bg-background p-3 shadow-sm transition-shadow hover:shadow-md">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-bold tabular-nums text-primary-foreground">{index + 1}</div>
+                        <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{employeeName(employee)}</p><p className="truncate text-xs text-muted-foreground">{employee.centerName} · {employee.positionName}</p></div>
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={() => removeEmployee(employee.id)} aria-label={`Quitar a ${employeeName(employee)}`}><X className="h-4 w-4" /></Button>
+                      </div>
+                    ))}
+                    {!selectedEmployees.length ? <div className="flex min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-primary/20 bg-background/60 px-6 text-center"><UsersRound className="mb-3 h-10 w-10 text-primary/35" /><p className="font-semibold">El grupo está vacío</p><p className="mt-1 max-w-56 text-sm text-muted-foreground">Agrega empleados desde la lista de disponibles.</p></div> : null}
+                  </div>
+                </ScrollArea>
+              </aside>
+            </div>
+          </section>
         </div>
-        <DialogFooter className="border-t px-6 py-4"><Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button onClick={handleSave} disabled={createGroup.isPending || updateGroup.isPending}>{initial ? 'Guardar cambios' : 'Crear y generar enlace'}</Button></DialogFooter>
+        <DialogFooter className="flex-row items-center justify-between border-t border-primary/10 bg-background px-6 py-4 sm:justify-between"><p className="hidden text-sm text-muted-foreground sm:block"><strong className="text-foreground">{form.employeeIds.length}</strong> personas recibirán esta capacitación</p><div className="flex gap-2"><Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button><Button className="shadow-md shadow-primary/15" onClick={handleSave} disabled={createGroup.isPending || updateGroup.isPending}>{initial ? 'Guardar cambios' : 'Crear y generar enlace'}</Button></div></DialogFooter>
       </DialogContent>
     </Dialog>
   );
