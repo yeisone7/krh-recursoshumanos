@@ -57,6 +57,8 @@ import {
   STATUS_COLORS,
   REQUEST_TYPE_LABELS,
   REQUEST_TYPE_COLORS,
+  APPROVAL_STAGE_LABELS,
+  APPROVAL_STAGE_COLORS,
 } from '@/types/vacation';
 import { cn } from '@/lib/utils';
 import { MobileCardList } from '@/components/shared/MobileCardList';
@@ -241,7 +243,7 @@ export default function Vacaciones() {
               }
             >
               <div className="flex flex-col sm:flex-row gap-3">
-                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as VacationStatus | 'all')}>
                   <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-background border-border ">
                     <SelectValue placeholder="Estado" />
                   </SelectTrigger>
@@ -253,7 +255,7 @@ export default function Vacaciones() {
                   </SelectContent>
                 </Select>
                 
-                <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as VacationRequestType | 'all')}>
                   <SelectTrigger className="w-full sm:w-[220px] h-12 rounded-2xl bg-background border-border ">
                     <SelectValue placeholder="Tipo" />
                   </SelectTrigger>
@@ -283,8 +285,8 @@ export default function Vacaciones() {
                           title: `${request.employee?.first_name} ${request.employee?.last_name}`,
                           subtitle: request.employee?.document_number,
                           badge: (
-                            <Badge className={STATUS_COLORS[request.status]}>
-                              {STATUS_LABELS[request.status]}
+                            <Badge className={APPROVAL_STAGE_COLORS[request.approval_stage]}>
+                              {APPROVAL_STAGE_LABELS[request.approval_stage]}
                             </Badge>
                           ),
                           fields: [
@@ -360,8 +362,8 @@ export default function Vacaciones() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge className={cn(STATUS_COLORS[request.status], "shadow-sm")}>
-                            {STATUS_LABELS[request.status]}
+                          <Badge className={cn(APPROVAL_STAGE_COLORS[request.approval_stage], "shadow-sm")}>
+                            {APPROVAL_STAGE_LABELS[request.approval_stage]}
                           </Badge>
                         </TableCell>
                       </TableRow>

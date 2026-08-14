@@ -200,7 +200,8 @@ export function useVacationRequests(filters?: {
         .from('vacation_requests')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number),
+          employee:employees_v2!vacation_requests_employee_id_fkey(id, first_name, last_name, document_number),
+          replacement_employee:employees_v2!vacation_requests_replacement_employee_id_fkey(id, first_name, last_name, document_number),
           balance:vacation_balances(*)
         `)
         .eq('company_id', currentCompanyId!)
@@ -233,7 +234,8 @@ export function useVacationRequest(id: string | undefined) {
         .from('vacation_requests')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number),
+          employee:employees_v2!vacation_requests_employee_id_fkey(id, first_name, last_name, document_number),
+          replacement_employee:employees_v2!vacation_requests_replacement_employee_id_fkey(id, first_name, last_name, document_number),
           balance:vacation_balances(*)
         `)
         .eq('id', id!)
@@ -253,33 +255,18 @@ export function useCreateVacationRequest() {
   return useMutation({
     mutationFn: async (request: {
       employee_id: string;
-      balance_id?: string;
-      request_type: VacationRequestType;
-      status?: VacationStatus;
       start_date: string;
       end_date: string;
-      business_days: number;
-      calendar_days?: number;
-      compensation_amount?: number;
+      enjoyment_days: number;
+      compensated_days: number;
       notes?: string;
     }) => {
-      const startDate = parseDateOnlyOr(request.start_date, new Date());
-      const endDate = parseDateOnlyOr(request.end_date, startDate);
-      const calendarDays = request.calendar_days ?? calculateCalendarDays(startDate, endDate);
-
-      const { data, error } = await supabase
-        .from('vacation_requests')
-        .insert({
-          ...request,
-          company_id: currentCompanyId!,
-          calendar_days: calendarDays,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_vacation_request_workflow', {
+        p_request: request,
+      });
 
       if (error) throw error;
-      return data;
+      return data as VacationRequest;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
@@ -289,6 +276,89 @@ export function useCreateVacationRequest() {
     onError: (error: Error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     },
+  });
+}
+
+export function useManagerVacationDecision() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      requestId: string;
+      approved: boolean;
+      replacementRequiresHiring: boolean;
+      replacementEmployeeId?: string;
+      pendingActivities?: string;
+      returnToWorkDate?: string;
+      observations?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('decide_vacation_as_manager', {
+        p_request_id: input.requestId,
+        p_approved: input.approved,
+        p_replacement_requires_hiring: input.replacementRequiresHiring,
+        p_replacement_employee_id: input.replacementEmployeeId || null,
+        p_pending_activities: input.pendingActivities || null,
+        p_return_to_work_date: input.returnToWorkDate || null,
+        p_observations: input.observations || null,
+      });
+      if (error) throw error;
+      return data as VacationRequest;
+    },
+    onSuccess: (_, input) => {
+      queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vacation-request', input.requestId] });
+      toast({
+        title: input.approved ? 'Aprobación registrada' : 'Solicitud rechazada',
+        description: input.approved
+          ? 'La solicitud pasó al líder de área.'
+          : 'El flujo de aprobación fue cerrado.',
+      });
+    },
+    onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
+  });
+}
+
+export function useAreaLeaderVacationDecision() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: {
+      requestId: string;
+      approved: boolean;
+      payrollRecordedDays: number;
+      observations?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('decide_vacation_as_area_leader', {
+        p_request_id: input.requestId,
+        p_approved: input.approved,
+        p_payroll_recorded_days: input.payrollRecordedDays,
+        p_observations: input.observations || null,
+      });
+      if (error) throw error;
+      const decidedRequest = data as VacationRequest;
+      if (input.approved && decidedRequest.enjoyment_days > 0) {
+        await cleanupShiftAssignments({
+          employeeId: decidedRequest.employee_id,
+          startDate: decidedRequest.start_date,
+          endDate: decidedRequest.end_date,
+          absenceType: 'vacaciones',
+        });
+      }
+      return decidedRequest;
+    },
+    onSuccess: (_, input) => {
+      queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vacation-request', input.requestId] });
+      queryClient.invalidateQueries({ queryKey: ['vacation-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
+      toast({
+        title: input.approved ? 'Vacaciones aprobadas' : 'Solicitud rechazada',
+        description: input.approved
+          ? 'La aprobación final y los saldos fueron actualizados.'
+          : 'El flujo de aprobación fue cerrado.',
+      });
+    },
+    onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
   });
 }
 
@@ -535,7 +605,7 @@ export function useVacationCalendar(year: number, month: number) {
         .from('vacation_requests')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name)
+          employee:employees_v2!vacation_requests_employee_id_fkey(id, first_name, last_name)
         `)
         .eq('company_id', currentCompanyId!)
         .in('status', ['aprobado', 'en_curso', 'completado'])

@@ -4,6 +4,7 @@ import { Database } from '@/integrations/supabase/types';
 // Database types
 export type VacationRequestType = Database['public']['Enums']['vacation_request_type'];
 export type VacationStatus = Database['public']['Enums']['vacation_status'];
+export type VacationApprovalStage = 'pending_manager' | 'pending_area_leader' | 'approved' | 'rejected';
 
 export interface VacationConfig {
   id: string;
@@ -63,6 +64,29 @@ export interface VacationRequest {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  request_date: string;
+  enjoyment_days: number;
+  compensated_days: number;
+  total_requested_days: number;
+  approval_stage: VacationApprovalStage;
+  replacement_requires_hiring: boolean;
+  replacement_employee_id: string | null;
+  pending_activities: string | null;
+  return_to_work_date: string | null;
+  manager_approved: boolean | null;
+  manager_approved_by: string | null;
+  manager_approved_at: string | null;
+  manager_approver_name: string | null;
+  manager_observations: string | null;
+  contract_start_date: string | null;
+  accrued_days_at_request: number;
+  payroll_recorded_days: number;
+  pending_days_to_enjoy: number;
+  area_leader_approved: boolean | null;
+  area_leader_approved_by: string | null;
+  area_leader_approved_at: string | null;
+  area_leader_approver_name: string | null;
+  area_leader_observations: string | null;
   employee?: {
     id: string;
     first_name: string;
@@ -70,7 +94,27 @@ export interface VacationRequest {
     document_number: string;
   };
   balance?: VacationBalance;
+  replacement_employee?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    document_number: string;
+  } | null;
 }
+
+export const APPROVAL_STAGE_LABELS: Record<VacationApprovalStage, string> = {
+  pending_manager: 'Pendiente jefe inmediato',
+  pending_area_leader: 'Pendiente líder de área',
+  approved: 'Aprobada',
+  rejected: 'Rechazada',
+};
+
+export const APPROVAL_STAGE_COLORS: Record<VacationApprovalStage, string> = {
+  pending_manager: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+  pending_area_leader: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300',
+  approved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
+  rejected: 'bg-destructive/10 text-destructive',
+};
 
 export interface VacationPeriod {
   start: Date;

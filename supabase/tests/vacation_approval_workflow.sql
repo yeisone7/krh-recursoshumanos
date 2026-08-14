@@ -1,0 +1,96 @@
+begin;
+
+select plan(16);
+
+select has_column('public', 'vacation_requests', 'approval_stage', 'vacation requests expose the approval stage');
+select has_column('public', 'vacation_requests', 'compensated_days', 'vacation requests store compensated days');
+select is(
+  (select count(*)::integer from public.permissions permission
+   join public.modules module on module.id = permission.module_id
+   where module.code in ('vac_approve_manager', 'vac_approve_area_leader') and permission.action = 'approve'),
+  2,
+  'both approval permissions exist'
+);
+select ok(not has_function_privilege('anon', 'public.create_vacation_request_workflow(jsonb)', 'EXECUTE'), 'anonymous users cannot submit requests');
+select ok(not has_function_privilege('anon', 'public.decide_vacation_as_manager(uuid,boolean,boolean,uuid,text,date,text)', 'EXECUTE'), 'anonymous users cannot decide as manager');
+
+insert into auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
+  ('b1000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'employee-vacation@example.com', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('b1000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'manager-vacation@example.com', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('b1000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'leader-vacation@example.com', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now());
+
+insert into public.companies (id, name, nit) values ('b2000000-0000-0000-0000-000000000001', 'Empresa vacaciones', '900000091');
+insert into public.user_company_assignments (user_id, company_id) values
+  ('b1000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001'),
+  ('b1000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001'),
+  ('b1000000-0000-0000-0000-000000000003', 'b2000000-0000-0000-0000-000000000001');
+
+insert into public.employees_v2 (id, company_id, document_type, document_number, first_name, last_name, is_active, status) values
+  ('b3000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'CC', '200000001', 'Elena', 'Solicitante', true, 'active'),
+  ('b3000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001', 'CC', '200000002', 'Rafael', 'Reemplazo', true, 'active');
+
+insert into public.employee_user_links (employee_id, user_id) values
+  ('b3000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001');
+insert into public.employee_work_info (employee_id, company_id, position_name, hire_date, is_current)
+values ('b3000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'Analista', '2024-01-15', true);
+insert into public.vacation_balances (id, employee_id, company_id, period_start, period_end, days_accrued, days_taken, days_compensated)
+values ('b4000000-0000-0000-0000-000000000001', 'b3000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', '2025-01-15', '2026-01-14', 15, 0, 0);
+
+insert into public.custom_roles (id, company_id, name) values
+  ('b5000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'Jefe vacaciones'),
+  ('b5000000-0000-0000-0000-000000000002', 'b2000000-0000-0000-0000-000000000001', 'Lider vacaciones');
+insert into public.role_permissions (role_id, permission_id)
+select case module.code when 'vac_approve_manager' then 'b5000000-0000-0000-0000-000000000001'::uuid else 'b5000000-0000-0000-0000-000000000002'::uuid end, permission.id
+from public.permissions permission join public.modules module on module.id = permission.module_id
+where module.code in ('vac_approve_manager', 'vac_approve_area_leader') and permission.action = 'approve';
+insert into public.user_custom_roles (user_id, role_id) values
+  ('b1000000-0000-0000-0000-000000000002', 'b5000000-0000-0000-0000-000000000001'),
+  ('b1000000-0000-0000-0000-000000000003', 'b5000000-0000-0000-0000-000000000002');
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"b1000000-0000-0000-0000-000000000001","email":"employee-vacation@example.com","role":"authenticated"}', true);
+create temp table vacation_result as
+select (public.create_vacation_request_workflow(jsonb_build_object(
+  'employee_id', 'b3000000-0000-0000-0000-000000000001',
+  'start_date', '2026-09-01', 'end_date', '2026-09-05',
+  'enjoyment_days', 4, 'compensated_days', 1, 'notes', 'Solicitud de prueba'
+))).id request_id;
+reset role;
+
+select is((select approval_stage from public.vacation_requests where id = (select request_id from vacation_result)), 'pending_manager', 'a new request starts with the manager');
+select is((select total_requested_days from public.vacation_requests where id = (select request_id from vacation_result)), 5::numeric, 'the requested total is generated');
+select is((select contract_start_date from public.vacation_requests where id = (select request_id from vacation_result)), '2024-01-15'::date, 'contract start is snapshotted');
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"b1000000-0000-0000-0000-000000000003","email":"leader-vacation@example.com","role":"authenticated"}', true);
+select is((select count(*)::integer from public.vacation_requests where id = (select request_id from vacation_result)), 0, 'the leader cannot see a request before manager approval');
+select throws_ok(
+  format('select public.decide_vacation_as_area_leader(%L, true, 5, null)', (select request_id from vacation_result)),
+  '22023', 'La solicitud aun no ha sido aprobada por el jefe inmediato.',
+  'the leader cannot skip the manager stage'
+);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"b1000000-0000-0000-0000-000000000002","email":"manager-vacation@example.com","role":"authenticated"}', true);
+select public.decide_vacation_as_manager(
+  (select request_id from vacation_result), true, false,
+  'b3000000-0000-0000-0000-000000000002', 'Entregar informe mensual', '2026-09-06', null
+);
+reset role;
+
+select is((select approval_stage from public.vacation_requests where id = (select request_id from vacation_result)), 'pending_area_leader', 'manager approval advances exactly one stage');
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"b1000000-0000-0000-0000-000000000003","email":"leader-vacation@example.com","role":"authenticated"}', true);
+select is((select count(*)::integer from public.vacation_requests where id = (select request_id from vacation_result)), 1, 'the request becomes visible to the leader after manager approval');
+select public.decide_vacation_as_area_leader((select request_id from vacation_result), true, 5, null);
+reset role;
+
+select is((select approval_stage from public.vacation_requests where id = (select request_id from vacation_result)), 'approved', 'leader approval completes the workflow');
+select is((select status::text from public.vacation_requests where id = (select request_id from vacation_result)), 'aprobado', 'leader approval activates the operational status');
+select is((select days_pending from public.vacation_balances where id = 'b4000000-0000-0000-0000-000000000001'), 10::numeric, 'final approval deducts the balance exactly once');
+select is((select count(*)::integer from public.audit_logs where entity_id = (select request_id from vacation_result)), 3, 'creation and both decisions are audited');
+
+select * from finish();
+rollback;

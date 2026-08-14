@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
@@ -11,7 +11,11 @@ import {
   XCircle, 
   AlertTriangle,
   Pause,
-  Play
+  Play,
+  BriefcaseBusiness,
+  UsersRound,
+  WalletCards,
+  Info,
 } from 'lucide-react';
 import {
   Dialog,
@@ -25,16 +29,22 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import {
   useVacationRequest,
-  useApproveVacation,
+  useManagerVacationDecision,
+  useAreaLeaderVacationDecision,
   useUpdateVacationRequest,
   useInterruptVacation,
   useResumeVacation,
 } from '@/hooks/useVacations';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useAuth } from '@/contexts/AuthContext';
+import { VacationApprovalTimeline } from './VacationApprovalTimeline';
 import {
   VacationRequest,
   STATUS_LABELS,
@@ -43,6 +53,8 @@ import {
   REQUEST_TYPE_COLORS,
   calculateBusinessDays,
   calculateRemainingDays,
+  APPROVAL_STAGE_COLORS,
+  APPROVAL_STAGE_LABELS,
 } from '@/types/vacation';
 
 interface VacationDetailDialogProps {
@@ -56,28 +68,71 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
   const [interruptionReason, setInterruptionReason] = useState('');
   const [resumeStartDate, setResumeStartDate] = useState<Date | undefined>();
   const [resumeEndDate, setResumeEndDate] = useState<Date | undefined>();
+  const [replacementRequiresHiring, setReplacementRequiresHiring] = useState(false);
+  const [replacementEmployeeId, setReplacementEmployeeId] = useState('');
+  const [pendingActivities, setPendingActivities] = useState('');
+  const [returnToWorkDate, setReturnToWorkDate] = useState('');
+  const [managerObservations, setManagerObservations] = useState('');
+  const [payrollRecordedDays, setPayrollRecordedDays] = useState(0);
+  const [leaderObservations, setLeaderObservations] = useState('');
   
   const { data: request, isLoading } = useVacationRequest(requestId ?? undefined);
-  const approveVacation = useApproveVacation();
+  const managerDecision = useManagerVacationDecision();
+  const areaLeaderDecision = useAreaLeaderVacationDecision();
   const updateRequest = useUpdateVacationRequest();
   const interruptVacation = useInterruptVacation();
   const resumeVacation = useResumeVacation();
+  const { data: employees = [] } = useEmployees();
+  const { hasPermission, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+
+  const canApproveAsManager = isAdmin || isRRHH || isSuperAdmin || hasPermission('vac_approve_manager', 'approve');
+  const canApproveAsAreaLeader = isAdmin || isRRHH || isSuperAdmin || hasPermission('vac_approve_area_leader', 'approve');
+
+  const replacementOptions = useMemo(() => employees
+    .filter((employee) => employee.is_active && employee.status === 'active' && employee.id !== request?.employee_id)
+    .map((employee) => ({
+      value: employee.id,
+      label: `${employee.first_name} ${employee.middle_name || ''} ${employee.last_name} ${employee.second_last_name || ''}`.replace(/\s+/g, ' ').trim(),
+      keywords: employee.document_number,
+      suffix: <span className="ml-auto pl-3 text-xs text-muted-foreground">{employee.document_number}</span>,
+    })), [employees, request?.employee_id]);
+
+  useEffect(() => {
+    if (!request) return;
+    const nextDay = parseDateOnlyOr(request.end_date, new Date());
+    nextDay.setDate(nextDay.getDate() + 1);
+    setReplacementRequiresHiring(request.replacement_requires_hiring ?? false);
+    setReplacementEmployeeId(request.replacement_employee_id ?? '');
+    setPendingActivities(request.pending_activities ?? '');
+    setReturnToWorkDate(request.return_to_work_date ?? format(nextDay, 'yyyy-MM-dd'));
+    setManagerObservations(request.manager_observations ?? '');
+    setPayrollRecordedDays(Number(request.payroll_recorded_days ?? request.total_requested_days ?? 0));
+    setLeaderObservations(request.area_leader_observations ?? '');
+  }, [request]);
 
   if (!requestId || isLoading || !request) {
     return null;
   }
 
-  const handleApprove = async () => {
-    await approveVacation.mutateAsync({
+  const decideAsManager = async (approved: boolean) => {
+    await managerDecision.mutateAsync({
       requestId: request.id,
-      balanceId: request.balance_id ?? undefined,
-      businessDays: request.business_days,
-      requestType: request.request_type,
-      employeeId: request.employee_id,
-      startDate: request.start_date,
-      endDate: request.end_date,
+      approved,
+      replacementRequiresHiring,
+      replacementEmployeeId: replacementEmployeeId || undefined,
+      pendingActivities,
+      returnToWorkDate: returnToWorkDate || undefined,
+      observations: managerObservations,
     });
-    onOpenChange(false);
+  };
+
+  const decideAsAreaLeader = async (approved: boolean) => {
+    await areaLeaderDecision.mutateAsync({
+      requestId: request.id,
+      approved,
+      payrollRecordedDays,
+      observations: leaderObservations,
+    });
   };
 
   const handleCancel = async () => {
@@ -137,7 +192,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-h-[90dvh]">
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-h-[92dvh]">
         <DialogHeader className="shrink-0 border-b border-border/70 bg-slate-50/70 px-5 py-4 pr-12 dark:bg-slate-900/70 sm:px-6 sm:py-5 sm:pr-14">
           <DialogTitle className="flex items-center gap-3 text-left text-lg font-semibold tracking-tight sm:text-xl">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -149,12 +204,18 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
         <Tabs defaultValue="general" className="flex min-h-0 w-full flex-1 flex-col">
           <div className="shrink-0 border-b border-border/60 px-4 py-3 sm:px-6">
-            <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border-0 bg-slate-100 p-1 dark:bg-slate-900">
+            <TabsList className="grid h-auto w-full grid-cols-4 gap-1 rounded-xl border-0 bg-slate-100 p-1 dark:bg-slate-900">
               <TabsTrigger
                 className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
                 value="general"
               >
                 General
+              </TabsTrigger>
+              <TabsTrigger
+                className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
+                value="approval"
+              >
+                Aprobación
               </TabsTrigger>
               <TabsTrigger
                 className="rounded-lg px-2 py-2.5 text-[11px] font-semibold tracking-wide data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:hover:text-white sm:text-xs"
@@ -200,6 +261,9 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                   >
                     {STATUS_LABELS[request.status]}
                   </Badge>
+                  <Badge className={cn('rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide', APPROVAL_STAGE_COLORS[request.approval_stage])}>
+                    {APPROVAL_STAGE_LABELS[request.approval_stage]}
+                  </Badge>
                   <Badge
                     className={cn(
                       'rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide',
@@ -235,14 +299,18 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
             </div>
 
             {/* Duration summary */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div className="rounded-xl bg-primary/10 p-4">
-                <p className="text-xs font-medium text-muted-foreground">Días hábiles</p>
-                <p className="mt-1 text-2xl font-bold tabular-nums text-primary">{request.business_days}</p>
+                <p className="text-xs font-medium text-muted-foreground">Días a disfrutar</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-primary">{request.enjoyment_days}</p>
               </div>
               <div className="rounded-xl bg-slate-100 p-4 dark:bg-slate-800/60">
-                <p className="text-xs font-medium text-muted-foreground">Días calendario</p>
-                <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{request.calendar_days ?? '-'}</p>
+                <p className="text-xs font-medium text-muted-foreground">Días compensados</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">{request.compensated_days}</p>
+              </div>
+              <div className="rounded-xl bg-sky-50 p-4 dark:bg-sky-950/30">
+                <p className="text-xs font-medium text-muted-foreground">Total solicitado</p>
+                <p className="mt-1 text-2xl font-bold tabular-nums text-sky-700 dark:text-sky-300">{request.total_requested_days}</p>
               </div>
             </div>
 
@@ -279,6 +347,89 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                 </p>
               </div>
             )}
+
+            <div className="flex gap-3 rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm leading-relaxed text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">
+              <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
+              <p>Nota: El reintegro anticipado a sus labores deberá ser informado a Talento Humano con las justificaciones correspondientes. De lo contrario, se descontarán los días de su acumulado de vacaciones y no será sujeto a reclamaciones.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="approval" className="mt-0 space-y-5">
+            <VacationApprovalTimeline request={request} />
+
+            <section className="overflow-hidden rounded-2xl border border-border/70">
+              <div className="flex items-center gap-3 border-b border-border/60 bg-amber-50/70 px-4 py-4 dark:bg-amber-950/20 sm:px-5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200"><BriefcaseBusiness className="h-4 w-4" /></span>
+                <div><h3 className="font-bold">Espacio para jefe inmediato</h3><p className="text-xs text-muted-foreground">Reemplazo, pendientes y fecha de reingreso.</p></div>
+              </div>
+              <div className="space-y-4 p-4 sm:p-5">
+                <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                  <div><Label>Reemplazo requiere nueva contratación</Label><p className="mt-1 text-xs text-muted-foreground">Valor predeterminado: No</p></div>
+                  <Switch checked={replacementRequiresHiring} onCheckedChange={setReplacementRequiresHiring} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} />
+                </div>
+
+                {!replacementRequiresHiring && (
+                  <div className="space-y-2">
+                    <Label>Nombre o documento del reemplazo</Label>
+                    {request.manager_approved !== null ? (
+                      <Input disabled value={request.replacement_employee ? `${request.replacement_employee.first_name} ${request.replacement_employee.last_name} · ${request.replacement_employee.document_number}` : 'Sin registrar'} />
+                    ) : (
+                      <SearchableSelect options={replacementOptions} value={replacementEmployeeId} onValueChange={setReplacementEmployeeId} placeholder="Buscar empleado activo..." searchPlaceholder="Nombre o documento..." triggerClassName="h-11 rounded-xl" disabled={!canApproveAsManager} />
+                    )}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Actividades pendientes a tener en cuenta</Label>
+                  <Textarea rows={4} value={pendingActivities} onChange={(event) => setPendingActivities(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager || replacementRequiresHiring} className="resize-none rounded-xl" placeholder="Detalle las actividades que recibirá el reemplazo..." />
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2"><Label>Fecha de reingreso a labores</Label><Input type="date" min={request.end_date} value={returnToWorkDate} onChange={(event) => setReturnToWorkDate(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} /></div>
+                  <div className="space-y-2"><Label>Quien aprueba</Label><Input disabled value={request.manager_approver_name || 'Se registrará el usuario conectado'} /></div>
+                </div>
+
+                <div className="space-y-2"><Label>Observaciones de la decisión</Label><Textarea rows={2} value={managerObservations} onChange={(event) => setManagerObservations(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} className="resize-none" /></div>
+                {request.manager_approved_at && <p className="text-xs text-muted-foreground">Decisión registrada el {format(new Date(request.manager_approved_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
+
+                {request.approval_stage === 'pending_manager' && canApproveAsManager && (
+                  <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="destructive" onClick={() => decideAsManager(false)} disabled={managerDecision.isPending}><XCircle className="mr-2 h-4 w-4" />No aprobar</Button>
+                    <Button onClick={() => decideAsManager(true)} disabled={managerDecision.isPending || !returnToWorkDate || (!replacementRequiresHiring && (!replacementEmployeeId || !pendingActivities.trim()))}><CheckCircle2 className="mr-2 h-4 w-4" />Aprobar y enviar al líder</Button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className={cn('overflow-hidden rounded-2xl border border-border/70', request.approval_stage === 'pending_manager' && 'opacity-60')}>
+              <div className="flex items-center gap-3 border-b border-border/60 bg-sky-50/70 px-4 py-4 dark:bg-sky-950/20 sm:px-5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200"><UsersRound className="h-4 w-4" /></span>
+                <div><h3 className="font-bold">Espacio para líder de área</h3><p className="text-xs text-muted-foreground">Se habilita después de la aprobación del jefe inmediato.</p></div>
+              </div>
+              <div className="space-y-4 p-4 sm:p-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2"><Label>Fecha de inicio de contrato</Label><Input disabled value={request.contract_start_date ? formatDateOnly(request.contract_start_date, 'dd/MM/yyyy', { locale: es }) : 'Sin información'} /></div>
+                  <div className="space-y-2"><Label>Fechas a disfrutar</Label><Input disabled value={`${formatDateOnly(request.start_date, 'dd/MM/yyyy', { locale: es })} — ${formatDateOnly(request.end_date, 'dd/MM/yyyy', { locale: es })}`} /></div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl bg-primary/5 p-4"><p className="text-xs text-muted-foreground">Días acumulados a la solicitud</p><p className="mt-1 text-xl font-bold text-primary">{request.accrued_days_at_request}</p></div>
+                  <div className="space-y-2 rounded-xl border p-4"><Label>Días grabados nómina</Label><Input type="number" min="0" step="0.5" value={payrollRecordedDays} onChange={(event) => setPayrollRecordedDays(Number(event.target.value))} disabled={request.approval_stage !== 'pending_area_leader' || !canApproveAsAreaLeader} /></div>
+                  <div className="rounded-xl bg-slate-100 p-4 dark:bg-slate-900"><p className="text-xs text-muted-foreground">Días pendientes por disfrutar</p><p className="mt-1 text-xl font-bold">{request.pending_days_to_enjoy}</p></div>
+                </div>
+
+                <div className="space-y-2"><Label>Quien aprueba</Label><Input disabled value={request.area_leader_approver_name || 'Se registrará el líder conectado'} /></div>
+                <div className="space-y-2"><Label>Observaciones de la decisión</Label><Textarea rows={2} value={leaderObservations} onChange={(event) => setLeaderObservations(event.target.value)} disabled={request.approval_stage !== 'pending_area_leader' || !canApproveAsAreaLeader} className="resize-none" /></div>
+                {request.area_leader_approved_at && <p className="text-xs text-muted-foreground">Decisión registrada el {format(new Date(request.area_leader_approved_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
+
+                {request.approval_stage === 'pending_area_leader' && canApproveAsAreaLeader && (
+                  <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
+                    <Button variant="destructive" onClick={() => decideAsAreaLeader(false)} disabled={areaLeaderDecision.isPending}><XCircle className="mr-2 h-4 w-4" />No aprobar</Button>
+                    <Button onClick={() => decideAsAreaLeader(true)} disabled={areaLeaderDecision.isPending || payrollRecordedDays < 0}><WalletCards className="mr-2 h-4 w-4" />Aprobar solicitud</Button>
+                  </div>
+                )}
+              </div>
+            </section>
           </TabsContent>
 
           {/* Interruption Tab */}
@@ -446,18 +597,6 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
           {/* Actions Tab */}
           <TabsContent value="actions" className="mt-0 space-y-4">
             <div className="space-y-3">
-              {/* Approve */}
-              {request.status === 'borrador' && (
-                <Button 
-                  onClick={handleApprove}
-                  disabled={approveVacation.isPending}
-                  className="w-full"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Aprobar solicitud
-                </Button>
-              )}
-
               {/* Start */}
               {request.status === 'aprobado' && request.request_type === 'disfrute' && (
                 <Button 
@@ -484,7 +623,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
               )}
 
               {/* Cancel */}
-              {['borrador', 'aprobado'].includes(request.status) && (
+              {request.status === 'aprobado' && (
                 <Button 
                   onClick={handleCancel}
                   disabled={updateRequest.isPending}

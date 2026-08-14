@@ -1,569 +1,257 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
-import { CalendarIcon, AlertTriangle, Info, Plane, User, Calendar as CalendarLucide, FileText } from 'lucide-react';
-import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
-import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import { useEmployees } from '@/hooks/useEmployees';
-import { supabase } from '@/integrations/supabase/client';
-import { 
-  useEmployeeVacationBalances, 
-  useCreateVacationRequest,
-  useVacationConfig,
-  useVacationRequests,
-} from '@/hooks/useVacations';
-import { useHolidaysSet } from '@/hooks/useHolidays';
-import {
-  VacationRequestType,
-  REQUEST_TYPE_LABELS,
-  calculateBusinessDays,
-  canCompensate,
-  VacationBalance,
-} from '@/types/vacation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarDays, CircleDollarSign, Info, Plane, Umbrella, UserRound } from 'lucide-react';
 
-const formSchema = z.object({
-  employee_id: z.string().min(1, 'Seleccione un empleado'),
-  balance_id: z.string().optional(),
-  request_type: z.enum(['disfrute', 'compensacion', 'acumulacion', 'interrupcion']),
-  start_date: z.date({ required_error: 'Seleccione fecha de inicio' }),
-  end_date: z.date({ required_error: 'Seleccione fecha de fin' }),
-  compensation_amount: z.number().optional(),
-  notes: z.string().optional(),
+import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Textarea } from '@/components/ui/textarea';
+import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useCreateVacationRequest, useEmployeeVacationBalances, useVacationConfig } from '@/hooks/useVacations';
+import { parseDateOnlyOr } from '@/lib/dateOnly';
+
+const requestSchema = z.object({
+  employee_id: z.string().uuid('Seleccione un empleado'),
+  enjoyment_days: z.coerce.number().min(0, 'No puede ser negativo'),
+  compensated_days: z.coerce.number().min(0, 'No puede ser negativo'),
+  start_date: z.string().min(1, 'Seleccione la fecha de inicio'),
+  end_date: z.string().min(1, 'Seleccione la fecha final'),
+  notes: z.string().max(1500, 'Máximo 1.500 caracteres').optional(),
+}).superRefine((value, context) => {
+  if (value.enjoyment_days + value.compensated_days <= 0) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['enjoyment_days'], message: 'Solicite al menos un día' });
+  }
+  if (value.start_date && value.end_date && value.end_date < value.start_date) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['end_date'], message: 'Debe ser posterior o igual al inicio' });
+  }
 });
 
-type FormData = z.infer<typeof formSchema>;
+type RequestForm = z.infer<typeof requestSchema>;
 
 interface VacationFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editData?: any;
+  editData?: unknown;
 }
 
-export function VacationFormDialog({ open, onOpenChange, editData }: VacationFormDialogProps) {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | undefined>();
-  const [businessDays, setBusinessDays] = useState<number>(0);
-  const [affectedShifts, setAffectedShifts] = useState<{ total: number; work: number; rest: number } | null>(null);
-  const [activeTab, setActiveTab] = useState('general');
-  
-  const { data: employees } = useEmployees();
-  const { data: balances } = useEmployeeVacationBalances(selectedEmployeeId);
-  const { data: config } = useVacationConfig();
-  const { data: allRequests } = useVacationRequests();
-  const { data: holidaysSet } = useHolidaysSet();
-  const createRequest = useCreateVacationRequest();
+const VACATION_NOTICE = 'Nota: El reintegro anticipado a sus labores deberá ser informado a Talento Humano con las justificaciones correspondientes. De lo contrario, se descontarán los días de su acumulado de vacaciones y no será sujeto a reclamaciones.';
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogProps) {
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const { data: employees = [] } = useEmployees();
+  const createRequest = useCreateVacationRequest();
+  const { data: config } = useVacationConfig();
+
+  const form = useForm<RequestForm>({
+    resolver: zodResolver(requestSchema),
     defaultValues: {
       employee_id: '',
-      balance_id: '',
-      request_type: 'disfrute',
+      enjoyment_days: 0,
+      compensated_days: 0,
+      start_date: '',
+      end_date: '',
       notes: '',
     },
   });
 
-  const watchType = form.watch('request_type');
-  const watchStartDate = form.watch('start_date');
-  const watchEndDate = form.watch('end_date');
-  const watchBalanceId = form.watch('balance_id');
+  const employeeId = form.watch('employee_id');
+  const enjoymentDays = Number(form.watch('enjoyment_days') || 0);
+  const compensatedDays = Number(form.watch('compensated_days') || 0);
+  const startDate = form.watch('start_date');
+  const endDate = form.watch('end_date');
+  const totalDays = enjoymentDays + compensatedDays;
+  const { data: balances = [] } = useEmployeeVacationBalances(employeeId || undefined);
 
-  // Calculate business days when dates change
-  useEffect(() => {
-    if (watchStartDate && watchEndDate) {
-      const days = calculateBusinessDays(watchStartDate, watchEndDate, holidaysSet);
-      setBusinessDays(days);
-    }
-  }, [watchStartDate, watchEndDate, holidaysSet]);
+  const activeEmployees = useMemo(
+    () => employees.filter((employee) => employee.is_active && employee.status === 'active'),
+    [employees],
+  );
+  const employeeOptions = useMemo(
+    () => activeEmployees.map((employee) => ({
+      value: employee.id,
+      label: `${employee.first_name} ${employee.middle_name || ''} ${employee.last_name} ${employee.second_last_name || ''}`.replace(/\s+/g, ' ').trim(),
+      keywords: `${employee.document_number} ${employee.work_info?.position_name || ''}`,
+      suffix: <span className="ml-auto pl-3 text-xs text-muted-foreground">{employee.document_number}</span>,
+    })),
+    [activeEmployees],
+  );
 
-  // Query affected shift assignments when dates and employee change
-  useEffect(() => {
-    if (!selectedEmployeeId || !watchStartDate || !watchEndDate) {
-      setAffectedShifts(null);
-      return;
-    }
-    const startStr = format(watchStartDate, 'yyyy-MM-dd');
-    const endStr = format(watchEndDate, 'yyyy-MM-dd');
+  const availableDays = useMemo(
+    () => balances.reduce((sum, balance) => sum + Math.max(Number(balance.days_pending ?? 0), 0), 0),
+    [balances],
+  );
+  const maxCompensableDays = availableDays * ((config?.max_compensation_percentage ?? 50) / 100);
+  const exceedsBalance = Boolean(employeeId) && totalDays > availableDays;
+  const exceedsCompensation = compensatedDays > maxCompensableDays;
 
-    supabase
-      .from('employee_shift_assignments')
-      .select('id, shifts(is_rest_day)')
-      .eq('employee_id', selectedEmployeeId)
-      .gte('assignment_date', startStr)
-      .lte('assignment_date', endStr)
-      .then(({ data }) => {
-        if (!data || data.length === 0) {
-          setAffectedShifts(null);
-          return;
-        }
-        let work = 0;
-        let rest = 0;
-        data.forEach((row: any) => {
-          const isRest = row.shifts?.is_rest_day;
-          if (isRest) rest++;
-          else work++;
-        });
-        setAffectedShifts({ total: data.length, work, rest });
-      });
-  }, [selectedEmployeeId, watchStartDate, watchEndDate]);
+  const parsedStart = startDate ? parseDateOnlyOr(startDate, new Date()) : undefined;
+  const parsedEnd = endDate ? parseDateOnlyOr(endDate, new Date()) : undefined;
+  const { data: absenceConflicts = [] } = useAbsenceConflicts(employeeId || undefined, parsedStart, parsedEnd);
 
-  // Update selected employee when form changes
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === 'employee_id' && value.employee_id) {
-        setSelectedEmployeeId(value.employee_id);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form.watch]);
-
-  // Reset tab on open
   useEffect(() => {
     if (open) {
-      setActiveTab('general');
-      if (!editData) {
-        form.reset();
-        setSelectedEmployeeId(undefined);
-      }
+      form.reset({
+        employee_id: '',
+        enjoyment_days: 0,
+        compensated_days: 0,
+        start_date: '',
+        end_date: '',
+        notes: '',
+      });
     }
-  }, [open, editData, form]);
+  }, [form, open]);
 
-  const selectedBalance = balances?.find(b => b.id === watchBalanceId);
-  
-  // Validate compensation
-  const compensationValidation = selectedBalance && watchType === 'compensacion'
-    ? canCompensate(selectedBalance, businessDays, config?.max_compensation_percentage ?? 50)
-    : null;
-
-  // Unified absence conflict detection
-  const { data: absenceConflicts = [] } = useAbsenceConflicts(
-    selectedEmployeeId,
-    watchStartDate,
-    watchEndDate,
-  );
-  const hasConflicts = absenceConflicts.length > 0;
-
-  const onSubmit = async (data: FormData) => {
-    await createRequest.mutateAsync({
-      employee_id: data.employee_id,
-      balance_id: data.balance_id || undefined,
-      request_type: data.request_type as VacationRequestType,
-      start_date: format(data.start_date, 'yyyy-MM-dd'),
-      end_date: format(data.end_date, 'yyyy-MM-dd'),
-      business_days: businessDays,
-      compensation_amount: data.compensation_amount,
-      notes: data.notes,
-    });
-    
-    form.reset();
+  const submit = async (values: RequestForm) => {
+    await createRequest.mutateAsync(values);
     onOpenChange(false);
   };
 
-  const activeEmployees = employees?.filter(e => e.is_active) ?? [];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-background border-border/50 shadow-2xl rounded-[2rem]">
-        
-        {/* Premium Gradient Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          
-          
-          <DialogHeader className="relative z-10">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-                <Plane className="w-6 h-6" />
-              </div>
-              <div>
-                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
-                  NOVEDADES
-                </Badge>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
-                  {editData ? 'Editar Solicitud' : 'Nueva Solicitud de Vacaciones'}
-                </DialogTitle>
-                <p className="text-sm text-muted-foreground font-medium mt-1">
-                  Programa los descansos y compensaciones del personal.
-                </p>
-              </div>
+      <DialogContent className="flex max-h-[94dvh] w-[calc(100vw-1rem)] max-w-4xl flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:rounded-[1.75rem]">
+        <DialogHeader className="shrink-0 border-b border-primary/15 bg-gradient-to-r from-primary/12 via-primary/5 to-background px-5 py-5 pr-12 sm:px-7 sm:py-6 sm:pr-14">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
+              <Plane className="h-6 w-6" />
+            </span>
+            <div className="min-w-0 text-left">
+              <Badge variant="outline" className="mb-1 border-primary/20 bg-primary/10 text-[9px] font-bold uppercase tracking-[0.18em] text-primary">
+                Solicitud del empleado
+              </Badge>
+              <DialogTitle className="text-xl font-black tracking-tight sm:text-2xl">Nueva solicitud de vacaciones</DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">La solicitud iniciará el ciclo de aprobación con el jefe inmediato.</p>
             </div>
-          </DialogHeader>
-        </div>
+          </div>
+        </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="p-8 space-y-6">
-            
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-14 p-1 bg-background rounded-2xl mb-6">
-                <TabsTrigger value="general" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
-                  <User className="w-4 h-4 mr-2" /> General
-                </TabsTrigger>
-                <TabsTrigger value="fechas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
-                  <CalendarLucide className="w-4 h-4 mr-2" /> Fechas
-                </TabsTrigger>
-                <TabsTrigger value="notas" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-primary font-bold text-xs uppercase tracking-widest transition-all">
-                  <FileText className="w-4 h-4 mr-2" /> Observaciones
-                </TabsTrigger>
-              </TabsList>
+          <form onSubmit={form.handleSubmit(submit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+              <section className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-sm">
+                <div className="flex items-center gap-3 border-b border-border/60 bg-slate-50/80 px-5 py-4 dark:bg-slate-900/50">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserRound className="h-4 w-4" /></span>
+                  <div>
+                    <h3 className="font-bold">Espacio para diligenciamiento por el empleado</h3>
+                    <p className="text-xs text-muted-foreground">Datos de la solicitud y periodo a disfrutar.</p>
+                  </div>
+                </div>
 
-              <div className="min-h-[280px]">
-                {/* TAB 1: GENERAL */}
-                <AnimatePresence mode="wait">
-                  {activeTab === 'general' && (
-                    <motion.div
-                      key="general"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-5"
-                    >
-                      {/* Employee Selection */}
-                      <FormField
-                        control={form.control}
-                        name="employee_id"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Empleado</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
-                                  <SelectValue placeholder="Seleccione el empleado..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="rounded-2xl border-border ">
-                                {activeEmployees.map((emp) => (
-                                  <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
-                                    <div className="flex flex-col">
-                                      <span className="font-medium">{emp.first_name} {emp.last_name}</span>
-                                      <span className="text-[10px] text-muted-foreground opacity-70">CC: {emp.document_number}</span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                <div className="grid gap-5 p-5 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <FormLabel>Fecha de solicitud</FormLabel>
+                    <Input value={format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })} disabled className="h-11 bg-muted/50" />
+                  </div>
 
-                      {/* Request Type */}
-                      <FormField
-                        control={form.control}
-                        name="request_type"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Tipo de Movimiento</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent className="rounded-2xl border-border ">
-                                {(Object.entries(REQUEST_TYPE_LABELS) as [VacationRequestType, string][]).map(
-                                  ([value, label]) => (
-                                    <SelectItem key={value} value={value} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
-                                      {label}
-                                    </SelectItem>
-                                  )
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                  <FormField
+                    control={form.control}
+                    name="employee_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Empleado</FormLabel>
+                        <FormControl>
+                          <SearchableSelect
+                            options={employeeOptions}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            placeholder="Buscar empleado por nombre o documento"
+                            searchPlaceholder="Escriba nombre o documento..."
+                            emptyMessage="No hay empleados activos que coincidan."
+                            triggerClassName="h-11 rounded-xl"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      {/* Balance Selection */}
-                      {selectedEmployeeId && balances && balances.length > 0 && (
-                        <FormField
-                          control={form.control}
-                          name="balance_id"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Período Vacacional (Opcional)</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors">
-                                    <SelectValue placeholder="Seleccione período a afectar..." />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="rounded-2xl border-border ">
-                                  {balances.map((balance) => (
-                                    <SelectItem key={balance.id} value={balance.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
-                                      <div className="flex flex-col">
-                                        <span className="font-medium">
-                                          {formatDateOnly(balance.period_start, 'MMM yyyy', { locale: es })} - {formatDateOnly(balance.period_end, 'MMM yyyy', { locale: es })}
-                                        </span>
-                                        <span className="text-[10px] text-primary font-bold opacity-80">Disponibles: {balance.days_pending} días</span>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {selectedBalance && (
-                                <div className="mt-2 p-3 rounded-xl border border-border flex items-center justify-between text-xs">
-                                  <div className="text-center">
-                                    <span className="block font-black text-muted-foreground">Causados</span>
-                                    <span className="font-medium">{selectedBalance.days_accrued}</span>
-                                  </div>
-                                  <div className="text-center">
-                                    <span className="block font-black text-muted-foreground">Tomados</span>
-                                    <span className="font-medium">{selectedBalance.days_taken}</span>
-                                  </div>
-                                  <div className="text-center">
-                                    <span className="block font-black text-muted-foreground">Compensados</span>
-                                    <span className="font-medium">{selectedBalance.days_compensated}</span>
-                                  </div>
-                                </div>
-                              )}
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </motion.div>
-                  )}
+                  <FormField
+                    control={form.control}
+                    name="enjoyment_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Días a disfrutar</FormLabel>
+                        <FormControl><Input type="number" min="0" step="0.5" className="h-11 rounded-xl" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                  {/* TAB 2: FECHAS */}
-                  {activeTab === 'fechas' && (
-                    <motion.div
-                      key="fechas"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-5"
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="start_date"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Fecha Inicio</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      className={cn(
-                                        'h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors pl-4 text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        <span className="font-medium text-foreground">{format(field.value, 'dd/MM/yyyy', { locale: es })}</span>
-                                      ) : (
-                                        <span>Seleccionar</span>
-                                      )}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-xl" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    initialFocus
-                                    className="pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  <FormField
+                    control={form.control}
+                    name="compensated_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Días compensados en dinero</FormLabel>
+                        <FormControl><Input type="number" min="0" step="0.5" className="h-11 rounded-xl" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                        <FormField
-                          control={form.control}
-                          name="end_date"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Fecha Fin</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant="outline"
-                                      className={cn(
-                                        'h-12 rounded-2xl bg-background border-border focus:bg-background transition-colors pl-4 text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        <span className="font-medium text-foreground">{format(field.value, 'dd/MM/yyyy', { locale: es })}</span>
-                                      ) : (
-                                        <span>Seleccionar</span>
-                                      )}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl border-border shadow-xl" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={field.onChange}
-                                    disabled={(date) => watchStartDate ? date < watchStartDate : false}
-                                    initialFocus
-                                    className="pointer-events-auto"
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                  <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:col-span-2">
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <div className="flex items-center gap-3">
+                        <CalendarDays className="h-5 w-5 text-primary" />
+                        <div><p className="text-xs text-muted-foreground">Total solicitado</p><p className="text-xl font-black text-primary">{totalDays} días</p></div>
                       </div>
+                      <div><p className="text-xs text-muted-foreground">Saldo disponible</p><p className="text-lg font-bold">{employeeId ? `${availableDays} días` : 'Seleccione empleado'}</p></div>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground"><CircleDollarSign className="h-4 w-4" />Máximo compensable: {maxCompensableDays.toFixed(1)} días</div>
+                    </div>
+                    {exceedsBalance && <p className="mt-3 text-sm font-medium text-destructive">El total solicitado supera el saldo disponible.</p>}
+                    {exceedsCompensation && <p className="mt-2 text-sm font-medium text-destructive">Los días compensados superan el máximo configurado.</p>}
+                  </div>
 
-                      {/* Info Cards */}
-                      <div className="space-y-3">
-                        {/* Business Days Calculation */}
-                        {watchStartDate && watchEndDate && (
-                          <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-black uppercase tracking-widest text-primary">Días Hábiles:</span>
-                              <span className="text-xl font-black text-primary">{businessDays}</span>
-                            </div>
-                            {selectedBalance && businessDays > Number(selectedBalance.days_pending) && (
-                              <p className="text-xs text-destructive mt-2 flex items-center font-bold">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                Excede el saldo disponible ({selectedBalance.days_pending})
-                              </p>
-                            )}
-                            {compensationValidation && !compensationValidation.allowed && (
-                              <p className="text-xs text-destructive mt-2 flex items-center font-bold">
-                                <AlertTriangle className="w-3 h-3 mr-1" />
-                                {compensationValidation.reason}
-                              </p>
-                            )}
-                          </div>
-                        )}
+                  <FormField
+                    control={form.control}
+                    name="start_date"
+                    render={({ field }) => (
+                      <FormItem><FormLabel>Fecha inicio a disfrutar</FormLabel><FormControl><Input type="date" min={today} className="h-11 rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="end_date"
+                    render={({ field }) => (
+                      <FormItem><FormLabel>Fecha final a disfrutar</FormLabel><FormControl><Input type="date" min={startDate || today} className="h-11 rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}
+                  />
 
-                        {/* Affected Shift Assignments Warning */}
-                        {affectedShifts && affectedShifts.total > 0 && (
-                          <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4 flex items-start gap-3">
-                            <Info className="h-5 w-5 text-orange-500 shrink-0" />
-                            <div className="text-sm text-orange-800">
-                              <p className="font-bold">Se afectarán {affectedShifts.total} asignaciones de turno:</p>
-                              <ul className="list-disc list-inside mt-1 opacity-80 text-xs">
-                                <li>{affectedShifts.work} turno(s) de trabajo</li>
-                                <li>{affectedShifts.rest} día(s) de descanso</li>
-                              </ul>
-                            </div>
-                          </div>
-                        )}
-                        <AbsenceConflictAlert conflicts={absenceConflicts} />
-                      </div>
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem className="sm:col-span-2"><FormLabel>Observaciones (opcional)</FormLabel><FormControl><Textarea rows={3} placeholder="Información adicional para los aprobadores..." className="resize-none rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}
+                  />
+                </div>
+              </section>
 
-                      {/* Compensation Amount */}
-                      {watchType === 'compensacion' && (
-                        <FormField
-                          control={form.control}
-                          name="compensation_amount"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Monto a compensar (COP)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  {...field}
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                  className="h-12 rounded-2xl bg-background border-border focus:bg-background text-lg font-mono"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </motion.div>
-                  )}
+              <AbsenceConflictAlert conflicts={absenceConflicts} />
 
-                  {/* TAB 3: OBSERVACIONES */}
-                  {activeTab === 'notas' && (
-                    <motion.div
-                      key="notas"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="font-black uppercase tracking-widest text-[10px] text-muted-foreground">Observaciones (Opcional)</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Escribe cualquier detalle relevante sobre esta solicitud..."
-                                className="min-h-[200px] resize-none rounded-2xl bg-background border-border focus:bg-background p-4"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="flex gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm leading-relaxed text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-sky-600" />
+                <p>{VACATION_NOTICE}</p>
               </div>
-            </Tabs>
+            </div>
 
-            <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-border/50">
-              <Button 
-                type="button" 
-                variant="ghost" 
-                onClick={() => onOpenChange(false)}
-                className="rounded-2xl font-black uppercase tracking-widest text-xs h-12 px-6"
+            <div className="flex shrink-0 flex-col-reverse gap-3 border-t border-border/70 bg-background px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">Cancelar</Button>
+              <Button
+                type="submit"
+                disabled={createRequest.isPending || exceedsBalance || exceedsCompensation || absenceConflicts.length > 0}
+                className="rounded-xl px-6 shadow-lg shadow-primary/15"
               >
-                Cancelar
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={createRequest.isPending || (compensationValidation && !compensationValidation.allowed) || hasConflicts}
-                className="rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all h-12 px-8"
-              >
-                {createRequest.isPending ? 'Procesando...' : 'Guardar Solicitud'}
+                <Umbrella className="mr-2 h-4 w-4" />
+                {createRequest.isPending ? 'Enviando...' : 'Enviar a aprobación'}
               </Button>
             </div>
           </form>

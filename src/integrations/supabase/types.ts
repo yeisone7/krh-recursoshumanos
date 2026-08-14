@@ -10891,78 +10891,147 @@ export type Database = {
       }
       vacation_requests: {
         Row: {
+          accrued_days_at_request: number
+          approval_stage: string
           approved_at: string | null
           approved_by: string | null
+          area_leader_approved: boolean | null
+          area_leader_approved_at: string | null
+          area_leader_approved_by: string | null
+          area_leader_approver_name: string | null
+          area_leader_observations: string | null
           balance_id: string | null
           business_days: number
           calendar_days: number | null
           company_id: string
           compensation_amount: number | null
+          compensated_days: number
+          contract_start_date: string | null
           created_at: string
           created_by: string | null
           document_url: string | null
           employee_id: string
           end_date: string
+          enjoyment_days: number
           id: string
           interruption_date: string | null
           interruption_reason: string | null
           notes: string | null
+          manager_approved: boolean | null
+          manager_approved_at: string | null
+          manager_approved_by: string | null
+          manager_approver_name: string | null
+          manager_observations: string | null
+          payroll_recorded_days: number
+          pending_activities: string | null
+          pending_days_to_enjoy: number
           remaining_days: number | null
           request_type: Database["public"]["Enums"]["vacation_request_type"]
+          request_date: string
+          replacement_employee_id: string | null
+          replacement_requires_hiring: boolean
+          return_to_work_date: string | null
           resume_end_date: string | null
           resume_start_date: string | null
           start_date: string
           status: Database["public"]["Enums"]["vacation_status"]
+          total_requested_days: number
           updated_at: string
         }
         Insert: {
+          accrued_days_at_request?: number
+          approval_stage?: string
           approved_at?: string | null
           approved_by?: string | null
+          area_leader_approved?: boolean | null
+          area_leader_approved_at?: string | null
+          area_leader_approved_by?: string | null
+          area_leader_approver_name?: string | null
+          area_leader_observations?: string | null
           balance_id?: string | null
           business_days: number
           calendar_days?: number | null
           company_id: string
           compensation_amount?: number | null
+          compensated_days?: number
+          contract_start_date?: string | null
           created_at?: string
           created_by?: string | null
           document_url?: string | null
           employee_id: string
           end_date: string
+          enjoyment_days?: number
           id?: string
           interruption_date?: string | null
           interruption_reason?: string | null
           notes?: string | null
+          manager_approved?: boolean | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_approver_name?: string | null
+          manager_observations?: string | null
+          payroll_recorded_days?: number
+          pending_activities?: string | null
+          pending_days_to_enjoy?: number
           remaining_days?: number | null
           request_type?: Database["public"]["Enums"]["vacation_request_type"]
+          request_date?: string
+          replacement_employee_id?: string | null
+          replacement_requires_hiring?: boolean
+          return_to_work_date?: string | null
           resume_end_date?: string | null
           resume_start_date?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["vacation_status"]
+          total_requested_days?: number
           updated_at?: string
         }
         Update: {
+          accrued_days_at_request?: number
+          approval_stage?: string
           approved_at?: string | null
           approved_by?: string | null
+          area_leader_approved?: boolean | null
+          area_leader_approved_at?: string | null
+          area_leader_approved_by?: string | null
+          area_leader_approver_name?: string | null
+          area_leader_observations?: string | null
           balance_id?: string | null
           business_days?: number
           calendar_days?: number | null
           company_id?: string
           compensation_amount?: number | null
+          compensated_days?: number
+          contract_start_date?: string | null
           created_at?: string
           created_by?: string | null
           document_url?: string | null
           employee_id?: string
           end_date?: string
+          enjoyment_days?: number
           id?: string
           interruption_date?: string | null
           interruption_reason?: string | null
           notes?: string | null
+          manager_approved?: boolean | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_approver_name?: string | null
+          manager_observations?: string | null
+          payroll_recorded_days?: number
+          pending_activities?: string | null
+          pending_days_to_enjoy?: number
           remaining_days?: number | null
           request_type?: Database["public"]["Enums"]["vacation_request_type"]
+          request_date?: string
+          replacement_employee_id?: string | null
+          replacement_requires_hiring?: boolean
+          return_to_work_date?: string | null
           resume_end_date?: string | null
           resume_start_date?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["vacation_status"]
+          total_requested_days?: number
           updated_at?: string
         }
         Relationships: [
@@ -10983,6 +11052,13 @@ export type Database = {
           {
             foreignKeyName: "vacation_requests_employee_id_fkey"
             columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees_v2"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacation_requests_replacement_employee_id_fkey"
+            columns: ["replacement_employee_id"]
             isOneToOne: false
             referencedRelation: "employees_v2"
             referencedColumns: ["id"]
@@ -11109,6 +11185,10 @@ export type Database = {
         }
         Returns: Json
       }
+      create_vacation_request_workflow: {
+        Args: { p_request: Json }
+        Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
+      }
       create_training_group_assignment: {
         Args: { payload: Json }
         Returns: Json
@@ -11134,6 +11214,27 @@ export type Database = {
           p_start_date: string
         }
         Returns: number
+      }
+      decide_vacation_as_area_leader: {
+        Args: {
+          p_approved: boolean
+          p_observations?: string | null
+          p_payroll_recorded_days: number
+          p_request_id: string
+        }
+        Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
+      }
+      decide_vacation_as_manager: {
+        Args: {
+          p_approved: boolean
+          p_observations?: string | null
+          p_pending_activities: string | null
+          p_replacement_employee_id: string | null
+          p_replacement_requires_hiring: boolean
+          p_request_id: string
+          p_return_to_work_date: string | null
+        }
+        Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
       }
       delete_training_group_link: {
         Args: { assignment_id_value: string }
@@ -11625,11 +11726,21 @@ export type Database = {
             Returns: boolean
           }
         | { Args: { p_requisition_id: string }; Returns: boolean }
+      user_can_read_vacation_request: {
+        Args: {
+          p_approval_stage: string
+          p_company_id: string
+          p_created_by: string
+          p_employee_id: string
+        }
+        Returns: boolean
+      }
       validate_registration_token: { Args: { p_token: string }; Returns: Json }
       validate_training_access_token: {
         Args: { p_token: string }
         Returns: Json
       }
+      vacation_approver_name: { Args: { p_user_id: string }; Returns: string }
       verify_employee_cedula: {
         Args: { p_cedula: string; p_company_id: string }
         Returns: {
