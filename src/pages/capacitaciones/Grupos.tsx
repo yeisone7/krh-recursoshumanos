@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import {
   ArrowRight, Check, CheckCircle2, ClipboardCheck, Copy, Download, ExternalLink,
   Link2, Pencil, Plus, QrCode, Search, SlidersHorizontal, Trash2, UserPlus,
-  UsersRound, X, XCircle,
+  UsersRound, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -266,10 +266,6 @@ export default function TrainingGroups() {
     const effectiveStatus = group.status === 'closed' ? 'closed' : !group.token_id ? 'without_link' : new Date(group.expires_at) < new Date() ? 'expired' : 'active';
     return (status === 'all' || status === effectiveStatus) && `${group.name} ${group.course?.name}`.toLowerCase().includes(search.toLowerCase());
   }), [groups, search, status]);
-  const totals = useMemo(() => groups.reduce((acc, group) => {
-    const stats = getGroupStats(group); acc.people += stats.total; acc.completed += stats.completed; acc.pending += stats.pending; return acc;
-  }, { people: 0, completed: 0, pending: 0 }), [groups]);
-
   const copyLink = async (group: TrainingGroupAssignment) => {
     if (!group.token?.token) return;
     await navigator.clipboard.writeText(accessUrl(group.token.token)); toast.success('Enlace copiado');
@@ -288,11 +284,6 @@ export default function TrainingGroups() {
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-12">
       <div className="rounded-[2rem] border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-8"><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="flex items-center gap-3 text-3xl font-black"><UsersRound className="h-8 w-8 text-primary" />Capacitaciones por grupo</h1><p className="mt-1 text-muted-foreground">Asigna una capacitación a personas específicas y sigue su cumplimiento.</p></div>{canCreate ? <Button className="h-12 rounded-xl" onClick={() => { setEditing(null); setFormOpen(true); }}><Plus className="mr-2 h-4 w-4" />Nueva asignación</Button> : null}</div></div>
-      <div className="grid gap-4 sm:grid-cols-3">{[
-        { label: 'Participantes válidos', value: totals.people, Icon: UsersRound },
-        { label: 'Completadas', value: totals.completed, Icon: CheckCircle2 },
-        { label: 'Pendientes', value: totals.pending, Icon: XCircle },
-      ].map(({ label, value, Icon }) => <Card key={label}><CardContent className="flex items-center gap-3 p-5"><Icon className="h-6 w-6 text-primary" /><div><p className="text-2xl font-black">{value}</p><p className="text-sm text-muted-foreground">{label}</p></div></CardContent></Card>)}</div>
       <Card><CardContent className="grid gap-3 p-4 sm:grid-cols-[1fr_220px]"><div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar grupo o capacitación" /></div><Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activos</SelectItem><SelectItem value="expired">Vencidos</SelectItem><SelectItem value="closed">Cerrados</SelectItem><SelectItem value="without_link">Sin enlace</SelectItem></SelectContent></Select></CardContent></Card>
       {isLoading ? <Card><CardContent className="p-12 text-center text-muted-foreground">Cargando asignaciones...</CardContent></Card> : null}
       {!isLoading && !filtered.length ? <Card><CardContent className="p-12 text-center text-muted-foreground">No hay capacitaciones grupales para mostrar.</CardContent></Card> : null}
