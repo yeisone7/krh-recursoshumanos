@@ -70,7 +70,7 @@ export function useUnifiedCalendar(
           .from('vacation_requests')
           .select(`
             id, start_date, end_date, request_type, status, business_days,
-            employee:employees_v2(id, first_name, last_name)
+            employee:employees_v2!vacation_requests_employee_id_fkey(id, first_name, last_name)
           `)
           .eq('company_id', currentCompanyId)
           .in('status', ['aprobado', 'en_curso', 'completado'])

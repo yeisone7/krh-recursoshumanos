@@ -584,7 +584,7 @@ export function useVacationReport(startDate?: Date, endDate?: Date) {
       if (!currentCompanyId) return [];
       let query = supabase
         .from('vacation_requests')
-        .select(`*, employees_v2!inner(first_name, last_name, document_number)`)
+        .select(`*, employees_v2:employees_v2!vacation_requests_employee_id_fkey!inner(first_name, last_name, document_number)`)
         .eq('company_id', currentCompanyId)
         .order('start_date', { ascending: false });
       if (startDate) query = query.gte('start_date', format(startDate, 'yyyy-MM-dd'));

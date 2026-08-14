@@ -272,24 +272,16 @@ export function useEmployeePortal() {
       if (!employeeLink?.employee_id || !employee?.company_id || !user?.id) {
         throw new Error('No hay empleado vinculado');
       }
-      const startDate = new Date(request.start_date);
-      const endDate = new Date(request.end_date);
-      const calendarDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-      const insertData = {
+      const workflowRequest = {
         employee_id: employeeLink.employee_id,
-        company_id: employee.company_id,
-        request_type: request.request_type as 'disfrute' | 'compensacion',
         start_date: request.start_date,
         end_date: request.end_date,
-        business_days: request.business_days,
-        calendar_days: calendarDays,
+        enjoyment_days: request.request_type === 'compensacion' ? 0 : request.business_days,
+        compensated_days: request.request_type === 'compensacion' ? request.business_days : 0,
         notes: request.notes,
-        created_by: user.id,
       };
       const { error } = await supabase
-        .from('vacation_requests')
-        .insert(insertData);
+        .rpc('create_vacation_request_workflow', { p_request: workflowRequest });
       if (error) throw error;
     },
     onSuccess: () => {
