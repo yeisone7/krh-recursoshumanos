@@ -3,7 +3,7 @@ import { addDays, format, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
 import {
   ArrowRight, Check, CheckCircle2, ClipboardCheck, Copy, Download, ExternalLink,
-  Link2, Pencil, Plus, QrCode, Search, SlidersHorizontal, Trash2, UserPlus,
+  FileText, Link2, Loader2, Pencil, Plus, QrCode, Search, SlidersHorizontal, Trash2, UserPlus,
   UsersRound, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -23,11 +23,13 @@ import { QRCodeDialog } from '@/components/training';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTrainingCourses } from '@/hooks/useTraining';
 import {
-  TrainingGroupEmployeeOption, useCloseTrainingGroup, useCreateTrainingGroup,
+  fetchTrainingGroupReportCompletions, TrainingGroupEmployeeOption, useCloseTrainingGroup, useCreateTrainingGroup,
   useDeleteTrainingGroupLink, useRegenerateTrainingGroupLink,
   useTrainingGroupAssignments, useTrainingGroupEmployeeOptions, useUpdateTrainingGroup,
 } from '@/hooks/useTrainingGroups';
-import type { TrainingGroupAssignment, TrainingGroupParticipant } from '@/types/training';
+import { useCompany } from '@/hooks/useCompanies';
+import { buildTrainingAttendanceReportPdf, sanitizeTrainingReportFileName } from '@/lib/trainingAttendanceReportPdf';
+import type { TrainingCompletion, TrainingGroupAssignment, TrainingGroupParticipant } from '@/types/training';
 
 const defaultExpiry = () => format(addDays(new Date(), 30), 'yyyy-MM-dd');
 const employeeName = (employee: TrainingGroupEmployeeOption) =>
@@ -185,7 +187,7 @@ function GroupFormDialog({
             <div className="space-y-3 border-b bg-muted/20 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground"><SlidersHorizontal className="h-3.5 w-3.5" />Filtrar empleados disponibles</div>
               <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-                <div className="relative"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input className="bg-background pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre o cédula" /></div>
+                <div className="relative"><Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input className="bg-background pl-10" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nombre o cédula" /></div>
                 <Select value={center} onValueChange={setCenter}><SelectTrigger className="bg-background"><SelectValue placeholder="Centro" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los centros</SelectItem>{centers.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
                 <Select value={area} onValueChange={setArea}><SelectTrigger className="bg-background"><SelectValue placeholder="Área" /></SelectTrigger><SelectContent><SelectItem value="all">Todas las áreas</SelectItem>{areas.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
                 <Select value={position} onValueChange={setPosition}><SelectTrigger className="bg-background"><SelectValue placeholder="Cargo" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los cargos</SelectItem>{positions.map(([id, name]) => <SelectItem key={id} value={id!}>{name}</SelectItem>)}</SelectContent></Select>
@@ -240,7 +242,8 @@ function GroupFormDialog({
 }
 
 export default function TrainingGroups() {
-  const { hasPermission, isAdmin, isSuperAdmin } = useAuth();
+  const { currentCompanyId, hasPermission, isAdmin, isSuperAdmin } = useAuth();
+  const { data: currentCompany } = useCompany(currentCompanyId || undefined);
   const { data: groups = [], isLoading } = useTrainingGroupAssignments();
   const { data: employees = [] } = useTrainingGroupEmployeeOptions();
   const closeGroup = useCloseTrainingGroup();
@@ -256,6 +259,7 @@ export default function TrainingGroups() {
   const [qr, setQr] = useState<{ url: string; title: string } | null>(null);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [exportingPdfId, setExportingPdfId] = useState<string | null>(null);
   const canCreate = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'create');
   const canUpdate = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'update');
   const canDelete = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'delete');
@@ -280,6 +284,65 @@ export default function TrainingGroups() {
     }));
     const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(rows), 'Cumplimiento'); XLSX.writeFile(book, `cumplimiento-${group.name}.xlsx`);
   };
+  const exportAttendancePdf = async (group: TrainingGroupAssignment) => {
+    const completedParticipants = (group.participants || []).filter((participant) => (
+      participant.is_active && participant.employee?.is_active && participant.completion_id
+    ));
+    if (!completedParticipants.length) {
+      toast.error('No hay participantes completados para generar el informe');
+      return;
+    }
+
+    setExportingPdfId(group.id);
+    try {
+      const storedCompletions = await fetchTrainingGroupReportCompletions(
+        completedParticipants.map((participant) => participant.completion_id!),
+      );
+      const completionsById = new Map(storedCompletions.map((completion) => [completion.id, completion]));
+      const reportCompletions = completedParticipants.flatMap((participant) => {
+        const completion = participant.completion_id ? completionsById.get(participant.completion_id) : null;
+        if (!completion || !participant.employee) return [];
+        const employee = participant.employee;
+        const employeeWorkInfo = (employee.employee_work_info || []).map((workInfo) => ({
+          id: `${employee.id}-${workInfo.operation_center_id || 'work-info'}`,
+          employee_id: employee.id,
+          position_name: workInfo.position_name,
+          operation_center_id: workInfo.operation_center_id,
+          operation_centers: workInfo.operation_centers,
+          is_current: true,
+        }));
+        return [{
+          ...completion,
+          course: group.course,
+          employee: {
+            id: employee.id,
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            document_number: employee.document_number,
+            employee_work_info: employeeWorkInfo,
+          },
+        } satisfies TrainingCompletion];
+      });
+      const centers = [...new Set(completedParticipants
+        .map((participant) => participant.employee?.employee_work_info?.[0]?.operation_centers?.name)
+        .filter((name): name is string => Boolean(name)))];
+      const centerName = centers.length <= 1 ? centers[0] || 'Sin centro' : `Varios centros (${centers.length})`;
+      const doc = await buildTrainingAttendanceReportPdf({
+        completions: reportCompletions,
+        company: currentCompany,
+        centerName,
+        courseName: group.course?.name || 'Capacitacion',
+        sourceLabel: `capacitaciones por grupo - ${group.name}`,
+      });
+      doc.save(`registro-asistencia-${sanitizeTrainingReportFileName(group.name)}.pdf`);
+      toast.success('Informe de asistencia generado');
+    } catch (error) {
+      console.error('Group attendance report generation failed', error);
+      toast.error('No se pudo generar el informe de asistencia');
+    } finally {
+      setExportingPdfId(null);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-12">
@@ -290,12 +353,175 @@ export default function TrainingGroups() {
       <div className="grid gap-4 lg:grid-cols-2">{filtered.map((group) => {
         const stats = getGroupStats(group); const expired = new Date(group.expires_at) < new Date();
         const state = group.status === 'closed' ? 'Cerrado' : !group.token_id ? 'Sin enlace' : expired ? 'Vencido' : 'Activo';
-        return <Card key={group.id} className="overflow-hidden rounded-2xl"><CardContent className="space-y-4 p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-black">{group.name}</h2><p className="text-sm text-muted-foreground">{group.course?.name}</p></div><Badge variant={state === 'Activo' ? 'default' : 'secondary'}>{state}</Badge></div><div><div className="mb-2 flex justify-between text-sm"><span>{stats.completed}/{stats.total} completaron</span><strong>{stats.percentage}%</strong></div><Progress value={stats.percentage} /></div><div className="flex flex-wrap gap-2 text-xs text-muted-foreground"><Badge variant="outline">{stats.pending} pendientes</Badge>{stats.excluded ? <Badge variant="outline">{stats.excluded} excluidos</Badge> : null}<Badge variant="outline">Vence {format(parseISO(group.expires_at), 'dd/MM/yyyy')}</Badge></div><div className="flex flex-wrap gap-2 border-t pt-4"><Button size="sm" variant="outline" onClick={() => setDetail(group)}><ClipboardCheck className="mr-1 h-4 w-4" />Cumplimiento</Button>{group.token?.token ? <><Button size="sm" variant="outline" onClick={() => copyLink(group)}><Copy className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => setQr({ url: accessUrl(group.token!.token), title: group.name })}><QrCode className="h-4 w-4" /></Button><Button size="sm" variant="outline" onClick={() => window.open(accessUrl(group.token!.token), '_blank')}><ExternalLink className="h-4 w-4" /></Button></> : null}{canUpdate && state === 'Activo' ? <Button size="sm" variant="outline" onClick={() => { setEditing(group); setFormOpen(true); }}><Pencil className="h-4 w-4" /></Button> : null}{canUpdate && !group.token_id && group.status === 'active' ? <Button size="sm" onClick={() => { setRegenerateExpiry(defaultExpiry()); setRegenerateTarget(group); }}><Link2 className="mr-1 h-4 w-4" />Generar enlace</Button> : null}{canDelete && group.token_id ? <Button size="sm" variant="outline" className="text-destructive" onClick={() => setDeleteTarget(group)}><Trash2 className="h-4 w-4" /></Button> : null}{canUpdate && group.status === 'active' ? <Button size="sm" variant="ghost" onClick={() => setCloseTarget(group)}>Cerrar</Button> : null}</div></CardContent></Card>;
+        const stateBadgeClass = state === 'Activo'
+          ? 'border-primary/20 bg-primary text-primary-foreground'
+          : state === 'Vencido'
+            ? 'border-warning/25 bg-warning/15 text-warning'
+            : state === 'Sin enlace'
+              ? 'border-info/25 bg-info/10 text-info'
+              : 'border-border bg-muted text-muted-foreground';
+        const utilityButtonClass = 'border-primary/20 bg-primary/[0.055] text-primary shadow-sm transition-all hover:-translate-y-0.5 hover:bg-primary hover:text-primary-foreground hover:shadow-md active:translate-y-0';
+
+        return (
+          <Card key={group.id} className="overflow-hidden rounded-2xl border-primary/15 bg-gradient-to-br from-background via-background to-primary/[0.055] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/25 hover:shadow-card-hover">
+            <div className="h-1 bg-gradient-to-r from-primary via-primary/70 to-primary/20" />
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-black text-foreground">{group.name}</h2>
+                  <p className="mt-0.5 text-sm font-medium text-muted-foreground">{group.course?.name}</p>
+                </div>
+                <Badge variant="outline" className={stateBadgeClass}>{state}</Badge>
+              </div>
+
+              <div className="rounded-xl border border-primary/10 bg-background/80 p-3.5">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="font-medium">{stats.completed}/{stats.total} completaron</span>
+                  <strong className="tabular-nums text-primary">{stats.percentage}%</strong>
+                </div>
+                <Progress value={stats.percentage} className="h-2.5 bg-primary/10" />
+              </div>
+
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="outline" className="border-warning/25 bg-warning/10 text-warning">
+                  {stats.pending} pendientes
+                </Badge>
+                {stats.excluded ? (
+                  <Badge variant="outline" className="border-border bg-muted text-muted-foreground">{stats.excluded} excluidos</Badge>
+                ) : null}
+                <Badge variant="outline" className="border-primary/15 bg-primary/[0.06] text-primary">
+                  Vence {format(parseISO(group.expires_at), 'dd/MM/yyyy')}
+                </Badge>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 border-t border-primary/10 pt-4">
+                <Button size="sm" className="shadow-sm" onClick={() => setDetail(group)}>
+                  <ClipboardCheck className="mr-1.5 h-4 w-4" />Cumplimiento
+                </Button>
+                {group.token?.token ? (
+                  <>
+                    <Button size="sm" variant="outline" className={utilityButtonClass} onClick={() => copyLink(group)} aria-label="Copiar enlace"><Copy className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" className={utilityButtonClass} onClick={() => setQr({ url: accessUrl(group.token!.token), title: group.name })} aria-label="Mostrar código QR"><QrCode className="h-4 w-4" /></Button>
+                    <Button size="sm" variant="outline" className={utilityButtonClass} onClick={() => window.open(accessUrl(group.token!.token), '_blank')} aria-label="Abrir enlace"><ExternalLink className="h-4 w-4" /></Button>
+                  </>
+                ) : null}
+                {canUpdate && state === 'Activo' ? (
+                  <Button size="sm" variant="outline" className={utilityButtonClass} onClick={() => { setEditing(group); setFormOpen(true); }} aria-label="Editar asignación"><Pencil className="h-4 w-4" /></Button>
+                ) : null}
+                {canUpdate && !group.token_id && group.status === 'active' ? (
+                  <Button size="sm" onClick={() => { setRegenerateExpiry(defaultExpiry()); setRegenerateTarget(group); }}><Link2 className="mr-1 h-4 w-4" />Generar enlace</Button>
+                ) : null}
+                {canDelete && group.token_id ? (
+                  <Button size="sm" variant="outline" className="border-destructive/20 bg-destructive/5 text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground" onClick={() => setDeleteTarget(group)} aria-label="Eliminar enlace"><Trash2 className="h-4 w-4" /></Button>
+                ) : null}
+                {canUpdate && group.status === 'active' ? (
+                  <Button size="sm" variant="ghost" className="ml-auto text-muted-foreground hover:bg-primary/10 hover:text-primary" onClick={() => setCloseTarget(group)}>Cerrar</Button>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+        );
       })}</div>
 
       <GroupFormDialog key={`${editing?.id || 'new'}-${formOpen}`} open={formOpen} onOpenChange={setFormOpen} initial={editing} employees={employees} />
       {qr ? <QRCodeDialog open={!!qr} onOpenChange={() => setQr(null)} url={qr.url} title={qr.title} /> : null}
-      <Dialog open={!!detail} onOpenChange={(open) => !open && setDetail(null)}><DialogContent className="max-w-5xl"><DialogHeader><DialogTitle>{detail?.name}</DialogTitle><DialogDescription>Cumplimiento exclusivo de las personas seleccionadas.</DialogDescription></DialogHeader>{detail ? <div className="max-h-[65vh] overflow-auto"><table className="w-full min-w-[760px] text-sm"><thead><tr className="border-b text-left text-xs uppercase text-muted-foreground"><th className="p-3">Empleado</th><th className="p-3">Documento</th><th className="p-3">Centro</th><th className="p-3">Cargo</th><th className="p-3">Estado</th><th className="p-3">Fecha</th></tr></thead><tbody>{(detail.participants || []).map((participant) => { const excluded = !participant.is_active || !participant.employee?.is_active; return <tr key={participant.id} className="border-b"><td className="p-3 font-semibold">{participantName(participant)}</td><td className="p-3">{participant.employee?.document_number}</td><td className="p-3">{participant.employee?.employee_work_info?.[0]?.operation_centers?.name || '-'}</td><td className="p-3">{participant.employee?.employee_work_info?.[0]?.position_name || '-'}</td><td className="p-3"><Badge variant={excluded ? 'secondary' : participant.completion_id ? 'default' : 'destructive'}>{excluded ? 'Excluido' : participant.completion_id ? 'Completado' : 'Pendiente'}</Badge></td><td className="p-3">{participant.completion?.completed_at ? format(parseISO(participant.completion.completed_at), 'dd/MM/yyyy') : '-'}</td></tr>; })}</tbody></table></div> : null}<DialogFooter>{canExport && detail ? <Button variant="outline" onClick={() => exportGroup(detail)}><Download className="mr-2 h-4 w-4" />Exportar Excel</Button> : null}</DialogFooter></DialogContent></Dialog>
+      <Dialog open={!!detail} onOpenChange={(open) => !open && setDetail(null)}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden rounded-2xl border-primary/15 p-0 shadow-elevated-lg sm:rounded-2xl sm:p-0">
+          <DialogHeader className="border-b border-primary/10 bg-gradient-to-r from-primary/10 via-primary/5 to-background px-5 py-5 pr-14 sm:px-7 sm:py-6 sm:pr-16">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+                <ClipboardCheck className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 space-y-1 text-left">
+                <DialogTitle className="break-words text-xl font-bold leading-tight sm:text-2xl">{detail?.name}</DialogTitle>
+                <DialogDescription className="text-sm leading-relaxed">
+                  Cumplimiento exclusivo de las personas seleccionadas en esta capacitación.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {detail ? (
+            <div className="min-h-0 flex-1 overflow-auto bg-muted/15 p-4 sm:p-6">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-semibold text-foreground">Participantes del grupo</h3>
+                  <p className="text-sm text-muted-foreground">Consulta el estado individual y la fecha de finalización.</p>
+                </div>
+                <Badge variant="outline" className="w-fit border-primary/20 bg-background px-3 py-1.5 text-primary">
+                  <UsersRound className="mr-1.5 h-3.5 w-3.5" />
+                  {(detail.participants || []).length} participantes
+                </Badge>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-border/80 bg-background shadow-sm">
+                <div className="max-h-[52vh] overflow-auto">
+                  <table className="w-full min-w-[820px] text-sm">
+                    <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur-sm">
+                      <tr className="border-b text-left text-xs font-semibold text-muted-foreground">
+                        <th className="px-4 py-3.5">Empleado</th>
+                        <th className="px-4 py-3.5">Documento</th>
+                        <th className="px-4 py-3.5">Centro</th>
+                        <th className="px-4 py-3.5">Cargo</th>
+                        <th className="px-4 py-3.5">Estado</th>
+                        <th className="px-4 py-3.5">Fecha</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/70">
+                      {(detail.participants || []).map((participant) => {
+                        const excluded = !participant.is_active || !participant.employee?.is_active;
+                        const completed = !excluded && !!participant.completion_id;
+                        return (
+                          <tr key={participant.id} className="transition-colors hover:bg-primary/[0.035]">
+                            <td className="px-4 py-4 font-semibold text-foreground">{participantName(participant)}</td>
+                            <td className="px-4 py-4 tabular-nums text-muted-foreground">{participant.employee?.document_number}</td>
+                            <td className="px-4 py-4">{participant.employee?.employee_work_info?.[0]?.operation_centers?.name || '-'}</td>
+                            <td className="px-4 py-4">{participant.employee?.employee_work_info?.[0]?.position_name || '-'}</td>
+                            <td className="px-4 py-4">
+                              <Badge
+                                variant="outline"
+                                className={excluded
+                                  ? 'border-border bg-muted text-muted-foreground'
+                                  : completed
+                                    ? 'border-success/20 bg-success/10 text-success'
+                                    : 'border-warning/25 bg-warning/10 text-warning'}
+                              >
+                                {excluded ? 'Excluido' : completed ? 'Completado' : 'Pendiente'}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-4 tabular-nums text-muted-foreground">
+                              {participant.completion?.completed_at ? format(parseISO(participant.completion.completed_at), 'dd/MM/yyyy') : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <DialogFooter className="border-t bg-background px-4 py-4 sm:px-6">
+            <Button variant="outline" className="rounded-lg" onClick={() => setDetail(null)}>Cerrar</Button>
+            {canExport && detail ? (
+              <Button variant="outline" className="rounded-lg" onClick={() => exportGroup(detail)}>
+                <Download className="mr-2 h-4 w-4" />Exportar Excel
+              </Button>
+            ) : null}
+            {canExport && detail ? (
+              <Button
+                className="rounded-lg shadow-sm"
+                onClick={() => exportAttendancePdf(detail)}
+                disabled={exportingPdfId === detail.id || !(detail.participants || []).some((participant) => participant.is_active && participant.employee?.is_active && participant.completion_id)}
+              >
+                {exportingPdfId === detail.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                Informe asistencia
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>¿Eliminar el enlace?</AlertDialogTitle><AlertDialogDescription>El acceso dejará de funcionar inmediatamente. La capacitación, el grupo, el cumplimiento, las firmas y las evidencias se conservarán.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={async () => { if (!deleteTarget) return; try { await deleteLink.mutateAsync({ assignment_id_value: deleteTarget.id }); toast.success('Enlace eliminado'); setDeleteTarget(null); } catch (error: unknown) { toast.error(errorMessage(error)); } }}>Eliminar enlace</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <AlertDialog open={!!closeTarget} onOpenChange={(open) => !open && setCloseTarget(null)}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>¿Cerrar esta asignación?</AlertDialogTitle><AlertDialogDescription>El enlace quedará inactivo y el cumplimiento se conservará como histórico.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={async () => { if (!closeTarget) return; try { await closeGroup.mutateAsync({ assignment_id_value: closeTarget.id }); toast.success('Asignación cerrada'); setCloseTarget(null); } catch (error: unknown) { toast.error(errorMessage(error)); } }}>Cerrar asignación</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
       <Dialog open={!!regenerateTarget} onOpenChange={(open) => !open && setRegenerateTarget(null)}><DialogContent><DialogHeader><DialogTitle>Generar nuevo enlace</DialogTitle><DialogDescription>El cumplimiento existente no se reiniciará.</DialogDescription></DialogHeader><div className="space-y-2"><Label>Nueva fecha de vencimiento</Label><Input type="date" min={format(new Date(), 'yyyy-MM-dd')} value={regenerateExpiry} onChange={(event) => setRegenerateExpiry(event.target.value)} /></div><DialogFooter><Button variant="outline" onClick={() => setRegenerateTarget(null)}>Cancelar</Button><Button onClick={async () => { if (!regenerateTarget) return; try { await regenerateLink.mutateAsync({ assignment_id_value: regenerateTarget.id, expires_at_value: new Date(`${regenerateExpiry}T23:59:59`).toISOString() }); toast.success('Nuevo enlace generado'); setRegenerateTarget(null); } catch (error: unknown) { toast.error(errorMessage(error)); } }}>Generar enlace</Button></DialogFooter></DialogContent></Dialog>
