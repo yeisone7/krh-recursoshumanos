@@ -265,16 +265,22 @@ export function useEmployeeInformationCompletionReport() {
           .eq('company_id', currentCompanyId),
       ]);
 
-      const relatedError = [
-        cyclesResult.error,
-        contactsResult.error,
-        workInfoResult.error,
-        socialSecurityResult.error,
-        bankInfoResult.error,
-        documentsResult.error,
-        centersResult.error,
-      ].find(Boolean);
-      if (relatedError) throw relatedError;
+      // The profile blocks have independent RLS policies. A restriction or a
+      // timeout in one optional block must not prevent the general report from
+      // being generated with the information the user is allowed to consult.
+      const unavailableSections = [
+        cyclesResult.error ? 'Ciclo laboral' : null,
+        contactsResult.error ? 'Contacto y emergencia' : null,
+        workInfoResult.error ? 'Información laboral' : null,
+        socialSecurityResult.error ? 'Seguridad social' : null,
+        bankInfoResult.error ? 'Información bancaria' : null,
+        documentsResult.error ? 'Documentos cargados' : null,
+        centersResult.error ? 'Centros de operación' : null,
+      ].filter((section): section is string => Boolean(section));
+
+      if (unavailableSections.length) {
+        console.warn('El informe de diligenciamiento se generó con bloques no disponibles:', unavailableSections);
+      }
 
       const activeCycleByEmployee = new Map(
         (cyclesResult.data || []).map((cycle) => [cycle.employee_id, cycle.id]),
@@ -349,7 +355,7 @@ export function useEmployeeInformationCompletionReport() {
         });
       });
 
-      return summarizeEmployeeInformationCompletion(completionRows);
+      return summarizeEmployeeInformationCompletion(completionRows, unavailableSections);
     },
     enabled: !!currentCompanyId,
   });

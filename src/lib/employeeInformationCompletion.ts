@@ -87,6 +87,7 @@ export interface EmployeeInformationCompletionReportData {
   sections: InformationSectionSummary[];
   centers: EmployeeInformationCenterSummary[];
   employees: EmployeeInformationCompletionRow[];
+  unavailableSections: string[];
 }
 
 function hasValue(value: unknown): boolean {
@@ -155,6 +156,7 @@ export function calculateEmployeeInformationCompletion(
 
 export function summarizeEmployeeInformationCompletion(
   employees: EmployeeInformationCompletionRow[],
+  unavailableSections: string[] = [],
 ): EmployeeInformationCompletionReportData {
   const totalSections = employeeInformationSections.length;
   const totalCompletedSections = employees.reduce((total, employee) => total + employee.completedSections, 0);
@@ -208,5 +210,6 @@ export function summarizeEmployeeInformationCompletion(
     sections,
     centers,
     employees: sortedEmployees,
+    unavailableSections,
   };
 }
