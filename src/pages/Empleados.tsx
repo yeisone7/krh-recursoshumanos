@@ -54,7 +54,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, Clock } from 'lucide-react';
-import { useEmployees, useEmployeesInfinite, useToggleEmployeeActive } from '@/hooks/useEmployees';
+import {
+  countEmployeesWithDisability,
+  employeeMatchesPcdFilter,
+  useEmployees,
+  useEmployeesInfinite,
+  useToggleEmployeeActive,
+} from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboardAlerts } from '@/hooks/useDashboardAlerts';
@@ -359,7 +365,7 @@ export default function Empleados() {
       const matchesCenter = centerFilter === 'all'
         || emp.operation_center_assignments?.some((assignment) => assignment.operation_center_id === centerFilter)
         || emp.work_info?.operation_center_id === centerFilter;
-      const matchesPcd = pcdFilter === 'all' || emp.proceso_exclusivo_pcd === true;
+      const matchesPcd = employeeMatchesPcdFilter(emp, pcdFilter === 'pcd');
       const matchesRetiredVisibility = shouldIncludeRetired || !isFinalRetiredEmployee(emp);
       return matchesSearch && matchesStatus && matchesCenter && matchesPcd && matchesRetiredVisibility;
     });
@@ -372,7 +378,7 @@ export default function Empleados() {
       active: employees.filter(e => e.is_active && e.status === 'active').length,
       inactive: employees.filter(e => e.status === 'suspended' || (!e.is_active && e.status !== 'retired' && e.status !== 'en_retiro' && e.status !== 'active')).length,
       retired: employees.filter(e => e.status === 'retired' || e.status === 'en_retiro').length,
-      pcd: employees.filter(e => e.proceso_exclusivo_pcd).length,
+      pcd: countEmployeesWithDisability(employees),
     };
   }, [employees]);
 

@@ -199,10 +199,33 @@ function intersectEmployeeScopes(...scopes: Array<string[] | null>) {
   return activeScopes.reduce((intersection, scope) => intersection.filter((id) => scope.includes(id)));
 }
 
-function applyEmployeePcdFilter(query: any, pcdOnly?: boolean) {
+export function applyEmployeePcdFilter(query: any, pcdOnly?: boolean) {
   if (!pcdOnly) return query;
 
-  return query.eq('proceso_exclusivo_pcd', true);
+  return query
+    .not('disability_type', 'is', null)
+    .neq('disability_type', '')
+    .neq('disability_type', 'ninguna');
+}
+
+export function hasEmployeeDisability(disabilityType: unknown) {
+  if (typeof disabilityType !== 'string') return false;
+
+  const normalizedDisabilityType = disabilityType.trim().toLowerCase();
+  return normalizedDisabilityType !== '' && normalizedDisabilityType !== 'ninguna';
+}
+
+export function employeeMatchesPcdFilter(
+  employee: { disability_type?: unknown },
+  pcdOnly: boolean,
+) {
+  return !pcdOnly || hasEmployeeDisability(employee.disability_type);
+}
+
+export function countEmployeesWithDisability(
+  employees: Array<{ disability_type?: unknown }>,
+) {
+  return employees.filter((employee) => hasEmployeeDisability(employee.disability_type)).length;
 }
 
 function getAssignedOperationCenterIds(data: Pick<EmployeeFullFormData, 'operationCenterId' | 'operationCenterIds'>) {
