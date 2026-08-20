@@ -4,6 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { format, differenceInMonths, differenceInDays } from 'date-fns';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { getIncapacityOriginShortLabel, recoveryStatusLabels } from '@/types/incapacity';
+import {
+  calculateEmployeeInformationCompletion,
+  summarizeEmployeeInformationCompletion,
+  type EmployeeInformationCompletionReportData,
+} from '@/lib/employeeInformationCompletion';
 
 export interface EmployeeReportRow {
   documento: string;
@@ -17,6 +22,33 @@ export interface EmployeeReportRow {
   eps: string;
   afp: string;
   estado: string;
+}
+
+type CurrentEmployeeRecord = {
+  employee_id: string;
+  employment_cycle_id: string | null;
+  updated_at?: string | null;
+  valid_from?: string | null;
+  created_at?: string | null;
+};
+
+function getCurrentEmployeeRecord<T extends CurrentEmployeeRecord>(
+  records: T[] | null | undefined,
+  employeeId: string,
+  activeCycleId?: string,
+): T | undefined {
+  const employeeRecords = (records || []).filter((record) => record.employee_id === employeeId);
+  const recordsForCycle = activeCycleId
+    ? employeeRecords.filter((record) => record.employment_cycle_id === activeCycleId)
+    : [];
+  const legacyRecords = employeeRecords.filter((record) => !record.employment_cycle_id);
+  const candidates = recordsForCycle.length > 0 ? recordsForCycle : legacyRecords.length > 0 ? legacyRecords : employeeRecords;
+
+  return [...candidates].sort((a, b) => {
+    const aDate = a.updated_at || a.valid_from || a.created_at || '';
+    const bDate = b.updated_at || b.valid_from || b.created_at || '';
+    return bDate.localeCompare(aDate);
+  })[0];
 }
 
 export interface IncapacityReportRow {
@@ -152,6 +184,172 @@ export function useEmployeeReport() {
           estado: emp.is_active ? 'Activo' : 'Inactivo',
         };
       });
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
+/**
+ * Consolidates the state of the six information blocks expected in an active
+ * employee profile. Related records are selected from the active employment
+ * cycle whenever a cycle-specific value exists.
+ */
+export function useEmployeeInformationCompletionReport() {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['report-employee-information-completion', currentCompanyId],
+    queryFn: async (): Promise<EmployeeInformationCompletionReportData> => {
+      if (!currentCompanyId) {
+        return summarizeEmployeeInformationCompletion([]);
+      }
+
+      const { data: employees, error: employeesError } = await supabase
+        .from('employees_v2')
+        .select('id, first_name, last_name, document_number, birth_date, gender, marital_status, blood_type')
+        .eq('company_id', currentCompanyId)
+        .eq('is_active', true);
+
+      if (employeesError) throw employeesError;
+      if (!employees?.length) return summarizeEmployeeInformationCompletion([]);
+
+      const employeeIds = employees.map((employee) => employee.id);
+      const [
+        cyclesResult,
+        contactsResult,
+        workInfoResult,
+        socialSecurityResult,
+        bankInfoResult,
+        documentsResult,
+        centersResult,
+      ] = await Promise.all([
+        supabase
+          .from('employee_employment_cycles')
+          .select('id, employee_id, status, start_date')
+          .eq('company_id', currentCompanyId)
+          .eq('status', 'active')
+          .in('employee_id', employeeIds),
+        supabase
+          .from('employee_contact')
+          .select('employee_id, employment_cycle_id, email, personal_email, mobile, phone, residence_address, residence_city, emergency_contact_name, emergency_contact_phone, updated_at, valid_from')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .in('employee_id', employeeIds),
+        supabase
+          .from('employee_work_info')
+          .select('employee_id, employment_cycle_id, operation_center_id, area_id, position_name, hire_date, updated_at, valid_from')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .in('employee_id', employeeIds),
+        supabase
+          .from('employee_social_security')
+          .select('employee_id, employment_cycle_id, eps, afp, arl, ccf, updated_at, valid_from')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .in('employee_id', employeeIds),
+        supabase
+          .from('employee_bank_info')
+          .select('employee_id, employment_cycle_id, bank_name, account_type, account_number, updated_at, valid_from')
+          .eq('company_id', currentCompanyId)
+          .eq('is_current', true)
+          .in('employee_id', employeeIds),
+        supabase
+          .from('employee_documents')
+          .select('employee_id, employment_cycle_id, expiry_date, is_valid')
+          .eq('company_id', currentCompanyId)
+          .eq('is_valid', true)
+          .in('employee_id', employeeIds),
+        supabase
+          .from('operation_centers')
+          .select('id, name')
+          .eq('company_id', currentCompanyId),
+      ]);
+
+      const relatedError = [
+        cyclesResult.error,
+        contactsResult.error,
+        workInfoResult.error,
+        socialSecurityResult.error,
+        bankInfoResult.error,
+        documentsResult.error,
+        centersResult.error,
+      ].find(Boolean);
+      if (relatedError) throw relatedError;
+
+      const activeCycleByEmployee = new Map(
+        (cyclesResult.data || []).map((cycle) => [cycle.employee_id, cycle.id]),
+      );
+      const centersById = new Map((centersResult.data || []).map((center) => [center.id, center.name]));
+      const today = new Date().toISOString().slice(0, 10);
+
+      const completionRows = employees.map((employee) => {
+        const activeCycleId = activeCycleByEmployee.get(employee.id);
+        const work = getCurrentEmployeeRecord(workInfoResult.data, employee.id, activeCycleId);
+        const documentsForCycle = (documentsResult.data || []).filter((document) => {
+          const belongsToCurrentCycle = !document.employment_cycle_id || document.employment_cycle_id === activeCycleId;
+          return belongsToCurrentCycle && (!document.expiry_date || document.expiry_date >= today) && document.employee_id === employee.id;
+        });
+
+        return calculateEmployeeInformationCompletion({
+          employeeId: employee.id,
+          documentNumber: employee.document_number,
+          fullName: `${employee.first_name} ${employee.last_name}`.trim(),
+          centerName: work?.operation_center_id ? centersById.get(work.operation_center_id) : undefined,
+          personal: {
+            birthDate: employee.birth_date,
+            gender: employee.gender,
+            maritalStatus: employee.marital_status,
+            bloodType: employee.blood_type,
+          },
+          contact: getCurrentEmployeeRecord(contactsResult.data, employee.id, activeCycleId)
+            ? (() => {
+                const contact = getCurrentEmployeeRecord(contactsResult.data, employee.id, activeCycleId)!;
+                return {
+                  email: contact.email,
+                  personalEmail: contact.personal_email,
+                  mobile: contact.mobile,
+                  phone: contact.phone,
+                  residenceAddress: contact.residence_address,
+                  residenceCity: contact.residence_city,
+                  emergencyContactName: contact.emergency_contact_name,
+                  emergencyContactPhone: contact.emergency_contact_phone,
+                };
+              })()
+            : undefined,
+          work: work
+            ? {
+                operationCenterId: work.operation_center_id,
+                areaId: work.area_id,
+                positionName: work.position_name,
+                hireDate: work.hire_date,
+              }
+            : undefined,
+          socialSecurity: getCurrentEmployeeRecord(socialSecurityResult.data, employee.id, activeCycleId)
+            ? (() => {
+                const socialSecurity = getCurrentEmployeeRecord(socialSecurityResult.data, employee.id, activeCycleId)!;
+                return {
+                  eps: socialSecurity.eps,
+                  afp: socialSecurity.afp,
+                  arl: socialSecurity.arl,
+                  ccf: socialSecurity.ccf,
+                };
+              })()
+            : undefined,
+          bank: getCurrentEmployeeRecord(bankInfoResult.data, employee.id, activeCycleId)
+            ? (() => {
+                const bank = getCurrentEmployeeRecord(bankInfoResult.data, employee.id, activeCycleId)!;
+                return {
+                  bankName: bank.bank_name,
+                  accountType: bank.account_type,
+                  accountNumber: bank.account_number,
+                };
+              })()
+            : undefined,
+          validDocumentCount: documentsForCycle.length,
+        });
+      });
+
+      return summarizeEmployeeInformationCompletion(completionRows);
     },
     enabled: !!currentCompanyId,
   });
