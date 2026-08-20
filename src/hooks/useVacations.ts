@@ -40,6 +40,8 @@ export function useVacationConfig() {
           max_accumulation_years: 2,
           max_compensation_percentage: 50,
           alert_threshold_days: 30,
+          accrual_basis_days: 360,
+          allow_advance_vacation: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as VacationConfig;
@@ -65,6 +67,8 @@ export function useUpsertVacationConfig() {
           max_accumulation_years: config.max_accumulation_years ?? 2,
           max_compensation_percentage: config.max_compensation_percentage ?? 50,
           alert_threshold_days: config.alert_threshold_days ?? 30,
+          accrual_basis_days: config.accrual_basis_days ?? 360,
+          allow_advance_vacation: config.allow_advance_vacation ?? false,
         }, { onConflict: 'company_id' })
         .select()
         .single();
@@ -89,13 +93,20 @@ export function useVacationBalances() {
   return useQuery({
     queryKey: ['vacation-balances', currentCompanyId],
     queryFn: async () => {
+      const { error: syncError } = await supabase.rpc('sync_company_vacation_balances', {
+        p_company_id: currentCompanyId!,
+      });
+      if (syncError) throw syncError;
+
       const { data, error } = await supabase
         .from('vacation_balances')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number)
+          employee:employees_v2(id, first_name, last_name, document_number),
+          employment_cycle:employee_employment_cycles!inner(status)
         `)
         .eq('company_id', currentCompanyId!)
+        .eq('employment_cycle.status', 'active')
         .order('period_start', { ascending: false });
 
       if (error) throw error;
@@ -111,11 +122,20 @@ export function useEmployeeVacationBalances(employeeId: string | undefined) {
   return useQuery({
     queryKey: ['vacation-balances', 'employee', employeeId],
     queryFn: async () => {
+      const { data: syncResult, error: syncError } = await supabase.rpc('sync_employee_vacation_balances', {
+        p_employee_id: employeeId!,
+      });
+      if (syncError) throw syncError;
+
+      const cycleId = syncResult && typeof syncResult === 'object' && !Array.isArray(syncResult)
+        ? String((syncResult as Record<string, unknown>).cycle_id ?? '')
+        : '';
       const { data, error } = await supabase
         .from('vacation_balances')
         .select('*')
         .eq('company_id', currentCompanyId!)
         .eq('employee_id', employeeId!)
+        .eq('employment_cycle_id', cycleId)
         .order('period_start', { ascending: false });
 
       if (error) throw error;
@@ -125,35 +145,32 @@ export function useEmployeeVacationBalances(employeeId: string | undefined) {
   });
 }
 
-export function useCreateVacationBalance() {
+export function useAdjustVacationBalance() {
   const queryClient = useQueryClient();
-  const { currentCompanyId, user } = useAuth();
 
   return useMutation({
-    mutationFn: async (balance: {
+    mutationFn: async (adjustment: {
       employee_id: string;
-      period_start: string;
-      period_end: string;
-      days_accrued: number;
-      is_accumulated?: boolean;
-      accumulation_expires?: string;
-      notes?: string;
+      days: number;
+      reason: string;
+      effective_date: string;
+      idempotency_key: string;
     }) => {
-      const { data, error } = await supabase
-        .from('vacation_balances')
-        .insert({
-          ...balance,
-          company_id: currentCompanyId!,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('adjust_vacation_balance', {
+        p_employee_id: adjustment.employee_id,
+        p_days: adjustment.days,
+        p_reason: adjustment.reason,
+        p_effective_date: adjustment.effective_date,
+        p_idempotency_key: adjustment.idempotency_key,
+      });
 
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacation-balances'] });
-      toast({ title: 'Saldo creado', description: 'El periodo de vacaciones fue registrado.' });
+      queryClient.invalidateQueries({ queryKey: ['vacation-balance-movements'] });
+      toast({ title: 'Ajuste registrado', description: 'El libro de vacaciones fue actualizado y auditado.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -161,23 +178,21 @@ export function useCreateVacationBalance() {
   });
 }
 
-export function useUpdateVacationBalance() {
+export function useSyncCompanyVacationBalances() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<VacationBalance> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('vacation_balances')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
+    mutationFn: async () => {
+      const { data, error } = await supabase.rpc('sync_company_vacation_balances', {
+        p_company_id: currentCompanyId!,
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacation-balances'] });
+      toast({ title: 'Saldos actualizados', description: 'La causación fue recalculada a la fecha de hoy.' });
     },
     onError: (error: Error) => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -315,6 +330,26 @@ export function useManagerVacationDecision() {
       });
     },
     onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
+  });
+}
+
+export function useVacationBalanceMovements(employeeId: string | undefined) {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['vacation-balance-movements', currentCompanyId, employeeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vacation_balance_movements')
+        .select('*')
+        .eq('company_id', currentCompanyId!)
+        .eq('employee_id', employeeId!)
+        .order('effective_date', { ascending: false })
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!currentCompanyId && !!employeeId,
   });
 }
 
