@@ -9,7 +9,6 @@ import type {
 const COLORS = {
   navy: [20, 53, 70] as const,
   primary: [0, 123, 160] as const,
-  primaryLight: [231, 244, 249] as const,
   surface: [247, 250, 252] as const,
   border: [219, 229, 235] as const,
   muted: [91, 112, 126] as const,
@@ -42,6 +41,8 @@ export function exportEmployeeInformationCompletionPdf(
   const margin = 14;
   const contentWidth = pageWidth - margin * 2;
   const generatedAt = new Date();
+  const socialSecurity = report.sections.find((section) => section.key === 'socialSecurity');
+  const bank = report.sections.find((section) => section.key === 'bank');
 
   const setTextColor = (color: readonly number[]) => doc.setTextColor(color[0], color[1], color[2]);
   const setFillColor = (color: readonly number[]) => doc.setFillColor(color[0], color[1], color[2]);
@@ -52,7 +53,6 @@ export function exportEmployeeInformationCompletionPdf(
     doc.rect(0, 0, pageWidth, 29, 'F');
     setFillColor(COLORS.primary);
     doc.rect(0, 27, pageWidth, 2, 'F');
-
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
     doc.setTextColor(255, 255, 255);
@@ -80,43 +80,44 @@ export function exportEmployeeInformationCompletionPdf(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7.5);
     setTextColor(COLORS.muted);
-    doc.text('Indicador basado en seis bloques de información del perfil de empleados activos.', margin, pageHeight - 6);
+    doc.text('Indicadores agregados por centro de operación. No incluye detalle individual de empleados.', margin, pageHeight - 6);
     doc.text(`Página ${pageNumber} de ${totalPages}`, pageWidth - margin, pageHeight - 6, { align: 'right' });
   }
 
-  function drawProgressBar(x: number, y: number, width: number, value: number, height = 4) {
-    setFillColor(COLORS.border);
-    doc.roundedRect(x, y, width, height, height / 2, height / 2, 'F');
-    if (value > 0) {
-      setFillColor(getPercentageColor(value));
-      doc.roundedRect(x, y, Math.max(width * (value / 100), height), height, height / 2, height / 2, 'F');
-    }
-  }
-
-  function drawMetricCard(x: number, y: number, width: number, label: string, value: string, accent: readonly number[]) {
+  function drawMetricCard(
+    x: number,
+    y: number,
+    width: number,
+    label: string,
+    value: string,
+    detail: string,
+    accent: readonly number[],
+  ) {
     setFillColor(COLORS.surface);
-    doc.roundedRect(x, y, width, 23, 3, 3, 'F');
+    doc.roundedRect(x, y, width, 24, 3, 3, 'F');
     setDrawColor(COLORS.border);
-    doc.roundedRect(x, y, width, 23, 3, 3, 'S');
+    doc.roundedRect(x, y, width, 24, 3, 3, 'S');
     setFillColor(accent);
-    doc.roundedRect(x + 4, y + 5, 3, 13, 1.5, 1.5, 'F');
+    doc.roundedRect(x + 4, y + 5, 3, 14, 1.5, 1.5, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     setTextColor(COLORS.navy);
     doc.text(value, x + 11, y + 11);
+    doc.setFontSize(7.3);
+    doc.text(label.toUpperCase(), x + 11, y + 16);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     setTextColor(COLORS.muted);
-    doc.text(label.toUpperCase(), x + 11, y + 17);
+    doc.text(detail, x + 11, y + 20.3);
   }
 
   function drawCenterHeader(y: number) {
-    const columns = [72, 34, 34, 34, 38];
-    const headers = ['Centro de operación', 'Empleados activos', 'Perfiles al 100%', 'Con información pendiente', 'Diligenciamiento'];
+    const columns = [72, 37, 37, 42, 37, 44];
+    const headers = ['Centro de operación', 'Empleados analizados', 'Ficha completa', 'Seguridad social', 'Datos bancarios', 'Perfiles al 100%'];
     setFillColor(COLORS.navy);
     doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     doc.setTextColor(255, 255, 255);
     let x = margin;
     headers.forEach((header, index) => {
@@ -125,8 +126,24 @@ export function exportEmployeeInformationCompletionPdf(
     });
   }
 
+  function drawPercentageCell(x: number, y: number, value: number, count?: number) {
+    const color = getPercentageColor(value);
+    setFillColor(color);
+    doc.roundedRect(x + 3, y + 2, 16, 5, 2.5, 2.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.2);
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${value}%`, x + 11, y + 5.5, { align: 'center' });
+    if (count !== undefined) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.2);
+      setTextColor(COLORS.muted);
+      doc.text(`${count}`, x + 22, y + 5.5);
+    }
+  }
+
   function drawCenterRow(center: EmployeeInformationCenterSummary, y: number, alternate: boolean) {
-    const columns = [72, 34, 34, 34, 38];
+    const columns = [72, 37, 37, 42, 37, 44];
     const rowHeight = 9;
     if (alternate) {
       setFillColor(COLORS.surface);
@@ -138,96 +155,68 @@ export function exportEmployeeInformationCompletionPdf(
     doc.setFontSize(8);
     setTextColor(COLORS.navy);
     let x = margin;
-    const values = [
-      center.centerName,
-      String(center.totalEmployees),
-      String(center.fullyCompletedEmployees),
-      String(center.pendingEmployees),
-    ];
-    values.forEach((value, index) => {
-      doc.text(value, x + 3, y + 5.7, { maxWidth: columns[index] - 5 });
-      x += columns[index];
-    });
-    const color = getPercentageColor(center.percentage);
-    setFillColor(color);
-    doc.roundedRect(x + 3, y + 2, 17, 5, 2.5, 2.5, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`${center.percentage}%`, x + 11.5, y + 5.5, { align: 'center' });
-  }
-
-  function drawDetailHeader(y: number) {
-    const columns = [30, 52, 45, 20, 103];
-    const headers = ['Documento', 'Empleado', 'Centro de operación', 'Estado', 'Información pendiente'];
-    setFillColor(COLORS.navy);
-    doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.setTextColor(255, 255, 255);
-    let x = margin;
-    headers.forEach((header, index) => {
-      doc.text(header, x + 3, y + 5.1, { maxWidth: columns[index] - 5 });
-      x += columns[index];
-    });
-  }
-
-  drawHeader('Informe de diligenciamiento de información', 'Estado general de los perfiles de empleados activos, consolidado y por centro de operación');
-
-  let y = 39;
-  const cardGap = 4;
-  const cardWidth = (contentWidth - cardGap * 3) / 4;
-  drawMetricCard(margin, y, cardWidth, 'Empleados evaluados', String(report.totalEmployees), COLORS.primary);
-  drawMetricCard(margin + (cardWidth + cardGap), y, cardWidth, 'Diligenciamiento general', `${report.overallPercentage}%`, getPercentageColor(report.overallPercentage));
-  drawMetricCard(margin + (cardWidth + cardGap) * 2, y, cardWidth, 'Perfiles completos', String(report.fullyCompletedEmployees), COLORS.success);
-  drawMetricCard(margin + (cardWidth + cardGap) * 3, y, cardWidth, 'Con información pendiente', String(report.pendingEmployees), COLORS.warning);
-
-  y += 31;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  setTextColor(COLORS.navy);
-  doc.text('Calidad por bloque de información', margin, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  setTextColor(COLORS.muted);
-  doc.text('Cada porcentaje corresponde a empleados que completaron el bloque completo.', margin, y + 5);
-  y += 11;
-
-  const sectionWidth = (contentWidth - 10) / 6;
-  report.sections.forEach((section, index) => {
-    const x = margin + index * (sectionWidth + 2);
+    doc.text(center.centerName, x + 3, y + 5.7, { maxWidth: columns[0] - 5 });
+    x += columns[0];
+    doc.text(String(center.totalEmployees), x + 3, y + 5.7);
+    x += columns[1];
+    drawPercentageCell(x, y, center.percentage);
+    x += columns[2];
+    drawPercentageCell(x, y, center.socialSecurityPercentage, center.socialSecurityCompletedEmployees);
+    x += columns[3];
+    drawPercentageCell(x, y, center.bankPercentage, center.bankCompletedEmployees);
+    x += columns[4];
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8);
     setTextColor(COLORS.navy);
-    const sectionLabel = doc.splitTextToSize(section.label, sectionWidth);
-    doc.text(sectionLabel, x, y, { maxWidth: sectionWidth });
-    doc.setFontSize(11);
-    doc.text(`${section.percentage}%`, x, y + 9);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    setTextColor(COLORS.muted);
-    doc.text(`${section.completedEmployees}/${report.totalEmployees} empleados`, x, y + 13.5, { maxWidth: sectionWidth });
-    drawProgressBar(x, y + 17, sectionWidth, section.percentage, 3);
-  });
+    doc.text(`${center.fullyCompletedEmployees}/${center.totalEmployees}`, x + 3, y + 5.7);
+  }
 
-  y += 31;
+  drawHeader(
+    'Informe de diligenciamiento por centro de operación',
+    'Estado agregado de la calidad de la información de empleados activos',
+  );
+
+  let y = 39;
+  const cardGap = 5;
+  const cardWidth = (contentWidth - cardGap) / 2;
+  const socialPercentage = socialSecurity?.percentage || 0;
+  const socialEmployees = socialSecurity?.completedEmployees || 0;
+  const bankPercentage = bank?.percentage || 0;
+  const bankEmployees = bank?.completedEmployees || 0;
+
+  drawMetricCard(margin, y, cardWidth, 'Empleados analizados', String(report.totalEmployees), `${report.totalEmployees} activos`, COLORS.primary);
+  drawMetricCard(margin + cardWidth + cardGap, y, cardWidth, 'Ficha completa', `${report.overallPercentage}%`, 'Promedio de calidad de datos', getPercentageColor(report.overallPercentage));
+  y += 29;
+  drawMetricCard(margin, y, cardWidth, 'Seguridad social completa', `${socialPercentage}%`, `${socialEmployees} empleados`, getPercentageColor(socialPercentage));
+  drawMetricCard(margin + cardWidth + cardGap, y, cardWidth, 'Datos bancarios', `${bankPercentage}%`, `${bankEmployees} con banco`, getPercentageColor(bankPercentage));
+
+  y += 34;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   setTextColor(COLORS.navy);
-  doc.text('Resumen por centro de operación', margin, y);
+  doc.text('Resumen consolidado por centro de operación', margin, y);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   setTextColor(COLORS.muted);
-  doc.text('El porcentaje mide los seis bloques de información en el conjunto de empleados de cada centro.', margin, y + 5);
+  doc.text('Los porcentajes se calculan sobre los empleados activos de cada centro.', margin, y + 5);
   y += 10;
+
+  if (report.unavailableSections.length) {
+    setFillColor([255, 248, 230]);
+    doc.roundedRect(margin, y, contentWidth, 8, 2, 2, 'F');
+    doc.setFontSize(7.5);
+    setTextColor(COLORS.warning);
+    doc.text(`Bloques no disponibles en esta consulta: ${report.unavailableSections.join(', ')}.`, margin + 3, y + 5);
+    y += 12;
+  }
+
   drawCenterHeader(y);
   y += 8;
-
   let alternate = false;
   report.centers.forEach((center) => {
     if (y + 9 > pageHeight - 17) {
       doc.addPage();
-      drawHeader('Informe de diligenciamiento de información', 'Resumen por centro de operación');
+      drawHeader('Informe de diligenciamiento por centro de operación', 'Resumen consolidado por centro de operación');
       y = 39;
       drawCenterHeader(y);
       y += 8;
@@ -238,63 +227,11 @@ export function exportEmployeeInformationCompletionPdf(
     y += 9;
   });
 
-  doc.addPage();
-  drawHeader('Informe de diligenciamiento de información', 'Detalle de perfiles con sus bloques pendientes');
-  y = 39;
-  drawDetailHeader(y);
-  y += 8;
-  alternate = false;
-
-  const detailColumns = [30, 52, 45, 20, 103];
-  report.employees.forEach((employee) => {
-    const pending = employee.pendingSections.length > 0 ? employee.pendingSections.join(', ') : 'Perfil completo';
-    const pendingLines = doc.splitTextToSize(pending, detailColumns[4] - 6);
-    const rowHeight = Math.max(9, pendingLines.length * 3.5 + 4);
-    if (y + rowHeight > pageHeight - 17) {
-      doc.addPage();
-      drawHeader('Informe de diligenciamiento de información', 'Detalle de perfiles con sus bloques pendientes');
-      y = 39;
-      drawDetailHeader(y);
-      y += 8;
-      alternate = false;
-    }
-    if (alternate) {
-      setFillColor(COLORS.surface);
-      doc.rect(margin, y, contentWidth, rowHeight, 'F');
-    }
-    setDrawColor(COLORS.border);
-    doc.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    setTextColor(COLORS.navy);
-    let x = margin;
-    doc.text(employee.documentNumber, x + 3, y + 5.6, { maxWidth: detailColumns[0] - 5 });
-    x += detailColumns[0];
-    doc.text(employee.fullName, x + 3, y + 5.6, { maxWidth: detailColumns[1] - 5 });
-    x += detailColumns[1];
-    doc.text(employee.centerName, x + 3, y + 5.6, { maxWidth: detailColumns[2] - 5 });
-    x += detailColumns[2];
-    const statusColor = getPercentageColor(employee.percentage);
-    setFillColor(statusColor);
-    doc.roundedRect(x + 3, y + 2, 14, 5, 2.5, 2.5, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.2);
-    doc.setTextColor(255, 255, 255);
-    doc.text(`${employee.percentage}%`, x + 10, y + 5.5, { align: 'center' });
-    x += detailColumns[3];
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    setTextColor(employee.pendingSections.length > 0 ? COLORS.muted : COLORS.success);
-    doc.text(pendingLines, x + 3, y + 5.2, { maxWidth: detailColumns[4] - 6 });
-    alternate = !alternate;
-    y += rowHeight;
-  });
-
   const totalPages = doc.getNumberOfPages();
   for (let page = 1; page <= totalPages; page += 1) {
     doc.setPage(page);
     drawFooter(page, totalPages);
   }
 
-  doc.save(`informe_diligenciamiento_empleados_${sanitizeFileName(format(generatedAt, 'yyyyMMdd_HHmm'))}.pdf`);
+  doc.save(`informe_diligenciamiento_por_centro_${sanitizeFileName(format(generatedAt, 'yyyyMMdd_HHmm'))}.pdf`);
 }

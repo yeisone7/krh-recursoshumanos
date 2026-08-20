@@ -12,24 +12,24 @@ export function EmployeeInformationCompletionReport() {
   const companyName = companies.find((company) => company.id === currentCompanyId)?.name;
 
   const generateExcelReport = (): ReportData => ({
-    title: 'Diligenciamiento de información de empleados',
-    subtitle: 'Detalle de los bloques de información completados por empleado activo',
+    title: 'Diligenciamiento de información por centro de operación',
+    subtitle: 'Indicadores agregados de calidad de datos de empleados activos',
     generatedAt: new Date(),
     columns: [
-      { header: 'Documento', key: 'documento', width: 16 },
-      { header: 'Empleado', key: 'empleado', width: 28 },
       { header: 'Centro de operación', key: 'centro', width: 22 },
-      { header: 'Diligenciamiento', key: 'porcentaje', width: 16 },
-      { header: 'Bloques completados', key: 'completados', width: 18 },
-      { header: 'Información pendiente', key: 'pendientes', width: 45 },
+      { header: 'Empleados analizados', key: 'empleados', width: 20 },
+      { header: 'Ficha completa', key: 'ficha_completa', width: 18 },
+      { header: 'Seguridad social completa', key: 'seguridad_social', width: 25 },
+      { header: 'Datos bancarios', key: 'datos_bancarios', width: 20 },
+      { header: 'Perfiles al 100%', key: 'perfiles_completos', width: 19 },
     ],
-    data: (report?.employees || []).map((employee) => ({
-      documento: employee.documentNumber,
-      empleado: employee.fullName,
-      centro: employee.centerName,
-      porcentaje: `${employee.percentage}%`,
-      completados: `${employee.completedSections}/${employee.totalSections}`,
-      pendientes: employee.pendingSections.join(', ') || 'Perfil completo',
+    data: (report?.centers || []).map((center) => ({
+      centro: center.centerName,
+      empleados: center.totalEmployees,
+      ficha_completa: `${center.percentage}%`,
+      seguridad_social: `${center.socialSecurityPercentage}% (${center.socialSecurityCompletedEmployees})`,
+      datos_bancarios: `${center.bankPercentage}% (${center.bankCompletedEmployees})`,
+      perfiles_completos: center.fullyCompletedEmployees,
     })),
   });
 
@@ -40,7 +40,7 @@ export function EmployeeInformationCompletionReport() {
     }
 
     try {
-      exportToExcel(generateExcelReport(), 'diligenciamiento_informacion_empleados');
+      exportToExcel(generateExcelReport(), 'diligenciamiento_por_centro');
       toast.success('Informe exportado a Excel');
     } catch {
       toast.error('No fue posible exportar el informe');
@@ -68,8 +68,8 @@ export function EmployeeInformationCompletionReport() {
 
   return (
     <ReportCard
-      title="Diligenciamiento de información"
-      description="Estado general de los perfiles activos, con porcentaje global y por centro de operación"
+      title="Diligenciamiento por centro"
+      description="Indicadores agregados de calidad de datos por centro de operación"
       icon={<ClipboardList className="w-5 h-5" />}
       recordCount={report?.totalEmployees}
       isLoading={isLoading}
