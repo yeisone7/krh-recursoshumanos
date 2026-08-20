@@ -7,6 +7,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  CERTIFICATE_DIALOG_CANCEL_BUTTON_CLASSNAME,
+  CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME,
+} from './issueCertificateDialogUtils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -658,14 +662,14 @@ export function IssueCertificateDialog({ open, onOpenChange, employee, onGenerat
                   type="button" 
                   variant="ghost" 
                   onClick={() => onOpenChange(false)}
-                  className="h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[10px]"
+                  className={CERTIFICATE_DIALOG_CANCEL_BUTTON_CLASSNAME}
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isGenerating}
-                  className="h-12 px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground"
+                  className={CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME}
                 >
                   {isGenerating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileBadge className="w-4 h-4 mr-2" />}
                   {isGenerating ? 'Generando...' : 'Generar PDF'}
