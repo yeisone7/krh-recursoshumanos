@@ -61,7 +61,7 @@ import { cn } from '@/lib/utils';
 import {
   TerminationType,
   TerminationDocumentType,
-  terminationTypeLabels,
+  selectableTerminationTypes,
   terminationDocumentLabels,
   terminationDocumentDescriptions,
   initiateTerminationSchema,
@@ -138,7 +138,6 @@ export function TerminationProcessDialog({
       reason: '',
     },
   });
-  const terminationTypeOptions = Object.entries(terminationTypeLabels).filter(([value]) => value !== 'preaviso');
 
   // Determine initial step based on existing termination
   useEffect(() => {
@@ -351,7 +350,7 @@ export function TerminationProcessDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {terminationTypeOptions.map(([value, label]) => (
+                            {selectableTerminationTypes.map(([value, label]) => (
                               <SelectItem key={value} value={value}>
                                 {label}
                               </SelectItem>
