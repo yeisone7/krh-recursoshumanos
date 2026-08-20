@@ -7,7 +7,7 @@ import { ReportCard } from './ReportCard';
 import { toast } from 'sonner';
 
 export function EmployeeInformationCompletionReport() {
-  const { data: report, isLoading } = useEmployeeInformationCompletionReport();
+  const { data: report, isLoading, isError, error } = useEmployeeInformationCompletionReport();
   const { companies, currentCompanyId } = useAuth();
   const companyName = companies.find((company) => company.id === currentCompanyId)?.name;
 
@@ -34,6 +34,11 @@ export function EmployeeInformationCompletionReport() {
   });
 
   const handleExportExcel = () => {
+    if (isError) {
+      toast.error(error instanceof Error ? error.message : 'No fue posible cargar la información del informe');
+      return;
+    }
+
     try {
       exportToExcel(generateExcelReport(), 'diligenciamiento_informacion_empleados');
       toast.success('Informe exportado a Excel');
@@ -43,6 +48,11 @@ export function EmployeeInformationCompletionReport() {
   };
 
   const handleExportPdf = () => {
+    if (isError) {
+      toast.error(error instanceof Error ? error.message : 'No fue posible cargar la información del informe');
+      return;
+    }
+
     if (!report?.totalEmployees) {
       toast.error('No hay empleados activos para incluir en el informe');
       return;
@@ -72,6 +82,16 @@ export function EmployeeInformationCompletionReport() {
           </div>
         ) : undefined
       }
-    />
+    >
+      {isError ? (
+        <p className="text-sm font-medium text-destructive">
+          No se pudo cargar el informe. Intenta nuevamente o verifica los permisos de consulta de empleados.
+        </p>
+      ) : report?.unavailableSections.length ? (
+        <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+          El informe se generará sin estos bloques no disponibles: {report.unavailableSections.join(', ')}.
+        </p>
+      ) : undefined}
+    </ReportCard>
   );
 }
