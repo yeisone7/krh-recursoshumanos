@@ -9,7 +9,6 @@ import {
   Calendar, 
   Users, 
   AlertTriangle, 
-  Clock,
   FileText,
   Plane
 } from 'lucide-react';
@@ -46,7 +45,6 @@ import {
 import {
   useVacationRequests,
   useVacationBalances,
-  useVacationStats,
   useVacationConfig,
 } from '@/hooks/useVacations';
 import {
@@ -74,7 +72,6 @@ export default function Vacaciones() {
 
   const { data: requests, isLoading: requestsLoading } = useVacationRequests();
   const { data: balances, isLoading: balancesLoading } = useVacationBalances();
-  const { data: stats } = useVacationStats();
   const { data: config } = useVacationConfig();
   const isMobile = useIsMobile();
 
@@ -139,65 +136,6 @@ export default function Vacaciones() {
             Nueva Solicitud
           </Button>
         </div>
-      </div>
-
-      {/* KPIs Premium */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-4 sm:p-5 relative z-10">
-            <div className="flex justify-between items-start mb-3">
-              <div className="w-9 h-9 rounded-[0.85rem] bg-blue-500/10 text-blue-500 flex items-center justify-center">
-                <Calendar className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Días Pendientes</p>
-            <h3 className="text-2xl font-black tracking-tight">{stats?.totalPendingDays ?? 0}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Total en la empresa</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-4 sm:p-5 relative z-10">
-            <div className="flex justify-between items-start mb-3">
-              <div className="w-9 h-9 rounded-[0.85rem] bg-orange-500/10 text-orange-500 flex items-center justify-center">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Acumulación Excesiva</p>
-            <h3 className="text-2xl font-black tracking-tight text-orange-600">{stats?.employeesWithExcessiveAccumulation ?? 0}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Empleados con {'>'} {config?.alert_threshold_days ?? 30} días</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-4 sm:p-5 relative z-10">
-            <div className="flex justify-between items-start mb-3">
-              <div className="w-9 h-9 rounded-[0.85rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Vacaciones Activas</p>
-            <h3 className="text-2xl font-black tracking-tight text-emerald-600">{stats?.activeVacations ?? 0}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">En curso ahora mismo</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="rounded-3xl border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-4 sm:p-5 relative z-10">
-            <div className="flex justify-between items-start mb-3">
-              <div className="w-9 h-9 rounded-[0.85rem] bg-violet-500/10 text-violet-500 flex items-center justify-center">
-                <Clock className="w-4 h-4" />
-              </div>
-            </div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-0.5">Por Aprobar</p>
-            <h3 className="text-2xl font-black tracking-tight text-violet-600">{stats?.pendingApprovals ?? 0}</h3>
-            <p className="text-[10px] text-muted-foreground mt-1">Solicitudes en borrador</p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Content with Tabs */}
