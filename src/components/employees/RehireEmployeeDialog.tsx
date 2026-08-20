@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { BriefcaseBusiness, Check, Info, Loader2, RotateCcw, UserSearch } from 'lucide-react';
@@ -35,6 +35,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import {
+  getAvailableDirectRehirePositions,
+  REHIRE_DIALOG_CONTENT_CLASSNAME,
+} from './rehireEmployeeDialogUtils';
 
 interface RehireEmployeeDialogProps {
   open: boolean;
@@ -129,7 +133,7 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
   const { data: vacancies = [], isLoading: vacanciesLoading } = useOpenVacancies();
   const { data: operationCenters = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
-  const { data: positions = [] } = usePositions();
+  const { data: positions = [], isLoading: positionsLoading } = usePositions();
   const { data: configuredContractTypes = [] } = useContractTypes();
   const contractTypes = configuredContractTypes.filter((type) => type.is_active);
   const availableContractTypes = contractTypes.length > 0 ? contractTypes : fallbackContractTypes;
@@ -185,12 +189,7 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
   const selectedContractType = availableContractTypes.find(
     (type) => type.contract_type === directForm.contractType
   );
-  const filteredPositions = useMemo(
-    () => positions.filter((position) =>
-      (position.is_active ?? true) && (!directForm.areaId || position.area_id === directForm.areaId)
-    ),
-    [directForm.areaId, positions]
-  );
+  const availablePositions = getAvailableDirectRehirePositions(positions);
 
   const updateDirectField = <K extends keyof DirectFormState>(field: K, value: DirectFormState[K]) => {
     setDirectForm((current) => ({ ...current, [field]: value }));
@@ -294,7 +293,7 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100dvh-1.5rem)] gap-0 overflow-hidden border-border/70 p-0 shadow-2xl sm:max-w-[820px] sm:rounded-2xl">
+      <DialogContent className={REHIRE_DIALOG_CONTENT_CLASSNAME}>
         <DialogHeader className="border-b bg-background px-5 pb-5 pt-5 pr-12 sm:px-7 sm:pb-6 sm:pt-6 sm:pr-14">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -441,13 +440,16 @@ export function RehireEmployeeDialog({ open, onOpenChange, employee }: RehireEmp
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label>Cargo *</Label>
-                    <Select value={directForm.positionId} onValueChange={(value) => {
+                    <Select value={directForm.positionId} disabled={positionsLoading} onValueChange={(value) => {
                       const position = positions.find((item) => item.id === value);
                       setDirectForm((current) => ({ ...current, positionId: value, areaId: position?.area_id || current.areaId }));
                     }}>
-                      <SelectTrigger><SelectValue placeholder="Seleccionar cargo" /></SelectTrigger>
-                      <SelectContent>{filteredPositions.map((position) => <SelectItem key={position.id} value={position.id}>{position.name}</SelectItem>)}</SelectContent>
+                      <SelectTrigger><SelectValue placeholder={positionsLoading ? 'Cargando cargos…' : 'Seleccionar cargo'} /></SelectTrigger>
+                      <SelectContent>{availablePositions.map((position) => <SelectItem key={position.id} value={position.id}>{position.name}</SelectItem>)}</SelectContent>
                     </Select>
+                    {!positionsLoading && availablePositions.length === 0 && (
+                      <p className="text-xs text-muted-foreground">No hay cargos activos disponibles.</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Fecha de ingreso *</Label>
