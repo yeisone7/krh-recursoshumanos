@@ -7,6 +7,7 @@ export type TerminationType =
   | 'periodo_prueba'     // 03 - Terminación por periodo de prueba
   | 'obra_labor'         // 04 - Terminación por obra labor
   | 'sin_justa_causa'    // 05 - Terminación sin justa causa
+  | 'con_justa_causa'    // 06 - Terminación con justa causa
   | 'renuncia'           // 07 - Aceptación de renuncia
   | 'traslado'           // 08 - Retiro por traslado a otra empresa
   | 'tiempo_pactado'
@@ -30,11 +31,16 @@ export const terminationTypeLabels: Record<TerminationType, string> = {
   periodo_prueba: 'Periodo de Prueba',
   obra_labor: 'Finalización Obra o Labor',
   sin_justa_causa: 'Sin Justa Causa',
+  con_justa_causa: 'Con Justa Causa',
   renuncia: 'Renuncia Voluntaria',
   traslado: 'Traslado a Otra Empresa',
   tiempo_pactado: 'Tiempo Pactado',
   pension_vejez: 'Pensión de Vejez',
 };
+
+export const selectableTerminationTypes = (
+  Object.entries(terminationTypeLabels) as [TerminationType, string][]
+).filter(([value]) => value !== 'preaviso');
 
 // Labels for document types
 export const terminationDocumentLabels: Record<TerminationDocumentType, string> = {
@@ -117,6 +123,14 @@ export const requiredDocumentsByType: Record<TerminationType, TerminationDocumen
     'examen_egreso',
     'retiro_cesantias',
   ],
+  con_justa_causa: [
+    'acta_terminacion',
+    'notificacion_aportes',
+    'certificado_laboral',
+    'paz_y_salvo',
+    'examen_egreso',
+    'retiro_cesantias',
+  ],
   tiempo_pactado: [
     'acta_terminacion',
     'notificacion_aportes',
@@ -178,6 +192,7 @@ export const initiateTerminationSchema = z.object({
     'periodo_prueba',
     'obra_labor',
     'sin_justa_causa',
+    'con_justa_causa',
     'renuncia',
     'traslado',
     'tiempo_pactado',
@@ -193,6 +208,14 @@ export const initiateTerminationSchema = z.object({
   }),
   reason: z.string().optional(),
   resignationDate: z.date().optional(),
+}).superRefine((data, context) => {
+  if (data.terminationType === 'con_justa_causa' && (data.reason?.trim().length ?? 0) < 10) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['reason'],
+      message: 'Describa la justa causa en al menos 10 caracteres',
+    });
+  }
 });
 
 export type InitiateTerminationFormData = z.infer<typeof initiateTerminationSchema>;

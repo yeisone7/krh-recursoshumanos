@@ -12214,6 +12214,7 @@ export type Database = {
         | "periodo_prueba"
         | "obra_labor"
         | "sin_justa_causa"
+        | "con_justa_causa"
         | "renuncia"
         | "traslado"
         | "tiempo_pactado"
@@ -12772,6 +12773,7 @@ export const Constants = {
         "periodo_prueba",
         "obra_labor",
         "sin_justa_causa",
+        "con_justa_causa",
         "renuncia",
         "traslado",
         "tiempo_pactado",

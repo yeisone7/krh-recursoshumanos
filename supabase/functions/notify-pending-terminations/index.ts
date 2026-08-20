@@ -28,6 +28,7 @@ const terminationTypeLabels: Record<string, string> = {
   periodo_prueba: 'Periodo de Prueba',
   obra_labor: 'Finalización Obra o Labor',
   sin_justa_causa: 'Sin Justa Causa',
+  con_justa_causa: 'Con Justa Causa',
   renuncia: 'Renuncia Voluntaria',
   traslado: 'Traslado a Otra Empresa',
   tiempo_pactado: 'Tiempo Pactado',

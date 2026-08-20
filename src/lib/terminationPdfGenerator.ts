@@ -547,6 +547,69 @@ La empresa, le agradece los servicios prestados durante el tiempo que laboró pa
   return doc;
 }
 
+// 06 - Terminación Con Justa Causa
+export function generateConJustaCausaPDF(data: TerminationDocumentData): jsPDF {
+  const reason = data.reason?.trim();
+  if (!reason) {
+    throw new Error('La terminación con justa causa requiere describir los hechos y motivos.');
+  }
+
+  const doc = createBasePDF();
+  const pageWidth = 216;
+  const margin = 25;
+  const textWidth = pageWidth - 2 * margin;
+  let y = 30;
+
+  doc.setFontSize(10);
+  doc.text(`${data.documentCity}, ${capitalize(formatDateInWords(data.documentDate))}`, margin, y);
+  y += 15;
+
+  doc.text('Señor(a):', margin, y);
+  y += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.employeeFullName.toUpperCase(), margin, y);
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${data.employeeDocumentType} ${data.employeeDocumentNumber}`, margin, y);
+  y += 5;
+  if (data.employeeOperationCenter) {
+    doc.text(`Campo: ${data.employeeOperationCenter}`, margin, y);
+    y += 5;
+  }
+  y += 5;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('ASUNTO: TERMINACIÓN DEL CONTRATO DE TRABAJO CON JUSTA CAUSA. ART. 62 C.S.T.', margin, y);
+  y += 10;
+  doc.setFont('helvetica', 'normal');
+
+  const introduction = `Por medio de la presente, ${data.companyName} le comunica la decisión de dar por terminado unilateralmente y con justa causa el contrato de trabajo celebrado el ${formatDateInWords(data.contractStartDate)}. La terminación se hará efectiva el ${formatDateInWords(data.effectiveDate)} al finalizar la jornada laboral, con fundamento en el artículo 62 del Código Sustantivo del Trabajo.`;
+  const introductionLines = doc.splitTextToSize(introduction, textWidth);
+  doc.text(introductionLines, margin, y);
+  y += introductionLines.length * 5 + 10;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('HECHOS Y MOTIVOS DE LA DECISIÓN:', margin, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  const reasonLines = doc.splitTextToSize(reason, textWidth);
+  doc.text(reasonLines, margin, y);
+  y += reasonLines.length * 5 + 10;
+
+  const closing = 'Se deja constancia de que los motivos indicados en esta comunicación son los que sustentan la decisión de terminación. Deberá hacer entrega de su puesto y de los elementos de trabajo asignados. La liquidación definitiva de salarios y prestaciones sociales se realizará conforme a la normativa aplicable.';
+  const closingLines = doc.splitTextToSize(closing, textWidth);
+  doc.text(closingLines, margin, y);
+  y += closingLines.length * 5 + 15;
+
+  doc.text('Cordialmente,', margin, y);
+  y += 15;
+  y = addRepresentativeSignatureBlock(doc, y, data, margin);
+  y += 15;
+  doc.text('Recibí: ______________________________', margin, y);
+
+  return doc;
+}
+
 // 06 - Notificación de Aportes
 export function generateNotificacionAportesPDF(data: TerminationDocumentData): jsPDF {
   const doc = createBasePDF();
@@ -859,6 +922,8 @@ export function generateTerminationDocument(
           return generateObraLaborPDF(data);
         case 'sin_justa_causa':
           return generateSinJustaCausaPDF(data);
+        case 'con_justa_causa':
+          return generateConJustaCausaPDF(data);
         default:
           return generateMutuoAcuerdoPDF(data);
       }
