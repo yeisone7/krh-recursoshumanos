@@ -18,9 +18,9 @@ describe('IssueCertificateDialog footer actions', () => {
     expect(CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME).toContain('hover:text-white');
   });
 
-  it('does not let the dark-theme micro-label rule override dialog buttons', () => {
+  it('does not let micro-label rules override dialog buttons', () => {
     const globalStyles = readFileSync(`${process.cwd()}/src/index.css`, 'utf8');
 
-    expect(globalStyles).toContain('.text-\\[10px\\].font-black:not(button)');
+    expect(globalStyles.match(/\.text-\\\[10px\\\]\.font-black:not\(button\)/g)).toHaveLength(2);
   });
 });
