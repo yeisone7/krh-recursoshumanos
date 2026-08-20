@@ -50,5 +50,7 @@ describe('employee information completion', () => {
     expect(summary.overallPercentage).toBe(83);
     expect(summary.centers).toHaveLength(2);
     expect(summary.fullyCompletedEmployees).toBe(1);
+    expect(summary.centers.find((center) => center.centerName === 'Centro Norte')?.bankPercentage).toBe(100);
+    expect(summary.centers.find((center) => center.centerName === 'Sin centro asignado')?.bankPercentage).toBe(0);
   });
 });

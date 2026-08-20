@@ -77,6 +77,10 @@ export interface EmployeeInformationCenterSummary {
   fullyCompletedEmployees: number;
   pendingEmployees: number;
   percentage: number;
+  socialSecurityCompletedEmployees: number;
+  socialSecurityPercentage: number;
+  bankCompletedEmployees: number;
+  bankPercentage: number;
 }
 
 export interface EmployeeInformationCompletionReportData {
@@ -86,7 +90,6 @@ export interface EmployeeInformationCompletionReportData {
   overallPercentage: number;
   sections: InformationSectionSummary[];
   centers: EmployeeInformationCenterSummary[];
-  employees: EmployeeInformationCompletionRow[];
   unavailableSections: string[];
 }
 
@@ -182,6 +185,16 @@ export function summarizeEmployeeInformationCompletion(
         fullyCompletedEmployees,
         pendingEmployees: centerEmployees.length - fullyCompletedEmployees,
         percentage: percentage(centerCompletedSections, centerEmployees.length * totalSections),
+        socialSecurityCompletedEmployees: centerEmployees.filter((employee) => employee.sections.socialSecurity).length,
+        socialSecurityPercentage: percentage(
+          centerEmployees.filter((employee) => employee.sections.socialSecurity).length,
+          centerEmployees.length,
+        ),
+        bankCompletedEmployees: centerEmployees.filter((employee) => employee.sections.bank).length,
+        bankPercentage: percentage(
+          centerEmployees.filter((employee) => employee.sections.bank).length,
+          centerEmployees.length,
+        ),
       };
     })
     .sort((a, b) => a.centerName.localeCompare(b.centerName, 'es'));
@@ -196,10 +209,6 @@ export function summarizeEmployeeInformationCompletion(
     };
   });
 
-  const sortedEmployees = [...employees].sort((a, b) => {
-    const centerComparison = a.centerName.localeCompare(b.centerName, 'es');
-    return centerComparison !== 0 ? centerComparison : a.fullName.localeCompare(b.fullName, 'es');
-  });
   const fullyCompletedEmployees = employees.filter((employee) => employee.percentage === 100).length;
 
   return {
@@ -209,7 +218,6 @@ export function summarizeEmployeeInformationCompletion(
     overallPercentage: percentage(totalCompletedSections, employees.length * totalSections),
     sections,
     centers,
-    employees: sortedEmployees,
     unavailableSections,
   };
 }
