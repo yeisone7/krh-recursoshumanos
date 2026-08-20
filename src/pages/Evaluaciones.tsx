@@ -369,16 +369,16 @@ export default function Evaluaciones() {
         <div className="sticky top-0 z-30 -mx-4 border-b border-border/50 bg-background px-4 py-4 supports-[backdrop-filter]:bg-background sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:mb-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-background border border-border/50 rounded-[2rem] p-3 shadow-sm">
             <TabsList className="grid h-14 w-full grid-cols-3 sm:w-auto bg-background rounded-xl p-1 border border-border/50">
-              <TabsTrigger value="cycles" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <TabsTrigger value="cycles" className="gap-2 rounded-lg px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm sm:px-4">
                 <Calendar className="h-4 w-4" />
                 <span className="font-semibold">Ciclos</span>
               </TabsTrigger>
-              <TabsTrigger value="evaluations" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <TabsTrigger value="evaluations" className="gap-2 rounded-lg px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm sm:px-4">
                 <ClipboardCheck className="h-4 w-4" />
                 <span className="hidden sm:inline font-semibold">Evaluaciones</span>
                 <span className="sm:hidden font-semibold">Eval.</span>
               </TabsTrigger>
-              <TabsTrigger value="templates" className="gap-2 px-2 sm:px-4 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              <TabsTrigger value="templates" className="gap-2 rounded-lg px-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-sm sm:px-4">
                 <FileText className="h-4 w-4" />
                 <span className="font-semibold">Plantillas</span>
               </TabsTrigger>
