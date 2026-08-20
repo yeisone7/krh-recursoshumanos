@@ -10772,22 +10772,83 @@ export type Database = {
           },
         ]
       }
+      vacation_balance_movements: {
+        Row: {
+          balance_after: number
+          balance_id: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          days_delta: number
+          effective_date: string
+          employee_id: string
+          employment_cycle_id: string | null
+          id: string
+          idempotency_key: string
+          metadata: Json
+          movement_type: string
+          reason: string
+          request_id: string | null
+        }
+        Insert: {
+          balance_after: number
+          balance_id: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          days_delta: number
+          effective_date?: string
+          employee_id: string
+          employment_cycle_id?: string | null
+          id?: string
+          idempotency_key: string
+          metadata?: Json
+          movement_type: string
+          reason: string
+          request_id?: string | null
+        }
+        Update: {
+          balance_after?: number
+          balance_id?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          days_delta?: number
+          effective_date?: string
+          employee_id?: string
+          employment_cycle_id?: string | null
+          id?: string
+          idempotency_key?: string
+          metadata?: Json
+          movement_type?: string
+          reason?: string
+          request_id?: string | null
+        }
+        Relationships: []
+      }
       vacation_balances: {
         Row: {
           accumulation_expires: string | null
           company_id: string
           created_at: string
           days_accrued: number
+          days_adjusted: number
+          days_available: number | null
           days_compensated: number
           days_pending: number | null
+          days_reserved: number
           days_taken: number
           employee_id: string
           employment_cycle_id: string | null
           id: string
           is_accumulated: boolean
+          accrual_source: string
+          automatic_period_key: string | null
+          last_accrual_date: string | null
           notes: string | null
           period_end: string
           period_start: string
+          period_status: string
           updated_at: string
         }
         Insert: {
@@ -10795,16 +10856,23 @@ export type Database = {
           company_id: string
           created_at?: string
           days_accrued?: number
+          days_adjusted?: number
+          days_available?: number | null
           days_compensated?: number
           days_pending?: number | null
+          days_reserved?: number
           days_taken?: number
           employee_id: string
           employment_cycle_id?: string | null
           id?: string
           is_accumulated?: boolean
+          accrual_source?: string
+          automatic_period_key?: string | null
+          last_accrual_date?: string | null
           notes?: string | null
           period_end: string
           period_start: string
+          period_status?: string
           updated_at?: string
         }
         Update: {
@@ -10812,16 +10880,23 @@ export type Database = {
           company_id?: string
           created_at?: string
           days_accrued?: number
+          days_adjusted?: number
+          days_available?: number | null
           days_compensated?: number
           days_pending?: number | null
+          days_reserved?: number
           days_taken?: number
           employee_id?: string
           employment_cycle_id?: string | null
           id?: string
           is_accumulated?: boolean
+          accrual_source?: string
+          automatic_period_key?: string | null
+          last_accrual_date?: string | null
           notes?: string | null
           period_end?: string
           period_start?: string
+          period_status?: string
           updated_at?: string
         }
         Relationships: [
@@ -10851,6 +10926,8 @@ export type Database = {
       vacation_config: {
         Row: {
           alert_threshold_days: number
+          accrual_basis_days: number
+          allow_advance_vacation: boolean
           company_id: string
           created_at: string
           days_per_year: number
@@ -10861,6 +10938,8 @@ export type Database = {
         }
         Insert: {
           alert_threshold_days?: number
+          accrual_basis_days?: number
+          allow_advance_vacation?: boolean
           company_id: string
           created_at?: string
           days_per_year?: number
@@ -10871,6 +10950,8 @@ export type Database = {
         }
         Update: {
           alert_threshold_days?: number
+          accrual_basis_days?: number
+          allow_advance_vacation?: boolean
           company_id?: string
           created_at?: string
           days_per_year?: number
@@ -11185,6 +11266,16 @@ export type Database = {
         }
         Returns: Json
       }
+      adjust_vacation_balance: {
+        Args: {
+          p_days: number
+          p_effective_date?: string
+          p_employee_id: string
+          p_idempotency_key?: string
+          p_reason: string
+        }
+        Returns: Database["public"]["Tables"]["vacation_balances"]["Row"]
+      }
       create_vacation_request_workflow: {
         Args: { p_request: Json }
         Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
@@ -11235,6 +11326,14 @@ export type Database = {
           p_return_to_work_date: string | null
         }
         Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
+      }
+      sync_company_vacation_balances: {
+        Args: { p_as_of_date?: string; p_company_id: string }
+        Returns: Json
+      }
+      sync_employee_vacation_balances: {
+        Args: { p_as_of_date?: string; p_employee_id: string }
+        Returns: Json
       }
       delete_training_group_link: {
         Args: { assignment_id_value: string }

@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { 
   Plus, 
   Search, 
@@ -37,16 +36,16 @@ import {
 import {
   VacationFormDialog,
   VacationDetailDialog,
-  VacationBalanceCard,
   VacationBalanceFormDialog,
+  VacationBalancesPanel,
   VacationCalendarView,
   VacationAlertsPanel,
 } from '@/components/vacations';
 import {
   useVacationRequests,
   useVacationBalances,
-  useVacationConfig,
 } from '@/hooks/useVacations';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   VacationRequest,
   VacationRequestType,
@@ -72,7 +71,8 @@ export default function Vacaciones() {
 
   const { data: requests, isLoading: requestsLoading } = useVacationRequests();
   const { data: balances, isLoading: balancesLoading } = useVacationBalances();
-  const { data: config } = useVacationConfig();
+  const { hasPermission, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const canAdjustBalances = isAdmin || isRRHH || isSuperAdmin || hasPermission('vacation_balances', 'update');
   const isMobile = useIsMobile();
 
   const handleRequestClick = (request: VacationRequest) => {
@@ -91,16 +91,6 @@ export default function Vacaciones() {
     const matchesType = typeFilter === 'all' || r.request_type === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
-  }) ?? [];
-
-  // Filter balances
-  const filteredBalances = balances?.filter(b => {
-    if (!searchTerm) return true;
-    return (
-      b.employee?.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.employee?.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.employee?.document_number?.includes(searchTerm)
-    );
   }) ?? [];
 
   return (
@@ -316,7 +306,7 @@ export default function Vacaciones() {
 
         {/* Balances Tab */}
         <TabsContent value="balances" className="space-y-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-background p-4 rounded-[2rem] border border-border/50">
+          <div className="flex flex-col gap-4 bg-background p-4 rounded-[2rem] border border-border/50">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
@@ -326,35 +316,14 @@ export default function Vacaciones() {
                 className="h-12 pl-12 rounded-2xl bg-background border-border focus:bg-background text-sm"
               />
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setBalanceFormOpen(true)}
-              className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs bg-background"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Crear Período
-            </Button>
           </div>
-
-          {balancesLoading ? (
-            <div className="text-center py-12 text-muted-foreground font-black uppercase tracking-widest text-xs">Cargando...</div>
-          ) : filteredBalances.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-background rounded-[2rem] border border-dashed border-border/50">
-              <Calendar className="h-16 w-16 mb-4 opacity-50" />
-              <p className="font-bold text-lg">No hay saldos registrados</p>
-              <p className="text-sm mt-1 max-w-md text-center">Los saldos se generan automáticamente al registrar solicitudes o puedes crearlos manualmente.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredBalances.map((balance) => (
-                <VacationBalanceCard
-                  key={balance.id}
-                  balance={balance}
-                  alertThreshold={config?.alert_threshold_days ?? 30}
-                />
-              ))}
-            </div>
-          )}
+          <VacationBalancesPanel
+            balances={balances ?? []}
+            searchTerm={searchTerm}
+            isLoading={balancesLoading}
+            onAdjust={() => setBalanceFormOpen(true)}
+            canAdjust={canAdjustBalances}
+          />
         </TabsContent>
 
         {/* Calendar Tab */}

@@ -15,7 +15,7 @@ interface VacationBalanceCardProps {
 
 export function VacationBalanceCard({ balance, alertThreshold = 30, onClick }: VacationBalanceCardProps) {
   const usedPercentage = ((Number(balance.days_taken) + Number(balance.days_compensated)) / Number(balance.days_accrued)) * 100;
-  const isExcessiveAccumulation = Number(balance.days_pending) > alertThreshold;
+  const isExcessiveAccumulation = Number(balance.days_available ?? balance.days_pending) > alertThreshold;
   
   const periodLabel = `${formatDateOnly(balance.period_start, 'dd/MM/yyyy', { locale: es })} - ${formatDateOnly(balance.period_end, 'dd/MM/yyyy', { locale: es })}`;
   
@@ -75,7 +75,7 @@ export function VacationBalanceCard({ balance, alertThreshold = 30, onClick }: V
             <div className="rounded-lg bg-green-100 dark:bg-green-900/30 p-2">
               <p className="text-xs text-muted-foreground">Disponibles</p>
               <p className={`text-lg font-bold ${isExcessiveAccumulation ? 'text-orange-600' : 'text-green-600'}`}>
-                {balance.days_pending}
+                {balance.days_available ?? balance.days_pending}
               </p>
             </div>
           </div>

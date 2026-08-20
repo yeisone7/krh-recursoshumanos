@@ -1,53 +1,27 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { format, addYears, subDays } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { CalendarIcon, Calculator } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useCreateVacationBalance, useVacationConfig } from '@/hooks/useVacations';
-import { calculateAccruedDays } from '@/types/vacation';
+import { History, Scale } from 'lucide-react';
 
-const formSchema = z.object({
-  employee_id: z.string().min(1, 'Seleccione un empleado'),
-  period_start: z.date({ required_error: 'Seleccione fecha de inicio' }),
-  period_end: z.date({ required_error: 'Seleccione fecha de fin' }),
-  days_accrued: z.number().min(0).max(30),
-  is_accumulated: z.boolean().default(false),
-  notes: z.string().optional(),
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Textarea } from '@/components/ui/textarea';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useAdjustVacationBalance } from '@/hooks/useVacations';
+
+const adjustmentSchema = z.object({
+  employee_id: z.string().uuid('Seleccione un empleado'),
+  days: z.coerce.number().refine((value) => value !== 0, 'El ajuste debe ser diferente de cero'),
+  effective_date: z.string().min(1, 'Seleccione una fecha'),
+  reason: z.string().trim().min(10, 'Explique el motivo en al menos 10 caracteres').max(1000),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type AdjustmentForm = z.infer<typeof adjustmentSchema>;
 
 interface VacationBalanceFormDialogProps {
   open: boolean;
@@ -55,253 +29,71 @@ interface VacationBalanceFormDialogProps {
 }
 
 export function VacationBalanceFormDialog({ open, onOpenChange }: VacationBalanceFormDialogProps) {
-  const { data: employees } = useEmployees();
-  const { data: config } = useVacationConfig();
-  const createBalance = useCreateVacationBalance();
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      employee_id: '',
-      days_accrued: config?.days_per_year ?? 15,
-      is_accumulated: false,
-      notes: '',
-    },
+  const { data: employees = [] } = useEmployees();
+  const adjustBalance = useAdjustVacationBalance();
+  const form = useForm<AdjustmentForm>({
+    resolver: zodResolver(adjustmentSchema),
+    defaultValues: { employee_id: '', days: 0, effective_date: format(new Date(), 'yyyy-MM-dd'), reason: '' },
   });
 
-  const watchEmployeeId = form.watch('employee_id');
-  const watchPeriodStart = form.watch('period_start');
-
-  // Auto-calculate period end when period start changes
   useEffect(() => {
-    if (watchPeriodStart) {
-      const periodEnd = subDays(addYears(watchPeriodStart, 1), 1);
-      form.setValue('period_end', periodEnd);
-    }
-  }, [watchPeriodStart, form]);
+    if (open) form.reset({ employee_id: '', days: 0, effective_date: format(new Date(), 'yyyy-MM-dd'), reason: '' });
+  }, [form, open]);
 
-  // Find selected employee to get hire date for calculation suggestion
-  const selectedEmployee = employees?.find(e => e.id === watchEmployeeId);
+  const employeeOptions = useMemo(() => employees
+    .filter((employee) => employee.is_active && employee.status === 'active')
+    .map((employee) => ({
+      value: employee.id,
+      label: `${employee.first_name} ${employee.middle_name || ''} ${employee.last_name} ${employee.second_last_name || ''}`.replace(/\s+/g, ' ').trim(),
+      keywords: employee.document_number,
+      suffix: <span className="ml-auto pl-3 text-xs text-muted-foreground">{employee.document_number}</span>,
+    })), [employees]);
 
-  const onSubmit = async (data: FormData) => {
-    const accumulationExpires = data.is_accumulated 
-      ? format(addYears(new Date(), 2), 'yyyy-MM-dd')
-      : undefined;
-
-    await createBalance.mutateAsync({
-      employee_id: data.employee_id,
-      period_start: format(data.period_start, 'yyyy-MM-dd'),
-      period_end: format(data.period_end, 'yyyy-MM-dd'),
-      days_accrued: data.days_accrued,
-      is_accumulated: data.is_accumulated,
-      accumulation_expires: accumulationExpires,
-      notes: data.notes,
-    });
-    
-    form.reset();
+  const submit = async (values: AdjustmentForm) => {
+    await adjustBalance.mutateAsync({ ...values, idempotency_key: crypto.randomUUID() });
     onOpenChange(false);
   };
 
-  const activeEmployees = employees?.filter(e => e.is_active) ?? [];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Crear Período de Vacaciones</DialogTitle>
+      <DialogContent className="max-w-xl overflow-hidden rounded-3xl p-0">
+        <DialogHeader className="border-b border-primary/15 bg-gradient-to-r from-primary/12 via-primary/5 to-background px-6 py-6 pr-12">
+          <div className="flex items-center gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20"><Scale className="h-6 w-6" /></span>
+            <div className="text-left">
+              <DialogTitle className="text-2xl font-black tracking-tight">Registrar ajuste de saldo</DialogTitle>
+              <p className="mt-1 text-sm text-muted-foreground">Corrige una novedad sin alterar la causación automática.</p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Employee Selection */}
-            <FormField
-              control={form.control}
-              name="employee_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Empleado</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccione empleado" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {activeEmployees.map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.first_name} {emp.last_name} - {emp.document_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="period_start"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Inicio del período</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'dd/MM/yyyy', { locale: es })
-                            ) : (
-                              <span>Seleccionar</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Generalmente es la fecha de ingreso o su aniversario
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="period_end"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Fin del período</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              'pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'dd/MM/yyyy', { locale: es })
-                            ) : (
-                              <span>Seleccionar</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Se calcula automáticamente (1 año)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(submit)} className="space-y-5 p-6">
+            <div className="flex gap-3 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">
+              <History className="mt-0.5 h-5 w-5 shrink-0" />
+              <p>Cada ajuste queda en el libro de movimientos con usuario, fecha y justificación. Use valores negativos para descontar.</p>
             </div>
 
-            {/* Days Accrued */}
-            <FormField
-              control={form.control}
-              name="days_accrued"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Días causados</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={30}
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Por ley colombiana son 15 días hábiles por año de servicio
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="employee_id" render={({ field }) => (
+              <FormItem><FormLabel>Empleado activo</FormLabel><FormControl><SearchableSelect options={employeeOptions} value={field.value} onValueChange={field.onChange} placeholder="Buscar por nombre o documento" searchPlaceholder="Escriba nombre o documento..." /></FormControl><FormMessage /></FormItem>
+            )} />
 
-            {/* Is Accumulated */}
-            <FormField
-              control={form.control}
-              name="is_accumulated"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Acumulación autorizada
-                    </FormLabel>
-                    <FormDescription>
-                      Marcar si hay acuerdo de acumulación (máximo 2 años según ley)
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField control={form.control} name="days" render={({ field }) => (
+                <FormItem><FormLabel>Días del ajuste</FormLabel><FormControl><Input type="number" step="0.01" placeholder="Ej. 1.5 o -1" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="effective_date" render={({ field }) => (
+                <FormItem><FormLabel>Fecha efectiva</FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
 
-            {/* Notes */}
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Observaciones</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observaciones adicionales..."
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="reason" render={({ field }) => (
+              <FormItem><FormLabel>Justificación obligatoria</FormLabel><FormControl><Textarea rows={4} className="resize-none" placeholder="Describa la novedad, soporte o conciliación que origina el ajuste..." {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createBalance.isPending}>
-                {createBalance.isPending ? 'Guardando...' : 'Crear Período'}
-              </Button>
+            <div className="flex justify-end gap-3 border-t pt-5">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+              <Button type="submit" disabled={adjustBalance.isPending}>{adjustBalance.isPending ? 'Registrando...' : 'Registrar ajuste'}</Button>
             </div>
           </form>
         </Form>

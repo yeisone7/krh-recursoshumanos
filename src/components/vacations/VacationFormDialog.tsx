@@ -86,7 +86,7 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
   );
 
   const availableDays = useMemo(
-    () => balances.reduce((sum, balance) => sum + Math.max(Number(balance.days_pending ?? 0), 0), 0),
+    () => balances.reduce((sum, balance) => sum + Math.max(Number(balance.days_available ?? balance.days_pending ?? 0), 0), 0),
     [balances],
   );
   const maxCompensableDays = availableDays * ((config?.max_compensation_percentage ?? 50) / 100);

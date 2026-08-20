@@ -13,6 +13,8 @@ export interface VacationConfig {
   max_accumulation_years: number;
   max_compensation_percentage: number;
   alert_threshold_days: number;
+  accrual_basis_days: number;
+  allow_advance_vacation: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -27,6 +29,14 @@ export interface VacationBalance {
   days_taken: number;
   days_compensated: number;
   days_pending: number;
+  days_adjusted: number;
+  days_reserved: number;
+  days_available: number;
+  accrual_source: 'legacy' | 'automatic' | 'adjusted';
+  last_accrual_date: string | null;
+  period_status: 'open' | 'closed' | 'reconciled';
+  automatic_period_key: string | null;
+  employment_cycle_id: string | null;
   is_accumulated: boolean;
   accumulation_expires: string | null;
   notes: string | null;
@@ -100,6 +110,41 @@ export interface VacationRequest {
     last_name: string;
     document_number: string;
   } | null;
+}
+
+export type VacationBalanceMovementType =
+  | 'legacy_accrual' | 'legacy_enjoyment' | 'legacy_compensation'
+  | 'automatic_accrual' | 'reservation' | 'reservation_release'
+  | 'enjoyment' | 'compensation' | 'adjustment' | 'liquidation' | 'reversal';
+
+export interface VacationBalanceMovement {
+  id: string;
+  company_id: string;
+  employee_id: string;
+  employment_cycle_id: string | null;
+  balance_id: string;
+  request_id: string | null;
+  movement_type: VacationBalanceMovementType;
+  days_delta: number;
+  balance_after: number;
+  effective_date: string;
+  reason: string;
+  metadata: Record<string, unknown>;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface VacationBalanceSummary {
+  employee_id: string;
+  employee?: VacationBalance['employee'];
+  periods: VacationBalance[];
+  days_accrued: number;
+  days_adjusted: number;
+  days_taken: number;
+  days_compensated: number;
+  days_reserved: number;
+  days_available: number;
+  last_accrual_date: string | null;
 }
 
 export const APPROVAL_STAGE_LABELS: Record<VacationApprovalStage, string> = {

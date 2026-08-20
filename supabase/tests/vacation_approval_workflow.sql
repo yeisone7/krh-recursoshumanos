@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(20);
 
 select has_column('public', 'vacation_requests', 'approval_stage', 'vacation requests expose the approval stage');
 select has_column('public', 'vacation_requests', 'compensated_days', 'vacation requests store compensated days');
@@ -33,8 +33,8 @@ insert into public.employee_user_links (employee_id, user_id) values
   ('b3000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001');
 insert into public.employee_work_info (employee_id, company_id, position_name, hire_date, is_current)
 values ('b3000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'Analista', '2024-01-15', true);
-insert into public.vacation_balances (id, employee_id, company_id, period_start, period_end, days_accrued, days_taken, days_compensated)
-values ('b4000000-0000-0000-0000-000000000001', 'b3000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', '2025-01-15', '2026-01-14', 15, 0, 0);
+insert into public.employee_employment_cycles (id, company_id, employee_id, cycle_number, status, source, start_date)
+values ('b3500000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'b3000000-0000-0000-0000-000000000001', 1, 'active', 'selection', '2024-01-15');
 
 insert into public.custom_roles (id, company_id, name) values
   ('b5000000-0000-0000-0000-000000000001', 'b2000000-0000-0000-0000-000000000001', 'Jefe vacaciones'),
@@ -60,13 +60,15 @@ reset role;
 select is((select approval_stage from public.vacation_requests where id = (select request_id from vacation_result)), 'pending_manager', 'a new request starts with the manager');
 select is((select total_requested_days from public.vacation_requests where id = (select request_id from vacation_result)), 5::numeric, 'the requested total is generated');
 select is((select contract_start_date from public.vacation_requests where id = (select request_id from vacation_result)), '2024-01-15'::date, 'contract start is snapshotted');
+select is((select sum(enjoyment_days + compensated_days) from public.vacation_request_allocations where request_id = (select request_id from vacation_result) and state = 'reserved'), 5::numeric, 'a pending request reserves its full balance');
+select is((select sum(days_reserved) from public.vacation_balances where employee_id = 'b3000000-0000-0000-0000-000000000001'), 5::numeric, 'reserved days are excluded from availability');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"b1000000-0000-0000-0000-000000000003","email":"leader-vacation@example.com","role":"authenticated"}', true);
 select is((select count(*)::integer from public.vacation_requests where id = (select request_id from vacation_result)), 0, 'the leader cannot see a request before manager approval');
 select throws_ok(
   format('select public.decide_vacation_as_area_leader(%L, true, 5, null)', (select request_id from vacation_result)),
-  '22023', 'La solicitud aun no ha sido aprobada por el jefe inmediato.',
+  '22023', 'La solicitud aún no ha sido aprobada por el jefe inmediato.',
   'the leader cannot skip the manager stage'
 );
 reset role;
@@ -89,7 +91,9 @@ reset role;
 
 select is((select approval_stage from public.vacation_requests where id = (select request_id from vacation_result)), 'approved', 'leader approval completes the workflow');
 select is((select status::text from public.vacation_requests where id = (select request_id from vacation_result)), 'aprobado', 'leader approval activates the operational status');
-select is((select days_pending from public.vacation_balances where id = 'b4000000-0000-0000-0000-000000000001'), 10::numeric, 'final approval deducts the balance exactly once');
+select is((select sum(days_taken) from public.vacation_balances where employee_id = 'b3000000-0000-0000-0000-000000000001'), 4::numeric, 'final approval deducts enjoyment exactly once');
+select is((select sum(days_reserved) from public.vacation_balances where employee_id = 'b3000000-0000-0000-0000-000000000001'), 0::numeric, 'final approval clears the reservation');
+select is((select count(*)::integer from public.vacation_request_allocations where request_id = (select request_id from vacation_result) and state = 'consumed'), 1, 'the allocation is consumed exactly once');
 select is((select count(*)::integer from public.audit_logs where entity_id = (select request_id from vacation_result)), 3, 'creation and both decisions are audited');
 
 select * from finish();
