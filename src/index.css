@@ -1450,7 +1450,7 @@ html.dark [role="dialog"] [class*="DialogDescription"],
 html.dark [role="dialog"] p.text-xs.font-bold,
 html.dark [role="dialog"] label,
 html.dark [role="dialog"] [class*="FormLabel"],
-html.dark [role="dialog"] .text-\[10px\].font-black {
+html.dark [role="dialog"] .text-\[10px\].font-black:not(button) {
   color: var(--dark-text-muted) !important;
 }
 

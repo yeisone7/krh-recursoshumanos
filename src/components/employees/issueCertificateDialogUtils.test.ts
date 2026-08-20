@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 import {
   CERTIFICATE_DIALOG_CANCEL_BUTTON_CLASSNAME,
@@ -15,5 +16,11 @@ describe('IssueCertificateDialog footer actions', () => {
     expect(CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME).toContain('bg-primary');
     expect(CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME).toContain('text-white');
     expect(CERTIFICATE_DIALOG_SUBMIT_BUTTON_CLASSNAME).toContain('hover:text-white');
+  });
+
+  it('does not let the dark-theme micro-label rule override dialog buttons', () => {
+    const globalStyles = readFileSync(`${process.cwd()}/src/index.css`, 'utf8');
+
+    expect(globalStyles).toContain('.text-\\[10px\\].font-black:not(button)');
   });
 });
