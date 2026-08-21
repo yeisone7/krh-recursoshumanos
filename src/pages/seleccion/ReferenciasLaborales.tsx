@@ -91,16 +91,16 @@ export default function ReferenciasLaborales() {
       </div>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? 'Editar referencia laboral' : 'Nueva referencia laboral'}</DialogTitle><DialogDescription>Registra los datos de contacto de la referencia.</DialogDescription></DialogHeader>
-          <form onSubmit={submit} className="space-y-4">
+        <DialogContent className="w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] gap-5 rounded-2xl p-5 sm:max-w-lg sm:p-7">
+          <DialogHeader className="pr-8"><DialogTitle>{editing ? 'Editar referencia laboral' : 'Nueva referencia laboral'}</DialogTitle><DialogDescription>Registra los datos de contacto de la referencia.</DialogDescription></DialogHeader>
+          <form onSubmit={submit} className="space-y-5">
             <div className="space-y-2"><Label htmlFor="labor-reference-company">Empresa *</Label><Input id="labor-reference-company" value={form.company} onChange={(event) => setForm({ ...form, company: event.target.value })} maxLength={160} required autoFocus /></div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2"><Label htmlFor="labor-reference-phone">Teléfono</Label><Input id="labor-reference-phone" value={form.phone || ''} onChange={(event) => setForm({ ...form, phone: event.target.value })} maxLength={50} /></div>
               <div className="space-y-2"><Label htmlFor="labor-reference-email">Correo electrónico</Label><Input id="labor-reference-email" type="email" value={form.email || ''} onChange={(event) => setForm({ ...form, email: event.target.value })} maxLength={254} /></div>
             </div>
             <div className="space-y-2"><Label htmlFor="labor-reference-observations">Observaciones</Label><Textarea id="labor-reference-observations" value={form.observations || ''} onChange={(event) => setForm({ ...form, observations: event.target.value })} maxLength={2000} rows={4} /></div>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button><Button type="submit" disabled={isSaving || !form.company.trim()}>{isSaving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear referencia'}</Button></DialogFooter>
+            <DialogFooter className="border-t pt-4"><Button type="button" variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button><Button type="submit" disabled={isSaving || !form.company.trim()}>{isSaving ? 'Guardando…' : editing ? 'Guardar cambios' : 'Crear referencia'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
