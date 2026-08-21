@@ -74,7 +74,7 @@ export const candidateStatusLabels: Record<CandidateStatus, string> = {
   selected: 'Seleccionado',
   not_selected: 'No Seleccionado',
   withdrawn: 'Retirado',
-  hired: 'Contratado',
+  hired: 'Seleccionado - Contratar',
 };
 
 export const selectionStepTypeLabels: Record<SelectionStepType, string> = {

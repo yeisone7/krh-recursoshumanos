@@ -10772,6 +10772,305 @@ export type Database = {
           },
         ]
       }
+      selection_labor_references: {
+        Row: {
+          company: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          observations: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          company: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          observations?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          observations?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_labor_references_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_academic_references: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          institution: string
+          observations: string | null
+          phone: string | null
+          platform: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          institution: string
+          observations?: string | null
+          phone?: string | null
+          platform?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          institution?: string
+          observations?: string | null
+          phone?: string | null
+          platform?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_academic_references_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_pink_list: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          document_number: string
+          full_name: string
+          id: string
+          observations: string | null
+          operation_center_id: string
+          position_id: string
+          reference_date: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          document_number: string
+          full_name: string
+          id?: string
+          observations?: string | null
+          operation_center_id: string
+          position_id: string
+          reference_date?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          document_number?: string
+          full_name?: string
+          id?: string
+          observations?: string | null
+          operation_center_id?: string
+          position_id?: string
+          reference_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_pink_list_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_pink_list_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_pink_list_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_vacancy_information: {
+        Row: {
+          available_compensation_funds: string | null
+          company_id: string
+          compensation_fund_contacts: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          module_type: string
+          operation_center_id: string
+          publication_compensation_funds: string | null
+          residence_letter_validation: string | null
+          rotation: boolean
+          social_contacts: string | null
+          special_observations: string | null
+          spe_compensation_fund_access: string | null
+          spe_email: string | null
+          spe_password: string | null
+          spe_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          available_compensation_funds?: string | null
+          company_id: string
+          compensation_fund_contacts?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_type?: string
+          operation_center_id: string
+          publication_compensation_funds?: string | null
+          residence_letter_validation?: string | null
+          rotation?: boolean
+          social_contacts?: string | null
+          special_observations?: string | null
+          spe_compensation_fund_access?: string | null
+          spe_email?: string | null
+          spe_password?: string | null
+          spe_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          available_compensation_funds?: string | null
+          company_id?: string
+          compensation_fund_contacts?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          module_type?: string
+          operation_center_id?: string
+          publication_compensation_funds?: string | null
+          residence_letter_validation?: string | null
+          rotation?: boolean
+          social_contacts?: string | null
+          special_observations?: string | null
+          spe_compensation_fund_access?: string | null
+          spe_email?: string | null
+          spe_password?: string | null
+          spe_username?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_vacancy_information_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_vacancy_information_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      selection_medical_exam_information: {
+        Row: {
+          address: string | null
+          company_id: string
+          contact: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          exam_type: string
+          id: string
+          ips: string | null
+          observations: string | null
+          operation_center_id: string
+          order_type: string
+          updated_at: string
+          vaccination_scheme: string[]
+        }
+        Insert: {
+          address?: string | null
+          company_id: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          exam_type: string
+          id?: string
+          ips?: string | null
+          observations?: string | null
+          operation_center_id: string
+          order_type: string
+          updated_at?: string
+          vaccination_scheme?: string[]
+        }
+        Update: {
+          address?: string | null
+          company_id?: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          exam_type?: string
+          id?: string
+          ips?: string | null
+          observations?: string | null
+          operation_center_id?: string
+          order_type?: string
+          updated_at?: string
+          vaccination_scheme?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "selection_medical_exam_information_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "selection_medical_exam_information_operation_center_id_fkey"
+            columns: ["operation_center_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vacation_balance_movements: {
         Row: {
           balance_after: number

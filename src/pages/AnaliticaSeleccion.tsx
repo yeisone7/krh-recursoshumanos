@@ -89,7 +89,7 @@ const spanishLabels: Record<string, string> = {
   evaluated: 'Evaluado',
   interview: 'Entrevista',
   offer: 'Oferta',
-  hired: 'Contratado',
+  hired: 'Seleccionado - Contratar',
   selected: 'Seleccionado',
   not_selected: 'No seleccionado',
   withdrawn: 'Retirado',
