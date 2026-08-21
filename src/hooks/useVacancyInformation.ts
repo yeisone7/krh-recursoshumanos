@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { clearSelectionCatalogCache, getSelectionCatalogCache, setSelectionCatalogCache } from '@/lib/selectionCatalogCache';
 
 export interface VacancyInformation {
   id: string; company_id: string; operation_center_id: string; rotation: boolean; module_type: 'normal' | 'ep_onshore';
@@ -15,11 +16,15 @@ const table = 'selection_vacancy_information';
 
 export function useVacancyInformation() {
   const { currentCompanyId } = useAuth(); const queryClient = useQueryClient(); const queryKey = ['selection-vacancy-information', currentCompanyId];
-  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, queryFn: async (): Promise<VacancyInformation[]> => {
+  const cacheKey = `vacancy-information:${currentCompanyId}`;
+  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 15 * 60 * 1000, gcTime: 60 * 60 * 1000, refetchOnMount: false, initialData: () => getSelectionCatalogCache<VacancyInformation[]>(cacheKey)?.data, initialDataUpdatedAt: () => getSelectionCatalogCache<VacancyInformation[]>(cacheKey)?.updatedAt, queryFn: async (): Promise<VacancyInformation[]> => {
     const { data, error } = await supabase.from(table).select('*, operation_centers(id, name)').eq('company_id', currentCompanyId).order('created_at', { ascending: false });
-    if (error) throw error; return (data || []) as unknown as VacancyInformation[];
+    if (error) throw error;
+    const records = (data || []) as unknown as VacancyInformation[];
+    setSelectionCatalogCache(cacheKey, records);
+    return records;
   }});
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => { clearSelectionCatalogCache(cacheKey); return queryClient.invalidateQueries({ queryKey }); };
   const normalize = (input: VacancyInformationInput) =>
     Object.fromEntries(Object.entries(input).map(([key, value]) => [key, typeof value === 'string' && key !== 'module_type' ? value.trim() || null : value]));
   const createMutation = useMutation({ mutationFn: async (input: VacancyInformationInput) => {

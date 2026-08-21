@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { clearSelectionCatalogCache, getSelectionCatalogCache, setSelectionCatalogCache } from '@/lib/selectionCatalogCache';
 
 export interface LaborReference {
   id: string;
@@ -20,12 +21,16 @@ export function useLaborReferences() {
   const { currentCompanyId } = useAuth();
   const queryClient = useQueryClient();
   const queryKey = ['selection-labor-references', currentCompanyId];
+  const cacheKey = `labor-references:${currentCompanyId}`;
 
   const query = useQuery({
     queryKey,
     enabled: Boolean(currentCompanyId),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnMount: false,
+    initialData: () => getSelectionCatalogCache<LaborReference[]>(cacheKey)?.data,
+    initialDataUpdatedAt: () => getSelectionCatalogCache<LaborReference[]>(cacheKey)?.updatedAt,
     queryFn: async (): Promise<LaborReference[]> => {
       const { data, error } = await supabase
         .from('selection_labor_references')
@@ -33,11 +38,13 @@ export function useLaborReferences() {
         .eq('company_id', currentCompanyId)
         .order('company');
       if (error) throw error;
-      return data || [];
+      const records = data || [];
+      setSelectionCatalogCache(cacheKey, records);
+      return records;
     },
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => { clearSelectionCatalogCache(cacheKey); return queryClient.invalidateQueries({ queryKey }); };
   const createMutation = useMutation({
     mutationFn: async (input: LaborReferenceInput) => {
       if (!currentCompanyId) throw new Error('No hay una empresa seleccionada.');
