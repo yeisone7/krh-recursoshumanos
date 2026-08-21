@@ -1,0 +1,215 @@
+﻿Empresa;Tipo Documento;Documento;Nombre Completo;Estado;Activo;Cargo;Centro de Operacion;Area;Creado En;ID Empleado
+Petrocasinos S.A.;CC;1116777782;Adriana Rocio Ruiz Salazar;active;Si;Auxiliar De Aseo;Caricare;Sin área;2026-05-14;e6ddd1b8-9e27-4deb-9f4e-6e59ed50424a
+Petrocasinos S.A.;CC;1005448189;Ailyn Yurany Pava Rodriguez;active;Si;Auxiliar De Cafeteria;Mac Pollo;Sin área;2026-05-14;471ce3f5-a0be-4fa6-ac70-46726a0f9b36
+Petrocasinos S.A.;CC;1102356306;Albeiro Araque Carrizalez;active;Si;Galponero;Lote 2 Vr;Campos;2026-05-14;59d3b258-3162-46f7-99e3-74082d90d54f
+Petrocasinos S.A.;CC;1098671448;Alfred Sneyder Paez Espinosa;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;e0cbe073-00f8-45e2-8c4c-ec27bd53127f
+Petrocasinos S.A.;CC;1098673245;Andres Felipe Leon Ortiz;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;7c8437a1-8bcc-41a3-b3fb-614eb7cb383c
+Petrocasinos S.A.;CC;1096482182;Angie Lorena Gamboa Arevalo;active;Si;Auxiliar De Aseo Y Cafeteria;Santa Rosa;Sin área;2026-05-14;4dcd61e4-4e82-48ab-91a6-baec8f1f79be
+Petrocasinos S.A.;CC;1095940477;Angie Rossana Suarez Mendez;active;Si;Coordinador De Bienestar Y Desarrollo;Principal;Juridica;2026-05-14;77fcf59f-b99a-4855-8512-46ad8b6de1fb
+Petrocasinos S.A.;CC;1145495;ANTHONY ALEJANDRO GUERRERO JIMENEZ;active;Si;Auxiliar Acondicionamiento Cárnico;Sala De Desposte;Campos;2026-06-09;d33358eb-cd97-459a-83ce-f20d9dfcdf06
+Petrocasinos S.A.;CC;1122130421;Anyela Judith Rozo Maldonado;active;Si;Auxiliar De Servicios Generales;Aliar;Sin área;2026-05-14;d09adf9c-75c0-4ccc-a098-3e9f4239c246
+Petrocasinos S.A.;CC;6663273;Berenice Bayona Quintero;active;Si;Cocinera;Tibu;Sin área;2026-05-14;07cc86d4-8d9b-4609-8f1a-753d9204da54
+Petrocasinos S.A.;CC;1035128910;Bernardo De Jesus Zapata Valdes;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;8debbaee-bc26-4598-97ee-4991cca5e68a
+Petrocasinos S.A.;CC;63524954;Blanca Lucely Ramirez Rojas;active;Si;Auxiliar De Cafeteria;Mac Pollo;Sin área;2026-05-14;392d6aaf-6821-41d4-b26b-662d0bbd3297
+Petrocasinos S.A.;CC;1116493222;Britny Tatiana Garavito Florez;active;Si;Aprendiz Sena Productiva;Caño Limon;Campos;2026-05-14;c8491b64-bfc2-4b7d-82ff-421385bc602b
+Petrocasinos S.A.;CC;1098744578;Bryan Andres Rojas Gil;active;Si;Nutricionista Programas Especiales;Principal;Operaciones;2026-05-14;416fc9aa-6715-4fb5-8fa0-fe994f8fca35
+Petrocasinos S.A.;CC;1102355861;Carlos Andres Carrillo Mejia;active;Si;Galponero;Lote 2 Vr;Sin área;2026-05-14;a17acd2f-56fe-45d9-af5a-44f1c7d8d618
+Petrocasinos S.A.;CC;1098667649;Carlos Enrique Sanchez Mantilla;active;Si;Supervisor;Cantagallo;Sin área;2026-05-14;46c31316-b12a-4ffd-afbc-0c94a1017f34
+Petrocasinos S.A.;CC;7690690;Carlos Rodrigo Rojas Garcia;active;Si;Administrador De Campo;Dina;Campos;2026-05-07;34b96da6-df44-41a4-a484-a81e261a757f
+Petrocasinos S.A.;CC;1049896528;Carolina Palomino Contreras;active;Si;Auxiliar De Aseo;Caricare;Campos;2026-06-01;42a7c69e-7934-4514-a685-82a45ff46505
+Petrocasinos S.A.;CC;1006409340;César Eduardo Carvajal Gonzalez;active;Si;Auxiliar De Cocina;Caño Limon;Campos;2026-06-11;a5becba9-3976-4c44-bd94-6cbaea83b1e6
+Petrocasinos S.A.;TI;1049291622;Charith Dayana Grimaldos Rincon;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;e91ed81b-3117-4e16-b177-acaf8364f3c8
+Petrocasinos S.A.;CC;37580161;Claudia Patricia Burgos Vasquez;active;Si;Auxiliar De Cocina;Oxy La Cira;Sin área;2026-05-14;d5d56795-af96-4cd9-80ee-c438f0092839
+Petrocasinos S.A.;CC;46646731;Consuelo Suarez Villalba;active;Si;Cocinera;Velasquez;Sin área;2026-05-14;61a5678b-00bf-47d2-9536-f39bc1a2c08a
+Petrocasinos S.A.;CC;1005297711;Daniela Bello Pineda;active;Si;Asistente Costos;Principal;Operaciones;2026-05-14;b64ee26e-ab5e-4f55-aa4e-060d2e110b52
+Petrocasinos S.A.;CC;1075540480;Darcy Lorena Cuevas Vargas;active;Si;Supervisor De Produccion;Dina;Sin área;2026-05-14;78983b1b-163e-4871-a86b-d934e46005f6
+Petrocasinos S.A.;CC;1075283117;Diana Gisela Forero Paez;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Campos;2026-07-02;0795f230-8dc4-4dbe-aa17-d80f1e4a24a5
+Petrocasinos S.A.;CC;98504614;Edwin Enrique Chacon;active;Si;Chef;Velasquez;Sin área;2026-05-07;89efba60-9bda-4a28-a838-17865be6e5fe
+Petrocasinos S.A.;CC;24717178;ELis Omaira Isaza Chaverra;active;Si;Auxiliar De Casino;Velasquez;Campos;2026-06-19;bac02130-6bed-4354-ad03-24d0bbdc0853
+Petrocasinos S.A.;CC;1006489766;Emerita Horopa Cruz;active;Si;Mesera;Hocol-Ocelote;Sin área;2026-05-14;14cbdbc1-5697-4b42-b6c9-4390c3de0be7
+Petrocasinos S.A.;CC;1006454421;Emily Camila Murillo Arrieta;active;Si;Auxiliar Administrativa;Caño Limon;Campos;2026-06-09;36d15a3c-1adf-4e12-a748-e521eac96694
+Petrocasinos S.A.;CC;1093914443;Erika Gonzalez Castillo;active;Si;Auxiliar De Aseo Y Cafeteria;Oru;Campos;2026-06-13;a101087e-b27c-4f31-a7ed-3f5f1f322527
+Petrocasinos S.A.;CC;1037777583;Erika Tatiana Posada;active;Si;Auxiliar De Cocina;Hidroituango;Sin área;2026-05-14;46b9ce60-96b3-4a5b-9ec1-4460eb33389c
+Petrocasinos S.A.;CC;1001503104;Erika Yuliana Sepulveda Espinosa;active;Si;Auxiliar Servicios Generales;Hidroituango;Sin área;2026-05-14;030db1d0-1b6d-4a62-b44b-7195be925b6e
+Petrocasinos S.A.;CC;1075539579;Estephany Estephy Cortés Gutiérrez;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Campos;2026-06-19;86c4ba32-be0c-4358-87b6-e61ad8a77759
+Petrocasinos S.A.;CC;1133839825;Ester Cecilia Soto hoyos;active;Si;Auxiliar De Cocina;Canacol;Campos;2026-06-23;c2337616-a8d9-431d-ba40-5293cbce5a0a
+Petrocasinos S.A.;CC;1093916845;Evelin Yulieth Melo Quintero;active;Si;Auxiliar De Aseo Y Cafeteria;Tibu;Sin área;2026-05-14;3372e745-216e-4672-bfca-539ff90585f4
+Petrocasinos S.A.;CC;1042772603;Flober Flober Uribe Macias;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;4cf12d81-c31f-4419-a7c1-f60deb2856c0
+Petrocasinos S.A.;CC;68249366;Floricel ' Osorio Basallo;active;Si;Auxiliar De Cocina;Caricare;Sin área;2026-05-14;d96be8c3-1fff-4f30-ba9a-30f3d1e5c86a
+Petrocasinos S.A.;CC;91451611;Francisco Rodriguez Tarazona;active;Si;Galponero;Lote 2 Vr;Sin área;2026-05-14;9d827a78-e305-49aa-bc8f-cb0da782b2e7
+Petrocasinos S.A.;CC;1039680186;Gendy Liceth Soto Mejia;active;Si;Auxiliar De Aseo Y Cafeteria;Casabe;Campos;2026-06-25;b6ac9b04-1a56-4b25-b381-ef3d1664b6df
+Petrocasinos S.A.;CC;91157632;Gerardo Vargas Ramirez;active;Si;Conductor;Cpa Calle 38;Sin área;2026-05-14;2cdd9acc-0470-42c7-af6a-e7f0fe6aa120
+Petrocasinos S.A.;CC;1037776396;Gladys Estela Zapata Jaramillo;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;333c5e20-8e80-45e0-baf3-b8cec91be4f3
+Petrocasinos S.A.;CC;1005047818;Gustavo Alexis Meneses Buitrago;active;Si;Cocinero;Tibu;Sin área;2026-05-14;0e902409-8f78-4c26-93a9-e3f59c37c63c
+Petrocasinos S.A.;CC;1097911332;Hayder Said Osorio Garcia;active;Si;Auxiliar De Cocina;Crezcamos-Bga;Campos;2026-07-02;49d81b38-28b3-42aa-ab87-d0adc2eb0eba
+Petrocasinos S.A.;CC;37577434;Heiny Tatiana Chaves Caceres;active;Si;Auxiliar De Aseo Y Cafeteria;Casabe;Sin área;2026-05-14;384a3f57-75d8-46b9-9c74-1a072550fba3
+Petrocasinos S.A.;CC;1056773603;Hernan Dario Suaza Torres;active;Si;Bodeguero;Velasquez;Sin área;2026-05-14;8095ce6e-3a30-490d-8661-3afa25718b30
+Petrocasinos S.A.;CC;1096186291;Hilary Yisdey Jaimes Narvaez;active;Si;Auxiliar Contable;Principal;Contabilidad;2026-05-07;913f2f0a-7eb5-4eda-8732-3f77b942bbdb
+Petrocasinos S.A.;CC;91324714;Ismael Bravo Pérez;active;Si;Auxiliar De Aseo Y Cafeteria;Cantagallo;Campos;2026-07-02;8325abff-2f31-4e05-8237-8b305b3b6fa3
+Petrocasinos S.A.;CC;19472472;Jaime Aldo Castellanos Rodriguez;active;Si;Chef;Hocol-Ocelote;Sin área;2026-05-14;1f4da987-9bfb-4a0d-8ad1-38f241d3c696
+Petrocasinos S.A.;CC;80222824;JAMES ARLEY SARAY GUERRERO;active;Si;Conductor;Aliar;Campos;2026-06-04;f38dcec5-f649-4889-ac4c-79c1f71777ff
+Petrocasinos S.A.;CC;1080296439;Jeidy Yohana Llanos Suaza;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Sin área;2026-05-14;7baf6f3c-45fe-41bf-b66b-20663042ca09
+Petrocasinos S.A.;CC;1006944116;Jenny Carolina Garcia Cardenas;active;Si;Auxiliar De Cocina;Hocol-Ocelote;Sin área;2026-05-14;7d17e669-91da-489c-8c2f-67ba02b5893d
+Petrocasinos S.A.;CC;1005339825;Jessica Andrea Sanabria Rosas;active;Si;Auxiliar De Cocina;Colegio Caldas;Sin área;2026-05-14;f40a9dbe-24e8-45ce-bd94-c346fc968b99
+Petrocasinos S.A.;CC;1095802379;Jhaider ' Baron Camacho;active;Si;Auxiliares De  Servicios Hospitalarios;Fundacion Cardiovascular;Servicio;2026-05-14;0cb11851-3cc9-4fdb-8dd2-0b9da104ee20
+Petrocasinos S.A.;CC;1098650428;Jhayra Alejandra Torres Mendoza;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;384598f6-5b40-4d1c-8740-c8a8d5454a66
+Petrocasinos S.A.;CC;8033651;Jhoan Alexander Ramirez Loaiza;active;Si;Sous Chef;Hidroituango;Sin área;2026-05-14;6d7206d6-f0b6-4c06-82e1-126243aa72e8
+Petrocasinos S.A.;CC;1093744529;Jhon Alexander Delgado Delgado;active;Si;Supervisor;Oru;Campos;2026-06-18;fae03290-1a91-4162-a1de-c50c7f55d842
+Petrocasinos S.A.;CC;1012396376;JHON BRAYAN SILVA GOMEZ;active;Si;;;;2026-06-01;0c2fb65e-dec6-4e25-b8db-27eb88c275b7
+Petrocasinos S.A.;CC;1116499938;Jhon Jairo Torres Zuleta;active;Si;Cuadrillo;Caño Limon;Campos;2026-06-19;6f887d71-7bac-4d37-a0f2-9f9dfa17d1c1
+Petrocasinos S.A.;CC;91433397;Jhonny Ramirez Reyes;active;Si;Conductor Lonchero;El Centro;Sin área;2026-05-14;f8b4cfbb-a286-48e6-bf4b-75dfd16ff4f9
+Petrocasinos S.A.;CC;13870875;Jorge Enrique Bravo Dominguez;active;Si;Conductor;Clinica Bucaramanga;Sin área;2026-05-07;b7dde9ab-7ab1-4c2f-9cd7-a5572e459251
+Petrocasinos S.A.;PPT;6887309;Jose Alejandro Loyo Salazar;active;Si;Auxiliar De Cocina;Cpa Bucaramanga Km4;Sin área;2026-05-14;eba6d1a9-5e99-47ee-8337-db6ff0122e5b
+Petrocasinos S.A.;CC;1054543129;Jose Andres Garcia Garcia;active;Si;Cocinero;Tibu;Sin área;2026-05-14;9c3937b9-aaa9-4f02-84d5-b06cde2dd25d
+Petrocasinos S.A.;CC;1042211289;Jose Aquiles Jerez Chacon;active;Si;Conductor;Hidroituango;Sin área;2026-05-14;2f6eb927-6d20-4756-b627-b5e0a42abc50
+Petrocasinos S.A.;CC;1042214505;Jose Armando Vergara Escobar;active;Si;;;;2026-05-29;7169864d-f770-4412-b498-00663893e450
+Petrocasinos S.A.;CC;1069482283;Jose Carlos Ramos Garcia;active;Si;Auxiliar De Cocina (Programas Especiales);Canacol;Campos;2026-06-09;cc4451f9-fb10-4311-b169-8a4e13e80249
+Petrocasinos S.A.;CC;1035433935;Jose David Gonzalez Madrigal;active;Si;Auxiliar De Aseo;Hidroituango;Sin área;2026-05-14;b82f8224-14ab-406f-baf3-43a155f861a8
+Petrocasinos S.A.;CC;1002065514;Jose Jose Lopez López;active;Si;Cocinero;Hidroituango;Sin área;2026-05-14;76c90c55-6fd4-4b64-bad4-94f12cf6fb37
+Petrocasinos S.A.;CC;1075277753;Joseph Gregory Walteros Manjarres;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Campos;2026-06-19;c6d50e9d-aefe-4d48-b90a-bea40d62323b
+Petrocasinos S.A.;CC;1042767867;Juan David Ceballos Perez;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;41824ff0-6d17-46d6-9dfa-48ab33e2db0a
+Petrocasinos S.A.;CC;1104127628;Julian Felipe Garcia Moreno;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;f1a58f5f-5557-4c89-aed4-0b931dca6f6b
+Petrocasinos S.A.;CC;1063151340;Karen Paola Negrete Carrasquilla;active;Si;Aprendiz Sena Lectiva;Colegio Caldas;Sena;2026-06-22;4afa3dc4-5799-47eb-9f55-2c9602e52361
+Petrocasinos S.A.;CC;1097780731;Karol Juliana Celis Gomez;active;Si;Mesera-Auxiliar De Servicios Generales;Campo L;Sin área;2026-05-14;7459e4f1-7850-4164-8939-4c3afcf2fc9b
+Petrocasinos S.A.;CC;1099740062;Kevin Sebastian Garcia Zafra;active;Si;Aprendiz Sena Lectiva;Principal;Sena;2026-05-14;80851f48-5e02-44f7-bbe9-bc8b371c8bba
+Petrocasinos S.A.;CC;1096204317;Kevinton Miguel Kevinton Sanchez;active;Si;Conductor Lonchero;El Centro;Sin área;2026-05-14;eee0902f-395b-4043-b32d-dd51aa6c74be
+Petrocasinos S.A.;CC;22586655;Laudith Johana Ospino Benítez Johana Ospino Benítez;active;Si;;;;2026-06-12;a7f2a6ad-57e7-4984-8bed-71bab26007ad
+Petrocasinos S.A.;CC;1001509080;Leison Stiven Zapata George;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;dbaa7190-1a7a-4a5c-b179-ee63ec65bc4f
+Petrocasinos S.A.;CC;60420681;Ligia Contreras Tarazona;active;Si;Auxiliar De Aseo Y Cafeteria;Samore;Sin área;2026-05-14;74cacac6-b4e9-42e5-b9e7-ac651ef44a04
+Petrocasinos S.A.;CC;1002465333;Luis Fernando Caña Moreno;active;Si;Aprendiz Sena Productiva;Principal;Nomina;2026-05-14;c94db9bc-0c3f-4bfc-b294-fac1082d3932
+Petrocasinos S.A.;CC;1121817691;Luis Miguel Niño Prieto;active;Si;Tecnico De Mantenimiento;Principal;Activos Fijos;2026-05-14;a1868ce6-826a-4953-972f-e07bef336f25
+Petrocasinos S.A.;CC;1095798645;Luis Yesid Corzo Rueda;active;Si;Auxiliares De  Servicios Hospitalarios;Fundacion Cardiovascular;Servicio;2026-05-14;3978e1f7-7dbe-4004-a1b3-c364b3acd9f1
+Petrocasinos S.A.;CC;1071429187;Luisa Fernanda Callejas Londoño;active;Si;Auxiliar General;Hidroituango;Sin área;2026-05-14;eaba9a8e-424e-44ea-b784-d5de4e8e17e5
+Petrocasinos S.A.;CC;1122140415;Luisa Mayerly Giraldo Bernal;active;Si;Mesera;Hocol-Ocelote;Sin área;2026-05-14;200b0e22-2a66-46ff-bc0f-a23ebef3fbc8
+Petrocasinos S.A.;CC;1000150704;Maria Camila Zambrano Arias;active;Si;Auxiliar De Cafeteria;Mac Pollo;Sin área;2026-05-14;73f6e959-077d-4659-93c7-5dd5231e798f
+Petrocasinos S.A.;CC;22642506;Maria Jimena Morales;active;Si;Auxiliar De Cocina;El Centro;Sin área;2026-05-14;15c7b5d6-f527-4966-89d7-751aef8c9865
+Petrocasinos S.A.;CC;26601631;MARIA MAYERLY PEREZ MORENO;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Compras;2026-07-02;cb149b9e-ade9-42d4-aa01-7b5352e54c9a
+Petrocasinos S.A.;CC;1095944363;Marisol Rangel Bohorquez;active;Si;Auxiliar De Servicios Generales;Nexans;Sin área;2026-05-14;00abaa2a-035b-4d27-a42e-847975da767e
+Petrocasinos S.A.;CC;24.246.216;MARLENY BONET RINCON;active;Si;;;;2026-06-11;753c9bd2-b611-4c2d-bfd2-17a1e9c60044
+Petrocasinos S.A.;CC;1121300653;Marley Viviana Rendon Estrada;active;Si;Auxiliares De  Servicios Hospitalarios;Clinica Bucaramanga;Sin área;2026-05-14;f973e9d7-46ac-4f92-adc6-c4c9152d7b1a
+Petrocasinos S.A.;CC;2807442;Martha Pimentel Quiroga;active;Si;;;;2026-06-10;b90a82ae-a462-49ce-b1aa-64a5ca0db3ca
+Petrocasinos S.A.;CC;1003894922;Martin Daniel Perez Escobar;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Campos;2026-05-27;f0005e03-0f64-4c90-be8b-414d1f049846
+Petrocasinos S.A.;CC;1098719412;Mauricio Andres Pantoja Martinez;active;Si;Profesional Facturación;Principal;Contabilidad;2026-05-14;422219e0-d17a-4da1-a21f-e1610f17ac8d
+Petrocasinos S.A.;CC;91478568;Mauricio Moya;active;Si;Coordinador De Activos;Principal;Activos Fijos;2026-05-07;2e846476-5f08-45af-ba19-1390107f4478
+Petrocasinos S.A.;CC;3982207;Melkin Garcia Cester;active;Si;Cocinero;Cantagallo;Sin área;2026-05-14;b6c5411d-1532-4081-9b01-cf565c4b1fd0
+Petrocasinos S.A.;CC;65790863;Mercy ' Valencia Andrade;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Sin área;2026-05-14;c6c28a46-ada4-46e4-978b-f783aa567e7f
+Petrocasinos S.A.;CC;1007167784;Michell Estrella Sequera Soto;active;Si;Auxiliar De Aseo;Caricare;Sin área;2026-05-14;12ccdd9c-3413-47c9-b857-a5edfc657bb9
+Petrocasinos S.A.;TI;1097913418;Michelle Garnica Mantilla;active;Si;Aprendiz Sena Lectiva;Cpa Clinicas;Campos;2026-06-10;8f919d48-5709-4a03-afe0-c52c4e9b31dc
+Petrocasinos S.A.;CC;1193290368;Miguel Benito Najera Ferrer;active;Si;Auxiliar De Aseo;Caño Limon;Sin área;2026-05-14;a9f0efef-6b78-428c-b6d0-f6cb254af852
+Petrocasinos S.A.;CC;91539979;Milton Eliecer Arenas Higuera;active;Si;Aprendiz Sena Productiva;Colegio Caldas;Sin área;2026-05-14;ed532fac-54fe-4cf1-bafd-600b05c95079
+Petrocasinos S.A.;CC;1075260423;MONICA CAPERA RAMOS;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Campos;2026-07-02;052aa20b-1066-4f07-8949-2e45e080e7c4
+Petrocasinos S.A.;CC;1007376504;Neida Liced Morales Monsalve;active;Si;Auxiliar De Servicios Generales;Hidroituango;Sin área;2026-05-14;b8427c02-9e1f-4d82-925c-14f31e019f9c
+Petrocasinos S.A.;CC;1051634231;Nerlys Acosta Martinez;active;Si;Auxiliar De Aseo Y Cafeteria;Cantagallo;Sin área;2026-05-14;7d7176a4-91bd-4bce-a598-a350b631e4d8
+Petrocasinos S.A.;CC;26767738;Nolvis Maria Eljach Obeso;active;Si;Clasificadora De Huevos;Lote 1 Vr;Sin área;2026-05-14;c7a460d1-8075-48b4-aef0-bc5f29e6d6b2
+Petrocasinos S.A.;CC;43851750;Omaira Del Socorro Gomez;active;Si;Auxiliar De Cocina;Hidroituango;Sin área;2026-05-14;7e80c32f-33a8-439a-a2af-9a6dd4810219
+Petrocasinos S.A.;CC;1103740491;Orlando Melquisedec Junior Alvarez Meza;active;Si;Mesero;El Limonal;Sin área;2026-05-07;81fd638f-fb61-4d6e-b64d-378e8e5acabb
+Petrocasinos S.A.;CC;80542318;Oscar Hernan Riaño Castañeda;active;Si;Sous Chef;Hidroituango;Sin área;2026-05-14;e25402bf-b568-4ef5-8bb2-3002e6b736ee
+Petrocasinos S.A.;CC;1067888929;Paula Andrea Cruz Tejada;active;Si;SUPERVISOR DE CALIDAD;Hidroituango;Sin área;2026-05-14;6ca30063-6e1b-4ec0-98c5-7eab54f87fc4
+Petrocasinos S.A.;CC;88174074;Reinaldo Riveros Ascanio;active;Si;Conductor Lonchero;Tibu;Sin área;2026-05-14;7cca92dd-087e-4fe5-9360-76b918493727
+Petrocasinos S.A.;CC;1005209852;Robinson Daniel Jiménez Pinzén;active;Si;Auxiliar Contable;Principal;Contabilidad;2026-05-07;b76e525b-65c5-48a1-bc8d-0a6c52a490b9
+Petrocasinos S.A.;CC;1054543129 ;SANDRA PATRICIA RODRIGUEZ CASADIEGOS;active;Si;Auxiliar De Casino;Velasquez;Sin área;2026-05-29;f1250947-98b0-4ffd-b8c0-3e904f5e909f
+Petrocasinos S.A.;CC;1115750500;Sandra Tibisay Acosta Zuñiga;active;Si;Auxiliar De Aseo Y Cafeteria;Cenit Aseo Banadia;Sin área;2026-05-14;cb3b8bd4-c262-4bba-a516-332af7a617fe
+Petrocasinos S.A.;CC;33516107;Sara Ortiz Leal;active;Si;Auxiliar De Aseo Y Cafeteria;Banadia;Sin área;2026-05-14;28ac6178-4e10-4317-9873-c4da851f0df0
+Petrocasinos S.A.;CC;1005345231;Sebastian Duarte Leal;active;Si;Oficios Varios;Cpa Clinicas;Servicio;2026-05-14;8d2603ca-7c84-4844-a646-cfda808421cc
+Petrocasinos S.A.;CC;1020786904;Sergio Andrés Pérez García;active;Si;;;;2026-06-10;e7701437-597c-4183-9314-7caaf536d39d
+Petrocasinos S.A.;CC;30937790;Sol Merida Saavedra Granados;active;Si;Auxiliar De Servicios Generales;Aliar;Sin área;2026-05-14;664ca918-b7e3-4f7e-861e-2a475f9b24fd
+Petrocasinos S.A.;CC;1005105207;Stevenn Alfonso Villamizar Bayona;active;Si;Auxiliar De Cocina;Crezcamos-Bga;Campos;2026-07-02;b56b80db-5f7a-4018-b8fe-4a017b7970aa
+Petrocasinos S.A.;CC;1098817388;Wendy Catheryne Ariza Osorio;active;Si;Aprendiz Sena Productiva;Principal;Sena;2026-05-14;751d0c7d-14cc-4344-96ce-fe504120f9d0
+Petrocasinos S.A.;CC;1007359127;Yeiber ' Sandoval Barrera;active;Si;Cuadrillo;Caricare;Sin área;2026-05-14;385f419e-b1f4-460e-bcfc-10e818c3c4d6
+Petrocasinos S.A.;CC;1096482300;Yeidy Lineth Gil Forero;active;Si;Auxiliar De Aseo Y Cafeteria;Santa Rosa;Sin área;2026-05-14;18980020-1033-4e61-b0b8-87f88437d157
+Petrocasinos S.A.;CC;1005342162;Yeison Leonel Fajardo Ruiz;active;Si;Auxiliar De Cocina;Campo L;Sin área;2026-05-14;e7874b8d-6a8f-4c6d-bb09-ddb5bbbcdade
+Petrocasinos S.A.;CC;1120864096;Yessica Lorena Pulido Soler;active;Si;Cocinera;Aliar;Campos;2026-05-14;baf82e77-bd83-4dcd-bd41-1b875f91a176
+Petrocasinos S.A.;CC;1124822450;Yudy Marcela Torres Mosquera;active;Si;Mesera;Hocol-Ocelote;Sin área;2026-05-14;0f4cc439-5d84-4066-90a0-217a2f3ce24d
+Petrocasinos S.A.;CC;1055916809;Yuldor Osorio Ramirez;active;Si;Supervisor De Campo;Principal;Operaciones;2026-05-07;8038992b-e74c-49ea-b869-ba6be885cbeb
+Petrocasinos S.A.;CC;1116789602;Yurvely Quinchia Cifuentes;active;Si;Auxiliar De Aseo;Caño Limon;Sin área;2026-05-14;7b147218-b056-4a4d-96e4-653b39a85a48
+Petrocasinos S.A.;CC;1075231291;Zulma Mendez Lombana;active;Si;Auxiliar De Aseo Y Cafeteria;Dina;Sin área;2026-05-14;1b653c27-bc73-4c53-82af-bc053216e699
+Petrocasinos S.A.;CC;987645421;Juan Pedro Barragan;active;No;;;;2026-05-21;66d31cf9-f310-4b03-a4a5-ac0e738eb422
+Petrocasinos S.A.;CC;1067909677;Alba Rosa Aricapa Martinez;retired;No;;;;2026-05-14;523c2210-a52e-4d7e-9819-de8b01018e77
+Petrocasinos S.A.;CC;55217296;aleida aleida Garzon garzon;retired;No;;;;2026-05-14;5c6f5286-5627-455d-b2d6-a47b09d66320
+Petrocasinos S.A.;CC;46645635;Ana Cecilia Hinestroza Arias;retired;No;;;;2026-05-14;2eaaccc2-ef89-4fbd-8ae9-38c69c7874a3
+Petrocasinos S.A.;CC;1015998868;Andrea Andrea Rico Bernal;retired;No;;;;2026-05-14;8029b36e-2bd5-405f-afa6-fdc268a01a91
+Petrocasinos S.A.;CC;1065238084;Andrea Paola Hernandez Ortega;retired;No;;;;2026-05-14;03c41b06-2d31-4250-bb66-23e5353899fb
+Petrocasinos S.A.;TI;1099366554;Andres Santiago Cardenas Gomez;retired;No;;;;2026-05-14;5112474f-24ee-49c5-beae-9cf94090d335
+Petrocasinos S.A.;CC;1102635648;Andres Sebastian Camargo Sandoval;retired;No;;;;2026-05-14;14aeaf1c-cc66-4ba7-b769-087164d5707d
+Petrocasinos S.A.;CC;1075540474;Angelica Ramirez Losada;retired;No;;;;2026-05-14;15d1ac21-ffae-41d0-98ed-20234348134f
+Petrocasinos S.A.;CC;1007339169;Angie Julieth Jimenez Ropero;retired;No;;;;2026-05-14;1e707b28-6fc7-4873-ade1-4a3d65d52a98
+Petrocasinos S.A.;CC;1005066389;ANYELA FERNANDA CACERES CAMARGO;retired;No;;;;2026-05-14;4250e832-c339-4022-a4fd-667f0cfc288e
+Petrocasinos S.A.;CC;1116791543;Arelys Jasmin Quiceno Romero;retired;No;;;;2026-05-07;a2cd149d-42ac-4667-9587-e34db924c144
+Petrocasinos S.A.;CC;17592915;Armesto Hugo Del Villar;retired;No;;;;2026-05-07;3b8927ac-9137-4ee0-897f-a3f111093fab
+Petrocasinos S.A.;CC;1006414423;Asly Yurany Tumay Carvajal;retired;No;;;;2026-05-14;c0f7fc77-2738-47ce-a783-8a445749d701
+Petrocasinos S.A.;CC;26445411;Bismary Bermeo Garzon;retired;No;;;;2026-05-14;ebb6b9d9-4cd6-4cce-b8c8-bc5db01bfbae
+Petrocasinos S.A.;CC;1005340270;Carlos Daniel Porras Cardenas;retired;No;;;;2026-05-14;16b18565-55b2-40b7-8ae9-9a00389b8e69
+Petrocasinos S.A.;CC;1052389775;Cristian Camilo Chaparro Vergara;retired;No;;;;2026-05-07;0d117fc4-e6a2-4d3c-942f-7486e8f5e5c9
+Petrocasinos S.A.;CC;1006454843;Dania Valexka Moreno Ariza;retired;No;;;;2026-05-14;62ffda19-4167-4190-9a02-ded89a752d4e
+Petrocasinos S.A.;CC;13871333;Daniel Andres Gonzalez Ruiz;retired;No;;;;2026-05-07;1aa50e43-1c29-48b0-940b-c3b4e74e54ed
+Petrocasinos S.A.;CC;1093751051;Deisy Meneses Mora;retired;No;;;;2026-05-14;6d92febc-4f7d-4fd1-aa45-0741ec7647eb
+Petrocasinos S.A.;CC;1075224980;Diana Alexy Jascue;retired;No;;;;2026-05-14;2de45497-7d71-4d9f-924d-74d1e3945133
+Petrocasinos S.A.;CC;1105057894;Diana Diana Mondragon Paola;retired;No;;;;2026-05-14;8d821b3f-a94b-4007-b36b-cee9113d20e5
+Petrocasinos S.A.;CC;1098803100;Diana Fernanda Gomez Arguello;retired;No;;;;2026-05-14;e616da28-fc02-4929-96e7-9b22c1547d4c
+Petrocasinos S.A.;CC;68293601;Edeima Chacon Lagos;retired;No;;;;2026-05-14;ec3e1a1a-0d9b-4e21-9544-6cbc76607d9a
+Petrocasinos S.A.;CC;1003803338;Eliana Canacue Murcia;retired;No;;;;2026-05-14;9d2b9fe4-142d-4e77-b202-8444b3d03a69
+Petrocasinos S.A.;CC;1052042560;Elizabeth Galarcio Mercado;retired;No;;;;2026-05-14;64959d4a-1db5-4028-88da-241c484e9d03
+Petrocasinos S.A.;CC;13569760;Elpidio Sejia Rodriguez;retired;No;;;;2026-05-14;1e85ade7-1db2-4b70-b6ea-6943514bef05
+Petrocasinos S.A.;CC;12556473;Exavier Cortes Mantilla;retired;No;;;;2026-05-14;7aed6b69-6df5-4aaa-83e9-b660ee8d4400
+Petrocasinos S.A.;CC;98518098;Fabio Alfonso Fabio Alfonso Rodriguez Zuleta;retired;No;;;;2026-05-14;a0bd0c91-13ee-47a6-a20f-ebb9426c23b3
+Petrocasinos S.A.;CC;21992177;Fanny Socorro Espinosa Restrepo;retired;No;;;;2026-05-14;59c52b30-3844-400f-a438-ffbc4eeb40ed
+Petrocasinos S.A.;CC;5888139;Genesis Robimar Morillo Gonzalez;retired;No;;;;2026-05-14;58f32933-950a-4d0c-8c4d-cb0807382fd1
+Petrocasinos S.A.;CC;1094278759;Gina Gissela Perez Veru;retired;No;;;;2026-05-07;c639539e-fc84-497b-94ea-774c49fc841c
+Petrocasinos S.A.;CC;1075208373;Gloria Elena Gloria Medina;retired;No;;;;2026-05-07;5e3fa941-a435-438c-b449-d850950ff0a7
+Petrocasinos S.A.;CC;35533365;Herlency Trujillo Florez;retired;No;;;;2026-05-07;1c5b56e3-69f7-4724-af49-63080287d9f2
+Petrocasinos S.A.;CC;17594332;Hermess Dueñez Sanguino;retired;No;;;;2026-05-14;d5e6f338-5f76-4f41-ba9c-2f8b72f89e47
+Petrocasinos S.A.;CC;1041631005;Isabela Ortega Ceballos;retired;No;;;;2026-05-14;408fc08e-259e-4ad4-92da-9d72dbdb43d8
+Petrocasinos S.A.;CC;1069769838;Ivan Rene Bastidas Callejas;retired;No;;;;2026-05-14;41793d71-c402-4741-bb84-74bb8f76c287
+Petrocasinos S.A.;CC;3025289;Jefferson Alexander Villamarin Gonzalez;retired;No;;;;2026-05-14;d16f06fa-1503-4ea0-82d5-0b364a3e7856
+Petrocasinos S.A.;CC;1116502583;Jennifer Catherine Angulo Luna;retired;No;;;;2026-05-14;b4694f63-5333-4aca-958d-7ed0dc5d7fb4
+Petrocasinos S.A.;CC;1075293925;Jessica Paola Vargas Velandia;retired;No;;;;2026-05-14;0eb6d4ab-1083-4b35-8980-066ac1af5b2f
+Petrocasinos S.A.;CC;80169656;Jhon Alexander Beltran Beltran;retired;No;;;;2026-05-14;2aa04b1c-2e28-4e52-adeb-df58a7e0e3a2
+Petrocasinos S.A.;CE;1097097481;Jonathan David Gomez Guarin;retired;No;;;;2026-05-14;858e1fdb-214b-4b85-812f-4bffd7157079
+Petrocasinos S.A.;CC;1013613245;Jose Alejandro Castillo Pinto;retired;No;;;;2026-05-14;aaa86f93-6b21-4a53-b06c-433aeff825a2
+Petrocasinos S.A.;CC;1115722145;Jose Manuel Loaiza Acosta;retired;No;;;;2026-05-14;8c9c7721-44f4-4357-a78c-10b92703a509
+Petrocasinos S.A.;CC;1115727440;Juan David Herrera Gereda;retired;No;;;;2026-05-14;a2816aa6-073e-4b63-85f7-5f05ad8b1b65
+Petrocasinos S.A.;CC;1068137947;Juan Felipe Balmaceda Seguanes;retired;No;;;;2026-05-14;86579583-26bb-4f63-93a5-86e3fad6dfbd
+Petrocasinos S.A.;CC;1095817161;Julio JULIO Rueda RUEDA;retired;No;;;;2026-05-07;54bef8ac-f6d2-4edd-bbd3-0659bcbc31ba
+Petrocasinos S.A.;CC;1080296301;Katherine Quintero Ramirez;retired;No;;;;2026-05-14;2268d761-89c5-4076-b089-1fa3514fd016
+Petrocasinos S.A.;CC;1118827238;KIARA MECK ROMERO PALACIO;retired;No;;;;2026-06-02;482d9a52-19a1-44aa-908d-85598c4015d9
+Petrocasinos S.A.;CC;1116493546;Leidy Johanna Estrada Higuera;retired;No;;;;2026-05-14;5193c737-03d2-4e74-964b-56a3d543d30c
+Petrocasinos S.A.;CC;1006514710;Leydi Milena Silva Esterling;retired;No;;;;2026-05-14;11f0237d-2051-4966-b036-66eaf81a16ba
+Petrocasinos S.A.;CC;1006407599;Liliana Jazmin Carreño Chogo;retired;No;;;;2026-05-14;578ddb38-ac58-42c1-b5e4-ecfc09e71d18
+Petrocasinos S.A.;CC;1019080171;Liset Maria Baeza Cordero;retired;No;;;;2026-05-14;9142cdaa-c872-451f-92e0-862db9e707d2
+Petrocasinos S.A.;CC;1006440773;Lucia Angelica Mejia Barrera;retired;No;;;;2026-05-14;8c6f8ad6-63cd-42e3-b50e-43e7f21a8b82
+Petrocasinos S.A.;CC;1075288330;Lucia Lucia Cerquera Cerquera;retired;No;;;;2026-05-14;61c0de01-5197-4377-833b-5208e049f94d
+Petrocasinos S.A.;CC;1116788492;Luz Dary Jara Bermudez;retired;No;;;;2026-05-14;6cc9076b-98c2-4fb2-84ff-e40b057c18fc
+Petrocasinos S.A.;CC;1069471049;Luz Elena Corpas Castro;retired;No;;;;2026-05-14;253267a4-80a2-4d90-9356-1375630643ba
+Petrocasinos S.A.;CC;37394825;Luz Marina Rodriguez Villamizar;retired;No;;;;2026-05-14;8669d94f-9764-4701-b535-f1957654e079
+Petrocasinos S.A.;CC;1075255547;Luz Marina Salas Gutierrez;retired;No;;;;2026-05-14;f156b942-4e02-4f56-8d68-b48f40870bc5
+Petrocasinos S.A.;CC;40767501;Luz Mary Toledo Cuellar;retired;No;;;;2026-05-14;1f080c94-b155-4434-8a05-22e5b4bd21ed
+Petrocasinos S.A.;CC;1002446712;Maidis Seija Pimienta;retired;No;;;;2026-05-14;866b2995-7d7b-4e90-97f2-e415c304e3c2
+Petrocasinos S.A.;CC;18399590;Manuel Santiago Loaiza Osorio;retired;No;;;;2026-05-14;87120934-9255-4904-b231-7e8b819b15b3
+Petrocasinos S.A.;CC;1000874676;Manuela Gomez;retired;No;;;;2026-05-14;72897144-a1e8-4e67-ab56-eaecab85de5c
+Petrocasinos S.A.;CC;36068402;Maria Argenis Bailon Barreto;retired;No;;;;2026-05-14;6d0cbd0f-b1b7-4ba7-bf12-7bc0e612477c
+Petrocasinos S.A.;CC;26460426;Maria Del Carmen Maria Del Carmen Serrano Robles;retired;No;;;;2026-05-14;6a3fe017-5f90-458b-a8f8-1eca668e32b3
+Petrocasinos S.A.;CC;1098221164;Maria Del Pilar Delgado Caceres;retired;No;;;;2026-05-07;1b2dec79-ded4-47f6-83a9-718b97cfdece
+Petrocasinos S.A.;CC;26421804;María del pilar María del pilar Artunduaga Fernández;retired;No;;;;2026-05-07;2adc48d0-7f1e-4f8f-9f61-b37547139437
+Petrocasinos S.A.;CC;1075230902;Maria Fernanda Medina Cardoso;retired;No;;;;2026-05-14;b9cf36dc-24c7-4b48-b219-7b9b2c5e6f6b
+Petrocasinos S.A.;CC;1096235656;Maribel Rodriguez Toro;retired;No;;;;2026-05-14;c440d9cf-b0f4-4ebf-81b5-1084e46a9684
+Petrocasinos S.A.;CC;1082216121;Marily Marily Trujillo Trujillo;retired;No;;;;2026-05-14;e45d3462-205d-44f0-bd65-8c1a605f7349
+Petrocasinos S.A.;CC;1098710227;Mayerly Villamizar Guerrero;retired;No;;;;2026-05-07;f5e19054-d7e8-4d50-85c2-ea6dc2664af4
+Petrocasinos S.A.;CC;1098804939;Nathalie Alexandra Sanchez Pinzon;retired;No;;;;2026-05-14;5eb03ba7-af0e-44ec-9c7f-2037e5ff3457
+Petrocasinos S.A.;CC;17589595;Omar Dario Britto Pinzon;retired;No;;;;2026-05-14;4bf5ee4d-80e6-4ca8-a4a9-52c963b8315d
+Petrocasinos S.A.;CC;1040510992;Orlando De Jesus Jaraba Pacheco;retired;No;;;;2026-05-14;f960c659-26e0-46c4-82ae-3815b86867ba
+Petrocasinos S.A.;CC;1075230459;Oscar Eduardo Polania Quintero;retired;No;;;;2026-05-14;2ecc40e3-026e-4ed5-8994-75de0932c9ad
+Petrocasinos S.A.;CC;26593542;Rosalba Piñacue Fince;retired;No;;;;2026-05-14;2a846845-1369-474c-81c8-6f82e6a15ffb
+Petrocasinos S.A.;CC;26425248;Rosalia Cabrera Cabrera;retired;No;;;;2026-05-14;cbad3d56-d004-4da9-9789-ee2d307ff19e
+Petrocasinos S.A.;CC;1116182385;Ruth Lisbeth Avila Calderon;retired;No;;;;2026-05-14;a4d8a4b8-b80d-4821-a95c-f280f6780e53
+Petrocasinos S.A.;CC;1062875033;Samir Botello Zapata;retired;No;;;;2026-05-14;2604654c-eeb5-4c0f-b723-597597867c57
+Petrocasinos S.A.;CC;1079173450;Saydi Lorena Plaza Barreiro;retired;No;;;;2026-05-14;98d60f96-a3df-4e0b-997d-18d6620f3216
+Petrocasinos S.A.;CC;1069478629;Stefannia Hoyos Benavides;retired;No;;;;2026-05-14;61fb51f4-8bd2-4812-8cad-0c7bcdda9d2e
+Petrocasinos S.A.;PPT;5133450;Vanessa Coromoto Rodriguez Azocar;retired;No;;;;2026-05-14;63901e1c-d5dd-4c0b-ab32-802ea576874a
+Petrocasinos S.A.;CC;1075541851;Viviana Viviana Castro Aldana;retired;No;;;;2026-05-14;6b3bceb2-43a9-4936-ae4c-f735c71bceab
+Petrocasinos S.A.;CC;1001988381;Wilmer Andres Munoz Garcia;retired;No;;;;2026-05-14;86a69ec4-a847-4624-8074-c79f05ebda59
+Petrocasinos S.A.;CC;1116501069;Yaneth Alvarez Castillo;retired;No;;;;2026-05-14;46e2568e-9232-4a23-a33a-1bf5dbfd9531
+Petrocasinos S.A.;CC;1104411492;Yeider Yair Prasca Ricardo;retired;No;;;;2026-05-14;2db373af-3b3a-47a8-a025-6395f44adccc
+Petrocasinos S.A.;CC;1088305693;Yeisson Alexander Castro Gomez;retired;No;;;;2026-05-14;094bf349-c1ba-49c1-8bbd-0f2bcbfc11ae
+Petrocasinos S.A.;CC;1075258170;yesica yesica Pascuas pascuas;retired;No;;;;2026-05-14;879e0edf-684e-457c-a6f0-7cce9096dff6
+Petrocasinos S.A.;CC;46648311;Yolanda Cataño Ramirez;retired;No;;;;2026-05-07;3b07c944-fa51-40a7-80a2-33df69380f24
+Petrocasinos S.A.;CC;1063957505;Yulieth Paola Ramirez Herrera;retired;No;;;;2026-05-14;842aebb3-6a5f-4d7d-b89d-796b5e84bb32

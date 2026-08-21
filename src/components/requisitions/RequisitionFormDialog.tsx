@@ -68,6 +68,7 @@ import { Badge } from '@/components/ui/badge';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
+import { parseDateOnly, toDateOnlyString } from '@/lib/dateOnly';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -155,8 +156,8 @@ export function RequisitionFormDialog({
   useEffect(() => {
     if (requisition) {
       form.reset({
-        fecha_requisicion: requisition.fecha_requisicion ? new Date(requisition.fecha_requisicion) : new Date(),
-        fecha_ingreso_estimada: requisition.fecha_ingreso_estimada ? new Date(requisition.fecha_ingreso_estimada) : undefined,
+        fecha_requisicion: parseDateOnly(requisition.fecha_requisicion) ?? new Date(),
+        fecha_ingreso_estimada: parseDateOnly(requisition.fecha_ingreso_estimada),
         cantidad_vacantes_requeridas: requisition.cantidad_vacantes_requeridas,
         cargo_solicitado: requisition.cargo_solicitado,
         area_id: requisition.area_id || undefined,
@@ -197,8 +198,8 @@ export function RequisitionFormDialog({
 
   const onSubmit = async (data: RequisitionFormData) => {
     const payload = {
-      fecha_requisicion: format(data.fecha_requisicion, 'yyyy-MM-dd'),
-      fecha_ingreso_estimada: data.fecha_ingreso_estimada ? format(data.fecha_ingreso_estimada, 'yyyy-MM-dd') : null,
+      fecha_requisicion: toDateOnlyString(data.fecha_requisicion),
+      fecha_ingreso_estimada: data.fecha_ingreso_estimada ? toDateOnlyString(data.fecha_ingreso_estimada) : null,
       cantidad_vacantes_requeridas: data.cantidad_vacantes_requeridas,
       cargo_solicitado: data.cargo_solicitado,
       area_id: data.area_id || null,

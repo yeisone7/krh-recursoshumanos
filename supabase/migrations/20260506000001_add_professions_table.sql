@@ -13,20 +13,25 @@ ALTER TABLE public.professions ENABLE ROW LEVEL SECURITY;
 
 -- Policies
 CREATE POLICY "Users can view professions of their company" 
-ON public.professions FOR SELECT 
-USING (company_id = auth.get_user_company_id());
+ON public.professions FOR SELECT
+TO authenticated
+USING (public.is_company_member(company_id));
 
 CREATE POLICY "Users can insert professions of their company" 
-ON public.professions FOR INSERT 
-WITH CHECK (company_id = auth.get_user_company_id());
+ON public.professions FOR INSERT
+TO authenticated
+WITH CHECK (public.is_company_member(company_id));
 
 CREATE POLICY "Users can update professions of their company" 
-ON public.professions FOR UPDATE 
-USING (company_id = auth.get_user_company_id());
+ON public.professions FOR UPDATE
+TO authenticated
+USING (public.is_company_member(company_id))
+WITH CHECK (public.is_company_member(company_id));
 
 CREATE POLICY "Users can delete professions of their company" 
-ON public.professions FOR DELETE 
-USING (company_id = auth.get_user_company_id());
+ON public.professions FOR DELETE
+TO authenticated
+USING (public.is_company_member(company_id));
 
 -- Add profession_id to employees
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS profession_id UUID REFERENCES public.professions(id);

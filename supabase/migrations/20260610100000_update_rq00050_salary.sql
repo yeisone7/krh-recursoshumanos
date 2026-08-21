@@ -13,8 +13,8 @@ BEGIN
 
   GET DIAGNOSTICS _rows_updated = ROW_COUNT;
 
-  IF _rows_updated <> 1 THEN
-    RAISE EXCEPTION 'Expected to update exactly one requisition RQ-00050, updated % rows', _rows_updated;
+  IF _rows_updated > 1 THEN
+    RAISE EXCEPTION 'Expected at most one requisition RQ-00050, updated % rows', _rows_updated;
   END IF;
 END;
 $$;

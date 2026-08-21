@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { PersonnelRequisition } from '@/hooks/useRequisitions';
 import {
   requisitionStatusLabels,
@@ -47,10 +48,6 @@ const CW   = PW - ML - MR; // Content width
 function fmt(d: string | null | undefined) {
   if (!d) return '—';
   return format(new Date(d), "dd/MM/yyyy", { locale: es });
-}
-function fmtLong(d: string | null | undefined) {
-  if (!d) return '—';
-  return format(new Date(d), "dd 'de' MMMM 'de' yyyy", { locale: es });
 }
 function fmtCOP(n: number | null | undefined) {
   if (n == null) return '—';
@@ -243,7 +240,7 @@ export async function generateRequisitionPDF(
   doc.setTextColor(...HEADER_MUTED);
   doc.text('Código: GT FO 218   Versión: 04', ML + 64, 25);
   const fechaReq = req.fecha_requisicion
-    ? format(new Date(req.fecha_requisicion), 'dd/MM/yyyy')
+    ? formatDateOnly(req.fecha_requisicion, 'dd/MM/yyyy')
     : '___/___/______';
   doc.text(`Fecha: ${fechaReq}`, ML + 64, 31);
 
@@ -293,7 +290,7 @@ export async function generateRequisitionPDF(
   y = section(doc, '1.  DATOS DEL SOLICITANTE', y);
   y = row2(doc, y, 'Nombre del Solicitante', val(req.solicitante_nombre), 'Cargo del Solicitante', val(req.cargo_solicitante));
   y = row2(doc, y, 'Centro de Operación', val(req.operation_centers?.name), 'Área', val(req.areas?.name));
-  y = row2(doc, y, 'Fecha de la Requisición', fmt(req.fecha_requisicion), 'Fecha de Ingreso Estimada', fmtLong(req.fecha_ingreso_estimada));
+  y = row2(doc, y, 'Fecha de la Requisición', formatDateOnly(req.fecha_requisicion, 'dd/MM/yyyy'), 'Fecha de Ingreso Estimada', formatDateOnly(req.fecha_ingreso_estimada, "dd 'de' MMMM 'de' yyyy", { locale: es }));
 
   // ── 2. INFORMACIÓN DEL CARGO ──────────────────────────────────────────────
   y = checkPage(doc, y, 40);
@@ -343,7 +340,7 @@ export async function generateRequisitionPDF(
   y = checkPage(doc, y, 30);
   y += 3;
   y = section(doc, '6.  DEFINICIONES DE SELECCIÓN', y);
-  y = row1(doc, y, 'Fecha de Inicio del Proceso', fmtLong(req.seleccion_fecha_inicio_proceso));
+  y = row1(doc, y, 'Fecha de Inicio del Proceso', formatDateOnly(req.seleccion_fecha_inicio_proceso, "dd 'de' MMMM 'de' yyyy", { locale: es }));
   if (req.seleccion_observaciones) y = rowText(doc, y, 'Observaciones de Selección', req.seleccion_observaciones);
 
   // ── 7. FLUJO DE APROBACIONES ─────────────────────────────────────────────

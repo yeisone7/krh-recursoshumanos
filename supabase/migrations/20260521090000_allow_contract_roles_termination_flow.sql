@@ -101,26 +101,10 @@ USING (
   OR public.is_admin()
 );
 
-CREATE POLICY "Contract managers can update employee termination status"
-ON public.employees_v2
-FOR UPDATE
-TO authenticated
-USING (
-  public.is_super_admin()
-  OR (
-    public.is_company_member(company_id)
-    AND public.check_user_permission(auth.uid(), 'contratos', 'update')
-  )
-)
-WITH CHECK (
-  public.is_super_admin()
-  OR (
-    public.is_company_member(company_id)
-    AND public.check_user_permission(auth.uid(), 'contratos', 'update')
-    AND status IN ('en_retiro', 'retired')
-    AND (status <> 'retired' OR is_active = false)
-  )
-);
+-- employees_v2.status is introduced later by
+-- 20260619101500_add_employee_status_to_employees_v2.sql. The matching
+-- termination policy is created immediately afterwards by
+-- 20260619102000_allow_contract_managers_employee_termination_status_v2.sql.
 
 CREATE POLICY "Contract managers can update termination work info"
 ON public.employee_work_info

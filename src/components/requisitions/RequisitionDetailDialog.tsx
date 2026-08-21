@@ -37,6 +37,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateOnly } from '@/lib/dateOnly';
 
 import { useRequisitionWithVacancies, useSubmitRequisition, useUpdateRequisition } from '@/hooks/useRequisitions';
 import { useAuth } from '@/contexts/AuthContext';
@@ -491,7 +492,7 @@ export function RequisitionDetailDialog({
                     <p className="text-sm text-muted-foreground">Fecha de Requisición</p>
                     <p className="font-medium flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      {format(new Date(requisition.fecha_requisicion), "dd 'de' MMMM 'de' yyyy", { locale: es })}
+                      {formatDateOnly(requisition.fecha_requisicion, "dd 'de' MMMM 'de' yyyy", { locale: es })}
                     </p>
                   </div>
                   <div>
@@ -499,7 +500,7 @@ export function RequisitionDetailDialog({
                     <p className="font-medium flex items-center gap-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                       {requisition.fecha_ingreso_estimada
-                        ? format(new Date(requisition.fecha_ingreso_estimada), "dd 'de' MMMM 'de' yyyy", { locale: es })
+                        ? formatDateOnly(requisition.fecha_ingreso_estimada, "dd 'de' MMMM 'de' yyyy", { locale: es })
                         : 'No especificada'}
                     </p>
                   </div>

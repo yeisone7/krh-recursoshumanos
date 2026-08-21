@@ -1,4 +1,7 @@
 -- Redefine public.submit_candidate_registration to respect is_reusable
+ALTER TABLE public.self_registration_tokens
+  ADD COLUMN IF NOT EXISTS is_reusable boolean NOT NULL DEFAULT false;
+
 CREATE OR REPLACE FUNCTION public.submit_candidate_registration(
     p_token text,
     p_first_name text,

@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -436,7 +437,7 @@ export default function Requisiciones() {
                             <div className="p-1.5 rounded-lg bg-background shadow-sm">
                               <Calendar className="w-3.5 h-3.5 text-primary" />
                             </div>
-                            <span className="text-xs font-bold text-foreground/80">{format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}</span>
+                            <span className="text-xs font-bold text-foreground/80">{formatDateOnly(req.fecha_requisicion, 'dd MMM yyyy', { locale: es })}</span>
                           </div>
                         </div>
 
@@ -548,7 +549,7 @@ export default function Requisiciones() {
                                   {requisitionReasonLabels[req.motivo_solicitud as RequisitionReason]}
                                 </Badge>
                                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-primary/5 text-primary border-primary/20 px-2 py-0">
-                                  {format(new Date(req.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
+                                  {formatDateOnly(req.fecha_requisicion, 'dd MMM yyyy', { locale: es })}
                                 </Badge>
                               </div>
                             </div>
