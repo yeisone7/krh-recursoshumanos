@@ -81,6 +81,7 @@ const ACTION_ICONS: Record<string, any> = {
 
 const SENSITIVE_PERMISSION_MODULE_CODES = new Set([
   'req_confidential_requisitions',
+  'catalogos_seleccion_lista_rosada',
 ]);
 
 const getPermissionLabel = (module: Module, permission?: Permission) => {
