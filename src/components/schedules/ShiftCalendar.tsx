@@ -405,6 +405,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
   const { data: operationalShifts = [] } = useShifts();
   const { data: dayShifts = [] } = useShifts('day');
+  const shifts = useMemo(() => [...operationalShifts, ...dayShifts], [operationalShifts, dayShifts]);
   const { data: centers = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: holidaysMap = {} } = useHolidaysMap();
@@ -819,7 +820,6 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   }, [selectedCells]);
 
-  const shifts = useMemo(() => [...operationalShifts, ...dayShifts], [operationalShifts, dayShifts]);
   const activeShifts = useMemo(() => shifts.filter(s => s.is_active), [shifts]);
   const activeDayShifts = useMemo(() => dayShifts.filter(shift => shift.is_active), [dayShifts]);
   const isLoading = loadingEmployees || loadingAssignments;
