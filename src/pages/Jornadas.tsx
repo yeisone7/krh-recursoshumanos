@@ -97,7 +97,7 @@ export default function Jornadas() {
   const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const isShiftsCatalog = searchParams.get('tab') === 'shifts';
-  const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>(isShiftsCatalog ? 'shifts' : 'calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'day-shifts' | 'cycles'>(isShiftsCatalog ? 'shifts' : 'calendar');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -115,6 +115,7 @@ export default function Jornadas() {
   const { currentCompanyId } = useAuth();
   const { data: workSchedules = [], isLoading: loadingSchedules } = useWorkSchedules();
   const { data: shifts = [], isLoading: loadingShifts } = useShifts();
+  const { data: dayShifts = [], isLoading: loadingDayShifts } = useShifts('day');
   const { data: shiftCycles = [], isLoading: loadingCycles } = useShiftCycles();
   
   const deleteSchedule = useDeleteWorkSchedule();
@@ -130,13 +131,14 @@ export default function Jornadas() {
   const formatTime = (time: string) => time?.slice(0, 5) || '';
   const filteredSchedules = workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredShifts = shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredDayShifts = dayShifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredCycles = shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
     try {
       if (deleteConfirm.type === 'schedule') await deleteSchedule.mutateAsync(deleteConfirm.id);
-      else if (deleteConfirm.type === 'shift') await deleteShift.mutateAsync(deleteConfirm.id);
+      else if (deleteConfirm.type === 'shift' || deleteConfirm.type === 'day-shift') await deleteShift.mutateAsync(deleteConfirm.id);
       else if (deleteConfirm.type === 'cycle') await deleteCycle.mutateAsync(deleteConfirm.id);
       toast.success('Eliminado correctamente');
     } catch (error: any) {
@@ -240,6 +242,10 @@ export default function Jornadas() {
               <Briefcase className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Horarios</span>
             </TabsTrigger>
+            <TabsTrigger value="day-shifts" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
+              <Clock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Turnos Día</span>
+            </TabsTrigger>
             <TabsTrigger value="cycles" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
               <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Ciclos</span>
@@ -269,7 +275,7 @@ export default function Jornadas() {
             ) : (
               <Button size="sm" className="h-12 w-full sm:w-auto px-8 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px]" onClick={() => {
                 if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
-                else if (activeTab === 'shifts') { setSelectedShift(null); setShowShiftForm(true); }
+                else if (activeTab === 'shifts' || activeTab === 'day-shifts') { setSelectedShift(null); setShowShiftForm(true); }
                 else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
               }}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -375,14 +381,14 @@ export default function Jornadas() {
           </TabsContent>
 
           {/* Turnos Content */}
-          <TabsContent value="shifts" className="m-0 focus-visible:ring-0">
-             {loadingShifts ? (
+          <TabsContent value={activeTab === 'day-shifts' ? 'day-shifts' : 'shifts'} className="m-0 focus-visible:ring-0">
+             {(activeTab === 'day-shifts' ? loadingDayShifts : loadingShifts) ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-44 rounded-2xl" />)}
                 </div>
              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {filteredShifts.map((shift) => (
+                   {(activeTab === 'day-shifts' ? filteredDayShifts : filteredShifts).map((shift) => (
                       <div 
                         key={shift.id}
                         className="group p-6 rounded-2xl bg-white border border-border hover:border-primary/50 transition-colors"
@@ -450,7 +456,7 @@ export default function Jornadas() {
                                   <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-slate-100 hover:text-foreground transition-all" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
                                      <Edit2 className="w-4 h-4" />
                                   </Button>
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all" onClick={() => setDeleteConfirm({ type: activeTab === 'day-shifts' ? 'day-shift' : 'shift', id: shift.id })}>
                                      <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
@@ -533,7 +539,7 @@ export default function Jornadas() {
 
       {/* Dialogs */}
       <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
-      <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} />
+      <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} kind={activeTab === 'day-shifts' ? 'day' : 'operational'} />
       <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />
       <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />
       <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />

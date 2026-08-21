@@ -103,16 +103,17 @@ export function useDeleteWorkSchedule() {
 // SHIFTS (Turnos Operativos)
 // =============================================
 
-export function useShifts() {
+export function useShifts(kind: 'operational' | 'day' = 'operational') {
   const { currentCompanyId } = useAuth();
 
   return useQuery({
-    queryKey: ['shifts', currentCompanyId],
+    queryKey: ['shifts', currentCompanyId, kind],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('shifts')
         .select('*')
         .eq('company_id', currentCompanyId!)
+        .eq('kind', kind)
         .order('name');
 
       if (error) throw error;
@@ -134,7 +135,7 @@ export function useCreateShift() {
           ...shift,
           company_id: currentCompanyId!,
           created_by: user?.id,
-        })
+        } as never)
         .select()
         .single();
 

@@ -51,12 +51,14 @@ interface ShiftFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   shift?: Shift | null;
+  kind?: 'operational' | 'day';
 }
 
 export function ShiftFormDialog({
   open,
   onOpenChange,
   shift,
+  kind = 'operational',
 }: ShiftFormDialogProps) {
   const createShift = useCreateShift();
   const updateShift = useUpdateShift();
@@ -130,6 +132,7 @@ export function ShiftFormDialog({
           color: data.color,
           is_rest_day: data.is_rest_day,
           is_active: data.is_active,
+          kind,
         });
         toast.success('Turno creado');
       }
