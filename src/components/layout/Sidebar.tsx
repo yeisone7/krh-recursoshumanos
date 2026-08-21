@@ -267,6 +267,7 @@ const catalogosItem: NavItem = {
     { label: 'Tipos Identificación', icon: <FileText className="w-4 h-4" />, href: '/catalogos/tipos-identificacion', moduleCode: CATALOG_PERMISSION_CODES.tiposIdentificacion },
     { label: 'Niveles Educativos', icon: <GraduationCap className="w-4 h-4" />, href: '/catalogos/niveles-educativos', moduleCode: CATALOG_PERMISSION_CODES.nivelesEducativos },
     { label: 'Profesiones', icon: <Briefcase className="w-4 h-4" />, href: '/catalogos/profesiones', moduleCode: CATALOG_PERMISSION_CODES.profesiones },
+    { label: 'Turnos', icon: <Clock className="w-4 h-4" />, href: '/jornadas?tab=shifts', moduleCode: 'jornadas' },
   ],
 };
 

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Clock,
@@ -94,7 +95,9 @@ const getShiftColor = (color?: string) => {
 
 export default function Jornadas() {
   const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>('calendar');
+  const [searchParams] = useSearchParams();
+  const isShiftsCatalog = searchParams.get('tab') === 'shifts';
+  const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'cycles'>(isShiftsCatalog ? 'shifts' : 'calendar');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -198,11 +201,11 @@ export default function Jornadas() {
                 <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0.5 rounded-md">
                   Operaciones / RRHH
                 </Badge>
-                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">Jornadas & Turnos</h1>
+                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">{isShiftsCatalog ? 'Turnos' : 'Jornadas'}</h1>
               </div>
             </div>
             <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
-              Planificación estratégica de horarios administrativos y rotación de personal operativo con visualización en tiempo real.
+              {isShiftsCatalog ? 'Configuración de los turnos operativos disponibles para la organización.' : 'Planificación estratégica de horarios administrativos y rotación de personal operativo con visualización en tiempo real.'}
             </p>
           </div>
 
@@ -236,10 +239,6 @@ export default function Jornadas() {
             <TabsTrigger value="schedules" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
               <Briefcase className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Horarios</span>
-            </TabsTrigger>
-            <TabsTrigger value="shifts" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Turnos</span>
             </TabsTrigger>
             <TabsTrigger value="cycles" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
               <RotateCcw className="w-3.5 h-3.5" />
