@@ -24,7 +24,7 @@ export function useAcademicReferences() {
   const queryClient = useQueryClient();
   const queryKey = ['selection-academic-references', currentCompanyId];
   const query = useQuery({
-    queryKey, enabled: Boolean(currentCompanyId),
+    queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000,
     queryFn: async (): Promise<AcademicReference[]> => {
       const { data, error } = await supabase.from(table).select('*').eq('company_id', currentCompanyId).order('institution');
       if (error) throw error;
