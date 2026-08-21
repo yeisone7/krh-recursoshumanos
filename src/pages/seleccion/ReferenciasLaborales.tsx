@@ -43,7 +43,7 @@ export default function ReferenciasLaborales() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-2">
+    <div className="selection-catalog-page mx-auto max-w-7xl space-y-6 px-2">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4">
           <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Building2 className="size-7" /></div>

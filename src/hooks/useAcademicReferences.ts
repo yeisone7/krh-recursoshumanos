@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { clearSelectionCatalogCache, getSelectionCatalogCache, setSelectionCatalogCache } from '@/lib/selectionCatalogCache';
 
 export interface AcademicReference {
   id: string;
@@ -23,15 +24,20 @@ export function useAcademicReferences() {
   const { currentCompanyId } = useAuth();
   const queryClient = useQueryClient();
   const queryKey = ['selection-academic-references', currentCompanyId];
+  const cacheKey = `academic-references:${currentCompanyId}`;
   const query = useQuery({
-    queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000,
+    queryKey, enabled: Boolean(currentCompanyId), staleTime: 15 * 60 * 1000, gcTime: 60 * 60 * 1000, refetchOnMount: false,
+    initialData: () => getSelectionCatalogCache<AcademicReference[]>(cacheKey)?.data,
+    initialDataUpdatedAt: () => getSelectionCatalogCache<AcademicReference[]>(cacheKey)?.updatedAt,
     queryFn: async (): Promise<AcademicReference[]> => {
       const { data, error } = await supabase.from(table).select('*').eq('company_id', currentCompanyId).order('institution');
       if (error) throw error;
-      return data || [];
+      const records = data || [];
+      setSelectionCatalogCache(cacheKey, records);
+      return records;
     },
   });
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => { clearSelectionCatalogCache(cacheKey); return queryClient.invalidateQueries({ queryKey }); };
   const normalize = (input: AcademicReferenceInput) => ({
     institution: input.institution.trim(), phone: input.phone?.trim() || null, email: input.email?.trim() || null,
     platform: input.platform?.trim() || null, observations: input.observations?.trim() || null,

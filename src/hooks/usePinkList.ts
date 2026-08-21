@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { clearSelectionCatalogCache, getSelectionCatalogCache, setSelectionCatalogCache } from '@/lib/selectionCatalogCache';
 
 export interface PinkListEntry {
   id: string; company_id: string; reference_date: string; full_name: string; document_number: string;
@@ -16,12 +17,15 @@ export function usePinkList() {
   const { currentCompanyId } = useAuth();
   const queryClient = useQueryClient();
   const queryKey = ['selection-pink-list', currentCompanyId];
-  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, queryFn: async (): Promise<PinkListEntry[]> => {
+  const cacheKey = `pink-list:${currentCompanyId}`;
+  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 15 * 60 * 1000, gcTime: 60 * 60 * 1000, refetchOnMount: false, initialData: () => getSelectionCatalogCache<PinkListEntry[]>(cacheKey)?.data, initialDataUpdatedAt: () => getSelectionCatalogCache<PinkListEntry[]>(cacheKey)?.updatedAt, queryFn: async (): Promise<PinkListEntry[]> => {
     const { data, error } = await supabase.from(table).select('*, positions(id, name), operation_centers(id, name)').eq('company_id', currentCompanyId).order('reference_date', { ascending: false }).order('created_at', { ascending: false });
     if (error) throw error;
-    return (data || []) as unknown as PinkListEntry[];
+    const records = (data || []) as unknown as PinkListEntry[];
+    setSelectionCatalogCache(cacheKey, records);
+    return records;
   }});
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => { clearSelectionCatalogCache(cacheKey); return queryClient.invalidateQueries({ queryKey }); };
   const normalize = (input: PinkListInput) => ({ ...input, full_name: input.full_name.trim(), document_number: input.document_number.trim(), observations: input.observations?.trim() || null });
   const createMutation = useMutation({ mutationFn: async (input: PinkListInput) => {
     if (!currentCompanyId) throw new Error('No hay una empresa seleccionada.');
