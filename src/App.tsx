@@ -59,6 +59,11 @@ import SelectCompany from "./pages/SelectCompany";
 import Empleado360 from "./pages/Empleado360";
 import SuperAdmin from "./pages/SuperAdmin";
 import Requisiciones from "./pages/Requisiciones";
+import ReferenciasLaborales from "./pages/seleccion/ReferenciasLaborales";
+import ReferenciasAcademicas from "./pages/seleccion/ReferenciasAcademicas";
+import ListaRosada from "./pages/seleccion/ListaRosada";
+import InformacionVacantes from "./pages/seleccion/InformacionVacantes";
+import InformacionExamenesMedicos from "./pages/seleccion/InformacionExamenesMedicos";
 import Perfil from "./pages/Perfil";
 import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
@@ -181,6 +186,11 @@ const App = () => (
                         <Route path="/examenes" element={<P module="examenes"><Examenes /></P>} />
                         <Route path="/seleccion" element={<P module="seleccion"><Seleccion /></P>} />
                         <Route path="/seleccion/analitica" element={<P module="analitica_seleccion"><Suspense fallback={null}><AnaliticaSeleccion /></Suspense></P>} />
+                        <Route path="/seleccion/catalogos/referencias-laborales" element={<P module="catalogos_seleccion_referencias_laborales"><ReferenciasLaborales /></P>} />
+                        <Route path="/seleccion/catalogos/referencias-academicas" element={<P module="catalogos_seleccion_referencias_academicas"><ReferenciasAcademicas /></P>} />
+                        <Route path="/seleccion/catalogos/lista-rosada" element={<P module="catalogos_seleccion_lista_rosada"><ListaRosada /></P>} />
+                        <Route path="/seleccion/catalogos/informacion-vacantes" element={<P module="catalogos_seleccion_informacion_vacantes"><InformacionVacantes /></P>} />
+                        <Route path="/seleccion/catalogos/informacion-examenes-medicos" element={<P module="catalogos_seleccion_informacion_examenes_medicos"><InformacionExamenesMedicos /></P>} />
                         <Route path="/requisiciones" element={<P module="requisiciones"><Requisiciones /></P>} />
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />

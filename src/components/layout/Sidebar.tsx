@@ -54,6 +54,9 @@ import {
   ClipboardCheck,
   UsersRound,
   Globe,
+  ContactRound,
+  ListChecks,
+  NotebookTabs,
   Bot,
   Workflow,
   ExternalLink,
@@ -293,6 +296,20 @@ const adminNavItems: NavItem[] = [
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
 ];
 
+const catalogosSeleccionItem: NavItem = {
+  label: 'Catálogos Selección',
+  icon: <FolderOpen className="w-5 h-5" />,
+  href: '/seleccion/catalogos/referencias-laborales',
+  moduleCode: 'catalogos_seleccion_referencias_laborales',
+  children: [
+    { label: 'Referencias laborales', icon: <ContactRound className="w-4 h-4" />, href: '/seleccion/catalogos/referencias-laborales', moduleCode: 'catalogos_seleccion_referencias_laborales' },
+    { label: 'Referencias académicas', icon: <GraduationCap className="w-4 h-4" />, href: '/seleccion/catalogos/referencias-academicas', moduleCode: 'catalogos_seleccion_referencias_academicas' },
+    { label: 'Lista Rosada', icon: <ListChecks className="w-4 h-4" />, href: '/seleccion/catalogos/lista-rosada', moduleCode: 'catalogos_seleccion_lista_rosada' },
+    { label: 'Información Vacantes', icon: <NotebookTabs className="w-4 h-4" />, href: '/seleccion/catalogos/informacion-vacantes', moduleCode: 'catalogos_seleccion_informacion_vacantes' },
+    { label: 'Información exámenes médicos', icon: <Stethoscope className="w-4 h-4" />, href: '/seleccion/catalogos/informacion-examenes-medicos', moduleCode: 'catalogos_seleccion_informacion_examenes_medicos' },
+  ],
+};
+
 const sidebarItemTransition = { duration: 0.1, ease: 'easeOut' as const };
 
 export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
@@ -300,6 +317,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
   const [evaluacionesOpen, setEvaluacionesOpen] = useState(false);
+  const [catalogosSeleccionOpen, setCatalogosSeleccionOpen] = useState(false);
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
@@ -374,10 +392,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
   const filteredEvaluacionesItem = useMemo(() => filterItems([evaluacionesItem])[0], [filterItems]);
   const filteredCatalogosItem = useMemo(() => filterItems([catalogosItem])[0], [filterItems]);
+  const filteredCatalogosSeleccionItem = useMemo(() => filterItems([catalogosSeleccionItem])[0], [filterItems]);
 
   const showCapacitaciones = !!filteredCapacitacionesItem;
   const showEvaluaciones = !!filteredEvaluacionesItem;
   const showCatalogos = !!filteredCatalogosItem;
+  const showCatalogosSeleccion = !!filteredCatalogosSeleccionItem;
 
   // Auto-open menus based on route (in useEffect to avoid setState during render)
   const pathname = location.pathname;
@@ -390,6 +410,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     }
     if (pathname.startsWith('/evaluaciones')) {
       setEvaluacionesOpen(true);
+    }
+    if (pathname.startsWith('/seleccion/catalogos')) {
+      setCatalogosSeleccionOpen(true);
     }
   }, [pathname]);
 
@@ -786,12 +809,19 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}
 
         {/* Selección */}
-        {filteredSeleccionNavItems.length > 0 && (
+        {(filteredSeleccionNavItems.length > 0 || showCatalogosSeleccion) && (
           <>
             <SectionLabel label="Selección" />
             <div className="space-y-0.5">
               {filteredSeleccionNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
+              )}
+              {showCatalogosSeleccion && (
+                <ExpandableMenu
+                  item={filteredCatalogosSeleccionItem}
+                  isOpen={catalogosSeleccionOpen}
+                  setIsOpen={setCatalogosSeleccionOpen}
+                />
               )}
             </div>
           </>

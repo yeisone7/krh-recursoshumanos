@@ -1101,7 +1101,7 @@ const candidateStatusLabel: Record<string, string> = {
   selected: 'Seleccionado',
   not_selected: 'No Seleccionado',
   withdrawn: 'Retirado',
-  hired: 'Contratado',
+  hired: 'Seleccionado - Contratar',
 };
 
 const ALL_STEP_TYPES = [

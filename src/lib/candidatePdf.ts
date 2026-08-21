@@ -54,7 +54,7 @@ const maritalMap: Record<string, string> = {
 };
 const statusMap: Record<string, string> = {
   applied: 'Aplicado', in_process: 'En Proceso', selected: 'Seleccionado',
-  hired: 'Contratado', not_selected: 'No Seleccionado', withdrawn: 'Retirado',
+  hired: 'Seleccionado - Contratar', not_selected: 'No Seleccionado', withdrawn: 'Retirado',
 };
 
 export async function generateCandidatePdf(candidate: CandidateForPdf) {
