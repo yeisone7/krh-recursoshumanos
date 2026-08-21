@@ -403,7 +403,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
   const { currentCompanyId, assignedCenterIds } = useAuth();
   const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
-  const { data: shifts = [] } = useShifts();
+  const { data: operationalShifts = [] } = useShifts();
+  const { data: dayShifts = [] } = useShifts('day');
   const { data: centers = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: holidaysMap = {} } = useHolidaysMap();
@@ -772,7 +773,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const handleAssign = useCallback(async () => {
     if (!selectedShiftId || selectedCells.length === 0) return;
 
-    const selectedShift = getShiftById(selectedShiftId);
+    const selectedShift = dayShifts.find(shift => shift.id === selectedShiftId);
     const isWorkShift = selectedShift && !selectedShift.is_rest_day;
 
     if (isWorkShift) {
@@ -812,13 +813,15 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     } catch (error: any) {
       toast.error('Error', { description: error.message || 'No se pudieron guardar las asignaciones' });
     }
-  }, [selectedShiftId, selectedCells, getShiftById, absencesMap, createBulkAssignments, clearSelection]);
+  }, [selectedShiftId, selectedCells, dayShifts, absencesMap, createBulkAssignments, clearSelection]);
 
   const isCellSelected = useCallback((employeeId: string, date: string): boolean => {
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   }, [selectedCells]);
 
+  const shifts = useMemo(() => [...operationalShifts, ...dayShifts], [operationalShifts, dayShifts]);
   const activeShifts = useMemo(() => shifts.filter(s => s.is_active), [shifts]);
+  const activeDayShifts = useMemo(() => dayShifts.filter(shift => shift.is_active), [dayShifts]);
   const isLoading = loadingEmployees || loadingAssignments;
 
   const isInitializedRef = useRef(false);
@@ -1191,13 +1194,13 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Turno</label>
+              <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Turno Día</label>
               <Select value={selectedShiftId} onValueChange={setSelectedShiftId}>
                 <SelectTrigger className="h-14 rounded-xl px-4 text-base">
-                  <SelectValue placeholder="Seleccione turno" />
+                  <SelectValue placeholder="Seleccione turno día" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
-                  {activeShifts.map((shift) => (
+                  {activeDayShifts.map((shift) => (
                     <SelectItem key={shift.id} value={shift.id}>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />

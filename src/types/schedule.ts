@@ -42,6 +42,7 @@ export interface Shift {
   color: string;
   is_rest_day: boolean;
   is_active: boolean;
+  kind?: 'operational' | 'day';
   created_at: string;
   updated_at: string;
   created_by?: string;
