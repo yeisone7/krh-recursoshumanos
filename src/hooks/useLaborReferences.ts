@@ -24,6 +24,8 @@ export function useLaborReferences() {
   const query = useQuery({
     queryKey,
     enabled: Boolean(currentCompanyId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async (): Promise<LaborReference[]> => {
       const { data, error } = await supabase
         .from('selection_labor_references')

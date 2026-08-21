@@ -15,7 +15,7 @@ const table = 'selection_vacancy_information';
 
 export function useVacancyInformation() {
   const { currentCompanyId } = useAuth(); const queryClient = useQueryClient(); const queryKey = ['selection-vacancy-information', currentCompanyId];
-  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), queryFn: async (): Promise<VacancyInformation[]> => {
+  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, queryFn: async (): Promise<VacancyInformation[]> => {
     const { data, error } = await supabase.from(table).select('*, operation_centers(id, name)').eq('company_id', currentCompanyId).order('created_at', { ascending: false });
     if (error) throw error; return (data || []) as unknown as VacancyInformation[];
   }});

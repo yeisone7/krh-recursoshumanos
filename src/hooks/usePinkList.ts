@@ -16,7 +16,7 @@ export function usePinkList() {
   const { currentCompanyId } = useAuth();
   const queryClient = useQueryClient();
   const queryKey = ['selection-pink-list', currentCompanyId];
-  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), queryFn: async (): Promise<PinkListEntry[]> => {
+  const query = useQuery({ queryKey, enabled: Boolean(currentCompanyId), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, queryFn: async (): Promise<PinkListEntry[]> => {
     const { data, error } = await supabase.from(table).select('*, positions(id, name), operation_centers(id, name)').eq('company_id', currentCompanyId).order('reference_date', { ascending: false }).order('created_at', { ascending: false });
     if (error) throw error;
     return (data || []) as unknown as PinkListEntry[];
