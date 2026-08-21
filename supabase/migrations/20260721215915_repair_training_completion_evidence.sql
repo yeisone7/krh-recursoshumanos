@@ -1,6 +1,8 @@
 -- Restore complete evidence visibility and enforce one completion per person/course.
 -- Duplicate rows are preserved verbatim in a private backup table before deletion.
 
+BEGIN;
+
 SET lock_timeout = '10s';
 SET statement_timeout = '60s';
 
@@ -266,3 +268,5 @@ ANALYZE public.training_completions;
 
 RESET lock_timeout;
 RESET statement_timeout;
+
+COMMIT;

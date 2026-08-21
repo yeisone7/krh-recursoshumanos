@@ -14,6 +14,7 @@ import {
   Briefcase,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PersonnelRequisition } from '@/hooks/useRequisitions';
@@ -46,6 +47,10 @@ interface TimelineStepData {
 }
 
 function formatTimelineDate(date: string, includeTime = false) {
+  if (!includeTime) {
+    return formatDateOnly(date, "dd 'de' MMMM 'de' yyyy", { locale: es });
+  }
+
   const parsedDate = new Date(date);
 
   if (Number.isNaN(parsedDate.getTime())) {

@@ -647,7 +647,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                             <p className="font-medium text-sm">
-                              {format(new Date(requisition.fecha_requisicion), 'dd MMM yyyy', { locale: es })}
+                              {formatDateOnly(requisition.fecha_requisicion, 'dd MMM yyyy', { locale: es })}
                             </p>
                           </div>
                         </div>

@@ -15,12 +15,9 @@ BEGIN
   FROM auth.users
   WHERE lower(email) = lower('maopantoja17@gmail.com');
 
-  IF _source_user_id IS NULL THEN
-    RAISE EXCEPTION 'Source user yeisone7@gmail.com was not found';
-  END IF;
-
-  IF _target_user_id IS NULL THEN
-    RAISE EXCEPTION 'Target user maopantoja17@gmail.com was not found';
+  IF _source_user_id IS NULL OR _target_user_id IS NULL THEN
+    RAISE NOTICE 'Skipping admin access clone because source or target user was not found';
+    RETURN;
   END IF;
 
   -- Legacy static roles.

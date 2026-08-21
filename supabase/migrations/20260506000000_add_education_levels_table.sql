@@ -13,20 +13,25 @@ ALTER TABLE public.education_levels ENABLE ROW LEVEL SECURITY;
 
 -- Policies
 CREATE POLICY "Users can view education levels of their company" 
-ON public.education_levels FOR SELECT 
-USING (company_id = auth.get_user_company_id());
+ON public.education_levels FOR SELECT
+TO authenticated
+USING (public.is_company_member(company_id));
 
 CREATE POLICY "Users can insert education levels of their company" 
-ON public.education_levels FOR INSERT 
-WITH CHECK (company_id = auth.get_user_company_id());
+ON public.education_levels FOR INSERT
+TO authenticated
+WITH CHECK (public.is_company_member(company_id));
 
 CREATE POLICY "Users can update education levels of their company" 
-ON public.education_levels FOR UPDATE 
-USING (company_id = auth.get_user_company_id());
+ON public.education_levels FOR UPDATE
+TO authenticated
+USING (public.is_company_member(company_id))
+WITH CHECK (public.is_company_member(company_id));
 
 CREATE POLICY "Users can delete education levels of their company" 
-ON public.education_levels FOR DELETE 
-USING (company_id = auth.get_user_company_id());
+ON public.education_levels FOR DELETE
+TO authenticated
+USING (public.is_company_member(company_id));
 
 -- Add education_level_id to employees
 ALTER TABLE public.employees ADD COLUMN IF NOT EXISTS education_level_id UUID REFERENCES public.education_levels(id);

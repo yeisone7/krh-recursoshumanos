@@ -134,7 +134,7 @@ source_data AS (
           THEN 'indefinido'
         ELSE NULL
       END
-    )::public.contract_type AS normalized_contract_type
+    ) AS normalized_contract_type
   FROM links li
   JOIN public.contracts co ON co.id = li.contract_id
   JOIN public.candidates ca ON ca.id = li.candidate_id
@@ -151,7 +151,7 @@ FROM source_data;
 UPDATE public.contracts co
 SET
   contract_type = CASE
-    WHEN co.contract_type = 'indefinido'::public.contract_type THEN COALESCE(src.normalized_contract_type, co.contract_type)
+    WHEN co.contract_type = 'indefinido' THEN COALESCE(src.normalized_contract_type, co.contract_type)
     ELSE co.contract_type
   END,
   end_date = COALESCE(
