@@ -48,6 +48,7 @@ import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones"
 import Organigrama from "./pages/Organigrama";
 import Cesantias from "./pages/Cesantias";
 import Calendario from "./pages/Calendario";
+import Cumpleanos from "./pages/Cumpleanos";
 import Portal from "./pages/Portal";
 import Reportes from "./pages/Reportes";
 import Analitica from "./pages/Analitica";
@@ -218,6 +219,7 @@ const App = () => (
                         <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />
                         <Route path="/cesantias" element={<P module="cesantias"><Cesantias /></P>} />
                         <Route path="/calendario" element={<P module="calendario"><Calendario /></P>} />
+                        <Route path="/cumpleanos" element={<P module="reportes"><Cumpleanos /></P>} />
                         <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
                         <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
                         <Route path="/asistente-ia" element={<P module="asistente_ia"><AsistenteIA /></P>} />
