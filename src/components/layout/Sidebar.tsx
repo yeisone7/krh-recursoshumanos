@@ -23,6 +23,7 @@ import {
   Building2,
   UserSearch,
   Calendar,
+  Cake,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -273,6 +274,7 @@ const catalogosItem: NavItem = {
 
 const toolsNavItemsBase: NavItem[] = [
   { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario', moduleCode: 'calendario' },
+  { label: 'Cumpleaños', icon: <Cake className="w-5 h-5" />, href: '/cumpleanos', moduleCode: 'reportes' },
   { label: 'Reportes', icon: <FileBarChart className="w-5 h-5" />, href: '/reportes', moduleCode: 'reportes' },
   { label: 'Organigrama', icon: <Network className="w-5 h-5" />, href: '/organigrama', moduleCode: 'organigrama' },
   { label: 'Asistente IA', icon: <Bot className="w-5 h-5" />, href: '/asistente-ia', moduleCode: 'asistente_ia' },
