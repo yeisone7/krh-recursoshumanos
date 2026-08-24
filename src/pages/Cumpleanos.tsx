@@ -3,6 +3,7 @@ import { Cake, CalendarDays, Download, Loader2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import { exportToExcel, exportToPDF, type ReportData } from '@/lib/reportExporter';
 import { getEmployeeFullName } from '@/types/employee';
 import { Button } from '@/components/ui/button';
@@ -24,11 +25,16 @@ function parseBirthDate(value: string) {
 export default function Cumpleanos() {
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(String(today.getMonth() + 1));
+  const [selectedCenter, setSelectedCenter] = useState('all');
   const { data: employees, isLoading } = useEmployees();
+  const { data: operationCenters } = useOperationCenters();
 
   const birthdays = useMemo(() => (employees || [])
     .filter((employee) => employee.is_active && employee.status !== 'retired' && employee.birth_date)
     .filter((employee) => Number(employee.birth_date!.slice(5, 7)) === Number(selectedMonth))
+    .filter((employee) => selectedCenter === 'all'
+      || employee.work_info?.operation_center_id === selectedCenter
+      || employee.operation_center_assignments?.some((assignment) => assignment.operation_center_id === selectedCenter))
     .map((employee) => {
       const birthDate = parseBirthDate(employee.birth_date!);
       return {
@@ -40,14 +46,17 @@ export default function Cumpleanos() {
         center: employee.operation_centers?.name || 'Sin centro asignado',
       };
     })
-    .sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'es')), [employees, selectedMonth]);
+    .sort((a, b) => a.day - b.day || a.name.localeCompare(b.name, 'es')), [employees, selectedMonth, selectedCenter]);
 
   const selectedMonthLabel = MONTHS.find((month) => month.value === selectedMonth)?.label || '';
+  const selectedCenterLabel = selectedCenter === 'all'
+    ? 'Todos los centros'
+    : operationCenters?.find((center) => center.id === selectedCenter)?.name || 'Centro seleccionado';
   const title = `Cumpleaños de ${selectedMonthLabel}`;
 
   const report = (): ReportData => ({
     title: 'Listado de cumpleaños',
-    subtitle: `${title} · ${birthdays.length} colaborador${birthdays.length === 1 ? '' : 'es'}`,
+    subtitle: `${title} · ${selectedCenterLabel} · ${birthdays.length} colaborador${birthdays.length === 1 ? '' : 'es'}`,
     generatedAt: new Date(),
     columns: [
       { header: 'Día', key: 'dia', width: 10 },
@@ -111,6 +120,18 @@ export default function Cumpleanos() {
               <SelectTrigger id="birthday-month" className="w-full sm:w-64"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MONTHS.map((month) => <SelectItem key={month.value} value={month.value} className="capitalize">{month.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="birthday-center" className="text-sm font-semibold text-foreground">Centro de operaciones</label>
+            <Select value={selectedCenter} onValueChange={setSelectedCenter}>
+              <SelectTrigger id="birthday-center" className="w-full sm:w-64"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los centros</SelectItem>
+                {operationCenters?.map((center) => (
+                  <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
