@@ -1,4 +1,4 @@
-import { toDateOnlyString } from '@/lib/dateOnly';
+import { parseDateOnly, toDateOnlyString } from '@/lib/dateOnly';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +19,8 @@ function calculateDaysRemaining(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const targetDate = new Date(dateStr);
+  const targetDate = parseDateOnly(dateStr);
+  if (!targetDate) return null;
   targetDate.setHours(0, 0, 0, 0);
   const diffTime = targetDate.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -72,7 +73,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
         .from('employees_v2')
         .select('id, first_name, last_name, company_id')
         .eq('company_id', currentCompanyId!)
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('status', 'active');
 
       if (!employees || employees.length === 0) return alerts;
 
@@ -273,7 +275,8 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
           const employee = employeeMap.get(inc.employee_id);
           if (!employee) continue;
 
-          const endDate = new Date(inc.end_date);
+          const endDate = parseDateOnly(inc.end_date);
+          if (!endDate) continue;
           endDate.setHours(0, 0, 0, 0);
           const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
