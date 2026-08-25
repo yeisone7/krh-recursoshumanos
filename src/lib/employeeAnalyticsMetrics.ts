@@ -45,3 +45,28 @@ export function countTerminationsForMonth(
     return effectiveMonth === monthKey;
   }).length;
 }
+
+interface AnalyticsContract {
+  employee_id?: string | null;
+  end_date: string | null;
+  is_terminated: boolean;
+  contract_extensions?: Array<{
+    id?: string;
+    end_date: string | null;
+    extension_number: number;
+  }> | null;
+}
+
+export function getEffectiveContractEndDate(contract: AnalyticsContract) {
+  const latestExtension = [...(contract.contract_extensions || [])]
+    .sort((a, b) => b.extension_number - a.extension_number || (b.id || '').localeCompare(a.id || ''))[0];
+
+  return latestExtension?.end_date || contract.end_date;
+}
+
+export function isContractCurrent(contract: AnalyticsContract, today = new Date()) {
+  if (!contract.employee_id || contract.is_terminated) return false;
+
+  const effectiveEndDate = parseDateOnly(getEffectiveContractEndDate(contract));
+  return !effectiveEndDate || differenceInCalendarDays(effectiveEndDate, today) >= 0;
+}
