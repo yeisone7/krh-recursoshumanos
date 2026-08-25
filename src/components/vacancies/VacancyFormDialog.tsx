@@ -22,6 +22,7 @@ import {
   FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { parseCopCurrency } from '@/lib/currency';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
@@ -203,8 +204,8 @@ export function VacancyFormDialog({ open, onOpenChange, onSuccess, preselectedRe
         vacancy_type: data.vacancyType,
         vacancy_reason: data.vacancyReason,
         reason_details: data.reasonDetails || null,
-        salary_range_min: data.salaryRangeMin ? parseFloat(data.salaryRangeMin.replace(/[^0-9.-]+/g, '')) : null,
-        salary_range_max: data.salaryRangeMax ? parseFloat(data.salaryRangeMax.replace(/[^0-9.-]+/g, '')) : null,
+        salary_range_min: parseCopCurrency(data.salaryRangeMin),
+        salary_range_max: parseCopCurrency(data.salaryRangeMax),
         includes_transport: data.includesTransport,
         other_benefits: data.otherBenefits || null,
         job_description: data.jobDescription || null,
