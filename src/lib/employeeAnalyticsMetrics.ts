@@ -31,3 +31,17 @@ export function isHireWithinLastDays(
   const daysSinceHire = differenceInCalendarDays(today, hireDate);
   return daysSinceHire >= 0 && daysSinceHire <= days;
 }
+
+export function countTerminationsForMonth(
+  terminations: Array<{ employee_id: string; effective_date: string | null }>,
+  allowedEmployeeIds: Set<string>,
+  monthKey: string,
+) {
+  return terminations.filter((termination) => {
+    const effectiveDate = parseDateOnly(termination.effective_date);
+    if (!effectiveDate || !allowedEmployeeIds.has(termination.employee_id)) return false;
+
+    const effectiveMonth = `${effectiveDate.getFullYear()}-${String(effectiveDate.getMonth() + 1).padStart(2, '0')}`;
+    return effectiveMonth === monthKey;
+  }).length;
+}
