@@ -43,6 +43,20 @@ export interface CenterComplianceData {
   totalEmployees: number;
 }
 
+export interface TrainingTokenCenterAssociation {
+  course_id: string;
+  operation_center_id: string | null;
+  created_at: string;
+}
+
+export function isTrainingTokenInPeriod(
+  token: Pick<TrainingTokenCenterAssociation, 'created_at'>,
+  period: TrainingPeriodInput
+) {
+  const createdAt = new Date(token.created_at);
+  return createdAt.getFullYear() === period.year && createdAt.getMonth() + 1 === period.month;
+}
+
 function normalizeDocument(value: string | null | undefined) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -164,7 +178,7 @@ function useTokenCenterAssociations(
     queryFn: async () => {
       let query = supabase
         .from('training_access_tokens')
-        .select('course_id, operation_center_id')
+        .select('course_id, operation_center_id, created_at')
         .not('operation_center_id', 'is', null);
 
       if (shouldLimitByAssignedCenters) {
@@ -272,21 +286,28 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const complianceData: CenterComplianceData[] = [];
 
   if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
-    const periodCourseIds = period
+    const configuredPeriodCourseIds = period
       ? new Set(periodAssignments.data.map((assignment) => assignment.course_id))
       : null;
-    const visibleCourses = periodCourseIds
-      ? courses.data.filter((course) => periodCourseIds.has(course.id))
-      : courses.data;
 
     // Build a map: center_id -> Set of course_ids that have tokens for that center
     const centerCourseMap = new Map<string, Set<string>>();
+    const periodCenterCourseMap = new Map<string, Set<string>>();
+    const periodTokenCourseIds = new Set<string>();
     for (const assoc of tokenAssociations.data) {
       if (!assoc.operation_center_id) continue;
       if (!centerCourseMap.has(assoc.operation_center_id)) {
         centerCourseMap.set(assoc.operation_center_id, new Set());
       }
       centerCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
+
+      if (period && isTrainingTokenInPeriod(assoc, period)) {
+        if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
+          periodCenterCourseMap.set(assoc.operation_center_id, new Set());
+        }
+        periodCenterCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
+        periodTokenCourseIds.add(assoc.course_id);
+      }
     }
 
     for (const center of centers.data) {
@@ -299,7 +320,13 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       const centerCourseIds = centerCourseMap.get(center.id);
       if (!centerCourseIds || centerCourseIds.size === 0) continue;
 
-      const applicableCourses = visibleCourses.filter((c) => centerCourseIds.has(c.id));
+      const periodCenterCourseIds = periodCenterCourseMap.get(center.id);
+      const applicableCourses = courses.data.filter((course) => {
+        if (!centerCourseIds.has(course.id)) return false;
+        if (!period) return true;
+
+        return configuredPeriodCourseIds?.has(course.id) || periodCenterCourseIds?.has(course.id);
+      });
       if (applicableCourses.length === 0) continue;
 
       const coursesData: CourseComplianceData[] = [];
@@ -356,7 +383,9 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
     complianceData,
     centers: centers.data || [],
     courses: period
-      ? (courses.data || []).filter((course) => (periodAssignments.data || []).some((assignment) => assignment.course_id === course.id))
+      ? (courses.data || []).filter((course) =>
+          configuredPeriodCourseIds?.has(course.id) || periodTokenCourseIds.has(course.id)
+        )
       : courses.data || [],
     isLoading,
   };
