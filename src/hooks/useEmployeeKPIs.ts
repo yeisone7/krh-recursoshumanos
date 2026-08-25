@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfMonth, subMonths, format } from 'date-fns';
+import { fetchAllAnalyticsRows, isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
 
 export interface EmployeeKPIs {
   // Core counts
@@ -70,20 +71,26 @@ export function useEmployeeKPIs() {
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
       // 1. Get all employees for the company
-      const { data: employees } = await supabase
-        .from('employees_v2')
-        .select(`
-          id, 
-          is_active, 
-          gender,
-          created_at
-        `)
-        .eq('company_id', currentCompanyId!);
+      const employees = await fetchAllAnalyticsRows(async (from, to) => {
+        const { data, error } = await supabase
+          .from('employees_v2')
+          .select(`
+            id,
+            is_active,
+            status,
+            gender,
+            created_at
+          `)
+          .eq('company_id', currentCompanyId!)
+          .order('id')
+          .range(from, to);
+        return { data, error };
+      });
 
-      const activeEmployees = employees?.filter(e => e.is_active) || [];
-      const inactiveEmployees = employees?.filter(e => !e.is_active) || [];
+      const activeEmployees = employees.filter(isOperationallyActiveEmployee);
+      const inactiveEmployees = employees.filter(e => !e.is_active);
       
-      const employeeIds = employees?.map(e => e.id) || [];
+      const employeeIds = employees.map(e => e.id);
       const activeEmployeeIds = activeEmployees.map(e => e.id);
 
       // 2. Get work info for area/center breakdown and hire dates

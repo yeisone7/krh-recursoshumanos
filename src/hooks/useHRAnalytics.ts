@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfMonth, subMonths, format, startOfYear } from 'date-fns';
 import { buildEmployeeDistributions } from '@/lib/hrAnalyticsDistributions';
+import { fetchAllAnalyticsRows, isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
 
 export interface TurnoverData {
   month: string;
@@ -87,14 +88,19 @@ export function useHRAnalytics() {
       const sixMonthsAgo = subMonths(now, 6);
 
       // 1. Get all employees
-      const { data: employees } = await supabase
-        .from('employees_v2')
-        .select('id, is_active, gender, created_at')
-        .eq('company_id', currentCompanyId!);
+      const employees = await fetchAllAnalyticsRows(async (from, to) => {
+        const { data, error } = await supabase
+          .from('employees_v2')
+          .select('id, is_active, status, gender, created_at')
+          .eq('company_id', currentCompanyId!)
+          .order('id')
+          .range(from, to);
+        return { data, error };
+      });
 
-      const activeEmployees = employees?.filter(e => e.is_active) || [];
+      const activeEmployees = employees.filter(isOperationallyActiveEmployee);
       const activeEmployeeIds = activeEmployees.map(e => e.id);
-      const allEmployeeIds = employees?.map(e => e.id) || [];
+      const allEmployeeIds = employees.map(e => e.id);
 
       // 2. Get work info for area/center breakdown
       const { data: workInfos } = await supabase

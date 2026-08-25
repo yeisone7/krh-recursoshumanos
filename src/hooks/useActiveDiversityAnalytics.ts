@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { ActiveDiversityEmployee } from '@/lib/activeDiversityAnalytics';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 
 interface ActiveWorkInfoRow {
   employee_id: string;
@@ -21,23 +22,28 @@ export function useActiveDiversityDataset() {
     queryFn: async (): Promise<ActiveDiversityEmployee[]> => {
       if (!currentCompanyId) return [];
 
-      const [employeesResult, workInfoResult] = await Promise.all([
-        supabase
-          .from('employees_v2')
-          .select(`
-            id,
-            gender,
-            birth_date,
-            disability_type,
-            ethnic_group,
-            is_first_job,
-            is_head_of_household,
-            is_conflict_victim,
-            is_demobilized
-          `)
-          .eq('company_id', currentCompanyId)
-          .eq('is_active', true)
-          .range(0, 9999),
+      const [employees, workInfoResult] = await Promise.all([
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase
+            .from('employees_v2')
+            .select(`
+              id,
+              gender,
+              birth_date,
+              disability_type,
+              ethnic_group,
+              is_first_job,
+              is_head_of_household,
+              is_conflict_victim,
+              is_demobilized
+            `)
+            .eq('company_id', currentCompanyId)
+            .eq('is_active', true)
+            .eq('status', 'active')
+            .order('id')
+            .range(from, to);
+          return { data, error };
+        }),
         supabase
           .from('employee_work_info')
           .select('employee_id, operation_center_id, created_at, operation_centers(id, name)')
@@ -47,7 +53,6 @@ export function useActiveDiversityDataset() {
           .range(0, 9999),
       ]);
 
-      if (employeesResult.error) throw employeesResult.error;
       if (workInfoResult.error) throw workInfoResult.error;
 
       const workInfoByEmployee = new Map<string, ActiveWorkInfoRow>();
@@ -58,7 +63,7 @@ export function useActiveDiversityDataset() {
         }
       });
 
-      return (employeesResult.data || [])
+      return employees
         .map((employee): ActiveDiversityEmployee => {
           const workInfo = workInfoByEmployee.get(employee.id);
           const center = workInfo?.operation_centers as { id?: string; name?: string } | null;
