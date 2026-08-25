@@ -32,6 +32,7 @@ import {
   Package,
   LogOut,
   HeartPulse,
+  HeartHandshake,
   Gavel,
   Palmtree,
   ClipboardList,
@@ -176,6 +177,7 @@ function CompanyLogo({ name, logoUrl, className, fallbackIcon = false }: Company
 const coreNavItems: NavItem[] = [
   { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, href: '/' },
   { label: 'Analítica Global', icon: <BarChart3 className="w-5 h-5" />, href: '/analitica', moduleCode: 'analitica' },
+  { label: 'Diversidad e Inclusión', icon: <HeartHandshake className="w-5 h-5" />, href: '/analitica/diversidad', moduleCode: 'analitica' },
 ];
 
 const personnelNavItems: NavItem[] = [
