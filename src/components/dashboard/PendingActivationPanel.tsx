@@ -8,12 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { resolvePendingUserLabel } from './pendingActivationIdentity';
 
 interface PendingUser {
   user_id: string;
-  email: string;
   full_name: string;
-  created_at: string;
 }
 
 function usePendingActivationUsers() {
@@ -55,19 +54,23 @@ function usePendingActivationUsers() {
       if (pendingUserIds.length === 0) return [];
 
       // Get profile info
-      const { data: profiles } = await supabase
+      const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
-        .select('id, full_name')
+        .select('id, full_name, display_name')
         .in('id', pendingUserIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+      if (profilesError) throw profilesError;
 
-      return pendingUserIds.map(uid => ({
-        user_id: uid,
-        email: '',
-        full_name: profileMap.get(uid) || '',
-        created_at: '',
-      }));
+      const profileMap = new Map(profiles?.map(profile => [profile.id, profile]) || []);
+
+      return pendingUserIds.map(uid => {
+        const profile = profileMap.get(uid);
+
+        return {
+          user_id: uid,
+          full_name: resolvePendingUserLabel(profile?.full_name, profile?.display_name),
+        };
+      });
     },
     enabled: !!currentCompanyId && isAdmin,
     staleTime: 60_000,
@@ -114,7 +117,7 @@ export function PendingActivationPanel() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-foreground">
-                        {user.full_name || 'Sin nombre'}
+                        {user.full_name}
                       </p>
                       <p className="text-xs text-muted-foreground">{user.user_id.slice(0, 8)}...</p>
                     </div>
