@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { startOfMonth, subMonths, format, startOfYear } from 'date-fns';
+import { buildEmployeeDistributions } from '@/lib/hrAnalyticsDistributions';
 
 export interface TurnoverData {
   month: string;
@@ -395,31 +396,25 @@ export function useHRAnalytics() {
         .sort((a, b) => b.employees - a.employees)
         .slice(0, 10);
 
-      // Distribution by contract type
-      const contractTypeCounts = { indefinido: 0, fijo: 0, obra: 0, other: 0 };
-      workInfos?.forEach(w => {
-        if (!activeEmployeeIds.includes(w.employee_id)) return;
-        switch (w.link_type) {
-          case 'indefinido': contractTypeCounts.indefinido++; break;
-          case 'fijo': contractTypeCounts.fijo++; break;
-          case 'obra_labor': contractTypeCounts.obra++; break;
-          default: contractTypeCounts.other++; break;
-        }
-      });
-
-      const byContractType = [
-        { name: 'Indefinido', value: contractTypeCounts.indefinido, color: COLORS.primary },
-        { name: 'Fijo', value: contractTypeCounts.fijo, color: COLORS.accent },
-        { name: 'Obra/Labor', value: contractTypeCounts.obra, color: COLORS.warning },
-        { name: 'Otro', value: contractTypeCounts.other, color: COLORS.muted },
-      ].filter(item => item.value > 0);
-
-      // Distribution by gender
-      const byGender = [
-        { name: 'Masculino', value: activeEmployees.filter(e => e.gender === 'M').length, color: COLORS.primary },
-        { name: 'Femenino', value: activeEmployees.filter(e => e.gender === 'F').length, color: COLORS.accent },
-        { name: 'Otro', value: activeEmployees.filter(e => e.gender === 'O').length, color: COLORS.info },
-      ].filter(item => item.value > 0);
+      // Employee distributions must always account for every active employee.
+      const distributions = buildEmployeeDistributions(activeEmployees, workInfos || []);
+      const distributionColors: Record<string, string> = {
+        Indefinido: COLORS.primary,
+        Fijo: COLORS.accent,
+        'Obra/Labor': COLORS.warning,
+        Masculino: COLORS.primary,
+        Femenino: COLORS.accent,
+        Otro: COLORS.info,
+        'Sin dato': COLORS.muted,
+      };
+      const byContractType = distributions.byContractType.map((item) => ({
+        ...item,
+        color: distributionColors[item.name] || COLORS.muted,
+      }));
+      const byGender = distributions.byGender.map((item) => ({
+        ...item,
+        color: distributionColors[item.name] || COLORS.muted,
+      }));
 
       // Distribution by center
       const centerMap = new Map<string, number>();
