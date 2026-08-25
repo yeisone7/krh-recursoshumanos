@@ -231,7 +231,7 @@ export default function AnaliticaDiversidad() {
   return (
     <div className="min-h-full bg-slate-50/70 p-4 md:p-6">
       <div className="mx-auto max-w-[1680px] space-y-6">
-        <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-teal-50 px-6 py-7 text-slate-950 shadow-xl shadow-slate-200/70 md:px-8">
+        <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-teal-50 px-6 py-7 text-slate-950 md:px-8">
           <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-300/25 blur-3xl" />
           <div className="absolute bottom-0 right-1/3 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
