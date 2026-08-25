@@ -66,7 +66,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
-import { countTerminationsForMonth, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
+import { countTerminationsForMonth, indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -137,7 +137,7 @@ function getProfileScore(employee: any, related: RelatedData) {
     employee.birth_date,
     employee.gender,
     employee.marital_status,
-    employee.work_info?.operation_center_id,
+    employee.work_info?.operation_center_id || employee.operation_centers?.id,
     employee.work_info?.position_name,
     employee.work_info?.hire_date,
     employee.contact?.mobile || employee.contact?.phone,
@@ -273,7 +273,7 @@ function useEmployeeAnalyticsDataset() {
         return { employees: [], contracts: [], terminations: [], related: EMPTY_RELATED };
       }
 
-      const [employeesRows, workInfoRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows, terminationRows] = await Promise.all([
+      const [employeesRows, workInfoRows, centerAssignmentRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows, terminationRows] = await Promise.all([
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('employees_v2')
             .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
@@ -283,7 +283,13 @@ function useEmployeeAnalyticsDataset() {
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('employee_work_info')
             .select('id, employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name)')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+            .eq('company_id', currentCompanyId).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_operation_center_assignments')
+            .select('id, employee_id, operation_center_id, created_at, operation_centers(id, name)')
+            .eq('company_id', currentCompanyId).order('id').range(from, to);
           return { data, error };
         }),
         fetchAllAnalyticsRows(async (from, to) => {
@@ -335,23 +341,26 @@ function useEmployeeAnalyticsDataset() {
         }),
       ]);
 
-      const workInfoByEmployee = indexLatestByEmployee(workInfoRows);
+      const workInfoByEmployee = indexCurrentOrLatestByEmployee(workInfoRows);
+      const centerAssignmentByEmployee = indexLatestByEmployee(centerAssignmentRows);
       const contactByEmployee = indexLatestByEmployee(contactRows);
 
       let employees = employeesRows.map((employee: any) => {
         const workInfo = workInfoByEmployee[employee.id] || null;
+        const centerAssignment = centerAssignmentByEmployee[employee.id] || null;
+        const operationCenter = resolveEmployeeCenter(workInfo, centerAssignment);
         return {
           ...employee,
           contact: contactByEmployee[employee.id] || null,
           work_info: workInfo,
-          operation_centers: workInfo?.operation_centers || null,
+          operation_centers: operationCenter,
           areas: workInfo?.areas || null,
         };
       });
 
       if (shouldLimitByAssignedCenters) {
         employees = employees.filter((employee: any) => {
-          const centerId = employee.work_info?.operation_center_id;
+          const centerId = employee.work_info?.operation_center_id || employee.operation_centers?.id;
           return centerId && assignedCenterIds.includes(centerId);
         });
       }

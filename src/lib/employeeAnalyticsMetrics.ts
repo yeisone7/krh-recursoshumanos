@@ -8,6 +8,15 @@ interface EmployeeRelatedRow {
   id?: string;
 }
 
+interface CurrentEmployeeRelatedRow extends EmployeeRelatedRow {
+  is_current?: boolean | null;
+}
+
+interface EmployeeCenterSource {
+  operation_center_id?: string | null;
+  operation_centers?: { id?: string; name?: string } | null;
+}
+
 function rowVersion(row: EmployeeRelatedRow) {
   return `${row.created_at || ''}|${row.id || ''}`;
 }
@@ -18,6 +27,44 @@ export function indexLatestByEmployee<T extends EmployeeRelatedRow>(rows: T[]) {
     if (!existing || rowVersion(row) > rowVersion(existing)) acc[row.employee_id] = row;
     return acc;
   }, {});
+}
+
+export function indexCurrentOrLatestByEmployee<T extends CurrentEmployeeRelatedRow>(rows: T[]) {
+  return rows.reduce<Record<string, T>>((acc, row) => {
+    const existing = acc[row.employee_id];
+    if (!existing) {
+      acc[row.employee_id] = row;
+      return acc;
+    }
+
+    const currentPriority = Number(row.is_current === true) - Number(existing.is_current === true);
+    if (currentPriority > 0 || (currentPriority === 0 && rowVersion(row) > rowVersion(existing))) {
+      acc[row.employee_id] = row;
+    }
+
+    return acc;
+  }, {});
+}
+
+export function resolveEmployeeCenter(
+  workInfo: EmployeeCenterSource | null | undefined,
+  assignment: EmployeeCenterSource | null | undefined,
+) {
+  if (workInfo?.operation_center_id) {
+    return {
+      id: workInfo.operation_center_id,
+      name: workInfo.operation_centers?.name,
+    };
+  }
+
+  if (assignment?.operation_center_id) {
+    return {
+      id: assignment.operation_center_id,
+      name: assignment.operation_centers?.name,
+    };
+  }
+
+  return null;
 }
 
 export function isHireWithinLastDays(
