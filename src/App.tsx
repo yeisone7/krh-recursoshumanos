@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { applySelectionCatalogQueryDefaults } from "@/lib/selectionCatalogCache";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -116,6 +117,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+applySelectionCatalogQueryDefaults(queryClient);
 
 // Helper to wrap a page with permission check
 const P = ({ module, children }: { module: string; children: React.ReactNode }) => (

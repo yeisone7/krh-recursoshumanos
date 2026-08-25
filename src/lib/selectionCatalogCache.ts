@@ -1,5 +1,15 @@
+import type { QueryClient } from '@tanstack/react-query';
+
 const CACHE_PREFIX = 'krh:selection-catalog:';
 const CACHE_TTL_MS = 15 * 60 * 1000;
+
+export const SELECTION_CATALOG_QUERY_KEYS = [
+  'selection-labor-references',
+  'selection-academic-references',
+  'selection-pink-list',
+  'selection-vacancy-information',
+  'selection-medical-exam-information',
+] as const;
 
 interface CachedCatalog<T> {
   data: T;
@@ -37,4 +47,12 @@ export function clearSelectionCatalogCache(key: string) {
   } catch {
     // Nothing else is required when browser storage is unavailable.
   }
+}
+
+export function applySelectionCatalogQueryDefaults(queryClient: QueryClient) {
+  SELECTION_CATALOG_QUERY_KEYS.forEach((queryKey) => {
+    queryClient.setQueryDefaults([queryKey], {
+      placeholderData: [],
+    });
+  });
 }
