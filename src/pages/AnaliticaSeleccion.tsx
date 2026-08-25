@@ -56,7 +56,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -64,6 +64,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCandidates } from '@/hooks/useCandidates';
 import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
+import {
+  candidateReachedStage,
+  isActiveVacancyStatus,
+  isWithinDateRange,
+  resolveVacancyAverageSalary,
+} from '@/lib/selectionAnalytics';
 import { cn } from '@/lib/utils';
 
 const chartColors = [
@@ -160,13 +166,6 @@ function bucketDays(days: number) {
   return '+30 días';
 }
 
-function isWithinRange(date: Date | null, startDate: string, endDate: string) {
-  if (!date) return !startDate && !endDate;
-  if (startDate && date < new Date(`${startDate}T00:00:00`)) return false;
-  if (endDate && date > new Date(`${endDate}T23:59:59`)) return false;
-  return true;
-}
-
 function getCandidateCenterId(candidate: any) {
   return candidate.vacancies?.operation_center_id || candidate.vacancies?.operation_centers?.id || null;
 }
@@ -203,24 +202,6 @@ function groupCount<T>(items: T[], getKey: (item: T) => string | null | undefine
   )
     .map(([name, value]) => ({ name: formatStatus(name), value }))
     .sort((a, b) => b.value - a.value);
-}
-
-function candidateReachedStage(candidate: any, stage: 'aplicado' | 'evaluado' | 'entrevista' | 'oferta' | 'contratado') {
-  const status = String(candidate.status || '').toLowerCase();
-  const currentStep = String(candidate.current_step || '').toLowerCase();
-  const steps = Array.isArray(candidate.selection_steps) ? candidate.selection_steps : [];
-  const hasStep = (terms: string[]) => steps.some((step: any) => {
-    const type = String(step.step_type || '').toLowerCase();
-    const stepStatus = String(step.status || '').toLowerCase();
-    const result = String(step.result || '').toLowerCase();
-    return terms.some((term) => type.includes(term) || stepStatus.includes(term) || result.includes(term));
-  });
-
-  if (stage === 'aplicado') return true;
-  if (stage === 'contratado') return status === 'hired';
-  if (stage === 'oferta') return ['selected', 'hired'].includes(status) || currentStep.includes('offer') || currentStep.includes('oferta') || hasStep(['offer', 'oferta']);
-  if (stage === 'entrevista') return ['selected', 'hired'].includes(status) || currentStep.includes('interview') || currentStep.includes('entrevista') || hasStep(['interview', 'entrevista']);
-  return Boolean(candidate.final_score || hasStep(['evaluation', 'evaluacion', 'evaluación', 'test', 'prueba', 'assessment', 'score']) || ['selected', 'hired'].includes(status));
 }
 
 export interface MetricInfoData {
@@ -341,7 +322,7 @@ function CircularProcessInfographic({ analytics }: { analytics: any }) {
     { label: 'Planear', value: analytics.kpis.activeRequisitions, color: infographicPalette.teal, icon: Briefcase },
     { label: 'Publicar', value: analytics.kpis.activeVacancies, color: infographicPalette.green, icon: Target },
     { label: 'Atraer', value: analytics.kpis.candidates, color: infographicPalette.navy, icon: Users },
-    { label: 'Evaluar', value: analytics.kpis.inProcessCandidates, color: infographicPalette.orange, icon: Gauge },
+    { label: 'Evaluar', value: analytics.recruitmentFunnel.find((stage: any) => stage.name === 'Evaluado')?.value || 0, color: infographicPalette.orange, icon: Gauge },
     { label: 'Vincular', value: analytics.kpis.hiredCandidates, color: infographicPalette.coral, icon: UserCheck },
   ];
   const total = Math.max(...stages.map((stage) => stage.value), 1);
@@ -625,19 +606,19 @@ export default function AnaliticaSeleccion() {
 
   const filteredRequisitions = useMemo(() => requisitions.filter((item: any) => {
     const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
-    const matchesDate = isWithinRange(asDate(item.fecha_requisicion || item.created_at), startDate, endDate);
+    const matchesDate = isWithinDateRange(asDate(item.fecha_requisicion || item.created_at), startDate, endDate);
     return matchesCenter && matchesDate;
   }), [requisitions, centerFilter, startDate, endDate]);
 
   const filteredVacancies = useMemo(() => vacancies.filter((item: any) => {
     const matchesCenter = centerFilter === 'all' || item.operation_center_id === centerFilter;
-    const matchesDate = isWithinRange(asDate(item.open_date || item.created_at), startDate, endDate);
+    const matchesDate = isWithinDateRange(asDate(item.open_date || item.created_at), startDate, endDate);
     return matchesCenter && matchesDate;
   }), [vacancies, centerFilter, startDate, endDate]);
 
   const filteredCandidates = useMemo(() => candidates.filter((item: any) => {
     const matchesCenter = centerFilter === 'all' || getCandidateCenterId(item) === centerFilter;
-    const matchesDate = isWithinRange(asDate(item.application_date || item.created_at), startDate, endDate);
+    const matchesDate = isWithinDateRange(asDate(item.application_date || item.created_at), startDate, endDate);
     return matchesCenter && matchesDate;
   }), [candidates, centerFilter, startDate, endDate]);
 
@@ -716,16 +697,18 @@ export default function AnaliticaSeleccion() {
     const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
     const activeRequisitions = requisitions.filter((item: any) => !['rechazada', 'cancelada', 'cerrada', 'finalizada'].includes(String(item.estado_requisicion || '').toLowerCase()));
-    const activeVacancies = vacancies.filter((item: any) => ['open', 'in_process', 'pending_placed'].includes(item.status));
+    const activeVacancies = vacancies.filter((item: any) => isActiveVacancyStatus(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
     const hiredCandidates = candidates.filter((item: any) => item.status === 'hired');
     const selectedCandidates = candidates.filter((item: any) => item.status === 'selected');
     const rejectedCandidates = candidates.filter((item: any) => ['not_selected', 'withdrawn'].includes(item.status));
     const inProcessCandidates = candidates.filter((item: any) => !['hired', 'not_selected', 'withdrawn'].includes(item.status));
+    const activeVacancyIds = new Set(activeVacancies.map((item: any) => item.id));
+    const activePipelineCandidates = inProcessCandidates.filter((item: any) => activeVacancyIds.has(item.vacancy_id));
 
     const totalPositions = vacancies.reduce((sum: number, item: any) => sum + (item.positions_count || 0), 0);
     const requestedPositions = requisitions.reduce((sum, item) => sum + (item.cantidad_vacantes_requeridas || 0), 0);
-    const avgCandidatesPerVacancy = vacancies.length ? candidates.length / vacancies.length : 0;
+    const avgCandidatesPerVacancy = activeVacancies.length ? activePipelineCandidates.length / activeVacancies.length : 0;
     const hireRate = percent(hiredCandidates.length, candidates.length);
     const selectionRate = percent(selectedCandidates.length + hiredCandidates.length, candidates.length);
     const rejectionRate = percent(rejectedCandidates.length, candidates.length);
@@ -793,12 +776,11 @@ export default function AnaliticaSeleccion() {
       avance: percent(entry.completados, entry.total),
     })).sort((a, b) => b.total - a.total).slice(0, 8);
 
+    const requisitionsById = new Map(requisitions.map((item: any) => [item.id, item]));
     const salaryByArea = Object.values(
       vacancies.reduce<Record<string, { area: string; promedio: number; vacantes: number; values: number[] }>>((acc: any, vacancy: any) => {
         const area = vacancy.department_area || 'Sin área';
-        const min = Number(vacancy.salary_range_min || 0);
-        const max = Number(vacancy.salary_range_max || 0);
-        const value = min && max ? (min + max) / 2 : min || max;
+        const value = resolveVacancyAverageSalary(vacancy, requisitionsById.get(vacancy.requisition_id));
         if (!value) return acc;
         if (!acc[area]) acc[area] = { area, promedio: 0, vacantes: 0, values: [] };
         acc[area].vacantes += vacancy.positions_count || 1;
@@ -1108,12 +1090,12 @@ export default function AnaliticaSeleccion() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral"
           info={{ calc: 'Se cuentan todas las solicitudes de personal que no han sido canceladas, rechazadas ni cerradas.', ejemplo: 'Si hay 10 solicitudes y 2 fueron canceladas, el indicador muestra 8.', note: 'Refleja cuántas necesidades de personal están pendientes de resolver.' }} />
-        <KpiCard title="Vacantes abiertas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up"
-          info={{ calc: 'Se cuentan las vacantes en estado Abierta o En Proceso.', ejemplo: 'Si se crearon 5 vacantes y 2 ya cerraron, se muestran 3.', note: 'Indica cuántos procesos de selección están activos ahora mismo.' }} />
-        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} por vacante`} icon={Users} trend="up"
-          info={{ calc: 'Candidatos sin resultado final: ni contratados, ni descartados, ni desistidos.', ejemplo: 'Un candidato en entrevista cuenta; uno contratado ya no cuenta.', note: 'Muestra cuántas personas están siendo evaluadas en este momento.' }} />
+        <KpiCard title="Vacantes activas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up"
+          info={{ calc: 'Se cuentan las vacantes en estado Abierta, En proceso o Pendiente colocado.', ejemplo: 'Si se crearon 5 vacantes y 2 ya cerraron, se muestran 3.', note: 'Indica cuántos procesos de selección están activos ahora mismo.' }} />
+        <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} activos por vacante activa`} icon={Users} trend="up"
+          info={{ calc: 'Candidatos sin resultado final. El promedio usa solo candidatos asociados a vacantes activas.', ejemplo: 'Un candidato en entrevista cuenta; uno contratado ya no cuenta.', note: 'Muestra cuántas personas están siendo evaluadas y qué tan surtido está el pipeline activo.' }} />
         <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'}
-          info={{ calc: 'Promedio de qué tan lejos llegan los candidatos dentro del proceso (de aplicación a contratación).', ejemplo: 'Si la mayoría llega hasta entrevistas pero casi nadie llega a oferta, la tasa baja.', note: 'Cuanto más alta, mejor: significa que los candidatos avanzan por todo el proceso.' }} />
+          info={{ calc: 'Promedio ponderado por la etapa máxima: Aplicado 0%, Evaluado 25%, Entrevista 50%, Oferta 75% y Contratado 100%.', ejemplo: 'Dos candidatos en Aplicado y Entrevista promedian (0% + 50%) / 2 = 25%.', note: 'Cuanto más alta, más lejos avanza en promedio el conjunto de candidatos.' }} />
         <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock}
           info={{ calc: 'Promedio de días que tomó cerrar las vacantes ya finalizadas (desde apertura hasta cierre).', ejemplo: 'Si una vacante tardó 20 días y otra 30, el promedio es 25 días.', note: 'Permite saber si los procesos de selección son rápidos o lentos.' }} />
         <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'}
@@ -1628,9 +1610,9 @@ export default function AnaliticaSeleccion() {
               <BookOpen className="h-5 w-5 text-primary" />
               Diccionario de Métricas — Analítica de Selección
             </DialogTitle>
-            <p className="text-sm text-muted-foreground mt-1">
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
               Aquí puedes entender qué significa cada indicador, de dónde viene la información y cómo leerlo.
-            </p>
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto px-6 py-5 space-y-8">
@@ -1649,8 +1631,8 @@ export default function AnaliticaSeleccion() {
                     note: 'Refleja cuántas necesidades de personal están pendientes de resolver.',
                   },
                   {
-                    name: 'Vacantes abiertas',
-                    calc: 'Se cuentan las vacantes que están en estado Abierta o En Proceso.',
+                    name: 'Vacantes activas',
+                    calc: 'Se cuentan las vacantes que están en estado Abierta, En proceso o Pendiente colocado.',
                     ejemplo: 'Si se crearon 5 vacantes y 2 ya fueron cerradas, se muestran 3.',
                     note: 'Indica cuántos procesos de selección están activos en este momento.',
                   },
@@ -1667,15 +1649,15 @@ export default function AnaliticaSeleccion() {
                     note: 'Muestra cuántas personas están actualmente siendo evaluadas.',
                   },
                   {
-                    name: 'Candidatos por vacante',
-                    calc: 'Total de candidatos dividido entre el total de vacantes.',
-                    ejemplo: 'Si hay 30 candidatos y 6 vacantes → 5 candidatos por vacante.',
+                    name: 'Candidatos activos por vacante activa',
+                    calc: 'Candidatos sin resultado final asociados a vacantes activas, dividido entre esas vacantes activas.',
+                    ejemplo: 'Si hay 12 candidatos activos asociados a 6 vacantes activas → 2 candidatos por vacante.',
                     note: 'Lo recomendable es tener 3 o más candidatos por vacante para poder elegir con criterio.',
                   },
                   {
                     name: 'Tasa de avance',
-                    calc: 'Mide en promedio qué tan lejos llegan los candidatos dentro del proceso (desde la aplicación hasta la contratación).',
-                    ejemplo: 'Si la mayoría llega hasta entrevistas pero casi nadie llega a oferta, la tasa baja.',
+                    calc: 'Promedia la etapa máxima alcanzada con estos pesos: Aplicado 0%, Evaluado 25%, Entrevista 50%, Oferta 75% y Contratado 100%.',
+                    ejemplo: 'Dos candidatos en Aplicado y Entrevista promedian (0% + 50%) / 2 = 25%.',
                     note: 'Cuanto más alta, mejor: significa que los candidatos avanzan por todo el proceso.',
                   },
                   {
@@ -1832,7 +1814,7 @@ export default function AnaliticaSeleccion() {
                   { name: 'Conversión', calc: 'De cada 100 candidatos que aplican, cuántos terminan siendo contratados (igual que la tasa de contratación).', note: 'Entre más alto, más eficiente es el proceso.' },
                   { name: 'Selección', calc: 'Qué tan bien el proceso identifica candidatos aptos (seleccionados + contratados respecto al total).', note: 'Un porcentaje bajo puede indicar que se están aplicando muchos candidatos poco calificados.' },
                   { name: 'Velocidad', calc: 'Qué tan rápido se están llenando las vacantes. Entre menos días lleven abiertas, mayor es este índice.', note: 'Una vacante de más de 50 días sin cerrarse reduce significativamente este indicador.' },
-                  { name: 'Pipeline', calc: 'Qué tan surtida está la base de candidatos. Con 5 o más candidatos por vacante se llega al máximo (100%).', note: 'Un pipeline sano permite elegir al mejor candidato, no simplemente al único disponible.' },
+                  { name: 'Pipeline', calc: 'Qué tan surtidas están las vacantes activas con candidatos que aún siguen en proceso. Con 5 o más por vacante activa se llega al máximo (100%).', note: 'Un pipeline sano permite elegir al mejor candidato, no simplemente al único disponible.' },
                 ].map((m) => (
                   <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
                     <p className="font-semibold text-foreground text-sm">{m.name}</p>
