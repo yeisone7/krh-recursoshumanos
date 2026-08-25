@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSelectionDiversityReport } from '@/hooks/useReports';
+import { formatCandidateDisability } from '@/lib/diversityMetrics';
 
 const COLORS = [
   'hsl(220, 70%, 45%)',
@@ -40,7 +41,7 @@ export function SelectionDiversityCharts() {
   const disabilityData = useMemo(() => {
     const map: Record<string, number> = {};
     rows.forEach(r => {
-      const key = r.discapacidad || 'Ninguna';
+      const key = formatCandidateDisability(r.discapacidad);
       map[key] = (map[key] || 0) + 1;
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));

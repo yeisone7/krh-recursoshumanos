@@ -6,6 +6,7 @@ import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { hasCandidateDisability } from '@/lib/diversityMetrics';
 
 const COLORS = {
   masculino: 'hsl(220, 70%, 45%)',
@@ -66,7 +67,7 @@ export function DiversityTrendsChart() {
         total: monthCandidates.length,
         masculino: monthCandidates.filter(c => c.gender === 'M').length,
         femenino: monthCandidates.filter(c => c.gender === 'F').length,
-        conDiscapacidad: monthCandidates.filter(c => c.disability_type && c.disability_type !== 'Ninguna').length,
+        conDiscapacidad: monthCandidates.filter(c => hasCandidateDisability(c.disability_type)).length,
         grupoEtnico: monthCandidates.filter(c => c.ethnic_group && c.ethnic_group !== 'No registrado' && c.ethnic_group !== 'Ninguno').length,
         primerEmpleo: monthCandidates.filter(c => c.is_first_job).length,
         cabezaFamilia: monthCandidates.filter(c => c.is_head_of_household).length,
