@@ -66,7 +66,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
-import { indexLatestByEmployee, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
+import { countTerminationsForMonth, indexLatestByEmployee, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -179,6 +179,7 @@ interface RelatedData {
 interface EmployeeAnalyticsDataset {
   employees: any[];
   contracts: any[];
+  terminations: any[];
   related: RelatedData;
 }
 
@@ -269,10 +270,10 @@ function useEmployeeAnalyticsDataset() {
     queryKey: ['employee_analytics_dataset', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async (): Promise<EmployeeAnalyticsDataset> => {
       if (!currentCompanyId) {
-        return { employees: [], contracts: [], related: EMPTY_RELATED };
+        return { employees: [], contracts: [], terminations: [], related: EMPTY_RELATED };
       }
 
-      const [employeesRows, workInfoRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows] = await Promise.all([
+      const [employeesRows, workInfoRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows, terminationRows] = await Promise.all([
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('employees_v2')
             .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
@@ -326,6 +327,12 @@ function useEmployeeAnalyticsDataset() {
             .eq('company_id', currentCompanyId).order('id').range(from, to);
           return { data, error };
         }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_terminations')
+            .select('id, employee_id, effective_date')
+            .eq('company_id', currentCompanyId).order('id').range(from, to);
+          return { data, error };
+        }),
       ]);
 
       const workInfoByEmployee = indexLatestByEmployee(workInfoRows);
@@ -359,6 +366,7 @@ function useEmployeeAnalyticsDataset() {
       return {
         employees,
         contracts: keepAllowedRows(contractRows, allowedEmployeeIds),
+        terminations: keepAllowedRows(terminationRows, allowedEmployeeIds),
         related: {
           socialByEmployee: indexLatestByEmployee(keepAllowedRows(socialRows, allowedEmployeeIds)),
           bankByEmployee: indexLatestByEmployee(keepAllowedRows(bankRows, allowedEmployeeIds)),
@@ -380,10 +388,11 @@ export default function AnaliticaEmpleados() {
   const [ageFilter, setAgeFilter] = useState('all');
 
   const { canView, hasPermission } = useAuth();
-  const { data: dataset = { employees: [], contracts: [], related: EMPTY_RELATED }, isLoading } = useEmployeeAnalyticsDataset();
+  const { data: dataset = { employees: [], contracts: [], terminations: [], related: EMPTY_RELATED }, isLoading } = useEmployeeAnalyticsDataset();
   const { data: operationCenters = [] } = useOperationCenters();
   const employees = dataset.employees;
   const contracts = dataset.contracts;
+  const terminations = dataset.terminations;
   const related = dataset.related;
 
   const canViewCompensation =
@@ -516,16 +525,14 @@ export default function AnaliticaEmpleados() {
     ];
 
     const months = getMonthlyBuckets(period);
+    const filteredEmployeeIds = new Set(filteredEmployees.map((employee) => employee.id));
     const trendData = months.map((month) => {
       const monthKey = format(month, 'yyyy-MM');
       return {
         name: format(month, 'MMM yy', { locale: es }),
         ingresos: filteredEmployees.filter((employee) => employee.hireDate && format(employee.hireDate, 'yyyy-MM') === monthKey).length,
         creados: filteredEmployees.filter((employee) => employee.createdDate && format(employee.createdDate, 'yyyy-MM') === monthKey).length,
-        retiros: filteredEmployees.filter((employee) => {
-          const date = asDate(employee.work_info?.termination_date);
-          return date && format(date, 'yyyy-MM') === monthKey;
-        }).length,
+        retiros: countTerminationsForMonth(terminations, filteredEmployeeIds, monthKey),
       };
     });
 
@@ -564,7 +571,7 @@ export default function AnaliticaEmpleados() {
       trendData,
       alerts,
     };
-  }, [filteredEmployees, period]);
+  }, [filteredEmployees, period, terminations]);
 
   const resetFilters = () => {
     setPeriod('all');
