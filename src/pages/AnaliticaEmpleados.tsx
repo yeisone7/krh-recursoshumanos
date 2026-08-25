@@ -66,7 +66,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
-import { countTerminationsForMonth, indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter } from '@/lib/employeeAnalyticsMetrics';
+import { countTerminationsForMonth, indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter, resolveEmployeePosition } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -138,7 +138,7 @@ function getProfileScore(employee: any, related: RelatedData) {
     employee.gender,
     employee.marital_status,
     employee.work_info?.operation_center_id || employee.operation_centers?.id,
-    employee.work_info?.position_name,
+    resolveEmployeePosition(employee.work_info),
     employee.work_info?.hire_date,
     employee.contact?.mobile || employee.contact?.phone,
     employee.contact?.email || employee.contact?.personal_email,
@@ -282,7 +282,7 @@ function useEmployeeAnalyticsDataset() {
         }),
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('employee_work_info')
-            .select('id, employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name)')
+            .select('id, employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name), positions(id, name)')
             .eq('company_id', currentCompanyId).order('id').range(from, to);
           return { data, error };
         }),
@@ -439,7 +439,7 @@ export default function AnaliticaEmpleados() {
         centerName: employee.operation_centers?.name || employee.work_info?.operation_centers?.name || 'Sin centro',
         centerId: employee.work_info?.operation_center_id || employee.operation_centers?.id || null,
         areaName: employee.areas?.name || employee.work_info?.areas?.name || 'Sin area',
-        positionName: employee.work_info?.position_name || 'Sin cargo',
+        positionName: resolveEmployeePosition(employee.work_info) || 'Sin cargo',
         contract,
         salary,
         social: related.socialByEmployee[employee.id] || null,

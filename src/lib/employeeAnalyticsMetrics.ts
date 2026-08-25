@@ -17,6 +17,11 @@ interface EmployeeCenterSource {
   operation_centers?: { id?: string; name?: string } | null;
 }
 
+interface EmployeePositionSource {
+  position_name?: string | null;
+  positions?: { name?: string | null } | null;
+}
+
 function rowVersion(row: EmployeeRelatedRow) {
   return `${row.created_at || ''}|${row.id || ''}`;
 }
@@ -65,6 +70,14 @@ export function resolveEmployeeCenter(
   }
 
   return null;
+}
+
+export function resolveEmployeePosition(workInfo: EmployeePositionSource | null | undefined) {
+  const recordedName = workInfo?.position_name?.trim();
+  if (recordedName) return recordedName;
+
+  const catalogName = workInfo?.positions?.name?.trim();
+  return catalogName || null;
 }
 
 export function isHireWithinLastDays(
