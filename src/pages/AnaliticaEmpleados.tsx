@@ -65,6 +65,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
+import { indexLatestByEmployee, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -121,8 +123,7 @@ function getEmployeeStatus(employee: any): EmployeeStatus {
   if (employee.status === 'retired' || (!employee.is_active && employee.status === 'active')) return 'retired';
   if (employee.status === 'en_retiro') return 'en_retiro';
   if (!employee.is_active || employee.status === 'suspended') return 'inactive';
-  const created = asDate(employee.created_at);
-  if (created && differenceInCalendarDays(new Date(), created) <= 30) return 'new';
+  if (isHireWithinLastDays(employee.work_info?.hire_date, 30)) return 'new';
   return 'active';
 }
 
@@ -165,16 +166,6 @@ function getMonthlyBuckets(period: PeriodFilter) {
   }
 
   return months;
-}
-
-function indexCurrent(rows: any[]) {
-  return rows.reduce<Record<string, any>>((acc, row) => {
-    const existing = acc[row.employee_id];
-    if (!existing || row.is_current || row.is_active || row.created_at > existing.created_at) {
-      acc[row.employee_id] = row;
-    }
-    return acc;
-  }, {});
 }
 
 interface RelatedData {
@@ -281,92 +272,66 @@ function useEmployeeAnalyticsDataset() {
         return { employees: [], contracts: [], related: EMPTY_RELATED };
       }
 
-      const [
-        employeesResult,
-        workInfoResult,
-        contactResult,
-        socialResult,
-        bankResult,
-        familyResult,
-        scheduleResult,
-        documentsResult,
-        contractsResult,
-      ] = await Promise.all([
-        supabase
-          .from('employees_v2')
-          .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
-          .eq('company_id', currentCompanyId)
-          .order('created_at', { ascending: false })
-          .range(0, 9999),
-        supabase
-          .from('employee_work_info')
-          .select('employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name)')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_contact')
-          .select('employee_id, email, personal_email, mobile, phone, is_current, created_at')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_social_security')
-          .select('employee_id, eps, afp, arl, ccf, risk_level, is_current, created_at')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_bank_info')
-          .select('employee_id, bank_name, account_type, account_registered, is_current, created_at')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_family')
-          .select('employee_id, children_count, spouse_name, is_current, created_at')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_schedule')
-          .select('employee_id, payroll_type, is_office_schedule, rest_day, is_current, created_at')
-          .eq('company_id', currentCompanyId)
-          .eq('is_current', true)
-          .range(0, 9999),
-        supabase
-          .from('employee_documents')
-          .select('employee_id, is_valid')
-          .eq('company_id', currentCompanyId)
-          .eq('is_valid', true)
-          .range(0, 9999),
-        supabase
-          .from('contracts')
-          .select('employee_id, salary, start_date, end_date, is_terminated, created_at')
-          .eq('company_id', currentCompanyId)
-          .order('created_at', { ascending: false })
-          .range(0, 9999),
+      const [employeesRows, workInfoRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows] = await Promise.all([
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employees_v2')
+            .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
+            .eq('company_id', currentCompanyId).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_work_info')
+            .select('id, employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name)')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_contact')
+            .select('id, employee_id, email, personal_email, mobile, phone, is_current, created_at')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_social_security')
+            .select('id, employee_id, eps, afp, arl, ccf, risk_level, is_current, created_at')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_bank_info')
+            .select('id, employee_id, bank_name, account_type, account_registered, is_current, created_at')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_family')
+            .select('id, employee_id, children_count, spouse_name, is_current, created_at')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_schedule')
+            .select('id, employee_id, payroll_type, is_office_schedule, rest_day, is_current, created_at')
+            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('employee_documents')
+            .select('id, employee_id, is_valid').eq('company_id', currentCompanyId).eq('is_valid', true).order('id').range(from, to);
+          return { data, error };
+        }),
+        fetchAllAnalyticsRows(async (from, to) => {
+          const { data, error } = await supabase.from('contracts')
+            .select('id, employee_id, salary, start_date, end_date, is_terminated, created_at')
+            .eq('company_id', currentCompanyId).order('id').range(from, to);
+          return { data, error };
+        }),
       ]);
 
-      const results = [
-        employeesResult,
-        workInfoResult,
-        contactResult,
-        socialResult,
-        bankResult,
-        familyResult,
-        scheduleResult,
-        documentsResult,
-        contractsResult,
-      ];
+      const workInfoByEmployee = indexLatestByEmployee(workInfoRows);
+      const contactByEmployee = indexLatestByEmployee(contactRows);
 
-      const failedResult = results.find((result) => result.error);
-      if (failedResult?.error) throw failedResult.error;
-
-      const workInfoByEmployee = indexCurrent(workInfoResult.data || []);
-      const contactByEmployee = indexCurrent(contactResult.data || []);
-
-      let employees = (employeesResult.data || []).map((employee: any) => {
+      let employees = employeesRows.map((employee: any) => {
         const workInfo = workInfoByEmployee[employee.id] || null;
         return {
           ...employee,
@@ -385,7 +350,7 @@ function useEmployeeAnalyticsDataset() {
       }
 
       const allowedEmployeeIds = new Set(employees.map((employee: any) => employee.id));
-      const validDocumentRows = keepAllowedRows(documentsResult.data || [], allowedEmployeeIds);
+      const validDocumentRows = keepAllowedRows(documentRows, allowedEmployeeIds);
       const documentCounts = validDocumentRows.reduce<Record<string, number>>((acc, row: any) => {
         acc[row.employee_id] = (acc[row.employee_id] || 0) + 1;
         return acc;
@@ -393,12 +358,12 @@ function useEmployeeAnalyticsDataset() {
 
       return {
         employees,
-        contracts: keepAllowedRows(contractsResult.data || [], allowedEmployeeIds),
+        contracts: keepAllowedRows(contractRows, allowedEmployeeIds),
         related: {
-          socialByEmployee: indexCurrent(keepAllowedRows(socialResult.data || [], allowedEmployeeIds)),
-          bankByEmployee: indexCurrent(keepAllowedRows(bankResult.data || [], allowedEmployeeIds)),
-          familyByEmployee: indexCurrent(keepAllowedRows(familyResult.data || [], allowedEmployeeIds)),
-          scheduleByEmployee: indexCurrent(keepAllowedRows(scheduleResult.data || [], allowedEmployeeIds)),
+          socialByEmployee: indexLatestByEmployee(keepAllowedRows(socialRows, allowedEmployeeIds)),
+          bankByEmployee: indexLatestByEmployee(keepAllowedRows(bankRows, allowedEmployeeIds)),
+          familyByEmployee: indexLatestByEmployee(keepAllowedRows(familyRows, allowedEmployeeIds)),
+          scheduleByEmployee: indexLatestByEmployee(keepAllowedRows(scheduleRows, allowedEmployeeIds)),
           documentCounts,
         },
       };
@@ -428,13 +393,12 @@ export default function AnaliticaEmpleados() {
     hasPermission('compensaciones', 'view');
 
   const activeContractsByEmployee = useMemo(() => {
-    return contracts.reduce<Record<string, any>>((acc, contract: any) => {
-      if (!contract.employee_id || contract.is_terminated) return acc;
+    const validContracts = contracts.filter((contract: any) => {
+      if (!contract.employee_id || contract.is_terminated) return false;
       const endDate = asDate(contract.end_date);
-      if (endDate && differenceInCalendarDays(endDate, new Date()) < 0) return acc;
-      acc[contract.employee_id] = contract;
-      return acc;
-    }, {});
+      return !endDate || differenceInCalendarDays(endDate, new Date()) >= 0;
+    });
+    return indexLatestByEmployee(validContracts);
   }, [contracts]);
 
   const enrichedEmployees = useMemo(() => {
