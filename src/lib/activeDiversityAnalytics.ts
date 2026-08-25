@@ -210,12 +210,10 @@ export function buildActiveDiversityAnalytics(
     )), total),
     ageDistribution: distribution(employees.map((employee) => ageBand(employee.birth_date)), total),
     ethnicDistribution: distribution(employees.map((employee) => {
-      if (!employee.ethnic_group) return 'No registrado';
       if (!hasCandidateEthnicGroup(employee.ethnic_group)) return 'Sin pertenencia';
       return titleCase(formatCandidateEthnicGroup(employee.ethnic_group));
     }), total),
     disabilityDistribution: distribution(employees.map((employee) => {
-      if (!employee.disability_type) return 'No registrada';
       if (!hasCandidateDisability(employee.disability_type)) return 'Sin discapacidad';
       return titleCase(formatCandidateDisability(employee.disability_type));
     }), total),
