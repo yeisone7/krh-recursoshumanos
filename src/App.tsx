@@ -106,6 +106,7 @@ const AnaliticaNomina = lazy(() => import("./pages/AnaliticaNomina"));
 const AnaliticaIncapacidades = lazy(() => import("./pages/AnaliticaIncapacidades"));
 const AnaliticaContratos = lazy(() => import("./pages/AnaliticaContratos"));
 const AnaliticaEmpleados = lazy(() => import("./pages/AnaliticaEmpleados"));
+const AnaliticaDiversidad = lazy(() => import("./pages/AnaliticaDiversidad"));
 const Jornadas = lazy(() => import("./pages/Jornadas"));
 
 const queryClient = new QueryClient({
@@ -222,6 +223,7 @@ const App = () => (
                         <Route path="/cumpleanos" element={<P module="reportes"><Cumpleanos /></P>} />
                         <Route path="/reportes" element={<P module="reportes"><Reportes /></P>} />
                         <Route path="/analitica" element={<P module="analitica"><Analitica /></P>} />
+                        <Route path="/analitica/diversidad" element={<P module="analitica"><Suspense fallback={null}><AnaliticaDiversidad /></Suspense></P>} />
                         <Route path="/asistente-ia" element={<P module="asistente_ia"><AsistenteIA /></P>} />
                         <Route path="/automatizaciones" element={<P module="automatizaciones"><Automatizaciones /></P>} />
                         <Route path="/cumplimiento-laboral" element={<P module="cumplimiento_laboral"><CumplimientoLaboral /></P>} />
