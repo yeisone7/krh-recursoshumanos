@@ -82,6 +82,7 @@ import {
   candidateStatusLabels,
   candidateStatusConfig,
 } from '@/types/vacancy';
+import { isActiveVacancyStatus } from '@/lib/selectionAnalytics';
 
 type VacancyListItem = NonNullable<ReturnType<typeof useVacancies>['data']>[number];
 type CandidateListItem = NonNullable<ReturnType<typeof useCandidates>['data']>[number];
@@ -160,16 +161,14 @@ export default function Seleccion() {
 
   // Stats
   const stats = useMemo(() => {
-    const openVacancies = vacancies.filter((v) => v.status === 'open').length;
-    const inProcessVacancies = vacancies.filter((v) => v.status === 'in_process').length;
+    const activeVacancies = vacancies.filter((v) => isActiveVacancyStatus(v.status)).length;
     const totalCandidates = candidates.length;
     const inProcessCandidates = candidates.filter((c) => isCandidateInProcess(c.status)).length;
     const hiredCandidates = candidates.filter((c) => c.status === 'hired').length;
     const selectedCandidates = candidates.filter((c) => c.status === 'selected').length;
 
     return {
-      openVacancies,
-      inProcessVacancies,
+      activeVacancies,
       totalCandidates,
       inProcessCandidates,
       hiredCandidates,
@@ -383,7 +382,7 @@ export default function Seleccion() {
   };
 
   const kpis = useMemo(() => ([
-    { label: 'VACANTES ABIERTAS', value: stats.openVacancies, desc: 'Nuevas solicitudes', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
+    { label: 'VACANTES ACTIVAS', value: stats.activeVacancies, desc: 'Procesos vigentes', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
     { label: 'EN PROCESO', value: stats.inProcessCandidates, desc: 'Candidatos activos', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-500/10', view: 'in_process' as CandidateKpiView },
     { label: 'CANDIDATOS', value: stats.totalCandidates, desc: 'Ver base completa', icon: Users, color: 'text-primary', bg: 'bg-primary/10', view: 'all' as CandidateKpiView },
     { label: 'CONTRATADOS', value: stats.hiredCandidates, desc: 'Ver contratados', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-500/10', view: 'hired' as CandidateKpiView },
