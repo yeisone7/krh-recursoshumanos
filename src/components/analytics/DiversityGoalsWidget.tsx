@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useSelectionDiversityReport } from '@/hooks/useReports';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import type { DiversityGoals } from '@/components/config/DiversityGoalsConfig';
+import { hasCandidateDisability } from '@/lib/diversityMetrics';
 
 interface GoalMetric {
   label: string;
@@ -27,7 +28,7 @@ export function DiversityGoalsWidget() {
     if (!goals || rows.length === 0) return [];
     const total = rows.length;
     const female = rows.filter(r => r.sexo_biologico === 'Femenino').length;
-    const disability = rows.filter(r => r.discapacidad && r.discapacidad !== 'Ninguna').length;
+    const disability = rows.filter(r => hasCandidateDisability(r.discapacidad)).length;
     const ethnic = rows.filter(r => r.grupo_etnico && r.grupo_etnico !== 'No registrado' && r.grupo_etnico !== 'Ninguno').length;
     const firstJob = rows.filter(r => r.primer_empleo === 'Sí').length;
     const headHouse = rows.filter(r => r.cabeza_familia === 'Sí').length;
