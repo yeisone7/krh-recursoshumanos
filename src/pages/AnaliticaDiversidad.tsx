@@ -388,6 +388,25 @@ export default function AnaliticaDiversidad() {
             </Card>
           </div>
 
+          <div className="mt-6">
+            <SectionHeading eyebrow="Infografía" title="Condiciones especiales de inclusión" description="Número y proporción de personas activas que registran cada condición." />
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {analytics.specialConditions.map((condition, index) => (
+                <Card key={condition.name} className="overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
+                  <CardContent className="relative p-6">
+                    <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full opacity-10" style={{ backgroundColor: COLORS[index] }} />
+                    <div className="relative flex items-center gap-5">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[10px] border-slate-100" style={{ borderTopColor: COLORS[index], borderRightColor: COLORS[index] }}>
+                        <span className="text-lg font-black text-slate-950">{decimal.format(condition.percentage)}%</span>
+                      </div>
+                      <div><p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{condition.name}</p><p className="mt-1 text-3xl font-black text-slate-950">{integer.format(condition.value)}</p><p className="text-xs font-semibold text-slate-500">de {integer.format(analytics.total)} personas</p></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
           <Card className="mt-5 overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-base font-black"><BarChart3 className="h-5 w-5 text-primary" /> Matriz comparativa por centro</CardTitle>
@@ -407,25 +426,6 @@ export default function AnaliticaDiversidad() {
               </table>
             </CardContent>
           </Card>
-        </section>
-
-        <section>
-          <SectionHeading eyebrow="Infografía" title="Condiciones especiales de inclusión" description="Número y proporción de personas activas que registran cada condición." />
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {analytics.specialConditions.map((condition, index) => (
-              <Card key={condition.name} className="overflow-hidden rounded-3xl border-slate-200 bg-white shadow-sm">
-                <CardContent className="relative p-6">
-                  <div className="absolute right-0 top-0 h-24 w-24 rounded-bl-full opacity-10" style={{ backgroundColor: COLORS[index] }} />
-                  <div className="relative flex items-center gap-5">
-                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-[10px] border-slate-100" style={{ borderTopColor: COLORS[index], borderRightColor: COLORS[index] }}>
-                      <span className="text-lg font-black text-slate-950">{decimal.format(condition.percentage)}%</span>
-                    </div>
-                    <div><p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{condition.name}</p><p className="mt-1 text-3xl font-black text-slate-950">{integer.format(condition.value)}</p><p className="text-xs font-semibold text-slate-500">de {integer.format(analytics.total)} personas</p></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </section>
 
         {analytics.total === 0 && (
