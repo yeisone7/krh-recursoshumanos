@@ -66,7 +66,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
-import { countTerminationsForMonth, indexLatestByEmployee, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
+import { countTerminationsForMonth, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -323,7 +323,7 @@ function useEmployeeAnalyticsDataset() {
         }),
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('contracts')
-            .select('id, employee_id, salary, start_date, end_date, is_terminated, created_at')
+            .select('id, employee_id, salary, start_date, end_date, is_terminated, created_at, contract_extensions(id, end_date, extension_number)')
             .eq('company_id', currentCompanyId).order('id').range(from, to);
           return { data, error };
         }),
@@ -402,11 +402,7 @@ export default function AnaliticaEmpleados() {
     hasPermission('compensaciones', 'view');
 
   const activeContractsByEmployee = useMemo(() => {
-    const validContracts = contracts.filter((contract: any) => {
-      if (!contract.employee_id || contract.is_terminated) return false;
-      const endDate = asDate(contract.end_date);
-      return !endDate || differenceInCalendarDays(endDate, new Date()) >= 0;
-    });
+    const validContracts = contracts.filter((contract: any) => isContractCurrent(contract));
     return indexLatestByEmployee(validContracts);
   }, [contracts]);
 
