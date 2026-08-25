@@ -22,3 +22,25 @@ export function formatCandidateDisability(value: string | null | undefined): str
   if (!hasCandidateDisability(value)) return 'Ninguna';
   return value!.trim();
 }
+
+const NO_ETHNIC_GROUP_VALUES = new Set([
+  '',
+  'ninguna',
+  'ninguno',
+  'no aplica',
+  'n/a',
+  'no registrado',
+  'sin grupo étnico',
+  'sin pertenencia étnica',
+]);
+
+export function hasCandidateEthnicGroup(value: string | null | undefined): boolean {
+  return !NO_ETHNIC_GROUP_VALUES.has(normalizeDiversityValue(value));
+}
+
+export function formatCandidateEthnicGroup(value: string | null | undefined): string {
+  const normalized = normalizeDiversityValue(value);
+  if (!normalized || normalized === 'no registrado') return 'No registrado';
+  if (!hasCandidateEthnicGroup(value)) return 'Ninguno';
+  return value!.trim();
+}
