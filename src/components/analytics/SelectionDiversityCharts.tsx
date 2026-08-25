@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSelectionDiversityReport } from '@/hooks/useReports';
-import { formatCandidateDisability } from '@/lib/diversityMetrics';
+import { formatCandidateDisability, formatCandidateEthnicGroup } from '@/lib/diversityMetrics';
 
 const COLORS = [
   'hsl(220, 70%, 45%)',
@@ -29,7 +29,7 @@ export function SelectionDiversityCharts() {
   const ethnicData = useMemo(() => {
     const map: Record<string, number> = {};
     rows.forEach(r => {
-      const key = r.grupo_etnico || 'No registrado';
+      const key = formatCandidateEthnicGroup(r.grupo_etnico);
       map[key] = (map[key] || 0) + 1;
     });
     return Object.entries(map)
