@@ -149,7 +149,7 @@ export function RecentActivity() {
     <div className="card-elevated p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="font-display font-semibold text-lg text-foreground">Actividad Reciente</h2>
-        <span className="text-sm text-muted-foreground">Últimas 24 horas</span>
+        <span className="text-sm text-muted-foreground">Últimos 10 eventos</span>
       </div>
 
       {activities.length === 0 ? (
