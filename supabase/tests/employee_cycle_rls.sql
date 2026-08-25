@@ -1,6 +1,6 @@
 begin;
 
-select plan(7);
+select plan(9);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -35,7 +35,8 @@ insert into public.employees_v2 (
   ('74000000-0000-0000-0000-000000000001', '72000000-0000-0000-0000-000000000001', 'CC', '710000001', 'Visible', 'Actual', true, 'active'),
   ('74000000-0000-0000-0000-000000000002', '72000000-0000-0000-0000-000000000001', 'CC', '710000002', 'Oculto', 'Cambio Centro', true, 'active'),
   ('74000000-0000-0000-0000-000000000003', '72000000-0000-0000-0000-000000000002', 'CC', '710000003', 'Oculto', 'Otra Empresa', true, 'active'),
-  ('74000000-0000-0000-0000-000000000004', '72000000-0000-0000-0000-000000000001', 'CC', '710000004', 'Retirado', 'Seleccion', false, 'retired');
+  ('74000000-0000-0000-0000-000000000004', '72000000-0000-0000-0000-000000000001', 'CC', '710000004', 'Retirado', 'Seleccion', false, 'retired'),
+  ('74000000-0000-0000-0000-000000000005', '72000000-0000-0000-0000-000000000001', 'CC', '710000005', 'Visible', 'Centro Primario', true, 'active');
 
 insert into public.employee_employment_cycles (
   id, company_id, employee_id, cycle_number, status, source, start_date, end_date
@@ -44,7 +45,21 @@ insert into public.employee_employment_cycles (
   ('75000000-0000-0000-0000-000000000002', '72000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000002', 1, 'terminated', 'backfill', date '2020-01-01', date '2022-12-31'),
   ('75000000-0000-0000-0000-000000000003', '72000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000002', 2, 'active', 'backfill', date '2024-01-01', null),
   ('75000000-0000-0000-0000-000000000004', '72000000-0000-0000-0000-000000000002', '74000000-0000-0000-0000-000000000003', 1, 'active', 'backfill', date '2025-01-01', null),
-  ('75000000-0000-0000-0000-000000000005', '72000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000004', 1, 'terminated', 'backfill', date '2019-01-01', date '2023-12-31');
+  ('75000000-0000-0000-0000-000000000005', '72000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000004', 1, 'terminated', 'backfill', date '2019-01-01', date '2023-12-31'),
+  ('75000000-0000-0000-0000-000000000006', '72000000-0000-0000-0000-000000000001', '74000000-0000-0000-0000-000000000005', 1, 'active', 'backfill', date '2025-02-01', null);
+
+insert into public.employee_work_info (
+  employee_id, company_id, operation_center_id, position_name, hire_date,
+  is_current, employment_cycle_id
+) values (
+  '74000000-0000-0000-0000-000000000005',
+  '72000000-0000-0000-0000-000000000001',
+  '73000000-0000-0000-0000-000000000001',
+  'Cargo centro primario',
+  date '2025-02-01',
+  true,
+  '75000000-0000-0000-0000-000000000006'
+);
 
 insert into public.employee_operation_center_assignments (
   employee_id, company_id, operation_center_id, employment_cycle_id
@@ -84,11 +99,17 @@ select is(
     '74000000-0000-0000-0000-000000000002',
     '74000000-0000-0000-0000-000000000003'
   )),
-  1::bigint,
-  'employee visibility uses only the center assignment from the active cycle'
+  2::bigint,
+  'employee visibility accepts an active-cycle assignment or current primary work info'
 );
 select ok(public.has_employee_v2_access('74000000-0000-0000-0000-000000000001'), 'current assigned center grants access');
 select ok(not public.has_employee_v2_access('74000000-0000-0000-0000-000000000002'), 'historical center no longer grants access');
+select ok(public.has_employee_v2_access('74000000-0000-0000-0000-000000000005'), 'current primary work-info center grants access without an assignment row');
+select is(
+  (select count(*)::bigint from public.employee_operation_center_assignments where employee_id = '74000000-0000-0000-0000-000000000005'),
+  0::bigint,
+  'primary-center access does not require a duplicated assignment row'
+);
 select is(
   (select count(*)::bigint from public.employee_employment_cycles),
   1::bigint,

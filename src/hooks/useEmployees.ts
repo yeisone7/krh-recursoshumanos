@@ -169,16 +169,38 @@ function applyRetiredVisibilityFilter(query: any, includeRetired?: boolean) {
     .or('is_active.eq.true,status.neq.active');
 }
 
+export function mergeEmployeeCenterScopeIds(
+  primaryCenterRows: Array<{ employee_id: string }> | null | undefined,
+  additionalCenterRows: Array<{ employee_id: string }> | null | undefined,
+) {
+  return [...new Set([
+    ...(primaryCenterRows || []).map((row) => row.employee_id),
+    ...(additionalCenterRows || []).map((row) => row.employee_id),
+  ])];
+}
+
 async function getEmployeeIdsForActiveCenters(companyId: string, centerIds: string[]) {
   if (centerIds.length === 0) return null;
-  const { data, error } = await supabase
-    .from('employee_operation_center_assignments')
-    .select('employee_id, employee_employment_cycles!inner(status)')
-    .eq('company_id', companyId)
-    .in('operation_center_id', centerIds)
-    .eq('employee_employment_cycles.status', 'active');
-  if (error) throw error;
-  return [...new Set((data || []).map((assignment: any) => assignment.employee_id))];
+  const [primaryCentersResult, additionalCentersResult] = await Promise.all([
+    supabase
+      .from('employee_work_info')
+      .select('employee_id, employee_employment_cycles!inner(status)')
+      .eq('company_id', companyId)
+      .eq('is_current', true)
+      .in('operation_center_id', centerIds)
+      .eq('employee_employment_cycles.status', 'active'),
+    supabase
+      .from('employee_operation_center_assignments')
+      .select('employee_id, employee_employment_cycles!inner(status)')
+      .eq('company_id', companyId)
+      .in('operation_center_id', centerIds)
+      .eq('employee_employment_cycles.status', 'active'),
+  ]);
+
+  if (primaryCentersResult.error) throw primaryCentersResult.error;
+  if (additionalCentersResult.error) throw additionalCentersResult.error;
+
+  return mergeEmployeeCenterScopeIds(primaryCentersResult.data, additionalCentersResult.data);
 }
 
 async function getNewCycleEmployeeIds(companyId: string) {
