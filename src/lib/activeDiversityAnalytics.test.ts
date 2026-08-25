@@ -39,6 +39,10 @@ describe('active employee diversity analytics', () => {
     expect(result.genderDistribution.reduce((sum, item) => sum + item.value, 0)).toBe(3);
     expect(result.ethnicDistribution.reduce((sum, item) => sum + item.value, 0)).toBe(3);
     expect(result.disabilityDistribution.reduce((sum, item) => sum + item.value, 0)).toBe(3);
+    expect(result.ethnicDistribution).toContainEqual({ name: 'Sin pertenencia', value: 2, percentage: 66.7 });
+    expect(result.disabilityDistribution).toContainEqual({ name: 'Sin discapacidad', value: 2, percentage: 66.7 });
+    expect(result.ethnicDistribution.some((item) => item.name === 'No registrado')).toBe(false);
+    expect(result.disabilityDistribution.some((item) => item.name === 'No registrada')).toBe(false);
   });
 
   it('builds center comparisons and goal gaps from the filtered population', () => {
