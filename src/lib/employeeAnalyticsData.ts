@@ -31,3 +31,13 @@ export async function fetchAllAnalyticsRows<T>(
 
   return rows;
 }
+
+export function keepFirstRowPerEmployee<T extends { employee_id: string }>(rows: T[]) {
+  const uniqueRows = new Map<string, T>();
+
+  for (const row of rows) {
+    if (!uniqueRows.has(row.employee_id)) uniqueRows.set(row.employee_id, row);
+  }
+
+  return Array.from(uniqueRows.values());
+}

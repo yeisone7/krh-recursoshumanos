@@ -69,8 +69,8 @@ export default function Dashboard() {
                 />
                 <KPICard
                   title="Vacantes Abiertas"
-                  value={kpis?.activeCandidatesCount || 0}
-                  subtitle={`${kpis?.candidatesInFinalStage || 0} en proceso final`}
+                  value={kpis?.activeVacanciesCount || 0}
+                  subtitle={`${kpis?.activeCandidatesCount || 0} candidatos activos`}
                   icon={<Briefcase className="w-6 h-6" />}
                   variant="secondary"
                 />

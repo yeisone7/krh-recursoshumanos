@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { startOfMonth, subMonths, format } from 'date-fns';
-import { fetchAllAnalyticsRows, isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
+import { addMonths, startOfMonth, subMonths, format } from 'date-fns';
+import { fetchAllAnalyticsRows, isOperationallyActiveEmployee, keepFirstRowPerEmployee } from '@/lib/employeeAnalyticsData';
+import { parseDateOnly } from '@/lib/dateOnly';
 
 export interface EmployeeKPIs {
   // Core counts
@@ -32,6 +33,7 @@ export interface EmployeeKPIs {
   // Candidates
   activeCandidatesCount: number;
   candidatesInFinalStage: number;
+  activeVacanciesCount: number;
   
   // Alerts
   criticalAlertsCount: number;
@@ -52,7 +54,8 @@ function calculateDaysRemaining(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const targetDate = new Date(dateStr);
+  const targetDate = parseDateOnly(dateStr);
+  if (!targetDate) return null;
   targetDate.setHours(0, 0, 0, 0);
   const diffTime = targetDate.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -66,6 +69,7 @@ export function useEmployeeKPIs() {
     queryFn: async (): Promise<EmployeeKPIs> => {
       const now = new Date();
       const startOfCurrentMonth = startOfMonth(now);
+      const startOfNextMonth = addMonths(startOfCurrentMonth, 1);
       const startOfLastMonth = startOfMonth(subMonths(now, 1));
       const thirtyDaysFromNow = new Date(now);
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
@@ -92,34 +96,43 @@ export function useEmployeeKPIs() {
       
       const employeeIds = employees.map(e => e.id);
       const activeEmployeeIds = activeEmployees.map(e => e.id);
+      const activeEmployeeIdSet = new Set(activeEmployeeIds);
 
       // 2. Get work info for area/center breakdown and hire dates
-      const { data: workInfos } = await supabase
-        .from('employee_work_info')
-        .select(`
-          employee_id,
-          hire_date,
-          link_type,
-          termination_date,
-          operation_center_id,
-          area_id,
-          operation_centers(name),
-          areas(name)
-        `)
-        .eq('company_id', currentCompanyId!)
-        .eq('is_current', true);
+      const workInfoRows = await fetchAllAnalyticsRows(async (from, to) => {
+        const { data, error } = await supabase
+          .from('employee_work_info')
+          .select(`
+            employee_id,
+            hire_date,
+            link_type,
+            termination_date,
+            operation_center_id,
+            area_id,
+            created_at,
+            operation_centers(name),
+            areas(name)
+          `)
+          .eq('company_id', currentCompanyId!)
+          .eq('is_current', true)
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(from, to);
+        return { data, error };
+      });
+      const workInfos = keepFirstRowPerEmployee(workInfoRows);
 
       // Calculate new hires this month
-      const newHiresThisMonth = workInfos?.filter(w => {
-        const hireDate = new Date(w.hire_date);
-        return hireDate >= startOfCurrentMonth && activeEmployeeIds.includes(w.employee_id);
-      }).length || 0;
+      const newHiresThisMonth = workInfos.filter(w => {
+        const hireDate = parseDateOnly(w.hire_date);
+        return !!hireDate && hireDate >= startOfCurrentMonth && hireDate < startOfNextMonth && activeEmployeeIdSet.has(w.employee_id);
+      }).length;
 
       // Calculate new hires last month for trend
-      const newHiresLastMonth = workInfos?.filter(w => {
-        const hireDate = new Date(w.hire_date);
-        return hireDate >= startOfLastMonth && hireDate < startOfCurrentMonth;
-      }).length || 0;
+      const newHiresLastMonth = workInfos.filter(w => {
+        const hireDate = parseDateOnly(w.hire_date);
+        return !!hireDate && hireDate >= startOfLastMonth && hireDate < startOfCurrentMonth && activeEmployeeIdSet.has(w.employee_id);
+      }).length;
 
       // Calculate employee trend
       const employeeTrend = newHiresLastMonth > 0 
@@ -127,14 +140,24 @@ export function useEmployeeKPIs() {
         : newHiresThisMonth > 0 ? 100 : 0;
 
       // 3. Get terminations this month
-      const { data: terminations } = await supabase
-        .from('employee_terminations')
-        .select('id, effective_date, is_completed')
-        .eq('company_id', currentCompanyId!)
-        .gte('effective_date', format(startOfCurrentMonth, 'yyyy-MM-dd'));
+      const [terminationsThisMonthResult, activeTerminationsResult] = await Promise.all([
+        supabase
+          .from('employee_terminations')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', currentCompanyId!)
+          .gte('effective_date', format(startOfCurrentMonth, 'yyyy-MM-dd'))
+          .lt('effective_date', format(startOfNextMonth, 'yyyy-MM-dd')),
+        supabase
+          .from('employee_terminations')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', currentCompanyId!)
+          .eq('is_completed', false),
+      ]);
+      if (terminationsThisMonthResult.error) throw terminationsThisMonthResult.error;
+      if (activeTerminationsResult.error) throw activeTerminationsResult.error;
 
-      const terminationsThisMonth = terminations?.length || 0;
-      const employeesInRetirement = terminations?.filter(t => !t.is_completed).length || 0;
+      const terminationsThisMonth = terminationsThisMonthResult.count || 0;
+      const employeesInRetirement = activeTerminationsResult.count || 0;
 
       // 4. Get expiring contracts (next 30 days)
       const { data: contracts } = await supabase
@@ -219,14 +242,25 @@ export function useEmployeeKPIs() {
       }
 
       // 7. Get candidates stats
-      const { data: candidates } = await supabase
-        .from('candidates')
-        .select('id, status, current_step')
-        .eq('company_id', currentCompanyId!)
-        .in('status', ['applied', 'in_interview', 'in_psycho_test', 'in_technical_test', 'in_medical', 'in_validation', 'selected']);
+      const [candidatesResult, vacanciesResult] = await Promise.all([
+        supabase
+          .from('candidates')
+          .select('id, status, current_step')
+          .eq('company_id', currentCompanyId!)
+          .in('status', ['applied', 'in_interview', 'in_psycho_test', 'in_technical_test', 'in_medical', 'in_validation', 'selected']),
+        supabase
+          .from('vacancies')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', currentCompanyId!)
+          .in('status', ['open', 'in_process', 'pending_placed']),
+      ]);
+      if (candidatesResult.error) throw candidatesResult.error;
+      if (vacanciesResult.error) throw vacanciesResult.error;
+      const candidates = candidatesResult.data;
 
       const activeCandidatesCount = candidates?.length || 0;
       const candidatesInFinalStage = candidates?.filter(c => c.status === 'selected').length || 0;
+      const activeVacanciesCount = vacanciesResult.count || 0;
 
       // 8. Calculate demographics
       const byGender = {
@@ -243,8 +277,8 @@ export function useEmployeeKPIs() {
         other: 0,
       };
 
-      workInfos?.forEach(w => {
-        if (!activeEmployeeIds.includes(w.employee_id)) return;
+      workInfos.forEach(w => {
+        if (!activeEmployeeIdSet.has(w.employee_id)) return;
         switch (w.link_type) {
           case 'indefinido': byContractType.indefinido++; break;
           case 'fijo': byContractType.fijo++; break;
@@ -255,8 +289,8 @@ export function useEmployeeKPIs() {
 
       // Area breakdown
       const areaMap = new Map<string, number>();
-      workInfos?.forEach(w => {
-        if (!activeEmployeeIds.includes(w.employee_id)) return;
+      workInfos.forEach(w => {
+        if (!activeEmployeeIdSet.has(w.employee_id)) return;
         const areaName = (w.areas as any)?.name || 'Sin área';
         areaMap.set(areaName, (areaMap.get(areaName) || 0) + 1);
       });
@@ -267,8 +301,8 @@ export function useEmployeeKPIs() {
 
       // Center breakdown
       const centerMap = new Map<string, number>();
-      workInfos?.forEach(w => {
-        if (!activeEmployeeIds.includes(w.employee_id)) return;
+      workInfos.forEach(w => {
+        if (!activeEmployeeIdSet.has(w.employee_id)) return;
         const centerName = (w.operation_centers as any)?.name || 'Sin centro';
         centerMap.set(centerName, (centerMap.get(centerName) || 0) + 1);
       });
@@ -286,9 +320,10 @@ export function useEmployeeKPIs() {
       // 10. Calculate average tenure
       let totalTenureMonths = 0;
       let tenureCount = 0;
-      workInfos?.forEach(w => {
-        if (!activeEmployeeIds.includes(w.employee_id)) return;
-        const hireDate = new Date(w.hire_date);
+      workInfos.forEach(w => {
+        if (!activeEmployeeIdSet.has(w.employee_id)) return;
+        const hireDate = parseDateOnly(w.hire_date);
+        if (!hireDate) return;
         const monthsDiff = (now.getTime() - hireDate.getTime()) / (1000 * 60 * 60 * 24 * 30);
         totalTenureMonths += monthsDiff;
         tenureCount++;
@@ -309,8 +344,9 @@ export function useEmployeeKPIs() {
 
       if (incapacities) {
         for (const inc of incapacities) {
-          const startDate = new Date(inc.start_date);
-          const endDate = new Date(inc.end_date);
+          const startDate = parseDateOnly(inc.start_date);
+          const endDate = parseDateOnly(inc.end_date);
+          if (!startDate || !endDate) continue;
           startDate.setHours(0, 0, 0, 0);
           endDate.setHours(0, 0, 0, 0);
           
@@ -347,6 +383,7 @@ export function useEmployeeKPIs() {
         incapacityDaysThisMonth,
         activeCandidatesCount,
         candidatesInFinalStage,
+        activeVacanciesCount,
         criticalAlertsCount: criticalCount,
         warningAlertsCount: warningCount,
         byGender,
