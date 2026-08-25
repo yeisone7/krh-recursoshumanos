@@ -231,23 +231,23 @@ export default function AnaliticaDiversidad() {
   return (
     <div className="min-h-full bg-slate-50/70 p-4 md:p-6">
       <div className="mx-auto max-w-[1680px] space-y-6">
-        <section className="relative overflow-hidden rounded-3xl bg-slate-950 px-6 py-7 text-white shadow-2xl shadow-slate-300 md:px-8">
-          <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-400/15 blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+        <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50 to-teal-50 px-6 py-7 text-slate-950 shadow-xl shadow-slate-200/70 md:px-8">
+          <div className="absolute -right-20 -top-24 h-72 w-72 rounded-full bg-teal-300/25 blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 h-40 w-40 rounded-full bg-blue-300/20 blur-3xl" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="border-white/15 bg-white/10 text-[9px] font-black uppercase tracking-[0.2em] text-white hover:bg-white/10">Analítica estratégica</Badge>
-                <Badge className="border-emerald-400/20 bg-emerald-400/10 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-200 hover:bg-emerald-400/10">Datos vigentes</Badge>
+                <Badge className="border-sky-200 bg-sky-100 text-[9px] font-black uppercase tracking-[0.2em] text-sky-800 hover:bg-sky-100">Analítica estratégica</Badge>
+                <Badge className="border-emerald-200 bg-emerald-100 text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700 hover:bg-emerald-100">Datos vigentes</Badge>
               </div>
               <div className="mt-5 flex items-start gap-4">
                 <div className="hidden h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-blue-600 shadow-lg shadow-teal-950/40 sm:flex">
                   <HeartHandshake className="h-7 w-7" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-300">Personal activo</p>
-                  <h1 className="mt-1 text-3xl font-black tracking-tight !text-white sm:text-4xl">Diversidad e Inclusión</h1>
-                  <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-slate-300">
+                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-700">Personal activo</p>
+                  <h1 className="mt-1 text-3xl font-black tracking-tight !text-slate-950 sm:text-4xl">Diversidad e Inclusión</h1>
+                  <p className="mt-2 max-w-2xl text-sm font-medium leading-relaxed text-slate-600">
                     Representación demográfica, condiciones de inclusión, brechas frente a metas y desempeño comparativo por centro de operación.
                   </p>
                 </div>
@@ -256,7 +256,7 @@ export default function AnaliticaDiversidad() {
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Select value={centerFilter} onValueChange={setCenterFilter}>
-                <SelectTrigger className="h-11 min-w-[250px] border-white/15 bg-white/10 font-bold text-white [&>span]:text-white [&>svg]:text-white">
+                <SelectTrigger className="h-11 min-w-[250px] border-slate-200 bg-white font-bold text-slate-800 shadow-sm [&>span]:text-slate-800 [&>svg]:text-slate-500">
                   <SelectValue placeholder="Todos los centros" />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,23 +264,23 @@ export default function AnaliticaDiversidad() {
                   {centers.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-11 border-white/15 bg-white/10 font-black text-white hover:bg-white/20 hover:text-white">
+              <Button variant="outline" onClick={() => refetch()} disabled={isFetching} className="h-11 border-sky-200 bg-white font-black text-sky-700 shadow-sm hover:bg-sky-50 hover:text-sky-800">
                 <RefreshCw className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin')} /> Actualizar
               </Button>
             </div>
           </div>
 
-          <div className="relative mt-7 grid gap-3 border-t border-white/10 pt-5 sm:grid-cols-3">
-            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Universo analizado</p><p className="mt-1 text-lg font-black">{integer.format(analytics.total)} personas activas</p></div>
-            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Cobertura demográfica</p><p className="mt-1 text-lg font-black">{decimal.format(analytics.demographicCoverage)}%</p></div>
-            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Metas alcanzadas</p><p className="mt-1 text-lg font-black">{analytics.goalsMet} de {analytics.metrics.length}</p></div>
+          <div className="relative mt-7 grid gap-3 border-t border-slate-200 pt-5 sm:grid-cols-3">
+            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Universo analizado</p><p className="mt-1 text-lg font-black text-slate-950">{integer.format(analytics.total)} personas activas</p></div>
+            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Cobertura demográfica</p><p className="mt-1 text-lg font-black text-slate-950">{decimal.format(analytics.demographicCoverage)}%</p></div>
+            <div><p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Metas alcanzadas</p><p className="mt-1 text-lg font-black text-slate-950">{analytics.goalsMet} de {analytics.metrics.length}</p></div>
           </div>
         </section>
 
         <section>
           <SectionHeading eyebrow="Indicadores clave" title="Radiografía de representación" description="Cada indicador utiliza como denominador el personal activo del filtro seleccionado." />
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <KpiCard title="Personal activo" value={integer.format(analytics.total)} detail={centerFilter === 'all' ? `${centers.length} centros con personal` : 'Centro seleccionado'} icon={Users} tone="bg-slate-900" />
+            <KpiCard title="Personal activo" value={integer.format(analytics.total)} detail={centerFilter === 'all' ? `${centers.length} centros con personal` : 'Centro seleccionado'} icon={Users} tone="bg-sky-600" />
             <KpiCard title="Mujeres" value={`${decimal.format(analytics.metrics[0]?.percentage || 0)}%`} detail={`${integer.format(analytics.female)} personas`} icon={UsersRound} tone="bg-pink-600" />
             <KpiCard title="Discapacidad" value={`${decimal.format(analytics.metrics[1]?.percentage || 0)}%`} detail={`${integer.format(analytics.disability)} personas`} icon={Accessibility} tone="bg-teal-600" />
             <KpiCard title="Pertenencia étnica" value={`${decimal.format(analytics.metrics[2]?.percentage || 0)}%`} detail={`${integer.format(analytics.ethnic)} personas`} icon={Globe2} tone="bg-blue-600" />
@@ -355,32 +355,32 @@ export default function AnaliticaDiversidad() {
               </div>
             </ChartCard>
 
-            <Card className="rounded-3xl border-slate-200 bg-slate-950 text-white shadow-xl xl:col-span-5">
+            <Card className="rounded-3xl border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-teal-50 text-slate-950 shadow-lg shadow-slate-200/70 xl:col-span-5">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">Lectura ejecutiva</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">Lectura ejecutiva</p>
                     <h3 className="mt-1 text-xl font-black">Hallazgos del corte actual</h3>
                   </div>
-                  <Sparkles className="h-6 w-6 text-amber-300" />
+                  <Sparkles className="h-6 w-6 text-amber-500" />
                 </div>
                 <div className="mt-6 space-y-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <Target className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
-                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Brecha prioritaria</p><p className="mt-1 text-sm font-bold">{biggestGap?.label || 'Sin datos'}: {biggestGap ? `${decimal.format(biggestGap.gap)} pp frente a la meta` : 'sin población analizada'}.</p></div>
+                      <Target className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-500">Brecha prioritaria</p><p className="mt-1 text-sm font-bold text-slate-900">{biggestGap?.label || 'Sin datos'}: {biggestGap ? `${decimal.format(biggestGap.gap)} pp frente a la meta` : 'sin población analizada'}.</p></div>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-teal-300" />
-                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Centro referente</p><p className="mt-1 text-sm font-bold">{topCenter ? `${topCenter.name} registra un índice compuesto de ${decimal.format(topCenter.inclusionIndex)}%.` : 'Se requieren centros con al menos cinco personas.'}</p></div>
+                      <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-teal-600" />
+                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-500">Centro referente</p><p className="mt-1 text-sm font-bold text-slate-900">{topCenter ? `${topCenter.name} registra un índice compuesto de ${decimal.format(topCenter.inclusionIndex)}%.` : 'Se requieren centros con al menos cinco personas.'}</p></div>
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-300" />
-                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-400">Calidad del dato</p><p className="mt-1 text-sm font-bold">{decimal.format(analytics.demographicCoverage)}% de cobertura en sexo, edad y centro de operación.</p></div>
+                      <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+                      <div><p className="text-xs font-black uppercase tracking-wider text-slate-500">Calidad del dato</p><p className="mt-1 text-sm font-bold text-slate-900">{decimal.format(analytics.demographicCoverage)}% de cobertura en sexo, edad y centro de operación.</p></div>
                     </div>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function AnaliticaDiversidad() {
                 <tbody className="divide-y divide-slate-100">
                   {overallAnalytics.centers.map((center) => (
                     <tr key={center.id} className="text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50">
-                      <td className="px-5 py-4 font-black text-slate-900">{center.name}</td><td className="px-4 py-4 text-right">{integer.format(center.total)}</td><td className="px-4 py-4 text-right">{decimal.format(center.femalePct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.disabilityPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.ethnicPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.firstJobPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.headHouseholdPct)}%</td><td className="px-5 py-4 text-right"><Badge className="bg-slate-900 font-black text-white hover:bg-slate-900">{decimal.format(center.inclusionIndex)}%</Badge></td>
+                      <td className="px-5 py-4 font-black text-slate-900">{center.name}</td><td className="px-4 py-4 text-right">{integer.format(center.total)}</td><td className="px-4 py-4 text-right">{decimal.format(center.femalePct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.disabilityPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.ethnicPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.firstJobPct)}%</td><td className="px-4 py-4 text-right">{decimal.format(center.headHouseholdPct)}%</td><td className="px-5 py-4 text-right"><Badge className="bg-teal-600 font-black text-white hover:bg-teal-600">{decimal.format(center.inclusionIndex)}%</Badge></td>
                     </tr>
                   ))}
                 </tbody>
