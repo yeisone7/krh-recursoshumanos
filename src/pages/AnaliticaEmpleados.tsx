@@ -10,7 +10,6 @@ import {
   Cell,
   ComposedChart,
   Legend,
-  Line,
   Pie,
   PieChart,
   Radar,
@@ -65,12 +64,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
-import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
-import { countTerminationsForMonth, indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter, resolveEmployeePosition } from '@/lib/employeeAnalyticsMetrics';
+import { fetchAllAnalyticsRows, isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
+import { indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter, resolveEmployeePosition } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
-type EmployeeStatus = 'active' | 'inactive' | 'retired' | 'en_retiro' | 'new';
+type EmployeeStatus = 'active' | 'new';
 
 const chartColors = ['#0EA5E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6', '#64748B', '#EC4899'];
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -120,9 +119,6 @@ function getEmployeeName(employee: any) {
 }
 
 function getEmployeeStatus(employee: any): EmployeeStatus {
-  if (employee.status === 'retired' || (!employee.is_active && employee.status === 'active')) return 'retired';
-  if (employee.status === 'en_retiro') return 'en_retiro';
-  if (!employee.is_active || employee.status === 'suspended') return 'inactive';
   if (isHireWithinLastDays(employee.work_info?.hire_date, 30)) return 'new';
   return 'active';
 }
@@ -179,7 +175,6 @@ interface RelatedData {
 interface EmployeeAnalyticsDataset {
   employees: any[];
   contracts: any[];
-  terminations: any[];
   related: RelatedData;
 }
 
@@ -270,14 +265,18 @@ function useEmployeeAnalyticsDataset() {
     queryKey: ['employee_analytics_dataset', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async (): Promise<EmployeeAnalyticsDataset> => {
       if (!currentCompanyId) {
-        return { employees: [], contracts: [], terminations: [], related: EMPTY_RELATED };
+        return { employees: [], contracts: [], related: EMPTY_RELATED };
       }
 
-      const [employeesRows, workInfoRows, centerAssignmentRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows, terminationRows] = await Promise.all([
+      const [employeesRows, workInfoRows, centerAssignmentRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows] = await Promise.all([
         fetchAllAnalyticsRows(async (from, to) => {
           const { data, error } = await supabase.from('employees_v2')
             .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
-            .eq('company_id', currentCompanyId).order('id').range(from, to);
+            .eq('company_id', currentCompanyId)
+            .eq('is_active', true)
+            .eq('status', 'active')
+            .order('id')
+            .range(from, to);
           return { data, error };
         }),
         fetchAllAnalyticsRows(async (from, to) => {
@@ -333,19 +332,13 @@ function useEmployeeAnalyticsDataset() {
             .eq('company_id', currentCompanyId).order('id').range(from, to);
           return { data, error };
         }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_terminations')
-            .select('id, employee_id, effective_date')
-            .eq('company_id', currentCompanyId).order('id').range(from, to);
-          return { data, error };
-        }),
       ]);
 
       const workInfoByEmployee = indexCurrentOrLatestByEmployee(workInfoRows);
       const centerAssignmentByEmployee = indexLatestByEmployee(centerAssignmentRows);
       const contactByEmployee = indexLatestByEmployee(contactRows);
 
-      let employees = employeesRows.map((employee: any) => {
+      let employees = employeesRows.filter(isOperationallyActiveEmployee).map((employee: any) => {
         const workInfo = workInfoByEmployee[employee.id] || null;
         const centerAssignment = centerAssignmentByEmployee[employee.id] || null;
         const operationCenter = resolveEmployeeCenter(workInfo, centerAssignment);
@@ -375,7 +368,6 @@ function useEmployeeAnalyticsDataset() {
       return {
         employees,
         contracts: keepAllowedRows(contractRows, allowedEmployeeIds),
-        terminations: keepAllowedRows(terminationRows, allowedEmployeeIds),
         related: {
           socialByEmployee: indexLatestByEmployee(keepAllowedRows(socialRows, allowedEmployeeIds)),
           bankByEmployee: indexLatestByEmployee(keepAllowedRows(bankRows, allowedEmployeeIds)),
@@ -392,16 +384,14 @@ function useEmployeeAnalyticsDataset() {
 
 export default function AnaliticaEmpleados() {
   const [period, setPeriod] = useState<PeriodFilter>('all');
-  const [statusFilter, setStatusFilter] = useState('all');
   const [centerFilter, setCenterFilter] = useState('all');
   const [ageFilter, setAgeFilter] = useState('all');
 
   const { canView, hasPermission } = useAuth();
-  const { data: dataset = { employees: [], contracts: [], terminations: [], related: EMPTY_RELATED }, isLoading } = useEmployeeAnalyticsDataset();
+  const { data: dataset = { employees: [], contracts: [], related: EMPTY_RELATED }, isLoading } = useEmployeeAnalyticsDataset();
   const { data: operationCenters = [] } = useOperationCenters();
   const employees = dataset.employees;
   const contracts = dataset.contracts;
-  const terminations = dataset.terminations;
   const related = dataset.related;
 
   const canViewCompensation =
@@ -455,7 +445,6 @@ export default function AnaliticaEmpleados() {
   const filteredEmployees = useMemo(() => {
     return enrichedEmployees.filter((employee) => {
       const matchesPeriod = isInsideRange(employee.hireDate || employee.createdDate, period);
-      const matchesStatus = statusFilter === 'all' || employee.status === statusFilter;
       const matchesCenter = centerFilter === 'all' || employee.centerId === centerFilter;
       const matchesAge =
         ageFilter === 'all' ||
@@ -464,17 +453,14 @@ export default function AnaliticaEmpleados() {
         (ageFilter === 'over45' && employee.age !== null && employee.age > 45) ||
         (ageFilter === 'unknown' && employee.age === null);
 
-      return matchesPeriod && matchesStatus && matchesCenter && matchesAge;
+      return matchesPeriod && matchesCenter && matchesAge;
     });
-  }, [ageFilter, centerFilter, enrichedEmployees, period, statusFilter]);
+  }, [ageFilter, centerFilter, enrichedEmployees, period]);
 
   const analytics = useMemo(() => {
     const total = filteredEmployees.length;
-    const active = filteredEmployees.filter((employee) => employee.status === 'active' || employee.status === 'new').length;
-    const inactive = filteredEmployees.filter((employee) => employee.status === 'inactive').length;
-    const retired = filteredEmployees.filter((employee) => employee.status === 'retired').length;
-    const inRetirement = filteredEmployees.filter((employee) => employee.status === 'en_retiro').length;
     const newEmployees = filteredEmployees.filter((employee) => employee.status === 'new').length;
+    const establishedEmployees = total - newEmployees;
     const withContract = filteredEmployees.filter((employee) => !!employee.contract).length;
     const withoutContract = total - withContract;
     const withCompleteSocial = filteredEmployees.filter((employee) => employee.social?.eps && employee.social?.afp && employee.social?.arl).length;
@@ -490,10 +476,8 @@ export default function AnaliticaEmpleados() {
     const avgTenure = tenureValues.length ? tenureValues.reduce((sum, tenure) => sum + tenure, 0) / tenureValues.length : 0;
 
     const statusData = [
-      { name: 'Activos', value: active, color: '#10B981' },
-      { name: 'Inactivos', value: inactive, color: '#64748B' },
-      { name: 'Retirados', value: retired, color: '#EF4444' },
-      { name: 'En retiro', value: inRetirement, color: '#F59E0B' },
+      { name: 'Más de 30 días', value: establishedEmployees, color: '#10B981' },
+      { name: 'Nuevos', value: newEmployees, color: '#8B5CF6' },
     ];
 
     const ageData = [
@@ -530,14 +514,12 @@ export default function AnaliticaEmpleados() {
     ];
 
     const months = getMonthlyBuckets(period);
-    const filteredEmployeeIds = new Set(filteredEmployees.map((employee) => employee.id));
     const trendData = months.map((month) => {
       const monthKey = format(month, 'yyyy-MM');
       return {
         name: format(month, 'MMM yy', { locale: es }),
         ingresos: filteredEmployees.filter((employee) => employee.hireDate && format(employee.hireDate, 'yyyy-MM') === monthKey).length,
         creados: filteredEmployees.filter((employee) => employee.createdDate && format(employee.createdDate, 'yyyy-MM') === monthKey).length,
-        retiros: countTerminationsForMonth(terminations, filteredEmployeeIds, monthKey),
       };
     });
 
@@ -548,10 +530,6 @@ export default function AnaliticaEmpleados() {
 
     return {
       total,
-      active,
-      inactive,
-      retired,
-      inRetirement,
       newEmployees,
       withContract,
       withoutContract,
@@ -576,11 +554,10 @@ export default function AnaliticaEmpleados() {
       trendData,
       alerts,
     };
-  }, [filteredEmployees, period, terminations]);
+  }, [filteredEmployees, period]);
 
   const resetFilters = () => {
     setPeriod('all');
-    setStatusFilter('all');
     setCenterFilter('all');
     setAgeFilter('all');
   };
@@ -603,7 +580,7 @@ export default function AnaliticaEmpleados() {
             <div>
               <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">Analitica de Empleados</h1>
               <p className="mt-1 max-w-3xl text-sm font-medium text-muted-foreground">
-                Lectura integral de poblacion laboral, cobertura contractual, estructura organizacional, calidad de datos, seguridad social, cargos, centros y tendencias de ingreso.
+                Lectura integral del personal activo: cobertura contractual, estructura organizacional, calidad de datos, seguridad social, cargos, centros y tendencias de ingreso.
               </p>
             </div>
           </div>
@@ -618,20 +595,6 @@ export default function AnaliticaEmpleados() {
                 <SelectItem value="12m">Ultimos 12 meses</SelectItem>
                 <SelectItem value="ytd">Este ano</SelectItem>
                 <SelectItem value="all">Historico</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-10 w-full rounded-lg bg-background lg:w-[150px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Activos</SelectItem>
-                <SelectItem value="new">Nuevos</SelectItem>
-                <SelectItem value="inactive">Inactivos</SelectItem>
-                <SelectItem value="retired">Retirados</SelectItem>
-                <SelectItem value="en_retiro">En retiro</SelectItem>
               </SelectContent>
             </Select>
 
@@ -670,7 +633,7 @@ export default function AnaliticaEmpleados() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Empleados analizados', value: integerFormatter.format(analytics.total), icon: Users, tone: 'bg-sky-500/10 text-sky-600', detail: `${analytics.active} activos` },
+          { label: 'Empleados activos analizados', value: integerFormatter.format(analytics.total), icon: Users, tone: 'bg-sky-500/10 text-sky-600', detail: 'Solo personal activo' },
           { label: 'Ficha completa', value: `${analytics.avgProfileScore}%`, icon: Gauge, tone: 'bg-emerald-500/10 text-emerald-600', detail: 'Promedio de calidad de datos' },
           { label: 'Sin contrato vigente', value: integerFormatter.format(analytics.withoutContract), icon: AlertTriangle, tone: 'bg-amber-500/10 text-amber-600', detail: `${percent(analytics.withoutContract, analytics.total)}% de la muestra` },
           { label: 'Nuevos ingresos', value: integerFormatter.format(analytics.newEmployees), icon: UserPlus, tone: 'bg-violet-500/10 text-violet-600', detail: 'Ultimos 30 dias' },
@@ -744,7 +707,7 @@ export default function AnaliticaEmpleados() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Tendencia de ingresos y retiros
+              Tendencia de ingresos del personal activo
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -758,7 +721,6 @@ export default function AnaliticaEmpleados() {
                   <Legend />
                   <Bar dataKey="ingresos" name="Ingresos laborales" fill="#0EA5E9" radius={[4, 4, 0, 0]} />
                   <Bar dataKey="creados" name="Fichas creadas" fill="#10B981" radius={[4, 4, 0, 0]} />
-                  <Line type="monotone" dataKey="retiros" name="Retiros" stroke="#EF4444" strokeWidth={3} dot={{ r: 3 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -769,7 +731,7 @@ export default function AnaliticaEmpleados() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <FileCheck2 className="h-4 w-4 text-primary" />
-              Estado de personal
+              Composición del personal activo
             </CardTitle>
           </CardHeader>
           <CardContent>
