@@ -59,6 +59,12 @@ export function getEarliestIncapacityStartDate(
   return earliestValue ? new Date(`${earliestValue}T00:00:00`) : fallback;
 }
 
+export function hasIncapacityStartedBy(row: IncapacityAnalyticsRow, cutoff: Date) {
+  if (!row.start_date) return false;
+  const startDate = new Date(`${row.start_date}T00:00:00`);
+  return !Number.isNaN(startDate.getTime()) && startDate.getTime() <= cutoff.getTime();
+}
+
 const roundPercentage = (value: number, total: number) => {
   if (!total) return 0;
   return Math.round((value / total) * 1000) / 10;
