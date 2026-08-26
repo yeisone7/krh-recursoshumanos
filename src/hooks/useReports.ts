@@ -54,6 +54,7 @@ function getCurrentEmployeeRecord<T extends CurrentEmployeeRecord>(
 export interface IncapacityReportRow {
   empleado: string;
   documento: string;
+  codigo_diagnostico: string;
   diagnostico: string;
   origen: string;
   fecha_inicio: string;
@@ -392,6 +393,7 @@ export function useIncapacityReport(startDate?: Date, endDate?: Date) {
       return (data || []).map(inc => ({
         empleado: `${inc.employees_v2.first_name} ${inc.employees_v2.last_name}`,
         documento: inc.employees_v2.document_number,
+        codigo_diagnostico: inc.cie10_code || 'Sin código',
         diagnostico: inc.diagnosis,
         origen: getIncapacityOriginShortLabel(inc.origin),
         fecha_inicio: formatDateOnly(inc.start_date, 'dd/MM/yyyy'),

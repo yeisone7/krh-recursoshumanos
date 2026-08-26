@@ -12,10 +12,13 @@ import { format, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function IncapacityReport() {
   const [startDate, setStartDate] = useState<Date>(startOfYear(new Date()));
   const [endDate, setEndDate] = useState<Date>(endOfYear(new Date()));
+  const { companies, currentCompanyId } = useAuth();
+  const companyName = companies.find((company) => company.id === currentCompanyId)?.name;
   
   const { data: incapacities, isLoading } = useIncapacityReport(startDate, endDate);
   
@@ -23,9 +26,19 @@ export function IncapacityReport() {
     title: 'Reporte de Incapacidades con Recuperación',
     subtitle: `Período: ${format(startDate, 'dd/MM/yyyy')} - ${format(endDate, 'dd/MM/yyyy')}`,
     generatedAt: new Date(),
+    organization: companyName || 'Gestión Humana',
+    institutional: true,
+    summary: [
+      { label: 'Registros', value: incapacities?.length || 0 },
+      { label: 'Valor total', value: totalAmount, format: 'currency' },
+      { label: 'Recuperado', value: recoveredAmount, format: 'currency', tone: 'positive' },
+      { label: 'Pendiente', value: pendingAmount, format: 'currency', tone: 'warning' },
+    ],
+    currencyKeys: ['monto_total', 'monto_recuperado', 'pendiente'],
     columns: [
       { header: 'Empleado', key: 'empleado', width: 25 },
       { header: 'Documento', key: 'documento', width: 15 },
+      { header: 'Código del Diagnóstico', key: 'codigo_diagnostico', width: 16 },
       { header: 'Diagnóstico', key: 'diagnostico', width: 25 },
       { header: 'Origen', key: 'origen', width: 12 },
       { header: 'Fecha Inicio', key: 'fecha_inicio', width: 12 },
