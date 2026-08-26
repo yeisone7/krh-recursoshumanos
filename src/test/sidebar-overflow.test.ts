@@ -16,3 +16,25 @@ describe('sidebar viewport containment', () => {
     );
   });
 });
+
+describe('sidebar incapacity group', () => {
+  it('keeps incapacity links in their own section', () => {
+    const sidebarSource = readFileSync(
+      `${process.cwd()}/src/components/layout/Sidebar.tsx`,
+      'utf8',
+    );
+    const timeGroup = sidebarSource.slice(
+      sidebarSource.indexOf('const timeManagementNavItems'),
+      sidebarSource.indexOf('const incapacityNavItems'),
+    );
+    const incapacityGroup = sidebarSource.slice(
+      sidebarSource.indexOf('const incapacityNavItems'),
+      sidebarSource.indexOf('const capacitacionesItem'),
+    );
+
+    expect(timeGroup).not.toContain("href: '/incapacidades'");
+    expect(incapacityGroup).toContain("href: '/incapacidades'");
+    expect(incapacityGroup).toContain("href: '/incapacidades/analitica'");
+    expect(sidebarSource).toContain('<SectionLabel label="Incapacidades" />');
+  });
+});
