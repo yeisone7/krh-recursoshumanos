@@ -71,6 +71,7 @@ import {
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
 import { cn } from '@/lib/utils';
+import { isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
 import {
   getCurrentLegalStage,
   getLegalMilestones,
@@ -946,7 +947,7 @@ export default function AnaliticaIncapacidades() {
   const flatIncapacities = useMemo(() => flattenIncapacities(incapacityRoots), [incapacityRoots]);
   const employeeById = useMemo(() => new Map(employees.map((employee) => [employee.id, employee])), [employees]);
   const activeEmployees = useMemo(
-    () => employees.filter((employee) => employee.is_active && employee.status !== 'retired').length,
+    () => employees.filter(isOperationallyActiveEmployee).length,
     [employees]
   );
 
@@ -1255,7 +1256,7 @@ export default function AnaliticaIncapacidades() {
         <KpiTile title="Casos filtrados" value={integerFormatter.format(analytics.total)} detail={`${analytics.active} activos ahora`} icon={FileText} color={palette.teal} trend={analytics.trends.cases} />
         <KpiTile title="Dias de incapacidad" value={integerFormatter.format(analytics.totalDays)} detail={`${numberFormatter.format(analytics.avgDays)} dias promedio`} icon={CalendarDays} color={palette.orange} trend={analytics.trends.days} />
         <KpiTile title="Recobro pendiente" value={money(analytics.pendingRecovery)} detail={`${analytics.recoveryRate}% recuperado`} icon={Banknote} color={palette.amber} trend={analytics.trends.recovery} />
-        <KpiTile title="Incidencia laboral" value={`${analytics.incidenceRate}%`} detail={`${analytics.affectedEmployees} de ${analytics.activeEmployees || analytics.affectedEmployees} empleados`} icon={Users} color={palette.navy} />
+        <KpiTile title="Colaboradores afectados" value={integerFormatter.format(analytics.affectedEmployees)} detail={`${analytics.incidenceRate}% de ${analytics.activeEmployees || analytics.affectedEmployees} activos`} icon={Users} color={palette.navy} />
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">

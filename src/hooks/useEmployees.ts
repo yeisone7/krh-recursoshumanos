@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/employee';
 import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 import { scopeToEmploymentCycle, withEmploymentCycle } from '@/hooks/employeeCycleScope';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -428,28 +429,32 @@ export function useIncapacityAnalyticsEmployees() {
         : null;
       if (scopedEmployeeIds && scopedEmployeeIds.length === 0) return [];
 
-      let query = supabase
-        .from('employees_v2')
-        .select(`
-          id,
-          is_active,
-          status,
-          gender,
-          employee_employment_cycles(id, status),
-          employee_work_info(
-            employment_cycle_id, position_name, is_current,
-            operation_centers(id, name)
-          )
-        `)
-        .eq('company_id', currentCompanyId)
-        .eq('employee_work_info.is_current', true);
+      const employees = await fetchAllAnalyticsRows(async (from, to) => {
+        let query = supabase
+          .from('employees_v2')
+          .select(`
+            id,
+            is_active,
+            status,
+            gender,
+            employee_employment_cycles(id, status),
+            employee_work_info(
+              employment_cycle_id, position_name, is_current,
+              operation_centers(id, name)
+            )
+          `)
+          .eq('company_id', currentCompanyId)
+          .eq('employee_work_info.is_current', true);
 
-      if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
+        if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
 
-      const { data: employees, error } = await query;
-      if (error) throw error;
+        const { data, error } = await query
+          .order('id')
+          .range(from, to);
+        return { data, error };
+      });
 
-      return (employees || []).map((employee) => {
+      return employees.map((employee) => {
         const workInfo = getDisplayWorkInfo(employee);
         return {
           id: employee.id,
