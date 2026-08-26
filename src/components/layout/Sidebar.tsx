@@ -712,8 +712,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14.75rem') }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className={cn(
-          "h-screen bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10",
-          isMobileDrawer && "h-full"
+          "h-full min-h-0 overflow-hidden bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10"
         )}>
 
       {/* Collapse/Expand Toggle Button - hidden in mobile drawer */}
@@ -765,7 +764,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-2 px-2.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="min-h-0 flex-1 overflow-y-auto py-2 px-2.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Core */}
         {filteredCoreNavItems.length > 0 && (
           <div className="space-y-0.5">
