@@ -562,7 +562,17 @@ export function IncapacityDetailDialog({
                       
                       <Separator />
                       
-                      {isWorkRelatedIncapacityOrigin(incapacity.origin) ? (
+                      {incapacity.recovery_status === 'asumido_empresa' ? (
+                        <div className="flex items-center justify-between rounded-lg bg-primary/10 p-3">
+                          <div>
+                            <p className="font-medium">Empleador</p>
+                            <p className="text-sm text-muted-foreground">
+                              {incapacity.total_days} día{incapacity.total_days === 1 ? '' : 's'} · valor asumido por la empresa
+                            </p>
+                          </div>
+                          <p className="text-lg font-bold">{formatCurrency(incapacity.total_amount)}</p>
+                        </div>
+                      ) : isWorkRelatedIncapacityOrigin(incapacity.origin) ? (
                         <>
                           {incapacity.employer_days > 0 && (
                             <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10">

@@ -593,6 +593,41 @@ export function calculatePaymentDistribution(
   };
 }
 
+export function applyRecoveryStatusToPaymentDistribution(
+  distribution: ReturnType<typeof calculatePaymentDistribution>,
+  recoveryStatus: RecoveryStatus,
+  totalDays: number,
+  accumulatedDays: number = 0,
+): ReturnType<typeof calculatePaymentDistribution> {
+  if (recoveryStatus !== 'asumido_empresa') return distribution;
+
+  return {
+    ...distribution,
+    employerDays: totalDays,
+    epsDays: 0,
+    arlDays: 0,
+    afpDays: 0,
+    epsInitialDays: 0,
+    epsReducedDays: 0,
+    epsAfter540Days: 0,
+    employerAmount: distribution.totalAmount,
+    epsAmount: 0,
+    arlAmount: 0,
+    afpAmount: 0,
+    epsAfter540Amount: 0,
+    segments: [{
+      stage: 'employer',
+      label: 'Empleador - valor asumido por la empresa',
+      responsible: 'empleador',
+      fromDay: accumulatedDays + 1,
+      toDay: accumulatedDays + totalDays,
+      days: totalDays,
+      rate: 1,
+      amount: distribution.totalAmount,
+    }],
+  };
+}
+
 export function getCurrentLegalStage(origin: IncapacityOrigin, accumulatedDays: number): {
   stage: IncapacityLegalStage;
   label: string;

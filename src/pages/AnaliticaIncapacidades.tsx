@@ -190,6 +190,7 @@ function groupBy<T>(items: T[], keyGetter: (item: T) => string, valueGetter: (it
 }
 
 function getRecoveryBase(item: FlatIncapacity) {
+  if (item.recovery_status === 'asumido_empresa') return 0;
   return (item.eps_amount || 0) + (item.arl_amount || 0) + (item.afp_amount || 0);
 }
 
