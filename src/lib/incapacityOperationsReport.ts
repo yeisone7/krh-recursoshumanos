@@ -1,3 +1,5 @@
+import { differenceInCalendarDays, eachMonthOfInterval, endOfMonth, format, isValid, parseISO, startOfMonth } from 'date-fns';
+
 export interface IncapacityOperationsRow {
   id: string;
   employeeId: string;
@@ -7,6 +9,7 @@ export interface IncapacityOperationsRow {
   positionName: string;
   concept: string;
   startDate: string;
+  endDate: string;
   totalDays: number;
   diagnosisKey: string;
   diagnosisLabel: string;
@@ -41,12 +44,56 @@ export function filterIncapacityOperationsRows(
   rows: IncapacityOperationsRow[],
   filters: IncapacityOperationsFilters
 ) {
-  return rows.filter((row) => (
-    (filters.month === 'all' || row.startDate.startsWith(filters.month)) &&
-    (filters.operationCenterId === 'all' || row.operationCenterId === filters.operationCenterId) &&
-    (filters.positionName === 'all' || row.positionName === filters.positionName) &&
-    (filters.employeeId === 'all' || row.employeeId === filters.employeeId)
-  ));
+  const monthInterval = filters.month === 'all' ? null : getMonthInterval(filters.month);
+
+  return rows.flatMap((row) => {
+    if (
+      (filters.operationCenterId !== 'all' && row.operationCenterId !== filters.operationCenterId) ||
+      (filters.positionName !== 'all' && row.positionName !== filters.positionName) ||
+      (filters.employeeId !== 'all' && row.employeeId !== filters.employeeId)
+    ) {
+      return [];
+    }
+
+    if (!monthInterval) return [row];
+
+    const daysWithinMonth = getIncapacityDaysWithinMonth(row, filters.month);
+    return daysWithinMonth > 0 ? [{ ...row, totalDays: daysWithinMonth }] : [];
+  });
+}
+
+function getMonthInterval(month: string) {
+  const date = parseISO(`${month}-01T00:00:00`);
+  if (!/^\d{4}-\d{2}$/.test(month) || !isValid(date)) return null;
+  return { start: startOfMonth(date), end: endOfMonth(date) };
+}
+
+export function getIncapacityDaysWithinMonth(row: IncapacityOperationsRow, month: string) {
+  const monthInterval = getMonthInterval(month);
+  const incapacityStart = parseISO(`${row.startDate}T00:00:00`);
+  const incapacityEnd = parseISO(`${row.endDate}T00:00:00`);
+
+  if (!monthInterval || !isValid(incapacityStart) || !isValid(incapacityEnd)) return 0;
+
+  const overlapStart = incapacityStart > monthInterval.start ? incapacityStart : monthInterval.start;
+  const overlapEnd = incapacityEnd < monthInterval.end ? incapacityEnd : monthInterval.end;
+  if (overlapStart > overlapEnd) return 0;
+
+  return differenceInCalendarDays(overlapEnd, overlapStart) + 1;
+}
+
+export function getIncapacityOperationsMonths(rows: IncapacityOperationsRow[]) {
+  const months = new Set<string>();
+
+  rows.forEach((row) => {
+    const start = parseISO(`${row.startDate}T00:00:00`);
+    const end = parseISO(`${row.endDate}T00:00:00`);
+    if (!isValid(start) || !isValid(end) || start > end) return;
+
+    eachMonthOfInterval({ start, end }).forEach((month) => months.add(format(month, 'yyyy-MM')));
+  });
+
+  return [...months].sort((left, right) => right.localeCompare(left));
 }
 
 export function countBy(

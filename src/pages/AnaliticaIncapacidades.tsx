@@ -1074,6 +1074,7 @@ export default function AnaliticaIncapacidades() {
         positionName: employee?.work_info?.position_name?.trim() || 'Sin cargo asignado',
         concept: operationsConceptLabels[item.origin] || item.origin,
         startDate: item.start_date,
+        endDate: item.end_date,
         totalDays: item.total_days || 0,
         diagnosisKey: diagnosisCode || diagnosis.toLocaleLowerCase('es'),
         diagnosisLabel: diagnosisCode ? `${diagnosisCode} - ${diagnosis}` : diagnosis,
