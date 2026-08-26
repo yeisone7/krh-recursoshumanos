@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
-import { Plus, Calendar, List, Settings, Filter, Search, FileText } from 'lucide-react';
+import { Plus, Calendar, List, Settings, Filter, Search, FileText, Trash2 } from 'lucide-react';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -33,10 +43,18 @@ import {
   LeaveAlertsPanel,
   LeaveTypeConfigDialog,
 } from '@/components/leaves';
-import { useLeaveRequests, useLeaveTypeConfigs, usePendingLeavesCount } from '@/hooks/useLeaves';
-import { LeaveRequest, LeaveTypeConfig, LEAVE_TYPE_LABELS, LEAVE_STATUS_LABELS, LeaveRequestStatus } from '@/types/leave';
+import {
+  LeaveTypeInUseError,
+  useDeleteLeaveTypeConfig,
+  useLeaveRequests,
+  useLeaveTypeConfigs,
+  usePendingLeavesCount,
+} from '@/hooks/useLeaves';
+import { getLeaveTypeLabel, LeaveRequest, LeaveTypeConfig, LEAVE_STATUS_LABELS, LeaveRequestStatus } from '@/types/leave';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export default function Permisos() {
   const [activeTab, setActiveTab] = useState('solicitudes');
@@ -45,6 +63,7 @@ export default function Permisos() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<LeaveTypeConfig | null>(null);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [deleteConfig, setDeleteConfig] = useState<LeaveTypeConfig | null>(null);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -53,6 +72,8 @@ export default function Permisos() {
   const { data: requests = [], isLoading } = useLeaveRequests();
   const { data: typeConfigs = [] } = useLeaveTypeConfigs();
   const { data: pendingCount = 0 } = usePendingLeavesCount();
+  const deleteLeaveType = useDeleteLeaveTypeConfig();
+  const { canCreate, canUpdate, canDelete } = useAuth();
   const isMobile = useIsMobile();
 
   // Filter requests
@@ -63,7 +84,7 @@ export default function Permisos() {
       : '';
     const matchesSearch = !searchTerm || 
       employeeName.includes(searchTerm.toLowerCase()) ||
-      LEAVE_TYPE_LABELS[request.leave_type].toLowerCase().includes(searchTerm.toLowerCase());
+      getLeaveTypeLabel(request.leave_type, typeConfigs).toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -73,8 +94,38 @@ export default function Permisos() {
   };
 
   const handleConfigClick = (config: LeaveTypeConfig) => {
+    if (!canUpdate('permisos')) return;
     setSelectedConfig(config);
     setShowConfigDialog(true);
+  };
+
+  const handleCreateConfig = () => {
+    setSelectedConfig(null);
+    setShowConfigDialog(true);
+  };
+
+  const handleDeleteConfig = async () => {
+    if (!deleteConfig) return;
+
+    try {
+      await deleteLeaveType.mutateAsync(deleteConfig);
+      toast.success('Tipo de permiso eliminado');
+      setDeleteConfig(null);
+    } catch (error: unknown) {
+      if (error instanceof LeaveTypeInUseError) {
+        const { requests: requestCount, balances: balanceCount } = error.usage;
+        toast.error(
+          `No se puede eliminar: tiene ${requestCount} solicitud(es) y ${balanceCount} saldo(s) asociados. Desactívalo para conservar el historial.`,
+        );
+      } else {
+        const dbError = error as { code?: string; message?: string };
+        toast.error(
+          dbError.code === '23503'
+            ? 'El tipo ya tiene información asociada. Desactívalo para conservar el historial.'
+            : dbError.message || 'No fue posible eliminar el tipo de permiso',
+        );
+      }
+    }
   };
 
   const getStatusBadgeVariant = (status: LeaveRequestStatus) => {
@@ -276,7 +327,7 @@ export default function Permisos() {
                         items={filteredRequests.map((request) => ({
                           id: request.id,
                           title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
-                          subtitle: LEAVE_TYPE_LABELS[request.leave_type],
+                          subtitle: getLeaveTypeLabel(request.leave_type, typeConfigs),
                           badge: (
                             <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
                               {LEAVE_STATUS_LABELS[request.status]}
@@ -343,7 +394,7 @@ export default function Permisos() {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: getTypeColor(request.leave_type) }}
                             />
-                            <span className="font-medium text-muted-foreground">{LEAVE_TYPE_LABELS[request.leave_type]}</span>
+                            <span className="font-medium text-muted-foreground">{getLeaveTypeLabel(request.leave_type, typeConfigs)}</span>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell font-medium">
@@ -389,14 +440,21 @@ export default function Permisos() {
         <TabsContent value="configuracion" className="space-y-4">
           <Card className="rounded-[2rem] border-none shadow-sm">
             <CardHeader className="p-8 border-b border-border/50 bg-background /10 rounded-t-[2rem]">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                  <Settings className="w-6 h-6" />
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <Settings className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-black">Tipos de Permisos</CardTitle>
+                    <p className="text-sm font-medium text-muted-foreground">Configura las reglas para cada tipo de licencia</p>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-2xl font-black">Tipos de Permisos</CardTitle>
-                  <p className="text-sm font-medium text-muted-foreground">Configura las reglas para cada tipo de licencia</p>
-                </div>
+                {canCreate('permisos') && (
+                  <Button onClick={handleCreateConfig} className="rounded-xl">
+                    <Plus className="mr-2 size-4" />Crear tipo
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -404,7 +462,10 @@ export default function Permisos() {
                 {typeConfigs.map((config) => (
                   <div
                     key={config.id}
-                    className="flex flex-col gap-3 p-4 border border-border/50 rounded-2xl hover:bg-background cursor-pointer transition-colors sm:flex-row sm:items-center sm:justify-between group"
+                    className={cn(
+                      'flex flex-col gap-3 p-4 border border-border/50 rounded-2xl transition-colors sm:flex-row sm:items-center sm:justify-between group',
+                      canUpdate('permisos') && 'hover:bg-background cursor-pointer',
+                    )}
                     onClick={() => handleConfigClick(config)}
                   >
                     <div className="flex min-w-0 items-center gap-4">
@@ -434,6 +495,20 @@ export default function Permisos() {
                       <Badge variant={config.is_active ? 'default' : 'secondary'} className="rounded-lg text-[10px] uppercase font-bold tracking-wider">
                         {config.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
+                      {canDelete('permisos') && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={`Eliminar ${config.display_name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDeleteConfig(config);
+                          }}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -460,6 +535,30 @@ export default function Permisos() {
         onOpenChange={setShowConfigDialog}
         config={selectedConfig}
       />
+
+      <AlertDialog open={Boolean(deleteConfig)} onOpenChange={(open) => !open && setDeleteConfig(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar “{deleteConfig?.display_name}”?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se eliminará únicamente si nunca se ha utilizado en solicitudes o saldos. Si tiene historial, la operación será bloqueada y podrás marcarlo como inactivo desde Configurar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteLeaveType.isPending}
+              onClick={(event) => {
+                event.preventDefault();
+                void handleDeleteConfig();
+              }}
+            >
+              {deleteLeaveType.isPending ? 'Verificando…' : 'Eliminar de forma segura'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

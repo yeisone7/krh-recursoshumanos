@@ -39,6 +39,7 @@ export function useLeaveTypeConfigs() {
 
 export function useUpdateLeaveTypeConfig() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<LeaveTypeConfig>) => {
@@ -46,11 +47,115 @@ export function useUpdateLeaveTypeConfig() {
         .from('leave_type_config')
         .update(updates)
         .eq('id', id)
+        .eq('company_id', currentCompanyId!)
         .select()
         .single();
 
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave_type_config'] });
+    },
+  });
+}
+
+export type CreateLeaveTypeConfigInput = Pick<
+  LeaveTypeConfig,
+  | 'leave_type'
+  | 'display_name'
+  | 'description'
+  | 'max_days_per_year'
+  | 'is_paid'
+  | 'requires_document'
+  | 'document_description'
+  | 'min_days_advance'
+  | 'allows_half_day'
+  | 'allows_hours'
+  | 'is_active'
+  | 'color'
+>;
+
+export function useCreateLeaveTypeConfig() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId, user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (config: CreateLeaveTypeConfigInput) => {
+      if (!currentCompanyId) throw new Error('Selecciona una empresa antes de crear el tipo de permiso.');
+
+      const { data, error } = await supabase
+        .from('leave_type_config')
+        .insert({
+          ...config,
+          company_id: currentCompanyId,
+          created_by: user?.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave_type_config'] });
+    },
+  });
+}
+
+export interface LeaveTypeUsage {
+  requests: number;
+  balances: number;
+}
+
+export class LeaveTypeInUseError extends Error {
+  usage: LeaveTypeUsage;
+
+  constructor(usage: LeaveTypeUsage) {
+    super('El tipo de permiso tiene información histórica asociada.');
+    this.name = 'LeaveTypeInUseError';
+    this.usage = usage;
+  }
+}
+
+export function useDeleteLeaveTypeConfig() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (config: Pick<LeaveTypeConfig, 'id' | 'leave_type'>) => {
+      if (!currentCompanyId) throw new Error('Selecciona una empresa antes de eliminar el tipo de permiso.');
+
+      const [requestsResult, balancesResult] = await Promise.all([
+        supabase
+          .from('leave_requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', currentCompanyId)
+          .eq('leave_type', config.leave_type),
+        supabase
+          .from('leave_balances')
+          .select('id', { count: 'exact', head: true })
+          .eq('company_id', currentCompanyId)
+          .eq('leave_type', config.leave_type),
+      ]);
+
+      if (requestsResult.error) throw requestsResult.error;
+      if (balancesResult.error) throw balancesResult.error;
+
+      const usage = {
+        requests: requestsResult.count || 0,
+        balances: balancesResult.count || 0,
+      };
+      if (usage.requests > 0 || usage.balances > 0) throw new LeaveTypeInUseError(usage);
+
+      const { error } = await supabase
+        .from('leave_type_config')
+        .delete()
+        .eq('id', config.id)
+        .eq('company_id', currentCompanyId);
+
+      if (error) throw error;
+      return config.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave_type_config'] });

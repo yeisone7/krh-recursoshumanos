@@ -20,13 +20,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { LeaveTypeConfig } from '@/types/leave';
-import { useUpdateLeaveTypeConfig } from '@/hooks/useLeaves';
+import { createLeaveTypeKey, LeaveTypeConfig } from '@/types/leave';
+import { useCreateLeaveTypeConfig, useUpdateLeaveTypeConfig } from '@/hooks/useLeaves';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
 const formSchema = z.object({
-  display_name: z.string().min(1, 'El nombre es requerido'),
+  leave_type: z.string()
+    .min(2, 'El identificador debe tener al menos 2 caracteres')
+    .max(60, 'El identificador no puede superar 60 caracteres')
+    .regex(/^[a-z0-9_]+$/, 'Usa únicamente letras minúsculas, números y guion bajo'),
+  display_name: z.string().trim().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
   description: z.string().optional(),
   max_days_per_year: z.number().optional().nullable(),
   is_paid: z.boolean(),
@@ -51,10 +55,13 @@ export function LeaveTypeConfigDialog({
   config,
 }: LeaveTypeConfigDialogProps) {
   const updateConfig = useUpdateLeaveTypeConfig();
+  const createConfig = useCreateLeaveTypeConfig();
+  const isEditing = Boolean(config);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      leave_type: '',
       display_name: '',
       description: '',
       max_days_per_year: null,
@@ -72,6 +79,7 @@ export function LeaveTypeConfigDialog({
   useEffect(() => {
     if (config) {
       form.reset({
+        leave_type: config.leave_type,
         display_name: config.display_name,
         description: config.description || '',
         max_days_per_year: config.max_days_per_year || null,
@@ -84,32 +92,60 @@ export function LeaveTypeConfigDialog({
         is_active: config.is_active,
         color: config.color,
       });
+    } else if (open) {
+      form.reset({
+        leave_type: '',
+        display_name: '',
+        description: '',
+        max_days_per_year: null,
+        is_paid: true,
+        requires_document: false,
+        document_description: '',
+        min_days_advance: 0,
+        allows_half_day: true,
+        allows_hours: false,
+        is_active: true,
+        color: '#3B82F6',
+      });
     }
-  }, [config, form]);
+  }, [config, form, open]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!config) return;
-
     try {
-      await updateConfig.mutateAsync({
-        id: config.id,
-        ...values,
-        max_days_per_year: values.max_days_per_year || undefined,
-      });
-      toast.success('Configuración actualizada');
+      if (config) {
+        const { leave_type: _leaveType, ...updates } = values;
+        await updateConfig.mutateAsync({
+          id: config.id,
+          ...updates,
+          max_days_per_year: values.max_days_per_year || undefined,
+        });
+        toast.success('Configuración actualizada');
+      } else {
+        await createConfig.mutateAsync({
+          ...values,
+          leave_type: values.leave_type,
+          max_days_per_year: values.max_days_per_year || undefined,
+        });
+        toast.success('Tipo de permiso creado');
+      }
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Error al actualizar');
+    } catch (error: unknown) {
+      const dbError = error as { code?: string; message?: string };
+      if (dbError.code === '23505') {
+        toast.error('Ya existe un tipo de permiso con ese identificador.');
+      } else {
+        toast.error(dbError.message || `Error al ${isEditing ? 'actualizar' : 'crear'} el tipo de permiso`);
+      }
     }
   }
 
-  if (!config) return null;
+  const isSaving = updateConfig.isPending || createConfig.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Configurar: {config.display_name}</DialogTitle>
+          <DialogTitle>{isEditing ? `Configurar: ${config?.display_name}` : 'Crear tipo de permiso'}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -121,8 +157,33 @@ export function LeaveTypeConfigDialog({
                 <FormItem>
                   <FormLabel>Nombre a Mostrar</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      {...field}
+                      onChange={(event) => {
+                        field.onChange(event);
+                        if (!isEditing && !form.formState.dirtyFields.leave_type) {
+                          form.setValue('leave_type', createLeaveTypeKey(event.target.value), { shouldValidate: true });
+                        }
+                      }}
+                    />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="leave_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ID técnico</FormLabel>
+                  <FormControl>
+                    <Input {...field} disabled={isEditing} placeholder="permiso_especial" />
+                  </FormControl>
+                  <FormDescription>
+                    Identificador único. Después de crear el tipo no se puede modificar.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -303,8 +364,8 @@ export function LeaveTypeConfigDialog({
               <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={updateConfig.isPending}>
-                {updateConfig.isPending ? 'Guardando...' : 'Guardar'}
+              <Button type="submit" className="w-full sm:w-auto" disabled={isSaving}>
+                {isSaving ? 'Guardando...' : isEditing ? 'Guardar' : 'Crear tipo'}
               </Button>
             </div>
           </form>

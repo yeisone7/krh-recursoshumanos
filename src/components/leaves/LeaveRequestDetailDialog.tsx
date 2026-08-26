@@ -24,8 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { LeaveRequest, LEAVE_TYPE_LABELS, LEAVE_STATUS_LABELS, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
-import { useApproveLeaveRequest, useRejectLeaveRequest, useCancelLeaveRequest, useUpdateLeaveRequest } from '@/hooks/useLeaves';
+import { getLeaveTypeLabel, LeaveRequest, LEAVE_STATUS_LABELS, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
+import { useApproveLeaveRequest, useRejectLeaveRequest, useCancelLeaveRequest, useLeaveTypeConfigs, useUpdateLeaveRequest } from '@/hooks/useLeaves';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,6 +45,7 @@ export function LeaveRequestDetailDialog({
   onOpenChange,
   request,
 }: LeaveRequestDetailDialogProps) {
+  const { data: typeConfigs = [] } = useLeaveTypeConfigs();
   const [reviewNotes, setReviewNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [cancellationReason, setCancellationReason] = useState('');
@@ -213,7 +214,7 @@ export function LeaveRequestDetailDialog({
             <div className="mt-4 grid grid-cols-1 gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tipo de permiso</p>
-                <p className="mt-1 font-semibold text-foreground">{LEAVE_TYPE_LABELS[request.leave_type]}</p>
+                <p className="mt-1 font-semibold text-foreground">{getLeaveTypeLabel(request.leave_type, typeConfigs)}</p>
               </div>
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Tipo de duración</p>

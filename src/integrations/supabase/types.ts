@@ -6086,7 +6086,7 @@ export type Database = {
           employment_cycle_id: string | null
           entitled_days: number
           id: string
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           pending_days: number
           updated_at: string
           used_days: number
@@ -6100,7 +6100,7 @@ export type Database = {
           employment_cycle_id?: string | null
           entitled_days?: number
           id?: string
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           pending_days?: number
           updated_at?: string
           used_days?: number
@@ -6114,7 +6114,7 @@ export type Database = {
           employment_cycle_id?: string | null
           entitled_days?: number
           id?: string
-          leave_type?: Database["public"]["Enums"]["leave_type"]
+          leave_type?: string
           pending_days?: number
           updated_at?: string
           used_days?: number
@@ -6159,7 +6159,7 @@ export type Database = {
           end_date: string
           end_time: string | null
           id: string
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           reason: string
           rejection_reason: string | null
           requested_at: string
@@ -6188,7 +6188,7 @@ export type Database = {
           end_date: string
           end_time?: string | null
           id?: string
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           reason: string
           rejection_reason?: string | null
           requested_at?: string
@@ -6217,7 +6217,7 @@ export type Database = {
           end_date?: string
           end_time?: string | null
           id?: string
-          leave_type?: Database["public"]["Enums"]["leave_type"]
+          leave_type?: string
           reason?: string
           rejection_reason?: string | null
           requested_at?: string
@@ -6263,7 +6263,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           is_paid: boolean
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           max_days_per_year: number | null
           min_days_advance: number | null
           requires_document: boolean
@@ -6282,7 +6282,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_paid?: boolean
-          leave_type: Database["public"]["Enums"]["leave_type"]
+          leave_type: string
           max_days_per_year?: number | null
           min_days_advance?: number | null
           requires_document?: boolean
@@ -6301,7 +6301,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           is_paid?: boolean
-          leave_type?: Database["public"]["Enums"]["leave_type"]
+          leave_type?: string
           max_days_per_year?: number | null
           min_days_advance?: number | null
           requires_document?: boolean
