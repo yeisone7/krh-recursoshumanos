@@ -21,6 +21,9 @@ import {
   History,
   LockKeyhole,
   ChevronDown,
+  IdCard,
+  Briefcase,
+  Building2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -212,7 +215,7 @@ export function IncapacityDetailDialog({
   if (isLoading || !incapacity) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-6xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Cargando incapacidad</DialogTitle>
             <DialogDescription>Estamos consultando el detalle de la incapacidad seleccionada.</DialogDescription>
@@ -243,6 +246,9 @@ export function IncapacityDetailDialog({
   const currentSocialSecurity = incapacity.employee?.employee_social_security
     ?.find((record) => record.is_current)
     || incapacity.employee?.employee_social_security?.[0];
+  const currentWorkInfo = incapacity.employee?.employee_work_info
+    ?.find((record) => record.is_current)
+    || incapacity.employee?.employee_work_info?.[0];
   const employerCost = calculateIncapacityEmployerCost(
     incapacity.total_amount,
     currentSocialSecurity?.risk_level,
@@ -257,7 +263,7 @@ export function IncapacityDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 bg-background border-border/50 shadow-2xl rounded-[2rem] sm:h-[90vh] sm:max-h-[90vh]">
+        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-6xl flex-col overflow-hidden rounded-[2rem] border-border/50 bg-background p-0 shadow-2xl sm:h-[92vh] sm:max-h-[92vh]">
           
           {/* Premium Gradient Header */}
           <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
@@ -279,6 +285,23 @@ export function IncapacityDetailDialog({
                     <DialogDescription className="font-medium mt-1">
                       {formatDateOnly(incapacity.start_date, "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
                     </DialogDescription>
+                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <IdCard className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="font-medium text-foreground">Documento:</span>
+                        <span>{incapacity.employee?.document_number || 'Sin registrar'}</span>
+                      </span>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <Briefcase className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="font-medium text-foreground">Cargo:</span>
+                        <span>{currentWorkInfo?.position_name || 'Sin registrar'}</span>
+                      </span>
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <Building2 className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="font-medium text-foreground">Centro de Operación:</span>
+                        <span>{currentWorkInfo?.operation_centers?.name || 'Sin registrar'}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:justify-end mt-2 sm:mt-0">
@@ -298,21 +321,21 @@ export function IncapacityDetailDialog({
           <div className="flex min-h-0 flex-1 flex-col px-4 py-4 sm:px-8 sm:py-6">
             <Tabs defaultValue="general" className="flex min-h-0 flex-1 flex-col">
               <TabsList className="mb-4 h-12 w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:mb-6">
-                <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><FileText className="h-4 w-4 shrink-0" />General</TabsTrigger>
-                <TabsTrigger value="payment" className="h-10 min-w-[104px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><DollarSign className="h-4 w-4 shrink-0" />Pagos</TabsTrigger>
-                <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
-                <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
-                <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
-                <TabsTrigger value="audit" className="h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none"><History className="h-4 w-4 shrink-0" />Trazabilidad</TabsTrigger>
+                <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><FileText className="h-4 w-4 shrink-0" />General</TabsTrigger>
+                <TabsTrigger value="payment" className="h-10 min-w-[104px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><DollarSign className="h-4 w-4 shrink-0" />Pagos</TabsTrigger>
+                <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
+                <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
+                <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
+                <TabsTrigger value="audit" className="h-10 min-w-[132px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><History className="h-4 w-4 shrink-0" />Trazabilidad</TabsTrigger>
               </TabsList>
               <ScrollArea className="-mx-4 min-h-0 flex-1 px-4 pb-4 sm:-mx-8 sm:px-8 sm:pb-6">
               
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-4">
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
                   <Card>
                     <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription>Días Totales</CardDescription>
+                      <CardDescription className="whitespace-nowrap">Días Totales</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{incapacity.total_days}</p>
@@ -321,7 +344,7 @@ export function IncapacityDetailDialog({
                   
                   <Card>
                     <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription>Días Cadena</CardDescription>
+                      <CardDescription className="whitespace-nowrap">Días Cadena</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
                       <p className="text-2xl font-bold">{totalChainDays}</p>
@@ -330,10 +353,10 @@ export function IncapacityDetailDialog({
                   
                   <Card>
                     <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription>Días Restantes</CardDescription>
+                      <CardDescription className="whitespace-nowrap">Días Restantes</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className={`text-2xl font-bold ${daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : ''}`}>
+                      <p className={`whitespace-nowrap text-2xl font-bold ${daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : ''}`}>
                         {daysRemaining < 0 ? 'Finalizada' : daysRemaining}
                       </p>
                     </CardContent>
@@ -341,10 +364,10 @@ export function IncapacityDetailDialog({
                   
                   <Card>
                     <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription>Valor Total</CardDescription>
+                      <CardDescription className="whitespace-nowrap">Valor Total</CardDescription>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className="break-words text-xl font-bold sm:text-2xl">{formatCurrency(incapacity.total_amount)}</p>
+                      <p className="whitespace-nowrap text-xl font-bold tabular-nums sm:text-2xl">{formatCurrency(incapacity.total_amount)}</p>
                     </CardContent>
                   </Card>
                 </div>
