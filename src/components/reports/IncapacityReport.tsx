@@ -35,6 +35,11 @@ export function IncapacityReport() {
       { label: 'Pendiente', value: pendingAmount, format: 'currency', tone: 'warning' },
     ],
     currencyKeys: ['monto_total', 'monto_recuperado', 'pendiente'],
+    dateKeys: ['fecha_inicio', 'fecha_fin'],
+    integerKeys: ['dias_totales'],
+    textKeys: ['documento', 'codigo_diagnostico'],
+    statusKey: 'estado_recobro',
+    sheetName: 'Recuperación',
     columns: [
       { header: 'Empleado', key: 'empleado', width: 25 },
       { header: 'Documento', key: 'documento', width: 15 },

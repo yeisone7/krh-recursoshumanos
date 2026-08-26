@@ -77,6 +77,11 @@ describe('IncapacityReport', () => {
     }));
     expect(report.data[0].codigo_diagnostico).toBe('M75.1');
     expect(report.currencyKeys).toEqual(['monto_total', 'monto_recuperado', 'pendiente']);
+    expect(report.dateKeys).toEqual(['fecha_inicio', 'fecha_fin']);
+    expect(report.integerKeys).toEqual(['dias_totales']);
+    expect(report.textKeys).toEqual(['documento', 'codigo_diagnostico']);
+    expect(report.statusKey).toBe('estado_recobro');
+    expect(report.sheetName).toBe('Recuperación');
     expect(report.summary).toEqual(expect.arrayContaining([
       expect.objectContaining({ label: 'Valor total', value: 180000 }),
       expect.objectContaining({ label: 'Recuperado', value: 60000 }),
