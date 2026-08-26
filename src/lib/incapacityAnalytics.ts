@@ -1,6 +1,10 @@
 export interface IncapacityAnalyticsRow {
   total_days?: number | null;
   total_amount?: number | null;
+  employer_days?: number | null;
+  eps_days?: number | null;
+  arl_days?: number | null;
+  afp_days?: number | null;
   start_date?: string | null;
   eps_name?: string | null;
   eps_amount?: number | null;
@@ -14,6 +18,11 @@ export interface IncapacityRecoveryAmounts {
   expected: number;
   recovered: number;
   pending: number;
+}
+
+export interface LegalResponsibilityDays {
+  name: 'EPS' | 'Empleador' | 'AFP' | 'ARL';
+  value: number;
 }
 
 export interface IncapacityDurationBucket {
@@ -72,6 +81,22 @@ export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): Incap
     recovered,
     pending: Math.max(0, expected - recovered),
   };
+}
+
+export function buildLegalResponsibilityDays(rows: IncapacityAnalyticsRow[]): LegalResponsibilityDays[] {
+  const definitions: Array<{ name: LegalResponsibilityDays['name']; field: keyof IncapacityAnalyticsRow }> = [
+    { name: 'EPS', field: 'eps_days' },
+    { name: 'Empleador', field: 'employer_days' },
+    { name: 'AFP', field: 'afp_days' },
+    { name: 'ARL', field: 'arl_days' },
+  ];
+
+  return definitions
+    .map(({ name, field }) => ({
+      name,
+      value: rows.reduce((total, row) => total + Math.max(0, Number(row[field] || 0)), 0),
+    }))
+    .filter((item) => item.value > 0);
 }
 
 export function buildIncapacityDurationBuckets(rows: IncapacityAnalyticsRow[]): IncapacityDurationBucket[] {
