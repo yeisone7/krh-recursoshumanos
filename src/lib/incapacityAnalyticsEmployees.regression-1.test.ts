@@ -4,6 +4,7 @@ import {
   fetchAllAnalyticsRows,
   isOperationallyActiveEmployee,
 } from './employeeAnalyticsData';
+import { createIncapacityAnalyticsEmployeesQuery } from './incapacityAnalyticsEmployeeQuery';
 
 // Regression: ISSUE-002 — el límite de 1.000 filas ocultaba empleados activos del denominador
 // Found by /qa on 2026-08-25
@@ -49,5 +50,26 @@ describe('incapacity analytics employee denominator', () => {
     expect(employees).toHaveLength(1037);
     expect(employees.filter(isOperationallyActiveEmployee)).toHaveLength(792);
     expect(fetchPage).toHaveBeenCalledTimes(2);
+  });
+
+  it('loads historical work information so retired employees keep their real operation center', () => {
+    const query = {
+      eq: vi.fn(),
+    };
+    query.eq.mockReturnValue(query);
+    const select = vi.fn(() => query);
+    const from = vi.fn(() => ({ select }));
+
+    createIncapacityAnalyticsEmployeesQuery(
+      { from } as unknown as Parameters<typeof createIncapacityAnalyticsEmployeesQuery>[0],
+      'company-1',
+    );
+
+    expect(from).toHaveBeenCalledWith('employees_v2');
+    expect(select).toHaveBeenCalledWith(expect.stringContaining('employee_work_info('));
+    expect(select).toHaveBeenCalledWith(expect.stringContaining('created_at, updated_at'));
+    expect(query.eq).toHaveBeenCalledTimes(1);
+    expect(query.eq).toHaveBeenCalledWith('company_id', 'company-1');
+    expect(query.eq).not.toHaveBeenCalledWith('employee_work_info.is_current', true);
   });
 });

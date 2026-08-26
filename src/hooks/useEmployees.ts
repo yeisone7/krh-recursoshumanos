@@ -7,6 +7,7 @@ import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 import { scopeToEmploymentCycle, withEmploymentCycle } from '@/hooks/employeeCycleScope';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { getLatestCandidateBiologicalSex } from '@/lib/biologicalSex';
+import { createIncapacityAnalyticsEmployeesQuery } from '@/lib/incapacityAnalyticsEmployeeQuery';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -431,23 +432,7 @@ export function useIncapacityAnalyticsEmployees() {
       if (scopedEmployeeIds && scopedEmployeeIds.length === 0) return [];
 
       const employees = await fetchAllAnalyticsRows(async (from, to) => {
-        let query = supabase
-          .from('employees_v2')
-          .select(`
-            id,
-            is_active,
-            status,
-            gender,
-            selection_candidates:candidates!candidates_employee_id_fkey(gender, updated_at),
-            rehire_candidates:candidates!candidates_rehire_employee_id_fkey(gender, updated_at),
-            employee_employment_cycles(id, status),
-            employee_work_info(
-              employment_cycle_id, position_name, is_current,
-              operation_centers(id, name)
-            )
-          `)
-          .eq('company_id', currentCompanyId)
-          .eq('employee_work_info.is_current', true);
+        let query = createIncapacityAnalyticsEmployeesQuery(supabase, currentCompanyId);
 
         if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
 
