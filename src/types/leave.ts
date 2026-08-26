@@ -146,6 +146,15 @@ export interface LeaveRequest {
     first_name: string;
     last_name: string;
     document_number: string;
+    avatar_url?: string | null;
+    employee_work_info?: Array<{
+      operation_center_id: string | null;
+      is_current: boolean;
+      operation_centers?: {
+        id: string;
+        name: string;
+      } | null;
+    }>;
   };
   leave_type_config?: LeaveTypeConfig;
 }
