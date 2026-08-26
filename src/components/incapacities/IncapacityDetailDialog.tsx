@@ -265,7 +265,7 @@ export function IncapacityDetailDialog({
   const formatPercentage = (rate: number) => new Intl.NumberFormat('es-CO', {
     style: 'percent',
     minimumFractionDigits: rate * 100 % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 3,
+    maximumFractionDigits: 2,
   }).format(rate);
   
   return (
@@ -674,7 +674,7 @@ export function IncapacityDetailDialog({
                                 >
                                   <span className="truncate font-medium">{item.label}</span>
                                   <span className="text-right tabular-nums text-muted-foreground">
-                                    {item.rate === 0 ? 'N.A.' : formatPercentage(item.rate)}
+                                    {formatPercentage(item.rate)}
                                   </span>
                                   <span className="text-right font-semibold tabular-nums">
                                     {formatCurrency(item.amount)}

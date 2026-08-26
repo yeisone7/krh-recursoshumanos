@@ -149,16 +149,20 @@ describe('calculateIncapacityEmployerCost', () => {
       ccf_rate: 0.04,
     });
 
-    expect(result.benefits.map((item) => item.amount)).toEqual([9727, 1167, 9727, 4864]);
+    expect(result.benefits.map((item) => item.amount)).toEqual([9727, 1167, 9727, 4868]);
     expect(result.contributions.map((item) => item.amount)).toEqual([0, 14007, 8124, 4669]);
-    expect(result.additionalCost).toBe(52285);
-    expect(result.totalCost).toBe(169012);
+    expect(result.benefits.find((item) => item.key === 'vacation')?.rate).toBe(0.0417);
+    expect(result.contributions.find((item) => item.key === 'health')?.rate).toBe(0);
+    expect(result.additionalCost).toBe(52289);
+    expect(result.totalCost).toBe(169016);
   });
 
   it('usa el nivel de riesgo ARL del empleado y las tarifas legales por defecto', () => {
     const result = calculateIncapacityEmployerCost(100_000, 'III');
     const arl = result.contributions.find((item) => item.key === 'arl');
+    const health = result.contributions.find((item) => item.key === 'health');
 
+    expect(health).toMatchObject({ rate: 0, amount: 0 });
     expect(arl?.rate).toBe(0.02436);
     expect(arl?.amount).toBe(2436);
   });
