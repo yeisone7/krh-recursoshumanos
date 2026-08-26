@@ -289,6 +289,13 @@ export interface IncapacityWithEmployee extends EmployeeIncapacity {
       risk_level: string | null;
       is_current: boolean | null;
     }>;
+    employee_work_info?: Array<{
+      position_name: string;
+      is_current: boolean | null;
+      operation_centers?: {
+        name: string;
+      } | null;
+    }>;
   };
   extensions?: EmployeeIncapacity[];
 }

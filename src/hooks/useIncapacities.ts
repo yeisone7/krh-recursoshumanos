@@ -94,7 +94,12 @@ export function useIncapacity(id: string | undefined) {
             last_name,
             document_number,
             gender,
-            employee_social_security(risk_level, is_current)
+            employee_social_security(risk_level, is_current),
+            employee_work_info(
+              position_name,
+              is_current,
+              operation_centers(name)
+            )
           )
         `)
         .eq('id', id!)
