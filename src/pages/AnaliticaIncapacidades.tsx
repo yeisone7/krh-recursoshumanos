@@ -70,6 +70,7 @@ import {
   getEarliestIncapacityStartDate,
   getIncapacityRecoveryAmounts,
   getLongCaseShare,
+  hasIncapacityStartedBy,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
@@ -957,7 +958,7 @@ export default function AnaliticaIncapacidades() {
     );
 
     const matchesPeriod = (item: FlatIncapacity, targetRange: ReturnType<typeof getRange>) => {
-      if (!targetRange) return true;
+      if (!targetRange) return hasIncapacityStartedBy(item, today);
       if (!item.startDate) return false;
       return isWithinInterval(item.startDate, { start: targetRange.start, end: targetRange.end });
     };
