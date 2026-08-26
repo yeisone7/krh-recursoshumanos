@@ -782,7 +782,7 @@ function DurationAnalysisPanel({
             </span>
             <div>
               <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Duración de las incapacidades</h3>
-              <p className="mt-1 text-xs font-medium text-slate-500">Cantidad, participación y valor según días reconocidos</p>
+              <p className="mt-1 text-xs font-medium text-slate-500">Cantidad, participación, valor y costo laboral según días reconocidos</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2 text-xs font-bold">
@@ -823,7 +823,7 @@ function DurationAnalysisPanel({
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-4 border-t border-slate-100 pt-4">
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Valor total</p>
                     <p className="mt-1 text-base font-black text-slate-950">{money(bucket.amount)}</p>
@@ -831,6 +831,14 @@ function DurationAnalysisPanel({
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Participación del valor</p>
                     <p className="mt-1 text-base font-black" style={{ color }}>{numberFormatter.format(bucket.amountPercentage)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Costo laboral estimado</p>
+                    <p className="mt-1 text-base font-black" style={{ color }}>{money(bucket.employerCost.additionalCost)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total con costo laboral</p>
+                    <p className="mt-1 text-base font-black text-slate-950">{money(bucket.employerCost.totalCost)}</p>
                   </div>
                 </div>
               </div>
@@ -1128,7 +1136,7 @@ export default function AnaliticaIncapacidades() {
       }))
       .filter((item) => item.value > 0);
 
-    const durationBuckets = buildIncapacityDurationBuckets(filtered);
+    const durationBuckets = buildIncapacityDurationBuckets(filtered, pilaSettings);
     const employerCostSummary = buildIncapacityEmployerCostSummary(filtered, pilaSettings);
     const epsMonthlyRecovery = buildMonthlyEpsRecovery(filtered);
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
