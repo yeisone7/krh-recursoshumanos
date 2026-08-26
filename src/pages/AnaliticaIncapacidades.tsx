@@ -887,7 +887,9 @@ function EpsMonthlyRecoveryTable({ rows }: { rows: MonthlyEpsRecoveryRow[] }) {
         {rows.length ? (
           <div className="max-h-[520px] overflow-auto">
             <table className="w-full min-w-[920px] border-collapse text-left">
-              <caption className="sr-only">Recobros de incapacidades agrupados por mes y EPS</caption>
+              <caption className="h-px overflow-hidden whitespace-nowrap p-0 text-[0px] leading-none [clip-path:inset(50%)]">
+                Recobros de incapacidades agrupados por mes y EPS
+              </caption>
               <thead className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_#E2E8F0]">
                 <tr className="text-[9px] font-black uppercase tracking-widest text-slate-500">
                   <th scope="col" className="px-4 py-3">Mes de incapacidad</th>
