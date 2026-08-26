@@ -79,7 +79,11 @@ import {
   countOperationallyActiveAffectedEmployees,
   isOperationallyActiveEmployee,
 } from '@/lib/employeeAnalyticsData';
-import { normalizeBiologicalSex, type BiologicalSexKey } from '@/lib/biologicalSex';
+import {
+  normalizeBiologicalSex,
+  shouldDisplayBiologicalSex,
+  type BiologicalSexKey,
+} from '@/lib/biologicalSex';
 import {
   getLegalMilestones,
   getTotalChainDays,
@@ -1102,7 +1106,7 @@ export default function AnaliticaIncapacidades() {
       days: item.days,
       employees: item.employeeIds.size,
       percentage: percent(item.cases, filtered.length),
-    })).filter((item) => item.key === 'F' || item.key === 'M' || item.cases > 0);
+    })).filter((item) => shouldDisplayBiologicalSex(item.key, item.cases));
 
     const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day) => ({ day, value: 0, count: 0 }));
     filtered.forEach((item) => {

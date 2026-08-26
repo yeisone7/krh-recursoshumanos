@@ -31,7 +31,7 @@ import {
   summarizeIncapacityOperationsRows,
   type IncapacityOperationsRow,
 } from '@/lib/incapacityOperationsReport';
-import type { BiologicalSexKey } from '@/lib/biologicalSex';
+import { shouldDisplayBiologicalSex, type BiologicalSexKey } from '@/lib/biologicalSex';
 
 const reportColors = ['#0EA5B7', '#F97316', '#334155', '#EAB308', '#8B5CF6', '#22C55E', '#3B82F6', '#EC4899'];
 const integerFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 });
@@ -222,7 +222,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
         employees: new Set(matchingRows.map((row) => row.employeeId)).size,
         percentage: filtered.length ? Math.round((matchingRows.length / filtered.length) * 100) : 0,
       };
-    }).filter((item) => item.key === 'F' || item.key === 'M' || item.cases > 0);
+    }).filter((item) => shouldDisplayBiologicalSex(item.key, item.cases));
 
     return {
       filtered,

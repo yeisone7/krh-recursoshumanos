@@ -20,3 +20,7 @@ export function normalizeBiologicalSex(value: unknown): BiologicalSexKey {
 
   return 'sin_dato';
 }
+
+export function shouldDisplayBiologicalSex(key: BiologicalSexKey, cases: number) {
+  return key === 'F' || key === 'M' || cases > 0;
+}
