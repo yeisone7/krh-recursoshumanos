@@ -73,7 +73,10 @@ import {
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
 import { cn } from '@/lib/utils';
-import { isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
+import {
+  countOperationallyActiveAffectedEmployees,
+  isOperationallyActiveEmployee,
+} from '@/lib/employeeAnalyticsData';
 import {
   getLegalMilestones,
   getTotalChainDays,
@@ -979,7 +982,9 @@ export default function AnaliticaIncapacidades() {
     const expectedRecovery = recoveryAmounts.reduce((sum, item) => sum + item.expected, 0);
     const recovered = recoveryAmounts.reduce((sum, item) => sum + item.recovered, 0);
     const pendingRecovery = recoveryAmounts.reduce((sum, item) => sum + item.pending, 0);
-    const affectedEmployees = new Set(filtered.map((item) => item.employee_id)).size;
+    const affectedEmployeeIds = new Set(filtered.map((item) => item.employee_id));
+    const affectedEmployees = affectedEmployeeIds.size;
+    const affectedActiveEmployees = countOperationallyActiveAffectedEmployees(employees, affectedEmployeeIds);
     const activeItems = filtered.filter((item) => {
       return !!item.startDate && !!item.endDate && !isAfter(item.startDate, today) && !isBefore(item.endDate, today);
     });
@@ -1111,7 +1116,7 @@ export default function AnaliticaIncapacidades() {
     const weekdayData = weekdays;
 
     const recoveryRate = percent(recovered, expectedRecovery);
-    const incidenceRate = percent(affectedEmployees, activeEmployees || employees.length);
+    const incidenceRate = percent(affectedActiveEmployees, activeEmployees);
     const topDiagnosis = diagnosisData[0];
     const topEntity = entityData[0];
     const strongestMonth = monthly.reduce((max, item) => item.Dias > max.Dias ? item : max, monthly[0] || { mes: 'N/A', Dias: 0 });
@@ -1126,6 +1131,7 @@ export default function AnaliticaIncapacidades() {
       pendingRecovery,
       recoveryRate,
       affectedEmployees,
+      affectedActiveEmployees,
       incidenceRate,
       activeEmployees,
       longCases: longCases.length,
@@ -1252,7 +1258,7 @@ export default function AnaliticaIncapacidades() {
         <KpiTile title="Casos filtrados" value={integerFormatter.format(analytics.total)} detail={`${analytics.active} activos ahora`} icon={FileText} color={palette.teal} trend={analytics.trends.cases} />
         <KpiTile title="Dias de incapacidad" value={integerFormatter.format(analytics.totalDays)} detail={`${numberFormatter.format(analytics.avgDays)} dias promedio`} icon={CalendarDays} color={palette.orange} trend={analytics.trends.days} />
         <KpiTile title="Recobro pendiente" value={money(analytics.pendingRecovery)} detail={`${analytics.recoveryRate}% recuperado`} icon={Banknote} color={palette.amber} trend={analytics.trends.recovery} />
-        <KpiTile title="Colaboradores afectados" value={integerFormatter.format(analytics.affectedEmployees)} detail={`${analytics.incidenceRate}% de ${analytics.activeEmployees || analytics.affectedEmployees} activos`} icon={Users} color={palette.navy} />
+        <KpiTile title="Colaboradores activos afectados" value={integerFormatter.format(analytics.affectedActiveEmployees)} detail={`${analytics.incidenceRate}% de ${analytics.activeEmployees} activos`} icon={Users} color={palette.navy} />
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
