@@ -531,7 +531,14 @@ export function useIncapacityAnalyticsData() {
           is_extension,
           parent_incapacity_id,
           extension_number,
-          employee:employees_v2(id, first_name, last_name, document_number, gender)
+          employee:employees_v2(
+            id,
+            first_name,
+            last_name,
+            document_number,
+            gender,
+            employee_social_security(risk_level, is_current)
+          )
         `)
         .eq('company_id', currentCompanyId!)
         .order('start_date', { ascending: false });

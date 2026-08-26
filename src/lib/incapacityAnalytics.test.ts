@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildIncapacityEmployerCostSummary,
   buildIncapacityDurationBuckets,
   buildMonthlyEpsRecovery,
   getActualRecoveryPayment,
@@ -20,6 +21,33 @@ describe('incapacity analytics', () => {
       expect.objectContaining({ key: 'one_two_days', cases: 3, casePercentage: 60, amount: 600, amountPercentage: 30 }),
       expect.objectContaining({ key: 'three_plus_days', cases: 2, casePercentage: 40, amount: 1400, amountPercentage: 70 }),
     ]);
+  });
+
+  it('totals employer costs using each affected employee ARL risk level', () => {
+    const result = buildIncapacityEmployerCostSummary([
+      {
+        total_amount: 100_000,
+        employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] },
+      },
+      {
+        total_amount: 100_000,
+        employee: { employee_social_security: [{ risk_level: 'V', is_current: true }] },
+      },
+    ], {
+      pension_employer_rate: 0.12,
+      arl_rate_i: 0.00522,
+      arl_rate_v: 0.0696,
+      ccf_rate: 0.04,
+    });
+
+    expect(result.paymentBase).toBe(200_000);
+    expect(result.benefits.map((item) => item.amount)).toEqual([16_666, 2_000, 16_666, 8_340]);
+    expect(result.contributions.map((item) => item.amount)).toEqual([0, 24_000, 7_482, 8_000]);
+    expect(result.benefits.find((item) => item.key === 'vacation')?.rate).toBe(0.0417);
+    expect(result.contributions.find((item) => item.key === 'health')?.rate).toBe(0);
+    expect(result.contributions.find((item) => item.key === 'arl')?.rate).toBe(0.03741);
+    expect(result.additionalCost).toBe(83_154);
+    expect(result.totalCost).toBe(283_154);
   });
 
   it('groups EPS recovery by month and entity and calculates pending values', () => {
