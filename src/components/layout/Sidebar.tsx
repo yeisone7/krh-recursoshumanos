@@ -199,6 +199,9 @@ const seleccionNavItems: NavItem[] = [
 const timeManagementNavItems: NavItem[] = [
   { label: 'Vacaciones', icon: <Palmtree className="w-5 h-5" />, href: '/vacaciones', moduleCode: 'vacaciones' },
   { label: 'Permisos', icon: <ClipboardList className="w-5 h-5" />, href: '/permisos', moduleCode: 'permisos' },
+];
+
+const incapacityNavItems: NavItem[] = [
   { label: 'Incapacidades', icon: <HeartPulse className="w-5 h-5" />, href: '/incapacidades', moduleCode: 'incapacidades' },
   { label: 'Analítica Incapacidades', icon: <BarChart3 className="w-5 h-5" />, href: '/incapacidades/analitica', moduleCode: 'analitica_incapacidades' },
 ];
@@ -366,6 +369,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const filteredSucursalesNavItems = useMemo(() => filterItems(sucursalesNavItems), [filterItems]);
   const filteredSeleccionNavItems = useMemo(() => filterItems(seleccionNavItems), [filterItems]);
   const filteredTimeManagementNavItems = useMemo(() => filterItems(timeManagementNavItems), [filterItems]);
+  const filteredIncapacityNavItems = useMemo(() => filterItems(incapacityNavItems), [filterItems]);
   const filteredDevelopmentNavItems = useMemo(() => filterItems(developmentNavItems), [filterItems]);
   const filteredBenefitsNavItems = useMemo(() => filterItems(benefitsNavItems), [filterItems]);
   const filteredPayrollNavItems = useMemo(() => filterItems(payrollNavItems), [filterItems]);
@@ -849,6 +853,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             <SectionLabel label="Tiempo" />
             <div className="space-y-0.5">
               {filteredTimeManagementNavItems.map((item) =>
+                <NavLinkItem key={item.href} item={item} />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Incapacidades */}
+        {filteredIncapacityNavItems.length > 0 && (
+          <>
+            <SectionLabel label="Incapacidades" />
+            <div className="space-y-0.5">
+              {filteredIncapacityNavItems.map((item) =>
                 <NavLinkItem key={item.href} item={item} />
               )}
             </div>
