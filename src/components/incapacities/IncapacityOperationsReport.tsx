@@ -25,6 +25,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   countBy,
   filterIncapacityOperationsRows,
+  getIncapacityOperationsMonths,
   getUniqueDiagnosisCount,
   summarizeByOperationCenter,
   summarizeIncapacityOperationsRows,
@@ -60,9 +61,10 @@ function MetricBubble({ label, value, detail, icon: Icon, color }: {
   );
 }
 
-function OperationalSnapshotInfographic({ cases, days, diagnoses, affectedEmployees }: {
+function OperationalSnapshotInfographic({ cases, days, daysLabel, diagnoses, affectedEmployees }: {
   cases: number;
   days: number;
+  daysLabel: string;
   diagnoses: number;
   affectedEmployees: number;
 }) {
@@ -83,7 +85,7 @@ function OperationalSnapshotInfographic({ cases, days, diagnoses, affectedEmploy
           </div>
           <div className="mt-6 grid grid-cols-1 gap-4 min-[420px]:grid-cols-3">
             <MetricBubble label="Incapacidades" value={cases} detail="casos registrados" icon={BarChart3} color="#F97316" />
-            <MetricBubble label="Días totales" value={days} detail="días acumulados" icon={CalendarDays} color="#06A7B9" />
+            <MetricBubble label={daysLabel} value={days} detail="días ocurridos" icon={CalendarDays} color="#06A7B9" />
             <MetricBubble label="Diagnósticos" value={diagnoses} detail="diagnósticos únicos" icon={Stethoscope} color="#8B5CF6" />
           </div>
         </div>
@@ -236,7 +238,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
     };
   }, [employeeId, month, operationCenterId, positionName, rows]);
 
-  const months = useMemo(() => sortedOptions(rows, (row) => row.startDate.slice(0, 7)).reverse(), [rows]);
+  const months = useMemo(() => getIncapacityOperationsMonths(rows), [rows]);
   const centers = useMemo(() => {
     const byId = new Map(rows.map((row) => [row.operationCenterId, row.operationCenterName]));
     return [...byId.entries()].sort((left, right) => left[1].localeCompare(right[1], 'es'));
@@ -253,6 +255,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
     setPositionName('all');
     setEmployeeId('all');
   };
+  const daysColumnLabel = month === 'all' ? 'Días' : 'Días del mes';
 
   return (
     <div className="space-y-5">
@@ -312,6 +315,7 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
         <OperationalSnapshotInfographic
           cases={report.filtered.length}
           days={report.totalDays}
+          daysLabel={month === 'all' ? 'Días totales' : 'Días del mes'}
           diagnoses={report.diagnoses}
           affectedEmployees={report.affectedEmployees}
         />
@@ -335,13 +339,13 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
           <CardContent className="p-0">
             <div className="border-b border-slate-200 p-4">
               <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Detalle por colaborador</h3>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Días agrupados por persona, centro, cargo y concepto</p>
+              <p className="mt-1 text-xs font-semibold text-slate-500">{month === 'all' ? 'Días agrupados por persona, centro, cargo y concepto' : 'Días ocurridos dentro del mes seleccionado, agrupados por persona, centro, cargo y concepto'}</p>
             </div>
             <div className="[&>div]:max-h-[340px] [&>div]:overflow-auto">
               <Table>
                 <TableHeader className="bg-slate-900">
                   <TableRow className="border-slate-700 hover:bg-slate-900">
-                    {['Colaborador', 'Centro de operación', 'Cargo', 'Concepto', 'Casos', 'Días'].map((label) => (
+                    {['Colaborador', 'Centro de operación', 'Cargo', 'Concepto', 'Casos', daysColumnLabel].map((label) => (
                       <TableHead key={label} className="sticky top-0 z-20 h-10 whitespace-nowrap bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white">{label}</TableHead>
                     ))}
                   </TableRow>
@@ -369,13 +373,13 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
         <CardContent className="p-0">
           <div className="border-b border-slate-200 p-4">
             <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Días por centro de operación</h3>
-            <p className="mt-1 text-xs font-semibold text-slate-500">Casos y días acumulados para los filtros seleccionados</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">Casos y {month === 'all' ? 'días acumulados' : 'días ocurridos en el mes'} para los filtros seleccionados</p>
           </div>
           <div className="[&>div]:max-h-[360px] [&>div]:overflow-auto">
             <Table>
               <TableHeader className="bg-slate-900">
                 <TableRow className="border-slate-700 hover:bg-slate-900">
-                  {['Centro de operación', 'Casos', 'Días'].map((label, index) => (
+                  {['Centro de operación', 'Casos', daysColumnLabel].map((label, index) => (
                     <TableHead
                       key={label}
                       className="sticky top-0 z-20 h-10 bg-slate-900 text-[10px] font-black uppercase tracking-wider text-white"
