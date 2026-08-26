@@ -15,6 +15,7 @@ import type {
   RecoveryStatus 
 } from '@/types/incapacity';
 import {
+  applyRecoveryStatusToPaymentDistribution,
   calculatePaymentDistribution,
   getAccumulatedDays,
   getAccumulatedDaysForNewExtension,
@@ -361,12 +362,17 @@ export function useUpdateIncapacity() {
         ? getAccumulatedDays(typedCurrent, typedRecords)
         : 0;
       const totalDays = differenceInDays(effectiveEndDate, effectiveStartDate) + 1;
-      const distribution = calculatePaymentDistribution(
-        effectiveOrigin,
+      const distribution = applyRecoveryStatusToPaymentDistribution(
+        calculatePaymentDistribution(
+          effectiveOrigin,
+          totalDays,
+          effectiveDailySalary,
+          accumulatedDays,
+          getLegalMinimumMonthlyWage(effectiveStartDate)
+        ),
+        typedCurrent.recovery_status,
         totalDays,
-        effectiveDailySalary,
         accumulatedDays,
-        getLegalMinimumMonthlyWage(effectiveStartDate)
       );
       const updateData: Record<string, unknown> = {};
       
@@ -421,12 +427,17 @@ export function useUpdateIncapacity() {
       for (const item of getIncapacityChain(refreshedRoot.id, refreshed)) {
         const itemOrigin = item.is_extension ? refreshedRoot.origin : item.origin;
         const itemIbc = item.is_extension ? rootIbc : (item.daily_base_salary || 0);
-        const itemDistribution = calculatePaymentDistribution(
-          itemOrigin,
+        const itemDistribution = applyRecoveryStatusToPaymentDistribution(
+          calculatePaymentDistribution(
+            itemOrigin,
+            item.total_days,
+            itemIbc,
+            chainAccumulatedDays,
+            getLegalMinimumMonthlyWage(item.start_date)
+          ),
+          item.recovery_status,
           item.total_days,
-          itemIbc,
           chainAccumulatedDays,
-          getLegalMinimumMonthlyWage(item.start_date)
         );
 
         const { error: chainUpdateError } = await supabase
@@ -564,6 +575,35 @@ export function useUpdateRecoveryStatus() {
 
       if (currentError) throw currentError;
 
+      const { data: employeeRecords, error: employeeRecordsError } = await supabase
+        .from('employee_incapacities')
+        .select('*')
+        .eq('employee_id', currentRecord.employee_id);
+
+      if (employeeRecordsError) throw employeeRecordsError;
+
+      const typedRecords = employeeRecords as unknown as EmployeeIncapacity[];
+      const typedCurrent = currentRecord as unknown as EmployeeIncapacity;
+      const root = getRootIncapacity(typedCurrent, typedRecords);
+      const accumulatedDays = typedCurrent.is_extension
+        ? getAccumulatedDays(typedCurrent, typedRecords)
+        : 0;
+      const dailyBaseSalary = typedCurrent.is_extension
+        ? (root.daily_base_salary || 0)
+        : (typedCurrent.daily_base_salary || 0);
+      const distribution = applyRecoveryStatusToPaymentDistribution(
+        calculatePaymentDistribution(
+          typedCurrent.is_extension ? root.origin : typedCurrent.origin,
+          typedCurrent.total_days,
+          dailyBaseSalary,
+          accumulatedDays,
+          getLegalMinimumMonthlyWage(typedCurrent.start_date),
+        ),
+        data.recovery_status,
+        typedCurrent.total_days,
+        accumulatedDays,
+      );
+
       const updateData: Record<string, unknown> = {
         recovery_status: data.recovery_status,
         filing_date: data.filing_date ? format(data.filing_date, 'yyyy-MM-dd') : null,
@@ -572,6 +612,15 @@ export function useUpdateRecoveryStatus() {
         actual_payment_date: data.actual_payment_date ? format(data.actual_payment_date, 'yyyy-MM-dd') : null,
         recovered_amount: data.recovered_amount ?? 0,
         recovery_notes: data.recovery_notes || null,
+        employer_days: distribution.employerDays,
+        eps_days: distribution.epsDays,
+        arl_days: distribution.arlDays,
+        afp_days: distribution.afpDays,
+        employer_amount: distribution.employerAmount,
+        eps_amount: distribution.epsAmount,
+        arl_amount: distribution.arlAmount,
+        afp_amount: distribution.afpAmount,
+        total_amount: distribution.totalAmount,
       };
       
       const { data: result, error } = await supabase

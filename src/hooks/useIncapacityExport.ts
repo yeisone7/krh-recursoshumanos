@@ -104,6 +104,7 @@ export function useIncapacityExport() {
       // Transform data for Excel
       const excelData: IncapacityExportRow[] = data.map((inc) => {
         const statusKey = inc.recovery_status as keyof typeof recoveryStatusLabels;
+        const isCompanyAssumed = inc.recovery_status === 'asumido_empresa';
         const legalStageDays = inc.origin === 'laboral' && inc.is_extension
           ? Math.max(2, inc.total_days || 0)
           : (inc.total_days || 0);
@@ -120,14 +121,14 @@ export function useIncapacityExport() {
           'Días Totales': inc.total_days || 0,
           'Diagnóstico': inc.diagnosis || '',
           'Código CIE-10': inc.cie10_code || '',
-          'Días Empleador': inc.employer_days || 0,
-          'Días EPS': inc.eps_days || 0,
-          'Días ARL': inc.arl_days || 0,
-          'Días AFP': inc.afp_days || 0,
-          'Monto Empleador': inc.employer_amount || 0,
-          'Monto EPS': inc.eps_amount || 0,
-          'Monto ARL': inc.arl_amount || 0,
-          'Monto AFP': inc.afp_amount || 0,
+          'Días Empleador': isCompanyAssumed ? inc.total_days || 0 : inc.employer_days || 0,
+          'Días EPS': isCompanyAssumed ? 0 : inc.eps_days || 0,
+          'Días ARL': isCompanyAssumed ? 0 : inc.arl_days || 0,
+          'Días AFP': isCompanyAssumed ? 0 : inc.afp_days || 0,
+          'Monto Empleador': isCompanyAssumed ? inc.total_amount || 0 : inc.employer_amount || 0,
+          'Monto EPS': isCompanyAssumed ? 0 : inc.eps_amount || 0,
+          'Monto ARL': isCompanyAssumed ? 0 : inc.arl_amount || 0,
+          'Monto AFP': isCompanyAssumed ? 0 : inc.afp_amount || 0,
           'Monto Total': inc.total_amount || 0,
           'Estado Recobro': recoveryStatusLabels[statusKey] || inc.recovery_status,
           'Monto Recuperado': inc.recovered_amount || 0,

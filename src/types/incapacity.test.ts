@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyRecoveryStatusToPaymentDistribution,
   calculatePaymentDistribution,
   calculateIncapacityEmployerCost,
   getAccumulatedDays,
@@ -66,6 +67,24 @@ describe('calculatePaymentDistribution', () => {
     expect(result.epsDays).toBe(1);
     expect(result.employerAmount).toBeCloseTo(133_340, 2);
     expect(result.epsAmount).toBeCloseTo(66_670, 2);
+  });
+
+  it('carga todo el valor al empleador cuando el recobro es asumido por la empresa', () => {
+    const legalDistribution = calculatePaymentDistribution('laboral', 3, 58_363.5, 0, 1);
+    const result = applyRecoveryStatusToPaymentDistribution(
+      legalDistribution,
+      'asumido_empresa',
+      3,
+    );
+
+    expect(result.employerDays).toBe(3);
+    expect(result.arlDays).toBe(0);
+    expect(result.epsDays).toBe(0);
+    expect(result.afpDays).toBe(0);
+    expect(result.employerAmount).toBe(result.totalAmount);
+    expect(result.arlAmount).toBe(0);
+    expect(result.epsAmount).toBe(0);
+    expect(result.afpAmount).toBe(0);
   });
 
   it('aplica el piso diario del salario mínimo cuando el porcentaje queda por debajo', () => {
