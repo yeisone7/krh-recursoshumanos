@@ -64,6 +64,10 @@ const roundPercentage = (value: number, total: number) => {
   return Math.round((value / total) * 1000) / 10;
 };
 
+export function getLongCaseShare(longCases: number, totalCases: number) {
+  return roundPercentage(Math.max(0, longCases), Math.max(0, totalCases));
+}
+
 export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): IncapacityRecoveryAmounts {
   const expected = row.recovery_status === 'asumido_empresa'
     ? 0

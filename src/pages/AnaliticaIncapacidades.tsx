@@ -69,6 +69,7 @@ import {
   buildMonthlyEpsRecovery,
   getEarliestIncapacityStartDate,
   getIncapacityRecoveryAmounts,
+  getLongCaseShare,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
@@ -601,18 +602,14 @@ interface IncapacityInfographicsAnalytics {
 }
 
 function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfographicsAnalytics }) {
-  const originCircleData = [
-    ...analytics.originData.map((item: { name: string; value: number }, index: number) => ({
-      label: item.name,
-      value: item.value,
-      color: chartColors[index % chartColors.length],
-    })),
-    { label: 'Largo plazo', value: analytics.longCases, color: palette.violet },
-    { label: 'Riesgo legal', value: analytics.legalRisk, color: palette.navy },
-  ].filter((item) => item.value > 0);
+  const originCircleData = analytics.originData.map((item: { name: string; value: number }, index: number) => ({
+    label: item.name,
+    value: item.value,
+    color: chartColors[index % chartColors.length],
+  }));
   const recoveryMax = Math.max(...analytics.recoveryData.map((item: { value: number }) => item.value), 1);
   const legalMax = Math.max(...analytics.legalData.map((item: { value: number }) => item.value), 1);
-  const operationalHealth = clampPercent((analytics.recoveryRate + Math.max(0, 100 - analytics.incidenceRate) + Math.max(0, 100 - percent(analytics.longCases, Math.max(analytics.total, 1)))) / 3);
+  const longCaseShare = getLongCaseShare(analytics.longCases, analytics.total);
 
   return (
     <div className="space-y-4 rounded-xl border border-slate-200 bg-[#F7F7FD] p-3 sm:p-5">
@@ -627,11 +624,11 @@ function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfogra
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <RingMetric value={analytics.recoveryRate} label="Recobro" detail={`${money(analytics.recovered)} recuperado`} color={palette.teal} />
-            <RingMetric value={operationalHealth} label="Control" detail={`${analytics.longCases} casos largos`} color={palette.orange} />
+            <RingMetric value={longCaseShare} label="Casos largos" detail={`${analytics.longCases} casos de mas de 30 dias`} color={palette.orange} />
           </div>
         </InfographicPanel>
 
-        <SegmentedCircle title="Origen y alertas" center={integerFormatter.format(analytics.total)} data={originCircleData.length ? originCircleData : [{ label: 'Sin datos', value: 1, color: '#CBD5E1' }]} />
+        <SegmentedCircle title="Distribucion por origen" center={integerFormatter.format(analytics.total)} data={originCircleData.length ? originCircleData : [{ label: 'Sin datos', value: 1, color: '#CBD5E1' }]} />
 
         <MonthlyInfographic monthly={analytics.monthly} />
       </div>
