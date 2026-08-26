@@ -118,8 +118,8 @@ export function IncapacityFormDialog({
   );
   const hasIncapConflicts = incapConflicts.length > 0;
   const employeeOptions = useMemo(() => (
-    (employees || [])
-      .filter(employee => employee.is_active)
+    [...(employees || [])]
+      .sort((a, b) => Number(b.is_active) - Number(a.is_active))
       .map(employee => {
         const fullName = [
           employee.first_name,
@@ -131,6 +131,7 @@ export function IncapacityFormDialog({
         const positionName = employee.work_info?.position_name || '';
         const centerName = employee.operation_centers?.name || '';
         const areaName = employee.areas?.name || '';
+        const statusLabel = employee.is_active ? 'Activo' : 'Inactivo';
 
         return {
           value: employee.id,
@@ -142,12 +143,29 @@ export function IncapacityFormDialog({
             positionName,
             centerName,
             areaName,
+            statusLabel,
+            employee.is_active ? '' : 'desvinculado retirado',
           ].filter(Boolean).join(' '),
-          suffix: positionName ? (
-            <span className="ml-auto max-w-[11rem] truncate pl-3 text-xs text-muted-foreground">
-              {positionName}
+          suffix: (
+            <span className="ml-auto flex min-w-0 shrink-0 items-center gap-2 pl-3">
+              {positionName && (
+                <span className="hidden max-w-[8rem] truncate text-xs text-muted-foreground sm:inline">
+                  {positionName}
+                </span>
+              )}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'shrink-0 px-2 py-0 text-[10px] font-semibold',
+                  employee.is_active
+                    ? 'border-primary/30 bg-primary/10 text-primary'
+                    : 'border-muted-foreground/30 bg-muted text-muted-foreground'
+                )}
+              >
+                {statusLabel}
+              </Badge>
             </span>
-          ) : undefined,
+          ),
         };
       })
   ), [employees]);
@@ -302,13 +320,13 @@ export function IncapacityFormDialog({
                           options={employeeOptions}
                           placeholder={loadingEmployees ? 'Cargando empleados...' : 'Seleccione un empleado'}
                           searchPlaceholder="Buscar por nombre, documento, cargo o centro..."
-                          emptyMessage="No se encontraron empleados activos."
+                          emptyMessage="No se encontraron empleados."
                           disabled={isEditing || !!employeeId || loadingEmployees}
                           triggerClassName="h-10"
                         />
                       </FormControl>
                       <FormDescription>
-                        Escriba nombre, apellido, documento, cargo o centro para filtrar.
+                        Puede seleccionar empleados activos o inactivos y filtrar por nombre, documento, cargo o centro.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
