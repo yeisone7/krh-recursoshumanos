@@ -931,7 +931,7 @@ export function IncapacityDetailDialog({
                 </Card>
               </TabsContent>
 
-              <TabsContent value="audit" className="mt-0 space-y-4">
+              <TabsContent value="audit" className="mt-0 min-h-full space-y-4 pb-6">
                 <AuditLogViewer entityType="incapacity" entityId={incapacity.id} compact />
               </TabsContent>
               </ScrollArea>

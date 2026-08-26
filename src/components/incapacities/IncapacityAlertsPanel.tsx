@@ -30,8 +30,6 @@ export function IncapacityAlertsPanel({
       case 'recovery_pending':
       case 'legal_milestone':
         return <AlertTriangle className="h-4 w-4" />;
-      case 'reintegration_exam':
-        return <Stethoscope className="h-4 w-4" />;
     }
   };
 
