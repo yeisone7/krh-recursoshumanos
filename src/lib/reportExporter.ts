@@ -1,6 +1,6 @@
-import * as XLSX from 'xlsx';
+import XLSX, { type WorkBook } from 'xlsx';
 import { jsPDF } from 'jspdf';
-import { format } from 'date-fns';
+import { format, isValid, parse } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export interface ReportColumn {
@@ -20,6 +20,11 @@ export interface ReportData {
   institutional?: boolean;
   summary?: ReportSummaryItem[];
   currencyKeys?: string[];
+  dateKeys?: string[];
+  integerKeys?: string[];
+  textKeys?: string[];
+  statusKey?: string;
+  sheetName?: string;
 }
 
 export interface ReportSummaryItem {
@@ -38,6 +43,12 @@ const INSTITUTIONAL_COLORS = {
   soft: 'F5F8FA',
   positive: '15803D',
   warning: 'C25D00',
+  danger: 'B42318',
+  palePositive: 'EAF7EE',
+  paleWarning: 'FFF4E5',
+  paleDanger: 'FDECEC',
+  paleBlue: 'EAF2FF',
+  palePurple: 'F3EDFF',
 };
 
 function formatCurrency(value: number): string {
@@ -60,7 +71,37 @@ function getReportValue(report: ReportData, key: string, value: unknown): string
   return String(value);
 }
 
-export function exportToExcel(report: ReportData, filename: string): void {
+function normalizeExcelValue(report: ReportData, key: string, value: unknown) {
+  if (value === null || value === undefined) return '';
+  if (value instanceof Date) return value;
+  if (report.dateKeys?.includes(key) && typeof value === 'string') {
+    const parsedDate = parse(value, 'dd/MM/yyyy', new Date());
+    return isValid(parsedDate)
+      ? (Date.UTC(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate()) / 86_400_000) + 25_569
+      : value;
+  }
+  return value;
+}
+
+function getSummaryBlocks(columnCount: number, itemCount: number) {
+  if (!itemCount) return [];
+  return Array.from({ length: itemCount }, (_, index) => ({
+    start: Math.floor((index * columnCount) / itemCount),
+    end: Math.floor(((index + 1) * columnCount) / itemCount) - 1,
+  }));
+}
+
+function getRecoveryStatusStyle(value: unknown) {
+  const status = String(value || '').toLocaleLowerCase('es');
+  if (status.includes('rechazado')) return { fill: INSTITUTIONAL_COLORS.paleDanger, font: INSTITUTIONAL_COLORS.danger };
+  if (status.includes('pendiente')) return { fill: INSTITUTIONAL_COLORS.paleWarning, font: INSTITUTIONAL_COLORS.warning };
+  if (status.includes('pagado') || status.includes('aprobado')) return { fill: INSTITUTIONAL_COLORS.palePositive, font: INSTITUTIONAL_COLORS.positive };
+  if (status.includes('trámite')) return { fill: INSTITUTIONAL_COLORS.palePurple, font: '6D3FC0' };
+  if (status.includes('radicado')) return { fill: INSTITUTIONAL_COLORS.paleBlue, font: INSTITUTIONAL_COLORS.teal };
+  return { fill: INSTITUTIONAL_COLORS.soft, font: INSTITUTIONAL_COLORS.slate };
+}
+
+export function createExcelWorkbook(report: ReportData): WorkBook {
   // Create worksheet data
   const wsData: (string | number | null)[][] = [];
   
@@ -73,12 +114,19 @@ export function exportToExcel(report: ReportData, filename: string): void {
     wsData.push([report.subtitle]);
   }
   wsData.push([`Generado: ${format(report.generatedAt, "PPP 'a las' p", { locale: es })}`]);
-  wsData.push([]); // Empty row
+  wsData.push(Array(report.columns.length).fill('')); // Empty row
 
   if (report.institutional && report.summary?.length) {
-    wsData.push(report.summary.map(item => item.label));
-    wsData.push(report.summary.map(item => item.value));
-    wsData.push([]);
+    const summaryBlocks = getSummaryBlocks(report.columns.length, report.summary.length);
+    const summaryLabels = Array<string | number | null>(report.columns.length).fill(null);
+    const summaryValues = Array<string | number | null>(report.columns.length).fill(null);
+    report.summary.forEach((item, index) => {
+      summaryLabels[summaryBlocks[index].start] = item.label.toUpperCase();
+      summaryValues[summaryBlocks[index].start] = item.value;
+    });
+    wsData.push(summaryLabels);
+    wsData.push(summaryValues);
+    wsData.push(Array(report.columns.length).fill(''));
   }
   
   // Add headers
@@ -88,10 +136,14 @@ export function exportToExcel(report: ReportData, filename: string): void {
   // Add data rows
   report.data.forEach(row => {
     wsData.push(report.columns.map(col => {
-      const value = row[col.key];
-      if (value === null || value === undefined) return '';
-      if (value instanceof Date) return format(value, 'yyyy-MM-dd');
-      return report.institutional ? value : String(value);
+      const rawValue = row[col.key];
+      if (!report.institutional) {
+        if (rawValue === null || rawValue === undefined) return '';
+        if (rawValue instanceof Date) return format(rawValue, 'yyyy-MM-dd');
+        return String(rawValue);
+      }
+      const value = normalizeExcelValue(report, col.key, row[col.key]);
+      return value;
     }));
   });
   
@@ -105,15 +157,24 @@ export function exportToExcel(report: ReportData, filename: string): void {
   if (report.institutional) {
     const lastColumn = Math.max(0, report.columns.length - 1);
     const metadataRows = report.subtitle ? 4 : 3;
-    ws['!merges'] = Array.from({ length: metadataRows }, (_, row) => ({
+    const summaryLabelRow = headerRowIndex - 3;
+    const summaryValueRow = headerRowIndex - 2;
+    const summaryBlocks = getSummaryBlocks(report.columns.length, report.summary?.length || 0);
+    ws['!merges'] = [
+      ...Array.from({ length: metadataRows }, (_, row) => ({
       s: { r: row, c: 0 },
       e: { r: row, c: lastColumn },
-    }));
+      })),
+      ...summaryBlocks.flatMap(block => [
+        { s: { r: summaryLabelRow, c: block.start }, e: { r: summaryLabelRow, c: block.end } },
+        { s: { r: summaryValueRow, c: block.start }, e: { r: summaryValueRow, c: block.end } },
+      ]),
+    ];
     ws['!autofilter'] = {
       ref: XLSX.utils.encode_range({ s: { r: headerRowIndex, c: 0 }, e: { r: wsData.length - 1, c: lastColumn } }),
     };
     ws['!rows'] = wsData.map((_, row) => ({
-      hpt: row === 0 ? 24 : row === 1 ? 30 : row === headerRowIndex ? 28 : row > headerRowIndex ? 22 : 20,
+      hpt: row === 0 ? 22 : row === 1 ? 32 : row === headerRowIndex ? 34 : row > headerRowIndex ? 24 : 20,
     }));
 
     const styleCell = (row: number, column: number, style: Record<string, unknown>) => {
@@ -123,12 +184,33 @@ export function exportToExcel(report: ReportData, filename: string): void {
     };
 
     styleCell(0, 0, {
-      font: { bold: true, color: { rgb: INSTITUTIONAL_COLORS.teal }, sz: 11 },
-      alignment: { vertical: 'center' },
+      font: { bold: true, color: { rgb: 'A7E7F2' }, sz: 11 },
+      fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.navy } },
+      alignment: { vertical: 'center', horizontal: 'left' },
     });
     styleCell(1, 0, {
-      font: { bold: true, color: { rgb: INSTITUTIONAL_COLORS.navy }, sz: 18 },
-      alignment: { vertical: 'center' },
+      font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 18 },
+      fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.navy } },
+      alignment: { vertical: 'center', horizontal: 'left' },
+    });
+    if (report.subtitle) {
+      styleCell(2, 0, {
+        font: { bold: true, color: { rgb: INSTITUTIONAL_COLORS.navy }, sz: 10 },
+        fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.paleTeal } },
+        alignment: { vertical: 'center', horizontal: 'left' },
+      });
+    }
+    styleCell(metadataRows - 1, 0, {
+      font: { italic: true, color: { rgb: INSTITUTIONAL_COLORS.slate }, sz: 9 },
+      fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.paleTeal } },
+      alignment: { vertical: 'center', horizontal: 'left' },
+    });
+    [metadataRows, headerRowIndex - 1].forEach((spacerRow) => {
+      for (let column = 0; column <= lastColumn; column += 1) {
+        styleCell(spacerRow, column, {
+          fill: { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
+        });
+      }
     });
 
     for (let column = 0; column <= lastColumn; column += 1) {
@@ -140,13 +222,13 @@ export function exportToExcel(report: ReportData, filename: string): void {
       });
     }
 
-    const summaryLabelRow = headerRowIndex - 3;
-    const summaryValueRow = headerRowIndex - 2;
-    report.summary?.forEach((item, column) => {
+    report.summary?.forEach((item, index) => {
+      const column = summaryBlocks[index].start;
       styleCell(summaryLabelRow, column, {
         font: { bold: true, color: { rgb: INSTITUTIONAL_COLORS.slate }, sz: 9 },
         fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.soft } },
         alignment: { horizontal: 'center', vertical: 'center' },
+        border: { top: { style: 'thin', color: { rgb: INSTITUTIONAL_COLORS.border } } },
       });
       styleCell(summaryValueRow, column, {
         font: {
@@ -162,6 +244,7 @@ export function exportToExcel(report: ReportData, filename: string): void {
         },
         fill: { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.soft } },
         alignment: { horizontal: 'center', vertical: 'center' },
+        border: { bottom: { style: 'thin', color: { rgb: INSTITUTIONAL_COLORS.border } } },
       });
       const address = XLSX.utils.encode_cell({ r: summaryValueRow, c: column });
       if (item.format === 'currency' && ws[address]) ws[address].z = '"$" #,##0.00';
@@ -173,13 +256,26 @@ export function exportToExcel(report: ReportData, filename: string): void {
       report.columns.forEach((column, columnIndex) => {
         const address = XLSX.utils.encode_cell({ r: row, c: columnIndex });
         if (report.currencyKeys?.includes(column.key) && ws[address]) ws[address].z = '"$" #,##0.00';
+        if (report.dateKeys?.includes(column.key) && ws[address]) ws[address].z = 'dd/mm/yyyy';
+        if (report.integerKeys?.includes(column.key) && ws[address]) ws[address].z = '#,##0';
+        if (report.textKeys?.includes(column.key) && ws[address]) ws[address].z = '@';
+        const isCurrency = report.currencyKeys?.includes(column.key);
+        const isDate = report.dateKeys?.includes(column.key);
+        const isInteger = report.integerKeys?.includes(column.key);
+        const isTextCode = report.textKeys?.includes(column.key);
+        const isStatus = report.statusKey === column.key;
+        const statusStyle = isStatus ? getRecoveryStatusStyle(report.data[dataIndex][column.key]) : null;
         styleCell(row, columnIndex, {
-          fill: dataIndex % 2 === 1 ? { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.soft } } : undefined,
-          font: { color: { rgb: INSTITUTIONAL_COLORS.navy }, sz: 9 },
+          fill: statusStyle
+            ? { patternType: 'solid', fgColor: { rgb: statusStyle.fill } }
+            : dataIndex % 2 === 1
+              ? { patternType: 'solid', fgColor: { rgb: INSTITUTIONAL_COLORS.soft } }
+              : { patternType: 'solid', fgColor: { rgb: 'FFFFFF' } },
+          font: { bold: isCurrency || isStatus, color: { rgb: statusStyle?.font || INSTITUTIONAL_COLORS.navy }, sz: 9 },
           alignment: {
             vertical: 'center',
             wrapText: true,
-            horizontal: report.currencyKeys?.includes(column.key) ? 'right' : 'left',
+            horizontal: isCurrency || isInteger ? 'right' : isDate || isStatus || isTextCode ? 'center' : 'left',
           },
           border: { bottom: { style: 'hair', color: { rgb: INSTITUTIONAL_COLORS.border } } },
         });
@@ -188,10 +284,28 @@ export function exportToExcel(report: ReportData, filename: string): void {
   }
   
   // Add worksheet to workbook
-  XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+  XLSX.utils.book_append_sheet(wb, ws, report.sheetName || 'Reporte');
+  wb.Props = {
+    Title: report.title,
+    Subject: report.subtitle || 'Reporte institucional',
+    Author: report.organization || 'Gestión Humana',
+    Company: report.organization || 'Gestión Humana',
+    Comments: 'Generado desde el Centro de Reportes',
+  };
+
+  return wb;
+}
+
+export function exportToExcel(report: ReportData, filename: string): void {
+  const wb = createExcelWorkbook(report);
   
   // Save file
-  XLSX.writeFile(wb, `${filename}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`);
+  XLSX.writeFile(wb, `${filename}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`, {
+    bookType: 'xlsx',
+    cellDates: true,
+    cellStyles: true,
+    compression: true,
+  });
 }
 
 export function exportToPDF(report: ReportData, filename: string): void {
