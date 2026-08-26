@@ -16,6 +16,7 @@ import { AppUpdateNotifier } from "@/components/system/AppUpdateNotifier";
 import { LocationPersister } from "@/components/auth/LocationPersister";
 import Dashboard from "./pages/Dashboard";
 import Empleados from "./pages/Empleados";
+import ContactosEmpleados from "./pages/ContactosEmpleados";
 import Contratos from "./pages/Contratos";
 import Incapacidades from "./pages/Incapacidades";
 import CentroNotificaciones from "./pages/CentroNotificaciones";
@@ -179,6 +180,7 @@ const App = () => (
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/empleados/:id/360" element={<P module="empleados"><Empleado360 /></P>} />
                         <Route path="/empleados" element={<P module="empleados"><Empleados /></P>} />
+                        <Route path="/empleados/contactos" element={<P module="empleados"><ContactosEmpleados /></P>} />
                         <Route path="/empleados/analitica" element={<P module="analitica_empleados"><Suspense fallback={null}><AnaliticaEmpleados /></Suspense></P>} />
                         <Route path="/contratos" element={<P module="contratos"><Contratos /></P>} />
                         <Route path="/contratos/analitica" element={<P module="analitica_contratos"><Suspense fallback={null}><AnaliticaContratos /></Suspense></P>} />
