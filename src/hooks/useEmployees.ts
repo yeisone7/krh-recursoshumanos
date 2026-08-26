@@ -379,8 +379,9 @@ export function useEmployees() {
           identification_types(id, name, code),
           employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
           employee_contact(
-            id, email, mobile, phone, residence_city, residence_department,
-            residence_address, emergency_contact_name, emergency_contact_phone
+            id, email, personal_email, mobile, phone, residence_city, residence_department,
+            residence_address, residence_neighborhood, emergency_contact_name,
+            emergency_contact_phone, emergency_contact_relationship
           ),
           ${getEmployeeWorkInfoSelect()},
           ${getEmployeeCenterAssignmentsSelect(undefined, shouldLimitByAssignedCenters)}

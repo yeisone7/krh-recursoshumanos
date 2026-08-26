@@ -182,6 +182,7 @@ const coreNavItems: NavItem[] = [
 
 const personnelNavItems: NavItem[] = [
   { label: 'Empleados', icon: <Users className="w-5 h-5" />, href: '/empleados', moduleCode: 'empleados' },
+  { label: 'Contactos de Empleados', icon: <ContactRound className="w-5 h-5" />, href: '/empleados/contactos', moduleCode: 'empleados' },
   { label: 'Analitica de Empleados', icon: <BarChart3 className="w-5 h-5" />, href: '/empleados/analitica', moduleCode: 'analitica_empleados' },
 ];
 
@@ -715,9 +716,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         initial={false}
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14.75rem') }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className={cn(
-          "h-full min-h-0 overflow-hidden bg-sidebar flex flex-col border-r border-sidebar-border relative shadow-sm z-10"
-        )}>
+        className="relative h-full min-h-0 shrink-0 overflow-visible z-20">
 
       {/* Collapse/Expand Toggle Button - hidden in mobile drawer */}
       {!isMobileDrawer && (
@@ -730,6 +729,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
           }
         </button>
       )}
+
+      <div className="h-full min-h-0 overflow-hidden bg-sidebar flex flex-col border-r border-sidebar-border shadow-sm">
 
       {/* Logo */}
       <div className="h-14 flex items-center px-3 border-b border-sidebar-border">
@@ -1015,6 +1016,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
       {/* User section */}
         <CompanyUserSection collapsed={isCollapsed} onNavigate={onNavigate} />
+      </div>
     </motion.aside>
     </TooltipProvider>);
 
