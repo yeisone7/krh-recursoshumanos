@@ -1159,7 +1159,7 @@ export default function AnaliticaIncapacidades() {
         strongestMonth,
       },
     };
-  }, [activeEmployees, employeeById, employees.length, flatIncapacities, incapacityRoots, origin, period, recoveryStatus]);
+  }, [activeEmployees, employeeById, employees, flatIncapacities, incapacityRoots, origin, period, recoveryStatus]);
 
   const isLoading = loadingIncapacities || loadingEmployees;
 
