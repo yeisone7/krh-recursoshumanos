@@ -88,7 +88,14 @@ export function useIncapacity(id: string | undefined) {
         .from('employee_incapacities')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number, gender)
+          employee:employees_v2(
+            id,
+            first_name,
+            last_name,
+            document_number,
+            gender,
+            employee_social_security(risk_level, is_current)
+          )
         `)
         .eq('id', id!)
         .single();

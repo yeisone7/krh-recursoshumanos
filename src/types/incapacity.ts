@@ -54,6 +54,32 @@ export interface IncapacityLegalMilestone {
   daysRemaining: number;
 }
 
+export interface IncapacityEmployerCostRates {
+  health_employer_rate?: number | null;
+  pension_employer_rate?: number | null;
+  ccf_rate?: number | null;
+  arl_rate_i?: number | null;
+  arl_rate_ii?: number | null;
+  arl_rate_iii?: number | null;
+  arl_rate_iv?: number | null;
+  arl_rate_v?: number | null;
+}
+
+export interface IncapacityEmployerCostItem {
+  key: string;
+  label: string;
+  rate: number;
+  amount: number;
+}
+
+export interface IncapacityEmployerCostBreakdown {
+  paymentBase: number;
+  benefits: IncapacityEmployerCostItem[];
+  contributions: IncapacityEmployerCostItem[];
+  additionalCost: number;
+  totalCost: number;
+}
+
 export type IncapacityFollowUpDocumentType =
   | 'incapacity_rehabilitation_concept'
   | 'incapacity_afp_follow_up'
@@ -259,6 +285,10 @@ export interface IncapacityWithEmployee extends EmployeeIncapacity {
     last_name: string;
     document_number: string;
     gender?: string | null;
+    employee_social_security?: Array<{
+      risk_level: string | null;
+      is_current: boolean | null;
+    }>;
   };
   extensions?: EmployeeIncapacity[];
 }
@@ -311,6 +341,69 @@ export type RecoveryFormData = z.infer<typeof recoveryFormSchema>;
 // =====================================================
 // CALCULATION UTILITIES
 // =====================================================
+
+const DEFAULT_EMPLOYER_COST_RATES = {
+  health: 0.085,
+  pension: 0.12,
+  ccf: 0.04,
+  arl: {
+    I: 0.00522,
+    II: 0.01044,
+    III: 0.02436,
+    IV: 0.0435,
+    V: 0.0696,
+  },
+};
+
+/**
+ * Estimates the employer cost associated with the economic value of an
+ * incapacity. Company PILA settings and the employee's current ARL risk level
+ * take precedence over the statutory fallback rates.
+ */
+export function calculateIncapacityEmployerCost(
+  paymentBase: number | null | undefined,
+  riskLevel?: string | null,
+  rates?: IncapacityEmployerCostRates | null,
+): IncapacityEmployerCostBreakdown {
+  const base = Math.max(0, Number(paymentBase) || 0);
+  const normalizedRiskLevel = String(riskLevel || 'I').toUpperCase() as keyof typeof DEFAULT_EMPLOYER_COST_RATES.arl;
+  const arlFallback = DEFAULT_EMPLOYER_COST_RATES.arl[normalizedRiskLevel]
+    ?? DEFAULT_EMPLOYER_COST_RATES.arl.I;
+  const arlSettingKey = `arl_rate_${normalizedRiskLevel.toLowerCase()}` as keyof IncapacityEmployerCostRates;
+  const amountFor = (rate: number) => Math.round(base * rate);
+  const configuredRate = (value: number | null | undefined, fallback: number) =>
+    value === null || value === undefined ? fallback : Math.max(0, Number(value) || 0);
+
+  const benefits: IncapacityEmployerCostItem[] = [
+    { key: 'severance', label: 'Cesantías', rate: 1 / 12, amount: amountFor(1 / 12) },
+    { key: 'severance-interest', label: 'Intereses de cesantías', rate: 0.01, amount: amountFor(0.01) },
+    { key: 'service-bonus', label: 'Prima', rate: 1 / 12, amount: amountFor(1 / 12) },
+    { key: 'vacation', label: 'Vacaciones', rate: 1 / 24, amount: amountFor(1 / 24) },
+  ];
+
+  const contributionRates = {
+    health: configuredRate(rates?.health_employer_rate, DEFAULT_EMPLOYER_COST_RATES.health),
+    pension: configuredRate(rates?.pension_employer_rate, DEFAULT_EMPLOYER_COST_RATES.pension),
+    arl: configuredRate(rates?.[arlSettingKey] as number | null | undefined, arlFallback),
+    ccf: configuredRate(rates?.ccf_rate, DEFAULT_EMPLOYER_COST_RATES.ccf),
+  };
+  const contributions: IncapacityEmployerCostItem[] = [
+    { key: 'health', label: 'Salud', rate: contributionRates.health, amount: amountFor(contributionRates.health) },
+    { key: 'pension', label: 'Pensión', rate: contributionRates.pension, amount: amountFor(contributionRates.pension) },
+    { key: 'arl', label: 'ARL', rate: contributionRates.arl, amount: amountFor(contributionRates.arl) },
+    { key: 'ccf', label: 'CCF', rate: contributionRates.ccf, amount: amountFor(contributionRates.ccf) },
+  ];
+  const additionalCost = [...benefits, ...contributions]
+    .reduce((total, item) => total + item.amount, 0);
+
+  return {
+    paymentBase: base,
+    benefits,
+    contributions,
+    additionalCost,
+    totalCost: base + additionalCost,
+  };
+}
 
 /**
  * Calculates the payment distribution for an incapacity. Every covered day

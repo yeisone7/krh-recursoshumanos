@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   calculatePaymentDistribution,
+  calculateIncapacityEmployerCost,
   getAccumulatedDays,
   getAccumulatedDaysForNewExtension,
   getCurrentLegalStage,
@@ -117,6 +118,40 @@ describe('calculatePaymentDistribution', () => {
       label: 'Licencia de paternidad',
       responsible: 'EPS (100%)',
     });
+  });
+});
+
+describe('calculateIncapacityEmployerCost', () => {
+  it('calcula prestaciones y aportes con las tarifas configuradas', () => {
+    const result = calculateIncapacityEmployerCost(116_727, 'V', {
+      health_employer_rate: 0,
+      pension_employer_rate: 0.12,
+      arl_rate_v: 0.0696,
+      ccf_rate: 0.04,
+    });
+
+    expect(result.benefits.map((item) => item.amount)).toEqual([9727, 1167, 9727, 4864]);
+    expect(result.contributions.map((item) => item.amount)).toEqual([0, 14007, 8124, 4669]);
+    expect(result.additionalCost).toBe(52285);
+    expect(result.totalCost).toBe(169012);
+  });
+
+  it('usa el nivel de riesgo ARL del empleado y las tarifas legales por defecto', () => {
+    const result = calculateIncapacityEmployerCost(100_000, 'III');
+    const arl = result.contributions.find((item) => item.key === 'arl');
+
+    expect(arl?.rate).toBe(0.02436);
+    expect(arl?.amount).toBe(2436);
+  });
+
+  it('normaliza valores negativos y configuraciones con tarifa cero', () => {
+    const result = calculateIncapacityEmployerCost(-50_000, null, {
+      health_employer_rate: 0,
+    });
+
+    expect(result.paymentBase).toBe(0);
+    expect(result.totalCost).toBe(0);
+    expect(result.contributions[0]).toMatchObject({ rate: 0, amount: 0 });
   });
 });
 
