@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildIncapacityDurationBuckets, buildMonthlyEpsRecovery } from './incapacityAnalytics';
+import {
+  buildIncapacityDurationBuckets,
+  buildMonthlyEpsRecovery,
+  getActualRecoveryPayment,
+} from './incapacityAnalytics';
 
 describe('incapacity analytics', () => {
   it('groups cases, percentages and amounts into two duration bands', () => {
@@ -30,5 +34,31 @@ describe('incapacity analytics', () => {
       expect.objectContaining({ monthKey: '2026-08', epsName: 'EPS Salud', cases: 2, expected: 1500, recovered: 750, pending: 750, recoveryPercentage: 50 }),
       expect.objectContaining({ monthKey: '2026-07', epsName: 'Otra EPS', cases: 1, expected: 800, recovered: 0, pending: 800, recoveryPercentage: 0 }),
     ]);
+  });
+
+  it('assigns the recovered amount to the month of the actual payment date', () => {
+    expect(getActualRecoveryPayment({
+      start_date: '2026-07-09',
+      actual_payment_date: '2026-08-28',
+      recovered_amount: 2_160_667,
+      recovery_status: 'pagado',
+    })).toEqual({ monthKey: '2026-08', amount: 2_160_667 });
+  });
+
+  it('does not infer a recovered value without an actual payment date', () => {
+    expect(getActualRecoveryPayment({
+      actual_payment_date: null,
+      recovered_amount: 2_160_667,
+      recovery_status: 'pagado',
+    })).toBeNull();
+  });
+
+  it('does not replace a recorded zero with the estimated amount', () => {
+    expect(getActualRecoveryPayment({
+      actual_payment_date: '2026-08-28',
+      recovered_amount: 0,
+      eps_amount: 2_160_667,
+      recovery_status: 'pagado',
+    })).toEqual({ monthKey: '2026-08', amount: 0 });
   });
 });
