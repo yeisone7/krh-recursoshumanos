@@ -183,7 +183,6 @@ export function ContractTypeFormDialog({
                         onChange={(e) => setContractType(e.target.value)}
                         placeholder="ej: término_fijo_un_año"
                         required
-                        disabled={!!editItem}
                         className="h-11 rounded-xl bg-white border border-slate-200 focus-visible:ring-0 focus-visible:border-primary transition-all font-black text-slate-900 placeholder:text-slate-300 placeholder:font-bold text-xs uppercase"
                       />
                       {!editItem && <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-primary uppercase tracking-tighter bg-primary/5 px-2 py-1 rounded-lg">ID Único</div>}
