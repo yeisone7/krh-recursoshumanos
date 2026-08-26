@@ -1,3 +1,9 @@
+import {
+  calculateIncapacityEmployerCost,
+  type IncapacityEmployerCostBreakdown,
+  type IncapacityEmployerCostRates,
+} from '@/types/incapacity';
+
 export interface IncapacityAnalyticsRow {
   total_days?: number | null;
   total_amount?: number | null;
@@ -13,6 +19,12 @@ export interface IncapacityAnalyticsRow {
   recovered_amount?: number | null;
   actual_payment_date?: string | null;
   recovery_status?: string | null;
+  employee?: {
+    employee_social_security?: Array<{
+      risk_level?: string | null;
+      is_current?: boolean | null;
+    }>;
+  } | null;
 }
 
 export interface IncapacityRecoveryAmounts {
@@ -50,6 +62,45 @@ export interface MonthlyEpsRecoveryRow {
   recovered: number;
   pending: number;
   recoveryPercentage: number;
+}
+
+export function buildIncapacityEmployerCostSummary(
+  rows: IncapacityAnalyticsRow[],
+  rates?: IncapacityEmployerCostRates | null,
+): IncapacityEmployerCostBreakdown {
+  const initial = calculateIncapacityEmployerCost(0, 'I', rates);
+  const summary = rows.reduce<IncapacityEmployerCostBreakdown>((total, row) => {
+    const socialSecurity = row.employee?.employee_social_security
+      ?.find((record) => record.is_current)
+      || row.employee?.employee_social_security?.[0];
+    const breakdown = calculateIncapacityEmployerCost(
+      row.total_amount,
+      socialSecurity?.risk_level,
+      rates,
+    );
+
+    total.paymentBase += breakdown.paymentBase;
+    total.additionalCost += breakdown.additionalCost;
+    total.totalCost += breakdown.totalCost;
+    total.benefits.forEach((item, index) => {
+      item.amount += breakdown.benefits[index]?.amount || 0;
+    });
+    total.contributions.forEach((item, index) => {
+      item.amount += breakdown.contributions[index]?.amount || 0;
+    });
+    return total;
+  }, initial);
+
+  const withEffectiveRates = (item: IncapacityEmployerCostBreakdown['benefits'][number]) => ({
+    ...item,
+    rate: summary.paymentBase > 0 ? item.amount / summary.paymentBase : item.rate,
+  });
+
+  return {
+    ...summary,
+    benefits: summary.benefits.map(withEffectiveRates),
+    contributions: summary.contributions.map(withEffectiveRates),
+  };
 }
 
 export function getEarliestIncapacityStartDate(

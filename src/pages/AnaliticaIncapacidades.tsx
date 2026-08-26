@@ -63,7 +63,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
 import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
 import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
+import { usePilaUgppSettings } from '@/hooks/usePilaUgpp';
 import {
+  buildIncapacityEmployerCostSummary,
   buildIncapacityDurationBuckets,
   buildLegalResponsibilityDays,
   buildMonthlyEpsRecovery,
@@ -91,6 +93,7 @@ import {
   incapacityOriginOptions,
   recoveryStatusLabels,
   type IncapacityWithEmployee,
+  type IncapacityEmployerCostBreakdown,
   type RecoveryStatus,
 } from '@/types/incapacity';
 
@@ -754,9 +757,20 @@ function IncapacityAnalyticsSkeleton() {
   );
 }
 
-function DurationAnalysisPanel({ buckets }: { buckets: IncapacityDurationBucket[] }) {
+function DurationAnalysisPanel({
+  buckets,
+  employerCost,
+}: {
+  buckets: IncapacityDurationBucket[];
+  employerCost: IncapacityEmployerCostBreakdown;
+}) {
   const totalCases = buckets.reduce((sum, bucket) => sum + bucket.cases, 0);
   const totalAmount = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
+  const formatPercentage = (rate: number) => new Intl.NumberFormat('es-CO', {
+    style: 'percent',
+    minimumFractionDigits: rate * 100 % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(rate);
 
   return (
     <Card className="overflow-hidden rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm">
@@ -831,6 +845,54 @@ function DurationAnalysisPanel({ buckets }: { buckets: IncapacityDurationBucket[
               style={{ width: `${bucket.casePercentage}%`, backgroundColor: durationColors[index % durationColors.length] }}
             />
           ))}
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="flex flex-col gap-4 border-b border-slate-200 bg-slate-50/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                <Banknote className="h-4 w-4" />
+              </span>
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wide text-slate-900">Costo laboral estimado total</h4>
+                <p className="mt-1 text-xs font-medium text-slate-500">
+                  Prestaciones y aportes acumulados sobre {money(employerCost.paymentBase)}.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
+              {[
+                { label: 'Base', value: employerCost.paymentBase },
+                { label: 'Costo adicional', value: employerCost.additionalCost },
+                { label: 'Total con costo laboral', value: employerCost.totalCost },
+              ].map((item) => (
+                <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
+                  <p className="mt-1 whitespace-nowrap text-sm font-black text-slate-950">{money(item.value)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-0 lg:grid-cols-2 lg:divide-x lg:divide-slate-200">
+            {[
+              { title: 'Prestaciones sociales', items: employerCost.benefits },
+              { title: 'Aportes patronales', items: employerCost.contributions },
+            ].map((section) => (
+              <div key={section.title} className="p-4">
+                <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-slate-500">{section.title}</p>
+                <div className="divide-y divide-slate-100 border-y border-slate-100">
+                  {section.items.map((item) => (
+                    <div key={item.key} className="grid grid-cols-[minmax(0,1fr)_64px_110px] items-center gap-2 py-2 text-xs">
+                      <span className="truncate font-bold text-slate-700">{item.label}</span>
+                      <span className="text-right tabular-nums text-slate-500">{formatPercentage(item.rate)}</span>
+                      <span className="text-right font-black tabular-nums text-slate-950">{money(item.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -947,6 +1009,7 @@ export default function AnaliticaIncapacidades() {
 
   const { data: incapacityRoots = [], isPending: loadingIncapacities } = useIncapacityAnalyticsData();
   const { data: employees = [], isPending: loadingEmployees } = useIncapacityAnalyticsEmployees();
+  const { data: pilaSettings } = usePilaUgppSettings();
 
   const flatIncapacities = useMemo(() => flattenIncapacities(incapacityRoots), [incapacityRoots]);
   const employeeById = useMemo(() => new Map(employees.map((employee) => [employee.id, employee])), [employees]);
@@ -1066,6 +1129,7 @@ export default function AnaliticaIncapacidades() {
       .filter((item) => item.value > 0);
 
     const durationBuckets = buildIncapacityDurationBuckets(filtered);
+    const employerCostSummary = buildIncapacityEmployerCostSummary(filtered, pilaSettings);
     const epsMonthlyRecovery = buildMonthlyEpsRecovery(filtered);
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
     const legalData = buildLegalResponsibilityDays(filtered);
@@ -1151,6 +1215,7 @@ export default function AnaliticaIncapacidades() {
       legalRisk: legalRisk.length,
       monthly,
       durationBuckets,
+      employerCostSummary,
       epsMonthlyRecovery,
       originData,
       recoveryData,
@@ -1174,7 +1239,7 @@ export default function AnaliticaIncapacidades() {
         strongestMonth,
       },
     };
-  }, [activeEmployees, employeeById, employees, flatIncapacities, incapacityRoots, origin, period, recoveryStatus]);
+  }, [activeEmployees, employeeById, employees, flatIncapacities, incapacityRoots, origin, period, pilaSettings, recoveryStatus]);
 
   const isLoading = loadingIncapacities || loadingEmployees;
 
@@ -1295,7 +1360,7 @@ export default function AnaliticaIncapacidades() {
         />
       </div>
 
-      <DurationAnalysisPanel buckets={analytics.durationBuckets} />
+      <DurationAnalysisPanel buckets={analytics.durationBuckets} employerCost={analytics.employerCostSummary} />
 
       <EpsMonthlyRecoveryTable rows={analytics.epsMonthlyRecovery} />
 
