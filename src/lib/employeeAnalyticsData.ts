@@ -14,6 +14,14 @@ export function isOperationallyActiveEmployee(employee: EmployeeStatusRecord) {
   return employee.is_active === true && employee.status === 'active';
 }
 
+export function countOperationallyActiveAffectedEmployees<T extends EmployeeStatusRecord & { id: string }>(
+  employees: T[],
+  affectedEmployeeIds: Iterable<string>,
+) {
+  const affectedIds = new Set(affectedEmployeeIds);
+  return employees.filter((employee) => affectedIds.has(employee.id) && isOperationallyActiveEmployee(employee)).length;
+}
+
 export async function fetchAllAnalyticsRows<T>(
   fetchPage: (from: number, to: number) => Promise<PageResult<T>>,
   pageSize = DEFAULT_PAGE_SIZE,
