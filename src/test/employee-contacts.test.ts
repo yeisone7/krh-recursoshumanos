@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import type { EmployeeV2WithRelations } from '@/types/employee';
 import {
@@ -36,6 +37,17 @@ const employee = {
 } as unknown as EmployeeV2WithRelations;
 
 describe('employee contact directory helpers', () => {
+  it('paginates the complete employee query instead of stopping at 1,000 rows', () => {
+    const source = readFileSync(`${process.cwd()}/src/hooks/useEmployees.ts`, 'utf8');
+    const directoryQuery = source.slice(
+      source.indexOf('export function useEmployees()'),
+      source.indexOf('export function useIncapacityAnalyticsEmployees()'),
+    );
+
+    expect(directoryQuery).toContain('fetchAllAnalyticsRows((from, to) => fetchEmployeePage(from, to))');
+    expect(directoryQuery).toContain('.range(from, to)');
+  });
+
   it('includes primary and additional operation centers without duplicates', () => {
     expect(getEmployeeCenterIds(employee)).toEqual(['center-1', 'center-2']);
     expect(getEmployeeCenterNames(employee)).toEqual(['Centro Norte', 'Centro Sur']);

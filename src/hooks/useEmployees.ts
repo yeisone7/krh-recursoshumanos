@@ -10,6 +10,15 @@ import { getLatestCandidateBiologicalSex } from '@/lib/biologicalSex';
 import { createIncapacityAnalyticsEmployeesQuery } from '@/lib/incapacityAnalyticsEmployeeQuery';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
+const EMPLOYEE_ID_BATCH_SIZE = 500;
+
+function chunkValues<T>(values: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+  return chunks;
+}
 
 function getEmployeeWorkInfoSelect() {
   return `
@@ -184,26 +193,35 @@ export function mergeEmployeeCenterScopeIds(
 
 async function getEmployeeIdsForActiveCenters(companyId: string, centerIds: string[]) {
   if (centerIds.length === 0) return null;
-  const [primaryCentersResult, additionalCentersResult] = await Promise.all([
-    supabase
-      .from('employee_work_info')
-      .select('employee_id, employee_employment_cycles!inner(status)')
-      .eq('company_id', companyId)
-      .eq('is_current', true)
-      .in('operation_center_id', centerIds)
-      .eq('employee_employment_cycles.status', 'active'),
-    supabase
-      .from('employee_operation_center_assignments')
-      .select('employee_id, employee_employment_cycles!inner(status)')
-      .eq('company_id', companyId)
-      .in('operation_center_id', centerIds)
-      .eq('employee_employment_cycles.status', 'active'),
+  const [primaryCenterRows, additionalCenterRows] = await Promise.all([
+    fetchAllAnalyticsRows(async (from, to) => {
+      const { data, error } = await supabase
+        .from('employee_work_info')
+        .select('employee_id, employee_employment_cycles!inner(status)')
+        .eq('company_id', companyId)
+        .eq('is_current', true)
+        .in('operation_center_id', centerIds)
+        .eq('employee_employment_cycles.status', 'active')
+        .order('employee_id')
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
+    fetchAllAnalyticsRows(async (from, to) => {
+      const { data, error } = await supabase
+        .from('employee_operation_center_assignments')
+        .select('employee_id, employee_employment_cycles!inner(status)')
+        .eq('company_id', companyId)
+        .in('operation_center_id', centerIds)
+        .eq('employee_employment_cycles.status', 'active')
+        .order('employee_id')
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
   ]);
 
-  if (primaryCentersResult.error) throw primaryCentersResult.error;
-  if (additionalCentersResult.error) throw additionalCentersResult.error;
-
-  return mergeEmployeeCenterScopeIds(primaryCentersResult.data, additionalCentersResult.data);
+  return mergeEmployeeCenterScopeIds(primaryCenterRows, additionalCenterRows);
 }
 
 async function getNewCycleEmployeeIds(companyId: string) {
@@ -370,35 +388,45 @@ export function useEmployees() {
         : null;
       if (scopedEmployeeIds && scopedEmployeeIds.length === 0) return [];
 
-      // Get employees with their current related data
-      // Use left joins so retired employees (without is_current records) still appear
-      let query = supabase
-        .from('employees_v2')
-        .select(`
-          *,
-          identification_types(id, name, code),
-          employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
-          employee_contact(
-            id, email, personal_email, mobile, phone, residence_city, residence_department,
-            residence_address, residence_neighborhood, emergency_contact_name,
-            emergency_contact_phone, emergency_contact_relationship
-          ),
-          ${getEmployeeWorkInfoSelect()},
-          ${getEmployeeCenterAssignmentsSelect(undefined, shouldLimitByAssignedCenters)}
-        `)
-        .eq('company_id', currentCompanyId)
-        .eq('employee_contact.is_current', true)
-        .eq('employee_work_info.is_current', true);
+      const fetchEmployeePage = async (from: number, to: number, employeeIds?: string[]) => {
+        // Left joins keep employees that do not yet have contact or current work data.
+        let query = supabase
+          .from('employees_v2')
+          .select(`
+            *,
+            identification_types(id, name, code),
+            employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
+            employee_contact(
+              id, email, personal_email, mobile, phone, residence_city, residence_department,
+              residence_address, residence_neighborhood, emergency_contact_name,
+              emergency_contact_phone, emergency_contact_relationship
+            ),
+            ${getEmployeeWorkInfoSelect()},
+            ${getEmployeeCenterAssignmentsSelect()}
+          `)
+          .eq('company_id', currentCompanyId)
+          .eq('employee_contact.is_current', true)
+          .eq('employee_work_info.is_current', true);
 
-      if (scopedEmployeeIds) query = query.in('id', scopedEmployeeIds);
+        if (employeeIds) query = query.in('id', employeeIds);
 
-      const { data: employees, error } = await query
-        .order('last_name', { ascending: true });
+        const { data, error } = await query
+          .order('last_name', { ascending: true })
+          .order('id', { ascending: true })
+          .range(from, to);
+        return { data, error };
+      };
 
-      if (error) throw error;
+      const employees = scopedEmployeeIds
+        ? (await Promise.all(
+            chunkValues(scopedEmployeeIds, EMPLOYEE_ID_BATCH_SIZE).map((employeeIds) =>
+              fetchAllAnalyticsRows((from, to) => fetchEmployeePage(from, to, employeeIds)),
+            ),
+          )).flat()
+        : await fetchAllAnalyticsRows((from, to) => fetchEmployeePage(from, to));
 
       // Transform data to include nested relations
-      return (employees || []).map((emp: any) => {
+      return employees.map((emp: any) => {
         const workInfo = getDisplayWorkInfo(emp);
         const activeCycle = getActiveEmploymentCycle(emp);
 
@@ -411,7 +439,9 @@ export function useEmployees() {
           operation_centers: workInfo?.operation_centers || null,
           areas: workInfo?.areas || null,
         };
-      }) as EmployeeV2WithRelations[];
+      }).sort((left, right) => (
+        left.last_name.localeCompare(right.last_name, 'es') || left.id.localeCompare(right.id)
+      )) as EmployeeV2WithRelations[];
     },
     enabled: !!currentCompanyId,
   });
