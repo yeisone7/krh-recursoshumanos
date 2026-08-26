@@ -350,7 +350,6 @@ export type RecoveryFormData = z.infer<typeof recoveryFormSchema>;
 // =====================================================
 
 const DEFAULT_EMPLOYER_COST_RATES = {
-  health: 0.085,
   pension: 0.12,
   ccf: 0.04,
   arl: {
@@ -361,6 +360,9 @@ const DEFAULT_EMPLOYER_COST_RATES = {
     V: 0.0696,
   },
 };
+
+const INCAPACITY_HEALTH_RATE = 0;
+const INCAPACITY_VACATION_RATE = 0.0417;
 
 /**
  * Estimates the employer cost associated with the economic value of an
@@ -385,11 +387,11 @@ export function calculateIncapacityEmployerCost(
     { key: 'severance', label: 'Cesantías', rate: 1 / 12, amount: amountFor(1 / 12) },
     { key: 'severance-interest', label: 'Intereses de cesantías', rate: 0.01, amount: amountFor(0.01) },
     { key: 'service-bonus', label: 'Prima', rate: 1 / 12, amount: amountFor(1 / 12) },
-    { key: 'vacation', label: 'Vacaciones', rate: 1 / 24, amount: amountFor(1 / 24) },
+    { key: 'vacation', label: 'Vacaciones', rate: INCAPACITY_VACATION_RATE, amount: amountFor(INCAPACITY_VACATION_RATE) },
   ];
 
   const contributionRates = {
-    health: configuredRate(rates?.health_employer_rate, DEFAULT_EMPLOYER_COST_RATES.health),
+    health: INCAPACITY_HEALTH_RATE,
     pension: configuredRate(rates?.pension_employer_rate, DEFAULT_EMPLOYER_COST_RATES.pension),
     arl: configuredRate(rates?.[arlSettingKey] as number | null | undefined, arlFallback),
     ccf: configuredRate(rates?.ccf_rate, DEFAULT_EMPLOYER_COST_RATES.ccf),
