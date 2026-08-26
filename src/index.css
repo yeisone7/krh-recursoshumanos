@@ -1248,14 +1248,14 @@ div[class*="border"]:has([role="grid"]) {
 
 /* Intelligent overflow to prevent square corners while preserving scrollability */
 /* If a table container does not have explicit scroll classes, default to hidden to ensure perfect corner clipping */
-div:has(table):not([class*="overflow-"]):not([class*="max-h-"]),
-div[class*="border"]:has(table):not([class*="overflow-"]):not([class*="max-h-"]) {
+div:has(> table):not([class*="overflow-"]):not([class*="max-h-"]),
+div[class*="border"]:has(> table):not([class*="overflow-"]):not([class*="max-h-"]) {
   overflow: hidden !important;
 }
 
 /* If a table container has scroll/height classes, ensure it still clips but allows scrolling */
-div[class*="overflow-"]:has(table),
-div[class*="max-h-"]:has(table) {
+div[class*="overflow-"]:has(> table),
+div[class*="max-h-"]:has(> table) {
   overflow: auto !important; /* Keep scroll behavior */
   border-radius: 0.5rem !important;
 }
