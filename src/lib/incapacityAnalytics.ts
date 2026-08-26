@@ -37,6 +37,19 @@ export interface MonthlyEpsRecoveryRow {
   recoveryPercentage: number;
 }
 
+export function getEarliestIncapacityStartDate(
+  rows: IncapacityAnalyticsRow[],
+  fallback: Date,
+) {
+  const earliestValue = rows.reduce<string | null>((earliest, row) => {
+    const value = row.start_date;
+    if (!value || Number.isNaN(new Date(`${value}T00:00:00`).getTime())) return earliest;
+    return earliest === null || value < earliest ? value : earliest;
+  }, null);
+
+  return earliestValue ? new Date(`${earliestValue}T00:00:00`) : fallback;
+}
+
 const roundPercentage = (value: number, total: number) => {
   if (!total) return 0;
   return Math.round((value / total) * 1000) / 10;

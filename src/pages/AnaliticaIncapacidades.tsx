@@ -66,6 +66,7 @@ import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
 import {
   buildIncapacityDurationBuckets,
   buildMonthlyEpsRecovery,
+  getEarliestIncapacityStartDate,
   getIncapacityRecoveryAmounts,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
@@ -1005,7 +1006,7 @@ export default function AnaliticaIncapacidades() {
     const months = range
       ? eachMonthOfInterval({ start: startOfMonth(range.start), end: endOfMonth(range.end) })
       : eachMonthOfInterval({
-          start: all.length ? startOfMonth(all[all.length - 1].startDate || subMonths(today, 11)) : subMonths(today, 11),
+          start: startOfMonth(getEarliestIncapacityStartDate(all, subMonths(today, 11))),
           end: today,
         });
 
@@ -1149,9 +1150,11 @@ export default function AnaliticaIncapacidades() {
       sexData,
       weekdayData,
       trends: {
-        cases: trend(filtered.length, previous.length),
-        days: trend(totalDays, previousDays),
-        recovery: trend(recovered, previous.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).recovered, 0)),
+        cases: previousRange ? trend(filtered.length, previous.length) : undefined,
+        days: previousRange ? trend(totalDays, previousDays) : undefined,
+        recovery: previousRange
+          ? trend(recovered, previous.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).recovered, 0))
+          : undefined,
       },
       insights: {
         topDiagnosis,
