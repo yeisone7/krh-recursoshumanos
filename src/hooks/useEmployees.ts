@@ -6,6 +6,7 @@ import type { EmployeeFullFormData, EmployeeV2WithRelations } from '@/types/empl
 import { PREDEFINED_TASKS } from '@/hooks/useOnboardingTasks';
 import { scopeToEmploymentCycle, withEmploymentCycle } from '@/hooks/employeeCycleScope';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
+import { getLatestCandidateBiologicalSex } from '@/lib/biologicalSex';
 
 const NEW_EMPLOYEE_WINDOW_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -437,6 +438,8 @@ export function useIncapacityAnalyticsEmployees() {
             is_active,
             status,
             gender,
+            selection_candidates:candidates!candidates_employee_id_fkey(gender, updated_at),
+            rehire_candidates:candidates!candidates_rehire_employee_id_fkey(gender, updated_at),
             employee_employment_cycles(id, status),
             employee_work_info(
               employment_cycle_id, position_name, is_current,
@@ -460,7 +463,10 @@ export function useIncapacityAnalyticsEmployees() {
           id: employee.id,
           is_active: employee.is_active,
           status: employee.status,
-          gender: employee.gender,
+          gender: employee.gender || getLatestCandidateBiologicalSex(
+            employee.selection_candidates,
+            employee.rehire_candidates,
+          ),
           work_info: workInfo,
           operation_centers: workInfo?.operation_centers || null,
         };
