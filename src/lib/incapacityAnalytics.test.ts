@@ -10,16 +10,33 @@ import {
 describe('incapacity analytics', () => {
   it('groups cases, percentages and amounts into two duration bands', () => {
     const result = buildIncapacityDurationBuckets([
-      { total_days: 1, total_amount: 100 },
-      { total_days: 1, total_amount: 300 },
-      { total_days: 2, total_amount: 200 },
-      { total_days: 3, total_amount: 400 },
-      { total_days: 12, total_amount: 1000 },
-    ]);
+      { total_days: 1, total_amount: 100_000, employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] } },
+      { total_days: 2, total_amount: 200_000, employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] } },
+      { total_days: 3, total_amount: 400_000, employee: { employee_social_security: [{ risk_level: 'V', is_current: true }] } },
+    ], {
+      pension_employer_rate: 0.12,
+      arl_rate_i: 0.00522,
+      arl_rate_v: 0.0696,
+      ccf_rate: 0.04,
+    });
 
     expect(result).toEqual([
-      expect.objectContaining({ key: 'one_two_days', cases: 3, casePercentage: 60, amount: 600, amountPercentage: 30 }),
-      expect.objectContaining({ key: 'three_plus_days', cases: 2, casePercentage: 40, amount: 1400, amountPercentage: 70 }),
+      expect.objectContaining({
+        key: 'one_two_days',
+        cases: 2,
+        casePercentage: 66.7,
+        amount: 300_000,
+        amountPercentage: 42.9,
+        employerCost: expect.objectContaining({ paymentBase: 300_000, additionalCost: 115_076, totalCost: 415_076 }),
+      }),
+      expect.objectContaining({
+        key: 'three_plus_days',
+        cases: 1,
+        casePercentage: 33.3,
+        amount: 400_000,
+        amountPercentage: 57.1,
+        employerCost: expect.objectContaining({ paymentBase: 400_000, additionalCost: 179_186, totalCost: 579_186 }),
+      }),
     ]);
   });
 

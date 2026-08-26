@@ -51,6 +51,7 @@ export interface IncapacityDurationBucket {
   casePercentage: number;
   amount: number;
   amountPercentage: number;
+  employerCost: IncapacityEmployerCostBreakdown;
 }
 
 export interface MonthlyEpsRecoveryRow {
@@ -179,7 +180,10 @@ export function buildLegalResponsibilityDays(rows: IncapacityAnalyticsRow[]): Le
     .filter((item) => item.value > 0);
 }
 
-export function buildIncapacityDurationBuckets(rows: IncapacityAnalyticsRow[]): IncapacityDurationBucket[] {
+export function buildIncapacityDurationBuckets(
+  rows: IncapacityAnalyticsRow[],
+  rates?: IncapacityEmployerCostRates | null,
+): IncapacityDurationBucket[] {
   const definitions: Array<Pick<IncapacityDurationBucket, 'key' | 'label' | 'description'>> = [
     { key: 'one_two_days', label: '1 y 2 días', description: 'Incapacidades de corta duración' },
     { key: 'three_plus_days', label: '3 o más días', description: 'Incapacidades de mayor duración' },
@@ -201,6 +205,7 @@ export function buildIncapacityDurationBuckets(rows: IncapacityAnalyticsRow[]): 
       casePercentage: roundPercentage(bucketRows.length, validRows.length),
       amount,
       amountPercentage: roundPercentage(amount, totalAmount),
+      employerCost: buildIncapacityEmployerCostSummary(bucketRows, rates),
     };
   });
 }
