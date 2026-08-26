@@ -10,4 +10,16 @@ describe('global table overflow styles', () => {
     expect(globalStyles).toContain('div:has(> table):not([class*="overflow-"])');
     expect(globalStyles).toContain('div[class*="overflow-"]:has(> table)');
   });
+
+  it('keeps the incapacity analytics caption in table flow', () => {
+    const analyticsSource = readFileSync(
+      `${process.cwd()}/src/pages/AnaliticaIncapacidades.tsx`,
+      'utf8',
+    );
+
+    expect(analyticsSource).not.toContain('<caption className="sr-only">');
+    expect(analyticsSource).toContain(
+      'caption className="h-px overflow-hidden whitespace-nowrap p-0 text-[0px] leading-none [clip-path:inset(50%)]"',
+    );
+  });
 });
