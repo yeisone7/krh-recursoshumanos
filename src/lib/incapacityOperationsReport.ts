@@ -1,5 +1,7 @@
 import { differenceInCalendarDays, eachMonthOfInterval, endOfMonth, format, isValid, parseISO, startOfMonth } from 'date-fns';
 
+import type { BiologicalSexKey } from '@/lib/biologicalSex';
+
 export interface IncapacityOperationsRow {
   id: string;
   employeeId: string;
@@ -13,7 +15,7 @@ export interface IncapacityOperationsRow {
   totalDays: number;
   diagnosisKey: string;
   diagnosisLabel: string;
-  gender: 'F' | 'M' | 'sin_dato';
+  gender: BiologicalSexKey;
 }
 
 export interface IncapacityOperationsFilters {

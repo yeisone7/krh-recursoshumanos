@@ -79,6 +79,7 @@ import {
   countOperationallyActiveAffectedEmployees,
   isOperationallyActiveEmployee,
 } from '@/lib/employeeAnalyticsData';
+import { normalizeBiologicalSex, type BiologicalSexKey } from '@/lib/biologicalSex';
 import {
   getLegalMilestones,
   getTotalChainDays,
@@ -314,7 +315,7 @@ function InsightCard({ color, title, value, detail }: { color: string; title: st
   );
 }
 
-function SexAvatar({ kind, color }: { kind: 'M' | 'F' | 'sin_dato'; color: string }) {
+function SexAvatar({ kind, color }: { kind: BiologicalSexKey; color: string }) {
   const isFemale = kind === 'F';
   const isUnknown = kind === 'sin_dato';
 
@@ -334,7 +335,7 @@ function SexAvatar({ kind, color }: { kind: 'M' | 'F' | 'sin_dato'; color: strin
 function BiologicalSexInfographic({
   data,
 }: {
-  data: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+  data: Array<{ key: BiologicalSexKey; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
 }) {
   return (
     <Card className="overflow-hidden rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm">
@@ -347,7 +348,10 @@ function BiologicalSexInfographic({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
+        <div className={cn(
+          'grid grid-cols-1 gap-3 xl:grid-cols-1',
+          data.length > 3 ? 'sm:grid-cols-2 2xl:grid-cols-2' : 'sm:grid-cols-3 2xl:grid-cols-3',
+        )}>
           {data.map((item) => (
             <div key={item.key} className="rounded-lg border border-slate-200 bg-white p-3 text-center">
               <div className="mx-auto flex h-20 items-center justify-center">
@@ -552,7 +556,7 @@ function MonthlyInfographic({ monthly }: { monthly: Array<{ mes: string; Dias: n
 function SexInfographicBlock({
   data,
 }: {
-  data: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+  data: Array<{ key: BiologicalSexKey; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
 }) {
   return (
     <InfographicPanel>
@@ -563,7 +567,7 @@ function SexInfographicBlock({
         </div>
         <Users className="h-5 w-5 text-slate-500" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={cn('grid gap-3', data.length > 3 ? 'sm:grid-cols-2' : 'sm:grid-cols-3')}>
         {data.map((item) => (
           <div key={item.key} className="rounded-lg border border-slate-200 bg-[#FBFAF5] p-3 text-center">
             <SexAvatar kind={item.key} color={item.color} />
@@ -594,7 +598,7 @@ interface IncapacityInfographicsAnalytics {
   recoveryData: Array<{ name: string; value: number }>;
   legalData: Array<{ name: string; value: number }>;
   monthly: Array<{ mes: string; Dias: number; Incapacidades: number }>;
-  sexData: Array<{ key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
+  sexData: Array<{ key: BiologicalSexKey; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
   insights: {
     topDiagnosis?: { name: string; value: number };
     topEntity?: { name: string; value: number };
@@ -1058,12 +1062,7 @@ export default function AnaliticaIncapacidades() {
       const center = employee?.operation_centers;
       const diagnosis = item.diagnosis?.trim() || 'Sin diagnóstico';
       const diagnosisCode = item.cie10_code?.trim();
-      const rawGender = String(item.employee?.gender || employee?.gender || '').trim().toUpperCase();
-      const gender: 'F' | 'M' | 'sin_dato' = rawGender === 'F' || rawGender.startsWith('FEM')
-        ? 'F'
-        : rawGender === 'M' || rawGender.startsWith('MAS')
-          ? 'M'
-          : 'sin_dato';
+      const gender = normalizeBiologicalSex(item.employee?.gender || employee?.gender);
 
       return {
         id: item.id,
@@ -1081,15 +1080,15 @@ export default function AnaliticaIncapacidades() {
         gender,
       };
     });
-    const sexSeed: Record<'F' | 'M' | 'sin_dato', { key: 'F' | 'M' | 'sin_dato'; label: string; color: string; cases: number; days: number; employeeIds: Set<string> }> = {
+    const sexSeed: Record<BiologicalSexKey, { key: BiologicalSexKey; label: string; color: string; cases: number; days: number; employeeIds: Set<string> }> = {
       F: { key: 'F', label: 'Femenino', color: palette.orange, cases: 0, days: 0, employeeIds: new Set<string>() },
       M: { key: 'M', label: 'Masculino', color: palette.teal, cases: 0, days: 0, employeeIds: new Set<string>() },
+      O: { key: 'O', label: 'Otro', color: palette.violet, cases: 0, days: 0, employeeIds: new Set<string>() },
       sin_dato: { key: 'sin_dato', label: 'Sin dato', color: palette.navy, cases: 0, days: 0, employeeIds: new Set<string>() },
     };
 
     filtered.forEach((item) => {
-      const gender = item.employee?.gender || employeeById.get(item.employee_id)?.gender;
-      const key = gender === 'F' || gender === 'M' ? gender : 'sin_dato';
+      const key = normalizeBiologicalSex(item.employee?.gender || employeeById.get(item.employee_id)?.gender);
       sexSeed[key].cases += 1;
       sexSeed[key].days += item.total_days || 0;
       sexSeed[key].employeeIds.add(item.employee_id);
@@ -1103,7 +1102,7 @@ export default function AnaliticaIncapacidades() {
       days: item.days,
       employees: item.employeeIds.size,
       percentage: percent(item.cases, filtered.length),
-    }));
+    })).filter((item) => item.key === 'F' || item.key === 'M' || item.cases > 0);
 
     const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day) => ({ day, value: 0, count: 0 }));
     filtered.forEach((item) => {
