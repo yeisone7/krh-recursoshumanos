@@ -1,5 +1,5 @@
 // Leave Types
-export type LeaveType =
+export type DefaultLeaveType =
   | 'calamidad_domestica'
   | 'cita_medica'
   | 'licencia_maternidad'
@@ -11,12 +11,14 @@ export type LeaveType =
   | 'licencia_no_remunerada'
   | 'otro';
 
+export type LeaveType = string;
+
 export type LeaveRequestStatus = 'pendiente' | 'aprobado' | 'rechazado' | 'cancelado';
 
 export type LeaveDurationType = 'dias_completos' | 'medio_dia' | 'horas';
 
 // Leave Type Labels
-export const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
+export const LEAVE_TYPE_LABELS: Record<DefaultLeaveType, string> = {
   calamidad_domestica: 'Calamidad Doméstica',
   cita_medica: 'Cita Médica',
   licencia_maternidad: 'Licencia de Maternidad',
@@ -28,6 +30,31 @@ export const LEAVE_TYPE_LABELS: Record<LeaveType, string> = {
   licencia_no_remunerada: 'Licencia No Remunerada',
   otro: 'Otro Permiso',
 };
+
+export function getLeaveTypeLabel(
+  leaveType: LeaveType,
+  configs?: Array<Pick<LeaveTypeConfig, 'leave_type' | 'display_name'>>,
+): string {
+  const configuredLabel = configs?.find((config) => config.leave_type === leaveType)?.display_name;
+  if (configuredLabel) return configuredLabel;
+  if (leaveType in LEAVE_TYPE_LABELS) return LEAVE_TYPE_LABELS[leaveType as DefaultLeaveType];
+
+  return leaveType
+    .split('_')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+export function createLeaveTypeKey(displayName: string): string {
+  return displayName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 60);
+}
 
 export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
   pendiente: 'Pendiente',

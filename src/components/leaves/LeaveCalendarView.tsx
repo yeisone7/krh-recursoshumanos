@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { LeaveRequest, LEAVE_TYPE_LABELS } from '@/types/leave';
+import { getLeaveTypeLabel, LeaveRequest } from '@/types/leave';
 import { useLeaveRequests, useLeaveTypeConfigs } from '@/hooks/useLeaves';
 
 interface LeaveCalendarViewProps {
@@ -126,7 +126,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                           onClick={() => onSelectRequest?.(request)}
                         >
                           <span className="block font-medium">{employeeName}</span>
-                          <span className="block opacity-90">{LEAVE_TYPE_LABELS[request.leave_type]} • {request.total_days} días</span>
+                          <span className="block opacity-90">{getLeaveTypeLabel(request.leave_type, typeConfigs)} • {request.total_days} días</span>
                         </button>
                       );
                     })
@@ -193,7 +193,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                           color: color 
                         }}
                         onClick={() => onSelectRequest?.(request)}
-                        title={`${employeeName} - ${LEAVE_TYPE_LABELS[request.leave_type]}`}
+                        title={`${employeeName} - ${getLeaveTypeLabel(request.leave_type, typeConfigs)}`}
                       >
                         {employeeName}
                       </div>

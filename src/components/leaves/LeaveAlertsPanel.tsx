@@ -2,8 +2,8 @@ import { AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useLeaveRequests, usePendingLeavesCount } from '@/hooks/useLeaves';
-import { LEAVE_TYPE_LABELS } from '@/types/leave';
+import { useLeaveRequests, useLeaveTypeConfigs, usePendingLeavesCount } from '@/hooks/useLeaves';
+import { getLeaveTypeLabel } from '@/types/leave';
 import { format, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
@@ -15,6 +15,7 @@ interface LeaveAlertsPanelProps {
 export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
   const { data: requests = [] } = useLeaveRequests({ status: 'pendiente' });
   const { data: pendingCount = 0 } = usePendingLeavesCount();
+  const { data: typeConfigs = [] } = useLeaveTypeConfigs();
 
   // Sort by requested date (oldest first for urgent attention)
   const sortedRequests = [...requests].sort((a, b) => 
@@ -82,7 +83,7 @@ export function LeaveAlertsPanel({ onViewRequest }: LeaveAlertsPanelProps) {
                       <span className="truncate font-medium">{employeeName}</span>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {LEAVE_TYPE_LABELS[request.leave_type]} • {request.total_days} días
+                      {getLeaveTypeLabel(request.leave_type, typeConfigs)} • {request.total_days} días
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - {formatDateOnly(request.end_date, 'dd MMM yyyy', { locale: es })}
