@@ -18,8 +18,6 @@ import {
   RadialBar,
   RadialBarChart,
   ResponsiveContainer,
-  Scatter,
-  ScatterChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -1115,15 +1113,6 @@ export default function AnaliticaIncapacidades() {
       percentage: percent(item.cases, filtered.length),
     }));
 
-    const scatterData = filtered
-      .filter((item) => item.total_days > 0)
-      .map((item) => ({
-        x: item.total_days,
-        y: Math.round((item.total_amount || 0) / 1000),
-        z: Math.max(50, Math.min(420, item.chainDays * 8)),
-        name: item.employeeName,
-      }));
-
     const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day) => ({ day, value: 0, count: 0 }));
     filtered.forEach((item) => {
       if (!item.startDate) return;
@@ -1164,7 +1153,6 @@ export default function AnaliticaIncapacidades() {
       entityData,
       operationsReportRows,
       sexData,
-      scatterData,
       weekdayData,
       trends: {
         cases: trend(filtered.length, previous.length),
@@ -1448,19 +1436,7 @@ export default function AnaliticaIncapacidades() {
         </ChartPanel>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Dispersion costo/duracion" subtitle="Dias vs valor total en miles" icon={Target} className="xl:col-span-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 8, right: 12, left: -12, bottom: 8 }}>
-              <CartesianGrid stroke={palette.grid} />
-              <XAxis type="number" dataKey="x" name="Dias" tick={{ fontSize: 11, fill: palette.navy }} axisLine={{ stroke: palette.ink }} tickLine={false} />
-              <YAxis type="number" dataKey="y" name="Valor" tick={{ fontSize: 11, fill: palette.navy }} axisLine={{ stroke: palette.ink }} tickLine={false} />
-              <Tooltip cursor={{ strokeDasharray: '3 3' }} content={<CustomTooltip />} />
-              <Scatter name="Incapacidades" data={analytics.scatterData} fill={palette.teal} />
-            </ScatterChart>
-          </ResponsiveContainer>
-        </ChartPanel>
-
+      <div className="grid gap-4">
         <Card className="rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm">
           <CardContent className="p-4">
             <div className="mb-4 flex items-center gap-2">
