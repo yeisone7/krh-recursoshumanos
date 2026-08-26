@@ -68,6 +68,7 @@ import {
   buildLegalResponsibilityDays,
   buildMonthlyEpsRecovery,
   getEarliestIncapacityStartDate,
+  getActualRecoveryPayment,
   getIncapacityRecoveryAmounts,
   getLongCaseShare,
   hasIncapacityStartedBy,
@@ -1023,6 +1024,16 @@ export default function AnaliticaIncapacidades() {
       else itemsByMonth.set(key, [item]);
     });
 
+    const recoveredByPaymentMonth = new Map<string, number>();
+    all.filter(matchesStaticFilters).forEach((item) => {
+      const payment = getActualRecoveryPayment(item);
+      if (!payment) return;
+      recoveredByPaymentMonth.set(
+        payment.monthKey,
+        (recoveredByPaymentMonth.get(payment.monthKey) || 0) + payment.amount,
+      );
+    });
+
     const monthly = months.map((month) => {
       const key = format(month, 'yyyy-MM');
       const monthItems = itemsByMonth.get(key) || [];
@@ -1043,7 +1054,7 @@ export default function AnaliticaIncapacidades() {
         Dias: monthItems.reduce((sum, item) => sum + item.total_days, 0),
         ...originDays,
         Estimado: Math.round(monthItems.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).expected, 0)),
-        Recuperado: Math.round(monthItems.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).recovered, 0)),
+        Recuperado: Math.round(recoveredByPaymentMonth.get(key) || 0),
       };
     });
 
@@ -1330,7 +1341,7 @@ export default function AnaliticaIncapacidades() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Mapa de recobros" subtitle="Estimado vs recuperado" icon={Banknote} className="xl:col-span-2">
+        <ChartPanel title="Mapa de recobros" subtitle="Estimado por inicio vs recuperado por fecha real de pago" icon={Banknote} className="xl:col-span-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.monthly} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
               <CartesianGrid stroke={palette.grid} vertical />

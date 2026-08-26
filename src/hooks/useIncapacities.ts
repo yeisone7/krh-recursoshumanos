@@ -526,6 +526,7 @@ export function useIncapacityAnalyticsData() {
           afp_amount,
           total_amount,
           recovery_status,
+          actual_payment_date,
           recovered_amount,
           is_extension,
           parent_incapacity_id,

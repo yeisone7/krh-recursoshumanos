@@ -11,6 +11,7 @@ export interface IncapacityAnalyticsRow {
   arl_amount?: number | null;
   afp_amount?: number | null;
   recovered_amount?: number | null;
+  actual_payment_date?: string | null;
   recovery_status?: string | null;
 }
 
@@ -18,6 +19,11 @@ export interface IncapacityRecoveryAmounts {
   expected: number;
   recovered: number;
   pending: number;
+}
+
+export interface ActualRecoveryPayment {
+  monthKey: string;
+  amount: number;
 }
 
 export interface LegalResponsibilityDays {
@@ -90,6 +96,19 @@ export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): Incap
     expected,
     recovered,
     pending: Math.max(0, expected - recovered),
+  };
+}
+
+export function getActualRecoveryPayment(row: IncapacityAnalyticsRow): ActualRecoveryPayment | null {
+  const paymentDate = row.actual_payment_date?.trim();
+  if (!paymentDate || !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate)) return null;
+
+  const parsedDate = new Date(`${paymentDate}T00:00:00`);
+  if (Number.isNaN(parsedDate.getTime())) return null;
+
+  return {
+    monthKey: paymentDate.slice(0, 7),
+    amount: Math.max(0, Number(row.recovered_amount || 0)),
   };
 }
 
