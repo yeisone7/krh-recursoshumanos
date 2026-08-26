@@ -147,25 +147,19 @@ export default function Permisos() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-start sm:items-center gap-5">
-            <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-              <List className="w-8 h-8" />
+    <div className="space-y-3 sm:space-y-4">
+      {/* Compact Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-background to-primary/5 p-4 shadow-sm sm:p-5">
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner">
+              <List className="h-5 w-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
-                  GESTIÓN
-                </Badge>
-              </div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mb-1">
+            <div className="min-w-0">
+              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">
                 Permisos y Licencias
               </h1>
-              <p className="text-sm font-medium text-muted-foreground max-w-xl">
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground sm:text-sm">
                 Gestión de solicitudes de permisos, licencias y ausencias laborales
               </p>
             </div>
@@ -173,92 +167,19 @@ export default function Permisos() {
           <Button 
             onClick={() => setShowNewRequestDialog(true)}
             size="lg"
-            className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
+            className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/15 transition-all hover:bg-primary/90 sm:w-auto"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Nueva Solicitud
           </Button>
         </div>
       </div>
 
-      {/* KPIs Premium */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5 relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Pendientes</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-black tracking-tight">{pendingCount}</h3>
-                <p className="text-xs text-muted-foreground font-medium">Por revisar</p>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-[1rem] bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
-              <List className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5 relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Aprobados</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-black tracking-tight text-emerald-600">
-                  {requests.filter(r => r.status === 'aprobado').length}
-                </h3>
-                <p className="text-xs text-muted-foreground font-medium">Este mes</p>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-[1rem] bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
-              <Calendar className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5 relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Rechazados</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-black tracking-tight text-destructive">
-                  {requests.filter(r => r.status === 'rechazado').length}
-                </h3>
-                <p className="text-xs text-muted-foreground font-medium">Este mes</p>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-[1rem] bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
-              <Filter className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-[1.5rem] border-none shadow-sm bg-background relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <CardContent className="p-5 relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Tipos Activos</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-black tracking-tight text-primary">
-                  {typeConfigs.filter(c => c.is_active).length}
-                </h3>
-                <p className="text-xs text-muted-foreground font-medium">Configurados</p>
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-[1rem] bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <Settings className="w-6 h-6" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Tabs Premium */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
-            <TabsTrigger value="solicitudes" className="relative h-10 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+          <TabsList className="h-11 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
+            <TabsTrigger value="solicitudes" className="relative h-9 min-w-[132px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <List className="h-4 w-4 shrink-0" />
               Solicitudes
               {pendingCount > 0 && (
@@ -267,15 +188,15 @@ export default function Permisos() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="calendario" className="h-10 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="calendario" className="h-9 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Calendar className="h-4 w-4 shrink-0" />
               Calendario
             </TabsTrigger>
-            <TabsTrigger value="alertas" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="alertas" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Filter className="h-4 w-4 shrink-0" />
               Alertas
             </TabsTrigger>
-            <TabsTrigger value="configuracion" className="h-10 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="configuracion" className="h-9 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Settings className="h-4 w-4 shrink-0" />
               Configurar
             </TabsTrigger>
