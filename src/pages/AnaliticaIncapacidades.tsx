@@ -65,6 +65,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
 import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
 import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
+import {
+  buildIncapacityDurationBuckets,
+  buildMonthlyEpsRecovery,
+  type IncapacityDurationBucket,
+  type MonthlyEpsRecoveryRow,
+} from '@/lib/incapacityAnalytics';
 import { cn } from '@/lib/utils';
 import {
   getCurrentLegalStage,
@@ -90,6 +96,7 @@ const palette = {
 };
 
 const chartColors = [palette.teal, palette.orange, palette.amber, palette.navy, palette.aqua, palette.violet, palette.green, palette.sky];
+const durationColors = [palette.teal, palette.orange];
 
 const operationsConceptLabels: Record<string, string> = {
   comun: 'E.G.',
@@ -752,6 +759,190 @@ function IncapacityAnalyticsSkeleton() {
   );
 }
 
+function DurationAnalysisPanel({ buckets }: { buckets: IncapacityDurationBucket[] }) {
+  const totalCases = buckets.reduce((sum, bucket) => sum + bucket.cases, 0);
+  const totalAmount = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
+
+  return (
+    <Card className="overflow-hidden rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm">
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+              <CalendarDays className="h-5 w-5" />
+            </span>
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Duración de las incapacidades</h3>
+              <p className="mt-1 text-xs font-medium text-slate-500">Cantidad, participación y valor según días reconocidos</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 text-xs font-bold">
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600">
+              {integerFormatter.format(totalCases)} casos
+            </span>
+            <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-slate-600">
+              {money(totalAmount)}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {buckets.map((bucket, index) => {
+            const color = durationColors[index % durationColors.length];
+            const ringValue = clampPercent(bucket.casePercentage);
+            return (
+              <div key={bucket.key} className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
+                <div className="flex items-center gap-4">
+                  <div
+                    className="relative flex h-24 w-24 shrink-0 items-center justify-center rounded-full"
+                    style={{ background: `conic-gradient(${color} ${ringValue}%, #E8EDF1 ${ringValue}% 100%)` }}
+                    role="img"
+                    aria-label={`${numberFormatter.format(bucket.casePercentage)}% de los casos`}
+                  >
+                    <div className="flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full bg-white shadow-inner">
+                      <span className="text-xl font-black text-slate-950">{numberFormatter.format(bucket.casePercentage)}%</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">casos</span>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="inline-flex rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: color }}>
+                      {bucket.label}
+                    </span>
+                    <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">{integerFormatter.format(bucket.cases)}</p>
+                    <p className="text-xs font-semibold text-slate-500">{bucket.description}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Valor total</p>
+                    <p className="mt-1 text-base font-black text-slate-950">{money(bucket.amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Participación del valor</p>
+                    <p className="mt-1 text-base font-black" style={{ color }}>{numberFormatter.format(bucket.amountPercentage)}%</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+          {buckets.map((bucket, index) => (
+            <div
+              key={bucket.key}
+              style={{ width: `${bucket.casePercentage}%`, backgroundColor: durationColors[index % durationColors.length] }}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function getFullMonthLabel(monthKey: string) {
+  const label = format(parseISO(`${monthKey}-01T00:00:00`), 'MMMM yyyy', { locale: es });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function EpsMonthlyRecoveryTable({ rows }: { rows: MonthlyEpsRecoveryRow[] }) {
+  const expected = rows.reduce((sum, row) => sum + row.expected, 0);
+  const recovered = rows.reduce((sum, row) => sum + row.recovered, 0);
+  const pending = Math.max(0, expected - recovered);
+  const monthCount = new Set(rows.map((row) => row.monthKey)).size;
+
+  return (
+    <Card className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-0">
+        <div className="border-b border-slate-200 bg-[#FBFAF5] p-4 sm:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                <Banknote className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Recobro mensual por EPS</h3>
+                <p className="mt-1 text-xs font-medium text-slate-500">Valores asociados a incapacidades iniciadas en cada mes, desglosados por EPS</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:min-w-[610px]">
+              {[
+                { label: 'Meses', value: integerFormatter.format(monthCount), color: palette.navy },
+                { label: 'Esperado', value: money(expected), color: palette.amber },
+                { label: 'Recuperado', value: money(recovered), color: palette.teal },
+                { label: 'Pendiente', value: money(pending), color: palette.orange },
+              ].map((item) => (
+                <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
+                  <p className="mt-1 truncate text-sm font-black" style={{ color: item.color }} title={item.value}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {rows.length ? (
+          <div className="max-h-[520px] overflow-auto">
+            <table className="w-full min-w-[920px] border-collapse text-left">
+              <caption className="sr-only">Recobros de incapacidades agrupados por mes y EPS</caption>
+              <thead className="sticky top-0 z-10 bg-slate-50 shadow-[0_1px_0_0_#E2E8F0]">
+                <tr className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  <th scope="col" className="px-4 py-3">Mes de incapacidad</th>
+                  <th scope="col" className="px-4 py-3">EPS</th>
+                  <th scope="col" className="px-4 py-3 text-right">Casos</th>
+                  <th scope="col" className="px-4 py-3 text-right">Esperado</th>
+                  <th scope="col" className="px-4 py-3 text-right">Recuperado</th>
+                  <th scope="col" className="px-4 py-3 text-right">Pendiente</th>
+                  <th scope="col" className="w-[220px] px-4 py-3">Avance del recobro</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row) => (
+                  <tr key={row.key} className="bg-white text-xs text-slate-700 transition-colors hover:bg-cyan-50/40">
+                    <td className="whitespace-nowrap px-4 py-3 font-black text-slate-900">{getFullMonthLabel(row.monthKey)}</td>
+                    <td className="max-w-[260px] px-4 py-3 font-bold text-slate-800">
+                      <span className="block truncate" title={row.epsName}>{row.epsName}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-black">{integerFormatter.format(row.cases)}</td>
+                    <td className="px-4 py-3 text-right font-bold">{money(row.expected)}</td>
+                    <td className="px-4 py-3 text-right font-black text-cyan-700">{money(row.recovered)}</td>
+                    <td className="px-4 py-3 text-right font-black text-orange-600">{money(row.pending)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                          <div
+                            className="h-full rounded-full bg-cyan-600"
+                            style={{ width: `${clampPercent(row.recoveryPercentage)}%` }}
+                            role="progressbar"
+                            aria-label={`Avance de recobro de ${row.epsName} en ${getFullMonthLabel(row.monthKey)}`}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={clampPercent(row.recoveryPercentage)}
+                          />
+                        </div>
+                        <span className="w-11 text-right text-[11px] font-black text-slate-700">{numberFormatter.format(row.recoveryPercentage)}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="px-5 py-10 text-center">
+            <Banknote className="mx-auto h-8 w-8 text-slate-300" />
+            <p className="mt-3 text-sm font-black text-slate-800">Sin recobros EPS para los filtros seleccionados</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">La tabla aparecerá cuando existan incapacidades con valor asignado a una EPS.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AnaliticaIncapacidades() {
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
@@ -864,6 +1055,8 @@ export default function AnaliticaIncapacidades() {
       }))
       .filter((item) => item.value > 0);
 
+    const durationBuckets = buildIncapacityDurationBuckets(filtered);
+    const epsMonthlyRecovery = buildMonthlyEpsRecovery(filtered);
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
     const legalData = groupBy(filtered, (item) => item.legalResponsible, (item) => item.total_days || 0);
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
@@ -959,6 +1152,8 @@ export default function AnaliticaIncapacidades() {
       longCases: longCases.length,
       legalRisk: legalRisk.length,
       monthly,
+      durationBuckets,
+      epsMonthlyRecovery,
       originData,
       recoveryData,
       legalData,
@@ -1100,6 +1295,10 @@ export default function AnaliticaIncapacidades() {
           detail={`${analytics.longCases} casos superan 30 dias y pueden requerir reintegro, concepto o seguimiento especial.`}
         />
       </div>
+
+      <DurationAnalysisPanel buckets={analytics.durationBuckets} />
+
+      <EpsMonthlyRecoveryTable rows={analytics.epsMonthlyRecovery} />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <BiologicalSexInfographic data={analytics.sexData} />
