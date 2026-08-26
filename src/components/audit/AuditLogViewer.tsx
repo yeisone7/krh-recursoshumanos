@@ -58,7 +58,15 @@ function SeverityIcon({ severity, className }: { severity: string | null | undef
   return <Info className={cn('h-3.5 w-3.5', className)} />;
 }
 
-function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
+function AuditRow({
+  log,
+  onClick,
+  showFullContent = false,
+}: {
+  log: AuditLogEntry;
+  onClick: () => void;
+  showFullContent?: boolean;
+}) {
   const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
   const eventSummary = getAuditEventSummary(log);
@@ -66,7 +74,10 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
 
   return (
     <TableRow
-      className="group cursor-pointer border-slate-100/70 transition-all hover:bg-primary/[0.03]"
+      className={cn(
+        'group cursor-pointer border-slate-100/70 transition-all hover:bg-primary/[0.03]',
+        showFullContent && 'h-24',
+      )}
       onClick={onClick}
     >
       <TableCell className="px-5 py-4">
@@ -86,11 +97,17 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
             <User className="relative h-4 w-4 text-primary" />
           </div>
           <div className="flex min-w-0 flex-col gap-1">
-            <span className="line-clamp-2 text-sm font-black leading-snug tracking-tight text-slate-900">
+            <span className={cn(
+              'text-sm font-black leading-snug tracking-tight text-slate-900',
+              showFullContent ? 'whitespace-normal break-words' : 'line-clamp-2',
+            )}>
               {eventSummary}
             </span>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="max-w-[220px] truncate text-[10px] font-bold text-slate-400">
+              <span className={cn(
+                'text-[10px] font-bold text-slate-400',
+                showFullContent ? 'break-all' : 'max-w-[220px] truncate',
+              )}>
                 {actorName}{log.user_email ? ` · ${log.user_email}` : ''}
               </span>
               <Badge
@@ -144,7 +161,15 @@ function AuditRow({ log, onClick }: { log: AuditLogEntry; onClick: () => void })
   );
 }
 
-function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => void }) {
+function AuditMobileCard({
+  log,
+  onClick,
+  showFullContent = false,
+}: {
+  log: AuditLogEntry;
+  onClick: () => void;
+  showFullContent?: boolean;
+}) {
   const actionCfg = actionConfig[log.action] ?? { class: 'bg-background text-slate-500 border-slate-200' };
   const severityCfg = log.severity ? severityConfig[log.severity] : severityConfig.info;
   const eventSummary = getAuditEventSummary(log);
@@ -154,7 +179,10 @@ function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => 
     <button
       type="button"
       onClick={onClick}
-      className="w-full rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all active:scale-[0.99]"
+      className={cn(
+        'w-full rounded-2xl border border-slate-100 bg-white p-4 text-left shadow-sm transition-all active:scale-[0.99]',
+        showFullContent && 'min-h-48',
+      )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
@@ -162,10 +190,16 @@ function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => 
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="line-clamp-2 text-sm font-black leading-snug text-slate-950">
+            <p className={cn(
+              'text-sm font-black leading-snug text-slate-950',
+              showFullContent ? 'break-words' : 'line-clamp-2',
+            )}>
               {eventSummary}
             </p>
-            <p className="truncate text-[11px] font-semibold text-slate-400">
+            <p className={cn(
+              'text-[11px] font-semibold text-slate-400',
+              showFullContent ? 'break-all' : 'truncate',
+            )}>
               {actorName}{log.user_email ? ` · ${log.user_email}` : ''}
             </p>
           </div>
@@ -201,7 +235,10 @@ function AuditMobileCard({ log, onClick }: { log: AuditLogEntry; onClick: () => 
           </p>
         </div>
         {(log.description || log.entity_name) && (
-          <p className="mt-1 line-clamp-2 text-[11px] font-semibold text-slate-500">
+          <p className={cn(
+            'mt-1 text-[11px] font-semibold text-slate-500',
+            showFullContent ? 'break-words' : 'line-clamp-2',
+          )}>
             {log.description || log.entity_name}
           </p>
         )}
@@ -368,7 +405,12 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
               <>
                 <div className="space-y-3 bg-slate-50 p-3 md:hidden">
                   {logs.map((log) => (
-                    <AuditMobileCard key={log.id} log={log} onClick={() => setSelectedLog(log)} />
+                    <AuditMobileCard
+                      key={log.id}
+                      log={log}
+                      onClick={() => setSelectedLog(log)}
+                      showFullContent={compact}
+                    />
                   ))}
                 </div>
 
@@ -385,7 +427,12 @@ export function AuditLogViewer({ entityType, entityId, compact = false }: AuditL
                     </TableHeader>
                     <TableBody>
                       {logs.map((log) => (
-                        <AuditRow key={log.id} log={log} onClick={() => setSelectedLog(log)} />
+                        <AuditRow
+                          key={log.id}
+                          log={log}
+                          onClick={() => setSelectedLog(log)}
+                          showFullContent={compact}
+                        />
                       ))}
                     </TableBody>
                   </Table>

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, differenceInDays, addDays, isBefore, isAfter } from 'date-fns';
+import { format, differenceInDays, isBefore, isAfter } from 'date-fns';
 import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
@@ -790,7 +790,7 @@ export function useDeleteIncapacity() {
 
 export interface IncapacityAlert {
   id: string;
-  type: 'extension_pending' | 'recovery_pending' | 'reintegration_exam' | 'legal_milestone';
+  type: 'extension_pending' | 'recovery_pending' | 'legal_milestone';
   level: 'info' | 'warning' | 'critical';
   title: string;
   description: string;
@@ -843,21 +843,28 @@ export function useIncapacityAlerts() {
           ? `${inc.employee.first_name} ${inc.employee.last_name}`
           : 'Empleado';
         
-        // Alert for incapacities ending soon (potential extension needed)
-        if (daysUntilEnd >= 0 && daysUntilEnd <= 5 && !inc.is_extension) {
+        // Extensions require their own filing control from the moment they are registered.
+        if (inc.is_extension && inc.recovery_status === 'pendiente') {
+          const daysSinceEnd = Math.max(0, differenceInDays(today, endDate));
+          const timingDescription = daysUntilEnd < 0
+            ? `finalizó hace ${daysSinceEnd} día(s) y aún no ha sido radicada.`
+            : daysUntilEnd === 0
+              ? 'finaliza hoy y aún no ha sido radicada.'
+              : `finaliza en ${daysUntilEnd} día(s) y aún no ha sido radicada.`;
+
           alerts.push({
-            id: `ext-${inc.id}`,
+            id: `extension-filing-${inc.id}`,
             type: 'extension_pending',
-            level: daysUntilEnd <= 2 ? 'critical' : 'warning',
-            title: 'Incapacidad por vencer',
-            description: `La incapacidad de ${employeeName} vence en ${daysUntilEnd} día(s). Verificar si requiere prórroga.`,
-            daysRemaining: daysUntilEnd,
+            level: daysSinceEnd > 15 ? 'critical' : 'warning',
+            title: 'Prórroga pendiente por radicar',
+            description: `La prórroga #${inc.extension_number || 1} de ${employeeName} ${timingDescription}`,
+            daysRemaining: daysUntilEnd < 0 ? -daysSinceEnd : daysUntilEnd,
             incapacity: inc,
           });
         }
         
-        // Alert for pending recovery filings
-        if (inc.recovery_status === 'pendiente' && isBefore(endDate, today)) {
+        // Root incapacities keep their existing post-end recovery alert.
+        if (!inc.is_extension && inc.recovery_status === 'pendiente' && isBefore(endDate, today)) {
           const daysSinceEnd = differenceInDays(today, endDate);
           alerts.push({
             id: `rec-${inc.id}`,
@@ -866,20 +873,6 @@ export function useIncapacityAlerts() {
             title: 'Recobro pendiente',
             description: `La incapacidad de ${employeeName} finalizó hace ${daysSinceEnd} día(s) y no ha sido radicada para recobro.`,
             daysRemaining: -daysSinceEnd,
-            incapacity: inc,
-          });
-        }
-        
-        // Alert for reintegration exam
-        if (inc.requires_reintegration_exam && !inc.reintegration_exam_id && isBefore(endDate, addDays(today, 5))) {
-          const daysToEnd = differenceInDays(endDate, today);
-          alerts.push({
-            id: `rein-${inc.id}`,
-            type: 'reintegration_exam',
-            level: daysToEnd <= 0 ? 'critical' : 'warning',
-            title: 'Examen de reintegro pendiente',
-            description: `${employeeName} requiere examen de reintegro antes de retornar. La incapacidad ${daysToEnd <= 0 ? 'ya finalizó' : `finaliza en ${daysToEnd} día(s)`}.`,
-            daysRemaining: daysToEnd,
             incapacity: inc,
           });
         }
