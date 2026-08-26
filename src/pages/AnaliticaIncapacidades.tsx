@@ -66,6 +66,7 @@ import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
 import {
   buildIncapacityDurationBuckets,
   buildMonthlyEpsRecovery,
+  getIncapacityRecoveryAmounts,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
@@ -192,15 +193,6 @@ function groupBy<T>(items: T[], keyGetter: (item: T) => string, valueGetter: (it
   }, {}))
     .map(([name, value]) => ({ name, value: Math.round(value * 10) / 10 }))
     .sort((a, b) => b.value - a.value);
-}
-
-function getRecoveryBase(item: FlatIncapacity) {
-  if (item.recovery_status === 'asumido_empresa') return 0;
-  return (item.eps_amount || 0) + (item.arl_amount || 0) + (item.afp_amount || 0);
-}
-
-function getRecoveredAmount(item: FlatIncapacity) {
-  return item.recovery_status === 'pagado' ? item.recovered_amount || getRecoveryBase(item) : item.recovered_amount || 0;
 }
 
 function getMonthLabel(key: string) {
@@ -988,9 +980,10 @@ export default function AnaliticaIncapacidades() {
 
     const totalDays = filtered.reduce((sum, item) => sum + (item.total_days || 0), 0);
     const previousDays = previous.reduce((sum, item) => sum + (item.total_days || 0), 0);
-    const expectedRecovery = filtered.reduce((sum, item) => sum + getRecoveryBase(item), 0);
-    const recovered = filtered.reduce((sum, item) => sum + getRecoveredAmount(item), 0);
-    const pendingRecovery = Math.max(0, expectedRecovery - recovered);
+    const recoveryAmounts = filtered.map(getIncapacityRecoveryAmounts);
+    const expectedRecovery = recoveryAmounts.reduce((sum, item) => sum + item.expected, 0);
+    const recovered = recoveryAmounts.reduce((sum, item) => sum + item.recovered, 0);
+    const pendingRecovery = recoveryAmounts.reduce((sum, item) => sum + item.pending, 0);
     const affectedEmployees = new Set(filtered.map((item) => item.employee_id)).size;
     const activeItems = filtered.filter((item) => {
       return !!item.startDate && !!item.endDate && !isAfter(item.startDate, today) && !isBefore(item.endDate, today);
@@ -1043,8 +1036,8 @@ export default function AnaliticaIncapacidades() {
         Incapacidades: monthItems.length,
         Dias: monthItems.reduce((sum, item) => sum + item.total_days, 0),
         ...originDays,
-        Estimado: Math.round(monthItems.reduce((sum, item) => sum + getRecoveryBase(item), 0)),
-        Recuperado: Math.round(monthItems.reduce((sum, item) => sum + getRecoveredAmount(item), 0)),
+        Estimado: Math.round(monthItems.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).expected, 0)),
+        Recuperado: Math.round(monthItems.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).recovered, 0)),
       };
     });
 
@@ -1157,7 +1150,7 @@ export default function AnaliticaIncapacidades() {
       trends: {
         cases: trend(filtered.length, previous.length),
         days: trend(totalDays, previousDays),
-        recovery: trend(recovered, previous.reduce((sum, item) => sum + getRecoveredAmount(item), 0)),
+        recovery: trend(recovered, previous.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).recovered, 0)),
       },
       insights: {
         topDiagnosis,

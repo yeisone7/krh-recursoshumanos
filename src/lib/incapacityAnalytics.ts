@@ -4,8 +4,16 @@ export interface IncapacityAnalyticsRow {
   start_date?: string | null;
   eps_name?: string | null;
   eps_amount?: number | null;
+  arl_amount?: number | null;
+  afp_amount?: number | null;
   recovered_amount?: number | null;
   recovery_status?: string | null;
+}
+
+export interface IncapacityRecoveryAmounts {
+  expected: number;
+  recovered: number;
+  pending: number;
 }
 
 export interface IncapacityDurationBucket {
@@ -33,6 +41,25 @@ const roundPercentage = (value: number, total: number) => {
   if (!total) return 0;
   return Math.round((value / total) * 1000) / 10;
 };
+
+export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): IncapacityRecoveryAmounts {
+  const expected = row.recovery_status === 'asumido_empresa'
+    ? 0
+    : Math.max(0, Number(row.eps_amount || 0))
+      + Math.max(0, Number(row.arl_amount || 0))
+      + Math.max(0, Number(row.afp_amount || 0));
+  const recordedRecovered = Math.max(0, Number(row.recovered_amount || 0));
+  const uncappedRecovered = row.recovery_status === 'pagado' && recordedRecovered === 0
+    ? expected
+    : recordedRecovered;
+  const recovered = Math.min(expected, uncappedRecovered);
+
+  return {
+    expected,
+    recovered,
+    pending: Math.max(0, expected - recovered),
+  };
+}
 
 export function buildIncapacityDurationBuckets(rows: IncapacityAnalyticsRow[]): IncapacityDurationBucket[] {
   const definitions: Array<Pick<IncapacityDurationBucket, 'key' | 'label' | 'description'>> = [
