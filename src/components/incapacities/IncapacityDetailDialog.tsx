@@ -77,6 +77,8 @@ import { RecoveryFormDialog } from './RecoveryFormDialog';
 import { DocumentIndicator, DocumentSection } from '@/components/documents/DocumentSection';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { useCurrentDocument } from '@/hooks/useDocuments';
+import { cn } from '@/lib/utils';
+import { IncapacityDialogSizeToggle } from './IncapacityDialogSizeToggle';
 
 interface IncapacityDetailDialogProps {
   open: boolean;
@@ -175,6 +177,7 @@ export function IncapacityDetailDialog({
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
+  const [isMaximized, setIsMaximized] = useState(false);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
   const { data: pilaSettings } = usePilaUgppSettings();
@@ -182,6 +185,11 @@ export function IncapacityDetailDialog({
   const { data: chainRoot, isLoading: isLoadingChainRoot } = useIncapacity(chainRootId);
   const deleteMutation = useDeleteIncapacity();
   const createReintegrationExamMutation = useCreateReintegrationExam();
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) setIsMaximized(false);
+    onOpenChange(nextOpen);
+  };
   
   if (!incapacityId) return null;
   
@@ -189,7 +197,7 @@ export function IncapacityDetailDialog({
     try {
       await deleteMutation.mutateAsync(incapacityId);
       toast.success('Incapacidad eliminada');
-      onOpenChange(false);
+      handleOpenChange(false);
     } catch (error) {
       console.error('Error deleting incapacity:', error);
       toast.error('No se pudo eliminar la incapacidad', {
@@ -214,7 +222,7 @@ export function IncapacityDetailDialog({
   
   if (isLoading || !incapacity) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-6xl">
           <DialogHeader className="sr-only">
             <DialogTitle>Cargando incapacidad</DialogTitle>
@@ -262,8 +270,15 @@ export function IncapacityDetailDialog({
   
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-6xl flex-col overflow-hidden rounded-[2rem] border-border/50 bg-background p-0 shadow-2xl sm:h-[92vh] sm:max-h-[92vh]">
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent
+          className={cn(
+            'flex flex-col overflow-hidden border-border/50 bg-background p-0 shadow-2xl',
+            isMaximized
+              ? 'h-[100dvh] max-h-[100dvh] w-screen max-w-none rounded-none border-0 sm:h-[100dvh] sm:max-h-[100dvh] sm:w-screen sm:max-w-none'
+              : 'h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-6xl rounded-[2rem] sm:h-[92vh] sm:max-h-[92vh]',
+          )}
+        >
           
           {/* Premium Gradient Header */}
           <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
@@ -304,7 +319,11 @@ export function IncapacityDetailDialog({
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end mt-2 sm:mt-0">
+                <div className="mt-2 flex flex-wrap items-center gap-2 pr-8 sm:mt-0 sm:justify-end">
+                  <IncapacityDialogSizeToggle
+                    isMaximized={isMaximized}
+                    onToggle={() => setIsMaximized((current) => !current)}
+                  />
                   <Badge variant={isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'destructive' : 'secondary'} className="rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
                     {getIncapacityOriginLabel(incapacity.origin)}
                   </Badge>
@@ -954,7 +973,7 @@ export function IncapacityDetailDialog({
               Eliminar
             </Button>
             <div className="grid grid-cols-2 gap-3 sm:flex">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
+              <Button variant="outline" onClick={() => handleOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
                 Cerrar
               </Button>
               <Button onClick={() => openEditDialog(incapacity.id)} className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
