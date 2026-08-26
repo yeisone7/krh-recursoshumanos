@@ -65,6 +65,7 @@ import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
 import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
 import {
   buildIncapacityDurationBuckets,
+  buildLegalResponsibilityDays,
   buildMonthlyEpsRecovery,
   getEarliestIncapacityStartDate,
   getIncapacityRecoveryAmounts,
@@ -74,7 +75,6 @@ import {
 import { cn } from '@/lib/utils';
 import { isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
 import {
-  getCurrentLegalStage,
   getLegalMilestones,
   getTotalChainDays,
   incapacityOriginOptions,
@@ -121,8 +121,6 @@ type FlatIncapacity = IncapacityWithEmployee & {
   chainDays: number;
   rootId: string;
   employeeName: string;
-  legalStageLabel: string;
-  legalResponsible: string;
   startDate: Date | null;
   endDate: Date | null;
 };
@@ -158,15 +156,12 @@ function getRange(period: PeriodFilter) {
 function flattenIncapacities(items: IncapacityWithEmployee[]) {
   return items.flatMap((root) => {
     const chainDays = getTotalChainDays(root);
-    const stage = getCurrentLegalStage(root.origin, chainDays);
     const employeeName = root.employee ? `${root.employee.first_name} ${root.employee.last_name}`.trim() : 'Empleado sin nombre';
     const rootFlat: FlatIncapacity = {
       ...root,
       rootId: root.id,
       chainDays,
       employeeName,
-      legalStageLabel: stage.label,
-      legalResponsible: stage.responsible,
       startDate: safeDate(root.start_date),
       endDate: safeDate(root.end_date),
     };
@@ -177,8 +172,6 @@ function flattenIncapacities(items: IncapacityWithEmployee[]) {
       rootId: root.id,
       chainDays,
       employeeName,
-      legalStageLabel: stage.label,
-      legalResponsible: stage.responsible,
       startDate: safeDate(extension.start_date),
       endDate: safeDate(extension.end_date),
     })) as FlatIncapacity[];
@@ -1053,7 +1046,7 @@ export default function AnaliticaIncapacidades() {
     const durationBuckets = buildIncapacityDurationBuckets(filtered);
     const epsMonthlyRecovery = buildMonthlyEpsRecovery(filtered);
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
-    const legalData = groupBy(filtered, (item) => item.legalResponsible, (item) => item.total_days || 0);
+    const legalData = buildLegalResponsibilityDays(filtered);
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
     const employeeData = groupBy(filtered, (item) => item.employeeName, (item) => item.total_days || 0).slice(0, 8);
     const entityData = groupBy(filtered, (item) => item.origin === 'laboral' ? item.arl_name || 'ARL no registrada' : item.eps_name || 'EPS no registrada', (item) => item.total_days || 0).slice(0, 8);
