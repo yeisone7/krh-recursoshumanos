@@ -56,6 +56,7 @@ import {
 import { useIncapacity, useDeleteIncapacity, useCreateReintegrationExam } from '@/hooks/useIncapacities';
 import { 
   getIncapacityOriginLabel,
+  calculateIncapacityEmployerCost,
   isWorkRelatedIncapacityOrigin,
   recoveryStatusLabels, 
   recoveryStatusColors,
@@ -67,6 +68,7 @@ import {
   getTotalChainDays,
   type IncapacityFollowUpDocumentType,
 } from '@/types/incapacity';
+import { usePilaUgppSettings } from '@/hooks/usePilaUgpp';
 import { IncapacityFormDialog } from './IncapacityFormDialog';
 import { RecoveryFormDialog } from './RecoveryFormDialog';
 import { DocumentIndicator, DocumentSection } from '@/components/documents/DocumentSection';
@@ -172,6 +174,7 @@ export function IncapacityDetailDialog({
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
+  const { data: pilaSettings } = usePilaUgppSettings();
   const chainRootId = incapacity ? getIncapacityRootId(incapacity) : undefined;
   const { data: chainRoot, isLoading: isLoadingChainRoot } = useIncapacity(chainRootId);
   const deleteMutation = useDeleteIncapacity();
@@ -237,6 +240,19 @@ export function IncapacityDetailDialog({
   const isActive = endDate >= today && parseDateOnlyOr(incapacity.start_date, new Date()) <= today;
   const daysRemaining = differenceInDays(endDate, today);
   const minimumDailyWage = getLegalMinimumDailyWage(incapacity.start_date);
+  const currentSocialSecurity = incapacity.employee?.employee_social_security
+    ?.find((record) => record.is_current)
+    || incapacity.employee?.employee_social_security?.[0];
+  const employerCost = calculateIncapacityEmployerCost(
+    incapacity.total_amount,
+    currentSocialSecurity?.risk_level,
+    pilaSettings,
+  );
+  const formatPercentage = (rate: number) => new Intl.NumberFormat('es-CO', {
+    style: 'percent',
+    minimumFractionDigits: rate * 100 % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 3,
+  }).format(rate);
   
   return (
     <>
@@ -581,10 +597,51 @@ export function IncapacityDetailDialog({
                       )}
                       
                       <Separator />
-                      
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium">Total</p>
-                        <p className="text-xl font-bold">{formatCurrency(incapacity.total_amount)}</p>
+
+                      <div className="space-y-5">
+                        <div>
+                          <p className="font-semibold">Costo laboral estimado</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Prestaciones y aportes calculados sobre {formatCurrency(employerCost.paymentBase)}.
+                          </p>
+                        </div>
+
+                        {[
+                          { title: 'Prestaciones sociales', items: employerCost.benefits },
+                          { title: 'Aportes patronales', items: employerCost.contributions },
+                        ].map((section) => (
+                          <div key={section.title} className="grid gap-3 sm:grid-cols-[minmax(140px,0.7fr)_minmax(0,1.5fr)] sm:gap-5">
+                            <p className="text-sm font-medium text-muted-foreground sm:pt-2">
+                              {section.title}
+                            </p>
+                            <div className="divide-y divide-border/70 border-y border-border/70">
+                              {section.items.map((item) => (
+                                <div
+                                  key={item.key}
+                                  className="grid grid-cols-[minmax(0,1fr)_72px_100px] items-center gap-2 py-2 text-sm"
+                                >
+                                  <span className="truncate font-medium">{item.label}</span>
+                                  <span className="text-right tabular-nums text-muted-foreground">
+                                    {item.rate === 0 ? 'N.A.' : formatPercentage(item.rate)}
+                                  </span>
+                                  <span className="text-right font-semibold tabular-nums">
+                                    {formatCurrency(item.amount)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <Separator />
+
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="font-medium">Total</p>
+                          <p className="text-xs text-muted-foreground">Incapacidad más costo laboral estimado</p>
+                        </div>
+                        <p className="text-xl font-bold tabular-nums">{formatCurrency(employerCost.totalCost)}</p>
                       </div>
                     </div>
                   </CardContent>
