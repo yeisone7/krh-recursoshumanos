@@ -282,7 +282,18 @@ export function useLeaveRequests(filters?: {
         .from('leave_requests')
         .select(`
           *,
-          employees_v2(id, first_name, last_name, document_number)
+          employees_v2(
+            id,
+            first_name,
+            last_name,
+            document_number,
+            avatar_url,
+            employee_work_info(
+              operation_center_id,
+              is_current,
+              operation_centers(id, name)
+            )
+          )
         `)
         .eq('company_id', currentCompanyId!)
         .order('requested_at', { ascending: false });
