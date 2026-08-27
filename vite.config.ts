@@ -69,6 +69,9 @@ export default defineConfig(({ mode }) => ({
         theme_color: "#2B3A5C",
         background_color: "#F3F4F7",
         display: "standalone",
+        launch_handler: {
+          client_mode: "navigate-new",
+        },
         orientation: "portrait-primary",
         scope: "/",
         start_url: "/",

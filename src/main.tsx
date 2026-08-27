@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { registerSW } from "virtual:pwa-register";
-import App from "./App.tsx";
+import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import {
   isStaleDynamicImportError,
@@ -47,7 +47,31 @@ const updateSW = registerSW({
 
 applyThemePreference(getStoredThemePreference());
 
-createRoot(document.getElementById("root")!).render(<App />);
+const root = createRoot(document.getElementById("root")!);
+const isPublicLeaveRequest = window.location.pathname === "/solicitud-permiso"
+  || window.location.pathname.startsWith("/solicitud-permiso/");
+
+async function renderApplication() {
+  if (isPublicLeaveRequest) {
+    const { default: PublicLeaveRequest } = await import("./pages/PublicLeaveRequest.tsx");
+    root.render(
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
+        }}
+      >
+        <PublicLeaveRequest />
+      </BrowserRouter>,
+    );
+    return;
+  }
+
+  const { default: App } = await import("./App.tsx");
+  root.render(<App />);
+}
+
+void renderApplication();
 
 if (window.matchMedia('(display-mode: standalone)').matches) {
   document.body.classList.add('app-standalone');
