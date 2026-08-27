@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,6 +36,11 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
 import { TRAINING_PERMISSION_CODES } from '@/lib/trainingPermissions';
+import {
+  AUTO_EXPANDED_PERMISSION_MODULE_CODES,
+  getPermissionModuleLabel,
+  SENSITIVE_PERMISSION_MODULE_CODES,
+} from '@/lib/permissionMatrix';
 
 interface PermissionMatrixProps {
   role: CustomRole;
@@ -70,7 +76,7 @@ const ACTION_BG: Record<string, string> = {
   export: 'data-[state=checked]:bg-cyan-700 data-[state=checked]:border-cyan-700',
 };
 
-const ACTION_ICONS: Record<string, any> = {
+const ACTION_ICONS: Record<string, LucideIcon> = {
   view: Eye,
   create: Plus,
   update: Edit3,
@@ -79,14 +85,8 @@ const ACTION_ICONS: Record<string, any> = {
   export: FileDown,
 };
 
-const SENSITIVE_PERMISSION_MODULE_CODES = new Set([
-  'req_confidential_requisitions',
-  'catalogos_seleccion_lista_rosada',
-]);
-
 const getPermissionLabel = (module: Module, permission?: Permission) => {
-  if (!permission?.description) return module.name;
-  return permission.description.replace(/\s+-\s+(Ver|Crear|Modificar|Eliminar)$/i, '').trim();
+  return getPermissionModuleLabel(module, permission?.description);
 };
 
 export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
@@ -142,7 +142,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     setExpandedModules(prev => {
       const next = new Set(prev);
       modules.forEach(module => {
-        if (module.parent_id && SENSITIVE_PERMISSION_MODULE_CODES.has(module.code)) {
+        if (module.parent_id && AUTO_EXPANDED_PERMISSION_MODULE_CODES.has(module.code)) {
           next.add(module.parent_id);
         }
       });
