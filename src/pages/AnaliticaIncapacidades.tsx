@@ -77,6 +77,7 @@ import {
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
+import type { IncapacityOperationsRow } from '@/lib/incapacityOperationsReport';
 import { cn } from '@/lib/utils';
 import {
   countOperationallyActiveAffectedEmployees,
@@ -1010,6 +1011,45 @@ function EpsMonthlyRecoveryTable({ rows }: { rows: MonthlyEpsRecoveryRow[] }) {
   );
 }
 
+function OperationsFinancialPanels({
+  rows,
+  incapacities,
+  pilaSettings,
+}: {
+  rows: IncapacityOperationsRow[];
+  incapacities: FlatIncapacity[];
+  pilaSettings: Parameters<typeof buildIncapacityDurationBuckets>[1];
+}) {
+  const filteredIncapacities = useMemo(() => {
+    const incapacityById = new Map(incapacities.map((item) => [item.id, item]));
+
+    return rows.flatMap((row) => {
+      const incapacity = incapacityById.get(row.id);
+      return incapacity ? [{ ...incapacity, total_days: row.totalDays }] : [];
+    });
+  }, [incapacities, rows]);
+
+  const durationBuckets = useMemo(
+    () => buildIncapacityDurationBuckets(filteredIncapacities, pilaSettings),
+    [filteredIncapacities, pilaSettings],
+  );
+  const employerCost = useMemo(
+    () => buildIncapacityEmployerCostSummary(filteredIncapacities, pilaSettings),
+    [filteredIncapacities, pilaSettings],
+  );
+  const epsMonthlyRecovery = useMemo(
+    () => buildMonthlyEpsRecovery(filteredIncapacities),
+    [filteredIncapacities],
+  );
+
+  return (
+    <div className="space-y-5">
+      <DurationAnalysisPanel buckets={durationBuckets} employerCost={employerCost} />
+      <EpsMonthlyRecoveryTable rows={epsMonthlyRecovery} />
+    </div>
+  );
+}
+
 export default function AnaliticaIncapacidades() {
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
@@ -1136,9 +1176,6 @@ export default function AnaliticaIncapacidades() {
       }))
       .filter((item) => item.value > 0);
 
-    const durationBuckets = buildIncapacityDurationBuckets(filtered, pilaSettings);
-    const employerCostSummary = buildIncapacityEmployerCostSummary(filtered, pilaSettings);
-    const epsMonthlyRecovery = buildMonthlyEpsRecovery(filtered);
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
     const legalData = buildLegalResponsibilityDays(filtered);
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
@@ -1222,9 +1259,6 @@ export default function AnaliticaIncapacidades() {
       longCases: longCases.length,
       legalRisk: legalRisk.length,
       monthly,
-      durationBuckets,
-      employerCostSummary,
-      epsMonthlyRecovery,
       originData,
       recoveryData,
       legalData,
@@ -1247,7 +1281,7 @@ export default function AnaliticaIncapacidades() {
         strongestMonth,
       },
     };
-  }, [activeEmployees, employeeById, employees, flatIncapacities, incapacityRoots, origin, period, pilaSettings, recoveryStatus]);
+  }, [activeEmployees, employeeById, employees, flatIncapacities, incapacityRoots, origin, period, recoveryStatus]);
 
   const isLoading = loadingIncapacities || loadingEmployees;
 
@@ -1367,10 +1401,6 @@ export default function AnaliticaIncapacidades() {
           detail={`${analytics.longCases} casos superan 30 dias y pueden requerir reintegro, concepto o seguimiento especial.`}
         />
       </div>
-
-      <DurationAnalysisPanel buckets={analytics.durationBuckets} employerCost={analytics.employerCostSummary} />
-
-      <EpsMonthlyRecoveryTable rows={analytics.epsMonthlyRecovery} />
 
       <div className="grid gap-4 xl:grid-cols-3">
         <BiologicalSexInfographic data={analytics.sexData} />
@@ -1560,7 +1590,16 @@ export default function AnaliticaIncapacidades() {
         </TabsContent>
 
         <TabsContent value="operativo" className="mt-0">
-          <IncapacityOperationsReport rows={analytics.operationsReportRows} />
+          <IncapacityOperationsReport
+            rows={analytics.operationsReportRows}
+            renderFilteredContent={(filteredRows) => (
+              <OperationsFinancialPanels
+                rows={filteredRows}
+                incapacities={flatIncapacities}
+                pilaSettings={pilaSettings}
+              />
+            )}
+          />
         </TabsContent>
       </Tabs>
 

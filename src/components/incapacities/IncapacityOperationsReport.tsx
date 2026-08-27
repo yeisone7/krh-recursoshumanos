@@ -198,7 +198,13 @@ function sortedOptions(rows: IncapacityOperationsRow[], getValue: (row: Incapaci
   return [...new Set(rows.map(getValue).filter(Boolean))].sort((left, right) => left.localeCompare(right, 'es'));
 }
 
-export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperationsRow[] }) {
+export function IncapacityOperationsReport({
+  rows,
+  renderFilteredContent,
+}: {
+  rows: IncapacityOperationsRow[];
+  renderFilteredContent?: (filteredRows: IncapacityOperationsRow[]) => React.ReactNode;
+}) {
   const [month, setMonth] = useState('all');
   const [operationCenterId, setOperationCenterId] = useState('all');
   const [positionName, setPositionName] = useState('all');
@@ -312,6 +318,8 @@ export function IncapacityOperationsReport({ rows }: { rows: IncapacityOperation
           </div>
         </CardContent>
       </Card>
+
+      {renderFilteredContent?.(report.filtered)}
 
       <div className="grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
         <OperationalSnapshotInfographic
