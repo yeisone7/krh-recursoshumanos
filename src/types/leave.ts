@@ -158,6 +158,9 @@ export interface LeaveRequest {
   cancelled_by?: string;
   cancellation_reason?: string;
   created_by?: string;
+  submission_source: 'internal' | 'employee_portal' | 'public_link';
+  public_reference?: string | null;
+  public_access_token_id?: string | null;
   created_at: string;
   updated_at: string;
   // Joined data

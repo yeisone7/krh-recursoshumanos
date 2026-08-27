@@ -4,3 +4,4 @@ export { LeaveCalendarView } from './LeaveCalendarView';
 export { LeaveApprovalTimeline } from './LeaveApprovalTimeline';
 export { LeaveAlertsPanel } from './LeaveAlertsPanel';
 export { LeaveTypeConfigDialog } from './LeaveTypeConfigDialog';
+export { LeavePublicLinkDialog } from './LeavePublicLinkDialog';

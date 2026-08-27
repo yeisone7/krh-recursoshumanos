@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
-import { Plus, Calendar, List, Settings, Filter, Search, FileText, Trash2 } from 'lucide-react';
+import { Plus, Calendar, List, Settings, Filter, Search, FileText, Trash2, Link2 } from 'lucide-react';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { CollapsibleFilters } from '@/components/shared/CollapsibleFilters';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ import {
   LeaveCalendarView,
   LeaveAlertsPanel,
   LeaveTypeConfigDialog,
+  LeavePublicLinkDialog,
 } from '@/components/leaves';
 import {
   LeaveTypeInUseError,
@@ -66,6 +67,7 @@ import { toast } from 'sonner';
 export default function Permisos() {
   const [activeTab, setActiveTab] = useState('solicitudes');
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
+  const [showPublicLinkDialog, setShowPublicLinkDialog] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<LeaveTypeConfig | null>(null);
@@ -80,7 +82,7 @@ export default function Permisos() {
   const { data: typeConfigs = [] } = useLeaveTypeConfigs();
   const { data: pendingCount = 0 } = usePendingLeavesCount();
   const deleteLeaveType = useDeleteLeaveTypeConfig();
-  const { canCreate, canUpdate, canDelete } = useAuth();
+  const { canCreate, canUpdate, canDelete, hasPermission } = useAuth();
   const isMobile = useIsMobile();
 
   // Filter requests
@@ -177,14 +179,29 @@ export default function Permisos() {
               </p>
             </div>
           </div>
-          <Button 
-            onClick={() => setShowNewRequestDialog(true)}
-            size="lg"
-            className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/15 transition-all hover:bg-primary/90 sm:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva Solicitud
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            {hasPermission('leave_public_links', 'update') && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => setShowPublicLinkDialog(true)}
+                className="h-11 w-full shrink-0 rounded-xl px-5 text-xs font-black uppercase tracking-wider sm:w-auto"
+              >
+                <Link2 className="mr-2 h-4 w-4" />
+                Enlace público
+              </Button>
+            )}
+            {canCreate('permisos') && (
+              <Button
+                onClick={() => setShowNewRequestDialog(true)}
+                size="lg"
+                className="h-11 w-full shrink-0 rounded-xl bg-primary px-5 text-xs font-black uppercase tracking-wider text-primary-foreground shadow-md shadow-primary/15 transition-all hover:bg-primary/90 sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Nueva Solicitud
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -468,6 +485,11 @@ export default function Permisos() {
         open={showConfigDialog}
         onOpenChange={setShowConfigDialog}
         config={selectedConfig}
+      />
+
+      <LeavePublicLinkDialog
+        open={showPublicLinkDialog}
+        onOpenChange={setShowPublicLinkDialog}
       />
 
       <AlertDialog open={Boolean(deleteConfig)} onOpenChange={(open) => !open && setDeleteConfig(null)}>

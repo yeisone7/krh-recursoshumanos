@@ -44,6 +44,7 @@ import GruposCapacitaciones from "./pages/capacitaciones/Grupos";
 import AccesoPublico from "./pages/capacitaciones/AccesoPublico";
 import DescargosPublico from "./pages/DescargosPublico";
 import RegistroPublico from "./pages/RegistroPublico";
+import PublicLeaveRequest from "./pages/PublicLeaveRequest";
 import VerificarCertificado from "./pages/public/VerificarCertificado";
 import Evaluaciones from "./pages/Evaluaciones";
 import AnaliticasEvaluaciones from "./pages/evaluaciones/AnaliticasEvaluaciones";
@@ -151,6 +152,7 @@ const App = () => (
             <Route path="/capacitacion/grupo" element={<AccesoPublico groupMode />} />
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
+            <Route path="/solicitud-permiso" element={<PublicLeaveRequest />} />
             <Route path="/verificar-certificado/:token" element={<VerificarCertificado />} />
             <Route path="/install" element={<Install />} />
             <Route path="/portal" element={

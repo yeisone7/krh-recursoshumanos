@@ -6171,6 +6171,8 @@ export type Database = {
           manager_approved_by: string | null
           manager_approver_name: string | null
           manager_observations: string | null
+          public_access_token_id: string | null
+          public_reference: string | null
           reason: string
           rejection_reason: string | null
           requested_at: string
@@ -6181,6 +6183,7 @@ export type Database = {
           start_date: string
           start_time: string | null
           status: Database["public"]["Enums"]["leave_request_status"]
+          submission_source: string
           total_days: number
           total_hours: number | null
           updated_at: string
@@ -6211,6 +6214,8 @@ export type Database = {
           manager_approved_by?: string | null
           manager_approver_name?: string | null
           manager_observations?: string | null
+          public_access_token_id?: string | null
+          public_reference?: string | null
           reason: string
           rejection_reason?: string | null
           requested_at?: string
@@ -6221,6 +6226,7 @@ export type Database = {
           start_date: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["leave_request_status"]
+          submission_source?: string
           total_days: number
           total_hours?: number | null
           updated_at?: string
@@ -6251,6 +6257,8 @@ export type Database = {
           manager_approved_by?: string | null
           manager_approver_name?: string | null
           manager_observations?: string | null
+          public_access_token_id?: string | null
+          public_reference?: string | null
           reason?: string
           rejection_reason?: string | null
           requested_at?: string
@@ -6261,6 +6269,7 @@ export type Database = {
           start_date?: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["leave_request_status"]
+          submission_source?: string
           total_days?: number
           total_hours?: number | null
           updated_at?: string
@@ -11611,6 +11620,22 @@ export type Database = {
       create_vacation_request_workflow: {
         Args: { p_request: Json }
         Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
+      }
+      create_leave_request_workflow: {
+        Args: { p_request: Json }
+        Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
+      }
+      get_leave_public_link_status: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
+      revoke_leave_public_link: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
+      rotate_leave_public_link: {
+        Args: { p_company_id: string; p_expires_at?: string | null }
+        Returns: Json
       }
       create_training_group_assignment: {
         Args: { payload: Json }
