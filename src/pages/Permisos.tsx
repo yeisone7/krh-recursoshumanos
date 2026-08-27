@@ -87,8 +87,9 @@ export default function Permisos() {
   const { data: typeConfigs = [] } = useLeaveTypeConfigs();
   const { data: pendingCount = 0 } = usePendingLeavesCount();
   const deleteLeaveType = useDeleteLeaveTypeConfig();
-  const { canCreate, canUpdate, canDelete, hasPermission } = useAuth();
+  const { canCreate, hasPermission } = useAuth();
   const isMobile = useIsMobile();
+  const canConfigureLeaveTypes = hasPermission('leave_type_configuration', 'update');
 
   // Filter requests
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -113,7 +114,7 @@ export default function Permisos() {
   };
 
   const handleConfigClick = (config: LeaveTypeConfig) => {
-    if (!canUpdate('permisos')) return;
+    if (!canConfigureLeaveTypes) return;
     setSelectedConfig(config);
     setShowConfigDialog(true);
   };
@@ -239,10 +240,12 @@ export default function Permisos() {
               <Filter className="h-4 w-4 shrink-0" />
               Alertas
             </TabsTrigger>
-            <TabsTrigger value="configuracion" className="h-9 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
-              <Settings className="h-4 w-4 shrink-0" />
-              Configurar
-            </TabsTrigger>
+            {canConfigureLeaveTypes && (
+              <TabsTrigger value="configuracion" className="h-9 min-w-[128px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+                <Settings className="h-4 w-4 shrink-0" />
+                Configurar
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -424,7 +427,7 @@ export default function Permisos() {
         </TabsContent>
 
         {/* Configuración Tab */}
-        <TabsContent value="configuracion" className="space-y-4">
+        {canConfigureLeaveTypes && <TabsContent value="configuracion" className="space-y-4">
           <Card className="rounded-[2rem] border-none shadow-sm">
             <CardHeader className="p-8 border-b border-border/50 bg-background /10 rounded-t-[2rem]">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -437,7 +440,7 @@ export default function Permisos() {
                     <p className="text-sm font-medium text-muted-foreground">Configura las reglas para cada tipo de licencia</p>
                   </div>
                 </div>
-                {canCreate('permisos') && (
+                {canConfigureLeaveTypes && (
                   <Button onClick={handleCreateConfig} className="rounded-xl">
                     <Plus className="mr-2 size-4" />Crear tipo
                   </Button>
@@ -451,7 +454,7 @@ export default function Permisos() {
                     key={config.id}
                     className={cn(
                       'flex flex-col gap-3 p-4 border border-border/50 rounded-2xl transition-colors sm:flex-row sm:items-center sm:justify-between group',
-                      canUpdate('permisos') && 'hover:bg-background cursor-pointer',
+                      canConfigureLeaveTypes && 'hover:bg-background cursor-pointer',
                     )}
                     onClick={() => handleConfigClick(config)}
                   >
@@ -482,7 +485,7 @@ export default function Permisos() {
                       <Badge variant={config.is_active ? 'default' : 'secondary'} className="rounded-lg text-[10px] uppercase font-bold tracking-wider">
                         {config.is_active ? 'Activo' : 'Inactivo'}
                       </Badge>
-                      {canDelete('permisos') && (
+                      {canConfigureLeaveTypes && (
                         <Button
                           variant="ghost"
                           size="icon"
@@ -502,7 +505,7 @@ export default function Permisos() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       {/* Dialogs */}
