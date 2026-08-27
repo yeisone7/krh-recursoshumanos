@@ -8,6 +8,8 @@ export interface LeavePublicLinkStatus {
   created_at?: string;
   expires_at?: string | null;
   expired?: boolean;
+  token_available?: boolean;
+  token?: string | null;
 }
 
 const key = (companyId: string | null) => ['leave-public-link', companyId] as const;
@@ -25,6 +27,7 @@ export function useLeavePublicLinkStatus(enabled = true) {
       return data as LeavePublicLinkStatus;
     },
     enabled: enabled && Boolean(currentCompanyId),
+    refetchOnMount: 'always',
   });
 }
 
@@ -41,7 +44,7 @@ export function useRotateLeavePublicLink() {
       if (error) throw error;
       return data as LeavePublicLinkStatus & { token: string };
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: key(currentCompanyId) }),
+    onSuccess: (data) => queryClient.setQueryData(key(currentCompanyId), data),
   });
 }
 
@@ -57,6 +60,13 @@ export function useRevokeLeavePublicLink() {
       if (error) throw error;
       return Boolean(data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: key(currentCompanyId) }),
+    onSuccess: () => {
+      queryClient.setQueryData(key(currentCompanyId), {
+        active: false,
+        token_available: false,
+        token: null,
+      } satisfies LeavePublicLinkStatus);
+      void queryClient.invalidateQueries({ queryKey: key(currentCompanyId) });
+    },
   });
 }
