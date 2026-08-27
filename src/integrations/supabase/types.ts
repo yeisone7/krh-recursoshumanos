@@ -6146,6 +6146,12 @@ export type Database = {
       }
       leave_requests: {
         Row: {
+          approval_stage: string
+          area_leader_approved: boolean | null
+          area_leader_approved_at: string | null
+          area_leader_approved_by: string | null
+          area_leader_approver_name: string | null
+          area_leader_observations: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -6160,6 +6166,11 @@ export type Database = {
           end_time: string | null
           id: string
           leave_type: string
+          manager_approved: boolean | null
+          manager_approved_at: string | null
+          manager_approved_by: string | null
+          manager_approver_name: string | null
+          manager_observations: string | null
           reason: string
           rejection_reason: string | null
           requested_at: string
@@ -6175,6 +6186,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approval_stage?: string
+          area_leader_approved?: boolean | null
+          area_leader_approved_at?: string | null
+          area_leader_approved_by?: string | null
+          area_leader_approver_name?: string | null
+          area_leader_observations?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -6189,6 +6206,11 @@ export type Database = {
           end_time?: string | null
           id?: string
           leave_type: string
+          manager_approved?: boolean | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_approver_name?: string | null
+          manager_observations?: string | null
           reason: string
           rejection_reason?: string | null
           requested_at?: string
@@ -6204,6 +6226,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approval_stage?: string
+          area_leader_approved?: boolean | null
+          area_leader_approved_at?: string | null
+          area_leader_approved_by?: string | null
+          area_leader_approver_name?: string | null
+          area_leader_observations?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -6218,6 +6246,11 @@ export type Database = {
           end_time?: string | null
           id?: string
           leave_type?: string
+          manager_approved?: boolean | null
+          manager_approved_at?: string | null
+          manager_approved_by?: string | null
+          manager_approver_name?: string | null
+          manager_observations?: string | null
           reason?: string
           rejection_reason?: string | null
           requested_at?: string
@@ -11604,6 +11637,28 @@ export type Database = {
           p_start_date: string
         }
         Returns: number
+      }
+      cancel_leave_request_workflow: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
+      }
+      decide_leave_as_area_leader: {
+        Args: {
+          p_approved: boolean
+          p_observations?: string | null
+          p_rejection_reason?: string | null
+          p_request_id: string
+        }
+        Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
+      }
+      decide_leave_as_manager: {
+        Args: {
+          p_approved: boolean
+          p_observations?: string | null
+          p_rejection_reason?: string | null
+          p_request_id: string
+        }
+        Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
       }
       decide_vacation_as_area_leader: {
         Args: {

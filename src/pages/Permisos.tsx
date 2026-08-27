@@ -50,7 +50,14 @@ import {
   useLeaveTypeConfigs,
   usePendingLeavesCount,
 } from '@/hooks/useLeaves';
-import { getLeaveTypeLabel, LeaveRequest, LeaveTypeConfig, LEAVE_STATUS_LABELS, LeaveRequestStatus } from '@/types/leave';
+import {
+  getLeaveTypeLabel,
+  LeaveRequest,
+  LeaveTypeConfig,
+  LEAVE_APPROVAL_STAGE_LABELS,
+  LEAVE_STATUS_LABELS,
+  LeaveRequestStatus,
+} from '@/types/leave';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -145,6 +152,12 @@ export default function Permisos() {
     const config = typeConfigs.find(c => c.leave_type === leaveType);
     return config?.color || '#3B82F6';
   };
+
+  const getRequestStatusLabel = (request: LeaveRequest) => (
+    request.status === 'pendiente'
+      ? LEAVE_APPROVAL_STAGE_LABELS[request.approval_stage]
+      : LEAVE_STATUS_LABELS[request.status]
+  );
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -251,7 +264,7 @@ export default function Permisos() {
                           subtitle: getLeaveTypeLabel(request.leave_type, typeConfigs),
                           badge: (
                             <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                              {LEAVE_STATUS_LABELS[request.status]}
+                              {getRequestStatusLabel(request)}
                             </Badge>
                           ),
                           fields: [
@@ -328,7 +341,7 @@ export default function Permisos() {
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
-                            {LEAVE_STATUS_LABELS[request.status]}
+                            {getRequestStatusLabel(request)}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground hidden lg:table-cell text-xs font-medium">

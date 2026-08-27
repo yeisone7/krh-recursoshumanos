@@ -24,12 +24,25 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { getLeaveTypeLabel, LeaveRequest, LEAVE_STATUS_LABELS, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
-import { useApproveLeaveRequest, useRejectLeaveRequest, useCancelLeaveRequest, useLeaveTypeConfigs, useUpdateLeaveRequest } from '@/hooks/useLeaves';
+import {
+  getLeaveTypeLabel,
+  LeaveRequest,
+  LEAVE_APPROVAL_STAGE_LABELS,
+  LEAVE_STATUS_LABELS,
+  LEAVE_DURATION_TYPE_LABELS,
+} from '@/types/leave';
+import {
+  useAreaLeaderLeaveDecision,
+  useCancelLeaveRequest,
+  useLeaveTypeConfigs,
+  useManagerLeaveDecision,
+  useUpdateLeaveRequest,
+} from '@/hooks/useLeaves';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { LeaveApprovalTimeline } from './LeaveApprovalTimeline';
 
 interface LeaveRequestDetailDialogProps {
   open: boolean;
@@ -54,13 +67,24 @@ export function LeaveRequestDetailDialog({
   const [isUploading, setIsUploading] = useState(false);
   const [documentSignedUrl, setDocumentSignedUrl] = useState<string | null>(null);
 
-  const { currentCompanyId } = useAuth();
-  const approveRequest = useApproveLeaveRequest();
-  const rejectRequest = useRejectLeaveRequest();
+  const { currentCompanyId, hasPermission, isAdmin, isRRHH, isSuperAdmin } = useAuth();
+  const managerDecision = useManagerLeaveDecision();
+  const areaLeaderDecision = useAreaLeaderLeaveDecision();
   const cancelRequest = useCancelLeaveRequest();
   const updateRequest = useUpdateLeaveRequest();
 
   if (!request) return null;
+
+  const canApproveAsManager = isAdmin || isRRHH || isSuperAdmin
+    || hasPermission('leave_approve_manager', 'approve');
+  const canApproveAsAreaLeader = isAdmin || isRRHH || isSuperAdmin
+    || hasPermission('leave_approve_area_leader', 'approve');
+  const canDecideCurrentStage = request.status === 'pendiente'
+    && (
+      (request.approval_stage === 'pending_manager' && canApproveAsManager)
+      || (request.approval_stage === 'pending_area_leader' && canApproveAsAreaLeader)
+    );
+  const decisionIsPending = managerDecision.isPending || areaLeaderDecision.isPending;
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -77,11 +101,18 @@ export function LeaveRequestDetailDialog({
 
   const handleApprove = async () => {
     try {
-      await approveRequest.mutateAsync({ 
-        id: request.id, 
-        review_notes: reviewNotes || undefined 
-      });
-      toast.success('Solicitud aprobada exitosamente');
+      const decision = {
+        id: request.id,
+        approved: true,
+        observations: reviewNotes || undefined,
+      };
+      if (request.approval_stage === 'pending_manager') {
+        await managerDecision.mutateAsync(decision);
+        toast.success('Solicitud enviada al líder de área');
+      } else {
+        await areaLeaderDecision.mutateAsync(decision);
+        toast.success('Solicitud aprobada exitosamente');
+      }
       onOpenChange(false);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Error al aprobar la solicitud'));
@@ -94,10 +125,17 @@ export function LeaveRequestDetailDialog({
       return;
     }
     try {
-      await rejectRequest.mutateAsync({ 
-        id: request.id, 
-        rejection_reason: rejectionReason 
-      });
+      const decision = {
+        id: request.id,
+        approved: false,
+        observations: reviewNotes || undefined,
+        rejectionReason,
+      };
+      if (request.approval_stage === 'pending_manager') {
+        await managerDecision.mutateAsync(decision);
+      } else {
+        await areaLeaderDecision.mutateAsync(decision);
+      }
       toast.success('Solicitud rechazada');
       onOpenChange(false);
     } catch (error: unknown) {
@@ -188,9 +226,16 @@ export function LeaveRequestDetailDialog({
               </span>
               Detalle de solicitud
             </DialogTitle>
-            <Badge className="w-fit shrink-0 rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide" variant={getStatusBadgeVariant(request.status)}>
-              {LEAVE_STATUS_LABELS[request.status]}
-            </Badge>
+            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+              <Badge className="w-fit rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide" variant={getStatusBadgeVariant(request.status)}>
+                {LEAVE_STATUS_LABELS[request.status]}
+              </Badge>
+              {request.status === 'pendiente' && (
+                <Badge variant="outline" className="w-fit rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide text-primary">
+                  {LEAVE_APPROVAL_STAGE_LABELS[request.approval_stage]}
+                </Badge>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
@@ -276,6 +321,17 @@ export function LeaveRequestDetailDialog({
               </span>
             </div>
           </div>
+
+          {/* Approval workflow */}
+          <section className="rounded-xl border border-border/70 p-4 sm:p-5">
+            <div className="mb-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Flujo de aprobación</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Seguimiento de la solicitud desde su radicación hasta la decisión final.
+              </p>
+            </div>
+            <LeaveApprovalTimeline request={request} />
+          </section>
 
           {/* Reason */}
           <section className="rounded-xl border border-border/70 p-4">
@@ -380,40 +436,52 @@ export function LeaveRequestDetailDialog({
               
               {!showRejectForm && !showCancelForm && (
                 <section className="space-y-4 rounded-xl border border-border/70 bg-slate-50/50 p-4 dark:bg-slate-900/40">
-                  <div>
-                    <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Notas de revisión (opcional)</Label>
-                    <Textarea
-                      value={reviewNotes}
-                      onChange={(e) => setReviewNotes(e.target.value)}
-                      placeholder="Agregue notas sobre la revisión..."
-                      className="mt-2 min-h-[88px] resize-y bg-background"
-                    />
-                  </div>
+                  {canDecideCurrentStage && (
+                    <div>
+                      <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Observaciones de {request.approval_stage === 'pending_manager' ? 'jefe inmediato' : 'líder de área'} (opcional)
+                      </Label>
+                      <Textarea
+                        value={reviewNotes}
+                        onChange={(e) => setReviewNotes(e.target.value)}
+                        placeholder="Agregue observaciones sobre la revisión..."
+                        className="mt-2 min-h-[88px] resize-y bg-background"
+                      />
+                    </div>
+                  )}
                   
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
                     <Button 
-                      className="w-full"
+                      className="w-full sm:w-auto"
                       variant="outline" 
                       onClick={() => setShowCancelForm(true)}
                     >
                       Cancelar Solicitud
                     </Button>
-                    <Button 
-                      className="w-full"
-                      variant="destructive" 
-                      onClick={() => setShowRejectForm(true)}
-                    >
-                      <XCircle className="w-4 h-4 mr-2" />
-                      Rechazar
-                    </Button>
-                    <Button 
-                      className="w-full"
-                      onClick={handleApprove}
-                      disabled={approveRequest.isPending}
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      {approveRequest.isPending ? 'Aprobando...' : 'Aprobar'}
-                    </Button>
+                    {canDecideCurrentStage && (
+                      <>
+                        <Button
+                          className="w-full sm:w-auto"
+                          variant="destructive"
+                          onClick={() => setShowRejectForm(true)}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Rechazar
+                        </Button>
+                        <Button
+                          className="w-full sm:w-auto"
+                          onClick={handleApprove}
+                          disabled={decisionIsPending}
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          {decisionIsPending
+                            ? 'Procesando...'
+                            : request.approval_stage === 'pending_manager'
+                              ? 'Aprobar y enviar'
+                              : 'Aprobar permiso'}
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </section>
               )}
@@ -437,9 +505,9 @@ export function LeaveRequestDetailDialog({
                       className="w-full sm:w-auto"
                       variant="destructive" 
                       onClick={handleReject}
-                      disabled={rejectRequest.isPending}
+                      disabled={decisionIsPending}
                     >
-                      {rejectRequest.isPending ? 'Rechazando...' : 'Confirmar Rechazo'}
+                      {decisionIsPending ? 'Rechazando...' : 'Confirmar Rechazo'}
                     </Button>
                   </div>
                 </div>
