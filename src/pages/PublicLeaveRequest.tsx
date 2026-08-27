@@ -6,7 +6,9 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
+  ClipboardCheck,
   Clock3,
+  FileCheck2,
   FileUp,
   Loader2,
   LockKeyhole,
@@ -61,6 +63,81 @@ async function errorMessage(error: unknown, fallback: string) {
   } catch {
     return functionError?.message || fallback;
   }
+}
+
+const REQUEST_STEPS = [
+  { label: 'Identifícate', description: 'Confirma tus datos' },
+  { label: 'Completa', description: 'Cuéntanos tu solicitud' },
+  { label: 'Radica', description: 'Recibe tu número' },
+];
+
+function CompanyIdentity({ company }: { company: PublicCompany | null }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3">
+      {company?.horizontal_logo_url ? (
+        <div className="flex h-11 max-w-[152px] shrink-0 items-center rounded-xl border border-border/70 bg-card px-3 sm:max-w-[190px]">
+          <img
+            src={company.horizontal_logo_url}
+            alt={`Logo de ${company.name}`}
+            className="max-h-7 w-full object-contain object-left"
+          />
+        </div>
+      ) : (
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+          <Building2 className="size-5" aria-hidden="true" />
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-extrabold text-foreground sm:text-base">
+          {company?.name || 'Portal de colaboradores'}
+        </p>
+        <p className="text-xs font-medium text-muted-foreground">Solicitud de permisos</p>
+      </div>
+    </div>
+  );
+}
+
+function RequestProgress({ current }: { current: number }) {
+  return (
+    <nav aria-label={`Progreso de la solicitud. Etapa ${current} de 3`} className="border-b border-border/70 px-4 py-4 sm:px-7">
+      <ol className="grid grid-cols-3 gap-2 sm:gap-4">
+        {REQUEST_STEPS.map((item, index) => {
+          const position = index + 1;
+          const isActive = position === current;
+          const isComplete = position < current;
+          return (
+            <li key={item.label} className="relative flex min-w-0 items-center gap-2 sm:gap-3" aria-current={isActive ? 'step' : undefined}>
+              {index > 0 && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute right-[calc(100%+0.25rem)] top-4 hidden h-px w-[calc(100%-2.5rem)] sm:block',
+                    isComplete || isActive ? 'bg-primary/50' : 'bg-border',
+                  )}
+                />
+              )}
+              <span
+                className={cn(
+                  'flex size-8 shrink-0 items-center justify-center rounded-full border text-xs font-extrabold transition-colors',
+                  isActive && 'border-primary bg-primary text-primary-foreground',
+                  isComplete && 'border-primary/25 bg-primary/10 text-primary',
+                  !isActive && !isComplete && 'border-border bg-muted/60 text-muted-foreground',
+                )}
+              >
+                {isComplete ? <CheckCircle2 className="size-4" aria-hidden="true" /> : position}
+              </span>
+              <span className="min-w-0">
+                <span className={cn('block truncate text-[11px] font-bold sm:text-sm', isActive ? 'text-foreground' : 'text-muted-foreground')}>
+                  {item.label}
+                </span>
+                <span className="hidden truncate text-[11px] text-muted-foreground md:block">{item.description}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
 }
 
 export default function PublicLeaveRequest() {
@@ -149,7 +226,7 @@ export default function PublicLeaveRequest() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    if (!leaveType || !startDate || !endDate || reason.trim().length < 10) {
+    if (!leaveType || !startDate || (durationType === 'dias_completos' && !endDate) || reason.trim().length < 10) {
       setError('Completa el tipo, las fechas y un motivo de al menos 10 caracteres.');
       return;
     }
@@ -204,168 +281,235 @@ export default function PublicLeaveRequest() {
   }, [durationOptions, durationType]);
 
   return (
-    <main className="min-h-dvh bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.12),transparent_38%),linear-gradient(to_bottom,hsl(var(--background)),white)] px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-6 flex min-h-12 items-center justify-center">
-          {company?.horizontal_logo_url ? (
-            <img src={company.horizontal_logo_url} alt={company.name} className="max-h-12 max-w-[220px] object-contain" />
-          ) : company ? (
-            <div className="flex items-center gap-3 text-foreground">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Building2 className="size-5" /></span>
-              <span className="text-lg font-bold">{company.name}</span>
+    <main className="relative min-h-[100dvh] overflow-hidden bg-background">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_15%_10%,hsl(var(--primary)/0.16),transparent_40%),radial-gradient(circle_at_90%_0%,hsl(var(--primary)/0.08),transparent_34%)]" />
+
+      <header className="relative border-b border-border/70 bg-background/90 backdrop-blur-md">
+        <div className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:min-h-[76px] sm:px-6 lg:px-8">
+          <CompanyIdentity company={company} />
+          <Badge variant="outline" className="hidden min-h-8 gap-2 border-primary/20 bg-primary/5 px-3 text-primary sm:flex">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            Portal seguro
+          </Badge>
+        </div>
+      </header>
+
+      <div className="relative mx-auto grid w-full max-w-6xl gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] lg:gap-8 lg:px-8 lg:py-10">
+        <aside className="relative overflow-hidden rounded-2xl bg-foreground px-5 py-6 text-background shadow-[0_24px_70px_hsl(var(--foreground)/0.16)] sm:px-7 sm:py-8 lg:min-h-[640px] lg:px-9 lg:py-10">
+          <div aria-hidden="true" className="absolute -right-20 -top-24 size-64 rounded-full border-[44px] border-primary/25" />
+          <div aria-hidden="true" className="absolute -bottom-28 -left-24 size-72 rounded-full bg-primary/15" />
+
+          <div className="relative flex h-full flex-col">
+            <div className="max-w-md">
+              <p className="mb-3 text-xs font-bold text-background/65">Portal de {company?.name || 'tu empresa'}</p>
+              <h1 className="font-display text-2xl font-black leading-tight tracking-tight sm:text-3xl lg:text-4xl">
+                Solicita tu permiso de forma fácil y segura
+              </h1>
+              <p className="mt-3 max-w-sm text-sm leading-relaxed text-background/70 sm:text-base">
+                Identifícate, completa la información y recibe tu número de radicado en pocos minutos.
+              </p>
             </div>
-          ) : null}
-        </header>
 
-        {progress > 0 && (
-          <div className="mb-4 grid grid-cols-3 gap-2" aria-label={`Paso ${progress} de 3`}>
-            {['Identificación', 'Solicitud', 'Confirmación'].map((label, index) => (
-              <div key={label} className="space-y-2 text-center">
-                <div className={cn('h-1.5 rounded-full', index + 1 <= progress ? 'bg-primary' : 'bg-border')} />
-                <span className={cn('text-[10px] font-bold uppercase tracking-wide sm:text-xs', index + 1 === progress ? 'text-primary' : 'text-muted-foreground')}>{label}</span>
+            <div className="relative my-8 hidden flex-1 items-center justify-center lg:flex" aria-hidden="true">
+              <div className="relative flex size-64 items-center justify-center rounded-full border border-background/10 bg-background/[0.04]">
+                <div className="flex size-40 rotate-[-4deg] flex-col justify-between rounded-2xl border border-background/15 bg-background/[0.09] p-5 shadow-2xl shadow-black/15 backdrop-blur-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground"><ClipboardCheck className="size-6" /></span>
+                    <CheckCircle2 className="size-7 text-primary" />
+                  </div>
+                  <div className="space-y-3">
+                    <span className="block h-2 w-full rounded-full bg-background/20" />
+                    <span className="block h-2 w-4/5 rounded-full bg-background/15" />
+                    <span className="block h-2 w-3/5 rounded-full bg-background/10" />
+                  </div>
+                </div>
+                <span className="absolute -right-3 top-6 flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg"><CalendarDays className="size-6" /></span>
+                <span className="absolute bottom-8 left-0 flex size-11 items-center justify-center rounded-xl bg-background text-foreground shadow-lg"><FileCheck2 className="size-5" /></span>
               </div>
-            ))}
+            </div>
+
+            <div className="relative mt-6 hidden gap-3 sm:grid sm:grid-cols-3 lg:mt-auto lg:grid-cols-1">
+              {REQUEST_STEPS.map((item, index) => (
+                <div key={item.label} className="flex items-center gap-3 rounded-xl border border-background/10 bg-background/[0.05] px-3 py-3">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-xs font-black text-primary-foreground">{index + 1}</span>
+                  <div>
+                    <p className="text-sm font-bold text-background">{item.label}</p>
+                    <p className="hidden text-xs text-background/60 sm:block">{item.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+        </aside>
 
-        <Card className="overflow-hidden border-border/80 shadow-xl shadow-primary/5">
-          {step === 'loading' && (
-            <CardContent className="flex min-h-80 flex-col items-center justify-center gap-3">
-              <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Validando enlace seguro…</p>
-            </CardContent>
-          )}
+        <section className="min-w-0" aria-label="Formulario de solicitud de permiso">
+          <Card className="overflow-hidden rounded-2xl border-border/80 bg-card shadow-[0_24px_70px_hsl(var(--foreground)/0.08)]">
+            {progress > 0 && <RequestProgress current={progress} />}
 
-          {step === 'invalid' && (
-            <CardContent className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
-              <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-destructive/10 text-destructive"><LockKeyhole className="size-7" /></span>
-              <h1 className="text-xl font-bold">Enlace no disponible</h1>
-              <p className="mt-2 max-w-md text-sm text-muted-foreground">El enlace es inválido, venció o fue reemplazado. Solicita uno nuevo a Recursos Humanos.</p>
-            </CardContent>
-          )}
-
-          {step === 'identify' && (
-            <>
-              <CardHeader className="border-b bg-muted/20">
-                <Badge variant="outline" className="mb-2 w-fit">Paso 1 de 3</Badge>
-                <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl"><UserRoundCheck className="size-6 text-primary" /> Verifica tu identidad</CardTitle>
-                <CardDescription>Ingresa tus datos exactamente como aparecen registrados en la empresa.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 sm:p-7">
-                <form onSubmit={identify} className="space-y-5">
-                  {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-                  <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
-                    <div className="space-y-2">
-                      <Label htmlFor="document-type">Tipo de documento</Label>
-                      <Select value={documentType} onValueChange={setDocumentType}>
-                        <SelectTrigger id="document-type"><SelectValue /></SelectTrigger>
-                        <SelectContent>{['CC', 'CE', 'TI', 'PA', 'PEP'].map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="document-number">Número de documento</Label>
-                      <Input id="document-number" value={documentNumber} onChange={(event) => setDocumentNumber(event.target.value)} autoComplete="off" inputMode="numeric" />
-                    </div>
+            {step === 'loading' && (
+              <CardContent className="min-h-[420px] p-5 sm:p-8">
+                <div className="animate-pulse space-y-7" aria-label="Validando enlace seguro">
+                  <div className="space-y-3">
+                    <div className="h-7 w-3/5 rounded-lg bg-muted" />
+                    <div className="h-4 w-4/5 rounded bg-muted/70" />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="birth-date">Fecha de nacimiento</Label>
-                    <Input id="birth-date" type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} max={new Date().toISOString().slice(0, 10)} />
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="h-12 rounded-xl bg-muted/70" />
+                    <div className="h-12 rounded-xl bg-muted/70" />
                   </div>
-                  <Alert><ShieldCheck className="size-4" /><AlertDescription>Esta validación no crea una cuenta ni permite consultar información personal.</AlertDescription></Alert>
-                  <Button className="h-11 w-full" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ArrowRight className="mr-2 size-4" />} Continuar
-                  </Button>
-                </form>
+                  <div className="h-12 rounded-xl bg-muted/70" />
+                  <div className="flex items-center gap-3 rounded-xl border border-border p-4">
+                    <Loader2 className="size-5 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-muted-foreground">Validando enlace seguro...</p>
+                  </div>
+                </div>
               </CardContent>
-            </>
-          )}
+            )}
 
-          {step === 'request' && (
-            <>
-              <CardHeader className="border-b bg-muted/20">
-                <Badge variant="outline" className="mb-2 w-fit">Paso 2 de 3</Badge>
-                <CardTitle className="text-xl sm:text-2xl">Hola, {firstName}</CardTitle>
-                <CardDescription>Completa los datos de tu solicitud. La verificación es válida durante 10 minutos.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-5 sm:p-7">
-                <form onSubmit={submit} className="space-y-5">
-                  {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-                  {leaveTypes.length === 0 ? (
-                    <Alert><AlertDescription>No hay tipos de permiso habilitados. Comunícate con Recursos Humanos.</AlertDescription></Alert>
-                  ) : (
-                    <>
+            {step === 'invalid' && (
+              <CardContent className="flex min-h-[460px] flex-col items-center justify-center px-6 py-12 text-center sm:px-10">
+                <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-destructive/10 text-destructive"><LockKeyhole className="size-8" /></span>
+                <h1 className="font-display text-2xl font-black tracking-tight text-foreground">Enlace no disponible</h1>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">El enlace es inválido, venció o fue reemplazado. Solicita uno nuevo a Recursos Humanos.</p>
+              </CardContent>
+            )}
+
+            {step === 'identify' && (
+              <>
+                <CardHeader className="space-y-3 px-5 pb-4 pt-6 sm:px-8 sm:pt-8">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><UserRoundCheck className="size-6" /></span>
+                  <div className="space-y-1.5">
+                    <CardTitle className="font-display text-2xl font-black tracking-tight sm:text-3xl">Verifica tu identidad</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">Ingresa los datos registrados en {company?.name || 'la empresa'}.</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-5 pb-6 pt-3 sm:px-8 sm:pb-8">
+                  <form onSubmit={identify} className="space-y-5">
+                    {error && <Alert variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert>}
+                    <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
                       <div className="space-y-2">
-                        <Label htmlFor="leave-type">Tipo de permiso</Label>
-                        <Select value={leaveType} onValueChange={setLeaveType}>
-                          <SelectTrigger id="leave-type"><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
-                          <SelectContent>{leaveTypes.map((type) => <SelectItem key={type.leave_type} value={type.leave_type}>{type.display_name}</SelectItem>)}</SelectContent>
-                        </Select>
-                        {selectedType?.description && <p className="text-xs text-muted-foreground">{selectedType.description}</p>}
-                        {!!selectedType?.min_days_advance && <p className="text-xs font-medium text-primary">Requiere {selectedType.min_days_advance} día(s) de anticipación.</p>}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="duration-type">Duración</Label>
-                        <Select value={durationType} onValueChange={(value) => setDurationType(value as LeaveDurationType)}>
-                          <SelectTrigger id="duration-type"><SelectValue /></SelectTrigger>
-                          <SelectContent>{durationOptions.map((duration) => <SelectItem key={duration} value={duration}>{LEAVE_DURATION_TYPE_LABELS[duration]}</SelectItem>)}</SelectContent>
+                        <Label htmlFor="document-type">Tipo de documento</Label>
+                        <Select value={documentType} onValueChange={setDocumentType}>
+                          <SelectTrigger id="document-type" className="min-h-12 text-base"><SelectValue /></SelectTrigger>
+                          <SelectContent>{['CC', 'CE', 'TI', 'PA', 'PEP'].map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
                         </Select>
                       </div>
-                      <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="document-number">Número de documento</Label>
+                        <Input id="document-number" value={documentNumber} onChange={(event) => setDocumentNumber(event.target.value)} autoComplete="off" inputMode="numeric" className="min-h-12 text-base" required />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="birth-date">Fecha de nacimiento</Label>
+                      <Input id="birth-date" type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} max={new Date().toISOString().slice(0, 10)} autoComplete="bday" className="min-h-12 text-base" required />
+                    </div>
+                    <Alert className="border-primary/20 bg-primary/5 text-foreground">
+                      <ShieldCheck className="size-4 text-primary" />
+                      <AlertDescription className="leading-relaxed">Tus datos sólo se usan para validar esta solicitud. No se creará una cuenta.</AlertDescription>
+                    </Alert>
+                    <Button className="min-h-12 w-full text-base font-bold active:scale-[0.99]" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="mr-2 size-5 animate-spin" /> : <ArrowRight className="mr-2 size-5" />} Continuar
+                    </Button>
+                  </form>
+                </CardContent>
+              </>
+            )}
+
+            {step === 'request' && (
+              <>
+                <CardHeader className="space-y-3 px-5 pb-4 pt-6 sm:px-8 sm:pt-8">
+                  <span className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><ClipboardCheck className="size-6" /></span>
+                  <div className="space-y-1.5">
+                    <CardTitle className="font-display text-2xl font-black tracking-tight sm:text-3xl">Hola, {firstName}</CardTitle>
+                    <CardDescription className="text-sm leading-relaxed">Completa tu solicitud. Tienes 10 minutos desde la verificación.</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-5 pb-6 pt-3 sm:px-8 sm:pb-8">
+                  <form onSubmit={submit} className="space-y-5">
+                    {error && <Alert variant="destructive" role="alert"><AlertDescription>{error}</AlertDescription></Alert>}
+                    {leaveTypes.length === 0 ? (
+                      <Alert><AlertDescription>No hay tipos de permiso habilitados. Comunícate con Recursos Humanos.</AlertDescription></Alert>
+                    ) : (
+                      <>
                         <div className="space-y-2">
-                          <Label htmlFor="start-date"><CalendarDays className="mr-1 inline size-4" />Fecha {durationType === 'dias_completos' ? 'inicial' : 'del permiso'}</Label>
-                          <Input id="start-date" type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); if (durationType !== 'dias_completos') setEndDate(event.target.value); }} />
+                          <Label htmlFor="leave-type">Tipo de permiso</Label>
+                          <Select value={leaveType} onValueChange={setLeaveType}>
+                            <SelectTrigger id="leave-type" className="min-h-12 text-base"><SelectValue placeholder="Selecciona un tipo" /></SelectTrigger>
+                            <SelectContent>{leaveTypes.map((type) => <SelectItem key={type.leave_type} value={type.leave_type}>{type.display_name}</SelectItem>)}</SelectContent>
+                          </Select>
+                          {selectedType?.description && <p className="text-xs leading-relaxed text-muted-foreground">{selectedType.description}</p>}
+                          {!!selectedType?.min_days_advance && (
+                            <p className="text-xs font-semibold text-primary">
+                              Solicítalo con {selectedType.min_days_advance} {selectedType.min_days_advance === 1 ? 'día' : 'días'} de anticipación.
+                            </p>
+                          )}
                         </div>
-                        {durationType === 'dias_completos' && (
-                          <div className="space-y-2"><Label htmlFor="end-date"><CalendarDays className="mr-1 inline size-4" />Fecha final</Label><Input id="end-date" type="date" min={startDate} value={endDate} onChange={(event) => setEndDate(event.target.value)} /></div>
-                        )}
-                      </div>
-                      {durationType === 'horas' && (
+                        <div className="space-y-2">
+                          <Label htmlFor="duration-type">Duración</Label>
+                          <Select value={durationType} onValueChange={(value) => setDurationType(value as LeaveDurationType)}>
+                            <SelectTrigger id="duration-type" className="min-h-12 text-base"><SelectValue /></SelectTrigger>
+                            <SelectContent>{durationOptions.map((duration) => <SelectItem key={duration} value={duration}>{LEAVE_DURATION_TYPE_LABELS[duration]}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
                         <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="space-y-2"><Label htmlFor="start-time"><Clock3 className="mr-1 inline size-4" />Hora inicial</Label><Input id="start-time" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} /></div>
-                          <div className="space-y-2"><Label htmlFor="end-time"><Clock3 className="mr-1 inline size-4" />Hora final</Label><Input id="end-time" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} /></div>
+                          <div className="space-y-2">
+                            <Label htmlFor="start-date"><CalendarDays className="mr-1.5 inline size-4 text-primary" />Fecha {durationType === 'dias_completos' ? 'inicial' : 'del permiso'}</Label>
+                            <Input id="start-date" type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); if (durationType !== 'dias_completos') setEndDate(event.target.value); }} className="min-h-12 text-base" required />
+                          </div>
+                          {durationType === 'dias_completos' && (
+                            <div className="space-y-2">
+                              <Label htmlFor="end-date"><CalendarDays className="mr-1.5 inline size-4 text-primary" />Fecha final</Label>
+                              <Input id="end-date" type="date" min={startDate} value={endDate} onChange={(event) => setEndDate(event.target.value)} className="min-h-12 text-base" required />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div className="space-y-2">
-                        <Label htmlFor="reason">Motivo</Label>
-                        <Textarea id="reason" value={reason} onChange={(event) => setReason(event.target.value)} minLength={10} maxLength={1000} rows={4} placeholder="Describe brevemente el motivo de tu solicitud" />
-                        <p className="text-right text-xs text-muted-foreground">{reason.trim().length}/1000</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="support"><FileUp className="mr-1 inline size-4" />Soporte {selectedType?.requires_document ? '(obligatorio)' : '(opcional)'}</Label>
-                        <Input id="support" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setFile(event.target.files?.[0] || null)} className="h-auto py-2" />
-                        <p className="text-xs text-muted-foreground">PDF, JPG o PNG. Máximo 10 MB. {selectedType?.document_description}</p>
-                      </div>
-                      <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-between">
-                        <Button type="button" variant="ghost" onClick={() => { setError(''); setStep('identify'); }}><ArrowLeft className="mr-2 size-4" /> Volver</Button>
-                        <Button className="h-11 sm:min-w-48" disabled={isSubmitting}>
-                          {isSubmitting ? <Loader2 className="mr-2 size-4 animate-spin" /> : <ShieldCheck className="mr-2 size-4" />} Radicar solicitud
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </form>
+                        {durationType === 'horas' && (
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2"><Label htmlFor="start-time"><Clock3 className="mr-1.5 inline size-4 text-primary" />Hora inicial</Label><Input id="start-time" type="time" value={startTime} onChange={(event) => setStartTime(event.target.value)} className="min-h-12 text-base" required /></div>
+                            <div className="space-y-2"><Label htmlFor="end-time"><Clock3 className="mr-1.5 inline size-4 text-primary" />Hora final</Label><Input id="end-time" type="time" value={endTime} onChange={(event) => setEndTime(event.target.value)} className="min-h-12 text-base" required /></div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <Label htmlFor="reason">Motivo</Label>
+                          <Textarea id="reason" value={reason} onChange={(event) => setReason(event.target.value)} minLength={10} maxLength={1000} rows={4} placeholder="Describe brevemente el motivo de tu solicitud" className="min-h-28 resize-y text-base" required />
+                          <div className="flex justify-between gap-3 text-xs text-muted-foreground"><span>Mínimo 10 caracteres</span><span>{reason.trim().length}/1000</span></div>
+                        </div>
+                        <div className="space-y-2 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
+                          <Label htmlFor="support" className="flex items-center"><FileUp className="mr-2 size-4 text-primary" />Soporte {selectedType?.requires_document ? '(obligatorio)' : '(opcional)'}</Label>
+                          <Input id="support" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setFile(event.target.files?.[0] || null)} className="h-auto min-h-12 bg-card py-2 text-base file:mr-3" required={selectedType?.requires_document} />
+                          <p className="text-xs leading-relaxed text-muted-foreground">PDF, JPG o PNG. Máximo 10 MB. {selectedType?.document_description}</p>
+                        </div>
+                        <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-between">
+                          <Button type="button" variant="ghost" className="min-h-12" onClick={() => { setError(''); setStep('identify'); }}><ArrowLeft className="mr-2 size-4" /> Volver</Button>
+                          <Button className="min-h-12 w-full text-base font-bold active:scale-[0.99] sm:w-auto sm:min-w-52" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 size-5 animate-spin" /> : <ShieldCheck className="mr-2 size-5" />} Radicar solicitud
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </form>
+                </CardContent>
+              </>
+            )}
+
+            {step === 'success' && (
+              <CardContent className="flex min-h-[520px] flex-col items-center justify-center px-5 py-10 text-center sm:px-10">
+                <span className="mb-5 flex size-20 items-center justify-center rounded-2xl bg-success-light text-success"><CheckCircle2 className="size-10" /></span>
+                <h1 className="font-display text-2xl font-black tracking-tight text-foreground sm:text-3xl">Solicitud radicada</h1>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">Tu solicitud ya está en el flujo de aprobación de {company?.name || 'la empresa'}.</p>
+                <div className="mt-7 w-full max-w-sm rounded-2xl border border-primary/25 bg-primary/5 px-5 py-5">
+                  <p className="text-xs font-bold text-muted-foreground">Número de radicado</p>
+                  <p className="mt-2 break-all font-mono text-xl font-black text-primary sm:text-2xl">{reference}</p>
+                </div>
+                <p className="mt-6 max-w-sm text-xs leading-relaxed text-muted-foreground">Guarda este número como constancia. Este enlace no permite consultar solicitudes ni datos personales.</p>
               </CardContent>
-            </>
-          )}
+            )}
+          </Card>
 
-          {step === 'success' && (
-            <CardContent className="flex min-h-[420px] flex-col items-center justify-center px-5 py-10 text-center sm:px-10">
-              <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-success-light text-success"><CheckCircle2 className="size-9" /></span>
-              <Badge variant="outline" className="mb-3">Paso 3 de 3</Badge>
-              <h1 className="text-2xl font-black tracking-tight sm:text-3xl">Solicitud radicada</h1>
-              <p className="mt-3 max-w-md text-sm text-muted-foreground">Guarda este número como constancia. La solicitud continuará por el flujo de aprobación interno de la empresa.</p>
-              <div className="mt-6 rounded-2xl border-2 border-primary/20 bg-primary/5 px-5 py-4">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Número de radicado</p>
-                <p className="mt-1 break-all font-mono text-xl font-black text-primary sm:text-2xl">{reference}</p>
-              </div>
-              <p className="mt-6 text-xs text-muted-foreground">Por seguridad, este enlace no permite consultar solicitudes ni datos personales.</p>
-            </CardContent>
-          )}
-        </Card>
-
-        <footer className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-muted-foreground">
-          <LockKeyhole className="size-3.5" /> Conexión segura · Tus datos se usan sólo para validar esta solicitud
-        </footer>
+          <footer className="mt-4 flex items-start justify-center gap-2 px-3 text-center text-xs leading-relaxed text-muted-foreground sm:items-center">
+            <LockKeyhole className="mt-0.5 size-3.5 shrink-0 sm:mt-0" /> Conexión cifrada. Tus datos se usan sólo para gestionar esta solicitud.
+          </footer>
+        </section>
       </div>
     </main>
   );
