@@ -63,6 +63,12 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+const getEmployeeOperationCenter = (request: LeaveRequest) => {
+  const workInfo = request.employees_v2?.employee_work_info;
+  const currentWorkInfo = workInfo?.find((item) => item.is_current) ?? workInfo?.[0];
+  return currentWorkInfo?.operation_centers?.name ?? 'Sin centro asignado';
+};
+
 export default function Permisos() {
   const [activeTab, setActiveTab] = useState('solicitudes');
   const [showNewRequestDialog, setShowNewRequestDialog] = useState(false);
@@ -85,14 +91,19 @@ export default function Permisos() {
   const isMobile = useIsMobile();
 
   // Filter requests
+  const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredRequests = requests.filter(request => {
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
     const employeeName = request.employees_v2
       ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}`.toLowerCase()
       : '';
-    const matchesSearch = !searchTerm || 
-      employeeName.includes(searchTerm.toLowerCase()) ||
-      getLeaveTypeLabel(request.leave_type, typeConfigs).toLowerCase().includes(searchTerm.toLowerCase());
+    const operationCenter = getEmployeeOperationCenter(request).toLowerCase();
+    const reference = request.public_reference?.toLowerCase() ?? '';
+    const matchesSearch = !normalizedSearch ||
+      employeeName.includes(normalizedSearch) ||
+      getLeaveTypeLabel(request.leave_type, typeConfigs).toLowerCase().includes(normalizedSearch) ||
+      operationCenter.includes(normalizedSearch) ||
+      reference.includes(normalizedSearch);
     return matchesStatus && matchesSearch;
   });
 
@@ -244,7 +255,7 @@ export default function Permisos() {
                 <Search className="h-5 w-5 text-muted-foreground" />
               </div>
               <Input
-                placeholder="Buscar empleado o tipo de permiso..."
+                placeholder="Buscar empleado, centro, tipo o radicado..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-11 h-14 rounded-2xl bg-background border-none shadow-sm text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary/50"
@@ -287,6 +298,13 @@ export default function Permisos() {
                             </Badge>
                           ),
                           fields: [
+                            { label: 'Centro de operación', value: getEmployeeOperationCenter(request) },
+                            {
+                              label: 'N.º de radicado',
+                              value: request.public_reference
+                                ? <span className="font-mono text-xs text-primary">{request.public_reference}</span>
+                                : <span className="text-muted-foreground">—</span>,
+                            },
                             { label: 'Días', value: `${request.total_days}` },
                             { label: 'Fechas', value: `${formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - ${formatDateOnly(request.end_date, 'dd MMM', { locale: es })}` },
                           ],
@@ -302,23 +320,25 @@ export default function Permisos() {
                 <TableHeader className="bg-background">
                   <TableRow className="hover:bg-transparent border-b-primary/5">
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Empleado</TableHead>
+                    <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Centro de operación</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Tipo</TableHead>
                     <TableHead className="hidden md:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Fechas</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5 text-center">Días</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Estado</TableHead>
-                    <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Solicitado</TableHead>
+                    <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">N.º de radicado</TableHead>
+                    <TableHead className="hidden xl:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Solicitado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
+                      <TableCell colSpan={8} className="text-center py-8">
                         Cargando solicitudes...
                       </TableCell>
                     </TableRow>
                   ) : filteredRequests.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                         No se encontraron solicitudes
                       </TableCell>
                     </TableRow>
@@ -340,6 +360,11 @@ export default function Permisos() {
                                 : 'N/A'}
                             </span>
                           </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          <span className="block max-w-48 truncate text-xs font-medium text-muted-foreground" title={getEmployeeOperationCenter(request)}>
+                            {getEmployeeOperationCenter(request)}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -363,7 +388,16 @@ export default function Permisos() {
                             {getRequestStatusLabel(request)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground hidden lg:table-cell text-xs font-medium">
+                        <TableCell className="hidden lg:table-cell">
+                          {request.public_reference ? (
+                            <span className="inline-flex whitespace-nowrap rounded-md border border-primary/15 bg-primary/5 px-2 py-1 font-mono text-[10px] font-semibold text-primary">
+                              {request.public_reference}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden xl:table-cell text-xs font-medium">
                           {format(new Date(request.requested_at), 'dd/MM/yyyy', { locale: es })}
                         </TableCell>
                       </TableRow>
