@@ -44,6 +44,15 @@ export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDia
   const rotate = useRotateLeavePublicLink();
   const revoke = useRevokeLeavePublicLink();
 
+  const savedLink = useMemo(() => {
+    if (!status.data?.token) return null;
+    const url = new URL('/solicitud-permiso', window.location.origin);
+    url.searchParams.set('token', status.data.token);
+    return url.toString();
+  }, [status.data?.token]);
+
+  const visibleLink = generatedLink ?? savedLink;
+
   useEffect(() => {
     if (!open) {
       setGeneratedLink(null);
@@ -67,8 +76,8 @@ export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDia
   };
 
   const copyLink = async () => {
-    if (!generatedLink) return;
-    await navigator.clipboard.writeText(generatedLink);
+    if (!visibleLink) return;
+    await navigator.clipboard.writeText(visibleLink);
     setCopied(true);
     toast.success('Enlace copiado');
   };
@@ -121,13 +130,13 @@ export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDia
                 <Badge variant={isActive ? 'default' : 'secondary'}>{isActive ? 'Activo' : status.data?.expired ? 'Vencido' : 'Inactivo'}</Badge>
               </div>
 
-              {generatedLink && (
+              {visibleLink && (
                 <Alert className="border-emerald-200 bg-emerald-50 text-emerald-950">
                   <ShieldCheck className="size-4" />
                   <AlertDescription className="space-y-3">
-                    <p><strong>Guarda este enlace ahora.</strong> Por seguridad, el token no podrá volver a mostrarse.</p>
+                    <p><strong>Enlace listo para compartir.</strong> Podrás volver a consultarlo mientras permanezca activo.</p>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                      <Input value={generatedLink} readOnly className="bg-white font-mono text-xs" aria-label="Enlace público generado" />
+                      <Input value={visibleLink} readOnly className="bg-white font-mono text-xs" aria-label="Enlace público generado" />
                       <Button type="button" onClick={copyLink} className="shrink-0">
                         {copied ? <Check className="mr-2 size-4" /> : <Copy className="mr-2 size-4" />}
                         {copied ? 'Copiado' : 'Copiar'}
@@ -137,11 +146,11 @@ export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDia
                 </Alert>
               )}
 
-              {!generatedLink && status.data?.active && (
+              {!visibleLink && status.data?.active && (
                 <Alert>
                   <ShieldCheck className="size-4" />
                   <AlertDescription>
-                    El token se almacena únicamente como un hash y no puede recuperarse. Si perdiste el enlace, regenéralo.
+                    Este enlace fue creado antes de habilitar la consulta permanente. Regénéralo una sola vez para poder verlo y copiarlo en futuras visitas.
                   </AlertDescription>
                 </Alert>
               )}

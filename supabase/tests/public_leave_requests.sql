@@ -1,6 +1,6 @@
 begin;
 
-select plan(33);
+select plan(37);
 
 create temp table public_leave_test_state (
   key text primary key,
@@ -70,6 +70,12 @@ select throws_ok(
   'No tienes permiso para administrar el enlace público.',
   'a company member without the dedicated permission cannot create a public link'
 );
+select throws_ok(
+  $$select public.get_leave_public_link_status('d2000000-0000-0000-0000-000000000001')$$,
+  '42501',
+  'No tienes permiso para administrar el enlace público.',
+  'a company member without the dedicated permission cannot retrieve the public link'
+);
 
 reset role;
 set local role authenticated;
@@ -87,6 +93,15 @@ select 'token_one', public.rotate_leave_public_link(
 select ok(
   (public.get_leave_public_link_status('d2000000-0000-0000-0000-000000000001')->>'active')::boolean,
   'an administrator can create and inspect the active link'
+);
+select is(
+  public.get_leave_public_link_status('d2000000-0000-0000-0000-000000000001')->>'token',
+  (select value from public_leave_test_state where key = 'token_one'),
+  'an administrator can retrieve the same active token later'
+);
+select ok(
+  (public.get_leave_public_link_status('d2000000-0000-0000-0000-000000000001')->>'token_available')::boolean,
+  'the status reports that the encrypted active token is available'
 );
 select throws_ok(
   $$insert into public.leave_requests (
@@ -110,6 +125,13 @@ select is(
   (select octet_length(token_hash) from public.leave_public_access_tokens where is_active),
   32,
   'only a 256-bit SHA-256 token hash is stored'
+);
+select isnt(
+  (select secret from vault.secrets where id = (
+    select vault_secret_id from public.leave_public_access_tokens where is_active
+  )),
+  (select value from public_leave_test_state where key = 'token_one'),
+  'Vault never stores the recoverable token as plaintext'
 );
 
 set local role authenticated;
@@ -232,7 +254,7 @@ select throws_ok(
   ),
   '22023',
   'Este tipo de permiso requiere un soporte.',
-  'a leave type that requires evidence cannot be submitted without a private file path'
+  'request JSON leave types resolve against enum-backed configuration before evidence validation'
 );
 reset role;
 update public.leave_type_config
