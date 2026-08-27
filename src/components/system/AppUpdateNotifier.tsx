@@ -11,7 +11,7 @@ const CURRENT_BUILD_ID = import.meta.env.VITE_BUILD_ID;
 const ACKNOWLEDGED_UPDATE_KEY = 'empatiq_acknowledged_update_version';
 const APPLYING_UPDATE_KEY = 'empatiq_applying_update_version';
 
-const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos'];
+const PUBLIC_ROUTES = ['/registro', '/capacitacion', '/descargos', '/solicitud-permiso'];
 
 type VersionResponse = {
   version?: string;

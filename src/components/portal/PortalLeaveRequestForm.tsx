@@ -103,7 +103,7 @@ export function PortalLeaveRequestForm({
 
           <div className="space-y-2">
             <Label>Motivo</Label>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Describe el motivo..." required />
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Describe el motivo..." required minLength={10} />
           </div>
 
           <DialogFooter>

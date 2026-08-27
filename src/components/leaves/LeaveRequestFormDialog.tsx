@@ -133,6 +133,7 @@ export function LeaveRequestFormDialog({
   const activeLeaveTypes = leaveTypeConfigs.filter(c => c.is_active);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let uploadedPath: string | null = null;
     try {
       let totalDays = calculatedDays;
       let totalHours: number | undefined;
@@ -150,7 +151,6 @@ export function LeaveRequestFormDialog({
       // Upload document if provided
       if (documentFile && currentCompanyId) {
         setIsUploading(true);
-        const fileExt = documentFile.name.split('.').pop();
         const sanitized = documentFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
         const filePath = `${currentCompanyId}/leaves/${values.employee_id}/${Date.now()}_${sanitized}`;
 
@@ -159,6 +159,7 @@ export function LeaveRequestFormDialog({
           .upload(filePath, documentFile, { cacheControl: '3600', upsert: false });
 
         if (uploadError) throw uploadError;
+        uploadedPath = filePath;
         documentUrl = filePath;
         documentName = documentFile.name;
         setIsUploading(false);
@@ -183,9 +184,12 @@ export function LeaveRequestFormDialog({
       form.reset();
       setDocumentFile(null);
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      if (uploadedPath) {
+        await supabase.storage.from('documents').remove([uploadedPath]);
+      }
       setIsUploading(false);
-      toast.error(error.message || 'Error al crear la solicitud');
+      toast.error(error instanceof Error ? error.message : 'Error al crear la solicitud');
     }
   }
 

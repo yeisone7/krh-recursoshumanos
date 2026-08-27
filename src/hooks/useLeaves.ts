@@ -11,7 +11,6 @@ import {
   LeaveRequestStatus 
 } from '@/types/leave';
 import { addDays, format } from 'date-fns';
-import { parseDateOnlyOr } from '@/lib/dateOnly';
 import { useHolidaysSet } from '@/hooks/useHolidays';
 
 // =============================================
@@ -342,7 +341,6 @@ export function useLeaveRequest(id: string) {
 
 export function useCreateLeaveRequest() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (request: {
@@ -359,40 +357,23 @@ export function useCreateLeaveRequest() {
       document_url?: string;
       document_name?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('leave_requests')
-        .insert({
-          ...request,
-          company_id: currentCompanyId!,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('create_leave_request_workflow', {
+        p_request: {
+          employee_id: request.employee_id,
+          leave_type: request.leave_type,
+          duration_type: request.duration_type,
+          start_date: request.start_date,
+          end_date: request.end_date,
+          start_time: request.start_time || null,
+          end_time: request.end_time || null,
+          reason: request.reason,
+          document_url: request.document_url || null,
+          document_name: request.document_name || null,
+        },
+      });
 
       if (error) throw error;
-
-      // Update pending days in balance
-      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
-      
-      // Get existing balance
-      const { data: existingBalance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type', request.leave_type)
-        .eq('year', year)
-        .single();
-
-      if (existingBalance) {
-        await supabase
-          .from('leave_balances')
-          .update({
-            pending_days: existingBalance.pending_days + request.total_days,
-          })
-          .eq('id', existingBalance.id);
-      }
-
-      return data;
+      return data as LeaveRequest;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave_requests'] });

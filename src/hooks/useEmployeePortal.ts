@@ -306,20 +306,16 @@ export function useEmployeePortal() {
       if (!employeeLink?.employee_id || !employee?.company_id || !user?.id) {
         throw new Error('No hay empleado vinculado');
       }
-      const insertData = {
+      const workflowRequest = {
         employee_id: employeeLink.employee_id,
-        company_id: employee.company_id,
-        leave_type: request.leave_type as 'permiso_personal',
+        leave_type: request.leave_type,
         duration_type: 'dias_completos' as const,
         start_date: request.start_date,
         end_date: request.end_date,
-        total_days: request.total_days,
         reason: request.reason,
-        created_by: user.id,
       };
       const { error } = await supabase
-        .from('leave_requests')
-        .insert(insertData);
+        .rpc('create_leave_request_workflow', { p_request: workflowRequest });
       if (error) throw error;
     },
     onSuccess: () => {
