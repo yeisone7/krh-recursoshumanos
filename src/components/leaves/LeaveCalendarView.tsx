@@ -79,7 +79,7 @@ function getEmployeeCenter(request: LeaveRequest) {
 
 function getStatusBadgeClass(status: LeaveRequestStatus) {
   if (status === 'aprobado') return 'border-success/30 bg-success/10 text-success';
-  if (status === 'pendiente') return 'border-warning/40 bg-warning/10 text-warning-foreground';
+  if (status === 'pendiente') return 'border-warning/40 bg-warning-light text-warning';
   if (status === 'rechazado') return 'border-destructive/30 bg-destructive/10 text-destructive';
   return 'border-border bg-muted text-muted-foreground';
 }
@@ -239,7 +239,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
               <div
                 key={day}
                 className={cn(
-                  'px-2 py-2.5 text-center text-[11px] font-semibold text-muted-foreground lg:text-xs',
+                  'px-2 py-2 text-center text-[10px] font-semibold text-muted-foreground lg:text-[11px]',
                   index >= 5 && 'bg-muted/30',
                 )}
               >
@@ -257,15 +257,15 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                 <div
                   key={day.toISOString()}
                   className={cn(
-                    'min-h-[7.25rem] border-b border-r border-border/60 p-1.5 last:border-r-0 lg:min-h-[8.5rem] lg:p-2',
+                    'min-h-[5.5rem] border-b border-r border-border/60 p-1 last:border-r-0 lg:min-h-[6.25rem] lg:p-1.5',
                     isWeekend && 'bg-muted/20',
                     !isSameMonth(day, currentDate) && 'bg-muted/10 text-muted-foreground/60',
                   )}
                 >
-                  <div className="mb-1.5 flex items-center justify-between">
+                  <div className="mb-1 flex items-center justify-between">
                     <span
                       className={cn(
-                        'flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-xs font-semibold',
+                        'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold',
                         isToday && 'bg-primary text-primary-foreground',
                       )}
                     >
@@ -275,7 +275,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                       <span className="text-[10px] text-muted-foreground">{dayRequests.length}</span>
                     )}
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     {dayRequests.slice(0, 3).map((request) => {
                       const color = getTypeColor(request.leave_type);
                       return (
@@ -283,7 +283,7 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
                           key={request.id}
                           type="button"
                           className={cn(
-                            'group w-full overflow-hidden rounded-md border px-1.5 py-1 text-left transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                            'group w-full overflow-hidden rounded-md border px-1.5 py-0.5 text-left transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                             request.status === 'pendiente' && 'border-dashed',
                             (request.status === 'rechazado' || request.status === 'cancelado') && 'opacity-55',
                           )}
