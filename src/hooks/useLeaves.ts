@@ -423,65 +423,57 @@ export function useUpdateLeaveRequest() {
   });
 }
 
-export function useApproveLeaveRequest() {
+interface LeaveDecisionInput {
+  id: string;
+  approved: boolean;
+  observations?: string;
+  rejectionReason?: string;
+}
+
+export function useManagerLeaveDecision() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ id, review_notes }: { id: string; review_notes?: string }) => {
-      // First get the request details
-      const { data: request, error: fetchError } = await supabase
-        .from('leave_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Update request status
-      const { data, error } = await supabase
-        .from('leave_requests')
-        .update({
-          status: 'aprobado' as LeaveRequestStatus,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id,
-          review_notes,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Update balance: move from pending to used
-      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
-      const { data: existingBalance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type', request.leave_type)
-        .eq('year', year)
-        .single();
-
-      if (existingBalance) {
-        await supabase
-          .from('leave_balances')
-          .update({
-            pending_days: Math.max(0, existingBalance.pending_days - request.total_days),
-            used_days: existingBalance.used_days + request.total_days,
-          })
-          .eq('id', existingBalance.id);
-      }
-
-      // Cleanup conflicting shift assignments
-      await cleanupShiftAssignments({
-        employeeId: request.employee_id,
-        startDate: request.start_date,
-        endDate: request.end_date,
-        absenceType: 'permiso',
+    mutationFn: async ({ id, approved, observations, rejectionReason }: LeaveDecisionInput) => {
+      const { data, error } = await supabase.rpc('decide_leave_as_manager', {
+        p_request_id: id,
+        p_approved: approved,
+        p_observations: observations || null,
+        p_rejection_reason: rejectionReason || null,
       });
+      if (error) throw error;
+      return data as LeaveRequest;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['leave_balances'] });
+    },
+  });
+}
 
-      return data;
+export function useAreaLeaderLeaveDecision() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, approved, observations, rejectionReason }: LeaveDecisionInput) => {
+      const { data, error } = await supabase.rpc('decide_leave_as_area_leader', {
+        p_request_id: id,
+        p_approved: approved,
+        p_observations: observations || null,
+        p_rejection_reason: rejectionReason || null,
+      });
+      if (error) throw error;
+      const decidedRequest = data as LeaveRequest;
+
+      if (approved) {
+        await cleanupShiftAssignments({
+          employeeId: decidedRequest.employee_id,
+          startDate: decidedRequest.start_date,
+          endDate: decidedRequest.end_date,
+          absenceType: 'permiso',
+        });
+      }
+      return decidedRequest;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
@@ -491,123 +483,17 @@ export function useApproveLeaveRequest() {
   });
 }
 
-export function useRejectLeaveRequest() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  return useMutation({
-    mutationFn: async ({ id, rejection_reason }: { id: string; rejection_reason: string }) => {
-      // First get the request details
-      const { data: request, error: fetchError } = await supabase
-        .from('leave_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Update request status
-      const { data, error } = await supabase
-        .from('leave_requests')
-        .update({
-          status: 'rechazado' as LeaveRequestStatus,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user?.id,
-          rejection_reason,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Remove from pending days
-      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
-      const { data: existingBalance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type', request.leave_type)
-        .eq('year', year)
-        .single();
-
-      if (existingBalance) {
-        await supabase
-          .from('leave_balances')
-          .update({
-            pending_days: Math.max(0, existingBalance.pending_days - request.total_days),
-          })
-          .eq('id', existingBalance.id);
-      }
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
-      queryClient.invalidateQueries({ queryKey: ['leave_balances'] });
-    },
-  });
-}
-
 export function useCancelLeaveRequest() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, cancellation_reason }: { id: string; cancellation_reason: string }) => {
-      // First get the request details
-      const { data: request, error: fetchError } = await supabase
-        .from('leave_requests')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Update request status
-      const { data, error } = await supabase
-        .from('leave_requests')
-        .update({
-          status: 'cancelado' as LeaveRequestStatus,
-          cancelled_at: new Date().toISOString(),
-          cancelled_by: user?.id,
-          cancellation_reason,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
+      const { data, error } = await supabase.rpc('cancel_leave_request_workflow', {
+        p_request_id: id,
+        p_reason: cancellation_reason,
+      });
       if (error) throw error;
-
-      // Restore balance based on previous status
-      const year = parseDateOnlyOr(request.start_date, new Date()).getFullYear();
-      const { data: existingBalance } = await supabase
-        .from('leave_balances')
-        .select('*')
-        .eq('employee_id', request.employee_id)
-        .eq('leave_type', request.leave_type)
-        .eq('year', year)
-        .single();
-
-      if (existingBalance) {
-        if (request.status === 'pendiente') {
-          await supabase
-            .from('leave_balances')
-            .update({
-              pending_days: Math.max(0, existingBalance.pending_days - request.total_days),
-            })
-            .eq('id', existingBalance.id);
-        } else if (request.status === 'aprobado') {
-          await supabase
-            .from('leave_balances')
-            .update({
-              used_days: Math.max(0, existingBalance.used_days - request.total_days),
-            })
-            .eq('id', existingBalance.id);
-        }
-      }
-
-      return data;
+      return data as LeaveRequest;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leave_requests'] });

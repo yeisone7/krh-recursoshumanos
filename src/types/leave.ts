@@ -15,6 +15,8 @@ export type LeaveType = string;
 
 export type LeaveRequestStatus = 'pendiente' | 'aprobado' | 'rechazado' | 'cancelado';
 
+export type LeaveApprovalStage = 'pending_manager' | 'pending_area_leader' | 'approved' | 'rejected';
+
 export type LeaveDurationType = 'dias_completos' | 'medio_dia' | 'horas';
 
 // Leave Type Labels
@@ -61,6 +63,13 @@ export const LEAVE_STATUS_LABELS: Record<LeaveRequestStatus, string> = {
   aprobado: 'Aprobado',
   rechazado: 'Rechazado',
   cancelado: 'Cancelado',
+};
+
+export const LEAVE_APPROVAL_STAGE_LABELS: Record<LeaveApprovalStage, string> = {
+  pending_manager: 'Pendiente de jefe inmediato',
+  pending_area_leader: 'Pendiente de líder de área',
+  approved: 'Flujo aprobado',
+  rejected: 'Flujo cerrado',
 };
 
 export const LEAVE_DURATION_TYPE_LABELS: Record<LeaveDurationType, string> = {
@@ -128,6 +137,17 @@ export interface LeaveRequest {
   document_url?: string;
   document_name?: string;
   status: LeaveRequestStatus;
+  approval_stage: LeaveApprovalStage;
+  manager_approved: boolean | null;
+  manager_approved_by: string | null;
+  manager_approved_at: string | null;
+  manager_approver_name: string | null;
+  manager_observations: string | null;
+  area_leader_approved: boolean | null;
+  area_leader_approved_by: string | null;
+  area_leader_approved_at: string | null;
+  area_leader_approver_name: string | null;
+  area_leader_observations: string | null;
   requested_at: string;
   reviewed_at?: string;
   reviewed_by?: string;
