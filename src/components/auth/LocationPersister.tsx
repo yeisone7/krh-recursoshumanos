@@ -11,15 +11,19 @@ const IGNORED_PATHS = [
   '/registro',
   '/capacitacion',
   '/descargos',
+  '/solicitud-permiso',
   '/verificar-certificado',
 ];
 const LAST_PATH_KEY = 'empatiq_last_visited_path';
 
-const isIgnoredPath = (pathname: string) => (
+// Exported for the regression test that protects public-route isolation.
+// eslint-disable-next-line react-refresh/only-export-components
+export const isIgnoredPath = (pathname: string) => (
   IGNORED_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))
 );
 
-const getRestorablePath = (value: string | null) => {
+// eslint-disable-next-line react-refresh/only-export-components
+export const getRestorablePath = (value: string | null) => {
   if (!value || value === '/') return null;
 
   try {

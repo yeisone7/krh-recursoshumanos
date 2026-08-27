@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,6 +13,7 @@ import {
   FileUp,
   Loader2,
   LockKeyhole,
+  LogIn,
   ShieldCheck,
   UserRoundCheck,
 } from 'lucide-react';
@@ -23,7 +25,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
+import { buildDateOnlyFromParts, todayDateOnlyString } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 import { LeaveDurationType, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
 
@@ -55,6 +58,19 @@ interface FunctionErrorLike {
   context?: { json?: () => Promise<{ error?: string }> };
 }
 
+const publicSupabase = createClient<Database>(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+      storageKey: 'empatiq-public-leave-auth',
+    },
+  },
+);
+
 async function errorMessage(error: unknown, fallback: string) {
   const functionError = error as FunctionErrorLike | null;
   try {
@@ -70,6 +86,25 @@ const REQUEST_STEPS = [
   { label: 'Completa', description: 'Cuéntanos tu solicitud' },
   { label: 'Radica', description: 'Recibe tu número' },
 ];
+
+const BIRTH_MONTHS = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
+
+const BIRTH_DAYS = Array.from({ length: 31 }, (_, index) => String(index + 1));
+const MIN_BIRTH_YEAR = 1900;
+const CURRENT_YEAR = new Date().getFullYear();
 
 function CompanyIdentity({ company }: { company: PublicCompany | null }) {
   return (
@@ -147,7 +182,9 @@ export default function PublicLeaveRequest() {
   const [company, setCompany] = useState<PublicCompany | null>(null);
   const [documentType, setDocumentType] = useState('CC');
   const [documentNumber, setDocumentNumber] = useState('');
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [session, setSession] = useState('');
   const [firstName, setFirstName] = useState('');
   const [leaveTypes, setLeaveTypes] = useState<PublicLeaveType[]>([]);
@@ -167,6 +204,10 @@ export default function PublicLeaveRequest() {
     () => leaveTypes.find((item) => item.leave_type === leaveType) || null,
     [leaveType, leaveTypes],
   );
+  const birthDate = useMemo(
+    () => buildDateOnlyFromParts(birthYear, birthMonth, birthDay),
+    [birthDay, birthMonth, birthYear],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -175,7 +216,7 @@ export default function PublicLeaveRequest() {
         setStep('invalid');
         return;
       }
-      const { data, error: contextError } = await supabase.functions.invoke('public-leave-request', {
+      const { data, error: contextError } = await publicSupabase.functions.invoke('public-leave-request', {
         body: { action: 'context', token },
       }) as FunctionResult<{ valid: boolean; company: PublicCompany }>;
       if (cancelled) return;
@@ -193,12 +234,16 @@ export default function PublicLeaveRequest() {
   const identify = async (event: FormEvent) => {
     event.preventDefault();
     setError('');
-    if (!documentNumber.trim() || !birthDate) {
+    if (!documentNumber.trim() || !birthDay || !birthMonth || !birthYear) {
       setError('Completa todos los datos de identificación.');
       return;
     }
+    if (!birthDate || birthDate < `${MIN_BIRTH_YEAR}-01-01` || birthDate > todayDateOnlyString()) {
+      setError('Revisa la fecha de nacimiento ingresada.');
+      return;
+    }
     setIsSubmitting(true);
-    const { data, error: identifyError } = await supabase.functions.invoke('public-leave-request', {
+    const { data, error: identifyError } = await publicSupabase.functions.invoke('public-leave-request', {
       body: {
         action: 'identify',
         token,
@@ -258,7 +303,7 @@ export default function PublicLeaveRequest() {
     if (file) form.append('file', file);
 
     setIsSubmitting(true);
-    const { data, error: submitError } = await supabase.functions.invoke('public-leave-request', { body: form }) as FunctionResult<{ reference: string }>;
+    const { data, error: submitError } = await publicSupabase.functions.invoke('public-leave-request', { body: form }) as FunctionResult<{ reference: string }>;
     setIsSubmitting(false);
     if (submitError || !data?.reference) {
       setError(await errorMessage(submitError, 'No fue posible registrar la solicitud.'));
@@ -269,6 +314,7 @@ export default function PublicLeaveRequest() {
   };
 
   const progress = step === 'identify' ? 1 : step === 'request' ? 2 : step === 'success' ? 3 : 0;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
   const durationOptions = useMemo(
     () => selectedType
       ? (['dias_completos', ...(selectedType.allows_half_day ? ['medio_dia'] : []), ...(selectedType.allows_hours ? ['horas'] : [])] as LeaveDurationType[])
@@ -287,10 +333,21 @@ export default function PublicLeaveRequest() {
       <header className="relative border-b border-border/70 bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:min-h-[76px] sm:px-6 lg:px-8">
           <CompanyIdentity company={company} />
-          <Badge variant="outline" className="hidden min-h-8 gap-2 border-primary/20 bg-primary/5 px-3 text-primary sm:flex">
-            <ShieldCheck className="size-4" aria-hidden="true" />
-            Portal seguro
-          </Badge>
+          <div className="flex shrink-0 items-center gap-2">
+            {isStandalone && (
+              <Button asChild variant="outline" size="sm" className="min-h-9 bg-background/80">
+                <a href="/" aria-label="Volver a la plataforma EmpatiQ">
+                  <LogIn className="mr-2 size-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">Volver a EmpatiQ</span>
+                  <span className="sm:hidden">Volver</span>
+                </a>
+              </Button>
+            )}
+            <Badge variant="outline" className="hidden min-h-8 gap-2 border-primary/20 bg-primary/5 px-3 text-primary sm:flex">
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              Portal seguro
+            </Badge>
+          </div>
         </div>
       </header>
 
@@ -400,8 +457,43 @@ export default function PublicLeaveRequest() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="birth-date">Fecha de nacimiento</Label>
-                      <Input id="birth-date" type="date" value={birthDate} onChange={(event) => setBirthDate(event.target.value)} max={new Date().toISOString().slice(0, 10)} autoComplete="bday" className="min-h-12 text-base" required />
+                      <Label id="birth-date-label">Fecha de nacimiento</Label>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-[100px_minmax(0,1fr)_130px]" role="group" aria-labelledby="birth-date-label">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="birth-day" className="text-xs text-muted-foreground">Día</Label>
+                          <Select value={birthDay} onValueChange={setBirthDay}>
+                            <SelectTrigger id="birth-day" className="min-h-12 text-base"><SelectValue placeholder="Día" /></SelectTrigger>
+                            <SelectContent>{BIRTH_DAYS.map((day) => <SelectItem key={day} value={day}>{day}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="birth-month" className="text-xs text-muted-foreground">Mes</Label>
+                          <Select value={birthMonth} onValueChange={setBirthMonth}>
+                            <SelectTrigger id="birth-month" className="min-h-12 text-base"><SelectValue placeholder="Mes" /></SelectTrigger>
+                            <SelectContent>{BIRTH_MONTHS.map((month, index) => <SelectItem key={month} value={String(index + 1)}>{month}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2 space-y-1.5 sm:col-span-1">
+                          <Label htmlFor="birth-year" className="text-xs text-muted-foreground">Año</Label>
+                          <Input
+                            id="birth-year"
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="bday-year"
+                            pattern="[0-9]{4}"
+                            maxLength={4}
+                            placeholder="Ej. 1970"
+                            value={birthYear}
+                            onChange={(event) => setBirthYear(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                            aria-describedby="birth-date-help"
+                            className="min-h-12 text-base"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <p id="birth-date-help" className="text-xs leading-relaxed text-muted-foreground">
+                        Escribe el año directamente, entre {MIN_BIRTH_YEAR} y {CURRENT_YEAR}.
+                      </p>
                     </div>
                     <Alert className="border-primary/20 bg-primary/5 text-foreground">
                       <ShieldCheck className="size-4 text-primary" />

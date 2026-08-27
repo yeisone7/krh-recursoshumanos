@@ -31,6 +31,29 @@ export function todayDateOnlyString(): string {
   return toDateOnlyString(new Date());
 }
 
+export function buildDateOnlyFromParts(year: string, month: string, day: string): string {
+  if (!/^\d{4}$/.test(year) || !/^\d{1,2}$/.test(month) || !/^\d{1,2}$/.test(day)) return '';
+
+  const yearNumber = Number(year);
+  const monthNumber = Number(month);
+  const dayNumber = Number(day);
+  const date = new Date(yearNumber, monthNumber - 1, dayNumber, 12);
+
+  if (
+    yearNumber < 1
+    || monthNumber < 1
+    || monthNumber > 12
+    || dayNumber < 1
+    || date.getFullYear() !== yearNumber
+    || date.getMonth() !== monthNumber - 1
+    || date.getDate() !== dayNumber
+  ) {
+    return '';
+  }
+
+  return `${year}-${String(monthNumber).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+}
+
 export function formatDateOnly(
   value: Date | string | null | undefined,
   dateFormat: string,
