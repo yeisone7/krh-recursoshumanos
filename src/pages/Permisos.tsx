@@ -57,7 +57,6 @@ import {
   LeaveTypeConfig,
   LEAVE_APPROVAL_STAGE_LABELS,
   LEAVE_STATUS_LABELS,
-  LeaveRequestStatus,
 } from '@/types/leave';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { cn } from '@/lib/utils';
@@ -137,17 +136,20 @@ export default function Permisos() {
     }
   };
 
-  const getStatusBadgeVariant = (status: LeaveRequestStatus) => {
-    switch (status) {
-      case 'aprobado':
-        return 'default';
-      case 'rechazado':
-        return 'destructive';
-      case 'cancelado':
-        return 'secondary';
-      default:
-        return 'outline';
+  const getStatusBadgeClass = (request: LeaveRequest) => {
+    if (request.status === 'aprobado') {
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/40 dark:text-emerald-300';
     }
+    if (request.status === 'rechazado') {
+      return 'border-red-200 bg-red-50 text-red-700 dark:border-red-800/60 dark:bg-red-950/40 dark:text-red-300';
+    }
+    if (request.status === 'cancelado') {
+      return 'border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-300';
+    }
+    if (request.approval_stage === 'pending_area_leader') {
+      return 'border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800/60 dark:bg-sky-950/40 dark:text-sky-300';
+    }
+    return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-300';
   };
 
   const getTypeColor = (leaveType: string) => {
@@ -280,7 +282,7 @@ export default function Permisos() {
                           title: request.employees_v2 ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}` : 'N/A',
                           subtitle: getLeaveTypeLabel(request.leave_type, typeConfigs),
                           badge: (
-                            <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
+                            <Badge variant="outline" className={cn('rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', getStatusBadgeClass(request))}>
                               {getRequestStatusLabel(request)}
                             </Badge>
                           ),
@@ -357,7 +359,7 @@ export default function Permisos() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusBadgeVariant(request.status)} className="rounded-lg font-bold text-[10px] uppercase tracking-wider px-2 py-0.5">
+                          <Badge variant="outline" className={cn('rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider', getStatusBadgeClass(request))}>
                             {getRequestStatusLabel(request)}
                           </Badge>
                         </TableCell>
