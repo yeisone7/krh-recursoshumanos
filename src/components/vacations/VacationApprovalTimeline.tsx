@@ -62,7 +62,7 @@ export function VacationApprovalTimeline({ request }: { request: VacationRequest
   const steps: Step[] = [
     {
       title: 'Jefe Inmediato',
-      subtitle: 'Reporte y registro de la solicitud, reemplazo y fecha de reingreso',
+      subtitle: 'Revisión y aprobación de la información registrada en la solicitud',
       status: managerStatus,
       date: request.manager_approved_at,
       approver: request.manager_approver_name,

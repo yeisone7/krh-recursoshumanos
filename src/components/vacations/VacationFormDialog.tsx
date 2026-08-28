@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarDays, CircleDollarSign, Info, Plane, Umbrella, UserRound } from 'lucide-react';
+import { BriefcaseBusiness, CalendarDays, CircleDollarSign, Info, Plane, Umbrella, UserRound } from 'lucide-react';
 
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/ui/searchable-select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/AuthContext';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateVacationRequest, useEmployeeVacationBalances, useVacationConfig } from '@/hooks/useVacations';
@@ -26,12 +28,29 @@ const requestSchema = z.object({
   start_date: z.string().min(1, 'Seleccione la fecha de inicio'),
   end_date: z.string().min(1, 'Seleccione la fecha final'),
   notes: z.string().max(1500, 'Máximo 1.500 caracteres').optional(),
+  replacement_requires_hiring: z.boolean(),
+  replacement_employee_id: z.string().optional(),
+  pending_activities: z.string().max(3000, 'Máximo 3.000 caracteres').optional(),
+  return_to_work_date: z.string().min(1, 'Seleccione la fecha de reingreso'),
+  report_observations: z.string().max(1500, 'Máximo 1.500 caracteres').optional(),
 }).superRefine((value, context) => {
   if (value.enjoyment_days + value.compensated_days <= 0) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['enjoyment_days'], message: 'Solicite al menos un día' });
   }
   if (value.start_date && value.end_date && value.end_date < value.start_date) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['end_date'], message: 'Debe ser posterior o igual al inicio' });
+  }
+  if (value.return_to_work_date && value.end_date && value.return_to_work_date < value.end_date) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['return_to_work_date'], message: 'Debe ser posterior o igual a la fecha final' });
+  }
+  if (!value.replacement_requires_hiring && !value.replacement_employee_id) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['replacement_employee_id'], message: 'Seleccione el empleado que realizará el reemplazo' });
+  }
+  if (!value.replacement_requires_hiring && !value.pending_activities?.trim()) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['pending_activities'], message: 'Detalle las actividades pendientes' });
+  }
+  if (value.replacement_employee_id && value.replacement_employee_id === value.employee_id) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['replacement_employee_id'], message: 'El reemplazo debe ser otro empleado' });
   }
 });
 
@@ -50,6 +69,7 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
   const { data: employees = [] } = useEmployees();
   const createRequest = useCreateVacationRequest();
   const { data: config } = useVacationConfig();
+  const { profile, user } = useAuth();
 
   const form = useForm<RequestForm>({
     resolver: zodResolver(requestSchema),
@@ -60,6 +80,11 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
       start_date: '',
       end_date: '',
       notes: '',
+      replacement_requires_hiring: false,
+      replacement_employee_id: '',
+      pending_activities: '',
+      return_to_work_date: '',
+      report_observations: '',
     },
   });
 
@@ -68,6 +93,7 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
   const compensatedDays = Number(form.watch('compensated_days') || 0);
   const startDate = form.watch('start_date');
   const endDate = form.watch('end_date');
+  const replacementRequiresHiring = form.watch('replacement_requires_hiring');
   const totalDays = enjoymentDays + compensatedDays;
   const { data: balances = [] } = useEmployeeVacationBalances(employeeId || undefined);
 
@@ -84,6 +110,23 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
     })),
     [activeEmployees],
   );
+  const replacementOptions = useMemo(
+    () => activeEmployees
+      .filter((employee) => employee.id !== employeeId)
+      .map((employee) => ({
+        value: employee.id,
+        label: `${employee.first_name} ${employee.middle_name || ''} ${employee.last_name} ${employee.second_last_name || ''}`.replace(/\s+/g, ' ').trim(),
+        keywords: employee.document_number,
+        suffix: <span className="ml-auto pl-3 text-xs text-muted-foreground">{employee.document_number}</span>,
+      })),
+    [activeEmployees, employeeId],
+  );
+  const reporterName = profile?.full_name?.trim()
+    || profile?.display_name?.trim()
+    || user?.user_metadata?.full_name
+    || user?.user_metadata?.name
+    || user?.email
+    || 'Usuario conectado';
 
   const availableDays = useMemo(
     () => balances.reduce((sum, balance) => sum + Math.max(Number(balance.days_available ?? balance.days_pending ?? 0), 0), 0),
@@ -106,9 +149,31 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
         start_date: '',
         end_date: '',
         notes: '',
+        replacement_requires_hiring: false,
+        replacement_employee_id: '',
+        pending_activities: '',
+        return_to_work_date: '',
+        report_observations: '',
       });
     }
   }, [form, open]);
+
+  useEffect(() => {
+    if (!endDate) {
+      form.setValue('return_to_work_date', '');
+      return;
+    }
+    const nextDay = parseDateOnlyOr(endDate, new Date());
+    nextDay.setDate(nextDay.getDate() + 1);
+    form.setValue('return_to_work_date', format(nextDay, 'yyyy-MM-dd'), { shouldValidate: true });
+  }, [endDate, form]);
+
+  useEffect(() => {
+    if (replacementRequiresHiring) {
+      form.setValue('replacement_employee_id', '');
+      form.setValue('pending_activities', '');
+    }
+  }, [form, replacementRequiresHiring]);
 
   const submit = async (values: RequestForm) => {
     await createRequest.mutateAsync(values);
@@ -230,6 +295,84 @@ export function VacationFormDialog({ open, onOpenChange }: VacationFormDialogPro
                     name="notes"
                     render={({ field }) => (
                       <FormItem className="sm:col-span-2"><FormLabel>Observaciones (opcional)</FormLabel><FormControl><Textarea rows={3} placeholder="Información adicional para los aprobadores..." className="resize-none rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
+                    )}
+                  />
+                </div>
+              </section>
+
+              <section className="overflow-hidden rounded-2xl border border-border/70 bg-background shadow-sm">
+                <div className="flex items-center gap-3 border-b border-border/60 bg-amber-50/70 px-5 py-4 dark:bg-amber-950/20">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200"><BriefcaseBusiness className="h-4 w-4" /></span>
+                  <div>
+                    <h3 className="font-bold">Reporte del jefe inmediato</h3>
+                    <p className="text-xs text-muted-foreground">Reemplazo, pendientes y fecha de reingreso.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-5 p-5">
+                  <FormField
+                    control={form.control}
+                    name="replacement_requires_hiring"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between gap-4 rounded-xl border p-4">
+                        <div><FormLabel>Reemplazo requiere nueva contratación</FormLabel><p className="mt-1 text-xs text-muted-foreground">Valor predeterminado: No</p></div>
+                        <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {!replacementRequiresHiring && (
+                    <FormField
+                      control={form.control}
+                      name="replacement_employee_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre o documento del reemplazo</FormLabel>
+                          <FormControl>
+                            <SearchableSelect
+                              options={replacementOptions}
+                              value={field.value || ''}
+                              onValueChange={field.onChange}
+                              placeholder="Buscar empleado activo..."
+                              searchPlaceholder="Nombre o documento..."
+                              emptyMessage="No hay empleados activos que coincidan."
+                              triggerClassName="h-11 rounded-xl"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="pending_activities"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Actividades pendientes a tener en cuenta</FormLabel>
+                        <FormControl><Textarea rows={4} placeholder="Detalle las actividades que recibirá el reemplazo..." className="resize-none rounded-xl" disabled={replacementRequiresHiring} {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="return_to_work_date"
+                      render={({ field }) => (
+                        <FormItem><FormLabel>Fecha de reingreso a labores</FormLabel><FormControl><Input type="date" min={endDate || today} className="h-11 rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
+                      )}
+                    />
+                    <div className="space-y-2"><FormLabel>Quien reporta</FormLabel><Input disabled value={reporterName} className="h-11 rounded-xl" /></div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="report_observations"
+                    render={({ field }) => (
+                      <FormItem><FormLabel>Observaciones del reporte</FormLabel><FormControl><Textarea rows={2} className="resize-none rounded-xl" {...field} /></FormControl><FormMessage /></FormItem>
                     )}
                   />
                 </div>

@@ -11344,6 +11344,8 @@ export type Database = {
           manager_approved_by: string | null
           manager_approver_name: string | null
           manager_observations: string | null
+          report_submitted_by: string | null
+          report_submitter_name: string | null
           payroll_recorded_days: number
           pending_activities: string | null
           pending_days_to_enjoy: number
@@ -11396,6 +11398,8 @@ export type Database = {
           manager_approved_by?: string | null
           manager_approver_name?: string | null
           manager_observations?: string | null
+          report_submitted_by?: string | null
+          report_submitter_name?: string | null
           payroll_recorded_days?: number
           pending_activities?: string | null
           pending_days_to_enjoy?: number
@@ -11448,6 +11452,8 @@ export type Database = {
           manager_approved_by?: string | null
           manager_approver_name?: string | null
           manager_observations?: string | null
+          report_submitted_by?: string | null
+          report_submitter_name?: string | null
           payroll_recorded_days?: number
           pending_activities?: string | null
           pending_days_to_enjoy?: number

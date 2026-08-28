@@ -93,6 +93,8 @@ export interface VacationRequest {
   manager_approved_at: string | null;
   manager_approver_name: string | null;
   manager_observations: string | null;
+  report_submitted_by: string | null;
+  report_submitter_name: string | null;
   contract_start_date: string | null;
   accrued_days_at_request: number;
   payroll_recorded_days: number;
@@ -166,7 +168,7 @@ export interface VacationBalanceSummary {
 }
 
 export const APPROVAL_STAGE_LABELS: Record<VacationApprovalStage, string> = {
-  pending_manager: 'Pendiente reporte del jefe inmediato',
+  pending_manager: 'Pendiente aprobación del jefe inmediato',
   pending_area_leader: 'Pendiente aprobación del líder de área',
   pending_talent_leader_visa: 'Aprobada · pendiente visado de Talento Humano',
   approved: 'Aprobada',
