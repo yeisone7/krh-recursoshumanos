@@ -142,7 +142,7 @@ export default function Vacaciones() {
             </TabsTrigger>
             <TabsTrigger value="calendar" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Calendar className="h-4 w-4 shrink-0" />
-              Mes
+              Calendario
             </TabsTrigger>
             <TabsTrigger value="alerts" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <AlertTriangle className="h-4 w-4 shrink-0" />
