@@ -112,6 +112,36 @@ const isCandidateInProcess = (status: string | null | undefined) =>
 const getCandidateFullName = (candidate: CandidateListItem) =>
   `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() || 'Candidato sin nombre';
 
+type RequisitionWithVacancyCodes = {
+  requisition_vacancy_codes?: Array<{ codigo_vacante_externa?: string | null }> | null;
+} | null | undefined;
+
+const getVacancyCodes = (requisition: RequisitionWithVacancyCodes): string[] =>
+  Array.from(new Set(
+    (requisition?.requisition_vacancy_codes || [])
+      .map((entry) => entry.codigo_vacante_externa?.trim())
+      .filter((code: string | undefined): code is string => Boolean(code)),
+  ));
+
+const VacancyCodeBadges = ({ codes }: { codes: string[] }) => {
+  if (codes.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1" aria-label="Códigos de la vacante">
+      {codes.map((code) => (
+        <Badge
+          key={code}
+          variant="outline"
+          className="w-fit border-violet-300 bg-violet-50 px-2 py-0.5 text-[9px] font-black tracking-wide text-violet-700 dark:border-violet-700 dark:bg-violet-950/40 dark:text-violet-300"
+          title={`Código de vacante: ${code}`}
+        >
+          {code}
+        </Badge>
+      ))}
+    </div>
+  );
+};
+
 export default function Seleccion() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
@@ -251,12 +281,14 @@ export default function Seleccion() {
       const requisition = (vacancy as any).personnel_requisitions;
       const requisitionCode = (requisition?.requisition_code || '').toLowerCase();
       const requisitionCargo = (requisition?.cargo_solicitado || '').toLowerCase();
+      const vacancyCodes = getVacancyCodes(requisition).join(' ').toLowerCase();
       const matchesSearch =
         !normalizedSearch ||
         vacancy.position_title.toLowerCase().includes(normalizedSearch) ||
         vacancy.department_area?.toLowerCase().includes(normalizedSearch) ||
         requisitionCode.includes(normalizedSearch) ||
-        requisitionCargo.includes(normalizedSearch);
+        requisitionCargo.includes(normalizedSearch) ||
+        vacancyCodes.includes(normalizedSearch);
       const matchesStatus = statusFilter === 'all' || vacancy.status === statusFilter;
       const matchesCenter =
         centerFilter === 'all' || vacancy.operation_center_id === centerFilter;
@@ -281,6 +313,7 @@ export default function Seleccion() {
       const centerName = (vacancy as any).operation_centers?.name || 'General';
       const requisition = (vacancy as any).personnel_requisitions;
       const requisitionCode = requisition?.requisition_code || 'RQ-PEND';
+      const vacancyCodes = getVacancyCodes(requisition);
 
       return {
         id: vacancy.id,
@@ -299,7 +332,17 @@ export default function Seleccion() {
           </div>
         ),
         fields: [
-          { label: 'Requisición', value: requisitionCode },
+          {
+            label: 'Requisición',
+            value: (
+              <div className="space-y-1.5">
+                <Badge variant="outline" className="w-fit border-primary/20 bg-primary/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-primary">
+                  {requisitionCode}
+                </Badge>
+                <VacancyCodeBadges codes={vacancyCodes} />
+              </div>
+            ),
+          },
           { label: 'Centro', value: centerName },
           { label: 'Candidatos', value: candidateCount },
           { label: 'Apertura', value: formatDateOnly(vacancy.open_date, 'dd MMM yyyy', { locale: es }) },
@@ -581,6 +624,7 @@ export default function Seleccion() {
                       const centerName = (vacancy as any).operation_centers?.name || 'General';
                       const requisition = (vacancy as any).personnel_requisitions;
                       const requisitionCode = requisition?.requisition_code || 'RQ-PEND';
+                      const vacancyCodes = getVacancyCodes(requisition);
 
                       return (
                         <TableRow
@@ -613,6 +657,7 @@ export default function Seleccion() {
                                   </Badge>
                                 )}
                               </div>
+                              <VacancyCodeBadges codes={vacancyCodes} />
                               <span className="truncate text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">
                                 {requisition?.cargo_solicitado || 'Sin requisición'}
                               </span>

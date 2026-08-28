@@ -18,7 +18,14 @@ export function useVacancies() {
           *,
           operation_centers(id, name),
           candidates(id, status),
-          personnel_requisitions:requisition_id(id, requisition_code, cargo_solicitado, estado_requisicion, proceso_exclusivo_pcd),
+          personnel_requisitions:requisition_id(
+            id,
+            requisition_code,
+            cargo_solicitado,
+            estado_requisicion,
+            proceso_exclusivo_pcd,
+            requisition_vacancy_codes(codigo_vacante_externa)
+          ),
           vacancy_education_levels(
             education_levels(id, name)
           )
