@@ -286,6 +286,11 @@ export function useCreateVacationRequest() {
       enjoyment_days: number;
       compensated_days: number;
       notes?: string;
+      replacement_requires_hiring: boolean;
+      replacement_employee_id?: string;
+      pending_activities?: string;
+      return_to_work_date: string;
+      report_observations?: string;
     }) => {
       const { data, error } = await supabase.rpc('create_vacation_request_workflow', {
         p_request: request,
@@ -334,9 +339,9 @@ export function useManagerVacationDecision() {
       queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
       queryClient.invalidateQueries({ queryKey: ['vacation-request', input.requestId] });
       toast({
-        title: input.approved ? 'Reporte registrado' : 'Solicitud devuelta',
+        title: input.approved ? 'Solicitud aprobada' : 'Solicitud devuelta',
         description: input.approved
-          ? 'La solicitud fue reportada al líder de área para su aprobación.'
+          ? 'La solicitud fue enviada al líder de área para su aprobación.'
           : 'El flujo de aprobación fue cerrado.',
       });
     },
