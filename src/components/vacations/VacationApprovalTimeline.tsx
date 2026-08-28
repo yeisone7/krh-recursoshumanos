@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, Clock3, FilePenLine, UserCheck, UsersRound, X } from 'lucide-react';
+import { Check, Clock3, FilePenLine, ShieldCheck, UserCheck, UsersRound, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -50,6 +50,14 @@ export function VacationApprovalTimeline({ request }: { request: VacationRequest
     : request.area_leader_approved === true
       ? 'completed'
       : request.approval_stage === 'pending_area_leader' ? 'current' : 'pending';
+  const talentVisaStatus: StepStatus = request.area_leader_approved === false
+    ? 'pending'
+    : request.talent_leader_visa_at
+      ? 'completed'
+      : request.approval_stage === 'pending_talent_leader_visa'
+        || (request.approval_stage === 'approved' && request.area_leader_approved === true)
+        ? 'current'
+        : 'pending';
 
   const steps: Step[] = [
     {
@@ -62,7 +70,7 @@ export function VacationApprovalTimeline({ request }: { request: VacationRequest
     },
     {
       title: 'Jefe inmediato',
-      subtitle: 'Revisión del reemplazo y fecha de reingreso',
+      subtitle: 'Reporte del reemplazo, actividades y fecha de reingreso',
       status: managerStatus,
       date: request.manager_approved_at,
       approver: request.manager_approver_name,
@@ -70,11 +78,19 @@ export function VacationApprovalTimeline({ request }: { request: VacationRequest
     },
     {
       title: 'Líder de área',
-      subtitle: 'Validación de saldos y aprobación final',
+      subtitle: 'Aprobación final de la solicitud',
       status: leaderStatus,
       date: request.area_leader_approved_at,
       approver: request.area_leader_approver_name,
       icon: UsersRound,
+    },
+    {
+      title: 'Líder Talento Humano',
+      subtitle: 'Visado posterior a la aprobación',
+      status: talentVisaStatus,
+      date: request.talent_leader_visa_at,
+      approver: request.talent_leader_visa_name,
+      icon: ShieldCheck,
     },
   ];
 

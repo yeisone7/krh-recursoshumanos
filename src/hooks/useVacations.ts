@@ -334,9 +334,9 @@ export function useManagerVacationDecision() {
       queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
       queryClient.invalidateQueries({ queryKey: ['vacation-request', input.requestId] });
       toast({
-        title: input.approved ? 'Aprobación registrada' : 'Solicitud rechazada',
+        title: input.approved ? 'Reporte registrado' : 'Solicitud devuelta',
         description: input.approved
-          ? 'La solicitud pasó al líder de área.'
+          ? 'La solicitud fue reportada al líder de área para su aprobación.'
           : 'El flujo de aprobación fue cerrado.',
       });
     },
@@ -400,8 +400,32 @@ export function useAreaLeaderVacationDecision() {
       toast({
         title: input.approved ? 'Vacaciones aprobadas' : 'Solicitud rechazada',
         description: input.approved
-          ? 'La aprobación final y los saldos fueron actualizados.'
+          ? 'La aprobación final y los saldos fueron actualizados. Queda pendiente el visado de Talento Humano.'
           : 'El flujo de aprobación fue cerrado.',
+      });
+    },
+    onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
+  });
+}
+
+export function useTalentLeaderVacationVisa() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (input: { requestId: string; observations?: string }) => {
+      const { data, error } = await supabase.rpc('visa_vacation_as_talent_leader', {
+        p_request_id: input.requestId,
+        p_observations: input.observations || null,
+      });
+      if (error) throw error;
+      return data as VacationRequest;
+    },
+    onSuccess: (_, input) => {
+      queryClient.invalidateQueries({ queryKey: ['vacation-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['vacation-request', input.requestId] });
+      toast({
+        title: 'Visado registrado',
+        description: 'Talento Humano dejó constancia sobre la solicitud aprobada.',
       });
     },
     onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),

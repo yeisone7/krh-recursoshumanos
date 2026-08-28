@@ -4,7 +4,12 @@ import { Database } from '@/integrations/supabase/types';
 // Database types
 export type VacationRequestType = Database['public']['Enums']['vacation_request_type'];
 export type VacationStatus = Database['public']['Enums']['vacation_status'];
-export type VacationApprovalStage = 'pending_manager' | 'pending_area_leader' | 'approved' | 'rejected';
+export type VacationApprovalStage =
+  | 'pending_manager'
+  | 'pending_area_leader'
+  | 'pending_talent_leader_visa'
+  | 'approved'
+  | 'rejected';
 
 export interface VacationConfig {
   id: string;
@@ -97,6 +102,10 @@ export interface VacationRequest {
   area_leader_approved_at: string | null;
   area_leader_approver_name: string | null;
   area_leader_observations: string | null;
+  talent_leader_visa_by: string | null;
+  talent_leader_visa_at: string | null;
+  talent_leader_visa_name: string | null;
+  talent_leader_visa_observations: string | null;
   employee?: {
     id: string;
     first_name: string;
@@ -157,8 +166,9 @@ export interface VacationBalanceSummary {
 }
 
 export const APPROVAL_STAGE_LABELS: Record<VacationApprovalStage, string> = {
-  pending_manager: 'Pendiente jefe inmediato',
-  pending_area_leader: 'Pendiente líder de área',
+  pending_manager: 'Pendiente reporte del jefe inmediato',
+  pending_area_leader: 'Pendiente aprobación del líder de área',
+  pending_talent_leader_visa: 'Aprobada · pendiente visado de Talento Humano',
   approved: 'Aprobada',
   rejected: 'Rechazada',
 };
@@ -166,6 +176,7 @@ export const APPROVAL_STAGE_LABELS: Record<VacationApprovalStage, string> = {
 export const APPROVAL_STAGE_COLORS: Record<VacationApprovalStage, string> = {
   pending_manager: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
   pending_area_leader: 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300',
+  pending_talent_leader_visa: 'bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-300',
   approved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300',
   rejected: 'bg-destructive/10 text-destructive',
 };
