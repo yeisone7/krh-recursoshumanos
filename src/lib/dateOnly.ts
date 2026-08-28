@@ -27,6 +27,20 @@ export function toDateOnlyString(date: Date | string | null | undefined): string
   return format(date, 'yyyy-MM-dd');
 }
 
+export function isDateOnlyWithinRange(
+  value: Date | string | null | undefined,
+  startValue: Date | string | null | undefined,
+  endValue: Date | string | null | undefined,
+): boolean {
+  const valueKey = toDateOnlyString(value);
+  const startKey = toDateOnlyString(startValue);
+  const endKey = toDateOnlyString(endValue);
+
+  return Boolean(valueKey && startKey && endKey)
+    && valueKey >= startKey
+    && valueKey <= endKey;
+}
+
 export function todayDateOnlyString(): string {
   return toDateOnlyString(new Date());
 }

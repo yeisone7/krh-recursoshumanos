@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildDateOnlyFromParts, formatDateOnly, parseDateOnly, toDateOnlyString } from './dateOnly';
+import {
+  buildDateOnlyFromParts,
+  formatDateOnly,
+  isDateOnlyWithinRange,
+  parseDateOnly,
+  toDateOnlyString,
+} from './dateOnly';
 
 describe('date-only values', () => {
   it('preserves the calendar day when a persisted date is opened and saved again', () => {
@@ -20,5 +26,12 @@ describe('date-only values', () => {
     expect(buildDateOnlyFromParts('1970', '2', '30')).toBe('');
     expect(buildDateOnlyFromParts('70', '8', '27')).toBe('');
     expect(buildDateOnlyFromParts('1970', '', '27')).toBe('');
+  });
+
+  it('matches a calendar cell at midnight with a persisted single-day range', () => {
+    const calendarDay = new Date(2026, 7, 27);
+
+    expect(isDateOnlyWithinRange(calendarDay, '2026-08-27', '2026-08-27')).toBe(true);
+    expect(isDateOnlyWithinRange(new Date(2026, 7, 28), '2026-08-27', '2026-08-27')).toBe(false);
   });
 });
