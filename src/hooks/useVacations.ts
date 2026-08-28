@@ -215,7 +215,18 @@ export function useVacationRequests(filters?: {
         .from('vacation_requests')
         .select(`
           *,
-          employee:employees_v2!vacation_requests_employee_id_fkey(id, first_name, last_name, document_number),
+          employee:employees_v2!vacation_requests_employee_id_fkey(
+            id,
+            first_name,
+            last_name,
+            document_number,
+            avatar_url,
+            employee_work_info(
+              operation_center_id,
+              is_current,
+              operation_centers(id, name)
+            )
+          ),
           replacement_employee:employees_v2!vacation_requests_replacement_employee_id_fkey(id, first_name, last_name, document_number),
           balance:vacation_balances(*)
         `)

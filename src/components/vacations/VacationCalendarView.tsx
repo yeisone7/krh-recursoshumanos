@@ -1,277 +1,464 @@
-import { useState, useMemo } from 'react';
-import { parseDateOnlyOr } from '@/lib/dateOnly';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isWithinInterval, startOfWeek, endOfWeek, addMonths, subMonths, addWeeks, subWeeks, isSameDay } from 'date-fns';
+import { useMemo, useState } from 'react';
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+} from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useVacationRequests } from '@/hooks/useVacations';
+import { isDateOnlyWithinRange, parseDateOnlyOr } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
-import { useVacationCalendar } from '@/hooks/useVacations';
-import { VacationRequest } from '@/types/vacation';
-
-const EMPLOYEE_COLORS = [
-  { bg: 'bg-blue-100 dark:bg-blue-900/60', text: 'text-blue-800 dark:text-blue-200' },
-  { bg: 'bg-emerald-100 dark:bg-emerald-900/60', text: 'text-emerald-800 dark:text-emerald-200' },
-  { bg: 'bg-violet-100 dark:bg-violet-900/60', text: 'text-violet-800 dark:text-violet-200' },
-  { bg: 'bg-amber-100 dark:bg-amber-900/60', text: 'text-amber-800 dark:text-amber-200' },
-  { bg: 'bg-rose-100 dark:bg-rose-900/60', text: 'text-rose-800 dark:text-rose-200' },
-  { bg: 'bg-cyan-100 dark:bg-cyan-900/60', text: 'text-cyan-800 dark:text-cyan-200' },
-  { bg: 'bg-orange-100 dark:bg-orange-900/60', text: 'text-orange-800 dark:text-orange-200' },
-  { bg: 'bg-indigo-100 dark:bg-indigo-900/60', text: 'text-indigo-800 dark:text-indigo-200' },
-];
+import {
+  REQUEST_TYPE_LABELS,
+  STATUS_LABELS,
+  VacationRequest,
+  VacationRequestType,
+  VacationStatus,
+} from '@/types/vacation';
 
 interface VacationCalendarViewProps {
   onRequestClick?: (request: VacationRequest) => void;
 }
 
+type CalendarStatusFilter = VacationStatus | 'all';
+
+const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+const REQUEST_TYPE_COLORS: Record<VacationRequestType, string> = {
+  disfrute: '#0E7490',
+  compensacion: '#B45309',
+  acumulacion: '#7C3AED',
+  interrupcion: '#C2410C',
+};
+const STATUS_LEGEND: Array<{ status: VacationStatus; className: string }> = [
+  { status: 'borrador', className: 'bg-warning' },
+  { status: 'aprobado', className: 'bg-primary' },
+  { status: 'en_curso', className: 'bg-success' },
+  { status: 'completado', className: 'bg-emerald-600' },
+  { status: 'interrumpido', className: 'bg-orange-600' },
+  { status: 'cancelado', className: 'bg-muted-foreground' },
+];
+
+function getEmployeeName(request: VacationRequest, abbreviated = false) {
+  if (!request.employee) return 'Empleado';
+  const { first_name, last_name } = request.employee;
+  return abbreviated ? `${first_name} ${last_name.charAt(0)}.` : `${first_name} ${last_name}`;
+}
+
+function getEmployeeInitials(request: VacationRequest) {
+  if (!request.employee) return '?';
+  return `${request.employee.first_name.charAt(0)}${request.employee.last_name.charAt(0)}`.toUpperCase();
+}
+
+function getEmployeeCenter(request: VacationRequest) {
+  const workInfo = request.employee?.employee_work_info;
+  const current = workInfo?.find((item) => item.is_current) ?? workInfo?.[0];
+  return {
+    id: current?.operation_center_id ?? null,
+    name: current?.operation_centers?.name ?? 'Sin centro asignado',
+  };
+}
+
+function getStatusBadgeClass(status: VacationStatus) {
+  if (status === 'aprobado') return 'border-primary/30 bg-primary/10 text-primary';
+  if (status === 'en_curso' || status === 'completado') return 'border-success/30 bg-success/10 text-success';
+  if (status === 'borrador') return 'border-warning/40 bg-warning-light text-warning';
+  if (status === 'interrumpido') return 'border-orange-500/30 bg-orange-500/10 text-orange-700';
+  return 'border-border bg-muted text-muted-foreground';
+}
+
+function formatDateRange(request: VacationRequest) {
+  const start = parseDateOnlyOr(request.start_date, new Date());
+  const end = parseDateOnlyOr(request.end_date, start);
+  if (isSameDay(start, end)) return format(start, 'd MMM', { locale: es });
+  if (start.getMonth() === end.getMonth()) {
+    return `${format(start, 'd', { locale: es })}–${format(end, 'd MMM', { locale: es })}`;
+  }
+  return `${format(start, 'd MMM', { locale: es })} – ${format(end, 'd MMM', { locale: es })}`;
+}
+
 export function VacationCalendarView({ onRequestClick }: VacationCalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'month' | 'week'>('week');
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  
-  const { data: requests, isLoading } = useVacationCalendar(year, month);
+  const [statusFilter, setStatusFilter] = useState<CalendarStatusFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | VacationRequestType>('all');
+  const [centerFilter, setCenterFilter] = useState('all');
+  const { data: requests = [], isLoading } = useVacationRequests();
+  const { data: operationCenters = [] } = useOperationCenters();
 
-  const calendarDays = useMemo(() => {
-    if (view === 'week') {
-      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-      return eachDayOfInterval({ start: weekStart, end: weekEnd });
-    }
-    const monthStart = startOfMonth(currentDate);
-    const monthEnd = endOfMonth(currentDate);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-    return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
-  }, [currentDate, view]);
+  const today = startOfDay(new Date());
+  const monthStart = startOfMonth(currentDate);
+  const monthEnd = endOfMonth(currentDate);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const mobileWeekDays = useMemo(() => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-    return eachDayOfInterval({ start: weekStart, end: weekEnd });
-  }, [currentDate]);
+  const filteredRequests = useMemo(() => requests.filter((request) => {
+    const center = getEmployeeCenter(request);
+    return (statusFilter === 'all' || request.status === statusFilter)
+      && (typeFilter === 'all' || request.request_type === typeFilter)
+      && (centerFilter === 'all'
+        || (centerFilter === 'unassigned' ? !center.id : center.id === centerFilter));
+  }), [centerFilter, requests, statusFilter, typeFilter]);
 
-  // Assign a consistent color to each employee
-  const employeeColorMap = useMemo(() => {
-    if (!requests) return new Map<string, typeof EMPLOYEE_COLORS[0]>();
-    const uniqueIds = [...new Set(requests.map(r => r.employee_id))];
-    const map = new Map<string, typeof EMPLOYEE_COLORS[0]>();
-    uniqueIds.forEach((id, i) => {
-      map.set(id, EMPLOYEE_COLORS[i % EMPLOYEE_COLORS.length]);
-    });
-    return map;
-  }, [requests]);
+  const monthRequests = useMemo(() => filteredRequests.filter((request) => {
+    const start = parseDateOnlyOr(request.start_date, monthStart);
+    const end = parseDateOnlyOr(request.end_date, monthEnd);
+    return start <= monthEnd && end >= monthStart;
+  }), [filteredRequests, monthEnd, monthStart]);
 
-  const goToPrevious = () => {
-    setCurrentDate(view === 'week' ? subWeeks(currentDate, 1) : subMonths(currentDate, 1));
-  };
-  const goToNext = () => {
-    setCurrentDate(view === 'week' ? addWeeks(currentDate, 1) : addMonths(currentDate, 1));
-  };
-  const goToPreviousWeek = () => setCurrentDate(subWeeks(currentDate, 1));
-  const goToNextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
-  const goToToday = () => setCurrentDate(new Date());
+  const upcomingRequests = useMemo(() => filteredRequests
+    .filter((request) => {
+      const end = parseDateOnlyOr(request.end_date, today);
+      return request.status !== 'cancelado' && end >= today;
+    })
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+    .slice(0, 20), [filteredRequests, today]);
 
-  const getRequestsForDay = (day: Date) => {
-    if (!requests) return [];
-    return requests.filter(r => {
-      const start = parseDateOnlyOr(r.start_date, new Date());
-      const end = parseDateOnlyOr(r.end_date, new Date());
-      return isWithinInterval(day, { start, end });
-    });
-  };
+  const pendingApproval = filteredRequests.filter((request) => request.status === 'borrador').length;
+  const approvedThisMonth = monthRequests.filter((request) => (
+    request.status === 'aprobado' || request.status === 'en_curso' || request.status === 'completado'
+  )).length;
 
-  const weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-
-  const viewTitle = view === 'week'
-    ? `${format(calendarDays[0], 'd MMM', { locale: es })} – ${format(calendarDays[6], 'd MMM yyyy', { locale: es })}`
-    : format(currentDate, 'MMMM yyyy', { locale: es });
-
-  const mobileTitle = `${format(mobileWeekDays[0], 'd MMM', { locale: es })} – ${format(mobileWeekDays[6], 'd MMM yyyy', { locale: es })}`;
-
-  const maxVisible = view === 'week' ? 10 : 3;
+  const getRequestsForDay = (day: Date) => monthRequests.filter((request) => (
+    isDateOnlyWithinRange(day, request.start_date, request.end_date)
+  ));
 
   return (
-    <Card>
-      <CardHeader className="p-4 sm:p-6">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-          <CardTitle className="text-base font-semibold capitalize sm:text-lg">
-            <span className="sm:hidden">{mobileTitle}</span>
-            <span className="hidden sm:inline">{viewTitle}</span>
-          </CardTitle>
-          <div className="flex items-center justify-between gap-2 sm:justify-end">
-            <Tabs value={view} onValueChange={(v) => setView(v as 'month' | 'week')}>
-              <TabsList className="hidden h-8 sm:inline-flex">
-                <TabsTrigger value="month" className="text-xs px-3">Mes</TabsTrigger>
-                <TabsTrigger value="week" className="text-xs px-3">Semana</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button variant="outline" size="sm" className="h-8" onClick={goToToday}>
+    <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+      <div className="border-b border-border/70 px-4 py-4 sm:px-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => setCurrentDate((date) => subMonths(date, 1))}
+              aria-label="Mes anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => setCurrentDate((date) => addMonths(date, 1))}
+              aria-label="Mes siguiente"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div className="ml-1 flex min-w-0 items-center gap-2.5">
+              <CalendarDays className="h-5 w-5 shrink-0 text-primary" />
+              <h2 className="truncate text-base font-bold capitalize sm:text-lg">
+                {format(currentDate, 'MMMM yyyy', { locale: es })}
+              </h2>
+            </div>
+            <Button variant="outline" size="sm" className="ml-1 h-9" onClick={() => setCurrentDate(new Date())}>
               Hoy
             </Button>
-            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToPrevious}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToPreviousWeek}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="hidden h-8 w-8 sm:inline-flex" onClick={goToNext}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8 sm:hidden" onClick={goToNextWeek}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:flex xl:justify-end">
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as CalendarStatusFilter)}>
+              <SelectTrigger className="h-9 sm:min-w-[155px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {STATUS_LEGEND.map(({ status }) => (
+                  <SelectItem key={status} value={status}>{STATUS_LABELS[status]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as 'all' | VacationRequestType)}>
+              <SelectTrigger className="h-9 sm:min-w-[190px]">
+                <SelectValue placeholder="Tipo de solicitud" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {(Object.entries(REQUEST_TYPE_LABELS) as Array<[VacationRequestType, string]>).map(([type, label]) => (
+                  <SelectItem key={type} value={type}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={centerFilter} onValueChange={setCenterFilter}>
+              <SelectTrigger className="h-9 sm:min-w-[205px]">
+                <SelectValue placeholder="Centro de operación" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los centros</SelectItem>
+                {operationCenters.map((center) => (
+                  <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                ))}
+                <SelectItem value="unassigned">Sin centro asignado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-        {isLoading ? (
-          <div className="h-96 flex items-center justify-center text-muted-foreground">
-            Cargando...
+      </div>
+
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 xl:border-r xl:border-border/70">
+          <div className="hidden grid-cols-7 border-b border-border/70 bg-muted/20 sm:grid">
+            {WEEK_DAYS.map((day, index) => (
+              <div
+                key={day}
+                className={cn(
+                  'px-2 py-2 text-center text-[10px] font-semibold text-muted-foreground lg:text-[11px]',
+                  index >= 5 && 'bg-muted/30',
+                )}
+              >
+                {day}
+              </div>
+            ))}
           </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="space-y-2 sm:hidden">
-              {mobileWeekDays.map((day) => {
-                const dayRequests = getRequestsForDay(day);
-                const isCurrentDay = isToday(day);
 
-                return (
-                  <div
-                    key={day.toISOString()}
-                    className={cn(
-                      'rounded-md border p-3 transition-colors',
-                      isCurrentDay && 'ring-2 ring-primary'
-                    )}
-                  >
-                    <div className={cn('mb-2 flex items-center justify-between text-sm font-medium', isCurrentDay && 'text-primary')}>
-                      <span className="capitalize">{format(day, 'EEE d', { locale: es })}</span>
-                      <Badge variant="outline">{dayRequests.length}</Badge>
-                    </div>
-                    <div className="space-y-2">
-                      {dayRequests.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Sin vacaciones</p>
-                      ) : (
-                        dayRequests.map((request) => {
-                          const colors = employeeColorMap.get(request.employee_id) || EMPLOYEE_COLORS[0];
-                          const employeeName = request.employee
-                            ? `${request.employee.first_name} ${request.employee.last_name}`
-                            : 'Empleado';
-
-                          return (
-                            <button
-                              key={request.id}
-                              onClick={() => onRequestClick?.(request)}
-                              className={cn(
-                                'w-full rounded-md px-3 py-2 text-left text-xs font-medium transition-opacity hover:opacity-80',
-                                colors.bg,
-                                colors.text
-                              )}
-                            >
-                              <span className="block">{employeeName}</span>
-                              <span className="block font-normal opacity-90">
-                                {request.business_days} días hábiles • {request.status}
-                              </span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Week days header */}
-            <div className="hidden grid-cols-7 gap-1 sm:grid">
-              {weekDays.map((day) => (
-                <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">
-                  {day}
-                </div>
+          {isLoading ? (
+            <div className="hidden grid-cols-7 sm:grid">
+              {calendarDays.map((day, index) => (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    'min-h-[6.25rem] animate-pulse border-b border-r border-border/60 bg-muted/10 p-1.5',
+                    index % 7 >= 5 && 'bg-muted/20',
+                  )}
+                />
               ))}
             </div>
-
-            {/* Calendar grid */}
-            <div className="hidden grid-cols-7 gap-1 sm:grid">
-              {calendarDays.map((day) => {
+          ) : (
+            <div className="hidden grid-cols-7 sm:grid">
+              {calendarDays.map((day, index) => {
                 const dayRequests = getRequestsForDay(day);
-                const isCurrentMonth = isSameMonth(day, currentDate);
-                const isCurrentDay = isToday(day);
-
+                const isToday = isSameDay(day, today);
+                const isWeekend = index % 7 >= 5;
                 return (
                   <div
                     key={day.toISOString()}
                     className={cn(
-                      'p-1.5 border rounded-md transition-colors',
-                      view === 'week' ? 'min-h-[180px]' : 'min-h-[90px]',
-                      isCurrentMonth ? 'bg-background' : 'bg-background',
-                      isCurrentDay && 'ring-2 ring-primary'
+                      'min-h-[5.5rem] border-b border-r border-border/60 p-1 last:border-r-0 lg:min-h-[6.25rem] lg:p-1.5',
+                      isWeekend && 'bg-muted/20',
+                      !isSameMonth(day, currentDate) && 'bg-muted/10 text-muted-foreground/60',
                     )}
                   >
-                    <div className={cn(
-                      'text-xs font-medium mb-1',
-                      isCurrentMonth ? 'text-foreground' : 'text-muted-foreground',
-                      isCurrentDay && 'text-primary'
-                    )}>
-                      {format(day, 'd')}
-                      {view === 'week' && (
-                        <span className="ml-1 text-muted-foreground font-normal">
-                          {format(day, 'EEE', { locale: es })}
-                        </span>
-                      )}
+                    <div className="mb-1 flex items-center justify-between">
+                      <span
+                        className={cn(
+                          'flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[11px] font-semibold',
+                          isToday && 'bg-primary text-primary-foreground',
+                        )}
+                      >
+                        {format(day, 'd')}
+                      </span>
+                      {dayRequests.length > 0 && <span className="text-[10px] text-muted-foreground">{dayRequests.length}</span>}
                     </div>
-                    
                     <div className="space-y-0.5">
-                      {dayRequests.slice(0, maxVisible).map((request) => {
-                        const colors = employeeColorMap.get(request.employee_id) || EMPLOYEE_COLORS[0];
+                      {dayRequests.slice(0, 3).map((request) => {
+                        const color = REQUEST_TYPE_COLORS[request.request_type];
                         return (
                           <button
                             key={request.id}
-                            onClick={() => onRequestClick?.(request)}
+                            type="button"
                             className={cn(
-                              'w-full text-left text-[11px] font-medium px-1.5 py-0.5 rounded truncate',
-                              'hover:opacity-80 transition-opacity',
-                              colors.bg,
-                              colors.text
+                              'group w-full overflow-hidden rounded-md border px-1.5 py-0.5 text-left transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                              request.status === 'borrador' && 'border-dashed',
+                              request.status === 'cancelado' && 'opacity-55',
                             )}
+                            style={{ backgroundColor: `${color}14`, borderColor: `${color}70` }}
+                            onClick={() => onRequestClick?.(request)}
+                            title={`${getEmployeeName(request)} · ${REQUEST_TYPE_LABELS[request.request_type]}`}
                           >
-                            {request.employee?.first_name} {request.employee?.last_name?.charAt(0)}.
+                            <span className="flex min-w-0 items-center gap-1.5">
+                              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                              <span className="truncate text-[10px] font-semibold text-foreground lg:text-[11px]">
+                                {getEmployeeName(request, true)}
+                              </span>
+                            </span>
+                            <span className="block truncate pl-3 text-[9px] text-muted-foreground lg:text-[10px]">
+                              {REQUEST_TYPE_LABELS[request.request_type]}
+                            </span>
                           </button>
                         );
                       })}
-                      {dayRequests.length > maxVisible && (
-                        <span className="text-[10px] text-muted-foreground pl-1">
-                          +{dayRequests.length - maxVisible} más
-                        </span>
+                      {dayRequests.length > 3 && (
+                        <p className="px-1 text-[10px] font-semibold text-primary">+ {dayRequests.length - 3} más</p>
                       )}
                     </div>
                   </div>
                 );
               })}
             </div>
+          )}
 
-            {/* Legend - show unique employees with their colors */}
-            {requests && requests.length > 0 && (
-              <div className="flex flex-wrap gap-3 pt-4 border-t">
-                {[...employeeColorMap.entries()].map(([empId, colors]) => {
-                  const req = requests.find(r => r.employee_id === empId);
-                  const name = req?.employee 
-                    ? `${req.employee.first_name} ${req.employee.last_name?.charAt(0)}.`
-                    : empId;
-                  return (
-                    <div key={empId} className="flex items-center gap-1.5">
-                      <div className={cn('w-3 h-3 rounded', colors.bg)} />
-                      <span className="text-xs text-muted-foreground">{name}</span>
+          <div className="space-y-3 p-4 sm:hidden">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-20 animate-pulse rounded-xl bg-muted/40" />
+              ))
+            ) : (
+              calendarDays
+                .filter((day) => isSameMonth(day, currentDate) && getRequestsForDay(day).length > 0)
+                .map((day) => (
+                  <div key={day.toISOString()} className="border-b border-border/60 pb-3 last:border-0">
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-sm font-bold',
+                        isSameDay(day, today) && 'bg-primary text-primary-foreground',
+                      )}>
+                        {format(day, 'd')}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold capitalize">{format(day, 'EEEE', { locale: es })}</p>
+                        <p className="text-xs text-muted-foreground">{getRequestsForDay(day).length} solicitudes</p>
+                      </div>
                     </div>
-                  );
-                })}
+                    <div className="space-y-2 pl-10">
+                      {getRequestsForDay(day).map((request) => {
+                        const color = REQUEST_TYPE_COLORS[request.request_type];
+                        return (
+                          <button
+                            key={request.id}
+                            type="button"
+                            className="w-full rounded-lg border p-2.5 text-left transition-colors hover:bg-muted/30"
+                            style={{ borderLeftColor: color, borderLeftWidth: 3 }}
+                            onClick={() => onRequestClick?.(request)}
+                          >
+                            <p className="text-sm font-semibold">{getEmployeeName(request)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {REQUEST_TYPE_LABELS[request.request_type]} · {STATUS_LABELS[request.status]}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+            )}
+            {!isLoading && monthRequests.length === 0 && (
+              <div className="py-12 text-center">
+                <CalendarDays className="mx-auto mb-3 h-9 w-9 text-muted-foreground/50" />
+                <p className="text-sm font-semibold">No hay vacaciones para mostrar</p>
+                <p className="mt-1 text-xs text-muted-foreground">Prueba cambiando los filtros seleccionados.</p>
               </div>
             )}
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/70 px-4 py-3">
+            {STATUS_LEGEND.map(({ status, className }) => (
+              <div key={status} className="flex items-center gap-1.5">
+                <span className={cn('h-2.5 w-2.5 rounded-full', className)} />
+                <span className="text-[11px] text-muted-foreground">{STATUS_LABELS[status]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <aside className="min-w-0 bg-card">
+          <div className="border-b border-border/70 px-4 py-4">
+            <h3 className="font-bold">Próximas vacaciones</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">Solicitudes programadas y pendientes</p>
+          </div>
+
+          <div className="grid grid-cols-2 border-b border-border/70">
+            <div className="flex items-center gap-2.5 border-r border-border/70 p-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning/10 text-warning">
+                <Clock3 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Por aprobar</p>
+                <p className="text-xl font-bold leading-none tabular-nums">{pendingApproval}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 p-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/10 text-success">
+                <CheckCircle2 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] text-muted-foreground">Aprobadas en el mes</p>
+                <p className="text-xl font-bold leading-none tabular-nums">{approvedThisMonth}</p>
+              </div>
+            </div>
+          </div>
+
+          <ScrollArea className="h-[34rem] xl:h-[calc(100%-8.7rem)] xl:max-h-[44rem] xl:min-h-[32rem]">
+            <div className="px-4">
+              {upcomingRequests.map((request) => {
+                const color = REQUEST_TYPE_COLORS[request.request_type];
+                const center = getEmployeeCenter(request);
+                return (
+                  <button
+                    key={request.id}
+                    type="button"
+                    className="flex w-full gap-3 border-b border-border/60 py-3.5 text-left transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                    onClick={() => onRequestClick?.(request)}
+                  >
+                    <Avatar className="mt-0.5 h-8 w-8">
+                      <AvatarImage src={request.employee?.avatar_url || undefined} alt={getEmployeeName(request)} />
+                      <AvatarFallback className="text-[10px] font-bold" style={{ backgroundColor: `${color}18`, color }}>
+                        {getEmployeeInitials(request)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold">{getEmployeeName(request)}</p>
+                          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                            {REQUEST_TYPE_LABELS[request.request_type]}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cn('h-5 shrink-0 px-1.5 text-[9px]', getStatusBadgeClass(request.status))}>
+                          {STATUS_LABELS[request.status]}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+                        <span className="font-semibold text-foreground">{formatDateRange(request)}</span>
+                        <span className="flex min-w-0 items-center gap-1">
+                          <Building2 className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{center.name}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              {!isLoading && upcomingRequests.length === 0 && (
+                <div className="py-12 text-center">
+                  <CalendarDays className="mx-auto mb-3 h-9 w-9 text-muted-foreground/40" />
+                  <p className="text-sm font-semibold">No hay próximas vacaciones</p>
+                  <p className="mt-1 text-xs text-muted-foreground">No encontramos solicitudes con estos filtros.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </aside>
+      </div>
+    </section>
   );
 }
