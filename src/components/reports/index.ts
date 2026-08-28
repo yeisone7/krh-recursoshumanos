@@ -1,5 +1,6 @@
 export { ReportCard } from './ReportCard';
 export { EmployeeReport } from './EmployeeReport';
+export { GeneralEmployeeReport } from './GeneralEmployeeReport';
 export { EmployeeInformationCompletionReport } from './EmployeeInformationCompletionReport';
 export { IncapacityReport } from './IncapacityReport';
 export { CesantiasReport } from './CesantiasReport';

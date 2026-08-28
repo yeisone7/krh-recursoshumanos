@@ -2,6 +2,7 @@ import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, S
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   EmployeeReport,
+  GeneralEmployeeReport,
   EmployeeInformationCompletionReport,
   IncapacityReport,
   CesantiasReport,
@@ -74,6 +75,7 @@ export default function Reportes() {
         {/* Personal */}
         <TabsContent value="personal">
           <div className="grid gap-4 md:grid-cols-2 md:gap-6">
+            <GeneralEmployeeReport />
             <EmployeeReport />
             <EmployeeInformationCompletionReport />
             <MedicalExamsReport />
