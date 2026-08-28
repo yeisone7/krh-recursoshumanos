@@ -121,12 +121,12 @@ function joinDetails(values: Array<string | null | undefined>): string {
   return cleanValues.length ? cleanValues.join('; ') : '-';
 }
 
-export function useGeneralEmployeeReport() {
+export function useGeneralEmployeeReport(enabled = true) {
   const { currentCompanyId } = useAuth();
 
   return useQuery({
     queryKey: ['report-general-employees', currentCompanyId],
-    enabled: !!currentCompanyId,
+    enabled: Boolean(currentCompanyId) && enabled,
     queryFn: async (): Promise<GeneralEmployeeReportRow[]> => {
       if (!currentCompanyId) return [];
 
