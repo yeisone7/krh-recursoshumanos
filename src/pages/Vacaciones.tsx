@@ -70,7 +70,7 @@ export default function Vacaciones() {
   const [typeFilter, setTypeFilter] = useState<VacationRequestType | 'all'>('all');
 
   const { data: requests, isLoading: requestsLoading } = useVacationRequests();
-  const { data: balances, isLoading: balancesLoading } = useVacationBalances();
+  const { data: balances, isLoading: balancesLoading, error: balancesError } = useVacationBalances();
   const { hasPermission, isAdmin, isRRHH, isSuperAdmin } = useAuth();
   const canAdjustBalances = isAdmin || isRRHH || isSuperAdmin || hasPermission('vacation_balances', 'update');
   const isMobile = useIsMobile();
@@ -321,6 +321,7 @@ export default function Vacaciones() {
             balances={balances ?? []}
             searchTerm={searchTerm}
             isLoading={balancesLoading}
+            error={balancesError}
             onAdjust={() => setBalanceFormOpen(true)}
             canAdjust={canAdjustBalances}
           />

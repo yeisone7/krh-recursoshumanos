@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CalendarClock, ChevronRight, History, RefreshCw, ShieldCheck, WalletCards } from 'lucide-react';
+import { AlertCircle, CalendarClock, ChevronRight, History, RefreshCw, ShieldCheck, WalletCards } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,11 +31,12 @@ interface VacationBalancesPanelProps {
   balances: VacationBalance[];
   searchTerm: string;
   isLoading: boolean;
+  error: Error | null;
   onAdjust: () => void;
   canAdjust: boolean;
 }
 
-export function VacationBalancesPanel({ balances, searchTerm, isLoading, onAdjust, canAdjust }: VacationBalancesPanelProps) {
+export function VacationBalancesPanel({ balances, searchTerm, isLoading, error, onAdjust, canAdjust }: VacationBalancesPanelProps) {
   const [selected, setSelected] = useState<VacationBalanceSummary | null>(null);
   const syncBalances = useSyncCompanyVacationBalances();
   const summaries = useMemo(() => buildVacationBalanceSummaries(balances).filter((summary) => {
@@ -65,6 +66,12 @@ export function VacationBalancesPanel({ balances, searchTerm, isLoading, onAdjus
 
         {isLoading ? (
           <div className="py-16 text-center text-sm font-semibold text-muted-foreground">Calculando saldos a la fecha...</div>
+        ) : error ? (
+          <div className="flex flex-col items-center px-6 py-16 text-center text-destructive">
+            <AlertCircle className="mb-4 h-12 w-12 opacity-70" />
+            <p className="font-bold">No pudimos cargar los saldos</p>
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground">{error.message}</p>
+          </div>
         ) : summaries.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-center text-muted-foreground"><CalendarClock className="mb-4 h-12 w-12 opacity-40" /><p className="font-bold">No hay saldos que coincidan</p></div>
         ) : (
