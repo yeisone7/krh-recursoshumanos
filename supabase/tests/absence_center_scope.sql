@@ -1,6 +1,6 @@
 begin;
 
-select plan(18);
+select plan(19);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -65,6 +65,22 @@ insert into public.leave_requests (
   ('c8000000-0000-0000-0000-000000000001', 'c4000000-0000-0000-0000-000000000001', 'c2000000-0000-0000-0000-000000000001', 'permiso_personal', '2026-10-01', '2026-10-01', 1, 'Diligencia', 'aprobado', 'approved'),
   ('c8000000-0000-0000-0000-000000000002', 'c4000000-0000-0000-0000-000000000002', 'c2000000-0000-0000-0000-000000000001', 'permiso_personal', '2026-10-02', '2026-10-02', 1, 'Diligencia', 'aprobado', 'approved');
 
+-- Reproduce the historical shape that broke company synchronization: an
+-- older empty legacy row alongside the keyed automatic row for one period.
+alter table public.vacation_balances disable trigger skip_redundant_initial_vacation_balance;
+insert into public.vacation_balances (
+  id, employee_id, company_id, employment_cycle_id, period_start, period_end,
+  days_accrued, created_at, notes
+)
+select
+  'c5000000-0000-0000-0000-000000000004', cycle.employee_id, cycle.company_id,
+  cycle.id, cycle.start_date, (cycle.start_date + interval '1 year - 1 day')::date,
+  0, '2020-01-01 00:00:00+00', 'Duplicado histórico para regresión'
+from public.employee_employment_cycles cycle
+where cycle.employee_id = 'c4000000-0000-0000-0000-000000000001'
+  and cycle.status = 'active';
+alter table public.vacation_balances enable trigger skip_redundant_initial_vacation_balance;
+
 set local role authenticated;
 select set_config(
   'request.jwt.claims',
@@ -98,7 +114,19 @@ select is(
 );
 select lives_ok(
   $$select public.sync_employee_vacation_balances('c4000000-0000-0000-0000-000000000001', current_date)$$,
-  'privileged vacation synchronization remains available in an assigned center'
+  'vacation synchronization tolerates a historical duplicate in an assigned center'
+);
+select is(
+  (
+    select count(*)::integer
+    from public.vacation_balances balance
+    join public.employee_employment_cycles cycle on cycle.id = balance.employment_cycle_id
+    where cycle.employee_id = 'c4000000-0000-0000-0000-000000000001'
+      and balance.period_start = cycle.start_date
+      and balance.automatic_period_key is not null
+  ),
+  1,
+  'synchronization keeps one keyed automatic balance for the current period'
 );
 select throws_ok(
   $$select public.sync_employee_vacation_balances('c4000000-0000-0000-0000-000000000002', current_date)$$,
