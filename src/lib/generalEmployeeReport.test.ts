@@ -7,6 +7,7 @@ import {
   selectedGeneralEmployeeColumns,
   type GeneralEmployeeReportRow,
 } from '@/lib/generalEmployeeReport';
+import { GENERAL_EMPLOYEE_REPORT_SELECTS } from '@/lib/generalEmployeeReportQuery';
 
 const rows: GeneralEmployeeReportRow[] = [
   {
@@ -42,6 +43,16 @@ const rows: GeneralEmployeeReportRow[] = [
 ];
 
 describe('generalEmployeeReport', () => {
+  it('solicita únicamente las columnas necesarias y resuelve catálogos en las mismas consultas', () => {
+    const selections = Object.values(GENERAL_EMPLOYEE_REPORT_SELECTS);
+
+    expect(selections).toHaveLength(15);
+    expect(selections.every((selection) => !selection.includes('*'))).toBe(true);
+    expect(GENERAL_EMPLOYEE_REPORT_SELECTS.employees).toContain('identification_types(name, code)');
+    expect(GENERAL_EMPLOYEE_REPORT_SELECTS.workInfos).toContain('operation_centers(name)');
+    expect(GENERAL_EMPLOYEE_REPORT_SELECTS.timeConfigs).toContain('work_schedules(name)');
+  });
+
   it('mantiene claves de columna únicas en todas las categorías', () => {
     const keys = GENERAL_EMPLOYEE_COLUMNS.map((column) => column.key);
     expect(new Set(keys).size).toBe(keys.length);
