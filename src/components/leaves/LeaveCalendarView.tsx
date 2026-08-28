@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/select';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useLeaveRequests, useLeaveTypeConfigs } from '@/hooks/useLeaves';
-import { parseDateOnlyOr } from '@/lib/dateOnly';
+import { isDateOnlyWithinRange, parseDateOnlyOr } from '@/lib/dateOnly';
 import { cn } from '@/lib/utils';
 import {
   getLeaveTypeLabel,
@@ -141,11 +141,9 @@ export function LeaveCalendarView({ onSelectRequest }: LeaveCalendarViewProps) {
 
   const approvedThisMonth = monthRequests.filter((request) => request.status === 'aprobado').length;
 
-  const getRequestsForDay = (day: Date) => monthRequests.filter((request) => {
-    const start = parseDateOnlyOr(request.start_date, day);
-    const end = parseDateOnlyOr(request.end_date, day);
-    return day >= start && day <= end;
-  });
+  const getRequestsForDay = (day: Date) => monthRequests.filter((request) => (
+    isDateOnlyWithinRange(day, request.start_date, request.end_date)
+  ));
 
   const getTypeColor = (leaveType: string) => (
     typeConfigs.find((config) => config.leave_type === leaveType)?.color || '#0E7490'
