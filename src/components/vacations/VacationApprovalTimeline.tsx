@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Check, Clock3, FilePenLine, ShieldCheck, UserCheck, UsersRound, X } from 'lucide-react';
+import { Check, Clock3, ShieldCheck, UserCheck, UsersRound, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -14,7 +14,7 @@ interface Step {
   status: StepStatus;
   date?: string | null;
   approver?: string | null;
-  icon: typeof FilePenLine;
+  icon: typeof UserCheck;
 }
 
 function statusLabel(status: StepStatus) {
@@ -61,16 +61,8 @@ export function VacationApprovalTimeline({ request }: { request: VacationRequest
 
   const steps: Step[] = [
     {
-      title: 'Empleado',
-      subtitle: 'Solicitud radicada',
-      status: 'completed',
-      date: request.created_at,
-      approver: request.employee ? `${request.employee.first_name} ${request.employee.last_name}` : null,
-      icon: FilePenLine,
-    },
-    {
-      title: 'Jefe inmediato',
-      subtitle: 'Reporte del reemplazo, actividades y fecha de reingreso',
+      title: 'Jefe Inmediato',
+      subtitle: 'Reporte y registro de la solicitud, reemplazo y fecha de reingreso',
       status: managerStatus,
       date: request.manager_approved_at,
       approver: request.manager_approver_name,
