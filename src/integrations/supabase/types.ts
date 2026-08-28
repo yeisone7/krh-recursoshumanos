@@ -11357,6 +11357,10 @@ export type Database = {
           resume_start_date: string | null
           start_date: string
           status: Database["public"]["Enums"]["vacation_status"]
+          talent_leader_visa_at: string | null
+          talent_leader_visa_by: string | null
+          talent_leader_visa_name: string | null
+          talent_leader_visa_observations: string | null
           total_requested_days: number
           updated_at: string
         }
@@ -11405,6 +11409,10 @@ export type Database = {
           resume_start_date?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["vacation_status"]
+          talent_leader_visa_at?: string | null
+          talent_leader_visa_by?: string | null
+          talent_leader_visa_name?: string | null
+          talent_leader_visa_observations?: string | null
           total_requested_days?: number
           updated_at?: string
         }
@@ -11453,6 +11461,10 @@ export type Database = {
           resume_start_date?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["vacation_status"]
+          talent_leader_visa_at?: string | null
+          talent_leader_visa_by?: string | null
+          talent_leader_visa_name?: string | null
+          talent_leader_visa_observations?: string | null
           total_requested_days?: number
           updated_at?: string
         }
@@ -11704,6 +11716,10 @@ export type Database = {
           p_request_id: string
           p_return_to_work_date: string | null
         }
+        Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
+      }
+      visa_vacation_as_talent_leader: {
+        Args: { p_observations?: string | null; p_request_id: string }
         Returns: Database["public"]["Tables"]["vacation_requests"]["Row"]
       }
       sync_company_vacation_balances: {

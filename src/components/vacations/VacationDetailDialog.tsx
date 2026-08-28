@@ -16,6 +16,7 @@ import {
   UsersRound,
   WalletCards,
   Info,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   Dialog,
@@ -38,6 +39,7 @@ import {
   useVacationRequest,
   useManagerVacationDecision,
   useAreaLeaderVacationDecision,
+  useTalentLeaderVacationVisa,
   useUpdateVacationRequest,
   useInterruptVacation,
   useResumeVacation,
@@ -75,10 +77,12 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
   const [managerObservations, setManagerObservations] = useState('');
   const [payrollRecordedDays, setPayrollRecordedDays] = useState(0);
   const [leaderObservations, setLeaderObservations] = useState('');
+  const [talentVisaObservations, setTalentVisaObservations] = useState('');
   
   const { data: request, isLoading } = useVacationRequest(requestId ?? undefined);
   const managerDecision = useManagerVacationDecision();
   const areaLeaderDecision = useAreaLeaderVacationDecision();
+  const talentLeaderVisa = useTalentLeaderVacationVisa();
   const updateRequest = useUpdateVacationRequest();
   const interruptVacation = useInterruptVacation();
   const resumeVacation = useResumeVacation();
@@ -87,6 +91,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
   const canApproveAsManager = isAdmin || isRRHH || isSuperAdmin || hasPermission('vac_approve_manager', 'approve');
   const canApproveAsAreaLeader = isAdmin || isRRHH || isSuperAdmin || hasPermission('vac_approve_area_leader', 'approve');
+  const canVisaAsTalentLeader = isAdmin || isRRHH || isSuperAdmin || hasPermission('vac_visa_talent_leader', 'approve');
 
   const replacementOptions = useMemo(() => employees
     .filter((employee) => employee.is_active && employee.status === 'active' && employee.id !== request?.employee_id)
@@ -108,6 +113,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
     setManagerObservations(request.manager_observations ?? '');
     setPayrollRecordedDays(Number(request.payroll_recorded_days ?? request.total_requested_days ?? 0));
     setLeaderObservations(request.area_leader_observations ?? '');
+    setTalentVisaObservations(request.talent_leader_visa_observations ?? '');
   }, [request]);
 
   if (!requestId || isLoading || !request) {
@@ -132,6 +138,13 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
       approved,
       payrollRecordedDays,
       observations: leaderObservations,
+    });
+  };
+
+  const visaAsTalentLeader = async () => {
+    await talentLeaderVisa.mutateAsync({
+      requestId: request.id,
+      observations: talentVisaObservations,
     });
   };
 
@@ -360,7 +373,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
             <section className="overflow-hidden rounded-2xl border border-border/70">
               <div className="flex items-center gap-3 border-b border-border/60 bg-amber-50/70 px-4 py-4 dark:bg-amber-950/20 sm:px-5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200"><BriefcaseBusiness className="h-4 w-4" /></span>
-                <div><h3 className="font-bold">Espacio para jefe inmediato</h3><p className="text-xs text-muted-foreground">Reemplazo, pendientes y fecha de reingreso.</p></div>
+                <div><h3 className="font-bold">Reporte del jefe inmediato</h3><p className="text-xs text-muted-foreground">Reemplazo, pendientes y fecha de reingreso.</p></div>
               </div>
               <div className="space-y-4 p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-4 rounded-xl border p-4">
@@ -386,16 +399,16 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2"><Label>Fecha de reingreso a labores</Label><Input type="date" min={request.end_date} value={returnToWorkDate} onChange={(event) => setReturnToWorkDate(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} /></div>
-                  <div className="space-y-2"><Label>Quien aprueba</Label><Input disabled value={request.manager_approver_name || 'Se registrará el usuario conectado'} /></div>
+                  <div className="space-y-2"><Label>Quien reporta</Label><Input disabled value={request.manager_approver_name || 'Se registrará el usuario conectado'} /></div>
                 </div>
 
-                <div className="space-y-2"><Label>Observaciones de la decisión</Label><Textarea rows={2} value={managerObservations} onChange={(event) => setManagerObservations(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} className="resize-none" /></div>
-                {request.manager_approved_at && <p className="text-xs text-muted-foreground">Decisión registrada el {format(new Date(request.manager_approved_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
+                <div className="space-y-2"><Label>Observaciones del reporte</Label><Textarea rows={2} value={managerObservations} onChange={(event) => setManagerObservations(event.target.value)} disabled={request.approval_stage !== 'pending_manager' || !canApproveAsManager} className="resize-none" /></div>
+                {request.manager_approved_at && <p className="text-xs text-muted-foreground">Reporte registrado el {format(new Date(request.manager_approved_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
 
                 {request.approval_stage === 'pending_manager' && canApproveAsManager && (
                   <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
-                    <Button variant="destructive" onClick={() => decideAsManager(false)} disabled={managerDecision.isPending}><XCircle className="mr-2 h-4 w-4" />No aprobar</Button>
-                    <Button onClick={() => decideAsManager(true)} disabled={managerDecision.isPending || !returnToWorkDate || (!replacementRequiresHiring && (!replacementEmployeeId || !pendingActivities.trim()))}><CheckCircle2 className="mr-2 h-4 w-4" />Aprobar y enviar al líder</Button>
+                    <Button variant="destructive" onClick={() => decideAsManager(false)} disabled={managerDecision.isPending}><XCircle className="mr-2 h-4 w-4" />Devolver solicitud</Button>
+                    <Button onClick={() => decideAsManager(true)} disabled={managerDecision.isPending || !returnToWorkDate || (!replacementRequiresHiring && (!replacementEmployeeId || !pendingActivities.trim()))}><CheckCircle2 className="mr-2 h-4 w-4" />Reportar al líder de área</Button>
                   </div>
                 )}
               </div>
@@ -404,7 +417,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
             <section className={cn('overflow-hidden rounded-2xl border border-border/70', request.approval_stage === 'pending_manager' && 'opacity-60')}>
               <div className="flex items-center gap-3 border-b border-border/60 bg-sky-50/70 px-4 py-4 dark:bg-sky-950/20 sm:px-5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-200"><UsersRound className="h-4 w-4" /></span>
-                <div><h3 className="font-bold">Espacio para líder de área</h3><p className="text-xs text-muted-foreground">Se habilita después de la aprobación del jefe inmediato.</p></div>
+                <div><h3 className="font-bold">Aprobación del líder de área</h3><p className="text-xs text-muted-foreground">Se habilita después del reporte del jefe inmediato.</p></div>
               </div>
               <div className="space-y-4 p-4 sm:p-5">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -418,7 +431,7 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                   <div className="rounded-xl bg-slate-100 p-4 dark:bg-slate-900"><p className="text-xs text-muted-foreground">Días pendientes por disfrutar</p><p className="mt-1 text-xl font-bold">{request.pending_days_to_enjoy}</p></div>
                 </div>
 
-                <div className="space-y-2"><Label>Quien aprueba</Label><Input disabled value={request.area_leader_approver_name || 'Se registrará el líder conectado'} /></div>
+                <div className="space-y-2"><Label>Quien realiza la aprobación final</Label><Input disabled value={request.area_leader_approver_name || 'Se registrará el líder conectado'} /></div>
                 <div className="space-y-2"><Label>Observaciones de la decisión</Label><Textarea rows={2} value={leaderObservations} onChange={(event) => setLeaderObservations(event.target.value)} disabled={request.approval_stage !== 'pending_area_leader' || !canApproveAsAreaLeader} className="resize-none" /></div>
                 {request.area_leader_approved_at && <p className="text-xs text-muted-foreground">Decisión registrada el {format(new Date(request.area_leader_approved_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
 
@@ -426,6 +439,38 @@ export function VacationDetailDialog({ open, onOpenChange, requestId }: Vacation
                   <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
                     <Button variant="destructive" onClick={() => decideAsAreaLeader(false)} disabled={areaLeaderDecision.isPending}><XCircle className="mr-2 h-4 w-4" />No aprobar</Button>
                     <Button onClick={() => decideAsAreaLeader(true)} disabled={areaLeaderDecision.isPending || payrollRecordedDays < 0}><WalletCards className="mr-2 h-4 w-4" />Aprobar solicitud</Button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+            <section className={cn(
+              'overflow-hidden rounded-2xl border border-border/70',
+              request.area_leader_approved !== true && 'opacity-60',
+            )}>
+              <div className="flex items-center gap-3 border-b border-border/60 bg-violet-50/70 px-4 py-4 dark:bg-violet-950/20 sm:px-5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-200"><ShieldCheck className="h-4 w-4" /></span>
+                <div><h3 className="font-bold">Visado de Talento Humano</h3><p className="text-xs text-muted-foreground">Constancia posterior; no modifica la aprobación ni vuelve a afectar los saldos.</p></div>
+              </div>
+              <div className="space-y-4 p-4 sm:p-5">
+                <div className="space-y-2"><Label>Quien visa</Label><Input disabled value={request.talent_leader_visa_name || 'Se registrará el líder de Talento Humano conectado'} /></div>
+                <div className="space-y-2">
+                  <Label>Observaciones del visado</Label>
+                  <Textarea
+                    rows={2}
+                    value={talentVisaObservations}
+                    onChange={(event) => setTalentVisaObservations(event.target.value)}
+                    disabled={request.area_leader_approved !== true || !!request.talent_leader_visa_at || !canVisaAsTalentLeader}
+                    className="resize-none"
+                  />
+                </div>
+                {request.talent_leader_visa_at && <p className="text-xs text-muted-foreground">Visado registrado el {format(new Date(request.talent_leader_visa_at), "dd/MM/yyyy 'a las' HH:mm", { locale: es })}.</p>}
+
+                {request.area_leader_approved === true && !request.talent_leader_visa_at && canVisaAsTalentLeader && (
+                  <div className="flex border-t pt-4 sm:justify-end">
+                    <Button onClick={visaAsTalentLeader} disabled={talentLeaderVisa.isPending}>
+                      <ShieldCheck className="mr-2 h-4 w-4" />Registrar visado
+                    </Button>
                   </div>
                 )}
               </div>
