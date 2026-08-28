@@ -94,25 +94,25 @@ export default function Vacaciones() {
   }) ?? [];
 
   return (
-    <div className="space-y-8 pb-10 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-4 pb-6">
       {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border px-4 py-4 shadow-sm sm:px-6 sm:py-5">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-          <div className="flex items-start sm:items-center gap-5">
-            <div className="w-16 h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-              <Plane className="w-8 h-8" />
+        <div className="relative z-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-inner">
+              <Plane className="h-6 w-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-2">
+            <div className="min-w-0">
+              <div className="mb-1 flex items-center gap-2">
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
                   NOVEDADES
                 </Badge>
               </div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground mb-1">
+              <h1 className="text-2xl font-black leading-tight tracking-tighter text-foreground sm:text-3xl">
                 Libro de Vacaciones
               </h1>
-              <p className="text-sm font-medium text-muted-foreground max-w-xl">
+              <p className="mt-0.5 max-w-xl text-xs font-medium text-muted-foreground sm:text-sm">
                 Gestión de vacaciones, disfrutes y compensaciones según normativa laboral.
               </p>
             </div>
@@ -120,31 +120,31 @@ export default function Vacaciones() {
           <Button 
             onClick={() => setFormOpen(true)}
             size="lg"
-            className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
+            className="h-11 w-full shrink-0 rounded-xl bg-primary px-6 text-[11px] font-black uppercase tracking-widest text-primary-foreground shadow-lg shadow-primary/15 transition-all hover:bg-primary/90 active:scale-[0.98] sm:w-auto"
           >
-            <Plus className="w-5 h-5 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Nueva Solicitud
           </Button>
         </div>
       </div>
 
       {/* Main Content with Tabs */}
-      <Tabs defaultValue="requests" className="space-y-6">
+      <Tabs defaultValue="requests" className="space-y-3">
         <div className="flex justify-center sm:justify-start">
-          <TabsList className="h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
-            <TabsTrigger value="requests" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+          <TabsList className="h-11 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:w-auto">
+            <TabsTrigger value="requests" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <FileText className="h-4 w-4 shrink-0" />
               Lista
             </TabsTrigger>
-            <TabsTrigger value="balances" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="balances" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Users className="h-4 w-4 shrink-0" />
               Saldos
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="calendar" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <Calendar className="h-4 w-4 shrink-0" />
               Mes
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
+            <TabsTrigger value="alerts" className="h-9 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm sm:flex-none">
               <AlertTriangle className="h-4 w-4 shrink-0" />
               Avisos
             </TabsTrigger>
@@ -327,10 +327,8 @@ export default function Vacaciones() {
         </TabsContent>
 
         {/* Calendar Tab */}
-        <TabsContent value="calendar">
-          <div className="bg-background rounded-[2rem] border border-border/50 shadow-sm p-4 sm:p-6">
-            <VacationCalendarView onRequestClick={handleRequestClick} />
-          </div>
+        <TabsContent value="calendar" className="mt-0">
+          <VacationCalendarView onRequestClick={handleRequestClick} />
         </TabsContent>
 
         {/* Alerts Tab */}
