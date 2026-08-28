@@ -1,0 +1,17 @@
+export const GENERAL_EMPLOYEE_REPORT_SELECTS = {
+  employees: 'id, document_type, identification_type_id, document_number, document_issue_city, document_issue_date, first_name, middle_name, last_name, second_last_name, birth_country, birth_department, birth_city, birth_date, gender, gender_identity, gender_identity_other, blood_type, marital_status, education_level_id, profession_id, is_first_job, is_head_of_household, disability_type, proceso_exclusivo_pcd, ethnic_group, is_conflict_victim, is_demobilized, status, is_active, identification_types(name, code), professions(name), education_levels(name)',
+  cycles: 'id, employee_id, cycle_number, status, start_date, end_date',
+  contacts: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, residence_department, residence_city, residence_address, residence_neighborhood, email, personal_email, phone, mobile, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, residence_letter_expiry',
+  families: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, spouse_name, spouse_gender, spouse_birth_date, spouse_works, children_count',
+  familyMembers: 'employee_id, employment_cycle_id, created_at, relationship, full_name, age, observations',
+  workInfos: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, operation_center_id, cost_center, area_id, position_id, position_name, work_city, hire_date, termination_date, link_type, observations, operation_centers(name), areas(name), positions(name)',
+  socialSecurities: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, risk_level, eps, afp, arl, ccf, afc, ips',
+  bankInfos: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, bank_name, account_type, account_number, account_registered',
+  schedules: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, payroll_type, is_office_schedule, rest_day',
+  timeConfigs: 'employee_id, employment_cycle_id, is_active, updated_at, created_at, start_date, mode, work_schedule_id, shift_cycle_id, notes, work_schedules(name), shift_cycles(name, code)',
+  centerAssignments: 'employee_id, employment_cycle_id, created_at, operation_center_id, operation_centers(name)',
+  contracts: 'employee_id, employment_cycle_id, created_at, updated_at, start_date, is_terminated, contract_number, contract_type, end_date, salary, salary_type, transport_allowance, other_allowances, trial_period_days, trial_end_date, work_address, work_city, work_labor_description, has_confidentiality_clause, has_non_compete_clause, special_clauses, is_approved',
+  documents: 'employee_id, employment_cycle_id, created_at, document_type, document_name, file_name, expiry_date',
+  certifications: 'employee_id, created_at, certification_type, certification_name, expiry_date',
+  vaccinations: 'employee_id, created_at, vaccine_type, dose_number, application_date',
+} as const;
