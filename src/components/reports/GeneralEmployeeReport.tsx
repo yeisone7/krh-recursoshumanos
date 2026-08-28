@@ -368,7 +368,7 @@ export function GeneralEmployeeReport() {
           setFieldsDialogOpen(open);
           if (!open) setFieldSearch('');
         }}>
-          <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-3xl border-border/70 bg-background p-0 shadow-2xl sm:max-w-5xl">
+          <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden rounded-3xl border-border/70 bg-background p-0 shadow-2xl sm:max-w-5xl">
             <DialogHeader className="border-b bg-gradient-to-r from-primary/[0.08] via-primary/[0.03] to-background px-6 py-5 pr-14 text-left">
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
@@ -415,7 +415,7 @@ export function GeneralEmployeeReport() {
               </div>
             </div>
 
-            <ScrollArea className="min-h-0 flex-1 bg-muted/15">
+            <ScrollArea className="h-0 min-h-0 flex-1 bg-muted/15">
               <div className="grid gap-4 p-5 lg:grid-cols-2">
                 {visibleCategories.map(({ category, columns: visibleColumns }) => {
                   const categoryColumns = GENERAL_EMPLOYEE_COLUMNS.filter((item) => item.category === category);
