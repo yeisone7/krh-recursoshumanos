@@ -201,9 +201,11 @@ function sortedOptions(rows: IncapacityOperationsRow[], getValue: (row: Incapaci
 export function IncapacityOperationsReport({
   rows,
   renderFilteredContent,
+  renderFilteredFooter,
 }: {
   rows: IncapacityOperationsRow[];
   renderFilteredContent?: (filteredRows: IncapacityOperationsRow[]) => React.ReactNode;
+  renderFilteredFooter?: (filteredRows: IncapacityOperationsRow[]) => React.ReactNode;
 }) {
   const [month, setMonth] = useState('all');
   const [operationCenterId, setOperationCenterId] = useState('all');
@@ -472,6 +474,8 @@ export function IncapacityOperationsReport({
           </ResponsiveContainer>
         </ReportChart>
       </div>
+
+      {renderFilteredFooter?.(report.filtered)}
 
     </div>
   );
