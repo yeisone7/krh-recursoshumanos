@@ -1011,7 +1011,19 @@ function EpsMonthlyRecoveryTable({ rows }: { rows: MonthlyEpsRecoveryRow[] }) {
   );
 }
 
-function OperationsFinancialPanels({
+function getFilteredIncapacities(
+  rows: IncapacityOperationsRow[],
+  incapacities: FlatIncapacity[],
+) {
+  const incapacityById = new Map(incapacities.map((item) => [item.id, item]));
+
+  return rows.flatMap((row) => {
+    const incapacity = incapacityById.get(row.id);
+    return incapacity ? [{ ...incapacity, total_days: row.totalDays }] : [];
+  });
+}
+
+function OperationsDurationPanel({
   rows,
   incapacities,
   pilaSettings,
@@ -1020,14 +1032,10 @@ function OperationsFinancialPanels({
   incapacities: FlatIncapacity[];
   pilaSettings: Parameters<typeof buildIncapacityDurationBuckets>[1];
 }) {
-  const filteredIncapacities = useMemo(() => {
-    const incapacityById = new Map(incapacities.map((item) => [item.id, item]));
-
-    return rows.flatMap((row) => {
-      const incapacity = incapacityById.get(row.id);
-      return incapacity ? [{ ...incapacity, total_days: row.totalDays }] : [];
-    });
-  }, [incapacities, rows]);
+  const filteredIncapacities = useMemo(
+    () => getFilteredIncapacities(rows, incapacities),
+    [incapacities, rows],
+  );
 
   const durationBuckets = useMemo(
     () => buildIncapacityDurationBuckets(filteredIncapacities, pilaSettings),
@@ -1037,17 +1045,26 @@ function OperationsFinancialPanels({
     () => buildIncapacityEmployerCostSummary(filteredIncapacities, pilaSettings),
     [filteredIncapacities, pilaSettings],
   );
+  return <DurationAnalysisPanel buckets={durationBuckets} employerCost={employerCost} />;
+}
+
+function OperationsRecoveryPanel({
+  rows,
+  incapacities,
+}: {
+  rows: IncapacityOperationsRow[];
+  incapacities: FlatIncapacity[];
+}) {
+  const filteredIncapacities = useMemo(
+    () => getFilteredIncapacities(rows, incapacities),
+    [incapacities, rows],
+  );
   const epsMonthlyRecovery = useMemo(
     () => buildMonthlyEpsRecovery(filteredIncapacities),
     [filteredIncapacities],
   );
 
-  return (
-    <div className="space-y-5">
-      <DurationAnalysisPanel buckets={durationBuckets} employerCost={employerCost} />
-      <EpsMonthlyRecoveryTable rows={epsMonthlyRecovery} />
-    </div>
-  );
+  return <EpsMonthlyRecoveryTable rows={epsMonthlyRecovery} />;
 }
 
 export default function AnaliticaIncapacidades() {
@@ -1593,10 +1610,16 @@ export default function AnaliticaIncapacidades() {
           <IncapacityOperationsReport
             rows={analytics.operationsReportRows}
             renderFilteredContent={(filteredRows) => (
-              <OperationsFinancialPanels
+              <OperationsDurationPanel
                 rows={filteredRows}
                 incapacities={flatIncapacities}
                 pilaSettings={pilaSettings}
+              />
+            )}
+            renderFilteredFooter={(filteredRows) => (
+              <OperationsRecoveryPanel
+                rows={filteredRows}
+                incapacities={flatIncapacities}
               />
             )}
           />
