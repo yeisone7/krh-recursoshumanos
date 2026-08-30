@@ -33,7 +33,6 @@ import {
   BookOpen,
   Ban,
   CalendarDays,
-  CheckCircle2,
   Clock,
   Filter,
   Gauge,
@@ -69,7 +68,6 @@ import {
   countActiveSelectionRequisitions,
   isActiveVacancyStatus,
   isWithinDateRange,
-  resolveVacancyAverageSalary,
 } from '@/lib/selectionAnalytics';
 import { cn } from '@/lib/utils';
 
@@ -82,12 +80,6 @@ const chartColors = [
   'hsl(var(--destructive))',
   'hsl(var(--accent-foreground))',
 ];
-
-const currencyFormatter = new Intl.NumberFormat('es-CO', {
-  style: 'currency',
-  currency: 'COP',
-  maximumFractionDigits: 0,
-});
 
 const numberFormatter = new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 });
 
@@ -777,22 +769,6 @@ export default function AnaliticaSeleccion() {
       avance: percent(entry.completados, entry.total),
     })).sort((a, b) => b.total - a.total).slice(0, 8);
 
-    const requisitionsById = new Map(requisitions.map((item: any) => [item.id, item]));
-    const salaryByArea = Object.values(
-      vacancies.reduce<Record<string, { area: string; promedio: number; vacantes: number; values: number[] }>>((acc: any, vacancy: any) => {
-        const area = vacancy.department_area || 'Sin área';
-        const value = resolveVacancyAverageSalary(vacancy, requisitionsById.get(vacancy.requisition_id));
-        if (!value) return acc;
-        if (!acc[area]) acc[area] = { area, promedio: 0, vacantes: 0, values: [] };
-        acc[area].vacantes += vacancy.positions_count || 1;
-        acc[area].values.push(value);
-        return acc;
-      }, {})
-    ).map((entry) => ({
-      ...entry,
-      promedio: Math.round(entry.values.reduce((sum, value) => sum + value, 0) / entry.values.length),
-    })).sort((a, b) => b.promedio - a.promedio).slice(0, 8);
-
     const demandByPosition = Object.values(
       vacancies.reduce<Record<string, { cargo: string; demanda: number; vacantes: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
         const cargo = formatStatus(vacancy.position_title || vacancy.personnel_requisitions?.cargo_solicitado || 'Sin cargo');
@@ -807,10 +783,6 @@ export default function AnaliticaSeleccion() {
         return acc;
       }, {})
     ).sort((a, b) => b.demanda - a.demanda).slice(0, 10);
-
-    const coverageByPosition = [...demandByPosition]
-      .sort((a, b) => b.cobertura - a.cobertura || b.demanda - a.demanda)
-      .slice(0, 8);
 
     const demandByShift = Object.values(
       vacancies.reduce<Record<string, { jornada: string; demanda: number; candidatos: number; contratados: number; cobertura: number }>>((acc: any, vacancy: any) => {
@@ -906,16 +878,6 @@ export default function AnaliticaSeleccion() {
 
     const insights = [
       {
-        title: 'Salud del pipeline',
-        value: `${numberFormatter.format(avgCandidatesPerVacancy)} candidatos/vacante`,
-        tone: avgCandidatesPerVacancy >= 3 ? 'success' : avgCandidatesPerVacancy >= 1 ? 'warning' : 'destructive',
-      },
-      {
-        title: 'Conversión a contratación',
-        value: `${hireRate}%`,
-        tone: hireRate >= 20 ? 'success' : hireRate >= 10 ? 'warning' : 'destructive',
-      },
-      {
         title: 'Vacantes envejecidas',
         value: `${aging.find((item) => item.name === '+30 días')?.value || 0}`,
         tone: (aging.find((item) => item.name === '+30 días')?.value || 0) === 0 ? 'success' : 'warning',
@@ -931,16 +893,6 @@ export default function AnaliticaSeleccion() {
 
     const rejectionReasonsData = groupCount(discardedCandidates as any[], (c) => (c as any).rejection_reason || 'sin_registro');
     const withdrawalReasonsData = groupCount(withdrawnCandidates as any[], (c) => (c as any).withdrawal_reason || 'sin_registro');
-
-    const positionsCoverage = vacancies
-      .map((v: any) => {
-        const vacCandidates = candidates.filter((c: any) => c.vacancy_id === v.id);
-        const covered = vacCandidates.filter((c: any) => ['selected', 'hired'].includes(c.status)).length;
-        const total = v.positions_count || 1;
-        return { cargo: v.position_title || 'Sin cargo', posiciones: total, cubiertos: covered, cobertura: percent(covered, total) };
-      })
-      .sort((a: any, b: any) => b.posiciones - a.posiciones)
-      .slice(0, 10);
 
     const cancelledVacanciesData = cancelledVacancies.map((v: any) => ({
       cargo: v.position_title || 'Sin cargo',
@@ -967,15 +919,12 @@ export default function AnaliticaSeleccion() {
       centerPipeline,
       aging,
       stepsByType,
-      salaryByArea,
       demandByPosition,
-      coverageByPosition,
       demandByShift,
       stagnationAlerts,
       insights,
       rejectionReasonsData,
       withdrawalReasonsData,
-      positionsCoverage,
       cancelledVacanciesData,
       kpis: {
         requisitions: requisitions.length,
@@ -1095,14 +1044,10 @@ export default function AnaliticaSeleccion() {
           info={{ calc: 'Se cuentan las vacantes en estado Abierta, En proceso o Pendiente colocado.', ejemplo: 'Si se crearon 5 vacantes y 2 ya cerraron, se muestran 3.', note: 'Indica cuántos procesos de selección están activos ahora mismo.' }} />
         <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} activos por vacante activa`} icon={Users} trend="up"
           info={{ calc: 'Candidatos sin resultado final. El promedio usa solo candidatos asociados a vacantes activas.', ejemplo: 'Un candidato en entrevista cuenta; uno contratado ya no cuenta.', note: 'Muestra cuántas personas están siendo evaluadas y qué tan surtido está el pipeline activo.' }} />
-        <KpiCard title="Tasa de avance" value={`${analytics.kpis.advanceRate}%`} detail="Promedio del embudo aplicado-contratado" icon={TrendingUp} trend={analytics.kpis.advanceRate >= 45 ? 'up' : 'down'}
-          info={{ calc: 'Promedio ponderado por la etapa máxima: Aplicado 0%, Evaluado 25%, Entrevista 50%, Oferta 75% y Contratado 100%.', ejemplo: 'Dos candidatos en Aplicado y Entrevista promedian (0% + 50%) / 2 = 25%.', note: 'Cuanto más alta, más lejos avanza en promedio el conjunto de candidatos.' }} />
         <KpiCard title="Tiempo prom. cobertura" value={`${analytics.kpis.avgTimeToFill} días`} detail="Promedio de vacantes cerradas" icon={Clock}
           info={{ calc: 'Promedio de días que tomó cerrar las vacantes ya finalizadas (desde apertura hasta cierre).', ejemplo: 'Si una vacante tardó 20 días y otra 30, el promedio es 25 días.', note: 'Permite saber si los procesos de selección son rápidos o lentos.' }} />
         <KpiCard title="Contratados" value={analytics.kpis.hiredCandidates} detail={`${analytics.kpis.hireRate}% conversión`} icon={UserCheck} trend={analytics.kpis.hireRate >= 15 ? 'up' : 'down'}
           info={{ calc: 'Candidatos que completaron el proceso y fueron oficialmente vinculados a la empresa.', ejemplo: 'Si de 20 candidatos, 4 fueron contratados, este número es 4.', note: 'Es el resultado final esperado de cada proceso de selección. Una tasa del 15% o más es saludable.' }} />
-        <KpiCard title="Tasa selección" value={`${analytics.kpis.selectionRate}%`} detail="Seleccionados + contratados" icon={CheckCircle2}
-          info={{ calc: 'De cada 100 candidatos, cuántos fueron seleccionados o contratados.', ejemplo: '2 seleccionados + 3 contratados de 20 = 25% de tasa de selección.', note: 'Incluye tanto a los seleccionados (pendientes de contratar) como a los ya vinculados.' }} />
         <KpiCard title="Tasa descarte global" value={`${analytics.kpis.rejectionRate}%`} detail="No seleccionados o retirados" icon={Gauge}
           info={{ calc: 'De cada 100 candidatos, cuántos no continuaron en el proceso (descartados o desistidos).', ejemplo: '5 descartados + 3 desistidos de 20 candidatos = 40% de descarte global.', note: 'Permite ver qué tanto se está filtrando el proceso. Un valor muy alto puede indicar problemas en la atracción de candidatos.' }} />
       </div>
@@ -1357,19 +1302,6 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Rangos salariales promedio por área"
-          info={{ calc: 'Para cada área organizacional calcula el salario promedio de las vacantes publicadas en ese período.', ejemplo: 'Si el área de Tecnología tiene un promedio de $4M y Operaciones $2.5M, hay una brecha salarial entre áreas.', note: 'Ayuda a detectar áreas con presupuesto salarial bajo que pueden tener dificultad para atraer candidatos.' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={analytics.salaryByArea} layout="vertical" margin={{ left: 28, right: 18, top: 8, bottom: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" tickFormatter={(value) => `${Math.round(Number(value) / 1000000)}M`} tick={{ fontSize: 12 }} />
-              <YAxis dataKey="area" type="category" width={92} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(value) => currencyFormatter.format(Number(value))} />
-              <Bar dataKey="promedio" name="Promedio" fill="hsl(var(--warning))" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
         <ChartCard title="Ranking de demanda por cargo" className="xl:col-span-2"
           info={{ calc: 'Lista los cargos más solicitados comparando cuántos cupos se pidieron, cuántos candidatos llegaron y cuántos fueron contratados.', ejemplo: 'Si Conductor tiene 10 cupos pedidos y solo 3 contratados, ese cargo tiene baja tasa de cobertura.', note: 'Los cargos con alta demanda y baja cobertura son los que más requieren estrategias de atracción específicas.' }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -1382,19 +1314,6 @@ export default function AnaliticaSeleccion() {
               <Bar dataKey="demanda" name="Cupos demandados" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
               <Bar dataKey="candidatos" name="Candidatos" fill="hsl(var(--secondary))" radius={[0, 6, 6, 0]} />
               <Bar dataKey="contratados" name="Contratados" fill="hsl(var(--success))" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartCard>
-
-        <ChartCard title="Tasa de cobertura por cargo"
-          info={{ calc: 'Para cada cargo muestra qué porcentaje de los cupos solicitados ya fueron cubiertos con contrataciones.', ejemplo: 'Un cargo con 4 cupos pedidos y 2 contratados tiene 50% de cobertura.', note: '100% significa que todos los cupos de ese cargo ya fueron cubiertos. Por debajo del 60% requiere atención.' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={analytics.coverageByPosition} margin={{ left: -20, right: 12, top: 8, bottom: 36 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="cargo" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
-              <YAxis domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="cobertura" name="Cobertura" fill="hsl(var(--success))" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -1450,22 +1369,6 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Cobertura real de posiciones por vacante" className="xl:col-span-2"
-          info={{ calc: 'Por cada vacante muestra cuántos cupos tenía asignados (posiciones requeridas) y cuántos han sido cubiertos con candidatos seleccionados o contratados.', ejemplo: 'Una vacante con 4 cupos y 2 cubiertos tiene 50% de cobertura. Cuando llega al 100%, los botones se bloquean.', note: 'Permite identificar qué vacantes aún tienen cupos disponibles y cuáles ya completaron su proceso.' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={analytics.positionsCoverage} margin={{ left: 20, right: 18, top: 10, bottom: 36 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="cargo" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
-              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value, name) => String(name).includes('%') ? `${value}%` : value} />
-              <Legend />
-              <Bar yAxisId="left" dataKey="posiciones" name="Posiciones requeridas" fill="hsl(var(--secondary))" radius={[4, 4, 0, 0]} />
-              <Bar yAxisId="left" dataKey="cubiertos" name="Cubiertos (Sel.+Contrat.)" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} />
-              <Line yAxisId="right" type="monotone" dataKey="cobertura" name="Cobertura %" stroke="hsl(var(--primary))" strokeWidth={3} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartCard>
       </div>
 
       {/* Cancelled Vacancies Table */}
@@ -1518,47 +1421,6 @@ export default function AnaliticaSeleccion() {
               </div>
             )) : (
               <p className="text-sm text-muted-foreground">No hay candidatos en proceso sin avance durante 7 días o más.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-semibold">
-            <BarChart3 className="h-5 w-5 text-primary" />
-            Conversión detallada por fuente de convocatoria
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {analytics.sourceConversion.length > 0 ? analytics.sourceConversion.map((source: any) => (
-              <div key={source.source} className="rounded-md border p-3">
-                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="font-medium text-foreground">{source.source}</p>
-                  <Badge variant="outline" className="w-fit">{source.contratadoPct}% contratación</Badge>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-5">
-                  {[
-                    ['Aplicado', source.aplicado, 100],
-                    ['Evaluado', source.evaluado, source.evaluadoPct],
-                    ['Entrevista', source.entrevista, source.entrevistaPct],
-                    ['Oferta', source.oferta, source.ofertaPct],
-                    ['Contratado', source.contratado, source.contratadoPct],
-                  ].map(([label, value, pct]) => (
-                    <div key={label as string} className="rounded-md bg-background p-2">
-                      <div className="flex items-center justify-between gap-2 text-xs">
-                        <span className="text-muted-foreground">{label}</span>
-                        <span className="font-medium text-foreground">{value}</span>
-                      </div>
-                      <Progress value={Number(pct)} className="mt-2 h-1.5" />
-                      <p className="mt-1 text-[11px] text-muted-foreground">{pct}%</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )) : (
-              <p className="text-sm text-muted-foreground">Aún no hay candidatos con fuente de convocatoria registrada.</p>
             )}
           </div>
         </CardContent>
@@ -1656,12 +1518,6 @@ export default function AnaliticaSeleccion() {
                     note: 'Lo recomendable es tener 3 o más candidatos por vacante para poder elegir con criterio.',
                   },
                   {
-                    name: 'Tasa de avance',
-                    calc: 'Promedia la etapa máxima alcanzada con estos pesos: Aplicado 0%, Evaluado 25%, Entrevista 50%, Oferta 75% y Contratado 100%.',
-                    ejemplo: 'Dos candidatos en Aplicado y Entrevista promedian (0% + 50%) / 2 = 25%.',
-                    note: 'Cuanto más alta, mejor: significa que los candidatos avanzan por todo el proceso.',
-                  },
-                  {
                     name: 'Tiempo promedio de cobertura',
                     calc: 'Promedio de días que tomó cerrar las vacantes ya finalizadas (desde que se abrieron hasta que se cerraron).',
                     ejemplo: 'Si una vacante tardó 20 días y otra 30, el promedio es 25 días.',
@@ -1698,18 +1554,6 @@ export default function AnaliticaSeleccion() {
                     note: 'Es el resultado final esperado de cada proceso de selección.',
                   },
                   {
-                    name: 'Tasa de contratación',
-                    calc: 'De cada 100 candidatos que aplican, cuántos terminan siendo contratados.',
-                    ejemplo: '4 contratados de 20 candidatos = 20% de tasa de contratación.',
-                    note: 'Una tasa del 15% o más se considera saludable.',
-                  },
-                  {
-                    name: 'Tasa de selección',
-                    calc: 'De cada 100 candidatos, cuántos fueron seleccionados o contratados.',
-                    ejemplo: '2 seleccionados + 3 contratados de 20 = 25% de tasa de selección.',
-                    note: 'Incluye tanto a los seleccionados (pendientes de contratar) como a los ya vinculados.',
-                  },
-                  {
                     name: 'Tasa de descarte global',
                     calc: 'De cada 100 candidatos, cuántos no continuaron en el proceso (ya sea descartados o desistidos).',
                     ejemplo: '5 descartados + 3 desistidos de 20 = 40% de descarte global.',
@@ -1726,12 +1570,6 @@ export default function AnaliticaSeleccion() {
                     calc: 'Candidatos que decidieron retirarse voluntariamente del proceso.',
                     ejemplo: '3 desistidos de 20 candidatos = 15%.',
                     note: 'Una tasa alta puede indicar problemas con el salario, la demora del proceso o la competencia del mercado.',
-                  },
-                  {
-                    name: 'Cobertura real de posiciones',
-                    calc: 'Por cada vacante, qué porcentaje de sus cupos han sido cubiertos con candidatos seleccionados o contratados.',
-                    ejemplo: 'Una vacante con 4 cupos y 2 candidatos seleccionados tiene 50% de cobertura.',
-                    note: 'Cuando llega al 100%, los botones de selección se bloquean automáticamente.',
                   },
                 ].map((m) => (
                   <div key={m.name} className="rounded-xl border bg-background p-4 space-y-2">
