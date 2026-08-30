@@ -4,12 +4,13 @@ import { format, subMonths, subWeeks, startOfMonth, startOfWeek, differenceInCal
 import { es } from 'date-fns/locale';
 import {
   Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   ComposedChart,
+  Funnel,
+  FunnelChart,
   Legend,
   Line,
   Pie,
@@ -66,10 +67,12 @@ import { useVacancies } from '@/hooks/useVacancies';
 import {
   candidateReachedStage,
   countActiveSelectionRequisitions,
+  getApprovalTimeByArea,
   isActiveVacancyStatus,
   isWithinDateRange,
 } from '@/lib/selectionAnalytics';
 import { cn } from '@/lib/utils';
+import { getSelectionTimeByLaborType } from '@/lib/selectionLaborTiming';
 
 const chartColors = [
   'hsl(var(--primary))',
@@ -615,6 +618,8 @@ export default function AnaliticaSeleccion() {
     return matchesCenter && matchesDate;
   }), [candidates, centerFilter, startDate, endDate]);
 
+  const laborTiming = useMemo(() => getSelectionTimeByLaborType(filteredVacancies, requisitions), [filteredVacancies, requisitions]);
+
   const analytics = useMemo(() => {
     const vacancies = filteredVacancies;
     const candidates = filteredCandidates;
@@ -909,6 +914,7 @@ export default function AnaliticaSeleccion() {
       peakMonthlyCoverage,
       funnel,
       recruitmentFunnel,
+      approvalTimeByArea: getApprovalTimeByArea(requisitions),
       sourceConversion,
       radar,
       statusCandidates,
@@ -1143,6 +1149,38 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
+        <ChartCard title="Tiempos de selección por mano de obra (MOC / MONC)" className="xl:col-span-2"
+          info={{ calc: 'Promedio de días calendario por vacante, desde el inicio de selección registrado en su requisición (o la apertura si no hay inicio). Cerradas: hasta el cierre real. Activas: hasta hoy. MOC es calificada y MONC no calificada.', ejemplo: 'Dos vacantes MOC cerradas en 10 y 20 días muestran 15 días promedio. Las vacantes activas se calculan aparte.', note: 'Respeta los filtros de apertura y centro. No mide incumplimiento de una meta. Excluye pausadas, canceladas, fechas inválidas y vacantes sin clasificación; sin datos no equivale a cero días.' }}>
+          <div className="flex h-full flex-col gap-2">
+            <p className="text-xs text-muted-foreground">Días calendario desde inicio de selección; apertura como alternativa. MOC: calificada · MONC: no calificada.</p>
+            <div className="min-h-0 flex-1">
+              {laborTiming.groups.some((group) => group.closedCount + group.activeCount > 0) ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={laborTiming.groups} margin={{ left: -12, right: 12, top: 8, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `${value} d`} domain={[0, 'auto']} />
+                    <Tooltip formatter={(value, name, item) => [`${numberFormatter.format(Number(value))} días (${item.dataKey === 'closedAverageDays' ? item.payload.closedCount : item.payload.activeCount} vacantes)`, name]} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="closedAverageDays" name="Duración de cerradas" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="activeAverageDays" name="Tiempo de activas" fill="hsl(var(--warning))" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">No hay procesos MOC o MONC con fechas válidas para los filtros seleccionados.</div>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground" aria-label="Promedios y cantidad de vacantes por tipo de mano de obra">
+              {laborTiming.groups.map((group) => (
+                <p key={group.name}><span className="font-medium text-foreground">{group.name}</span>: cerradas {group.closedAverageDays === null ? 'sin datos' : `${numberFormatter.format(group.closedAverageDays)} d (${group.closedCount})`} · activas {group.activeAverageDays === null ? 'sin datos' : `${numberFormatter.format(group.activeAverageDays)} d (${group.activeCount})`}</p>
+              ))}
+            </div>
+            {(laborTiming.unclassifiedCount > 0 || laborTiming.invalidDatesCount > 0) && (
+              <p className="text-[11px] text-muted-foreground">Excluidas: {laborTiming.unclassifiedCount} sin clasificación MOC/MONC y {laborTiming.invalidDatesCount} con fechas inválidas o incompletas.</p>
+            )}
+          </div>
+        </ChartCard>
+
         <ChartCard title="Embudo de conversión"
           info={{ calc: 'Muestra cuántos elementos hay en cada etapa: requisiciones → vacantes → candidatos → en proceso → seleccionados → contratados.', ejemplo: 'Si hay 50 candidatos pero solo 5 contratados, hay una reducción del 90% en el embudo.', note: 'Entre más estrecho sea el embudo en las últimas etapas, más selectivo es el proceso. Lo ideal es que sea progresivo.' }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -1158,21 +1196,38 @@ export default function AnaliticaSeleccion() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Embudo de reclutamiento por etapa" className="xl:col-span-2"
-          info={{ calc: 'Para cada etapa (aplicado, evaluado, entrevista, oferta, contratado) muestra cuántos candidatos la alcanzaron y qué porcentaje representa del total.', ejemplo: 'Si 20 candidatos llegaron a entrevista de 50, ese paso tiene 40% de alcance.', note: '"% etapa anterior" indica la tasa de avance entre pasos. Una caída grande entre dos etapas señala dónde se pierde más talento.' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={analytics.recruitmentFunnel} margin={{ left: -20, right: 18, top: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="left" tick={{ fontSize: 12 }} />
-              <YAxis yAxisId="right" orientation="right" domain={[0, 100]} tickFormatter={(value) => `${value}%`} tick={{ fontSize: 12 }} />
-              <Tooltip formatter={(value, name) => name === 'Volumen' ? value : `${value}%`} />
-              <Legend />
-              <Bar yAxisId="left" dataKey="value" name="Volumen" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-              <Line yAxisId="right" type="monotone" dataKey="totalPercent" name="% del total" stroke="hsl(var(--success))" strokeWidth={3} />
-              <Line yAxisId="right" type="monotone" dataKey="stepPercent" name="% etapa anterior" stroke="hsl(var(--warning))" strokeWidth={3} />
-            </ComposedChart>
-          </ResponsiveContainer>
+        <ChartCard title="Embudo de tiempo de aprobación por área" className="xl:col-span-2"
+          info={{ calc: 'Promedio de días transcurridos entre la aprobación del paso anterior y la aprobación de cada área, según la ruta de autorización de cada requisición filtrada. Para Coordinadores se mide desde la creación e incluye el tiempo en borrador.', ejemplo: 'Si RRHH aprobó dos solicitudes en 1 y 3 días desde Coordinadores, su promedio es 2 días.', note: 'Ordenado de mayor a menor demora, no por secuencia del flujo ni por conversión. Solo incluye aprobaciones con fechas válidas; excluye pendientes, rechazos y pasos que no aplican.' }}>
+          {analytics.approvalTimeByArea.length > 0 ? (
+            <div className="flex h-full flex-col gap-2">
+              <p className="text-xs text-muted-foreground">Días promedio · Mayor a menor demora. Coordinadores incluye el tiempo desde creación.</p>
+              <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-3">
+                {analytics.approvalTimeByArea.some((area) => area.averageDays > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <FunnelChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                      <Tooltip formatter={(value, name, item) => [`${Number(value).toLocaleString('es-CO', { maximumFractionDigits: 3 })} días (${item.payload.approvals} aprobaciones)`, name]} />
+                      <Funnel dataKey="averageDays" nameKey="name" data={analytics.approvalTimeByArea.map((area, index) => ({ ...area, fill: chartColors[index % chartColors.length] }))} isAnimationActive={false} />
+                    </FunnelChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-center text-xs text-muted-foreground">Las aprobaciones registradas no tienen tiempo transcurrido.</p>
+                )}
+                <ul className="space-y-2 overflow-y-auto max-h-full" aria-label="Tiempo promedio de aprobación por área">
+                  {analytics.approvalTimeByArea.map((area, index) => (
+                    <li key={area.step} className="flex items-start gap-2 text-xs">
+                      <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: chartColors[index % chartColors.length] }} aria-hidden="true" />
+                      <div>
+                        <p className="font-medium">{area.name}: {area.averageDays > 0 && area.averageDays < 0.1 ? '<0,1' : numberFormatter.format(area.averageDays)} días</p>
+                        <p className="text-muted-foreground">{area.approvals} {area.approvals === 1 ? 'aprobación' : 'aprobaciones'}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">No hay aprobaciones con fechas válidas para los filtros seleccionados.</div>
+          )}
         </ChartCard>
 
         <ChartCard title="Conversión por fuente de convocatoria" className="xl:col-span-2"
@@ -1263,13 +1318,13 @@ export default function AnaliticaSeleccion() {
         <ChartCard title="Motivos de vacante"
           info={{ calc: 'Agrupa las vacantes según el motivo por el cual fueron creadas: renuncia, nuevo cargo, reemplazo, etc.', ejemplo: 'Si el 70% de las vacantes son por renuncia, hay un posible problema de retención de personal.', note: 'Una alta concentración en un solo motivo puede indicar un patrón organizacional que merece revisión.' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={analytics.reasons} margin={{ left: -20, right: 12, top: 8, bottom: 24 }}>
+            <BarChart data={analytics.reasons} margin={{ left: -20, right: 12, top: 8, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" angle={-12} textAnchor="end" interval={0} tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 12 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
               <Tooltip />
-              <Area type="monotone" dataKey="value" name="Vacantes" stroke="hsl(var(--tertiary))" fill="hsl(var(--tertiary))" fillOpacity={0.2} />
-            </AreaChart>
+              <Bar dataKey="value" name="Vacantes" fill="hsl(var(--tertiary))" radius={[6, 6, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 

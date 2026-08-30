@@ -1,3 +1,5 @@
+import { getRequisitionApprovalRoute, type RequisitionApprovalStep } from './requisitionApprovalFlow';
+
 export type RecruitmentStage = 'aplicado' | 'evaluado' | 'entrevista' | 'oferta' | 'contratado';
 
 export const ACTIVE_VACANCY_STATUSES = ['open', 'in_process', 'pending_placed'] as const;
@@ -26,6 +28,55 @@ export function isActiveSelectionRequisition(requisition: SelectionRequisitionDa
 
 export function countActiveSelectionRequisitions(requisitions: SelectionRequisitionData[]) {
   return requisitions.filter(isActiveSelectionRequisition).length;
+}
+
+type ApprovalTimingRequisition = {
+  autoriza?: string | null;
+  created_at?: string | null;
+} & Partial<Record<`${RequisitionApprovalStep}_aprobado`, boolean | null>>
+  & Partial<Record<`${RequisitionApprovalStep}_fecha_aprobacion`, string | null>>;
+
+const approvalAreaNames: Record<RequisitionApprovalStep, string> = {
+  coordinadores: 'Coordinadores',
+  rrhh: 'RRHH',
+  juridico: 'Jurídico',
+  operaciones: 'Operaciones',
+  gerencia: 'Gerencia',
+  seleccion: 'Selección',
+};
+
+export function getApprovalTimeByArea(requisitions: ApprovalTimingRequisition[]) {
+  const totals = new Map<RequisitionApprovalStep, { milliseconds: number; approvals: number }>();
+  const timestamp = (value: string | null | undefined) => value ? Date.parse(value) : NaN;
+
+  for (const requisition of requisitions) {
+    const route = getRequisitionApprovalRoute(requisition.autoriza);
+    route.forEach((step, index) => {
+      if (requisition[`${step}_aprobado`] !== true) return;
+
+      const previousStep = route[index - 1];
+      if (previousStep && requisition[`${previousStep}_aprobado`] !== true) return;
+
+      // Creation is the only recorded baseline for the first area; it includes draft time.
+      const start = timestamp(previousStep
+        ? requisition[`${previousStep}_fecha_aprobacion`]
+        : requisition.created_at);
+      const end = timestamp(requisition[`${step}_fecha_aprobacion`]);
+      if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return;
+
+      const total = totals.get(step) || { milliseconds: 0, approvals: 0 };
+      total.milliseconds += end - start;
+      total.approvals += 1;
+      totals.set(step, total);
+    });
+  }
+
+  return Array.from(totals, ([step, total]) => ({
+    step,
+    name: approvalAreaNames[step],
+    averageDays: total.milliseconds / total.approvals / 86_400_000,
+    approvals: total.approvals,
+  })).sort((a, b) => b.averageDays - a.averageDays);
 }
 
 interface CandidateStageData {
