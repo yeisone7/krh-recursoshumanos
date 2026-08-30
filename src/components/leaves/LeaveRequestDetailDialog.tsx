@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
+import { formatDateOnly } from '@/lib/dateOnly';
 import { 
   Calendar, 
   Clock, 
@@ -33,6 +33,7 @@ import {
 } from '@/types/leave';
 import {
   useAreaLeaderLeaveDecision,
+  useAnnulUnusedLeaveRequest,
   useCancelLeaveRequest,
   useLeaveTypeConfigs,
   useManagerLeaveDecision,
@@ -71,6 +72,7 @@ export function LeaveRequestDetailDialog({
   const managerDecision = useManagerLeaveDecision();
   const areaLeaderDecision = useAreaLeaderLeaveDecision();
   const cancelRequest = useCancelLeaveRequest();
+  const annulUnusedRequest = useAnnulUnusedLeaveRequest();
   const updateRequest = useUpdateLeaveRequest();
 
   if (!request) return null;
@@ -160,6 +162,23 @@ export function LeaveRequestDetailDialog({
     }
   };
 
+  const handleAnnulUnused = async () => {
+    if (!cancellationReason.trim()) {
+      toast.error('Debe especificar por qué no se utilizó el permiso');
+      return;
+    }
+    try {
+      await annulUnusedRequest.mutateAsync({
+        id: request.id,
+        unused_reason: cancellationReason,
+      });
+      toast.success('Permiso anulado por no uso');
+      onOpenChange(false);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'Error al anular el permiso'));
+    }
+  };
+
   const handleUploadDocument = async (file: File) => {
     if (!currentCompanyId) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -214,6 +233,7 @@ export function LeaveRequestDetailDialog({
   const employeeName = request.employees_v2 
     ? `${request.employees_v2.first_name} ${request.employees_v2.last_name}`
     : 'Empleado';
+  const selectedTypeConfig = typeConfigs.find((config) => config.leave_type === request.leave_type);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -228,7 +248,7 @@ export function LeaveRequestDetailDialog({
             </DialogTitle>
             <div className="flex shrink-0 flex-wrap justify-end gap-2">
               <Badge className="w-fit rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide" variant={getStatusBadgeVariant(request.status)}>
-                {LEAVE_STATUS_LABELS[request.status]}
+                {request.annulled_as_unused ? 'Anulado' : LEAVE_STATUS_LABELS[request.status]}
               </Badge>
               {request.status === 'pendiente' && (
                 <Badge variant="outline" className="w-fit rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-wide text-primary">
@@ -297,14 +317,14 @@ export function LeaveRequestDetailDialog({
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Hora de inicio</p>
-                  <p className="mt-1 font-semibold tabular-nums">{request.start_time}</p>
+                  <p className="mt-1 font-semibold tabular-nums">{request.start_time.slice(0, 5)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-xl border border-border/70 p-4">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Hora de finalización</p>
-                  <p className="mt-1 font-semibold tabular-nums">{request.end_time}</p>
+                  <p className="mt-1 font-semibold tabular-nums">{request.end_time.slice(0, 5)}</p>
                 </div>
               </div>
             </div>
@@ -344,7 +364,17 @@ export function LeaveRequestDetailDialog({
 
           {/* Document Section */}
           <section className="rounded-xl border border-border/70 p-4">
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Documento de soporte</p>
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Documento de soporte</p>
+              {selectedTypeConfig?.requires_document && !request.document_url && (
+                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">Pendiente por subir</Badge>
+              )}
+            </div>
+            {selectedTypeConfig?.requires_document && !request.document_url && (
+              <p className="mb-3 rounded-lg bg-amber-50 p-3 text-sm font-medium text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                Requerido: {selectedTypeConfig.document_description || 'documento de soporte'}.
+              </p>
+            )}
             {request.document_url ? (
               <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-900/60 sm:flex-row sm:items-center sm:gap-2">
                 <FileText className="h-4 w-4 shrink-0 text-primary" />
@@ -414,15 +444,19 @@ export function LeaveRequestDetailDialog({
             <>
               <Separator />
               <div className="space-y-2">
-                <p className="text-sm font-medium text-destructive">Información de Cancelación</p>
+                <p className="text-sm font-medium text-destructive">
+                  {request.annulled_as_unused ? 'Información de anulación por no uso' : 'Información de cancelación'}
+                </p>
                 <div>
-                  <p className="text-muted-foreground">Fecha de cancelación</p>
+                  <p className="text-muted-foreground">{request.annulled_as_unused ? 'Fecha de anulación' : 'Fecha de cancelación'}</p>
                   <p>{format(new Date(request.cancelled_at), 'PPP', { locale: es })}</p>
                 </div>
-                {request.cancellation_reason && (
+                {(request.unused_reason || request.cancellation_reason) && (
                   <div>
-                    <p className="text-muted-foreground">Motivo</p>
-                    <p className="p-2 bg-background rounded">{request.cancellation_reason}</p>
+                    <p className="text-muted-foreground">
+                      {request.annulled_as_unused ? 'Por qué no se utilizó' : 'Motivo'}
+                    </p>
+                    <p className="p-2 bg-background rounded">{request.unused_reason || request.cancellation_reason}</p>
                   </div>
                 )}
               </div>
@@ -553,17 +587,17 @@ export function LeaveRequestDetailDialog({
                     variant="outline" 
                     onClick={() => setShowCancelForm(true)}
                   >
-                    Cancelar Permiso Aprobado
+                    Anular permiso no utilizado
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <Label>Motivo de la Cancelación *</Label>
+                    <Label>¿Por qué no se utilizó el permiso? *</Label>
                     <Textarea
                       value={cancellationReason}
                       onChange={(e) => setCancellationReason(e.target.value)}
-                      placeholder="Indique el motivo de la cancelación..."
+                      placeholder="Explique obligatoriamente por qué el permiso aprobado no fue utilizado..."
                       className="mt-1"
                     />
                   </div>
@@ -574,10 +608,10 @@ export function LeaveRequestDetailDialog({
                     <Button 
                       className="w-full sm:w-auto"
                       variant="destructive" 
-                      onClick={handleCancel}
-                      disabled={cancelRequest.isPending}
+                      onClick={handleAnnulUnused}
+                      disabled={annulUnusedRequest.isPending}
                     >
-                      {cancelRequest.isPending ? 'Cancelando...' : 'Confirmar Cancelación'}
+                      {annulUnusedRequest.isPending ? 'Anulando...' : 'Confirmar anulación'}
                     </Button>
                   </div>
                 </div>

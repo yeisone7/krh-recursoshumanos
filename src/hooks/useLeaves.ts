@@ -483,6 +483,25 @@ export function useCancelLeaveRequest() {
   });
 }
 
+export function useAnnulUnusedLeaveRequest() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, unused_reason }: { id: string; unused_reason: string }) => {
+      const { data, error } = await supabase.rpc('annul_unused_leave_request', {
+        p_request_id: id,
+        p_reason: unused_reason,
+      });
+      if (error) throw error;
+      return data as LeaveRequest;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leave_requests'] });
+      queryClient.invalidateQueries({ queryKey: ['leave_balances'] });
+    },
+  });
+}
+
 // =============================================
 // UTILITY FUNCTIONS
 // =============================================

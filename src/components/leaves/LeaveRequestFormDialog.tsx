@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Upload, AlertCircle, FileText, X } from 'lucide-react';
 import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
@@ -45,7 +45,7 @@ import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useLeaveTypeConfigs, useCreateLeaveRequest, calculateBusinessDays } from '@/hooks/useLeaves';
 import { useHolidaysSet } from '@/hooks/useHolidays';
-import { LeaveType, LeaveDurationType, LEAVE_DURATION_TYPE_LABELS } from '@/types/leave';
+import { getAllowedLeaveDurations, LeaveType, LeaveDurationType } from '@/types/leave';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -99,6 +99,8 @@ export function LeaveRequestFormDialog({
   const watchEndDate = form.watch('end_date');
   const watchLeaveType = form.watch('leave_type');
   const watchEmployeeId = form.watch('employee_id');
+  const watchStartTime = form.watch('start_time');
+  const watchEndTime = form.watch('end_time');
 
   // Unified absence conflict detection
   const { data: leaveConflicts = [] } = useAbsenceConflicts(
@@ -118,6 +120,15 @@ export function LeaveRequestFormDialog({
     }
   }, [watchLeaveType, leaveTypeConfigs]);
 
+  useEffect(() => {
+    const allowedDurations = getAllowedLeaveDurations(selectedTypeConfig);
+    if (!allowedDurations.includes(watchDurationType)) {
+      form.setValue('duration_type', 'dias_completos', { shouldValidate: true });
+      form.setValue('start_time', '');
+      form.setValue('end_time', '');
+    }
+  }, [form, selectedTypeConfig, watchDurationType]);
+
   // Calculate days when dates change
   useEffect(() => {
     if (watchStartDate && watchEndDate) {
@@ -130,11 +141,34 @@ export function LeaveRequestFormDialog({
     }
   }, [watchStartDate, watchEndDate, watchDurationType, holidaysSet]);
 
+  useEffect(() => {
+    if (watchDurationType !== 'dias_completos' && watchStartDate) {
+      form.setValue('end_date', watchStartDate, { shouldValidate: true });
+    }
+  }, [form, watchDurationType, watchStartDate]);
+
+  useEffect(() => {
+    if (watchDurationType !== 'horas') return;
+    if (!watchStartTime || !watchEndTime) {
+      setCalculatedDays(0);
+      return;
+    }
+    const [startHour, startMinute] = watchStartTime.split(':').map(Number);
+    const [endHour, endMinute] = watchEndTime.split(':').map(Number);
+    const hours = (endHour * 60 + endMinute - startHour * 60 - startMinute) / 60;
+    setCalculatedDays(hours > 0 ? Number((hours / 8).toFixed(2)) : 0);
+  }, [watchDurationType, watchStartTime, watchEndTime]);
+
   const activeLeaveTypes = leaveTypeConfigs.filter(c => c.is_active);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     let uploadedPath: string | null = null;
     try {
+      if (values.duration_type === 'horas' && (!values.start_time || !values.end_time)) {
+        setActiveTab('fechas');
+        toast.error('Indique la hora de inicio y la hora de finalización');
+        return;
+      }
       let totalDays = calculatedDays;
       let totalHours: number | undefined;
 
@@ -143,6 +177,11 @@ export function LeaveRequestFormDialog({
         const [endH, endM] = values.end_time.split(':').map(Number);
         totalHours = (endH * 60 + endM - startH * 60 - startM) / 60;
         totalDays = totalHours / 8;
+        if (totalHours <= 0 || totalHours > 8) {
+          setActiveTab('fechas');
+          toast.error('El rango de horas debe ser mayor que cero y no superar 8 horas');
+          return;
+        }
       }
 
       let documentUrl: string | undefined;
@@ -320,7 +359,7 @@ export function LeaveRequestFormDialog({
                           <span>{selectedTypeConfig.is_paid ? 'Remunerado' : 'No remunerado'}</span>
                           {selectedTypeConfig.requires_document && (
                             <span className="text-destructive font-bold flex items-center gap-1">
-                              Soporte obligatorio
+                              Soporte requerido (puede quedar pendiente)
                             </span>
                           )}
                         </div>
@@ -606,7 +645,7 @@ export function LeaveRequestFormDialog({
                       {selectedTypeConfig?.requires_document && !documentFile && (
                         <p className="text-xs text-amber-600 font-medium mt-2 flex items-center gap-1">
                           <AlertCircle className="w-3 h-3" />
-                          Este tipo de permiso requiere un soporte para su aprobación.
+                          Puedes generar la solicitud ahora. El soporte quedará pendiente y se mostrará en Alertas de permisos.
                         </p>
                       )}
                     </div>

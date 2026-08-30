@@ -170,10 +170,16 @@ export default function Permisos() {
   };
 
   const getRequestStatusLabel = (request: LeaveRequest) => (
-    request.status === 'pendiente'
+    request.annulled_as_unused
+      ? 'Anulado'
+      : request.status === 'pendiente'
       ? LEAVE_APPROVAL_STAGE_LABELS[request.approval_stage]
       : LEAVE_STATUS_LABELS[request.status]
   );
+
+  const getRequestDuration = (request: LeaveRequest) => request.duration_type === 'horas'
+    ? `${request.start_time?.slice(0, 5)}–${request.end_time?.slice(0, 5)} (${request.total_hours} h)`
+    : `${request.total_days} día${request.total_days === 1 ? '' : 's'}`;
 
   return (
     <div className="space-y-3 sm:space-y-4">
@@ -251,6 +257,8 @@ export default function Permisos() {
 
         {/* Solicitudes Tab */}
         <TabsContent value="solicitudes" className="space-y-4">
+          <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+            <div className="min-w-0">
           {/* Filters Premium */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
@@ -275,7 +283,7 @@ export default function Permisos() {
                   <SelectItem value="pendiente" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Pendientes</SelectItem>
                   <SelectItem value="aprobado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Aprobados</SelectItem>
                   <SelectItem value="rechazado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Rechazados</SelectItem>
-                  <SelectItem value="cancelado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Cancelados</SelectItem>
+                  <SelectItem value="cancelado" className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1 font-medium">Cancelados / anulados</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -308,7 +316,7 @@ export default function Permisos() {
                                 ? <span className="font-mono text-xs text-primary">{request.public_reference}</span>
                                 : <span className="text-muted-foreground">—</span>,
                             },
-                            { label: 'Días', value: `${request.total_days}` },
+                            { label: 'Duración', value: getRequestDuration(request) },
                             { label: 'Fechas', value: `${formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - ${formatDateOnly(request.end_date, 'dd MMM', { locale: es })}` },
                           ],
                           onClick: () => handleViewRequest(request),
@@ -326,7 +334,7 @@ export default function Permisos() {
                     <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Centro de operación</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Tipo</TableHead>
                     <TableHead className="hidden md:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Fechas</TableHead>
-                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5 text-center">Días</TableHead>
+                    <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5 text-center">Duración</TableHead>
                     <TableHead className="font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Estado</TableHead>
                     <TableHead className="hidden lg:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">N.º de radicado</TableHead>
                     <TableHead className="hidden xl:table-cell font-black text-xs uppercase tracking-widest text-muted-foreground py-5">Solicitado</TableHead>
@@ -382,8 +390,8 @@ export default function Permisos() {
                           {formatDateOnly(request.start_date, 'dd MMM', { locale: es })} - {formatDateOnly(request.end_date, 'dd MMM', { locale: es })}
                         </TableCell>
                         <TableCell className="text-center">
-                          <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-primary/10 text-primary font-bold text-sm">
-                            {request.total_days}
+                          <span className="inline-flex h-8 min-w-8 items-center justify-center whitespace-nowrap rounded-xl bg-primary/10 px-2 text-sm font-bold text-primary">
+                            {request.duration_type === 'horas' ? `${request.total_hours} h` : request.total_days}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -411,6 +419,18 @@ export default function Permisos() {
               )}
             </CardContent>
           </Card>
+            </div>
+            <aside className="min-w-0 xl:sticky xl:top-4 xl:self-start" aria-label="Alertas de permisos y licencias">
+              <LeaveAlertsPanel
+                compact
+                maxItems={6}
+                onViewRequest={(id) => {
+                  const request = requests.find((item) => item.id === id);
+                  if (request) handleViewRequest(request);
+                }}
+              />
+            </aside>
+          </div>
         </TabsContent>
 
         {/* Calendario Tab */}
