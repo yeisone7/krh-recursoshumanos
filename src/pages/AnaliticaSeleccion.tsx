@@ -73,6 +73,7 @@ import {
 } from '@/lib/selectionAnalytics';
 import { cn } from '@/lib/utils';
 import { getSelectionTimeByLaborType } from '@/lib/selectionLaborTiming';
+import './AnaliticaSeleccion.css';
 
 const chartColors = [
   'hsl(var(--primary))',
@@ -239,7 +240,7 @@ function MetricInfo({ info }: { info: MetricInfoData }) {
 
 function ChartCard({ title, children, className, info }: { title: string; children: React.ReactNode; className?: string; info?: MetricInfoData }) {
   return (
-    <Card className={cn('overflow-hidden', className)}>
+    <Card className={cn('selection-analytics-chart overflow-hidden', className)}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-base font-semibold">{title}</CardTitle>
