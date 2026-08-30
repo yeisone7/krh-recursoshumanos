@@ -279,10 +279,6 @@ export default function PublicLeaveRequest() {
       setError('Indica la hora inicial y final.');
       return;
     }
-    if (selectedType?.requires_document && !file) {
-      setError('Este tipo de permiso requiere un soporte.');
-      return;
-    }
     if (file && (file.size > 10 * 1024 * 1024 || !['application/pdf', 'image/jpeg', 'image/png'].includes(file.type))) {
       setError('El soporte debe ser PDF, JPG o PNG y pesar máximo 10 MB.');
       return;
@@ -567,8 +563,11 @@ export default function PublicLeaveRequest() {
                           <div className="flex justify-between gap-3 text-xs text-muted-foreground"><span>Mínimo 10 caracteres</span><span>{reason.trim().length}/1000</span></div>
                         </div>
                         <div className="space-y-2 rounded-xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
-                          <Label htmlFor="support" className="flex items-center"><FileUp className="mr-2 size-4 text-primary" />Soporte {selectedType?.requires_document ? '(obligatorio)' : '(opcional)'}</Label>
-                          <Input id="support" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setFile(event.target.files?.[0] || null)} className="h-auto min-h-12 bg-card py-2 text-base file:mr-3" required={selectedType?.requires_document} />
+                          <Label htmlFor="support" className="flex items-center"><FileUp className="mr-2 size-4 text-primary" />Soporte (opcional al radicar)</Label>
+                          <Input id="support" type="file" accept="application/pdf,image/jpeg,image/png" onChange={(event) => setFile(event.target.files?.[0] || null)} className="h-auto min-h-12 bg-card py-2 text-base file:mr-3" />
+                          {selectedType?.requires_document && !file && (
+                            <p className="text-sm font-medium text-amber-700">Puedes continuar; el documento quedará registrado como pendiente por subir.</p>
+                          )}
                           <p className="text-xs leading-relaxed text-muted-foreground">PDF, JPG o PNG. Máximo 10 MB. {selectedType?.document_description}</p>
                         </div>
                         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-between">

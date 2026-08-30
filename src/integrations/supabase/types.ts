@@ -6147,6 +6147,7 @@ export type Database = {
       leave_requests: {
         Row: {
           approval_stage: string
+          annulled_as_unused: boolean
           area_leader_approved: boolean | null
           area_leader_approved_at: string | null
           area_leader_approved_by: string | null
@@ -6186,10 +6187,12 @@ export type Database = {
           submission_source: string
           total_days: number
           total_hours: number | null
+          unused_reason: string | null
           updated_at: string
         }
         Insert: {
           approval_stage?: string
+          annulled_as_unused?: boolean
           area_leader_approved?: boolean | null
           area_leader_approved_at?: string | null
           area_leader_approved_by?: string | null
@@ -6229,10 +6232,12 @@ export type Database = {
           submission_source?: string
           total_days: number
           total_hours?: number | null
+          unused_reason?: string | null
           updated_at?: string
         }
         Update: {
           approval_stage?: string
+          annulled_as_unused?: boolean
           area_leader_approved?: boolean | null
           area_leader_approved_at?: string | null
           area_leader_approved_by?: string | null
@@ -6272,6 +6277,7 @@ export type Database = {
           submission_source?: string
           total_days?: number
           total_hours?: number | null
+          unused_reason?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -11682,6 +11688,10 @@ export type Database = {
         Returns: number
       }
       cancel_leave_request_workflow: {
+        Args: { p_reason: string; p_request_id: string }
+        Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
+      }
+      annul_unused_leave_request: {
         Args: { p_reason: string; p_request_id: string }
         Returns: Database["public"]["Tables"]["leave_requests"]["Row"]
       }

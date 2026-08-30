@@ -78,6 +78,16 @@ export const LEAVE_DURATION_TYPE_LABELS: Record<LeaveDurationType, string> = {
   horas: 'Horas',
 };
 
+export function getAllowedLeaveDurations(
+  config?: Pick<LeaveTypeConfig, 'allows_half_day' | 'allows_hours'> | null,
+): LeaveDurationType[] {
+  return [
+    'dias_completos',
+    ...(config?.allows_half_day ? ['medio_dia' as const] : []),
+    ...(config?.allows_hours ? ['horas' as const] : []),
+  ];
+}
+
 // Leave Type Config
 export interface LeaveTypeConfig {
   id: string;
@@ -157,6 +167,8 @@ export interface LeaveRequest {
   cancelled_at?: string;
   cancelled_by?: string;
   cancellation_reason?: string;
+  annulled_as_unused?: boolean;
+  unused_reason?: string;
   created_by?: string;
   submission_source: 'internal' | 'employee_portal' | 'public_link';
   public_reference?: string | null;

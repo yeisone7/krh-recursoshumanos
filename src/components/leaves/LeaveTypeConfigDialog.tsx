@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { createLeaveTypeKey, LeaveTypeConfig } from '@/types/leave';
-import { useCreateLeaveTypeConfig, useUpdateLeaveTypeConfig } from '@/hooks/useLeaves';
+import { CreateLeaveTypeConfigInput, useCreateLeaveTypeConfig, useUpdateLeaveTypeConfig } from '@/hooks/useLeaves';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
@@ -41,6 +41,14 @@ const formSchema = z.object({
   allows_hours: z.boolean(),
   is_active: z.boolean(),
   color: z.string(),
+}).superRefine((values, context) => {
+  if (values.requires_document && !values.document_description?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['document_description'],
+      message: 'Especifica el documento que quedará pendiente si no se adjunta',
+    });
+  }
 });
 
 interface LeaveTypeConfigDialogProps {
@@ -122,10 +130,19 @@ export function LeaveTypeConfigDialog({
         toast.success('Configuración actualizada');
       } else {
         await createConfig.mutateAsync({
-          ...values,
           leave_type: values.leave_type,
+          display_name: values.display_name,
+          description: values.description,
           max_days_per_year: values.max_days_per_year || undefined,
-        });
+          is_paid: values.is_paid,
+          requires_document: values.requires_document,
+          document_description: values.document_description,
+          min_days_advance: values.min_days_advance,
+          allows_half_day: values.allows_half_day,
+          allows_hours: values.allows_hours,
+          is_active: values.is_active,
+          color: values.color,
+        } as CreateLeaveTypeConfigInput);
         toast.success('Tipo de permiso creado');
       }
       onOpenChange(false);
@@ -286,7 +303,7 @@ export function LeaveTypeConfigDialog({
                   <FormItem className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <FormLabel>Requiere Documento</FormLabel>
-                      <FormDescription>Se debe adjuntar soporte</FormDescription>
+                      <FormDescription>Permite adjuntarlo al crear o dejarlo pendiente para cargar después</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
