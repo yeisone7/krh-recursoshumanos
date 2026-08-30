@@ -66,6 +66,7 @@ import { useRequisitions } from '@/hooks/useRequisitions';
 import { useVacancies } from '@/hooks/useVacancies';
 import {
   candidateReachedStage,
+  countActiveSelectionRequisitions,
   isActiveVacancyStatus,
   isWithinDateRange,
   resolveVacancyAverageSalary,
@@ -696,7 +697,7 @@ export default function AnaliticaSeleccion() {
     const peakWeeklyOpenings = weeklyCoverageTrend.reduce((peak, item) => item.aperturas > peak.aperturas ? item : peak, weeklyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
     const peakMonthlyCoverage = monthlyCoverageTrend.reduce((peak, item) => item.cobertura > peak.cobertura ? item : peak, monthlyCoverageTrend[0] || { period: '', aperturas: 0, cierres: 0, cobertura: 0 });
 
-    const activeRequisitions = requisitions.filter((item: any) => !['rechazada', 'cancelada', 'cerrada', 'finalizada'].includes(String(item.estado_requisicion || '').toLowerCase()));
+    const activeRequisitionCount = countActiveSelectionRequisitions(requisitions);
     const activeVacancies = vacancies.filter((item: any) => isActiveVacancyStatus(item.status));
     const closedVacancies = vacancies.filter((item: any) => item.actual_close_date && item.open_date);
     const hiredCandidates = candidates.filter((item: any) => item.status === 'hired');
@@ -978,7 +979,7 @@ export default function AnaliticaSeleccion() {
       cancelledVacanciesData,
       kpis: {
         requisitions: requisitions.length,
-        activeRequisitions: activeRequisitions.length,
+        activeRequisitions: activeRequisitionCount,
         requestedPositions,
         vacancies: vacancies.length,
         activeVacancies: activeVacancies.length,
@@ -1089,7 +1090,7 @@ export default function AnaliticaSeleccion() {
         <TabsContent value="ejecutivo" className="mt-0 space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Requisiciones activas" value={analytics.kpis.activeRequisitions} detail={`${analytics.kpis.requisitions} requisiciones filtradas`} icon={Briefcase} trend="neutral"
-          info={{ calc: 'Se cuentan todas las solicitudes de personal que no han sido canceladas, rechazadas ni cerradas.', ejemplo: 'Si hay 10 solicitudes y 2 fueron canceladas, el indicador muestra 8.', note: 'Refleja cuántas necesidades de personal están pendientes de resolver.' }} />
+          info={{ calc: 'Requisiciones en Selección o Aprobadas que aún no tienen vacante, o que tienen al menos una vacante Abierta, En proceso o Pendiente colocado.', ejemplo: 'Una requisición con todas sus vacantes cerradas o canceladas deja de contar como activa.', note: 'Excluye borradores, solicitudes en aprobación, rechazadas y procesos cuya necesidad ya fue cerrada.' }} />
         <KpiCard title="Vacantes activas" value={analytics.kpis.activeVacancies} detail={`${analytics.kpis.totalPositions} posiciones publicadas`} icon={Target} trend="up"
           info={{ calc: 'Se cuentan las vacantes en estado Abierta, En proceso o Pendiente colocado.', ejemplo: 'Si se crearon 5 vacantes y 2 ya cerraron, se muestran 3.', note: 'Indica cuántos procesos de selección están activos ahora mismo.' }} />
         <KpiCard title="Candidatos en proceso" value={analytics.kpis.inProcessCandidates} detail={`${numberFormatter.format(analytics.kpis.avgCandidatesPerVacancy)} activos por vacante activa`} icon={Users} trend="up"

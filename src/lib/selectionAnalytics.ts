@@ -1,9 +1,31 @@
 export type RecruitmentStage = 'aplicado' | 'evaluado' | 'entrevista' | 'oferta' | 'contratado';
 
 export const ACTIVE_VACANCY_STATUSES = ['open', 'in_process', 'pending_placed'] as const;
+export const ACTIVE_SELECTION_REQUISITION_STATUSES = ['en_seleccion', 'aprobada'] as const;
 
 export function isActiveVacancyStatus(status: string | null | undefined) {
   return ACTIVE_VACANCY_STATUSES.includes(status as typeof ACTIVE_VACANCY_STATUSES[number]);
+}
+
+interface SelectionRequisitionData {
+  estado_requisicion?: string | null;
+  vacancies?: Array<{ status?: string | null }> | null;
+}
+
+export function isActiveSelectionRequisition(requisition: SelectionRequisitionData) {
+  const status = String(requisition.estado_requisicion || '').trim().toLowerCase();
+  const isReadyForSelection = ACTIVE_SELECTION_REQUISITION_STATUSES.includes(
+    status as typeof ACTIVE_SELECTION_REQUISITION_STATUSES[number],
+  );
+
+  if (!isReadyForSelection) return false;
+
+  const vacancies = Array.isArray(requisition.vacancies) ? requisition.vacancies : [];
+  return vacancies.length === 0 || vacancies.some((vacancy) => isActiveVacancyStatus(vacancy.status));
+}
+
+export function countActiveSelectionRequisitions(requisitions: SelectionRequisitionData[]) {
+  return requisitions.filter(isActiveSelectionRequisition).length;
 }
 
 interface CandidateStageData {

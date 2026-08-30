@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   candidateReachedStage,
+  countActiveSelectionRequisitions,
+  isActiveSelectionRequisition,
   isActiveVacancyStatus,
   isWithinDateRange,
   resolveVacancyAverageSalary,
@@ -23,6 +25,40 @@ describe('selection analytics rules', () => {
     expect(['open', 'in_process', 'pending_placed'].filter(isActiveVacancyStatus)).toHaveLength(3);
     expect(isActiveVacancyStatus('closed')).toBe(false);
     expect(isActiveVacancyStatus('cancelled')).toBe(false);
+  });
+
+  it('counts only requisitions that are active in the selection process', () => {
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'borrador' })).toBe(false);
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'en_rrhh' })).toBe(false);
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'rechazada' })).toBe(false);
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'cerrada' })).toBe(false);
+
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'en_seleccion' })).toBe(true);
+    expect(isActiveSelectionRequisition({ estado_requisicion: 'aprobada', vacancies: [] })).toBe(true);
+    expect(isActiveSelectionRequisition({
+      estado_requisicion: 'aprobada',
+      vacancies: [{ status: 'closed' }, { status: 'in_process' }],
+    })).toBe(true);
+  });
+
+  it('stops counting a requisition when every linked vacancy is terminal', () => {
+    expect(isActiveSelectionRequisition({
+      estado_requisicion: 'aprobada',
+      vacancies: [{ status: 'closed' }, { status: 'cancelled' }],
+    })).toBe(false);
+  });
+
+  it('calculates the aggregate value consumed by the active requisitions KPI', () => {
+    const requisitions = [
+      { estado_requisicion: 'borrador' },
+      { estado_requisicion: 'en_seleccion', vacancies: [{ status: 'open' }] },
+      { estado_requisicion: 'aprobada', vacancies: [{ status: 'pending_placed' }] },
+      { estado_requisicion: 'aprobada', vacancies: [{ status: 'closed' }] },
+      { estado_requisicion: ' APROBADA ', vacancies: null },
+      { estado_requisicion: null },
+    ];
+
+    expect(countActiveSelectionRequisitions(requisitions)).toBe(3);
   });
 
   it('makes every later recruitment stage include all previous stages', () => {
