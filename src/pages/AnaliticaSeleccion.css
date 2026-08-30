@@ -1,0 +1,23 @@
+/* Recharts inherits series fills for text and supplies inline tooltip styles.
+   Keep those colors on chart marks, not on labels, and scope the overrides to
+   Selection's chart cards so other analytical views remain unchanged. */
+.selection-analytics-chart .recharts-default-tooltip {
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.12);
+}
+
+.selection-analytics-chart .recharts-tooltip-item,
+.selection-analytics-chart .recharts-tooltip-label {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.selection-analytics-chart .recharts-legend-item-text {
+  color: hsl(var(--foreground)) !important;
+}
+
+.selection-analytics-chart .recharts-text {
+  fill: hsl(var(--foreground)) !important;
+}
