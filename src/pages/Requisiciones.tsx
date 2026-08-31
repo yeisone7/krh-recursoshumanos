@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -62,6 +62,8 @@ export default function Requisiciones() {
   const [centerFilter, setCenterFilter] = useState<string>('all');
   const [processLeaderFilter, setProcessLeaderFilter] = useState<string>('all');
   const [vacancyClosureFilter, setVacancyClosureFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -125,6 +127,23 @@ export default function Requisiciones() {
       return matchesSearch && matchesStatus && matchesCenter && matchesProcessLeader && matchesVacancyClosure;
     });
   }, [requisitions, searchQuery, statusFilter, centerFilter, processLeaderFilter, vacancyClosureFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter, centerFilter, processLeaderFilter, vacancyClosureFilter, pageSize, currentCompanyId]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paginatedRequisitions = useMemo(
+    () => filtered.slice(pageStart, pageStart + pageSize),
+    [filtered, pageStart, pageSize],
+  );
+
+  // A deletion or refresh can remove the last page; keep navigation in range.
+  useEffect(() => {
+    setPage((previousPage) => Math.min(previousPage, pageCount));
+  }, [pageCount]);
 
   const activeFiltersCount = [
     statusFilter !== 'all',
@@ -348,7 +367,7 @@ export default function Requisiciones() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-1.5 py-6 sm:px-2.5 sm:py-8">
+      <ScrollArea className="min-h-0 flex-1 px-1.5 py-6 sm:px-2.5 sm:py-8">
         <div className="max-w-full mx-auto w-full">
           {isLoading ? (
             <div className="space-y-4">
@@ -365,7 +384,7 @@ export default function Requisiciones() {
             <>
               {/* Card Grid View (Mobile and tablet) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
-                {filtered.map(req => {
+                {paginatedRequisitions.map(req => {
                   const status = req.estado_requisicion as RequisitionStatus;
                   const cfg = requisitionStatusConfig[status];
                   const progress = getApprovalProgress(req);
@@ -488,7 +507,7 @@ export default function Requisiciones() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {filtered.map(req => {
+                    {paginatedRequisitions.map(req => {
                       const status = req.estado_requisicion as RequisitionStatus;
                       const cfg = requisitionStatusConfig[status];
                       const step = getCurrentApprovalStep(req);
@@ -663,6 +682,31 @@ export default function Requisiciones() {
                   </Table>
                 </div>
               </div>
+              <nav aria-label="Paginación de requisiciones" className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-xs">
+                <p role="status" className="text-muted-foreground">
+                  Mostrando {pageStart + 1}–{Math.min(pageStart + pageSize, filtered.length)} de {filtered.length} requisiciones
+                </p>
+                <label className="flex items-center gap-2 text-muted-foreground">
+                  Por página
+                  <select
+                    aria-label="Requisiciones por página"
+                    value={pageSize}
+                    onChange={(event) => setPageSize(Number(event.target.value))}
+                    className="h-9 rounded-lg border border-input bg-background px-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {[10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+                  </select>
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>
+                    Anterior
+                  </Button>
+                  <span className="whitespace-nowrap font-medium">Página {currentPage} de {pageCount}</span>
+                  <Button type="button" variant="outline" size="sm" disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)}>
+                    Siguiente
+                  </Button>
+                </div>
+              </nav>
             </>
           )}
         </div>
