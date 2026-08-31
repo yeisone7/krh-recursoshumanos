@@ -152,6 +152,8 @@ export default function Seleccion() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [centerFilter, setCenterFilter] = useState<string>('all');
   const [requisitionFilter, setRequisitionFilter] = useState<string>('all');
+  const [vacancyPage, setVacancyPage] = useState(1);
+  const [vacancyPageSize, setVacancyPageSize] = useState(10);
   const [activeCandidateKpi, setActiveCandidateKpi] = useState<CandidateKpiView | null>(null);
   const [candidateSearchQuery, setCandidateSearchQuery] = useState('');
   const [candidateVacancyFilter, setCandidateVacancyFilter] = useState('all');
@@ -206,7 +208,7 @@ export default function Seleccion() {
   };
   const { data: operationCenters = [] } = useOperationCenters();
   const deleteVacancy = useDeleteVacancy();
-  const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canDelete } = useAuth();
+  const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canDelete } = useAuth();
   const canCreateVacancy = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canCreate('seleccion');
   const canDeleteVacancy = isAdmin || isRRHH || isSuperAdmin || isPsicologo || canDelete('seleccion');
 
@@ -320,6 +322,23 @@ export default function Seleccion() {
     });
   }, [vacancies, searchQuery, statusFilter, centerFilter, requisitionFilter]);
 
+  useEffect(() => {
+    setVacancyPage(1);
+  }, [searchQuery, statusFilter, centerFilter, requisitionFilter, vacancyPageSize, currentCompanyId]);
+
+  const vacancyPageCount = Math.max(1, Math.ceil(filteredVacancies.length / vacancyPageSize));
+  const currentVacancyPage = Math.min(vacancyPage, vacancyPageCount);
+  const vacancyPageStart = (currentVacancyPage - 1) * vacancyPageSize;
+  const paginatedVacancies = useMemo(
+    () => filteredVacancies.slice(vacancyPageStart, vacancyPageStart + vacancyPageSize),
+    [filteredVacancies, vacancyPageStart, vacancyPageSize],
+  );
+
+  // Keep navigation valid if a deletion or refresh removes the last page.
+  useEffect(() => {
+    setVacancyPage((page) => Math.min(page, vacancyPageCount));
+  }, [vacancyPageCount]);
+
   const activeFiltersCount = [
     statusFilter !== 'all',
     centerFilter !== 'all',
@@ -327,7 +346,7 @@ export default function Seleccion() {
   ].filter(Boolean).length;
 
   const vacancyItems = useMemo(
-    () => filteredVacancies.map((vacancy) => {
+    () => paginatedVacancies.map((vacancy) => {
       const status = vacancy.status as VacancyStatus;
       const statusStyle = vacancyStatusConfig[status];
       const candidateCount = (vacancy as any).candidates?.length || 0;
@@ -410,7 +429,7 @@ export default function Seleccion() {
         ),
       };
     }),
-    [canDeleteVacancy, deleteVacancy.isPending, filteredVacancies]
+    [canDeleteVacancy, deleteVacancy.isPending, paginatedVacancies]
   );
 
   const openVacancyDetail = (vacancyId: string) => {
@@ -548,7 +567,7 @@ export default function Seleccion() {
         <div className={cn("overflow-hidden transition-all duration-200", filtersOpen ? "max-h-48 pt-3 opacity-100" : "max-h-0 opacity-0")}>
           <div className="grid w-full grid-cols-1 gap-2 rounded-xl border border-border/70 bg-muted/20 p-2 sm:grid-cols-2 xl:grid-cols-3">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 w-full rounded-lg border-border bg-background px-3 text-[11px] font-medium text-muted-foreground">
+              <SelectTrigger aria-label="Filtrar vacantes por estado" className="h-8 w-full rounded-lg border-border bg-background px-3 text-[11px] font-medium text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Filter className="w-3.5 h-3.5 shrink-0 text-primary" />
                   <SelectValue placeholder="Estado" />
@@ -639,7 +658,7 @@ export default function Seleccion() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredVacancies.map((vacancy) => {
+                    {paginatedVacancies.map((vacancy) => {
                       const status = vacancy.status as VacancyStatus;
                       const statusStyle = vacancyStatusConfig[status];
                       const candidateCount = (vacancy as any).candidates?.length || 0;
@@ -760,6 +779,31 @@ export default function Seleccion() {
                   </TableBody>
                 </Table>
               </div>
+              <nav aria-label="Paginación de vacantes" className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-xs">
+                <p role="status" className="text-muted-foreground">
+                  Mostrando {vacancyPageStart + 1}–{Math.min(vacancyPageStart + vacancyPageSize, filteredVacancies.length)} de {filteredVacancies.length} vacantes
+                </p>
+                <label className="flex items-center gap-2 text-muted-foreground">
+                  Por página
+                  <select
+                    aria-label="Vacantes por página"
+                    value={vacancyPageSize}
+                    onChange={(event) => setVacancyPageSize(Number(event.target.value))}
+                    className="h-9 rounded-lg border border-input bg-background px-2 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {[10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
+                  </select>
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" disabled={currentVacancyPage === 1} onClick={() => setVacancyPage(currentVacancyPage - 1)}>
+                    Anterior
+                  </Button>
+                  <span className="whitespace-nowrap font-medium">Página {currentVacancyPage} de {vacancyPageCount}</span>
+                  <Button type="button" variant="outline" size="sm" disabled={currentVacancyPage === vacancyPageCount} onClick={() => setVacancyPage(currentVacancyPage + 1)}>
+                    Siguiente
+                  </Button>
+                </div>
+              </nav>
             </>
           )}
         </div>
