@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatDateOnly } from '@/lib/dateOnly';
+import { formatDateOnly, todayDateOnlyString } from '@/lib/dateOnly';
 import {
   Briefcase,
   Users,
@@ -74,6 +74,10 @@ import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
+import { SelectionAlertsPanel } from '@/components/selection/SelectionAlertsPanel';
+import { RequisitionDetailDialog } from '@/components/requisitions/RequisitionDetailDialog';
+import { useRequisitions } from '@/hooks/useRequisitions';
+import { buildSelectionAlerts, type SelectionAlert } from '@/lib/selectionAlerts';
 import {
   VacancyStatus,
   CandidateStatus,
@@ -181,8 +185,25 @@ export default function Seleccion() {
     }
   };
 
-  const { data: vacancies = [], isLoading: loadingVacancies } = useVacancies();
-  const { data: candidates = [] } = useCandidates();
+  const vacanciesQuery = useVacancies();
+  const candidatesQuery = useCandidates();
+  const requisitionsQuery = useRequisitions();
+  const { data: vacancies = [], isLoading: loadingVacancies } = vacanciesQuery;
+  const { data: candidates = [] } = candidatesQuery;
+  const [alertRequisitionId, setAlertRequisitionId] = useState<string | null>(null);
+  const alertsDay = todayDateOnlyString();
+  const selectionAlerts = useMemo(
+    () => buildSelectionAlerts(requisitionsQuery.data || [], vacanciesQuery.data || [], candidatesQuery.data || [], new Date(`${alertsDay}T12:00:00`)),
+    [requisitionsQuery.data, vacanciesQuery.data, candidatesQuery.data, alertsDay],
+  );
+  const handleSelectionAlertClick = (alert: SelectionAlert) => {
+    if (alert.source === 'requisition') setAlertRequisitionId(alert.entityId);
+    else if (alert.source === 'vacancy') openVacancyDetail(alert.entityId);
+    else {
+      setSelectedCandidateId(alert.entityId);
+      setShowCandidateDetail(true);
+    }
+  };
   const { data: operationCenters = [] } = useOperationCenters();
   const deleteVacancy = useDeleteVacancy();
   const { isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canDelete } = useAuth();
@@ -580,8 +601,9 @@ export default function Seleccion() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 px-3 py-3 sm:px-6 sm:py-4">
-        <div className="max-w-full mx-auto w-full">
+      <ScrollArea className="min-h-0 flex-1 px-3 py-3 sm:px-6 sm:py-4">
+        <div className="grid w-full min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0">
           {loadingVacancies ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
@@ -604,7 +626,7 @@ export default function Seleccion() {
 
               {/* Desktop Table View */}
               <div className="hidden overflow-hidden rounded-2xl border border-foreground/20 bg-background shadow-md md:block">
-                <Table className="w-full table-fixed">
+                <Table className="w-full min-w-[740px] table-fixed">
                   <TableHeader className="[&_th]:h-10 [&_th]:px-2 [&_th]:text-[9px] [&_th]:tracking-[0.18em]">
                     <TableRow className="border-b border-foreground/20 bg-muted/30 hover:bg-muted/30">
                       <TableHead className="h-10 w-[25%] px-3 text-[9px] font-black uppercase tracking-[0.18em]">Vacante</TableHead>
@@ -740,6 +762,16 @@ export default function Seleccion() {
               </div>
             </>
           )}
+        </div>
+        <aside aria-label="Alertas de requisiciones y selección" className="min-w-0">
+          <SelectionAlertsPanel
+            alerts={selectionAlerts}
+            isLoading={loadingVacancies || candidatesQuery.isLoading || requisitionsQuery.isLoading}
+            hasError={vacanciesQuery.isError || candidatesQuery.isError || requisitionsQuery.isError}
+            onRetry={() => { void vacanciesQuery.refetch(); void candidatesQuery.refetch(); void requisitionsQuery.refetch(); }}
+            onAlertClick={handleSelectionAlertClick}
+          />
+        </aside>
         </div>
       </ScrollArea>
 
@@ -940,6 +972,7 @@ export default function Seleccion() {
       </Dialog>
 
       {/* Dialogs */}
+      {alertRequisitionId && <RequisitionDetailDialog open requisitionId={alertRequisitionId} onOpenChange={(open) => { if (!open) setAlertRequisitionId(null); }} />}
       <VacancyFormDialog open={showVacancyForm} onOpenChange={setShowVacancyForm} />
       {selectedVacancyId && <VacancyDetailDialog open={showVacancyDetail} onOpenChange={setShowVacancyDetail} vacancyId={selectedVacancyId} />}
       <CandidateFormDialog open={showCandidateForm} onOpenChange={(open) => { setShowCandidateForm(open); if (!open) { setTimeout(() => setCandidateFormVacancyId(null), 200); } }} vacancyId={candidateFormVacancyId || undefined} />
