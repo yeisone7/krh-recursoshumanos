@@ -70,6 +70,15 @@ const USER_SCOPED_HOOKS = new Set([
   'useUserProfile.ts',
 ]);
 
+// These query contracts are exercised with real React Query hooks and a mocked
+// Supabase boundary in hooks-company-scope.behavior.test.tsx instead of guessing
+// ownership from variable spelling. Mutation checks below still apply.
+const BEHAVIOR_TESTED_QUERY_HOOKS = new Set([
+  'useEducationLevels.ts', // Explicit company override or authenticated company.
+  'useProfessions.ts', // Explicit company override or authenticated company.
+  'useNotificationCenter.ts', // Company history for managers, own history otherwise.
+]);
+
 // Hooks with known complex patterns that have been manually audited
 const MANUALLY_AUDITED_HOOKS: Record<string, string> = {
   'useContractTermination.ts': 'Queries medical_exams/contracts by employee_id within termination flow',
@@ -173,7 +182,7 @@ describe('Multi-company isolation: Hook query filters', () => {
     }
 
     // For hooks with useQuery, verify company_id filtering
-    if (hasUseQuery(content)) {
+    if (hasUseQuery(content) && !BEHAVIOR_TESTED_QUERY_HOOKS.has(fileName)) {
       it(`${fileName} should use currentCompanyId for queries on [${companyTables.join(', ')}]`, () => {
         const usesCompanyId = usesCurrentCompanyId(content);
         const filtersCompanyId = hasCompanyIdFilter(content);
