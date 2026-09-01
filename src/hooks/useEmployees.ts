@@ -125,20 +125,20 @@ async function fetchBestEmployeeRelatedRecord(
   return pickBestRelatedRecord(rows || [], currentColumn);
 }
 
-async function deactivateOtherCurrentRecords(
+export async function deactivateOtherCurrentRecords(
   table: string,
   employeeId: string,
   keepId: string | null | undefined,
   currentColumn = 'is_current',
   employmentCycleId?: string | null,
 ) {
-  if (!keepId) return;
-
   let query = (supabase.from(table as any) as any)
     .update({ [currentColumn]: false })
     .eq('employee_id', employeeId)
-    .eq(currentColumn, true)
-    .neq('id', keepId);
+    .eq(currentColumn, true);
+  if (keepId) {
+    query = query.neq('id', keepId);
+  }
   if (employmentCycleId !== undefined) {
     query = scopeToEmploymentCycle(query, employmentCycleId);
   }
@@ -1181,7 +1181,10 @@ export function useUpdateEmployee() {
         deactivateOtherCurrentRecords('employee_social_security', id, existingSocialSecurity?.id, 'is_current', activeCycleId),
         deactivateOtherCurrentRecords('employee_bank_info', id, existingBankInfo?.id, 'is_current', activeCycleId),
         deactivateOtherCurrentRecords('employee_schedule', id, existingSchedule?.id, 'is_current', activeCycleId),
-        deactivateOtherCurrentRecords('employee_time_config', id, existingTimeConfig?.id, 'is_active', activeCycleId),
+        // The database enforces one active time config per employee, not per
+        // employment cycle. Clear legacy or prior-cycle active rows globally
+        // before the current-cycle row is updated or inserted.
+        deactivateOtherCurrentRecords('employee_time_config', id, existingTimeConfig?.id, 'is_active'),
       ]);
 
       // Prepare upsert operations
