@@ -11,16 +11,11 @@ export interface TransferData {
 }
 
 export function useAvailableCompaniesForTransfer(currentCompanyId?: string) {
+  const { companies } = useAuth();
+
   return useQuery({
-    queryKey: ['companies-for-transfer', currentCompanyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, nit')
-        .order('name');
-      if (error) throw error;
-      return data.filter(c => c.id !== currentCompanyId);
-    },
+    queryKey: ['companies-for-transfer', currentCompanyId, companies.map(company => company.id).join(',')],
+    queryFn: () => companies.filter(company => company.id !== currentCompanyId),
     enabled: !!currentCompanyId,
   });
 }
@@ -31,12 +26,12 @@ export function useEmployeeTransfers(employeeId?: string) {
     queryFn: async () => {
       if (!employeeId) return [];
       const { data, error } = await supabase
-        .from('employee_transfers' as any)
+        .from('employee_transfers')
         .select('*')
         .or(`source_employee_id.eq.${employeeId},target_employee_id.eq.${employeeId}`)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
     enabled: !!employeeId,
   });
@@ -68,9 +63,14 @@ export function useExecuteTransfer() {
       ]);
 
       // 3. Create new employee in target company
-      const { data: newEmployee, error: newEmpErr } = await supabase
+      // Generate the identifier before INSERT. Asking PostgREST to return the
+      // inserted row makes the employees_v2 SELECT policy run before its
+      // self-query can see that row, which incorrectly rejects the transfer.
+      const newId = crypto.randomUUID();
+      const { error: newEmpErr } = await supabase
         .from('employees_v2')
         .insert({
+          id: newId,
           company_id: targetCompanyId,
           document_type: srcEmployee.document_type,
           document_number: srcEmployee.document_number,
@@ -98,12 +98,8 @@ export function useExecuteTransfer() {
           avatar_url: srcEmployee.avatar_url,
           is_active: true,
           created_by: user?.id || null,
-        })
-        .select('id')
-        .single();
+        });
       if (newEmpErr) throw new Error('Error al crear empleado en empresa destino: ' + newEmpErr.message);
-
-      const newId = newEmployee.id;
 
       // 4. Copy contact
       if (contactRes.data) {
@@ -214,7 +210,7 @@ export function useExecuteTransfer() {
 
       // 10. Create transfer record
       const { error: transferErr } = await supabase
-        .from('employee_transfers' as any)
+        .from('employee_transfers')
         .insert({
           source_company_id: sourceCompanyId,
           target_company_id: targetCompanyId,
