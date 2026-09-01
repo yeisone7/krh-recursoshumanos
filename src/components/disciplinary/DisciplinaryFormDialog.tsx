@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { CalendarIcon, Scale } from 'lucide-react';
+import { CalendarIcon, Plus, Scale, Trash2, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { DatePickerWithDropdowns } from '@/components/ui/date-picker-with-dropdowns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -39,6 +40,9 @@ import {
   faultTypeLabels,
   FaultType,
 } from '@/types/disciplinary';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 interface DisciplinaryFormDialogProps {
   open: boolean;
@@ -53,6 +57,8 @@ export function DisciplinaryFormDialog({
 }: DisciplinaryFormDialogProps) {
   const { data: employees } = useEmployees();
   const createProcess = useCreateDisciplinaryProcess();
+  const { currentCompanyId } = useAuth();
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
 
   const form = useForm<DisciplinaryFormData>({
     resolver: zodResolver(disciplinaryFormSchema),
@@ -60,12 +66,19 @@ export function DisciplinaryFormDialog({
       employee_id: employeeId || '',
       fault_type: 'leve',
       fault_date: new Date(),
-      facts_description: '',
+      facts: [{ title: '', description: '', occurred_at: '', location: '' }],
       article_violated: '',
+      legal_basis: [],
+      proof_transfer: '',
       witnesses: '',
       investigator_name: '',
       observations: '',
     },
+  });
+
+  const { fields: factFields, append: appendFact, remove: removeFact } = useFieldArray({
+    control: form.control,
+    name: 'facts',
   });
 
   useEffect(() => {
@@ -75,9 +88,40 @@ export function DisciplinaryFormDialog({
   }, [employeeId, form]);
 
   const onSubmit = async (data: DisciplinaryFormData) => {
-    await createProcess.mutateAsync(data);
+    const process = await createProcess.mutateAsync(data);
+
+    for (const file of evidenceFiles) {
+      const extension = file.name.split('.').pop()?.toLowerCase() || 'bin';
+      const storagePath = `disciplinary/${currentCompanyId}/${process.id}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('disciplinary-evidence').upload(storagePath, file);
+      if (uploadError) throw uploadError;
+      const { error: evidenceError } = await supabase.from('disciplinary_evidence').insert({
+        company_id: currentCompanyId!,
+        process_id: process.id,
+        evidence_type: 'foto',
+        description: `Registro fotográfico aportado con el reporte: ${file.name}`,
+        file_url: null,
+        file_name: file.name,
+        storage_path: storagePath,
+        collected_date: format(new Date(), 'yyyy-MM-dd'),
+      });
+      if (evidenceError) throw evidenceError;
+    }
+
     form.reset();
+    setEvidenceFiles([]);
     onOpenChange(false);
+  };
+
+  const handleEvidenceFiles = (files: FileList | null) => {
+    if (!files) return;
+    const incoming = Array.from(files);
+    const invalid = incoming.find((file) => !file.type.startsWith('image/') || file.size > 10 * 1024 * 1024);
+    if (invalid) {
+      toast({ title: 'Archivo no válido', description: 'Adjunte imágenes de máximo 10 MB cada una.', variant: 'destructive' });
+      return;
+    }
+    setEvidenceFiles((current) => [...current, ...incoming]);
   };
 
   return (
@@ -195,23 +239,58 @@ export function DisciplinaryFormDialog({
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="facts_description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Relato de los Hechos *</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describa detalladamente los hechos que originan el proceso..."
-                        className="min-h-[140px] rounded-xl bg-background shadow-inner border-border/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium py-3 leading-relaxed"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4 rounded-2xl border border-border/50 bg-background/70 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hechos reportados *</Label>
+                    <p className="mt-1 text-xs text-muted-foreground">Agregue cada antecedente por separado; la citación conservará este orden.</p>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => appendFact({ title: '', description: '', occurred_at: '', location: '' })}>
+                    <Plus className="mr-1 h-4 w-4" /> Hecho
+                  </Button>
+                </div>
+                {factFields.map((fact, index) => (
+                  <div key={fact.id} className="space-y-3 rounded-xl border border-border/50 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-primary">Hecho {index + 1}</span>
+                      {factFields.length > 1 && (
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFact(index)} aria-label={`Eliminar hecho ${index + 1}`}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input placeholder="Título breve" {...form.register(`facts.${index}.title`)} />
+                      <Input placeholder="Lugar (opcional)" {...form.register(`facts.${index}.location`)} />
+                    </div>
+                    <Input type="datetime-local" {...form.register(`facts.${index}.occurred_at`)} />
+                    <Textarea className="min-h-[110px]" placeholder="Describa quién, qué, cuándo y cómo ocurrió..." {...form.register(`facts.${index}.description`)} />
+                    {(form.formState.errors.facts?.[index]?.title || form.formState.errors.facts?.[index]?.description) && (
+                      <p className="text-xs font-medium text-destructive">
+                        {form.formState.errors.facts[index]?.title?.message || form.formState.errors.facts[index]?.description?.message}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Registros fotográficos</Label>
+                <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/60 p-6 text-center hover:border-primary/40">
+                  <Upload className="mb-2 h-6 w-6 text-primary" />
+                  <span className="text-sm font-bold">Adjuntar una o varias fotografías</span>
+                  <span className="text-xs text-muted-foreground">JPG, PNG o WEBP · máximo 10 MB por archivo</span>
+                  <input className="hidden" type="file" accept="image/*" multiple onChange={(event) => handleEvidenceFiles(event.target.files)} />
+                </label>
+                {evidenceFiles.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded-xl border px-3 py-2 text-xs">
+                    <span className="truncate">{file.name}</span>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setEvidenceFiles((files) => files.filter((_, fileIndex) => fileIndex !== index))}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
 
               <FormField
                 control={form.control}
@@ -226,6 +305,37 @@ export function DisciplinaryFormDialog({
                         {...field}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="legal_basis"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Fundamentos normativos</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={'Registre un artículo o norma por línea\nEj: Artículo 60, numeral 2 del CST'}
+                        className="min-h-[110px]"
+                        value={(field.value || []).join('\n')}
+                        onChange={(event) => field.onChange(event.target.value.split('\n').map((line) => line.trim()).filter(Boolean))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="proof_transfer"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Traslado de pruebas</FormLabel>
+                    <FormControl><Textarea className="min-h-[90px]" placeholder="Enumere los informes, fotografías y demás pruebas trasladadas al trabajador..." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -106,10 +106,10 @@ export function DecisionFormDialog({
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 rounded-full bg-primary/10 blur-[40px] pointer-events-none" />
           <DialogTitle className="text-2xl font-black tracking-tight text-foreground relative z-10 flex items-center gap-2">
             <Gavel className="w-6 h-6 text-primary" />
-            Registrar Decisión
+            Registrar Dictamen / Decisión
           </DialogTitle>
           <p className="text-muted-foreground font-medium mt-1 relative z-10">
-            Define la resolución final del proceso disciplinario
+            Documente el análisis jurídico, la decisión y la medida aplicable
           </p>
         </DialogHeader>
 
@@ -240,7 +240,7 @@ export function DecisionFormDialog({
                 name="decision_summary"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Resumen de la Decisión *</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Fundamentos y Dictamen Jurídico *</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Describa los fundamentos técnicos y legales de esta decisión..."
@@ -268,7 +268,7 @@ export function DecisionFormDialog({
                 disabled={setDecision.isPending} 
                 className="h-12 px-8 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
               >
-                {setDecision.isPending ? 'Guardando...' : 'Registrar Decisión'}
+                {setDecision.isPending ? 'Guardando...' : 'Registrar Dictamen'}
               </Button>
             </div>
           </form>

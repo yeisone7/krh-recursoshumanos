@@ -44,8 +44,9 @@ import { DefenseFormDialog } from './DefenseFormDialog';
 import { DecisionFormDialog } from './DecisionFormDialog';
 import { AppealFormDialog } from './AppealFormDialog';
 import { GenerateDefenseTokenDialog } from './GenerateDefenseTokenDialog';
+import { CitationFormDialog } from './CitationFormDialog';
 import { DocumentSection } from '@/components/documents/DocumentSection';
-import { generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
+import { generateCitationPdf, generateDefenseActPdf, generateDisciplinaryPdf } from '@/lib/disciplinaryPdfGenerator';
 import { cn } from '@/lib/utils';
 import { useCompanies } from '@/hooks/useCompanies';
 import { toast } from '@/hooks/use-toast';
@@ -111,6 +112,7 @@ export function DisciplinaryDetailDialog({
   const [showDecisionForm, setShowDecisionForm] = useState(false);
   const [showAppealForm, setShowAppealForm] = useState(false);
   const [showTokenDialog, setShowTokenDialog] = useState(false);
+  const [showCitationForm, setShowCitationForm] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   if (!process) {
@@ -152,7 +154,9 @@ export function DisciplinaryDetailDialog({
   const nextAction = getNextStatusAction(process.status);
 
   const handleAdvanceStatus = () => {
-    if (process.status === 'analisis') {
+    if (process.status === 'investigacion') {
+      setShowCitationForm(true);
+    } else if (process.status === 'analisis') {
       setShowDecisionForm(true);
     } else if (process.status === 'decision') {
       setShowAppealForm(true);
@@ -219,6 +223,16 @@ export function DisciplinaryDetailDialog({
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                {process.hearing_date && (
+                  <Button variant="outline" size="sm" className="h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest" onClick={() => generateCitationPdf({ process, companyName: companies?.[0]?.name })}>
+                    <FileText className="h-4 w-4" /> Citación
+                  </Button>
+                )}
+                {!!process.defenses?.length && (
+                  <Button variant="outline" size="sm" className="h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest" onClick={() => generateDefenseActPdf({ process, companyName: companies?.[0]?.name })}>
+                    <FileText className="h-4 w-4" /> Acta
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -499,7 +513,7 @@ export function DisciplinaryDetailDialog({
                         {process.has_appeal && (
                           <div className="border border-primary/20 rounded-xl p-5 space-y-4">
                             <h5 className="font-black text-[10px] uppercase tracking-widest text-primary flex items-center gap-2">
-                              <Scale className="w-4 h-4" /> Recurso de Apelación
+                              <Scale className="w-4 h-4" /> Réplica / Recurso del Trabajador
                             </h5>
                             <div className="grid grid-cols-2 gap-4 text-[11px]">
                               <div className="space-y-1">
@@ -615,6 +629,7 @@ export function DisciplinaryDetailDialog({
         open={showDefenseForm}
         onOpenChange={setShowDefenseForm}
         processId={process.id}
+        process={process}
       />
 
       <DecisionFormDialog
@@ -635,6 +650,13 @@ export function DisciplinaryDetailDialog({
         onOpenChange={setShowTokenDialog}
         processId={process.id}
         employeeId={process.employee_id}
+        validDays={process.defense_deadline_days || 5}
+      />
+
+      <CitationFormDialog
+        open={showCitationForm}
+        onOpenChange={setShowCitationForm}
+        process={process}
       />
     </>
   );

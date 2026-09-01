@@ -10,6 +10,7 @@ import {
   FaultType,
   SanctionType,
 } from '@/types/disciplinary';
+import petrocasinosLogoFull from '@/assets/petrocasinos-logo-full.png';
 
 
 const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
@@ -338,4 +339,193 @@ export async function generateDisciplinaryPdf(data: DisciplinaryPdfData) {
 
   // Save
   doc.save(`Proceso_Disciplinario_${process.case_number}.pdf`);
+}
+
+type LegalDocumentKind = 'citation' | 'defense_act';
+
+const ORDINALS = ['PRIMERO', 'SEGUNDO', 'TERCERO', 'CUARTO', 'QUINTO', 'SEXTO', 'SÉPTIMO', 'OCTAVO', 'NOVENO', 'DÉCIMO'];
+
+function legalDate(value: string | null | undefined, includeTime = false) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return format(date, includeTime ? "d 'de' MMMM 'de' yyyy, hh:mm a" : "d 'de' MMMM 'de' yyyy", { locale: es });
+}
+
+async function createLegalDocument(data: DisciplinaryPdfData, kind: LegalDocumentKind) {
+  const { process, companyName } = data;
+  const company = (companyName || 'PETROCASINOS S.A.').toUpperCase();
+  const employee = `${process.employee?.first_name || ''} ${process.employee?.last_name || ''}`.trim().toUpperCase();
+  const documentNumber = process.employee?.document_number || '-';
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+  const height = doc.internal.pageSize.getHeight();
+  let logo: string | null = null;
+  try { logo = await loadImageAsDataUrl(petrocasinosLogoFull); } catch { /* logo is optional */ }
+
+  const title = kind === 'citation' ? 'CITACIÓN PARA LA DILIGENCIA DE DESCARGOS' : `ACTA DE DESCARGOS – ${employee}`;
+  let y = 42;
+
+  const drawLegalHeader = () => {
+    doc.setDrawColor(90, 90, 90);
+    doc.rect(18, 12, 180, 24);
+    if (logo) {
+      try { doc.addImage(logo, 'PNG', 21, 16, 34, 14); } catch { /* skip */ }
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(kind === 'citation' ? 12 : 13);
+    doc.text(title, 108, 22, { align: 'center', maxWidth: 100 });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.text(process.case_number, 194, 18, { align: 'right' });
+    doc.text('Documento generado por la plataforma', 194, 25, { align: 'right' });
+    doc.text(company, 194, 31, { align: 'right' });
+  };
+
+  const ensureSpace = (needed: number) => {
+    if (y + needed <= height - 18) return;
+    doc.addPage();
+    drawLegalHeader();
+    y = 43;
+  };
+
+  const paragraph = (text: string, options?: { boldLead?: string; center?: boolean; gap?: number }) => {
+    const gap = options?.gap ?? 5;
+    doc.setFontSize(10.5);
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(text, 176);
+    ensureSpace(lines.length * 5 + gap);
+    if (options?.boldLead && text.startsWith(options.boldLead)) {
+      doc.setFont('helvetica', 'bold');
+    }
+    doc.text(lines, options?.center ? 108 : 20, y, { align: options?.center ? 'center' : 'left', lineHeightFactor: 1.35 });
+    doc.setFont('helvetica', 'normal');
+    y += lines.length * 5 + gap;
+  };
+
+  const heading = (text: string) => {
+    ensureSpace(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11.5);
+    doc.text(text.toUpperCase(), 108, y, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    y += 9;
+  };
+
+  drawLegalHeader();
+
+  if (kind === 'citation') {
+    paragraph(`${process.citation_place || 'Ciudad'}, ${legalDate(process.notification_date || new Date().toISOString())}`);
+    paragraph(`Señor(a):\n${employee}\nC.C. ${documentNumber}`);
+    heading('Notificación de apertura de proceso disciplinario y citación a diligencia de descargos');
+    const mode = process.hearing_method === 'presencial'
+      ? `de manera presencial en ${process.hearing_location || 'el lugar informado por la empresa'}`
+      : process.hearing_method === 'escrito'
+        ? 'mediante respuesta escrita a través del enlace seguro suministrado por la empresa'
+        : `mediante videoconferencia por ${process.hearing_platform || 'la plataforma informada'}${process.hearing_link ? ` (${process.hearing_link})` : ''}`;
+    paragraph(`Por medio de la presente, nos permitimos citarlo a diligencia de descargos el ${legalDate(process.hearing_date, true)}, la cual se llevará a cabo ${mode}, con el objetivo de escuchar sus aclaraciones sobre los hechos reportados y garantizar su derecho de defensa y contradicción.`);
+
+    const facts = process.report_facts?.length
+      ? process.report_facts
+      : [{ title: 'Hecho reportado', description: process.facts_description }];
+    for (const [index, fact] of facts.entries()) {
+      const ordinal = ORDINALS[index] || `HECHO ${index + 1}`;
+      const metadata = [fact.occurred_at ? legalDate(fact.occurred_at, true) : '', fact.location || ''].filter(Boolean).join(' · ');
+      paragraph(`${ordinal}: ${fact.title}. ${metadata ? `${metadata}. ` : ''}${fact.description}`, { boldLead: `${ordinal}:` });
+    }
+
+    const photographicEvidence = (process.evidence || []).filter((item) => item.evidence_type === 'foto' && item.file_url);
+    if (photographicEvidence.length) {
+      heading('Registros fotográficos anexos');
+      for (const evidence of photographicEvidence) {
+        try {
+          const imageData = await loadImageAsDataUrl(evidence.file_url!);
+          const properties = doc.getImageProperties(imageData);
+          const imageWidth = 82;
+          const imageHeight = Math.min(75, imageWidth * properties.height / properties.width);
+          ensureSpace(imageHeight + 14);
+          doc.addImage(imageData, properties.fileType || 'PNG', 20, y, imageWidth, imageHeight);
+          doc.setFontSize(8.5);
+          doc.text(evidence.description, 106, y + 5, { maxWidth: 88 });
+          y += imageHeight + 8;
+        } catch {
+          paragraph(`Anexo fotográfico: ${evidence.description}${evidence.file_name ? ` (${evidence.file_name})` : ''}`);
+        }
+      }
+    }
+
+    paragraph('Las anteriores conductas podrían constituir incumplimiento de las obligaciones contractuales, políticas internas y disposiciones del Reglamento Interno de Trabajo, razón por la cual se adelanta esta actuación sin prejuzgar sobre la responsabilidad del trabajador.');
+    if (process.legal_basis?.length) {
+      heading('Fundamentos normativos relacionados');
+      process.legal_basis.forEach((basis, index) => paragraph(`${index + 1}. ${basis}`, { gap: 2 }));
+    } else if (process.article_violated) {
+      heading('Fundamentos normativos relacionados');
+      paragraph(process.article_violated);
+    }
+    heading('Término para ejercer su defensa');
+    paragraph(`El trabajador cuenta con ${process.defense_deadline_days || 5} días hábiles para ejercer su derecho de defensa, aportar las pruebas que pretenda hacer valer y solicitar las que considere pertinentes antes de la diligencia.`);
+    heading('Traslado de pruebas');
+    paragraph(process.proof_transfer || 'Se ponen en conocimiento del trabajador los informes y evidencias incorporados al expediente disciplinario.');
+    paragraph('A la diligencia podrá asistir acompañado de un compañero de trabajo o testigo y presentar las pruebas que tenga en su poder para justificar su posición.');
+    ensureSpace(34);
+    y += 8;
+    doc.setFont('helvetica', 'bold');
+    doc.text('EL NOTIFICADO', 22, y);
+    doc.text('QUIEN NOTIFICA', 118, y);
+    y += 18;
+    doc.text(employee, 22, y);
+    doc.text((process.citation_sender_name || 'RESPONSABLE JURÍDICO').toUpperCase(), 118, y);
+    doc.setFont('helvetica', 'normal');
+    y += 5;
+    doc.text(`C.C. ${documentNumber}`, 22, y);
+    doc.text(process.citation_sender_role || 'Área Jurídica', 118, y, { maxWidth: 78 });
+  } else {
+    const defense = process.defenses?.[0];
+    paragraph(`En ${process.citation_place || 'la ciudad indicada'}, el ${legalDate(defense?.defense_date || process.hearing_date)}, se reunieron el trabajador ${employee}, identificado con C.C. ${documentNumber}, y los representantes de ${company}, con el fin de rendir descargos dentro del proceso disciplinario ${process.case_number}.`);
+    paragraph('Se informó al trabajador que, en garantía de su derecho de defensa y debido proceso, puede no declarar contra sí mismo, responder o no los cargos, exponer libremente su versión y aportar o solicitar pruebas que justifiquen, atenúen o demuestren su no participación en los hechos.');
+    paragraph(defense?.rights_acknowledged ? 'El trabajador manifestó comprender sus derechos y aceptó continuar con la diligencia.' : 'Se deja constancia de la lectura de los derechos del trabajador.');
+
+    const answers = defense?.answers || [];
+    if (answers.length) {
+      answers.forEach((answer) => {
+        paragraph(`PREGUNTADO: ${answer.question}`, { boldLead: 'PREGUNTADO:', gap: 2 });
+        paragraph(`RESPUESTA: ${answer.answer}`, { boldLead: 'RESPUESTA:', gap: 5 });
+      });
+    }
+    heading('Manifestación libre del trabajador');
+    paragraph(defense?.content || 'Sin contenido registrado.');
+    if (defense?.witness_name) paragraph(`Acompañante o testigo: ${defense.witness_name}${defense.witness_document ? `, documento ${defense.witness_document}` : ''}.`);
+    paragraph(`No siendo otro el objeto de la diligencia, se da por terminada el ${legalDate(defense?.hearing_end_at || new Date().toISOString(), true)}, una vez revisada y aprobada por quienes intervinieron.`);
+    ensureSpace(48);
+    y += 8;
+    if (defense?.signature_data) {
+      try { doc.addImage(defense.signature_data, 'PNG', 24, y, 58, 23); } catch { /* invalid legacy signature */ }
+    }
+    y += 26;
+    doc.setFont('helvetica', 'bold');
+    doc.text(employee, 22, y);
+    doc.text((defense?.received_by || process.investigator_name || 'REPRESENTANTE DE LA EMPRESA').toUpperCase(), 118, y, { maxWidth: 76 });
+    doc.setFont('helvetica', 'normal');
+    y += 5;
+    doc.text(`C.C. ${documentNumber}`, 22, y);
+    doc.text(company, 118, y);
+  }
+
+  const pages = doc.getNumberOfPages();
+  for (let page = 1; page <= pages; page += 1) {
+    doc.setPage(page);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Página ${page} de ${pages} · ${process.case_number}`, 108, height - 8, { align: 'center' });
+    doc.setTextColor(0, 0, 0);
+  }
+
+  const suffix = kind === 'citation' ? 'citacion-descargos' : 'acta-descargos';
+  doc.save(`${suffix}-${process.case_number}.pdf`);
+}
+
+export function generateCitationPdf(data: DisciplinaryPdfData) {
+  return createLegalDocument(data, 'citation');
+}
+
+export function generateDefenseActPdf(data: DisciplinaryPdfData) {
+  return createLegalDocument(data, 'defense_act');
 }

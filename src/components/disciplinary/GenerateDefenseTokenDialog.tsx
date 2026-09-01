@@ -12,6 +12,7 @@ interface GenerateDefenseTokenDialogProps {
   onOpenChange: (open: boolean) => void;
   processId: string;
   employeeId: string;
+  validDays?: number;
 }
 
 export function GenerateDefenseTokenDialog({
@@ -19,6 +20,7 @@ export function GenerateDefenseTokenDialog({
   onOpenChange,
   processId,
   employeeId,
+  validDays = 5,
 }: GenerateDefenseTokenDialogProps) {
   const { user, currentCompanyId } = useAuth();
   const [generating, setGenerating] = useState(false);
@@ -30,10 +32,10 @@ export function GenerateDefenseTokenDialog({
 
     try {
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 72);
+      expiresAt.setDate(expiresAt.getDate() + validDays);
 
       const { data, error } = await supabase
-        .from('disciplinary_defense_tokens' as any)
+        .from('disciplinary_defense_tokens')
         .insert({
           process_id: processId,
           company_id: currentCompanyId,
@@ -46,11 +48,11 @@ export function GenerateDefenseTokenDialog({
 
       if (error) throw error;
 
-      const token = (data as any).token;
+      const token = data.token;
       const url = `${window.location.origin}/descargos?token=${token}`;
       setGeneratedUrl(url);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al generar el enlace');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al generar el enlace');
     } finally {
       setGenerating(false);
     }
@@ -107,7 +109,7 @@ export function GenerateDefenseTokenDialog({
                 <Link className="h-12 w-12" />
               </div>
               <p className="text-sm text-muted-foreground text-center font-medium leading-relaxed">
-                Se generará un enlace de un solo uso válido por <span className="text-foreground font-bold">72 horas</span> para que el empleado presente sus descargos de forma remota.
+                Se generará un enlace de un solo uso válido por <span className="text-foreground font-bold">{validDays} días</span> para que el empleado presente sus descargos de forma remota.
               </p>
               <Button 
                 onClick={handleGenerate} 
@@ -171,7 +173,7 @@ export function GenerateDefenseTokenDialog({
               <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-border ">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-primary">
-                  Válido por 72h · Un solo uso
+                  Válido por {validDays} días · Un solo uso
                 </p>
               </div>
             </div>
