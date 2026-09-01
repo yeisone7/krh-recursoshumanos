@@ -2245,46 +2245,67 @@ export type Database = {
       }
       disciplinary_defenses: {
         Row: {
+          answers: Json
           company_id: string
           content: string
           created_at: string
           defense_date: string
           defense_type: string
           document_url: string | null
+          employee_email: string | null
+          hearing_end_at: string | null
           id: string
           process_id: string
           received_by: string | null
           received_by_id: string | null
+          rights_acknowledged: boolean
+          signature_data: string | null
           submitted_via_token: boolean
           updated_at: string
+          witness_document: string | null
+          witness_name: string | null
         }
         Insert: {
+          answers?: Json
           company_id: string
           content: string
           created_at?: string
           defense_date: string
           defense_type: string
           document_url?: string | null
+          employee_email?: string | null
+          hearing_end_at?: string | null
           id?: string
           process_id: string
           received_by?: string | null
           received_by_id?: string | null
+          rights_acknowledged?: boolean
+          signature_data?: string | null
           submitted_via_token?: boolean
           updated_at?: string
+          witness_document?: string | null
+          witness_name?: string | null
         }
         Update: {
+          answers?: Json
           company_id?: string
           content?: string
           created_at?: string
           defense_date?: string
           defense_type?: string
           document_url?: string | null
+          employee_email?: string | null
+          hearing_end_at?: string | null
           id?: string
           process_id?: string
           received_by?: string | null
           received_by_id?: string | null
+          rights_acknowledged?: boolean
+          signature_data?: string | null
           submitted_via_token?: boolean
           updated_at?: string
+          witness_document?: string | null
+          witness_name?: string | null
         }
         Relationships: [
           {
@@ -2315,6 +2336,7 @@ export type Database = {
           file_url: string | null
           id: string
           process_id: string
+          storage_path: string | null
           updated_at: string
         }
         Insert: {
@@ -2328,6 +2350,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           process_id: string
+          storage_path?: string | null
           updated_at?: string
         }
         Update: {
@@ -2341,6 +2364,7 @@ export type Database = {
           file_url?: string | null
           id?: string
           process_id?: string
+          storage_path?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2367,6 +2391,9 @@ export type Database = {
           appeal_document_url: string | null
           appeal_resolution: string | null
           article_violated: string | null
+          citation_place: string | null
+          citation_sender_name: string | null
+          citation_sender_role: string | null
           case_number: string
           closing_date: string | null
           company_id: string
@@ -2377,6 +2404,7 @@ export type Database = {
           decision_maker_id: string | null
           decision_maker_name: string | null
           decision_summary: string | null
+          defense_deadline_days: number
           employee_id: string
           facts_description: string
           fault_date: string
@@ -2384,14 +2412,22 @@ export type Database = {
           has_appeal: boolean | null
           hearing_date: string | null
           hearing_document_url: string | null
+          hearing_link: string | null
+          hearing_location: string | null
+          hearing_method: string | null
+          hearing_platform: string | null
+          hearing_questions: Json
           id: string
           investigator_id: string | null
           investigator_name: string | null
+          legal_basis: Json
           notification_date: string | null
           notification_document_url: string | null
           observations: string | null
           opening_date: string
           opening_document_url: string | null
+          proof_transfer: string | null
+          report_facts: Json
           sanction_days: number | null
           sanction_end_date: string | null
           sanction_start_date: string | null
@@ -2406,6 +2442,9 @@ export type Database = {
           appeal_document_url?: string | null
           appeal_resolution?: string | null
           article_violated?: string | null
+          citation_place?: string | null
+          citation_sender_name?: string | null
+          citation_sender_role?: string | null
           case_number: string
           closing_date?: string | null
           company_id: string
@@ -2416,6 +2455,7 @@ export type Database = {
           decision_maker_id?: string | null
           decision_maker_name?: string | null
           decision_summary?: string | null
+          defense_deadline_days?: number
           employee_id: string
           facts_description: string
           fault_date: string
@@ -2423,14 +2463,22 @@ export type Database = {
           has_appeal?: boolean | null
           hearing_date?: string | null
           hearing_document_url?: string | null
+          hearing_link?: string | null
+          hearing_location?: string | null
+          hearing_method?: string | null
+          hearing_platform?: string | null
+          hearing_questions?: Json
           id?: string
           investigator_id?: string | null
           investigator_name?: string | null
+          legal_basis?: Json
           notification_date?: string | null
           notification_document_url?: string | null
           observations?: string | null
           opening_date?: string
           opening_document_url?: string | null
+          proof_transfer?: string | null
+          report_facts?: Json
           sanction_days?: number | null
           sanction_end_date?: string | null
           sanction_start_date?: string | null
@@ -2445,6 +2493,9 @@ export type Database = {
           appeal_document_url?: string | null
           appeal_resolution?: string | null
           article_violated?: string | null
+          citation_place?: string | null
+          citation_sender_name?: string | null
+          citation_sender_role?: string | null
           case_number?: string
           closing_date?: string | null
           company_id?: string
@@ -2455,6 +2506,7 @@ export type Database = {
           decision_maker_id?: string | null
           decision_maker_name?: string | null
           decision_summary?: string | null
+          defense_deadline_days?: number
           employee_id?: string
           facts_description?: string
           fault_date?: string
@@ -2462,14 +2514,22 @@ export type Database = {
           has_appeal?: boolean | null
           hearing_date?: string | null
           hearing_document_url?: string | null
+          hearing_link?: string | null
+          hearing_location?: string | null
+          hearing_method?: string | null
+          hearing_platform?: string | null
+          hearing_questions?: Json
           id?: string
           investigator_id?: string | null
           investigator_name?: string | null
+          legal_basis?: Json
           notification_date?: string | null
           notification_document_url?: string | null
           observations?: string | null
           opening_date?: string
           opening_document_url?: string | null
+          proof_transfer?: string | null
+          report_facts?: Json
           sanction_days?: number | null
           sanction_end_date?: string | null
           sanction_start_date?: string | null
@@ -12004,8 +12064,22 @@ export type Database = {
             }
             Returns: Json
           }
+      get_disciplinary_defense_form: {
+        Args: { p_token: string }
+        Returns: Json
+      }
       submit_defense_via_token: {
-        Args: { p_content: string; p_defense_type?: string; p_token: string }
+        Args: {
+          p_answers?: Json
+          p_content: string
+          p_defense_type?: string
+          p_employee_email?: string
+          p_rights_acknowledged?: boolean
+          p_signature_data?: string
+          p_token: string
+          p_witness_document?: string
+          p_witness_name?: string
+        }
         Returns: Json
       }
       submit_employee_registration:

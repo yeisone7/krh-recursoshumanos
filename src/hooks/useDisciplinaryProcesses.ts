@@ -16,6 +16,15 @@ import {
   SanctionType,
 } from '@/types/disciplinary';
 
+type ProcessListRow = DisciplinaryProcess & {
+  employee?: (DisciplinaryProcessWithEmployee['employee'] & {
+    employee_work_info?: Array<{
+      is_current: boolean;
+      operation_centers?: { id: string; name: string } | null;
+    }>;
+  }) | null;
+};
+
 // ============================================
 // MAIN QUERIES
 // ============================================
@@ -41,8 +50,8 @@ export function useDisciplinaryProcesses() {
       if (error) throw error;
 
       // Map operation center name from nested join
-      return (data as any[]).map((p) => {
-        const workInfo = p.employee?.employee_work_info?.find((w: any) => w.is_current);
+      return (data as unknown as ProcessListRow[]).map((p) => {
+        const workInfo = p.employee?.employee_work_info?.find((workInfo) => workInfo.is_current);
         return {
           ...p,
           operation_center_name: workInfo?.operation_centers?.name || null,
@@ -87,9 +96,17 @@ export function useDisciplinaryProcess(id: string | null) {
           .order('defense_date', { ascending: false }),
       ]);
 
+      const evidence = await Promise.all(((evidenceRes.data || []) as unknown as DisciplinaryEvidence[]).map(async (item) => {
+        if (!item.storage_path) return item;
+        const { data: signed } = await supabase.storage
+          .from('disciplinary-evidence')
+          .createSignedUrl(item.storage_path, 60 * 60);
+        return { ...item, file_url: signed?.signedUrl || null };
+      }));
+
       return {
         ...data,
-        evidence: evidenceRes.data || [],
+        evidence,
         timeline: timelineRes.data || [],
         defenses: defensesRes.data || [],
       } as DisciplinaryProcessWithEmployee;
@@ -152,13 +169,20 @@ export function useCreateDisciplinaryProcess() {
 
       const caseNumber = `PD-${year}-${String((count || 0) + 1).padStart(4, '0')}`;
 
+      const factsDescription = formData.facts
+        .map((fact, index) => `${index + 1}. ${fact.title}: ${fact.description}`)
+        .join('\n\n');
+
       const insertData = {
         company_id: currentCompanyId,
         employee_id: formData.employee_id,
         case_number: caseNumber,
         fault_type: formData.fault_type,
         fault_date: format(formData.fault_date, 'yyyy-MM-dd'),
-        facts_description: formData.facts_description,
+        facts_description: factsDescription,
+        report_facts: formData.facts,
+        legal_basis: formData.legal_basis,
+        proof_transfer: formData.proof_transfer || null,
         article_violated: formData.article_violated || null,
         witnesses: formData.witnesses || null,
         investigator_name: formData.investigator_name || null,
@@ -297,6 +321,60 @@ export function useAdvanceStatus() {
         variant: 'destructive',
       });
     },
+  });
+}
+
+export function useConfigureCitation() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ processId, currentStatus, data }: {
+      processId: string;
+      currentStatus: DisciplinaryStatus;
+      data: {
+        citation_place: string;
+        hearing_date: string;
+        hearing_method: string;
+        hearing_location?: string;
+        hearing_platform?: string;
+        hearing_link?: string;
+        defense_deadline_days: number;
+        proof_transfer?: string;
+        citation_sender_name: string;
+        citation_sender_role: string;
+        hearing_questions: Array<{ id: string; question: string; required?: boolean }>;
+      };
+    }) => {
+      const { error } = await supabase
+        .from('disciplinary_processes')
+        .update({
+          ...data,
+          status: 'citacion_descargos',
+          notification_date: format(new Date(), 'yyyy-MM-dd'),
+        })
+        .eq('id', processId);
+      if (error) throw error;
+
+      const { error: timelineError } = await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
+        process_id: processId,
+        action_type: 'citacion_descargos',
+        description: `Citación programada para ${data.hearing_date}`,
+        previous_status: currentStatus,
+        new_status: 'citacion_descargos',
+        performed_by: user?.id,
+        performed_by_name: user?.email,
+      });
+      if (timelineError) throw timelineError;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_process', variables.processId] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_stats'] });
+      toast({ title: 'Citación preparada', description: 'La fecha, modalidad y cuestionario quedaron guardados.' });
+    },
+    onError: (error: Error) => toast({ title: 'Error', description: error.message, variant: 'destructive' }),
   });
 }
 
@@ -483,7 +561,7 @@ export function useRegisterAppeal() {
         company_id: currentCompanyId!,
         process_id: processId,
         action_type: 'apelacion',
-        description: `Apelación registrada: ${appealResolution.substring(0, 100)}...`,
+        description: `Réplica o recurso registrado: ${appealResolution.substring(0, 100)}...`,
         previous_status: 'decision',
         new_status: 'apelacion',
         performed_by: user?.id,
@@ -495,8 +573,8 @@ export function useRegisterAppeal() {
       queryClient.invalidateQueries({ queryKey: ['disciplinary_process', variables.processId] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_stats'] });
       toast({
-        title: 'Apelación registrada',
-        description: 'La apelación ha sido registrada exitosamente.',
+        title: 'Réplica registrada',
+        description: 'La respuesta del trabajador ha sido incorporada al expediente.',
       });
     },
     onError: (error: Error) => {
@@ -518,10 +596,22 @@ export function useAddDefense() {
       processId,
       data,
       fileUrl,
+      answers = [],
+      rightsAcknowledged = false,
+      signatureData,
+      employeeEmail,
+      witnessName,
+      witnessDocument,
     }: {
       processId: string;
       data: DefenseFormData;
       fileUrl?: string;
+      answers?: Array<{ question_id: string; question: string; answer: string }>;
+      rightsAcknowledged?: boolean;
+      signatureData?: string | null;
+      employeeEmail?: string;
+      witnessName?: string;
+      witnessDocument?: string;
     }) => {
       const insertData = {
         company_id: currentCompanyId!,
@@ -532,6 +622,13 @@ export function useAddDefense() {
         received_by: data.received_by || null,
         received_by_id: user?.id || null,
         document_url: fileUrl || null,
+        answers,
+        rights_acknowledged: rightsAcknowledged,
+        signature_data: signatureData || null,
+        employee_email: employeeEmail || null,
+        witness_name: witnessName || null,
+        witness_document: witnessDocument || null,
+        hearing_end_at: new Date().toISOString(),
       };
 
       const { error } = await supabase
@@ -539,6 +636,11 @@ export function useAddDefense() {
         .insert(insertData);
 
       if (error) throw error;
+
+      await supabase
+        .from('disciplinary_processes')
+        .update({ status: 'descargos' })
+        .eq('id', processId);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['disciplinary_process', variables.processId] });

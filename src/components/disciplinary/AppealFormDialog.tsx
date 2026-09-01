@@ -26,8 +26,8 @@ import { cn } from '@/lib/utils';
 import { useRegisterAppeal } from '@/hooks/useDisciplinaryProcesses';
 
 const appealFormSchema = z.object({
-  appeal_date: z.date({ required_error: 'Seleccione la fecha de apelación' }),
-  appeal_resolution: z.string().min(10, 'Describa los motivos o resolución de la apelación'),
+  appeal_date: z.date({ required_error: 'Seleccione la fecha de la réplica' }),
+  appeal_resolution: z.string().min(10, 'Describa la réplica, recurso o respuesta del trabajador'),
 });
 
 type AppealFormData = z.infer<typeof appealFormSchema>;
@@ -70,10 +70,10 @@ export function AppealFormDialog({
           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 rounded-full bg-primary/10 blur-[40px] pointer-events-none" />
           <DialogTitle className="text-2xl font-black tracking-tight text-foreground relative z-10 flex items-center gap-2">
             <Scale className="w-6 h-6 text-primary" />
-            Registrar Apelación
+            Registrar Réplica o Recurso
           </DialogTitle>
           <p className="text-muted-foreground font-medium mt-1 relative z-10">
-            Trámite de segunda instancia solicitado por el colaborador
+            Respuesta del colaborador frente al dictamen o decisión jurídica
           </p>
         </DialogHeader>
 
@@ -85,7 +85,7 @@ export function AppealFormDialog({
                 name="appeal_date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Apelación *</FormLabel>
+                      <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Fecha de Réplica *</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -125,10 +125,10 @@ export function AppealFormDialog({
                 name="appeal_resolution"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Motivos / Resolución de la Apelación *</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Contenido de la Réplica / Recurso *</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describa los fundamentos de la apelación o la resolución de la misma..."
+                        placeholder="Transcriba la réplica del trabajador, sus fundamentos y las pruebas que solicita valorar..."
                         className="min-h-[200px] rounded-xl bg-background shadow-inner border-border/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium py-3 leading-relaxed"
                         {...field}
                       />
@@ -153,7 +153,7 @@ export function AppealFormDialog({
                 disabled={registerAppeal.isPending} 
                 className="h-12 px-8 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
               >
-                {registerAppeal.isPending ? 'Guardando...' : 'Registrar Apelación'}
+                {registerAppeal.isPending ? 'Guardando...' : 'Registrar Réplica'}
               </Button>
             </div>
           </form>

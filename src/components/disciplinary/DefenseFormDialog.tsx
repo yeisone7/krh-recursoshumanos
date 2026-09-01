@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -32,19 +33,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { useAddDefense } from '@/hooks/useDisciplinaryProcesses';
 import { defenseFormSchema, DefenseFormData } from '@/types/disciplinary';
+import { DisciplinaryProcessWithEmployee } from '@/types/disciplinary';
+import { SignatureCanvas } from '@/components/training/SignatureCanvas';
+import { toast } from '@/hooks/use-toast';
 
 interface DefenseFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   processId: string;
+  process: DisciplinaryProcessWithEmployee;
 }
 
 export function DefenseFormDialog({
   open,
   onOpenChange,
   processId,
+  process,
 }: DefenseFormDialogProps) {
   const addDefense = useAddDefense();
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [rightsAcknowledged, setRightsAcknowledged] = useState(false);
+  const [signatureData, setSignatureData] = useState<string | null>(null);
+  const [employeeEmail, setEmployeeEmail] = useState('');
+  const [witnessName, setWitnessName] = useState('');
+  const [witnessDocument, setWitnessDocument] = useState('');
 
   const form = useForm<DefenseFormData>({
     resolver: zodResolver(defenseFormSchema),
@@ -56,8 +68,32 @@ export function DefenseFormDialog({
     },
   });
 
+  useEffect(() => {
+    if (open) {
+      setAnswers(Object.fromEntries((process.hearing_questions || []).map((question) => [question.id, ''])));
+      setRightsAcknowledged(false);
+      setSignatureData(null);
+    }
+  }, [open, process.hearing_questions]);
+
   const onSubmit = async (data: DefenseFormData) => {
-    await addDefense.mutateAsync({ processId, data });
+    if (!rightsAcknowledged) {
+      toast({ title: 'Confirmación requerida', description: 'Debe dejar constancia de que el trabajador comprendió sus derechos.', variant: 'destructive' });
+      return;
+    }
+    const questionAnswers = (process.hearing_questions || []).map((question) => ({
+      question_id: question.id,
+      question: question.question,
+      answer: answers[question.id] || '',
+    }));
+    if (questionAnswers.some((answer) => !answer.answer.trim())) {
+      toast({ title: 'Respuestas incompletas', description: 'Responda todas las preguntas configuradas para el acta.', variant: 'destructive' });
+      return;
+    }
+    await addDefense.mutateAsync({
+      processId, data, answers: questionAnswers, rightsAcknowledged, signatureData,
+      employeeEmail, witnessName, witnessDocument,
+    });
     form.reset();
     onOpenChange(false);
   };
@@ -79,6 +115,10 @@ export function DefenseFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col bg-card/30">
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-8">
+              <label className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+                <input type="checkbox" className="mt-1 h-4 w-4" checked={rightsAcknowledged} onChange={(event) => setRightsAcknowledged(event.target.checked)} />
+                <span>Se informó al trabajador que puede no declarar contra sí mismo, controvertir los cargos y aportar o solicitar pruebas; manifiesta comprender sus derechos.</span>
+              </label>
               <div className="grid gap-6 sm:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -144,6 +184,18 @@ export function DefenseFormDialog({
                 />
               </div>
 
+              {!!process.hearing_questions?.length && (
+                <div className="space-y-4">
+                  <div><p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Preguntas y respuestas</p><p className="text-xs text-muted-foreground">La transcripción se incluirá en el acta generada.</p></div>
+                  {process.hearing_questions.map((question, index) => (
+                    <div key={question.id} className="space-y-2 rounded-xl border p-4">
+                      <Label className="text-sm font-bold">{index + 1}. {question.question}</Label>
+                      <Textarea value={answers[question.id] || ''} onChange={(event) => setAnswers((current) => ({ ...current, [question.id]: event.target.value }))} placeholder="Respuesta del trabajador..." />
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="content"
@@ -161,6 +213,14 @@ export function DefenseFormDialog({
                   </FormItem>
                 )}
               />
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2"><Label>Correo del trabajador</Label><Input type="email" value={employeeEmail} onChange={(event) => setEmployeeEmail(event.target.value)} /></div>
+                <div className="space-y-2"><Label>Testigo o acompañante</Label><Input value={witnessName} onChange={(event) => setWitnessName(event.target.value)} /></div>
+                <div className="space-y-2 sm:col-span-2"><Label>Documento del testigo</Label><Input value={witnessDocument} onChange={(event) => setWitnessDocument(event.target.value)} /></div>
+              </div>
+
+              <div className="space-y-2"><Label>Firma del trabajador</Label><SignatureCanvas onSave={setSignatureData} /></div>
 
               <FormField
                 control={form.control}

@@ -21,6 +21,25 @@ export type SanctionType =
   | 'terminacion_justa_causa'
   | 'sin_sancion';
 
+export interface DisciplinaryFact {
+  title: string;
+  description: string;
+  occurred_at?: string;
+  location?: string;
+}
+
+export interface DisciplinaryQuestion {
+  id: string;
+  question: string;
+  required?: boolean;
+}
+
+export interface DisciplinaryAnswer {
+  question_id: string;
+  question: string;
+  answer: string;
+}
+
 // Labels for UI
 export const faultTypeLabels: Record<FaultType, string> = {
   leve: 'Leve',
@@ -35,7 +54,7 @@ export const disciplinaryStatusLabels: Record<DisciplinaryStatus, string> = {
   descargos: 'Descargos',
   analisis: 'Análisis',
   decision: 'Decisión',
-  apelacion: 'Apelación',
+  apelacion: 'Réplica / Recurso',
   cerrado: 'Cerrado',
 };
 
@@ -96,6 +115,18 @@ export interface DisciplinaryProcess {
   decision_document_url: string | null;
   appeal_document_url: string | null;
   observations: string | null;
+  report_facts: DisciplinaryFact[];
+  legal_basis: string[];
+  proof_transfer: string | null;
+  citation_place: string | null;
+  hearing_method: string | null;
+  hearing_location: string | null;
+  hearing_platform: string | null;
+  hearing_link: string | null;
+  defense_deadline_days: number;
+  citation_sender_name: string | null;
+  citation_sender_role: string | null;
+  hearing_questions: DisciplinaryQuestion[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -121,6 +152,7 @@ export interface DisciplinaryEvidence {
   description: string;
   file_url: string | null;
   file_name: string | null;
+  storage_path: string | null;
   collected_date: string;
   collected_by: string | null;
   created_at: string;
@@ -151,6 +183,13 @@ export interface DisciplinaryDefense {
   received_by_id: string | null;
   document_url: string | null;
   submitted_via_token: boolean;
+  answers: DisciplinaryAnswer[];
+  rights_acknowledged: boolean;
+  witness_name: string | null;
+  witness_document: string | null;
+  employee_email: string | null;
+  signature_data: string | null;
+  hearing_end_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -173,8 +212,15 @@ export const disciplinaryFormSchema = z.object({
   employee_id: z.string().min(1, 'Seleccione un empleado'),
   fault_type: z.enum(['leve', 'grave', 'gravisima'] as const),
   fault_date: z.date(),
-  facts_description: z.string().min(10, 'Describa los hechos detalladamente'),
+  facts: z.array(z.object({
+    title: z.string().min(3, 'Asigne un título al hecho'),
+    description: z.string().min(10, 'Describa el hecho detalladamente'),
+    occurred_at: z.string().optional(),
+    location: z.string().optional(),
+  })).min(1, 'Registre al menos un hecho'),
   article_violated: z.string().optional(),
+  legal_basis: z.array(z.string().min(3)).default([]),
+  proof_transfer: z.string().optional(),
   witnesses: z.string().optional(),
   investigator_name: z.string().optional(),
   observations: z.string().optional(),
@@ -239,7 +285,7 @@ export function getNextStatusAction(status: DisciplinaryStatus): string {
     citacion_descargos: 'Registrar Descargos',
     descargos: 'Iniciar Análisis',
     analisis: 'Tomar Decisión',
-    decision: 'Registrar Apelación',
+    decision: 'Registrar Réplica',
     apelacion: 'Cerrar Proceso',
     cerrado: '',
   };

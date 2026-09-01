@@ -19,21 +19,16 @@ import { formatDateOnly } from '@/lib/dateOnly';
 
 type Step = 'loading' | 'error' | 'form' | 'done';
 
-interface TokenData {
-  id: string;
-  process_id: string;
-  company_id: string;
-  employee_id: string;
-  is_used: boolean;
-  expires_at: string;
-}
-
 interface ProcessInfo {
   case_number: string;
   fault_date: string;
   facts_description: string;
   fault_type: string;
   employee_name: string;
+  employee_document: string;
+  company_name: string;
+  report_facts: Array<{ title: string; description: string; occurred_at?: string; location?: string }>;
+  hearing_questions: Array<{ id: string; question: string; required?: boolean }>;
 }
 
 export default function DescargosPublico() {
@@ -42,11 +37,15 @@ export default function DescargosPublico() {
 
   const [step, setStep] = useState<Step>('loading');
   const [errorMsg, setErrorMsg] = useState('');
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
   const [processInfo, setProcessInfo] = useState<ProcessInfo | null>(null);
   const [defenseContent, setDefenseContent] = useState('');
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [rightsAcknowledged, setRightsAcknowledged] = useState(false);
+  const [employeeEmail, setEmployeeEmail] = useState('');
+  const [witnessName, setWitnessName] = useState('');
+  const [witnessDocument, setWitnessDocument] = useState('');
 
   useEffect(() => {
     if (!tokenParam) {
@@ -59,12 +58,7 @@ export default function DescargosPublico() {
 
   const validateToken = async (token: string) => {
     try {
-      // Fetch token + process info via join
-      const { data, error } = await supabase
-        .from('disciplinary_defense_tokens' as any)
-        .select('id, process_id, company_id, employee_id, is_used, expires_at')
-        .eq('token', token)
-        .single();
+      const { data, error } = await supabase.rpc('get_disciplinary_defense_form', { p_token: token });
 
       if (error || !data) {
         setErrorMsg('El enlace no es válido o no existe.');
@@ -72,39 +66,15 @@ export default function DescargosPublico() {
         return;
       }
 
-      const row = data as any;
-
-      if (row.is_used) {
-        setErrorMsg('Este enlace ya fue utilizado para presentar descargos.');
+      const payload = data as unknown as ProcessInfo & { success: boolean; error?: string };
+      if (!payload.success) {
+        setErrorMsg(payload.error || 'El enlace no está disponible.');
         setStep('error');
         return;
       }
 
-      if (new Date(row.expires_at) < new Date()) {
-        setErrorMsg('Este enlace ha expirado.');
-        setStep('error');
-        return;
-      }
-
-      setTokenData(row as TokenData);
-
-      // Fetch process details
-      const { data: proc } = await supabase
-        .from('disciplinary_processes')
-        .select('case_number, fault_date, facts_description, fault_type, employee:employees_v2(first_name, last_name)')
-        .eq('id', row.process_id)
-        .single();
-
-      if (proc) {
-        const emp = (proc as any).employee;
-        setProcessInfo({
-          case_number: (proc as any).case_number,
-          fault_date: (proc as any).fault_date,
-          facts_description: (proc as any).facts_description,
-          fault_type: (proc as any).fault_type,
-          employee_name: emp ? `${emp.first_name} ${emp.last_name}` : '',
-        });
-      }
+      setProcessInfo(payload as ProcessInfo);
+      setAnswers(Object.fromEntries((payload.hearing_questions || []).map((question) => [question.id, ''])));
 
       setStep('form');
     } catch {
@@ -118,15 +88,21 @@ export default function DescargosPublico() {
     setSubmitting(true);
 
     try {
-      const { data, error } = await supabase.rpc('submit_defense_via_token' as any, {
+      const { data, error } = await supabase.rpc('submit_defense_via_token', {
         p_token: tokenParam,
         p_content: defenseContent.trim(),
         p_defense_type: 'escrito',
+        p_answers: (processInfo?.hearing_questions || []).map((question) => ({ question_id: question.id, question: question.question, answer: answers[question.id] || '' })),
+        p_signature_data: signatureData,
+        p_rights_acknowledged: rightsAcknowledged,
+        p_employee_email: employeeEmail || undefined,
+        p_witness_name: witnessName || undefined,
+        p_witness_document: witnessDocument || undefined,
       });
 
       if (error) throw error;
 
-      const result = data as any;
+      const result = data as unknown as { success?: boolean; error?: string } | null;
       if (result && !result.success) {
         setErrorMsg(result.error || 'Error al enviar los descargos.');
         setStep('error');
@@ -134,8 +110,8 @@ export default function DescargosPublico() {
       }
 
       setStep('done');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al enviar los descargos.');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error al enviar los descargos.');
       setStep('error');
     } finally {
       setSubmitting(false);
@@ -195,7 +171,7 @@ export default function DescargosPublico() {
           <Card>
             <CardContent className="pt-8 text-center space-y-5">
               <CheckCircle2 className="h-16 w-16 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold">Descargos Enviados</h2>
+              <h2 className="text-2xl font-bold">Descargos firmados y enviados</h2>
               <p className="text-muted-foreground">
                 Sus descargos han sido registrados exitosamente en el proceso <strong>{processInfo?.case_number || 'disciplinario'}</strong>.
               </p>
@@ -270,9 +246,11 @@ export default function DescargosPublico() {
 
             <div>
               <span className="text-sm text-muted-foreground">Descripción de los hechos:</span>
-              <p className="mt-1 text-sm whitespace-pre-wrap bg-background p-3 rounded-lg">
-                {processInfo?.facts_description}
-              </p>
+              <div className="mt-2 space-y-3">
+                {(processInfo?.report_facts?.length ? processInfo.report_facts : [{ title: 'Hechos reportados', description: processInfo?.facts_description || '' }]).map((fact, index) => (
+                  <div key={`${fact.title}-${index}`} className="rounded-lg bg-background p-3 text-sm"><p className="font-semibold">{index + 1}. {fact.title}</p><p className="mt-1 whitespace-pre-wrap text-muted-foreground">{fact.description}</p></div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -296,6 +274,23 @@ export default function DescargosPublico() {
               </span>
             </div>
 
+            <label className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm">
+              <input type="checkbox" className="mt-1 h-4 w-4" checked={rightsAcknowledged} onChange={(event) => setRightsAcknowledged(event.target.checked)} />
+              <span>Declaro que comprendo mi derecho a no declarar contra mí mismo, controvertir los cargos y aportar o solicitar pruebas.</span>
+            </label>
+
+            {!!processInfo?.hearing_questions?.length && (
+              <div className="space-y-4">
+                <div><Label>Cuestionario de la diligencia *</Label><p className="text-xs text-muted-foreground">Responda cada pregunta de forma libre, concreta y fiel a los hechos.</p></div>
+                {processInfo.hearing_questions.map((question, index) => (
+                  <div key={question.id} className="space-y-2 rounded-lg border p-4">
+                    <Label>{index + 1}. {question.question}</Label>
+                    <Textarea value={answers[question.id] || ''} onChange={(event) => setAnswers((current) => ({ ...current, [question.id]: event.target.value }))} rows={4} placeholder="Escriba su respuesta..." />
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="defense-content">Sus descargos *</Label>
               <Textarea
@@ -313,6 +308,14 @@ export default function DescargosPublico() {
 
             <Separator />
 
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2"><Label>Correo electrónico</Label><input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" type="email" value={employeeEmail} onChange={(event) => setEmployeeEmail(event.target.value)} /></div>
+              <div className="space-y-2"><Label>Acompañante o testigo</Label><input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={witnessName} onChange={(event) => setWitnessName(event.target.value)} /></div>
+              {witnessName && <div className="space-y-2 sm:col-span-2"><Label>Documento del testigo</Label><input className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={witnessDocument} onChange={(event) => setWitnessDocument(event.target.value)} /></div>}
+            </div>
+
+            <Separator />
+
             <div className="space-y-2">
               <Label>Firma del empleado *</Label>
               <SignatureCanvas onSave={(data) => setSignatureData(data)} />
@@ -325,7 +328,7 @@ export default function DescargosPublico() {
 
             <Button
               onClick={handleSubmit}
-              disabled={submitting || defenseContent.trim().length < 10 || !signatureData}
+              disabled={submitting || defenseContent.trim().length < 10 || !signatureData || !rightsAcknowledged || (processInfo?.hearing_questions || []).some((question) => !(answers[question.id] || '').trim())}
               className="w-full"
               size="lg"
             >
