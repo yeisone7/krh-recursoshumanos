@@ -81,6 +81,7 @@ import CumplimientoLaboral from "./pages/CumplimientoLaboral";
 import PilaUgpp from "./pages/PilaUgpp";
 import { CATALOG_CHILD_PERMISSION_CODES, CATALOG_PERMISSION_CODES } from "@/lib/catalogPermissions";
 import { TRAINING_PERMISSION_CODES } from "@/lib/trainingPermissions";
+import { COPASST_PERMISSIONS } from "@/lib/copasst";
 import { 
   CatalogosAreas, 
   CatalogosCargos, 
@@ -111,6 +112,11 @@ const AnaliticaContratos = lazy(() => import("./pages/AnaliticaContratos"));
 const AnaliticaEmpleados = lazy(() => import("./pages/AnaliticaEmpleados"));
 const AnaliticaDiversidad = lazy(() => import("./pages/AnaliticaDiversidad"));
 const Jornadas = lazy(() => import("./pages/Jornadas"));
+const CopasstDashboard = lazy(() => import("./pages/copasst/Dashboard"));
+const CopasstElections = lazy(() => import("./pages/copasst/Elections"));
+const CopasstCompliance = lazy(() => import("./pages/copasst/Compliance"));
+const CopasstAnalytics = lazy(() => import("./pages/copasst/Analytics"));
+const CopasstPublicVote = lazy(() => import("./pages/copasst/PublicVote"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -150,6 +156,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/capacitacion/grupo" element={<AccesoPublico groupMode />} />
+            <Route path="/copasst/votar" element={<Suspense fallback={null}><CopasstPublicVote /></Suspense>} />
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
             <Route path="/solicitud-permiso" element={<PublicLeaveRequest />} />
@@ -222,6 +229,10 @@ const App = () => (
                         <Route path="/capacitaciones/analiticas" element={<P module={TRAINING_PERMISSION_CODES.analytics}><AnaliticasCapacitaciones /></P>} />
                         <Route path="/capacitaciones/cumplimiento" element={<P module={TRAINING_PERMISSION_CODES.compliance}><CumplimientoCapacitaciones /></P>} />
                         <Route path="/capacitaciones/grupos" element={<P module={TRAINING_PERMISSION_CODES.groups}><GruposCapacitaciones /></P>} />
+                        <Route path="/copasst" element={<PAny modules={Object.values(COPASST_PERMISSIONS)}><Suspense fallback={null}><CopasstDashboard /></Suspense></PAny>} />
+                        <Route path="/copasst/elecciones" element={<P module={COPASST_PERMISSIONS.elections}><Suspense fallback={null}><CopasstElections /></Suspense></P>} />
+                        <Route path="/copasst/cumplimiento" element={<P module={COPASST_PERMISSIONS.compliance}><Suspense fallback={null}><CopasstCompliance /></Suspense></P>} />
+                        <Route path="/copasst/analitica" element={<P module={COPASST_PERMISSIONS.analytics}><Suspense fallback={null}><CopasstAnalytics /></Suspense></P>} />
                         <Route path="/evaluaciones" element={<P module="evaluaciones"><Evaluaciones /></P>} />
                         <Route path="/evaluaciones/analiticas" element={<P module="analitica_evaluaciones"><AnaliticasEvaluaciones /></P>} />
                         <Route path="/organigrama" element={<P module="organigrama"><Organigrama /></P>} />
