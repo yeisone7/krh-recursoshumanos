@@ -1,6 +1,6 @@
 begin;
 
-select plan(23);
+select plan(25);
 
 select has_table('public', 'copasst_elections', 'COPASST elections table exists');
 select has_table('public', 'copasst_candidates', 'COPASST candidates table exists');
@@ -25,6 +25,15 @@ select ok(not has_function_privilege('anon', 'public.get_copasst_compliance(uuid
 select hasnt_column('public', 'copasst_ballots', 'employee_id', 'ballots do not store an employee');
 select hasnt_column('public', 'copasst_ballots', 'document_number', 'ballots do not store a document');
 select hasnt_column('public', 'copasst_ballots', 'created_at', 'ballots have no correlatable timestamp');
+select ok(
+  position('America/Bogota' in pg_get_functiondef('private.get_copasst_analytics_impl(uuid)'::regprocedure)) > 0,
+  'COPASST analytics groups participation using the Bogota timezone'
+);
+select is(
+  date_trunc('day', '2026-09-03 23:30:00-05'::timestamptz, 'America/Bogota'),
+  '2026-09-03 05:00:00+00'::timestamptz,
+  'a late-night vote remains in its Bogota calendar day'
+);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
