@@ -64,10 +64,12 @@ import {
   ExternalLink,
   History } from
 'lucide-react';
+import { Vote } from 'lucide-react';
 import { BanknoteIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
 import { TRAINING_PERMISSION_CODES } from '@/lib/trainingPermissions';
+import { COPASST_PERMISSIONS } from '@/lib/copasst';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import sidebarLogo from '@/assets/empatiq-icono-sidebar.png';
 import empatiqTextLogo from '@/assets/empatiq-texto.png';
@@ -278,6 +280,19 @@ const catalogosItem: NavItem = {
   ],
 };
 
+const copasstItem: NavItem = {
+  label: 'COPASST',
+  icon: <Vote className="w-5 h-5" />,
+  href: '/copasst',
+  moduleCode: 'copasst',
+  children: [
+    { label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, href: '/copasst', moduleCode: COPASST_PERMISSIONS.elections },
+    { label: 'Elecciones', icon: <Vote className="w-4 h-4" />, href: '/copasst/elecciones', moduleCode: COPASST_PERMISSIONS.elections },
+    { label: 'Cumplimiento', icon: <ClipboardCheck className="w-4 h-4" />, href: '/copasst/cumplimiento', moduleCode: COPASST_PERMISSIONS.compliance },
+    { label: 'Analítica', icon: <BarChart3 className="w-4 h-4" />, href: '/copasst/analitica', moduleCode: COPASST_PERMISSIONS.analytics },
+  ],
+};
+
 const toolsNavItemsBase: NavItem[] = [
   { label: 'Calendario', icon: <Calendar className="w-5 h-5" />, href: '/calendario', moduleCode: 'calendario' },
   { label: 'Cumpleaños', icon: <Cake className="w-5 h-5" />, href: '/cumpleanos', moduleCode: 'reportes' },
@@ -325,6 +340,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [catalogosOpen, setCatalogosOpen] = useState(false);
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(false);
+  const [copasstOpen, setCopasstOpen] = useState(false);
   const [evaluacionesOpen, setEvaluacionesOpen] = useState(false);
   const [catalogosSeleccionOpen, setCatalogosSeleccionOpen] = useState(false);
   const location = useLocation();
@@ -334,6 +350,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   // In mobile drawer mode, never collapse - always show full sidebar
   const isCollapsed = isMobileDrawer ? false : collapsed;
+
+  const canViewItem = useCallback((item: NavItem): boolean => {
+    if (isAdmin || !permissionsLoaded) return true;
+    if (!item.moduleCode) return true;
+    return canView(item.moduleCode);
+  }, [canView, isAdmin, permissionsLoaded]);
 
   // Filter nav items based on permissions
   const filterItems = useCallback((items: NavItem[]): NavItem[] => {
@@ -349,13 +371,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         };
       })
       .filter((item): item is NavItem => item !== null);
-  }, [canView, isAdmin, permissionsLoaded]);
-
-  const canViewItem = useCallback((item: NavItem): boolean => {
-    if (isAdmin || !permissionsLoaded) return true;
-    if (!item.moduleCode) return true;
-    return canView(item.moduleCode);
-  }, [canView, isAdmin, permissionsLoaded]);
+  }, [canViewItem, isAdmin, permissionsLoaded]);
 
   const canViewQuickAccessItem = useCallback((item: NavItem): boolean => {
     if (isAdmin || isSuperAdmin) return true;
@@ -400,11 +416,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const sidebarIconHoverTone = 'group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground';
 
   const filteredCapacitacionesItem = useMemo(() => filterItems([capacitacionesItem])[0], [filterItems]);
+  const filteredCopasstItem = useMemo(() => filterItems([copasstItem])[0], [filterItems]);
   const filteredEvaluacionesItem = useMemo(() => filterItems([evaluacionesItem])[0], [filterItems]);
   const filteredCatalogosItem = useMemo(() => filterItems([catalogosItem])[0], [filterItems]);
   const filteredCatalogosSeleccionItem = useMemo(() => filterItems([catalogosSeleccionItem])[0], [filterItems]);
 
   const showCapacitaciones = !!filteredCapacitacionesItem;
+  const showCopasst = !!filteredCopasstItem;
   const showEvaluaciones = !!filteredEvaluacionesItem;
   const showCatalogos = !!filteredCatalogosItem;
   const showCatalogosSeleccion = !!filteredCatalogosSeleccionItem;
@@ -417,6 +435,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     }
     if (pathname.startsWith('/capacitaciones')) {
       setCapacitacionesOpen(true);
+    }
+    if (pathname.startsWith('/copasst')) {
+      setCopasstOpen(true);
     }
     if (pathname.startsWith('/evaluaciones')) {
       setEvaluacionesOpen(true);
@@ -873,7 +894,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}
 
         {/* Development */}
-        {(showCapacitaciones || showEvaluaciones || filteredDevelopmentNavItems.length > 0) && (
+        {(showCapacitaciones || showCopasst || showEvaluaciones || filteredDevelopmentNavItems.length > 0) && (
           <>
             <SectionLabel label="Desarrollo" />
             <div className="space-y-0.5">
@@ -882,6 +903,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                   item={filteredCapacitacionesItem}
                   isOpen={capacitacionesOpen}
                   setIsOpen={setCapacitacionesOpen}
+                />
+              )}
+              {showCopasst && (
+                <ExpandableMenu
+                  item={filteredCopasstItem}
+                  isOpen={copasstOpen}
+                  setIsOpen={setCopasstOpen}
                 />
               )}
               {showEvaluaciones && (
