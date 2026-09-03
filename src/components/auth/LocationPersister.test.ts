@@ -9,6 +9,12 @@ describe('LocationPersister public leave isolation', () => {
     expect(getRestorablePath('/solicitud-permiso?token=public-token')).toBeNull();
   });
 
+  it('never stores or restores the public COPASST ballot as an application module', () => {
+    expect(isIgnoredPath('/copasst/votar')).toBe(true);
+    expect(isIgnoredPath('/copasst/votar/')).toBe(true);
+    expect(getRestorablePath('/copasst/votar?token=public-token')).toBeNull();
+  });
+
   it('continues restoring authenticated application modules', () => {
     expect(isIgnoredPath('/permisos')).toBe(false);
     expect(getRestorablePath('/permisos?estado=pendiente')).toBe('/permisos?estado=pendiente');
