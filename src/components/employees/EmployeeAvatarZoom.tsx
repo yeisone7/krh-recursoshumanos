@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface EmployeeAvatarZoomProps {
@@ -37,6 +37,7 @@ export function EmployeeAvatarZoom({
           type="button"
           className="group/avatar relative block rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           title="Ampliar foto"
+          aria-label={`Ampliar foto de ${name}`}
           onClick={(event) => {
             event.stopPropagation();
             setOpen(true);
@@ -58,6 +59,7 @@ export function EmployeeAvatarZoom({
         >
           <DialogHeader className="border-b px-5 py-4">
             <DialogTitle className="text-base font-bold">{name}</DialogTitle>
+            <DialogDescription className="sr-only">Fotografía ampliada de {name}</DialogDescription>
           </DialogHeader>
           <div className="bg-slate-950 p-4">
             <div className="flex max-h-[72dvh] items-center justify-center overflow-hidden rounded-lg bg-slate-900">
