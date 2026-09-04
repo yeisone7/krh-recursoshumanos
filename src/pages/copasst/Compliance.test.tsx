@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CopasstCompliance from './Compliance';
 
@@ -31,6 +31,10 @@ vi.mock('@/components/copasst/CopasstElectionSelect', () => ({
 vi.mock('@/components/copasst/CopasstKpis', () => ({ CopasstKpis: () => null }));
 
 describe('COPASST compliance groups', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('renders pending and participated groups collapsed by default', async () => {
     mocks.listCopasstElections.mockResolvedValue([]);
     mocks.getCopasstCompliance.mockResolvedValue({
@@ -52,5 +56,18 @@ describe('COPASST compliance groups', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Pendientes/ }));
     expect(await screen.findByText('Persona Pendiente')).toBeInTheDocument();
+  });
+
+  it('refetches COPASST data each time the view is activated', async () => {
+    mocks.listCopasstElections.mockResolvedValue([]);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
+    queryClient.setQueryData(['copasst-elections', 'company-1'], []);
+
+    const firstView = render(<QueryClientProvider client={queryClient}><CopasstCompliance /></QueryClientProvider>);
+    await waitFor(() => expect(mocks.listCopasstElections).toHaveBeenCalledTimes(1));
+    firstView.unmount();
+
+    render(<QueryClientProvider client={queryClient}><CopasstCompliance /></QueryClientProvider>);
+    await waitFor(() => expect(mocks.listCopasstElections).toHaveBeenCalledTimes(2));
   });
 });

@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmployeeAvatarZoom } from '@/components/employees/EmployeeAvatarZoom';
 import {
-  COPASST_PERMISSIONS, bogotaInputToIso, closeCopasstElection, createCopasstElection,
+  COPASST_PERMISSIONS, COPASST_REFRESH_QUERY_OPTIONS, bogotaInputToIso, closeCopasstElection, createCopasstElection,
   cancelCopasstElection, deleteCopasstDraft, getCopasstCandidates, getEffectiveCopasstStatus, isoToBogotaInput,
   listCandidateEmployees, listCopasstElections, publicCopasstUrl, publishCopasstElection,
   rotateCopasstToken, setCopasstTokenActive, updateCopasstDraft, updateCopasstSchedule, uploadCopasstCandidatePhoto,
@@ -36,10 +36,12 @@ export default function CopasstElections() {
   const electionsQuery = useQuery({
     queryKey: ['copasst-elections', currentCompanyId],
     queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId,
+    ...COPASST_REFRESH_QUERY_OPTIONS,
   });
   const employeesQuery = useQuery({
     queryKey: ['copasst-candidate-employees', currentCompanyId],
     queryFn: () => listCandidateEmployees(currentCompanyId!), enabled: !!currentCompanyId && dialogOpen,
+    ...COPASST_REFRESH_QUERY_OPTIONS,
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['copasst-elections', currentCompanyId] });
 

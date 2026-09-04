@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CopasstElectionSelect } from '@/components/copasst/CopasstElectionSelect';
 import { CopasstKpis } from '@/components/copasst/CopasstKpis';
-import { getCopasstAnalytics, getEffectiveCopasstStatus, listCopasstElections } from '@/lib/copasst';
+import { COPASST_REFRESH_QUERY_OPTIONS, getCopasstAnalytics, getEffectiveCopasstStatus, listCopasstElections } from '@/lib/copasst';
 
 export default function CopasstDashboard() {
   const { currentCompanyId } = useAuth();
   const [electionId, setElectionId] = useState('');
-  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId });
+  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId, ...COPASST_REFRESH_QUERY_OPTIONS });
   useEffect(() => { if (!electionId && elections.data?.length) setElectionId(elections.data[0].id); }, [electionId, elections.data]);
-  const analytics = useQuery({ queryKey: ['copasst-analytics', electionId], queryFn: () => getCopasstAnalytics(electionId), enabled: !!electionId });
+  const analytics = useQuery({ queryKey: ['copasst-analytics', electionId], queryFn: () => getCopasstAnalytics(electionId), enabled: !!electionId, ...COPASST_REFRESH_QUERY_OPTIONS });
   const selected = elections.data?.find((row) => row.id === electionId);
   return <div className="space-y-6 p-4 sm:p-6"><div><h1 className="text-3xl font-bold">COPASST</h1><p className="text-muted-foreground">Elecciones internas, cumplimiento y resultados con privacidad por diseño.</p></div>
     <div className="grid gap-4 md:grid-cols-3">{[

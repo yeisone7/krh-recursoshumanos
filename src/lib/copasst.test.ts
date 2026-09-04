@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { bogotaInputToIso, getEffectiveCopasstStatus, isoToBogotaInput } from './copasst';
+import { COPASST_REFRESH_QUERY_OPTIONS, bogotaInputToIso, getEffectiveCopasstStatus, isoToBogotaInput } from './copasst';
 import type { CopasstElection } from '@/types/copasst';
 
 const election = (status: CopasstElection['status'], starts_at: string, ends_at: string) => ({
@@ -10,6 +10,15 @@ const election = (status: CopasstElection['status'], starts_at: string, ends_at:
 }) satisfies CopasstElection;
 
 describe('COPASST date and status rules', () => {
+  it('requests fresh data whenever a COPASST view becomes active', () => {
+    expect(COPASST_REFRESH_QUERY_OPTIONS).toEqual({
+      staleTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: 'always',
+      refetchOnReconnect: 'always',
+    });
+  });
+
   it('converts Colombia local input without depending on the browser timezone', () => {
     expect(bogotaInputToIso('2026-09-03T08:30')).toBe('2026-09-03T13:30:00.000Z');
     expect(isoToBogotaInput('2026-09-03T13:30:00.000Z')).toBe('2026-09-03T08:30');
