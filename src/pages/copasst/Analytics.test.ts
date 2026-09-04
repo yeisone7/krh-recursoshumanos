@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildGenderVoteDistribution } from '@/lib/copasstAnalytics';
+import { buildCenterParticipationExportRows, buildGenderVoteDistribution } from '@/lib/copasstAnalytics';
 
 describe('COPASST gender vote distribution', () => {
   it('calculates each sex as a percentage of all voters', () => {
@@ -18,5 +18,19 @@ describe('COPASST gender vote distribution', () => {
 
   it('returns no slices when nobody has voted', () => {
     expect(buildGenderVoteDistribution([{ label: 'F', eligible: 10, voted: 0 }])).toEqual([]);
+  });
+});
+
+describe('COPASST operation center participation export', () => {
+  it('exports the same totals and percentages shown in the table', () => {
+    expect(buildCenterParticipationExportRows([
+      { label: 'Centro Norte', eligible: 40, voted: 31 },
+      { label: 'Sin dato', eligible: 0, voted: 0 },
+      { label: 'Centro Sur', eligible: 5, voted: 8 },
+    ])).toEqual([
+      { 'Centro de operación': 'Centro Norte', Participación: 0.775, Habilitados: 40, Votaron: 31, Pendientes: 9 },
+      { 'Centro de operación': 'Sin dato', Participación: 0, Habilitados: 0, Votaron: 0, Pendientes: 0 },
+      { 'Centro de operación': 'Centro Sur', Participación: 1.6, Habilitados: 5, Votaron: 8, Pendientes: 0 },
+    ]);
   });
 });

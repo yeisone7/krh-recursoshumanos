@@ -114,7 +114,7 @@ export const getCopasstAnalytics = (electionId: string) => rpc<CopasstAnalyticsD
 export const getCopasstBallot = (token: string) => rpc<CopasstPublicBallot>('get_copasst_ballot', { token });
 export const verifyCopasstVoter = (token: string, document: string) => rpc<{ eligible: boolean; already_voted: boolean; message: string }>('verify_copasst_voter', { token, document });
 export const castCopasstVote = (token: string, document: string, candidateId: string | null, blankVote: boolean) => rpc<{ success: boolean; receipt_code: string }>('cast_copasst_vote', { token, document, candidate_id: candidateId, blank_vote: blankVote });
-export const logCopasstExport = (electionId: string, exportType: 'minutes_pdf' | 'electorate_xlsx') => rpc<boolean>('log_copasst_export', { election_id: electionId, export_type: exportType });
+export const logCopasstExport = (electionId: string, exportType: 'minutes_pdf' | 'electorate_xlsx' | 'center_participation_xlsx') => rpc<boolean>('log_copasst_export', { election_id: electionId, export_type: exportType });
 
 export async function uploadCopasstCandidatePhoto(companyId: string, employeeId: string, file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
