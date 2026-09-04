@@ -1,6 +1,6 @@
 begin;
 
-select plan(25);
+select plan(26);
 
 select has_table('public', 'copasst_elections', 'COPASST elections table exists');
 select has_table('public', 'copasst_candidates', 'COPASST candidates table exists');
@@ -22,6 +22,10 @@ select ok(has_function_privilege('anon', 'public.get_copasst_ballot(text)', 'EXE
 select ok(has_function_privilege('anon', 'public.verify_copasst_voter(text,text)', 'EXECUTE'), 'anonymous users can verify census eligibility');
 select ok(has_function_privilege('anon', 'public.cast_copasst_vote(text,text,uuid,boolean)', 'EXECUTE'), 'anonymous users can cast a vote through the transactional RPC');
 select ok(not has_function_privilege('anon', 'public.get_copasst_compliance(uuid)', 'EXECUTE'), 'anonymous users cannot request compliance identities');
+select ok(
+  position('center_participation_xlsx' in pg_get_functiondef('private.log_copasst_export_impl(uuid,text)'::regprocedure)) > 0,
+  'COPASST analytics can audit operation-center participation exports'
+);
 select hasnt_column('public', 'copasst_ballots', 'employee_id', 'ballots do not store an employee');
 select hasnt_column('public', 'copasst_ballots', 'document_number', 'ballots do not store a document');
 select hasnt_column('public', 'copasst_ballots', 'created_at', 'ballots have no correlatable timestamp');

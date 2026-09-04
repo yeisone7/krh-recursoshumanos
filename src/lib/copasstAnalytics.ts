@@ -13,3 +13,13 @@ export function buildGenderVoteDistribution(data: CopasstSegment[]) {
     color: GENDER_COLORS[index % GENDER_COLORS.length],
   }));
 }
+
+export function buildCenterParticipationExportRows(data: CopasstSegment[]) {
+  return data.map((segment) => ({
+    'Centro de operación': segment.label,
+    Participación: segment.eligible > 0 ? segment.voted / segment.eligible : 0,
+    Habilitados: segment.eligible,
+    Votaron: segment.voted,
+    Pendientes: Math.max(0, segment.eligible - segment.voted),
+  }));
+}
