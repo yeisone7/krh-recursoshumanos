@@ -30,6 +30,13 @@ export const COPASST_PERMISSIONS = {
   analytics: 'analitica_copasst',
 } as const;
 
+export const COPASST_REFRESH_QUERY_OPTIONS = {
+  staleTime: 0,
+  refetchOnMount: 'always',
+  refetchOnWindowFocus: 'always',
+  refetchOnReconnect: 'always',
+} as const;
+
 export function getEffectiveCopasstStatus(election: CopasstElection) {
   if (election.status === 'cancelled' || election.status === 'closed') return election.status;
   if (election.status === 'draft') return 'draft';

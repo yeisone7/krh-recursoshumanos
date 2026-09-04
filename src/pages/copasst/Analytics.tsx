@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CopasstElectionSelect } from '@/components/copasst/CopasstElectionSelect';
 import { CopasstKpis } from '@/components/copasst/CopasstKpis';
-import { COPASST_PERMISSIONS, getCopasstAnalytics, listCopasstElections, logCopasstExport, resolveCopasstTie } from '@/lib/copasst';
+import { COPASST_PERMISSIONS, COPASST_REFRESH_QUERY_OPTIONS, getCopasstAnalytics, listCopasstElections, logCopasstExport, resolveCopasstTie } from '@/lib/copasst';
 import { buildGenderVoteDistribution } from '@/lib/copasstAnalytics';
 import type { CopasstSegment } from '@/types/copasst';
 
@@ -25,8 +25,8 @@ export default function CopasstAnalytics() {
   const [tieOpen, setTieOpen] = useState(false);
   const [tieSelection, setTieSelection] = useState<string[]>([]);
   const [tieNote, setTieNote] = useState('');
-  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId });
-  const analytics = useQuery({ queryKey: ['copasst-analytics', electionId], queryFn: () => getCopasstAnalytics(electionId), enabled: !!electionId });
+  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId, ...COPASST_REFRESH_QUERY_OPTIONS });
+  const analytics = useQuery({ queryKey: ['copasst-analytics', electionId], queryFn: () => getCopasstAnalytics(electionId), enabled: !!electionId, ...COPASST_REFRESH_QUERY_OPTIONS });
   const selectedElection = elections.data?.find((row) => row.id === electionId);
   const automaticWinnerCount = analytics.data?.results.winners.length ?? 0;
   const slotsLeft = Math.max(0, (analytics.data?.election.seats ?? 0) - automaticWinnerCount);

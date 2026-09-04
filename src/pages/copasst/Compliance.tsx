@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { CopasstElectionSelect } from '@/components/copasst/CopasstElectionSelect';
 import { CopasstKpis } from '@/components/copasst/CopasstKpis';
-import { COPASST_PERMISSIONS, getCopasstCompliance, listCopasstElections, logCopasstExport } from '@/lib/copasst';
+import { COPASST_PERMISSIONS, COPASST_REFRESH_QUERY_OPTIONS, getCopasstCompliance, listCopasstElections, logCopasstExport } from '@/lib/copasst';
 import type { CopasstElector } from '@/types/copasst';
 
 export default function CopasstCompliance() {
@@ -20,8 +20,8 @@ export default function CopasstCompliance() {
   const [electionId, setElectionId] = useState('');
   const [search, setSearch] = useState('');
   const [gender, setGender] = useState('all');
-  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId });
-  const compliance = useQuery({ queryKey: ['copasst-compliance', electionId], queryFn: () => getCopasstCompliance(electionId), enabled: !!electionId });
+  const elections = useQuery({ queryKey: ['copasst-elections', currentCompanyId], queryFn: () => listCopasstElections(currentCompanyId!), enabled: !!currentCompanyId, ...COPASST_REFRESH_QUERY_OPTIONS });
+  const compliance = useQuery({ queryKey: ['copasst-compliance', electionId], queryFn: () => getCopasstCompliance(electionId), enabled: !!electionId, ...COPASST_REFRESH_QUERY_OPTIONS });
   const rows = useMemo(() => (compliance.data?.electors ?? []).filter((row) => {
     const haystack = `${row.display_name} ${row.document_number} ${row.operation_center_name} ${row.area_name} ${row.position_name}`.toLowerCase();
     return haystack.includes(search.toLowerCase()) && (gender === 'all' || (row.gender ?? 'Sin dato') === gender);
