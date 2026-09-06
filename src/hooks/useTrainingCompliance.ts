@@ -57,6 +57,19 @@ export function isTrainingTokenInPeriod(
   return createdAt.getFullYear() === period.year && createdAt.getMonth() + 1 === period.month;
 }
 
+export function getApplicableComplianceCourses<T extends { id: string }>(
+  courses: T[],
+  period: TrainingPeriodInput | null | undefined,
+  configuredPeriodCourseIds: Set<string> | null,
+  periodCenterCourseIds?: Set<string>
+) {
+  if (!period) return courses;
+
+  return courses.filter((course) =>
+    configuredPeriodCourseIds?.has(course.id) || periodCenterCourseIds?.has(course.id)
+  );
+}
+
 function normalizeDocument(value: string | null | undefined) {
   return String(value || '').replace(/\D/g, '');
 }
@@ -290,17 +303,10 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       ? new Set(periodAssignments.data.map((assignment) => assignment.course_id))
       : null;
 
-    // Build a map: center_id -> Set of course_ids that have tokens for that center
-    const centerCourseMap = new Map<string, Set<string>>();
     const periodCenterCourseMap = new Map<string, Set<string>>();
     const periodTokenCourseIds = new Set<string>();
     for (const assoc of tokenAssociations.data) {
       if (!assoc.operation_center_id) continue;
-      if (!centerCourseMap.has(assoc.operation_center_id)) {
-        centerCourseMap.set(assoc.operation_center_id, new Set());
-      }
-      centerCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
-
       if (period && isTrainingTokenInPeriod(assoc, period)) {
         if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
           periodCenterCourseMap.set(assoc.operation_center_id, new Set());
@@ -316,17 +322,13 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       );
       if (centerEmployees.length === 0) continue;
 
-      // Only courses that have at least one token associated with this center
-      const centerCourseIds = centerCourseMap.get(center.id);
-      if (!centerCourseIds || centerCourseIds.size === 0) continue;
-
       const periodCenterCourseIds = periodCenterCourseMap.get(center.id);
-      const applicableCourses = courses.data.filter((course) => {
-        if (!centerCourseIds.has(course.id)) return false;
-        if (!period) return true;
-
-        return configuredPeriodCourseIds?.has(course.id) || periodCenterCourseIds?.has(course.id);
-      });
+      const applicableCourses = getApplicableComplianceCourses(
+        courses.data,
+        period,
+        configuredPeriodCourseIds,
+        periodCenterCourseIds
+      );
       if (applicableCourses.length === 0) continue;
 
       const coursesData: CourseComplianceData[] = [];
