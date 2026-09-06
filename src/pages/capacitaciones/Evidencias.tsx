@@ -17,10 +17,13 @@ import { useCompany } from '@/hooks/useCompanies';
 import { toast } from 'sonner';
 import { jsPDF } from 'jspdf';
 import PizZip from 'pizzip';
-import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
+import type { TrainingCompletion } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
-import { getTrainingAttendanceReportCode } from '@/lib/trainingAttendanceReportFormat';
+import {
+  getTrainingAttendanceReportCode,
+  getTrainingAttendanceReportObjective,
+} from '@/lib/trainingAttendanceReportFormat';
 import { supabase } from '@/integrations/supabase/client';
 
 type CompletionWithCenterToken = TrainingCompletion & {
@@ -273,17 +276,6 @@ export default function Evidencias() {
     return currentWorkInfo?.position_name || '-';
   };
 
-  const getCourseObjective = (completion: TrainingCompletion) => {
-    const course = completion.course;
-    const content = course?.content as TrainingCourseContent | null | undefined;
-    const objectives = Array.isArray(course?.objectives) ? course?.objectives.join(' ') : course?.objectives;
-    return course?.objective
-      || objectives
-      || content?.objetivos?.[0]
-      || course?.description
-      || 'Registrar la participacion y finalizacion de la capacitacion.';
-  };
-
   const drawCellText = (
     doc: jsPDF,
     value: string,
@@ -417,7 +409,7 @@ export default function Evidencias() {
     doc.rect(margin, y, contentWidth, 18);
     doc.line(margin + 35, y, margin + 35, y + 18);
     drawCellText(doc, 'Objetivo', margin, y, 35, 18, { align: 'center', size: 8 });
-    drawCellText(doc, getCourseObjective(pageRows[0]), margin + 35, y, contentWidth - 35, 18, { size: 8 });
+    drawCellText(doc, getTrainingAttendanceReportObjective(pageRows[0]?.course), margin + 35, y, contentWidth - 35, 18, { size: 8 });
 
     y += 23;
     doc.rect(margin, y, contentWidth, 7);
