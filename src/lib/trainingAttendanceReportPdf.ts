@@ -1,8 +1,11 @@
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
-import { getTrainingAttendanceReportCode } from '@/lib/trainingAttendanceReportFormat';
-import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
+import {
+  getTrainingAttendanceReportCode,
+  getTrainingAttendanceReportObjective,
+} from '@/lib/trainingAttendanceReportFormat';
+import type { TrainingCompletion } from '@/types/training';
 
 interface AttendanceReportCompany {
   name?: string | null;
@@ -82,17 +85,6 @@ const getEmployeePosition = (completion: TrainingCompletion) => {
   const workInfo = completion.employee?.employee_work_info?.find((info) => info.is_current)
     || completion.employee?.employee_work_info?.[0];
   return workInfo?.position_name || '-';
-};
-
-const getCourseObjective = (completion: TrainingCompletion) => {
-  const course = completion.course;
-  const content = course?.content as TrainingCourseContent | null | undefined;
-  const objectives = Array.isArray(course?.objectives) ? course.objectives.join(' ') : course?.objectives;
-  return course?.objective
-    || objectives
-    || content?.objetivos?.[0]
-    || course?.description
-    || 'Registrar la participacion y finalizacion de la capacitacion.';
 };
 
 const drawCellText = (
@@ -228,7 +220,7 @@ const drawAttendanceReportPage = async (
   doc.rect(margin, y, contentWidth, 18);
   doc.line(margin + 35, y, margin + 35, y + 18);
   drawCellText(doc, 'Objetivo', margin, y, 35, 18, { align: 'center', size: 8 });
-  drawCellText(doc, getCourseObjective(pageRows[0]), margin + 35, y, contentWidth - 35, 18, { size: 8 });
+  drawCellText(doc, getTrainingAttendanceReportObjective(pageRows[0]?.course), margin + 35, y, contentWidth - 35, 18, { size: 8 });
 
   y += 23;
   doc.rect(margin, y, contentWidth, 7);
