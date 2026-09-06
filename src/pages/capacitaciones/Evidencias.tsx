@@ -20,6 +20,7 @@ import PizZip from 'pizzip';
 import type { TrainingCompletion, TrainingCourseContent } from '@/types/training';
 import EvidenciasTreeView from '@/components/training/EvidenciasTreeView';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
+import { getTrainingAttendanceReportCode } from '@/lib/trainingAttendanceReportFormat';
 import { supabase } from '@/integrations/supabase/client';
 
 type CompletionWithCenterToken = TrainingCompletion & {
@@ -345,7 +346,7 @@ export default function Evidencias() {
     doc.line(pageWidth - margin - 34, 8, pageWidth - margin - 34, 30);
     if (logoDataUrl) await drawContainedImage(doc, logoDataUrl, margin + 2, 10, 39, 18, 1);
     drawCellText(doc, 'Registro de Asistencia', margin + 43, 8, contentWidth - 77, 22, { bold: true, align: 'center', size: 11 });
-    drawCellText(doc, 'Codigo GH FO 36', pageWidth - margin - 34, 8, 34, 7, { align: 'center', size: 8 });
+    drawCellText(doc, getTrainingAttendanceReportCode(currentCompany?.name), pageWidth - margin - 34, 8, 34, 7, { align: 'center', size: 8 });
     doc.line(pageWidth - margin - 34, 15.3, pageWidth - margin, 15.3);
     drawCellText(doc, 'VERSION 02', pageWidth - margin - 34, 15.3, 34, 7, { align: 'center', size: 8 });
     doc.line(pageWidth - margin - 34, 22.6, pageWidth - margin, 22.6);
