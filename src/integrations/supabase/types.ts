@@ -11629,6 +11629,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_requisition_replacement_candidates: {
+        Args: { p_company_id: string; p_operation_center_id?: string | null }
+        Returns: {
+          first_name: string
+          id: string
+          is_active: boolean
+          last_name: string
+        }[]
+      }
       can_access_training_media: {
         Args: { p_action: string; p_course_id: string }
         Returns: boolean

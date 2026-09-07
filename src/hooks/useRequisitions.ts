@@ -103,6 +103,33 @@ export interface PersonnelRequisition {
   vacancies?: { id: string; position_title: string; status: string; actual_close_date?: string | null }[];
 }
 
+export interface RequisitionReplacementCandidate {
+  id: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+}
+
+export function useRequisitionReplacementCandidates(operationCenterId?: string) {
+  const { currentCompanyId } = useAuth();
+
+  return useQuery({
+    queryKey: ['requisition-replacement-candidates', currentCompanyId, operationCenterId ?? null],
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+
+      const { data, error } = await supabase.rpc('get_requisition_replacement_candidates', {
+        p_company_id: currentCompanyId,
+        p_operation_center_id: operationCenterId ?? null,
+      });
+
+      if (error) throw error;
+      return (data ?? []) as RequisitionReplacementCandidate[];
+    },
+    enabled: !!currentCompanyId,
+  });
+}
+
 type SupabaseMutationError = {
   code?: string;
   message?: string;
