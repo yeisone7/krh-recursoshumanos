@@ -24,8 +24,22 @@ describe('buildReplacementEmployeeOptions', () => {
   it('includes active and inactive employees and identifies inactive options', () => {
     expect(buildReplacementEmployeeOptions(employees)).toEqual([
       { label: 'Ana Activa', value: 'Ana Activa' },
-      { label: 'Iván Inactivo (Inactivo)', value: 'Iván Inactivo' },
-      { label: 'Celia Otro Centro (Inactivo)', value: 'Celia Otro Centro' },
+      {
+        label: 'Iván Inactivo',
+        value: 'Iván Inactivo',
+        badge: {
+          label: 'Inactivo',
+          className: expect.stringContaining('bg-red-50'),
+        },
+      },
+      {
+        label: 'Celia Otro Centro',
+        value: 'Celia Otro Centro',
+        badge: {
+          label: 'Inactivo',
+          className: expect.stringContaining('bg-red-50'),
+        },
+      },
     ]);
   });
 
