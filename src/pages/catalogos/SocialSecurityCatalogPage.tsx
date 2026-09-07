@@ -37,8 +37,10 @@ import { MobileCardList } from '@/components/shared/MobileCardList';
 import type { CatalogItem, CatalogIPS } from '@/hooks/useSocialSecurityCatalogs';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SocialSecurityCatalogPageProps {
+  permissionModule: string;
   title: string;
   description: string;
   data: (CatalogItem | CatalogIPS)[];
@@ -53,6 +55,7 @@ interface SocialSecurityCatalogPageProps {
 }
 
 export function SocialSecurityCatalogPage({
+  permissionModule,
   title,
   description,
   data,
@@ -65,10 +68,15 @@ export function SocialSecurityCatalogPage({
   isDeleting,
   showIPSFields = false,
 }: SocialSecurityCatalogPageProps) {
+  const { canCreate, canUpdate, canDelete } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<CatalogItem | CatalogIPS | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const mayCreate = canCreate(permissionModule);
+  const mayUpdate = canUpdate(permissionModule);
+  const mayDelete = canDelete(permissionModule);
+  const hasRowActions = mayUpdate || mayDelete;
 
   const filteredData = data.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,21 +85,24 @@ export function SocialSecurityCatalogPage({
   );
 
   const handleEdit = (item: CatalogItem | CatalogIPS) => {
+    if (!mayUpdate) return;
     setEditItem(item);
     setDialogOpen(true);
   };
 
   const handleSubmit = (formData: Partial<CatalogItem | CatalogIPS>) => {
     if (editItem) {
+      if (!mayUpdate) return;
       onUpdate({ ...formData, id: editItem.id } as Partial<CatalogItem | CatalogIPS> & { id: string });
     } else {
+      if (!mayCreate) return;
       onCreate(formData);
     }
     setEditItem(null);
   };
 
   const handleDelete = () => {
-    if (deleteId) {
+    if (deleteId && mayDelete) {
       onDelete(deleteId);
       setDeleteId(null);
     }
@@ -118,13 +129,15 @@ export function SocialSecurityCatalogPage({
           </div>
         </div>
         
-        <Button 
-          onClick={() => { setEditItem(null); setDialogOpen(true); }}
-          className="h-14 px-10 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all group w-full md:w-auto"
-        >
-          <Plus className="w-4 h-4 mr-3 stroke-[3] group-hover:rotate-90 transition-transform" />
-          REGISTRAR ENTIDAD
-        </Button>
+        {mayCreate && (
+          <Button
+            onClick={() => { setEditItem(null); setDialogOpen(true); }}
+            className="h-14 px-10 rounded-2xl bg-primary text-white hover:bg-primary/90 font-black uppercase tracking-widest text-[10px] transition-all group w-full md:w-auto"
+          >
+            <Plus className="w-4 h-4 mr-3 stroke-[3] group-hover:rotate-90 transition-transform" />
+            REGISTRAR ENTIDAD
+          </Button>
+        )}
       </motion.div>
 
       {/* Stats Summary - Flat Style */}
@@ -207,17 +220,21 @@ export function SocialSecurityCatalogPage({
                   },
                   ...(showIPSFields ? [{ label: 'Ubicación', value: <span className="text-[9px] font-black uppercase text-slate-500">{(item as CatalogIPS).city || 'SIN CIUDAD'}</span> }] : [])
                 ],
-                actions: (
+                actions: hasRowActions ? (
                   <div className="flex gap-3 w-full mt-4 pt-4 border-t border-slate-50">
-                    <Button onClick={() => handleEdit(item)} className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[9px] gap-2 border-none">
-                      <Pencil className="w-3.5 h-3.5" />
-                      EDITAR
-                    </Button>
-                    <Button onClick={() => setDeleteId(item.id)} className="h-12 w-12 rounded-xl bg-red-50 text-red-600 font-black border-none shrink-0">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    {mayUpdate && (
+                      <Button onClick={() => handleEdit(item)} className="flex-1 h-12 rounded-xl bg-primary text-white font-black uppercase tracking-widest text-[9px] gap-2 border-none">
+                        <Pencil className="w-3.5 h-3.5" />
+                        EDITAR
+                      </Button>
+                    )}
+                    {mayDelete && (
+                      <Button aria-label={`Eliminar ${item.name}`} onClick={() => setDeleteId(item.id)} className="h-12 w-12 rounded-xl bg-red-50 text-red-600 font-black border-none shrink-0">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
                   </div>
-                )
+                ) : undefined
               }))}
             />
 
@@ -229,7 +246,7 @@ export function SocialSecurityCatalogPage({
                     <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Identidad Fiscal</TableHead>
                     {showIPSFields && <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Nodo Geográfico</TableHead>}
                     <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Estado</TableHead>
-                    <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>
+                    {hasRowActions && <TableHead className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Acciones</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -280,26 +297,32 @@ export function SocialSecurityCatalogPage({
                           {item.is_active ? 'OPERATIVO' : 'SUSPENDIDO'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="px-8 py-6 text-right">
+                      {hasRowActions && <TableCell className="px-8 py-6 text-right">
                         <div className="flex justify-end gap-2">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-11 w-11 rounded-xl hover:bg-primary hover:text-white transition-all border border-transparent hover:border-primary/20"
-                            onClick={() => handleEdit(item)}
-                          >
-                            <Pencil className="w-4.5 h-4.5 stroke-[2.5]" />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-11 w-11 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
-                            onClick={() => setDeleteId(item.id)}
-                          >
-                            <Trash2 className="w-4.5 h-4.5 stroke-[2.5]" />
-                          </Button>
+                          {mayUpdate && (
+                            <Button
+                              aria-label={`Editar ${item.name}`}
+                              size="icon"
+                              variant="ghost"
+                              className="h-11 w-11 rounded-xl hover:bg-primary hover:text-white transition-all border border-transparent hover:border-primary/20"
+                              onClick={() => handleEdit(item)}
+                            >
+                              <Pencil className="w-4.5 h-4.5 stroke-[2.5]" />
+                            </Button>
+                          )}
+                          {mayDelete && (
+                            <Button
+                              aria-label={`Eliminar ${item.name}`}
+                              size="icon"
+                              variant="ghost"
+                              className="h-11 w-11 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all border border-transparent hover:border-red-100"
+                              onClick={() => setDeleteId(item.id)}
+                            >
+                              <Trash2 className="w-4.5 h-4.5 stroke-[2.5]" />
+                            </Button>
+                          )}
                         </div>
-                      </TableCell>
+                      </TableCell>}
                     </motion.tr>
                   ))}
                 </TableBody>
@@ -309,7 +332,7 @@ export function SocialSecurityCatalogPage({
         )}
       </div>
 
-      <SocialSecurityCatalogFormDialog
+      {(mayCreate || mayUpdate) && <SocialSecurityCatalogFormDialog
         open={dialogOpen}
         onOpenChange={(open) => {
           setDialogOpen(open);
@@ -320,9 +343,9 @@ export function SocialSecurityCatalogPage({
         editItem={editItem}
         title={title}
         showIPSFields={showIPSFields}
-      />
+      />}
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+      {mayDelete && <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent className="rounded-[2.5rem] border-slate-100 bg-white p-8">
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="h-16 w-16 rounded-[1.25rem] bg-red-50 text-red-500 flex items-center justify-center">
@@ -345,7 +368,7 @@ export function SocialSecurityCatalogPage({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>}
     </div>
   );
 }
