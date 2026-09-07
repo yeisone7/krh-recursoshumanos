@@ -69,6 +69,7 @@ import { MultiSelect } from '@/components/ui/multi-select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
 import { cn } from '@/lib/utils';
 import { parseDateOnly, toDateOnlyString } from '@/lib/dateOnly';
+import { buildReplacementEmployeeOptions } from '@/lib/requisitionReplacementEmployees';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
@@ -76,9 +77,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useShifts } from '@/hooks/useSchedules';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
-import { useEmployees } from '@/hooks/useEmployees';
 import { useContractTypes } from '@/hooks/useContractTypes';
-import { useCreateRequisition, useUpdateRequisition, PersonnelRequisition } from '@/hooks/useRequisitions';
+import {
+  useCreateRequisition,
+  useRequisitionReplacementCandidates,
+  useUpdateRequisition,
+  PersonnelRequisition,
+} from '@/hooks/useRequisitions';
 import {
   requisitionFormSchema,
   RequisitionFormData,
@@ -105,7 +110,6 @@ export function RequisitionFormDialog({
   const { data: areas = [] } = useAreas();
   const { data: positions = [] } = usePositions();
   const { data: operationCenters = [] } = useOperationCenters();
-  const { data: employees = [] } = useEmployees();
   const { data: contractTypes = [] } = useContractTypes();
   const { data: shifts = [] } = useShifts();
   
@@ -127,7 +131,6 @@ export function RequisitionFormDialog({
   // Get default requester name: profile full_name > email prefix
   const defaultRequesterName = userProfile?.full_name || user?.email?.split('@')[0] || '';
   
-  const activeEmployees = employees.filter((e) => e.is_active);
   const createRequisition = useCreateRequisition();
   const updateRequisition = useUpdateRequisition();
 
@@ -148,10 +151,8 @@ export function RequisitionFormDialog({
   });
 
   const selectedOperationCenterId = form.watch('operation_center_id');
-  const filteredActiveEmployees = activeEmployees.filter((e) => {
-    if (!selectedOperationCenterId) return true;
-    return e.work_info?.operation_center_id === selectedOperationCenterId;
-  });
+  const { data: replacementCandidates = [] } = useRequisitionReplacementCandidates(selectedOperationCenterId);
+  const replacementEmployeeOptions = buildReplacementEmployeeOptions(replacementCandidates);
 
   useEffect(() => {
     if (requisition) {
@@ -715,10 +716,7 @@ export function RequisitionFormDialog({
                             <FormLabel>Persona a Reemplazar</FormLabel>
                             <FormControl>
                               <MultiSelect
-                                options={filteredActiveEmployees.map(employee => ({
-                                  label: `${employee.first_name} ${employee.last_name}`,
-                                  value: `${employee.first_name} ${employee.last_name}`
-                                }))}
+                                options={replacementEmployeeOptions}
                                 value={field.value || []}
                                 onChange={field.onChange}
                                 placeholder="Seleccionar personas..."
