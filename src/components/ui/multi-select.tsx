@@ -20,6 +20,10 @@ import { Button } from "@/components/ui/button"
 export interface Option {
   label: string
   value: string
+  badge?: {
+    label: string
+    className?: string
+  }
 }
 
 interface MultiSelectProps {
@@ -69,22 +73,34 @@ export function MultiSelect({
                     variant="default"
                     className="flex items-center gap-1 rounded-md border-none bg-primary px-2 py-0.5 font-medium text-primary-foreground shadow-sm animate-in zoom-in-95 duration-200 hover:bg-primary-hover"
                   >
-                    {option.label}
-                    <button
-                      className="ml-1 rounded-full outline-none hover:bg-white/20 p-0.5 transition-colors"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleUnselect(option.value)
-                        }
-                      }}
+                    <span>{option.label}</span>
+                    {option.badge && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "ml-1 shrink-0 rounded-md px-1.5 py-0 text-[9px] font-bold uppercase tracking-wide",
+                          option.badge.className
+                        )}
+                      >
+                        {option.badge.label}
+                      </Badge>
+                    )}
+                    <span
+                      aria-hidden="true"
+                      data-remove-option={option.value}
+                      className="ml-1 rounded-full hover:bg-white/20 p-0.5 transition-colors"
                       onMouseDown={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
                       }}
-                      onClick={() => handleUnselect(option.value)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleUnselect(option.value)
+                      }}
                     >
                       <X className="h-3 w-3 text-white/80 hover:text-white" />
-                    </button>
+                    </span>
                   </Badge>
                 ))}
                 {selectedOptions.length > maxCount && (
@@ -126,7 +142,18 @@ export function MultiSelect({
                       value.includes(option.value) ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  {option.label}
+                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  {option.badge && (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "ml-2 shrink-0 rounded-md px-1.5 py-0 text-[9px] font-bold uppercase tracking-wide",
+                        option.badge.className
+                      )}
+                    >
+                      {option.badge.label}
+                    </Badge>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>
