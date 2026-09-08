@@ -28,7 +28,7 @@ import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
 import { useProfesiogramas } from '@/hooks/useDotationProfesiograma';
-import { useCreateDotationDelivery } from '@/hooks/useDotation';
+import { useCreateDotationDeliveryBatch } from '@/hooks/useDotation';
 import { useOperationCenters } from '@/hooks/useCompanies';
 
 interface BulkDeliveryDialogProps {
@@ -43,14 +43,14 @@ interface EmployeeDeliveryRow {
   positionName: string;
   documentNumber: string;
   selected: boolean;
-  items: { itemName: string; quantity: number }[];
+  items: { itemTypeId: string; itemName: string; quantity: number }[];
 }
 
 export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDeliveryDialogProps) {
   const { data: employees = [] } = useEmployees();
   const { data: profesiogramas = [] } = useProfesiogramas();
   const { data: operationCenters = [] } = useOperationCenters();
-  const createDelivery = useCreateDotationDelivery();
+  const createDeliveryBatch = useCreateDotationDeliveryBatch();
 
   const [centerId, setCenterId] = useState('');
   const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
@@ -60,7 +60,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
   const [rows, setRows] = useState<EmployeeDeliveryRow[]>([]);
   const [step, setStep] = useState<'config' | 'preview'>('config');
 
-  const centerOptions = operationCenters.map((c: any) => ({
+  const centerOptions = operationCenters.map((c) => ({
     value: c.id,
     label: c.name,
   }));
@@ -99,6 +99,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
         ? prof.items
             .filter((i) => i.is_required)
             .map((i) => ({
+              itemTypeId: i.dotation_item_type_id,
               itemName: i.dotation_item_types?.name || 'Artículo',
               quantity: i.quantity,
             }))
@@ -144,24 +145,24 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
 
     try {
       for (const row of selectedRows) {
-        for (const item of row.items) {
-          try {
-            await createDelivery.mutateAsync({
-              employee_id: row.employeeId,
+        try {
+          await createDeliveryBatch.mutateAsync({
+            employee_id: row.employeeId,
+            delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
+            expiration_date: format(expirationDate, 'yyyy-MM-dd'),
+            delivered_by: deliveredBy,
+            observations: 'Entrega masiva por centro',
+            items: row.items.map((item) => ({
+              dotation_item_type_id: item.itemTypeId,
               item_type: 'otros',
               item_name: item.itemName,
               quantity: item.quantity,
               size: null,
-              delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-              expiration_date: format(expirationDate, 'yyyy-MM-dd'),
-              delivered_by: deliveredBy,
-              observations: 'Entrega masiva por centro',
-              signature_url: null,
-            });
-            successCount++;
-          } catch {
-            errorCount++;
-          }
+            })),
+          });
+          successCount += row.items.length;
+        } catch {
+          errorCount += row.items.length;
         }
       }
 
@@ -178,8 +179,9 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
       handleReset();
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
-      toast.error('Error en la entrega masiva', { description: error.message });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'No fue posible completar la entrega';
+      toast.error('Error en la entrega masiva', { description: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -299,7 +301,7 @@ export function BulkDeliveryDialog({ open, onOpenChange, onSuccess }: BulkDelive
               <div className="flex flex-wrap gap-2 px-1">
                 <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 bg-background border-border/50 font-bold text-[10px] uppercase tracking-widest">
                   <Building2 className="w-3.5 h-3.5 text-primary" />
-                  {operationCenters.find((c: any) => c.id === centerId)?.name}
+                  {operationCenters.find((c) => c.id === centerId)?.name}
                 </Badge>
                 <Badge variant="outline" className="h-8 rounded-xl px-3 gap-2 text-primary border-primary/20 font-bold text-[10px] uppercase tracking-widest">
                   <Users className="w-3.5 h-3.5" />
