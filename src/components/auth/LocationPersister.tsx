@@ -14,6 +14,7 @@ const IGNORED_PATHS = [
   '/descargos',
   '/solicitud-permiso',
   '/verificar-certificado',
+  '/marcar',
 ];
 const LAST_PATH_KEY = 'empatiq_last_visited_path';
 

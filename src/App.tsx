@@ -112,6 +112,9 @@ const AnaliticaContratos = lazy(() => import("./pages/AnaliticaContratos"));
 const AnaliticaEmpleados = lazy(() => import("./pages/AnaliticaEmpleados"));
 const AnaliticaDiversidad = lazy(() => import("./pages/AnaliticaDiversidad"));
 const Jornadas = lazy(() => import("./pages/Jornadas"));
+const RelojChecador = lazy(() => import("./pages/RelojChecador"));
+const TimeClockPunch = lazy(() => import("./pages/TimeClockPunch"));
+const TimeClockScreen = lazy(() => import("./pages/TimeClockScreen"));
 const CopasstDashboard = lazy(() => import("./pages/copasst/Dashboard"));
 const CopasstElections = lazy(() => import("./pages/copasst/Elections"));
 const CopasstCompliance = lazy(() => import("./pages/copasst/Compliance"));
@@ -167,6 +170,22 @@ const App = () => (
                 <Portal />
               </ProtectedRoute>
             } />
+            <Route path="/marcar" element={
+              <ProtectedRoute>
+                <Suspense fallback={null}><TimeClockPunch /></Suspense>
+              </ProtectedRoute>
+            } />
+            <Route path="/reloj-checador/pantalla/:pointId" element={
+              <ProtectedRoute>
+                <OnboardingGuard>
+                  <CompanyGuard>
+                    <PermissionRoute moduleCode="reloj_checador" action="create">
+                      <Suspense fallback={null}><TimeClockScreen /></Suspense>
+                    </PermissionRoute>
+                  </CompanyGuard>
+                </OnboardingGuard>
+              </ProtectedRoute>
+            } />
             <Route path="/onboarding" element={
               <ProtectedRoute>
                 <Onboarding />
@@ -211,6 +230,7 @@ const App = () => (
                         <Route path="/centros" element={<P module="centros"><Centros /></P>} />
                         <Route path="/centros/fichas" element={<P module="centros"><CentrosFichas /></P>} />
                         <Route path="/jornadas" element={<P module="jornadas"><Suspense fallback={<JornadasSkeleton />}><Jornadas /></Suspense></P>} />
+                        <Route path="/reloj-checador" element={<P module="reloj_checador"><Suspense fallback={null}><RelojChecador /></Suspense></P>} />
                         <Route path="/nomina/analitica" element={<P module="analitica_nomina"><Suspense fallback={null}><AnaliticaNomina /></Suspense></P>} />
                         <Route path="/disciplinarios" element={<P module="disciplinarios"><Disciplinarios /></P>} />
                         <Route path="/vacaciones" element={<P module="vacaciones"><Vacaciones /></P>} />

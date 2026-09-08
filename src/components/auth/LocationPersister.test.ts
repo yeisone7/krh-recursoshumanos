@@ -19,4 +19,9 @@ describe('LocationPersister public leave isolation', () => {
     expect(isIgnoredPath('/permisos')).toBe(false);
     expect(getRestorablePath('/permisos?estado=pendiente')).toBe('/permisos?estado=pendiente');
   });
+
+  it('never persists a short-lived time clock QR token', () => {
+    expect(isIgnoredPath('/marcar')).toBe(true);
+    expect(getRestorablePath('/marcar?point=point-id&token=secret-challenge')).toBeNull();
+  });
 });
