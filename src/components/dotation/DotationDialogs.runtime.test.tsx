@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { DotationDetailDialog } from './DotationDetailDialog';
 import { DotationFormDialog } from './DotationFormDialog';
+import { InventoryAdjustDialog } from './InventoryAdjustDialog';
 
 const createDeliveryBatch = vi.hoisted(() =>
   vi.fn(() => new Promise(() => undefined)),
@@ -46,6 +47,7 @@ vi.mock('@/hooks/useDotationProfesiograma', () => ({
 
 vi.mock('@/hooks/useDotationInventory', () => ({
   useDotationInventory: () => ({ data: [] }),
+  useAdjustInventoryQuantity: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/hooks/useSystemConfig', () => ({
@@ -164,5 +166,34 @@ describe('Dotation dialogs runtime regressions', () => {
 
     await waitFor(() => expect(screen.getByText('Registrando...')).toBeInTheDocument());
     expect(createDeliveryBatch).toHaveBeenCalledOnce();
+  });
+
+  it('uses an outbound reason when switching an adjustment to Salida', () => {
+    renderWithQueryClient(
+      <InventoryAdjustDialog
+        open
+        onOpenChange={vi.fn()}
+        item={{
+          id: 'inventory-1',
+          company_id: 'company-1',
+          operation_center_id: 'center-1',
+          item_type: 'item-1',
+          item_name: 'BATA BLANCA',
+          size: null,
+          quantity_available: 5,
+          minimum_stock: 1,
+          unit_cost: null,
+          supplier: null,
+          last_restock_date: null,
+          created_at: '2026-09-08T12:00:00Z',
+          updated_at: '2026-09-08T12:00:00Z',
+          operation_centers: { id: 'center-1', name: 'Principal' },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Salida' }));
+
+    expect(screen.getByRole('combobox')).toHaveTextContent('Ajuste manual');
   });
 });

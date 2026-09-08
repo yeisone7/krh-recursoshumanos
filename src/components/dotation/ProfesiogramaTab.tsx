@@ -426,21 +426,21 @@ export function ProfesiogramaTab({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPreviewData(prof); }} title="Ver detalle">
+                          <Button aria-label="Ver detalle" variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setPreviewData(prof); }} title="Ver detalle">
                             <Eye className="w-4 h-4" />
                           </Button>
                           {canUpdate && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
+                            <Button aria-label="Editar profesiograma" variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(prof); }} title="Editar">
                               <Pencil className="w-4 h-4" />
                             </Button>
                           )}
                           {canCreate && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCloneData(prof); }} title="Clonar">
+                            <Button aria-label="Clonar profesiograma" variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); setCloneData(prof); }} title="Clonar">
                               <Copy className="w-4 h-4" />
                             </Button>
                           )}
                           {canDelete && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(prof.id); }} title="Eliminar">
+                            <Button aria-label="Eliminar profesiograma" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(prof.id); }} title="Eliminar">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           )}
@@ -480,21 +480,21 @@ export function ProfesiogramaTab({
                       </div>
                     </div>
                     <div className="grid grid-cols-4 gap-1">
-                      <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setPreviewData(prof)} title="Ver detalle">
+                      <Button aria-label="Ver detalle" variant="ghost" size="icon" className="h-9 w-full" onClick={() => setPreviewData(prof)} title="Ver detalle">
                         <Eye className="w-4 h-4" />
                       </Button>
                       {canUpdate && (
-                        <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => handleEdit(prof)} title="Editar">
+                        <Button aria-label="Editar profesiograma" variant="ghost" size="icon" className="h-9 w-full" onClick={() => handleEdit(prof)} title="Editar">
                           <Pencil className="w-4 h-4" />
                         </Button>
                       )}
                       {canCreate && (
-                        <Button variant="ghost" size="icon" className="h-9 w-full" onClick={() => setCloneData(prof)} title="Clonar">
+                        <Button aria-label="Clonar profesiograma" variant="ghost" size="icon" className="h-9 w-full" onClick={() => setCloneData(prof)} title="Clonar">
                           <Copy className="w-4 h-4" />
                         </Button>
                       )}
                       {canDelete && (
-                        <Button variant="ghost" size="icon" className="h-9 w-full text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
+                        <Button aria-label="Eliminar profesiograma" variant="ghost" size="icon" className="h-9 w-full text-destructive" onClick={() => setDeleteId(prof.id)} title="Eliminar">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
