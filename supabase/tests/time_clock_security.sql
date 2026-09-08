@@ -1,6 +1,6 @@
 begin;
 
-select plan(6);
+select plan(8);
 
 select ok(exists(select 1 from public.modules where code = 'reloj_checador' and is_active),
   'time clock module is registered');
@@ -21,6 +21,13 @@ select is(has_function_privilege('anon',
 
 select is(has_table_privilege('anon', 'public.time_clock_events', 'SELECT'), false,
   'anonymous users cannot read attendance evidence');
+
+select ok((select prosecdef from pg_proc where oid = 'public.time_clock_is_self(uuid)'::regprocedure),
+  'self-service policy helper resolves employee links with controlled privileges');
+
+select is(has_function_privilege('anon',
+  'public.time_clock_self_can_access_point(uuid,uuid)', 'EXECUTE'), false,
+  'anonymous users cannot invoke point access helper');
 
 select * from finish();
 rollback;
