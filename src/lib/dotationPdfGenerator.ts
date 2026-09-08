@@ -62,6 +62,10 @@ function fitImage(img: HTMLImageElement, maxWidth: number, maxHeight: number) {
   };
 }
 
+function getImageSource(img: HTMLImageElement, src: string): HTMLImageElement | string {
+  return src.startsWith('data:image/') ? src : img;
+}
+
 export async function generateActaEntregaPdf(options: ActaOptions): Promise<void> {
   const {
     companyName,
@@ -94,16 +98,19 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
       const wmImg = await loadImage(logoUrl);
       const wmSize = fitImage(wmImg, 97, 70);
       doc.saveGraphicsState();
-      doc.setGState(new GState({ opacity: 0.06 }));
-      doc.addImage(
-        wmImg,
-        getImageFormat(logoUrl),
-        (pageW - wmSize.width) / 2,
-        (pageH - wmSize.height) / 2,
-        wmSize.width,
-        wmSize.height,
-      );
-      doc.restoreGraphicsState();
+      try {
+        doc.setGState(new GState({ opacity: 0.06 }));
+        doc.addImage(
+          getImageSource(wmImg, logoUrl),
+          getImageFormat(logoUrl),
+          (pageW - wmSize.width) / 2,
+          (pageH - wmSize.height) / 2,
+          wmSize.width,
+          wmSize.height,
+        );
+      } finally {
+        doc.restoreGraphicsState();
+      }
     } catch { /* watermark optional */ }
   }
 
@@ -112,7 +119,7 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
       const logoImg = await loadImage(logoUrl);
       const logoSize = fitImage(logoImg, 36, 18);
       doc.addImage(
-        logoImg,
+        getImageSource(logoImg, logoUrl),
         getImageFormat(logoUrl),
         margin,
         y + (18 - logoSize.height) / 2,
