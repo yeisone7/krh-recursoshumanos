@@ -33,8 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DOTATION_PERIOD_MONTHS } from '@/types/dotation';
 import { useEmployees } from '@/hooks/useEmployees';
 import { getEmployeeFullName } from '@/types/employee';
-import { useCreateDotationDelivery, useDotationDeliveries } from '@/hooks/useDotation';
-import { useCreateDotationTransaction } from '@/hooks/useDotationTransactions';
+import { useCreateDotationDeliveryBatch, useDotationDeliveries } from '@/hooks/useDotation';
 import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
@@ -50,6 +49,7 @@ interface DotationFormDialogProps {
 
 interface DeliveryItem {
   selected: boolean;
+  itemTypeId: string;
   itemTypeEnum: DotationItemType;
   itemName: string;
   quantity: number;
@@ -66,8 +66,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const { data: allDeliveries = [] } = useDotationDeliveries();
   const { data: inventory = [] } = useDotationInventory();
   const { data: systemConfig } = useSystemConfig();
-  const createDelivery = useCreateDotationDelivery();
-  const createTransaction = useCreateDotationTransaction();
+  const createDeliveryBatch = useCreateDotationDeliveryBatch();
 
   const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
   const blockNoStock = inventoryEnabled && systemConfig?.dotation_block_no_stock?.enabled === true;
@@ -93,6 +92,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
     if (profesiograma && profesiograma.items.length > 0) {
       setItems(profesiograma.items.map((pi: any) => ({
         selected: true,
+        itemTypeId: pi.dotation_item_type_id,
         itemTypeEnum: 'otros' as DotationItemType, // will use catalog name
         itemName: pi.dotation_item_types?.name || 'Artículo',
         quantity: pi.quantity,
@@ -118,6 +118,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const addManualItem = () => {
     setItems([...items, {
       selected: true,
+      itemTypeId: '',
       itemTypeEnum: 'otros',
       itemName: '',
       quantity: 1,
@@ -126,10 +127,12 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
     }]);
   };
 
-  const handleCatalogSelect = (idx: number, catalogName: string) => {
+  const handleCatalogSelect = (idx: number, itemTypeId: string) => {
     const updated = [...items];
+    const catalogItem = itemTypeCatalog.find((item) => item.id === itemTypeId);
+    updated[idx].itemTypeId = itemTypeId;
     updated[idx].itemTypeEnum = 'otros' as DotationItemType;
-    updated[idx].itemName = catalogName;
+    updated[idx].itemName = catalogItem?.name || '';
     setItems(updated);
   };
 
@@ -156,7 +159,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
       toast.error('Selecciona al menos un artículo');
       return;
     }
-    const invalidItems = selectedItems.filter(i => !i.itemName.trim());
+    const invalidItems = selectedItems.filter(i => !i.itemTypeId || !i.itemName.trim());
     if (invalidItems.length > 0) {
       toast.error('Todos los artículos deben tener nombre');
       return;
@@ -165,11 +168,15 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
     // Stock validation if blocking is enabled
     if (blockNoStock) {
       const stockIssues: string[] = [];
+      const employeeCenterId = selectedEmployee?.work_info?.operation_center_id || null;
       for (const item of selectedItems) {
-        const matchingInventory = inventory.find((inv: any) =>
-          inv.item_name === item.itemName &&
-          (!item.size || inv.size === item.size)
+        const matchingRows = inventory.filter((inv) =>
+          inv.item_type === item.itemTypeId
+          && inv.item_name === item.itemName
+          && inv.size === (item.size || null)
         );
+        const matchingInventory = matchingRows.find((inv) => inv.operation_center_id === employeeCenterId)
+          || (employeeCenterId ? matchingRows.find((inv) => inv.operation_center_id === null) : undefined);
         if (!matchingInventory || matchingInventory.quantity_available < item.quantity) {
           const available = matchingInventory?.quantity_available || 0;
           stockIssues.push(`${item.itemName}${item.size ? ` (${item.size})` : ''}: disponible ${available}, solicitado ${item.quantity}`);
@@ -186,30 +193,20 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
     setIsSubmitting(true);
     try {
-      // Create transaction header first
-      const transaction = await createTransaction.mutateAsync({
+      await createDeliveryBatch.mutateAsync({
         employee_id: employeeId,
         delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
+        expiration_date: format(expirationDate, 'yyyy-MM-dd'),
         delivered_by: deliveredBy,
         observations: notes || null,
-      });
-
-      // Create delivery items linked to the transaction
-      for (const item of selectedItems) {
-        await createDelivery.mutateAsync({
-          employee_id: employeeId,
+        items: selectedItems.map((item) => ({
+          dotation_item_type_id: item.itemTypeId,
           item_type: item.itemTypeEnum,
           item_name: item.itemName,
           quantity: item.quantity,
           size: item.size || null,
-          delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-          expiration_date: format(expirationDate, 'yyyy-MM-dd'),
-          delivered_by: deliveredBy,
-          observations: notes || null,
-          signature_url: null,
-          transaction_id: transaction.id,
-        });
-      }
+        })),
+      });
 
       const employeeName = selectedEmployee ? getEmployeeFullName(selectedEmployee) : 'el empleado';
       toast.success('Entrega registrada', {
@@ -456,10 +453,10 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                                </div>
                              ) : (
                                <SearchableSelect
-                                 options={itemTypeCatalog
-                                   .filter((c: any) => c.is_active)
-                                   .map((c: any) => ({ value: c.name, label: c.name }))}
-                                 value={item.itemName || undefined}
+                                  options={itemTypeCatalog
+                                    .filter((c: any) => c.is_active)
+                                    .map((c: any) => ({ value: c.id, label: c.name }))}
+                                  value={item.itemTypeId || undefined}
                                  onValueChange={(v) => handleCatalogSelect(idx, v)}
                                  placeholder="Buscar artículo..."
                                  triggerClassName="h-10 rounded-xl bg-background border-border/50"

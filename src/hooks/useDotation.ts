@@ -179,127 +179,8 @@ export function useCreateDotationDelivery() {
 
       if (error) throw error;
 
-      // Check if auto-deduct is enabled
-      const { data: configData } = await supabase
-        .from('system_config')
-        .select('config_value')
-        .eq('company_id', currentCompanyId!)
-        .eq('config_key', 'dotation_auto_deduct')
-        .maybeSingle();
-
-      const autoDeductEnabled = (configData?.config_value as any)?.enabled !== false;
-
-      const inventoryEnabledCheck = await supabase
-        .from('system_config')
-        .select('config_value')
-        .eq('company_id', currentCompanyId!)
-        .eq('config_key', 'dotation_inventory_enabled')
-        .maybeSingle();
-
-      const inventoryModuleEnabled = (inventoryEnabledCheck.data?.config_value as any)?.enabled !== false;
-
-      // Auto-deduct from inventory only if both modules are enabled
-      if (autoDeductEnabled && inventoryModuleEnabled) {
-      try {
-        // Find matching inventory item
-        const { data: employee } = await supabase
-          .from('employees_v2')
-          .select('company_id, employee_work_info(operation_center_id, is_current)')
-          .eq('id', data.employee_id)
-          .maybeSingle();
-
-        const currentWorkInfo = employee?.employee_work_info?.find((w: any) => w.is_current);
-        const centerId = currentWorkInfo?.operation_center_id || null;
-
-        // Try to find inventory match (with center, then without)
-        let inventoryQuery = supabase
-          .from('dotation_inventory')
-          .select('id, quantity_available')
-          .eq('company_id', employee?.company_id || '')
-          .eq('item_type', data.item_type)
-          .eq('item_name', data.item_name);
-
-        if (data.size) {
-          inventoryQuery = inventoryQuery.eq('size', data.size);
-        } else {
-          inventoryQuery = inventoryQuery.is('size', null);
-        }
-
-        // Try with center first
-        if (centerId) {
-          const { data: withCenter } = await inventoryQuery.eq('operation_center_id', centerId).maybeSingle();
-          if (withCenter) {
-            const newQty = Math.max(0, withCenter.quantity_available - (data.quantity || 1));
-            await supabase
-              .from('dotation_inventory')
-              .update({ quantity_available: newQty })
-              .eq('id', withCenter.id);
-            // Record movement
-            await supabase.from('dotation_inventory_movements').insert({
-              company_id: employee?.company_id || '',
-              inventory_item_id: withCenter.id,
-              movement_type: 'entrega',
-              quantity: data.quantity || 1,
-              previous_stock: withCenter.quantity_available,
-              new_stock: newQty,
-              reason: `Entrega a empleado`,
-              reference_id: data.id,
-              created_by: user?.id || null,
-            });
-          } else {
-            // Fallback: try general (no center)
-            const { data: general } = await supabase
-              .from('dotation_inventory')
-              .select('id, quantity_available')
-              .eq('company_id', employee?.company_id || '')
-              .eq('item_type', data.item_type)
-              .eq('item_name', data.item_name)
-              .is('operation_center_id', null)
-              .maybeSingle();
-            if (general) {
-              const newQty = Math.max(0, general.quantity_available - (data.quantity || 1));
-              await supabase
-                .from('dotation_inventory')
-                .update({ quantity_available: newQty })
-                .eq('id', general.id);
-              await supabase.from('dotation_inventory_movements').insert({
-                company_id: employee?.company_id || '',
-                inventory_item_id: general.id,
-                movement_type: 'entrega',
-                quantity: data.quantity || 1,
-                previous_stock: general.quantity_available,
-                new_stock: newQty,
-                reason: `Entrega a empleado`,
-                reference_id: data.id,
-                created_by: user?.id || null,
-              });
-            }
-          }
-        } else {
-          const { data: general } = await inventoryQuery.is('operation_center_id', null).maybeSingle();
-          if (general) {
-            const newQty = Math.max(0, general.quantity_available - (data.quantity || 1));
-            await supabase
-              .from('dotation_inventory')
-              .update({ quantity_available: newQty })
-              .eq('id', general.id);
-            await supabase.from('dotation_inventory_movements').insert({
-              company_id: employee?.company_id || '',
-              inventory_item_id: general.id,
-              movement_type: 'entrega',
-              quantity: data.quantity || 1,
-              previous_stock: general.quantity_available,
-              new_stock: newQty,
-              reason: `Entrega a empleado`,
-              reference_id: data.id,
-              created_by: user?.id || null,
-            });
-          }
-        }
-      } catch (inventoryError) {
-        console.warn('Could not auto-deduct from inventory:', inventoryError);
-      }
-      } // end auto-deduct check
+      // Inventory deduction is handled by the database trigger in the same
+      // transaction as this insert. A failed deduction rolls the delivery back.
 
       // Get employee info for audit log
       const employee = await getEmployeeV2Info(data.employee_id);
@@ -327,6 +208,63 @@ export function useCreateDotationDelivery() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
+    },
+  });
+}
+
+export interface DotationDeliveryBatchItem {
+  dotation_item_type_id: string;
+  item_type: Database['public']['Enums']['dotation_item_type'];
+  item_name: string;
+  quantity: number;
+  size?: string | null;
+}
+
+export function useCreateDotationDeliveryBatch() {
+  const queryClient = useQueryClient();
+  const { user, currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (params: {
+      employee_id: string;
+      delivery_date: string;
+      expiration_date: string;
+      delivered_by: string;
+      observations: string | null;
+      items: DotationDeliveryBatchItem[];
+    }) => {
+      const { data, error } = await supabase.rpc('create_dotation_delivery_batch', {
+        p_employee_id: params.employee_id,
+        p_delivery_date: params.delivery_date,
+        p_expiration_date: params.expiration_date,
+        p_delivered_by: params.delivered_by,
+        p_observations: params.observations || '',
+        p_items: params.items,
+      });
+      if (error) throw error;
+
+      if (user && data) {
+        const employee = await getEmployeeV2Info(params.employee_id);
+        await logAuditEvent(
+          user.id,
+          user.email,
+          currentCompanyId,
+          'deliver_dotation',
+          'dotation_delivery_transaction',
+          data.id,
+          employee ? `${employee.first_name} ${employee.last_name}` : 'Empleado',
+          undefined,
+          { items: params.items, delivery_date: params.delivery_date },
+        );
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
     },
   });
 }

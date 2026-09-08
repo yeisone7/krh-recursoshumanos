@@ -106,7 +106,10 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
       };
 
       if (editItem) {
-        await updateItem.mutateAsync({ id: editItem.id, ...payload });
+        await updateItem.mutateAsync({
+          id: editItem.id,
+          minimum_stock: payload.minimum_stock,
+        });
         toast.success('Artículo actualizado');
       } else {
         await createItem.mutateAsync(payload);
@@ -133,7 +136,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                 {editItem ? 'Editar Artículo' : 'Nuevo Ingreso'}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium truncate">
-                {editItem ? 'Actualiza los niveles de stock y parámetros' : 'Registra un nuevo producto en el inventario'}
+                {editItem ? 'Actualiza el punto de reorden del artículo' : 'Registra un nuevo producto en el inventario'}
               </DialogDescription>
             </div>
           </div>
@@ -156,7 +159,11 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                   render={({ field }) => (
                     <FormItem className="space-y-2">
                       <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Centro de Operación</FormLabel>
-                      <Select onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)} value={field.value || '__general__'}>
+                      <Select
+                        onValueChange={(v) => field.onChange(v === '__general__' ? '' : v)}
+                        value={field.value || '__general__'}
+                        disabled={!!editItem}
+                      >
                         <FormControl>
                           <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm shadow-sm transition-all focus:ring-primary/20">
                             <SelectValue placeholder="General (todos los centros)" />
@@ -189,6 +196,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                           }))}
                           value={field.value}
                           onValueChange={field.onChange}
+                          disabled={!!editItem}
                           placeholder="Seleccionar tipo de dotación"
                           searchPlaceholder="Buscar tipo..."
                           emptyMessage="No se encontraron tipos de dotación."
@@ -215,7 +223,11 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Talla</FormLabel>
-                        <Select onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)} value={field.value || '__none__'}>
+                        <Select
+                          onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)}
+                          value={field.value || '__none__'}
+                          disabled={!!editItem}
+                        >
                           <FormControl>
                             <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm">
                               <SelectValue placeholder="Sin talla" />
@@ -239,17 +251,25 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                     rules={{ min: { value: 0, message: 'Mínimo 0' } }}
                     render={({ field }) => (
                       <FormItem className="space-y-2">
-                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Cantidad Inicial *</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+                          {editItem ? 'Cantidad disponible' : 'Cantidad inicial *'}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min={0}
+                            disabled={!!editItem}
                             className="h-12 rounded-xl border-border/50 bg-background font-black text-sm text-primary focus-visible:ring-primary/20"
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage className="text-[10px] font-bold uppercase" />
+                        {editItem && (
+                          <FormDescription className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground/70">
+                            Usa “Ajustar stock” para cambiar existencias y conservar la trazabilidad.
+                          </FormDescription>
+                        )}
                       </FormItem>
                     )}
                   />
