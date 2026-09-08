@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import jsPDF, { GState } from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
@@ -28,6 +28,8 @@ interface DeliveryForPdf {
 interface ActaOptions {
   companyName: string;
   companyNit: string;
+  logoUrl?: string | null;
+  watermarkLogoUrl?: string | null;
   deliveries: DeliveryForPdf[];
   signatureDataUrl?: string | null;
 }
@@ -42,8 +44,34 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
+function getImageFormat(src: string): 'PNG' | 'JPEG' {
+  const normalizedSrc = src.split('?')[0].toLowerCase();
+  return normalizedSrc.endsWith('.jpg') || normalizedSrc.endsWith('.jpeg') || src.startsWith('data:image/jpeg')
+    ? 'JPEG'
+    : 'PNG';
+}
+
+function fitImage(img: HTMLImageElement, maxWidth: number, maxHeight: number) {
+  if (!img.naturalWidth || !img.naturalHeight) {
+    return { width: maxWidth, height: maxHeight };
+  }
+
+  const scale = Math.min(maxWidth / img.naturalWidth, maxHeight / img.naturalHeight);
+  return {
+    width: img.naturalWidth * scale,
+    height: img.naturalHeight * scale,
+  };
+}
+
 export async function generateActaEntregaPdf(options: ActaOptions): Promise<void> {
-  const { companyName, companyNit, deliveries, signatureDataUrl } = options;
+  const {
+    companyName,
+    companyNit,
+    logoUrl,
+    watermarkLogoUrl,
+    deliveries,
+    signatureDataUrl,
+  } = options;
   if (deliveries.length === 0) return;
 
   const first = deliveries[0];
@@ -56,26 +84,46 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
 
   const doc = new jsPDF('p', 'mm', 'letter');
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 20;
   const contentW = pageW - margin * 2;
   let y = margin;
 
-  // Try to load watermark
-  try {
-    const wmImg = await loadImage('/images/petrocasinos-watermark.png');
-    const wmW = 97;
-    const wmH = 54;
-    doc.saveGraphicsState();
-    (doc as any).setGState(new (doc as any).GState({ opacity: 0.06 }));
-    doc.addImage(wmImg, 'PNG', (pageW - wmW) / 2, 120, wmW, wmH);
-    doc.restoreGraphicsState();
-  } catch { /* watermark optional */ }
+  // Branding must always come from the company selected in the current session.
+  // If it has no configured images, omit them instead of showing another company's logo.
+  if (watermarkLogoUrl) {
+    try {
+      const wmImg = await loadImage(watermarkLogoUrl);
+      const wmSize = fitImage(wmImg, 97, 70);
+      doc.saveGraphicsState();
+      doc.setGState(new GState({ opacity: 0.06 }));
+      doc.addImage(
+        wmImg,
+        getImageFormat(watermarkLogoUrl),
+        (pageW - wmSize.width) / 2,
+        (pageH - wmSize.height) / 2,
+        wmSize.width,
+        wmSize.height,
+      );
+      doc.restoreGraphicsState();
+    } catch { /* watermark optional */ }
+  }
 
-  // Header logo — use the same watermark image (full color) for the header
-  try {
-    const logoImg = await loadImage('/images/petrocasinos-watermark.png');
-    doc.addImage(logoImg, 'PNG', margin, y, 36, 18);
-  } catch { /* logo optional */ }
+  const headerLogoUrl = logoUrl || watermarkLogoUrl;
+  if (headerLogoUrl) {
+    try {
+      const logoImg = await loadImage(headerLogoUrl);
+      const logoSize = fitImage(logoImg, 36, 18);
+      doc.addImage(
+        logoImg,
+        getImageFormat(headerLogoUrl),
+        margin,
+        y + (18 - logoSize.height) / 2,
+        logoSize.width,
+        logoSize.height,
+      );
+    } catch { /* logo optional */ }
+  }
 
   // Header
   doc.setFontSize(16);

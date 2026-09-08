@@ -232,6 +232,8 @@ export default function Dotacion() {
       await generateActaEntregaPdf({
         companyName: company?.name || 'Empresa',
         companyNit: company?.nit || '',
+        logoUrl: company?.horizontal_logo_url || company?.logo_url || null,
+        watermarkLogoUrl: company?.logo_url || company?.horizontal_logo_url || null,
         deliveries,
         signatureDataUrl: tx.signature_url || null,
       });
