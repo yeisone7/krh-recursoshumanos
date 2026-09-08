@@ -1,4 +1,4 @@
--- Reloj Checador: secure attendance events, rotating QR challenges and reviewed corrections.
+-- Reloj de Asistencia: secure attendance events, rotating QR challenges and reviewed corrections.
 
 CREATE TABLE public.time_clock_points (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -117,12 +117,12 @@ GRANT SELECT ON public.time_clock_points, public.time_clock_days, public.time_cl
 GRANT INSERT, UPDATE ON public.time_clock_points TO authenticated;
 
 INSERT INTO public.modules (code, name, icon, sort_order, is_active)
-VALUES ('reloj_checador', 'Reloj Checador', 'ScanLine', 19, true)
+VALUES ('reloj_checador', 'Reloj de Asistencia', 'ScanLine', 19, true)
 ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, icon = EXCLUDED.icon, is_active = true;
 
 INSERT INTO public.permissions (module_id, action, description)
 SELECT module.id, action.value::public.permission_action,
-  'Reloj Checador - ' || action.label
+  'Reloj de Asistencia - ' || action.label
 FROM public.modules module
 CROSS JOIN (VALUES
   ('view', 'Ver'), ('create', 'Registrar'), ('update', 'Configurar'),
