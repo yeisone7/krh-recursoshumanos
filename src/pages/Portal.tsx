@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, FileText, CalendarDays, Stethoscope, Edit3, AlertCircle, LogOut, Wallet, Award } from 'lucide-react';
+import { User, FileText, CalendarDays, Stethoscope, Edit3, AlertCircle, LogOut, Wallet, Award, Clock3 } from 'lucide-react';
 import { useEmployeePortal } from '@/hooks/useEmployeePortal';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -13,6 +13,7 @@ import {
   PortalPayslips,
   PortalCertificates,
 } from '@/components/portal';
+import { PortalAttendance } from '@/components/time-clock';
 
 export default function Portal() {
   const { signOut } = useAuth();
@@ -91,7 +92,7 @@ export default function Portal() {
       {/* Main Content */}
       <main className="container py-6">
         <Tabs defaultValue="personal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-7 h-auto">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 h-auto">
             <TabsTrigger value="personal" className="flex items-center gap-2 py-3">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Mis Datos</span>
@@ -119,6 +120,10 @@ export default function Portal() {
             <TabsTrigger value="requests" className="flex items-center gap-2 py-3">
               <Edit3 className="h-4 w-4" />
               <span className="hidden sm:inline">Solicitudes</span>
+            </TabsTrigger>
+            <TabsTrigger value="attendance" className="flex items-center gap-2 py-3">
+              <Clock3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Asistencia</span>
             </TabsTrigger>
           </TabsList>
 
@@ -177,6 +182,9 @@ export default function Portal() {
               })}
               isSubmitting={createChangeRequest.isPending}
             />
+          </TabsContent>
+          <TabsContent value="attendance">
+            <PortalAttendance employeeId={employee.id} />
           </TabsContent>
         </Tabs>
       </main>

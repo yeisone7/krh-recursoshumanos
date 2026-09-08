@@ -148,7 +148,9 @@ export default function Auth() {
   const location = useLocation();
   const { toast, dismiss } = useToast();
 
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from
+    ? `${location.state.from.pathname}${location.state.from.search || ''}${location.state.from.hash || ''}`
+    : '/';
 
   useEffect(() => {
     if (user && !isRegisterFlowActive && !successType) {

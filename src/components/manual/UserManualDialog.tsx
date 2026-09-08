@@ -48,6 +48,7 @@ import {
   Lock,
   FileCheck,
   Zap,
+  ScanLine,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { MANUAL_SECTIONS, MODULE_DOCS, MODULES_SECTION_ID } from '@/data/manualContent';
@@ -60,7 +61,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   BookOpen, LogIn, Shield, Layers, Bell, Scale, Calculator, ShieldCheck, HelpCircle,
   LayoutDashboard, Users, FileText, Palmtree, ClipboardList, HeartPulse, Package,
   Stethoscope, GraduationCap, Target, Gavel, Landmark, UserSearch, Briefcase,
-  Clock, Calendar, FileBarChart, Network, BarChart3, Settings, FolderOpen, User,
+  Clock, Calendar, FileBarChart, Network, BarChart3, Settings, FolderOpen, User, ScanLine,
 };
 
 function getIcon(name: string) {
@@ -424,7 +425,7 @@ function buildModuleContent(m: ModuleDoc): ManualContentItem[] {
 function contentMatchesQuery(content: ManualContentItem[], q: string): boolean {
   return content.some((c) => {
     if (typeof c.data === 'string') return c.data.toLowerCase().includes(q);
-    if (Array.isArray(c.data)) return c.data.some((d: any) => String(d).toLowerCase().includes(q));
+    if (Array.isArray(c.data)) return c.data.some((d: string) => d.toLowerCase().includes(q));
     if (c.data && typeof c.data === 'object') return JSON.stringify(c.data).toLowerCase().includes(q);
     return false;
   });
