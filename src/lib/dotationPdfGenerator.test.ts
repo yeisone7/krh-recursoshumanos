@@ -63,15 +63,13 @@ describe('generateActaEntregaPdf', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders the selected company logo and watermark without the Petrocasinos fallback', async () => {
+  it('uses the exact same selected company logo in the header and watermark', async () => {
     const logoUrl = 'https://cdn.example.com/company-horizontal.png';
-    const watermarkLogoUrl = 'https://cdn.example.com/company-symbol.png';
 
     await generateActaEntregaPdf({
       companyName: 'Empresa Actual',
       companyNit: '900123456-7',
       logoUrl,
-      watermarkLogoUrl,
       deliveries: [{
         id: 'delivery-1',
         employee_id: 'employee-1',
@@ -91,8 +89,7 @@ describe('generateActaEntregaPdf', () => {
     });
 
     const renderedSources = pdfMocks.addImage.mock.calls.map(([image]) => image.currentSrc);
-    expect(renderedSources).toContain(watermarkLogoUrl);
-    expect(renderedSources).toContain(logoUrl);
+    expect(renderedSources.filter(source => source === logoUrl)).toHaveLength(2);
     expect(renderedSources).not.toContain('/images/petrocasinos-watermark.png');
     expect(pdfMocks.save).toHaveBeenCalledOnce();
   });
