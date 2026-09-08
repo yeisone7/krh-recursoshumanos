@@ -328,7 +328,7 @@ export const MODULE_DOCS: ModuleDoc[] = [
   },
   {
     moduleCode: 'reloj_checador',
-    title: 'Reloj Checador',
+    title: 'Reloj de Asistencia',
     icon: 'ScanLine',
     description: 'Control de asistencia con marcación móvil por QR dinámico, geolocalización, registro web y supervisión auditada.',
     actions: ['Marcar entrada y salida', 'Marcar inicio y fin de pausa cuando el centro lo requiera', 'Abrir una pantalla QR por punto', 'Registrar una marcación supervisada', 'Solicitar y aprobar correcciones', 'Consultar y exportar jornadas'],
