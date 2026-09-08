@@ -2757,6 +2757,7 @@ export type Database = {
           delivered_by: string | null
           delivery_date: string
           document_url: string | null
+          dotation_item_type_id: string | null
           employee_id: string
           expiration_date: string
           id: string
@@ -2778,6 +2779,7 @@ export type Database = {
           delivered_by?: string | null
           delivery_date: string
           document_url?: string | null
+          dotation_item_type_id?: string | null
           employee_id: string
           expiration_date: string
           id?: string
@@ -2799,6 +2801,7 @@ export type Database = {
           delivered_by?: string | null
           delivery_date?: string
           document_url?: string | null
+          dotation_item_type_id?: string | null
           employee_id?: string
           expiration_date?: string
           id?: string
@@ -2827,6 +2830,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "employees_v2"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dotation_deliveries_item_type_company_fkey"
+            columns: ["dotation_item_type_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "dotation_item_types"
+            referencedColumns: ["id", "company_id"]
           },
           {
             foreignKeyName: "dotation_deliveries_transaction_id_fkey"
@@ -11629,6 +11639,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_dotation_inventory: {
+        Args: {
+          p_adjustment: number
+          p_inventory_id: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
+      create_dotation_delivery_batch: {
+        Args: {
+          p_delivered_by: string
+          p_delivery_date: string
+          p_employee_id: string
+          p_expiration_date: string
+          p_items: Json
+          p_observations: string
+        }
+        Returns: Database["public"]["Tables"]["dotation_delivery_transactions"]["Row"]
+      }
       get_requisition_replacement_candidates: {
         Args: { p_company_id: string; p_operation_center_id?: string | null }
         Returns: {
@@ -11637,6 +11666,15 @@ export type Database = {
           is_active: boolean
           last_name: string
         }[]
+      }
+      transfer_dotation_inventory: {
+        Args: {
+          p_destination_center_id?: string
+          p_quantity?: number
+          p_reason?: string
+          p_source_inventory_id: string
+        }
+        Returns: Json
       }
       can_access_training_media: {
         Args: { p_action: string; p_course_id: string }

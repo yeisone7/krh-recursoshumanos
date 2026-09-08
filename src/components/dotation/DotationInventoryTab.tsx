@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, Edit, Trash2, ArrowUpDown, AlertTriangle, CheckCircle, Package, History } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, ArrowUpDown, ArrowRightLeft, AlertTriangle, CheckCircle, Package, History } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ import { useDotationInventory, useDeleteInventoryItem, type DotationInventoryIte
 import { InventoryFormDialog } from './InventoryFormDialog';
 import { InventoryAdjustDialog } from './InventoryAdjustDialog';
 import { InventoryHistoryDialog } from './InventoryHistoryDialog';
+import { InventoryTransferDialog } from './InventoryTransferDialog';
 import { toast } from 'sonner';
 
 interface DotationInventoryTabProps {
@@ -39,6 +40,7 @@ export function DotationInventoryTab({
   const [adjustItem, setAdjustItem] = useState<DotationInventoryItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DotationInventoryItem | null>(null);
   const [historyItem, setHistoryItem] = useState<DotationInventoryItem | null>(null);
+  const [transferItem, setTransferItem] = useState<DotationInventoryItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [centerFilter, setCenterFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -187,6 +189,15 @@ export function DotationInventoryTab({
                             <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
                               <ArrowUpDown className="w-4 h-4" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setTransferItem(item)}
+                              disabled={item.quantity_available === 0}
+                              title="Trasladar a otro centro"
+                            >
+                              <ArrowRightLeft className="w-4 h-4" />
+                            </Button>
                             <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -237,7 +248,7 @@ export function DotationInventoryTab({
                       <p className="font-semibold text-foreground">{item.minimum_stock}</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-3 gap-1">
                     <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
                       <History className="w-4 h-4" />
                     </Button>
@@ -245,6 +256,15 @@ export function DotationInventoryTab({
                       <>
                         <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
                           <ArrowUpDown className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setTransferItem(item)}
+                          disabled={item.quantity_available === 0}
+                          title="Trasladar a otro centro"
+                        >
+                          <ArrowRightLeft className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
                           <Edit className="w-4 h-4" />
@@ -296,6 +316,11 @@ export function DotationInventoryTab({
         open={!!historyItem}
         onOpenChange={(open) => !open && setHistoryItem(null)}
         item={historyItem}
+      />
+      <InventoryTransferDialog
+        open={!!transferItem}
+        onOpenChange={(open) => !open && setTransferItem(null)}
+        item={transferItem}
       />
     </div>
   );

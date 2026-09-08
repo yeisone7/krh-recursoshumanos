@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { History, ArrowUpCircle, ArrowDownCircle, RefreshCw, PackageCheck, Undo2 } from 'lucide-react';
+import { History, ArrowUpCircle, ArrowDownCircle, ArrowRightLeft, RefreshCw, PackageCheck, Undo2 } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -22,6 +22,8 @@ const movementConfig: Record<string, { label: string; icon: typeof ArrowUpCircle
   ajuste: { label: 'Ajuste', icon: RefreshCw, color: 'text-amber-600', badgeClass: 'bg-amber-500/10 text-amber-700 border-amber-200' },
   entrega: { label: 'Entrega', icon: PackageCheck, color: 'text-blue-600', badgeClass: 'bg-blue-500/10 text-blue-700 border-blue-200' },
   devolucion: { label: 'Devolución', icon: Undo2, color: 'text-violet-600', badgeClass: 'bg-violet-500/10 text-violet-700 border-violet-200' },
+  traslado_entrada: { label: 'Traslado recibido', icon: ArrowRightLeft, color: 'text-cyan-600', badgeClass: 'bg-cyan-500/10 text-cyan-700 border-cyan-200' },
+  traslado_salida: { label: 'Traslado enviado', icon: ArrowRightLeft, color: 'text-orange-600', badgeClass: 'bg-orange-500/10 text-orange-700 border-orange-200' },
 };
 
 const defaultConfig = { label: 'Otro', icon: RefreshCw, color: 'text-muted-foreground', badgeClass: 'bg-background text-muted-foreground border-border' };
@@ -71,7 +73,7 @@ export function InventoryHistoryDialog({ open, onOpenChange, item }: InventoryHi
               {movements.map((mov) => {
                 const cfg = movementConfig[mov.movement_type] || defaultConfig;
                 const Icon = cfg.icon;
-                const isPositive = ['entrada', 'devolucion'].includes(mov.movement_type);
+                const isPositive = ['entrada', 'devolucion', 'traslado_entrada'].includes(mov.movement_type);
 
                 return (
                   <div

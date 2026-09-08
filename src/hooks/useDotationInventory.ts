@@ -107,48 +107,46 @@ export function useDeleteInventoryItem() {
 
 export function useAdjustInventoryQuantity() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, adjustment, reason }: { id: string; adjustment: number; reason?: string }) => {
-      // Get current quantity
-      const { data: current, error: fetchError } = await supabase
-        .from('dotation_inventory')
-        .select('quantity_available')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const previousStock = current?.quantity_available || 0;
-      const newQuantity = Math.max(0, previousStock + adjustment);
-
-      const { data, error } = await supabase
-        .from('dotation_inventory')
-        .update({ quantity_available: newQuantity })
-        .eq('id', id)
-        .select()
-        .single();
-
+      const { data, error } = await supabase.rpc('adjust_dotation_inventory', {
+        p_inventory_id: id,
+        p_adjustment: adjustment,
+        p_reason: reason,
+      });
       if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
+    },
+  });
+}
 
-      // Record movement
-      const movementType = adjustment > 0 ? 'entrada' : 'salida';
-      try {
-        await supabase.from('dotation_inventory_movements').insert({
-          company_id: currentCompanyId!,
-          inventory_item_id: id,
-          movement_type: reason === 'devolucion' ? 'devolucion' : reason === 'ajuste' ? 'ajuste' : movementType,
-          quantity: Math.abs(adjustment),
-          previous_stock: previousStock,
-          new_stock: newQuantity,
-          reason: reason || null,
-          created_by: user?.id || null,
-        });
-      } catch (e) {
-        console.warn('Failed to record movement:', e);
-      }
+export function useTransferInventory() {
+  const queryClient = useQueryClient();
 
+  return useMutation({
+    mutationFn: async ({
+      sourceInventoryId,
+      destinationCenterId,
+      quantity,
+      reason,
+    }: {
+      sourceInventoryId: string;
+      destinationCenterId: string | null;
+      quantity: number;
+      reason?: string;
+    }) => {
+      const { data, error } = await supabase.rpc('transfer_dotation_inventory', {
+        p_source_inventory_id: sourceInventoryId,
+        p_destination_center_id: destinationCenterId ?? undefined,
+        p_quantity: quantity,
+        p_reason: reason,
+      });
+      if (error) throw error;
       return data;
     },
     onSuccess: () => {

@@ -30,6 +30,12 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
   const handleSubmit = async () => {
     if (!item || quantity <= 0) return;
+    if (adjustType === 'subtract' && quantity > item.quantity_available) {
+      toast.error('Stock insuficiente', {
+        description: `Solo hay ${item.quantity_available} unidades disponibles.`,
+      });
+      return;
+    }
 
     try {
       const adjustment = adjustType === 'add' ? quantity : -quantity;
@@ -83,8 +89,8 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
               variant="outline"
               className={cn(
                 "h-12 rounded-xl gap-2 font-bold text-xs uppercase tracking-widest transition-all duration-300",
-                adjustType === 'add' 
-                  ? "bg-primary/10 border-primary/30 text-primary shadow-sm" 
+                adjustType === 'add'
+                  ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
                   : "hover:"
               )}
               onClick={() => setAdjustType('add')}
@@ -96,8 +102,8 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
               variant="outline"
               className={cn(
                 "h-12 rounded-xl gap-2 font-bold text-xs uppercase tracking-widest transition-all duration-300",
-                adjustType === 'subtract' 
-                  ? "bg-destructive/10 border-destructive/30 text-destructive shadow-sm" 
+                adjustType === 'subtract'
+                  ? "bg-destructive/10 border-destructive/30 text-destructive shadow-sm"
                   : "hover:bg-destructive/5"
               )}
               onClick={() => setAdjustType('subtract')}
@@ -112,6 +118,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
               <Input
                 type="number"
                 min={1}
+                max={adjustType === 'subtract' ? item.quantity_available : undefined}
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                 className="h-12 rounded-xl bg-background border-border/50 focus:ring-primary/20 pl-4 font-bold text-lg"
@@ -163,20 +170,20 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
 
         {/* Footer */}
         <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:justify-end">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => onOpenChange(false)}
             className="h-12 px-6 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-background transition-colors"
           >
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={adjustMutation.isPending}
             className={cn(
               "h-12 px-8 rounded-2xl gap-2 text-primary-foreground font-black uppercase tracking-widest text-xs transition-all",
-              adjustType === 'add' 
-                ? "bg-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px]" 
+              adjustType === 'add'
+                ? "bg-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:translate-y-[-1px]"
                 : "bg-destructive shadow-lg shadow-destructive/20 hover:shadow-xl hover:translate-y-[-1px]"
             )}
           >
@@ -186,4 +193,4 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
       </DialogContent>
     </Dialog>
   );
-}
+}
