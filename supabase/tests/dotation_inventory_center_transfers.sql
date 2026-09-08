@@ -1,6 +1,8 @@
 begin;
 
-select plan(21);
+set local search_path = public, extensions;
+
+select plan(24);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -182,6 +184,21 @@ select is(
   (select count(*)::integer from public.dotation_inventory_movements where movement_type = 'devolucion'),
   1,
   'delivery cancellation leaves an auditable reversal movement'
+);
+
+select lives_ok(
+  $$delete from public.dotation_inventory
+    where operation_center_id = 'd3000000-0000-0000-0000-000000000001'$$,
+  'inventory created by a transfer can be deleted explicitly'
+);
+select is(
+  (select count(*)::integer from public.dotation_inventory_transfers),
+  0,
+  'deleting transferred inventory also removes its dependent transfer audit row'
+);
+select lives_ok(
+  $$delete from public.dotation_inventory where id = 'd6000000-0000-0000-0000-000000000001'$$,
+  'the remaining General inventory row can also be deleted'
 );
 
 select * from finish();

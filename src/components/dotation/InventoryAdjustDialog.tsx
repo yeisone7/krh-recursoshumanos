@@ -28,6 +28,11 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
   const [notes, setNotes] = useState('');
   const adjustMutation = useAdjustInventoryQuantity();
 
+  const handleAdjustTypeChange = (type: 'add' | 'subtract') => {
+    setAdjustType(type);
+    setReason(type === 'add' ? 'entrada' : 'ajuste');
+  };
+
   const handleSubmit = async () => {
     if (!item || quantity <= 0) return;
     if (adjustType === 'subtract' && quantity > item.quantity_available) {
@@ -93,7 +98,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                   ? "bg-primary/10 border-primary/30 text-primary shadow-sm"
                   : "hover:"
               )}
-              onClick={() => setAdjustType('add')}
+              onClick={() => handleAdjustTypeChange('add')}
             >
               <Plus className="w-4 h-4" /> Entrada
             </Button>
@@ -106,7 +111,7 @@ export function InventoryAdjustDialog({ open, onOpenChange, item }: InventoryAdj
                   ? "bg-destructive/10 border-destructive/30 text-destructive shadow-sm"
                   : "hover:bg-destructive/5"
               )}
-              onClick={() => setAdjustType('subtract')}
+              onClick={() => handleAdjustTypeChange('subtract')}
             >
               <Minus className="w-4 h-4" /> Salida
             </Button>

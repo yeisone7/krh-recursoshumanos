@@ -181,12 +181,12 @@ export function DotationInventoryTab({
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
+                        <Button aria-label="Ver historial" variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
                           <History className="w-4 h-4" />
                         </Button>
                         {canUpdate && (
                           <>
-                            <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
+                            <Button aria-label="Ajustar existencias" title="Ajustar existencias" variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
                               <ArrowUpDown className="w-4 h-4" />
                             </Button>
                             <Button
@@ -194,17 +194,18 @@ export function DotationInventoryTab({
                               size="sm"
                               onClick={() => setTransferItem(item)}
                               disabled={item.quantity_available === 0}
+                              aria-label="Trasladar a otro centro"
                               title="Trasladar a otro centro"
                             >
                               <ArrowRightLeft className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
+                            <Button aria-label="Editar artículo" title="Editar artículo" variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
                               <Edit className="w-4 h-4" />
                             </Button>
                           </>
                         )}
                         {canDelete && (
-                          <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
+                          <Button aria-label="Eliminar artículo" title="Eliminar artículo" variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         )}
@@ -249,12 +250,12 @@ export function DotationInventoryTab({
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
+                    <Button aria-label="Ver historial" variant="ghost" size="sm" onClick={() => setHistoryItem(item)} title="Ver historial">
                       <History className="w-4 h-4" />
                     </Button>
                     {canUpdate && (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
+                        <Button aria-label="Ajustar existencias" title="Ajustar existencias" variant="ghost" size="sm" onClick={() => setAdjustItem(item)}>
                           <ArrowUpDown className="w-4 h-4" />
                         </Button>
                         <Button
@@ -262,17 +263,18 @@ export function DotationInventoryTab({
                           size="sm"
                           onClick={() => setTransferItem(item)}
                           disabled={item.quantity_available === 0}
+                          aria-label="Trasladar a otro centro"
                           title="Trasladar a otro centro"
                         >
                           <ArrowRightLeft className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
+                        <Button aria-label="Editar artículo" title="Editar artículo" variant="ghost" size="sm" onClick={() => { setEditItem(item); setIsFormOpen(true); }}>
                           <Edit className="w-4 h-4" />
                         </Button>
                       </>
                     )}
                     {canDelete && (
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
+                      <Button aria-label="Eliminar artículo" title="Eliminar artículo" variant="ghost" size="sm" onClick={() => setDeleteTarget(item)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
                     )}

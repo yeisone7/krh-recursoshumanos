@@ -9,6 +9,7 @@ import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenT
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -255,6 +256,9 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
               <DialogTitle className="font-black text-xl tracking-tighter sm:text-2xl truncate text-foreground">
                 {employeeName}
               </DialogTitle>
+              <DialogDescription className="sr-only">
+                Detalle de entrega de dotación de {employeeName}
+              </DialogDescription>
               <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
                 <span>C.C. {transaction.employees?.document_number}</span>
                 <span>•</span>
@@ -372,10 +376,10 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                       <ExternalLink className="w-3.5 h-3.5" /> Ver
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl border-border/50" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
+                  <Button aria-label="Reemplazar acta firmada" title="Reemplazar acta firmada" variant="outline" size="sm" className="h-9 w-9 p-0 rounded-xl border-border/50" onClick={() => fileInputRef.current?.click()} disabled={isUploadingPdf}>
                     <Upload className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={handleRemoveDocument} className="h-9 w-9 p-0 rounded-xl text-destructive hover:bg-destructive/10">
+                  <Button aria-label="Eliminar acta firmada" title="Eliminar acta firmada" variant="ghost" size="sm" onClick={handleRemoveDocument} className="h-9 w-9 p-0 rounded-xl text-destructive hover:bg-destructive/10">
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>

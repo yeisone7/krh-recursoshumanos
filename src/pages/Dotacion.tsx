@@ -483,6 +483,8 @@ export default function Dotacion() {
                                 <TableCell className="px-8 text-right">
                                   <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0" onClick={e => e.stopPropagation()}>
                                     <Button
+                                      aria-label="Ver detalle de entrega"
+                                      title="Ver detalle de entrega"
                                       size="icon"
                                       variant="ghost"
                                       className="h-10 w-10 rounded-xl hover:bg-primary text-primary hover:text-primary-foreground shadow-sm transition-all"
@@ -494,6 +496,8 @@ export default function Dotacion() {
                                       <Eye className="w-5 h-5" />
                                     </Button>
                                     <Button
+                                      aria-label="Descargar acta de entrega"
+                                      title="Descargar acta de entrega"
                                       size="icon"
                                       variant="ghost"
                                       className="h-10 w-10 rounded-xl bg-background hover:bg-foreground hover:text-background transition-all"
@@ -506,6 +510,8 @@ export default function Dotacion() {
                                     </Button>
                                     {canDeleteDotation && (
                                       <Button
+                                        aria-label="Eliminar entrega"
+                                        title="Eliminar entrega"
                                         size="icon"
                                         variant="ghost"
                                         className="h-10 w-10 rounded-xl bg-destructive/5 hover:bg-destructive text-destructive hover:text-destructive-foreground transition-all"
