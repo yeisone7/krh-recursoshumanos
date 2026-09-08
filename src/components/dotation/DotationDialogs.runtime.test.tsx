@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DotationDetailDialog } from './DotationDetailDialog';
 import { DotationFormDialog } from './DotationFormDialog';
 import { InventoryAdjustDialog } from './InventoryAdjustDialog';
@@ -9,13 +9,22 @@ import { InventoryAdjustDialog } from './InventoryAdjustDialog';
 const createDeliveryBatch = vi.hoisted(() =>
   vi.fn(() => new Promise(() => undefined)),
 );
+const generateActaEntregaPdf = vi.hoisted(() => vi.fn());
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ currentCompanyId: 'company-1' }),
 }));
 
 vi.mock('@/hooks/useCompanies', () => ({
-  useCompany: () => ({ data: { id: 'company-1', name: 'Empresa QA' } }),
+  useCompany: () => ({
+    data: {
+      id: 'company-1',
+      name: 'Empresa QA',
+      nit: '900123456-7',
+      logo_url: 'https://cdn.example.com/empresa-qa.png',
+      horizontal_logo_url: 'https://cdn.example.com/empresa-qa-horizontal.png',
+    },
+  }),
 }));
 
 vi.mock('@/hooks/useEmployees', () => ({
@@ -94,10 +103,14 @@ vi.mock('@/components/training/SignatureCanvas', () => ({
 }));
 
 vi.mock('@/lib/dotationPdfGenerator', () => ({
-  generateActaEntregaPdf: vi.fn(),
+  generateActaEntregaPdf,
 }));
 
 describe('Dotation dialogs runtime regressions', () => {
+  beforeEach(() => {
+    generateActaEntregaPdf.mockClear();
+  });
+
   const renderWithQueryClient = (ui: ReactElement) => {
     render(
       <QueryClientProvider client={new QueryClient()}>
@@ -106,7 +119,7 @@ describe('Dotation dialogs runtime regressions', () => {
     );
   };
 
-  it('renders the registered delivery detail without missing component references', () => {
+  it('exports the registered delivery using the current company branding', async () => {
     renderWithQueryClient(
       <DotationDetailDialog
         open
@@ -147,6 +160,17 @@ describe('Dotation dialogs runtime regressions', () => {
     expect(screen.getByText('Detalle de Entrega')).toBeInTheDocument();
     expect(screen.getByText('BATA BLANCA')).toBeInTheDocument();
     expect(screen.getByText('Firma de prueba')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar Acta' }));
+
+    await waitFor(() => expect(generateActaEntregaPdf).toHaveBeenCalledWith(
+      expect.objectContaining({
+        companyName: 'Empresa QA',
+        companyNit: '900123456-7',
+        logoUrl: 'https://cdn.example.com/empresa-qa-horizontal.png',
+        watermarkLogoUrl: 'https://cdn.example.com/empresa-qa.png',
+      }),
+    ));
   });
 
   it('renders the submitting state while a delivery is being registered', async () => {
