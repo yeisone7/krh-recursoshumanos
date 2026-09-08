@@ -168,7 +168,6 @@ describe('Dotation dialogs runtime regressions', () => {
         companyName: 'Empresa QA',
         companyNit: '900123456-7',
         logoUrl: 'https://cdn.example.com/empresa-qa-horizontal.png',
-        watermarkLogoUrl: 'https://cdn.example.com/empresa-qa.png',
       }),
     ));
   });

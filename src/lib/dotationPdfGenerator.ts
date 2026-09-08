@@ -29,7 +29,6 @@ interface ActaOptions {
   companyName: string;
   companyNit: string;
   logoUrl?: string | null;
-  watermarkLogoUrl?: string | null;
   deliveries: DeliveryForPdf[];
   signatureDataUrl?: string | null;
 }
@@ -68,7 +67,6 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
     companyName,
     companyNit,
     logoUrl,
-    watermarkLogoUrl,
     deliveries,
     signatureDataUrl,
   } = options;
@@ -91,15 +89,15 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
 
   // Branding must always come from the company selected in the current session.
   // If it has no configured images, omit them instead of showing another company's logo.
-  if (watermarkLogoUrl) {
+  if (logoUrl) {
     try {
-      const wmImg = await loadImage(watermarkLogoUrl);
+      const wmImg = await loadImage(logoUrl);
       const wmSize = fitImage(wmImg, 97, 70);
       doc.saveGraphicsState();
       doc.setGState(new GState({ opacity: 0.06 }));
       doc.addImage(
         wmImg,
-        getImageFormat(watermarkLogoUrl),
+        getImageFormat(logoUrl),
         (pageW - wmSize.width) / 2,
         (pageH - wmSize.height) / 2,
         wmSize.width,
@@ -109,14 +107,13 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
     } catch { /* watermark optional */ }
   }
 
-  const headerLogoUrl = logoUrl || watermarkLogoUrl;
-  if (headerLogoUrl) {
+  if (logoUrl) {
     try {
-      const logoImg = await loadImage(headerLogoUrl);
+      const logoImg = await loadImage(logoUrl);
       const logoSize = fitImage(logoImg, 36, 18);
       doc.addImage(
         logoImg,
-        getImageFormat(headerLogoUrl),
+        getImageFormat(logoUrl),
         margin,
         y + (18 - logoSize.height) / 2,
         logoSize.width,
