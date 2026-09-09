@@ -16,10 +16,11 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Trash2, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
+import type { FormData } from './TemplateFormDialog';
 
 interface CriteriaRubricItemProps {
   index: number;
-  form: UseFormReturn<any>;
+  form: UseFormReturn<FormData>;
   onRemove: () => void;
   canRemove: boolean;
 }
@@ -35,16 +36,19 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="p-3 border rounded-lg bg-background space-y-2">
+    <div className="space-y-3 rounded-lg border border-primary/10 bg-background p-3 shadow-sm shadow-primary/5">
       <div className="flex gap-2 items-start">
-        <GripVertical className="w-4 h-4 mt-2 text-muted-foreground cursor-grab shrink-0" />
+        <div className="mt-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <GripVertical className="h-4 w-4 cursor-grab" />
+        </div>
 
-        <div className="flex-1 grid gap-2 sm:grid-cols-4">
+        <div className="grid flex-1 gap-3 sm:grid-cols-4">
           <FormField
             control={form.control}
             name={`criteria.${index}.name`}
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
+                <FormLabel className="text-xs">Competencia o criterio</FormLabel>
                 <FormControl>
                   <Input placeholder="Ej: Trabajo en Equipo" {...field} />
                 </FormControl>
@@ -58,6 +62,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             name={`criteria.${index}.category`}
             render={({ field }) => (
               <FormItem>
+                <FormLabel className="text-xs">Categoría</FormLabel>
                 <FormControl>
                   <Input placeholder="Ej: Organizacional" {...field} />
                 </FormControl>
@@ -70,6 +75,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             name={`criteria.${index}.weight`}
             render={({ field }) => (
               <FormItem>
+                <FormLabel className="text-xs">Peso</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -96,7 +102,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
 
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <Button type="button" variant="ghost" size="sm" className="text-xs gap-1 ml-6">
+          <Button type="button" variant="ghost" size="sm" className="ml-9 gap-1 text-xs text-primary hover:bg-primary/10 hover:text-primary">
             {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
             Rúbricas por nivel
           </Button>

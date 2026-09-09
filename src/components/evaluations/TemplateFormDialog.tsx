@@ -21,7 +21,18 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-import { Plus, Trash2, Search, X, Check } from 'lucide-react';
+import {
+  BarChart3,
+  Check,
+  ClipboardList,
+  Info,
+  ListChecks,
+  MessageSquare,
+  Plus,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CriteriaRubricItem } from './CriteriaRubricItem';
 import { usePositions } from '@/hooks/useSystemConfig';
@@ -60,7 +71,7 @@ const formSchema = z.object({
   rating_scale: z.array(ratingScaleItemSchema),
 });
 
-type FormData = z.infer<typeof formSchema>;
+export type FormData = z.infer<typeof formSchema>;
 
 const emptyCriteria = { name: '', description: '', category: 'general', weight: 1, max_score: 4, level_4_description: '', level_3_description: '', level_2_description: '', level_1_description: '' };
 
@@ -80,6 +91,7 @@ export function TemplateFormDialog({
   isLoading,
 }: TemplateFormDialogProps) {
   const { data: positions = [] } = usePositions();
+  const [posSearch, setPosSearch] = useState('');
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -97,11 +109,6 @@ export function TemplateFormDialog({
   const { fields: criteriaFields, append: appendCriteria, remove: removeCriteria } = useFieldArray({
     control: form.control,
     name: 'criteria',
-  });
-
-  const { fields: questionFields, append: appendQuestion, remove: removeQuestion } = useFieldArray({
-    control: form.control,
-    name: 'qualitative_questions' as any,
   });
 
   useEffect(() => {
@@ -125,7 +132,7 @@ export function TemplateFormDialog({
             }))
           : [{ ...emptyCriteria }],
         qualitative_questions: (template.qualitative_questions as string[]) || [...defaultQuestions],
-        rating_scale: (template.rating_scale as any[]) || [...defaultScale],
+        rating_scale: (template.rating_scale as FormData['rating_scale']) || [...defaultScale],
       });
     } else {
       form.reset({
@@ -145,30 +152,58 @@ export function TemplateFormDialog({
     onOpenChange(false);
   };
 
-  const positionOptions = positions.map((p: any) => ({
+  const positionOptions = useMemo(() => positions.map(p => ({
     value: p.id,
     label: p.name,
-  }));
+  })), [positions]);
+  const filteredPositionOptions = useMemo(() => {
+    if (!posSearch) return positionOptions;
+    const normalizedSearch = posSearch.toLowerCase();
+    return positionOptions.filter(option => option.label.toLowerCase().includes(normalizedSearch));
+  }, [posSearch, positionOptions]);
 
   const qualitativeQuestions = form.watch('qualitative_questions');
   const ratingScale = form.watch('rating_scale');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
-        <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-6 sm:pt-6">
-          <DialogTitle>
-            {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
-          </DialogTitle>
+      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden border-primary/15 bg-muted/20 p-0 shadow-2xl shadow-primary/10 sm:h-auto sm:max-h-[92vh]">
+        <DialogHeader className="border-b border-primary/10 bg-gradient-to-r from-primary/10 via-primary/5 to-background px-4 pb-4 pr-12 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+              <ClipboardList className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <DialogTitle className="text-xl tracking-tight">
+                {template ? 'Editar Plantilla' : 'Nueva Plantilla de Evaluación'}
+              </DialogTitle>
+              <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                Configura la información general, los criterios y la escala que se usará al evaluar.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-4 scrollbar-themed sm:px-6">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-5 scrollbar-themed sm:px-6">
             {/* Row 1: Name + Active toggle + Positions */}
-            <div className="grid gap-4 md:grid-cols-2">
+            <section className="rounded-xl border border-primary/10 bg-background p-4 shadow-sm shadow-primary/5 sm:p-5">
+              <div className="mb-4 flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Info className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Información de la plantilla</h3>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    Define el nombre, el estado y los cargos a los que aplica.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
               <div className="space-y-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
                   <FormField
                     control={form.control}
                     name="name"
@@ -186,11 +221,13 @@ export function TemplateFormDialog({
                     control={form.control}
                     name="is_active"
                     render={({ field }) => (
-                      <FormItem className="flex items-center gap-2 pb-2">
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                        <FormLabel className="!mt-0">Activa</FormLabel>
+                      <FormItem className="rounded-lg border border-primary/10 bg-primary/[0.04] px-3 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <FormLabel className="!mt-0 whitespace-nowrap">Plantilla activa</FormLabel>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -214,17 +251,16 @@ export function TemplateFormDialog({
                 control={form.control}
                 name="position_ids"
                 render={({ field }) => {
-                  const [posSearch, setPosSearch] = useState('');
-                  const filtered = useMemo(() => {
-                    if (!posSearch) return positionOptions;
-                    const s = posSearch.toLowerCase();
-                    return positionOptions.filter(o => o.label.toLowerCase().includes(s));
-                  }, [posSearch, positionOptions]);
                   const selectedCount = field.value?.length || 0;
 
                   return (
                     <FormItem>
-                      <FormLabel>Cargos que aplican ({selectedCount})</FormLabel>
+                      <FormLabel className="flex items-center justify-between gap-2">
+                        <span>Cargos que aplican</span>
+                        <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                          {selectedCount} seleccionados
+                        </span>
+                      </FormLabel>
                       <FormControl>
                         <div className="space-y-2">
                           {selectedCount > 0 && (
@@ -256,11 +292,11 @@ export function TemplateFormDialog({
                               className="pl-8 h-9"
                             />
                           </div>
-                          <div className="max-h-[168px] overflow-y-auto border rounded-lg p-1 space-y-0.5 scrollbar-themed">
-                            {filtered.length === 0 ? (
+                          <div className="max-h-[168px] space-y-0.5 overflow-y-auto rounded-lg border border-primary/10 bg-muted/20 p-1 scrollbar-themed">
+                            {filteredPositionOptions.length === 0 ? (
                               <p className="text-xs text-muted-foreground text-center py-2">Sin resultados</p>
                             ) : (
-                              filtered.map((opt) => {
+                              filteredPositionOptions.map((opt) => {
                                 const checked = field.value?.includes(opt.value);
                                 return (
                                   <button
@@ -292,12 +328,21 @@ export function TemplateFormDialog({
                   );
                 }}
               />
-            </div>
+              </div>
+            </section>
 
             {/* Criteria */}
-            <div className="space-y-4">
+            <section className="space-y-4 rounded-xl border border-primary/15 bg-primary/[0.035] p-4 sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h4 className="font-medium">Competencias / Criterios</h4>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <ListChecks className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Competencias y criterios</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Define qué se evaluará y cuánto pesa cada criterio.</p>
+                  </div>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -310,7 +355,7 @@ export function TemplateFormDialog({
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
+              <p className="rounded-lg border border-primary/10 bg-background/80 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
                 Escala 1-4: (4) Ampliamente Desarrollada, (3) Bueno dentro del Estándar, (2) Competencia en Desarrollo, (1) Competencia No Desarrollada
               </p>
 
@@ -325,12 +370,20 @@ export function TemplateFormDialog({
                   />
                 ))}
               </div>
-            </div>
+            </section>
 
             {/* Qualitative Questions */}
-            <div className="space-y-3">
+            <section className="space-y-3 rounded-xl border border-primary/10 bg-background p-4 shadow-sm shadow-primary/5 sm:p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h4 className="font-medium">Preguntas Cualitativas</h4>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Preguntas cualitativas</h3>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Añade preguntas abiertas para complementar la calificación.</p>
+                  </div>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
@@ -346,7 +399,10 @@ export function TemplateFormDialog({
                 </Button>
               </div>
               {qualitativeQuestions.map((_, idx) => (
-                <div key={idx} className="flex gap-2">
+                <div key={idx} className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-semibold text-primary">
+                    {idx + 1}
+                  </span>
                   <Input
                     value={qualitativeQuestions[idx]}
                     onChange={(e) => {
@@ -354,8 +410,8 @@ export function TemplateFormDialog({
                       updated[idx] = e.target.value;
                       form.setValue('qualitative_questions', updated);
                     }}
-                    placeholder="Pregunta..."
-                    className="flex-1"
+                    placeholder="Escribe una pregunta abierta..."
+                    className="flex-1 bg-background"
                   />
                   <Button
                     type="button"
@@ -372,14 +428,22 @@ export function TemplateFormDialog({
                   </Button>
                 </div>
               ))}
-            </div>
+            </section>
 
             {/* Rating Scale */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Tabla de Calificación</h4>
-              <div className="w-full overflow-x-auto rounded-lg border">
+            <section className="space-y-3 rounded-xl border border-primary/10 bg-background p-4 shadow-sm shadow-primary/5 sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Tabla de calificación</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Establece los rangos y la acción esperada para cada resultado.</p>
+                </div>
+              </div>
+              <div className="w-full overflow-x-auto rounded-lg border border-primary/10">
                 <table className="min-w-[680px] w-full table-fixed text-sm sm:table-auto">
-                  <thead className="bg-background">
+                  <thead className="bg-primary/[0.07] text-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left">Nivel</th>
                       <th className="px-3 py-2 text-left">Mín %</th>
@@ -389,7 +453,7 @@ export function TemplateFormDialog({
                   </thead>
                   <tbody>
                     {ratingScale.map((item, idx) => (
-                      <tr key={idx} className="border-t">
+                      <tr key={idx} className="border-t border-primary/10 transition-colors hover:bg-primary/[0.025]">
                         <td className="px-3 py-2 w-[170px]">
                           <Input
                             value={item.label}
@@ -441,10 +505,10 @@ export function TemplateFormDialog({
                   </tbody>
                 </table>
               </div>
-            </div>
+            </section>
 
             </div>
-            <div className="grid grid-cols-1 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">
+            <div className="grid grid-cols-1 gap-2 border-t border-primary/10 bg-background/95 p-4 shadow-[0_-8px_24px_-20px_hsl(var(--primary))] backdrop-blur sm:flex sm:justify-end sm:px-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>
