@@ -22,6 +22,7 @@ import type {
 } from '@/types/training';
 import type { Database } from '@/integrations/supabase/types';
 import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
+import { TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS } from '@/lib/trainingAttendanceReportFormat';
 
 type CourseInsert = Database['public']['Tables']['training_courses']['Insert'];
 type SessionInsert = Database['public']['Tables']['training_sessions']['Insert'];
@@ -886,8 +887,8 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
       if (!currentCompanyId) return [];
 
       const completionSelect = includeSignatures
-        ? `*, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider, content), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
-        : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, course:training_courses(id, name, category, legal_framework, target_audience, duration_hours, modality, objective, objectives, description, provider), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
+        ? `*, course:training_courses(${TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS}), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
+        : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, course:training_courses(${TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS}), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
 
       const completionRows: TrainingCompletionPageRow[] = [];
       let cursor: Pick<TrainingCompletionPageRow, 'completed_at' | 'id'> | null = null;
@@ -936,7 +937,7 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
       if (employeeIds.length > 0) {
         const { data: workInfoRows, error: workInfoError } = await supabase
           .from('employee_work_info')
-          .select('id, employee_id, position_name, operation_center_id, is_current, operation_centers(id, name)')
+          .select('id, employee_id, position_id, position_name, operation_center_id, is_current, positions(id, name), operation_centers(id, name)')
           .in('employee_id', employeeIds);
 
         if (!workInfoError && workInfoRows) {
