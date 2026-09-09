@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DotationDetailDialog } from './DotationDetailDialog';
 import { DotationFormDialog } from './DotationFormDialog';
 import { InventoryAdjustDialog } from './InventoryAdjustDialog';
+import { ProfesiogramaDetailDialog } from './ProfesiogramaDetailDialog';
 
 const createDeliveryBatch = vi.hoisted(() =>
   vi.fn(() => new Promise(() => undefined)),
@@ -118,6 +119,45 @@ describe('Dotation dialogs runtime regressions', () => {
       </QueryClientProvider>,
     );
   };
+
+  it('renders a profesiograma detail with assigned items', () => {
+    render(
+      <ProfesiogramaDetailDialog
+        open
+        onOpenChange={vi.fn()}
+        data={{
+          id: 'profesiograma-1',
+          company_id: 'company-1',
+          operation_center_id: 'center-1',
+          position_id: 'position-1',
+          created_at: '2026-09-08T12:00:00Z',
+          updated_at: '2026-09-08T12:00:00Z',
+          operation_centers: { id: 'center-1', name: 'Centro principal' },
+          positions: { id: 'position-1', name: 'Operario' },
+          items: [{
+            id: 'profesiograma-item-1',
+            dotation_item_type_id: 'item-1',
+            quantity: 2,
+            notes: null,
+            is_required: true,
+            dotation_item_types: {
+              id: 'item-1',
+              name: 'BOTA DE SEGURIDAD',
+              code: 'BOT-001',
+              category: 'EPP',
+              requires_size: true,
+              sizes_available: ['38', '39'],
+              default_validity_months: 12,
+            },
+          }],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Profesiograma' })).toBeInTheDocument();
+    expect(screen.getByText('BOTA DE SEGURIDAD')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cerrar' })).toBeInTheDocument();
+  });
 
   it('exports the registered delivery using the current company branding', async () => {
     renderWithQueryClient(
