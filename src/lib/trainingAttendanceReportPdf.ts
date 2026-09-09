@@ -4,6 +4,7 @@ import { formatTrainingDuration } from '@/lib/trainingDuration';
 import {
   getTrainingAttendanceReportCode,
   getTrainingAttendanceReportObjective,
+  getTrainingAttendanceReportPosition,
 } from '@/lib/trainingAttendanceReportFormat';
 import type { TrainingCompletion } from '@/types/training';
 
@@ -82,9 +83,7 @@ const drawContainedImage = async (
 };
 
 const getEmployeePosition = (completion: TrainingCompletion) => {
-  const workInfo = completion.employee?.employee_work_info?.find((info) => info.is_current)
-    || completion.employee?.employee_work_info?.[0];
-  return workInfo?.position_name || '-';
+  return getTrainingAttendanceReportPosition(completion.employee?.employee_work_info);
 };
 
 const drawCellText = (

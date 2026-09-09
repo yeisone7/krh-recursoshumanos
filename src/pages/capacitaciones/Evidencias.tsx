@@ -23,6 +23,7 @@ import { formatTrainingDuration } from '@/lib/trainingDuration';
 import {
   getTrainingAttendanceReportCode,
   getTrainingAttendanceReportObjective,
+  getTrainingAttendanceReportPosition,
 } from '@/lib/trainingAttendanceReportFormat';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -272,8 +273,7 @@ export default function Evidencias() {
   };
 
   const getEmployeePosition = (completion: TrainingCompletion) => {
-    const currentWorkInfo = completion.employee?.employee_work_info?.find(info => info.is_current) || completion.employee?.employee_work_info?.[0];
-    return currentWorkInfo?.position_name || '-';
+    return getTrainingAttendanceReportPosition(completion.employee?.employee_work_info);
   };
 
   const drawCellText = (

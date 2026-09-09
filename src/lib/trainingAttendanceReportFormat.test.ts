@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
+  TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS,
   getTrainingAttendanceReportCode,
   getTrainingAttendanceReportObjective,
+  getTrainingAttendanceReportPosition,
 } from './trainingAttendanceReportFormat';
+
+describe('training attendance report query contract', () => {
+  it('requests the structured course content needed for the real objective', () => {
+    expect(TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS.split(',').map((field) => field.trim()))
+      .toContain('content');
+  });
+});
 
 describe('getTrainingAttendanceReportCode', () => {
   it.each([
@@ -42,5 +51,26 @@ describe('getTrainingAttendanceReportObjective', () => {
   it('keeps the objective category as a fallback for legacy courses', () => {
     expect(getTrainingAttendanceReportObjective({ objective: 'Sensibilización' }))
       .toBe('Sensibilización');
+  });
+});
+
+describe('getTrainingAttendanceReportPosition', () => {
+  it('uses the normalized position relation used by Petrocasinos', () => {
+    expect(getTrainingAttendanceReportPosition([{
+      is_current: true,
+      position_name: null,
+      positions: { name: 'Auxiliar de Cocina' },
+    }])).toBe('Auxiliar de Cocina');
+  });
+
+  it('keeps the legacy position name used by existing companies', () => {
+    expect(getTrainingAttendanceReportPosition([{
+      is_current: true,
+      position_name: 'Facilitadora de Calidad',
+    }])).toBe('Facilitadora de Calidad');
+  });
+
+  it('uses a dash when no position is available', () => {
+    expect(getTrainingAttendanceReportPosition([])).toBe('-');
   });
 });
