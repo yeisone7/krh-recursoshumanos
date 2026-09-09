@@ -23,6 +23,7 @@ import type {
 import type { Database } from '@/integrations/supabase/types';
 import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
 import { TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS } from '@/lib/trainingAttendanceReportFormat';
+import { fetchTrainingCompletionWorkInfoRows } from '@/lib/trainingCompletionWorkInfo';
 
 type CourseInsert = Database['public']['Tables']['training_courses']['Insert'];
 type SessionInsert = Database['public']['Tables']['training_sessions']['Insert'];
@@ -935,24 +936,27 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
       const employeeIds = [...new Set(completions.map(completion => completion.employee_id).filter(Boolean))] as string[];
 
       if (employeeIds.length > 0) {
-        const { data: workInfoRows, error: workInfoError } = await supabase
-          .from('employee_work_info')
-          .select('id, employee_id, position_id, position_name, operation_center_id, is_current, positions(id, name), operation_centers(id, name)')
-          .in('employee_id', employeeIds);
+        const { data: workInfoRows, error: workInfoError } = await fetchTrainingCompletionWorkInfoRows(
+          employeeIds,
+          (employeeIdChunk) => supabase
+            .from('employee_work_info')
+            .select('id, employee_id, position_id, position_name, operation_center_id, is_current, positions(id, name), operation_centers(id, name)')
+            .in('employee_id', employeeIdChunk)
+        );
 
-        if (!workInfoError && workInfoRows) {
-          const workInfoByEmployee = new Map<string, typeof workInfoRows>();
-          workInfoRows.forEach(row => {
-            const rows = workInfoByEmployee.get(row.employee_id) || [];
-            rows.push(row);
-            workInfoByEmployee.set(row.employee_id, rows);
-          });
+        if (workInfoError) throw workInfoError;
 
-          completions.forEach(completion => {
-            if (!completion.employee || !completion.employee_id) return;
-            completion.employee.employee_work_info = workInfoByEmployee.get(completion.employee_id) || [];
-          });
-        }
+        const workInfoByEmployee = new Map<string, typeof workInfoRows>();
+        workInfoRows.forEach(row => {
+          const rows = workInfoByEmployee.get(row.employee_id) || [];
+          rows.push(row);
+          workInfoByEmployee.set(row.employee_id, rows);
+        });
+
+        completions.forEach(completion => {
+          if (!completion.employee || !completion.employee_id) return;
+          completion.employee.employee_work_info = workInfoByEmployee.get(completion.employee_id) || [];
+        });
       }
 
       if (!shouldLimitByAssignedCenters) return completions;
