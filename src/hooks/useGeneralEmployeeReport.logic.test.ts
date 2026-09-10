@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   classifyAttachedDocuments,
+  fetchReportRowsInEmployeeBatches,
   getEffectiveContractEnd,
   selectReportContract,
 } from '@/hooks/useGeneralEmployeeReport';
@@ -10,10 +11,30 @@ import {
 describe('useGeneralEmployeeReport business rules', () => {
   it('limita cada consulta relacionada a los empleados autorizados', () => {
     const source = readFileSync(resolve(__dirname, 'useGeneralEmployeeReport.ts'), 'utf8');
-    const scopedQueries = source.match(/\.in\('employee_id', employeeIds\)/g) || [];
+    const scopedQueries = source.match(/\.in\('employee_id', employeeIdBatch\)/g) || [];
 
     expect(scopedQueries).toHaveLength(14);
     expect(source).toContain(".not('file_url', 'is', null).neq('file_url', '')");
+  });
+
+  it('divide listas grandes de empleados para mantener acotado cada filtro IN', async () => {
+    const employeeIds = Array.from({ length: 205 }, (_, index) => `employee-${index}`);
+    const receivedBatches: string[][] = [];
+
+    const rows = await fetchReportRowsInEmployeeBatches(
+      employeeIds,
+      async (employeeIdBatch) => {
+        receivedBatches.push(employeeIdBatch);
+        return {
+          data: employeeIdBatch.map((employee_id) => ({ employee_id })),
+          error: null,
+        };
+      },
+    );
+
+    expect(receivedBatches.map((batch) => batch.length)).toEqual([100, 100, 5]);
+    expect(rows).toHaveLength(205);
+    expect(rows[204]).toEqual({ employee_id: 'employee-204' });
   });
 
   it('usa la prórroga con mayor número y no la fecha más lejana', () => {
