@@ -17,6 +17,7 @@ import {
   maritalStatusLabels,
   payrollTypeLabels,
   riskLevelLabels,
+  normalizeEmployeeDocumentFolder,
   vaccineTypeLabels,
 } from '@/types/employee';
 
@@ -53,6 +54,9 @@ type TimeConfigWithCatalogs = TimeConfig & {
   shift_cycles: { name: string | null; code: string | null } | null;
 };
 type CenterAssignmentWithCatalog = CenterAssignment & { operation_centers: NamedRelation };
+type ContractWithExtensions = Contract & {
+  contract_extensions?: Array<{ end_date: string; document_url: string | null }> | null;
+};
 
 type EmployeeRelated = {
   employee_id: string;
@@ -193,12 +197,13 @@ export function useGeneralEmployeeReport(enabled = true) {
       const scheduleMap = groupByEmployee(schedules as Schedule[]);
       const timeConfigMap = groupByEmployee(timeConfigs as unknown as TimeConfigWithCatalogs[]);
       const assignmentMap = groupByEmployee(centerAssignments as unknown as CenterAssignmentWithCatalog[]);
-      const contractMap = groupByEmployee(contracts as Contract[]);
+      const contractMap = groupByEmployee(contracts as unknown as ContractWithExtensions[]);
       const documentMap = groupByEmployee(documents as EmployeeDocument[]);
       const certificationMap = groupByEmployee(certifications as Certification[]);
       const vaccinationMap = groupByEmployee(vaccinations as Vaccination[]);
 
       return (employees as unknown as EmployeeWithCatalogs[]).map((employee) => {
+        const today = format(new Date(), 'yyyy-MM-dd');
         const employeeCycles = cyclesMap.get(employee.id) || [];
         const activeCycle = employeeCycles.find((cycle) => cycle.status === 'active')
           || [...employeeCycles].sort((left, right) => right.start_date.localeCompare(left.start_date))[0];
@@ -211,14 +216,35 @@ export function useGeneralEmployeeReport(enabled = true) {
         const schedule = pickCurrent(scheduleMap.get(employee.id) || [], cycleId);
         const timeConfig = pickCurrent(timeConfigMap.get(employee.id) || [], cycleId);
         const employeeContracts = getCycleRows(contractMap.get(employee.id) || [], cycleId);
-        const contract = [...employeeContracts]
+        const getEffectiveContractEnd = (item: ContractWithExtensions) => (
+          [item.end_date, ...(item.contract_extensions || []).map((extension) => extension.end_date)]
+            .filter((value): value is string => Boolean(value))
+            .sort((left, right) => right.localeCompare(left))[0]
+        );
+        const currentContracts = employeeContracts.filter((item) => {
+          const effectiveEnd = getEffectiveContractEnd(item);
+          return item.is_terminated !== true
+            && item.start_date <= today
+            && (!effectiveEnd || effectiveEnd >= today);
+        });
+        const contract = [...(currentContracts.length ? currentContracts : employeeContracts)]
           .sort((left, right) => {
             if (left.is_terminated !== right.is_terminated) return left.is_terminated ? 1 : -1;
             return right.start_date.localeCompare(left.start_date);
           })[0];
         const relatives = getCycleRows(familyMembersMap.get(employee.id) || [], cycleId);
         const employeeAssignments = getCycleRows(assignmentMap.get(employee.id) || [], cycleId);
-        const employeeDocuments = getCycleRows(documentMap.get(employee.id) || [], cycleId);
+        const cycleDocuments = getCycleRows(documentMap.get(employee.id) || [], cycleId);
+        const employeeDocuments = cycleDocuments.filter((document) => (
+          document.is_valid === true
+          && Boolean(document.file_url?.trim())
+          && (!document.expiry_date || document.expiry_date >= today)
+        ));
+        const expiredDocuments = cycleDocuments.filter((document) => (
+          document.is_valid === true
+          && Boolean(document.file_url?.trim())
+          && Boolean(document.expiry_date && document.expiry_date < today)
+        ));
         const employeeCertifications = certificationMap.get(employee.id) || [];
         const employeeVaccinations = vaccinationMap.get(employee.id) || [];
 
@@ -229,6 +255,20 @@ export function useGeneralEmployeeReport(enabled = true) {
         const genderIdentity = employee.gender_identity === 'otro'
           ? employee.gender_identity_other
           : employee.gender_identity;
+        const effectiveContractEnd = contract ? getEffectiveContractEnd(contract) : undefined;
+        const contractIsCurrent = Boolean(
+          contract
+          && contract.is_terminated !== true
+          && contract.start_date <= today
+          && (!effectiveContractEnd || effectiveContractEnd >= today),
+        );
+        const hasContractSupport = Boolean(
+          contract?.document_url?.trim()
+          || contract?.contract_extensions?.some((extension) => extension.document_url?.trim())
+          || employeeDocuments.some((document) => (
+            normalizeEmployeeDocumentFolder(document.document_type) === 'contratos_otrosi'
+          )),
+        );
 
         return {
           employee_id: employee.id,
@@ -292,6 +332,8 @@ export function useGeneralEmployeeReport(enabled = true) {
           tipo_contrato: text(contract?.contract_type),
           inicio_contrato: formatDate(contract?.start_date),
           fin_contrato: formatDate(contract?.end_date),
+          fin_efectivo_contrato: formatDate(effectiveContractEnd),
+          contrato_vigente: employee.is_active ? yesNo(contractIsCurrent) : 'No aplica',
           salario: contract?.salary ?? 0,
           tipo_salario: text(contract?.salary_type),
           auxilio_transporte: contract?.transport_allowance ?? 0,
@@ -305,6 +347,7 @@ export function useGeneralEmployeeReport(enabled = true) {
           clausula_no_competencia: yesNo(contract?.has_non_compete_clause),
           clausulas_especiales: text(contract?.special_clauses),
           contrato_aprobado: yesNo(contract?.is_approved),
+          soporte_contrato: employee.is_active ? yesNo(hasContractSupport) : 'No aplica',
           nivel_riesgo: enumLabel(riskLevelLabels, socialSecurity?.risk_level),
           eps: text(socialSecurity?.eps),
           afp: text(socialSecurity?.afp),
@@ -340,6 +383,7 @@ export function useGeneralEmployeeReport(enabled = true) {
             return `${relationship}: ${relative.full_name}${age}${observations}`;
           })),
           numero_documentos: employeeDocuments.length,
+          documentos_vencidos: expiredDocuments.length,
           detalle_documentos: joinDetails(employeeDocuments.map((document) => {
             const type = employeeDocumentTypeLabels[document.document_type] || document.document_type;
             return `${type}: ${document.document_name || document.file_name || 'Documento'}${document.expiry_date ? ` (vence ${formatDate(document.expiry_date)})` : ''}`;

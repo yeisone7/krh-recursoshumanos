@@ -52,7 +52,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 const PREVIEW_LIMIT = 50;
 const CURRENCY_KEYS = ['salario', 'auxilio_transporte', 'otros_auxilios'];
-const INTEGER_KEYS = ['edad', 'ciclo_laboral', 'periodo_prueba_dias', 'numero_hijos', 'numero_parientes', 'numero_documentos', 'numero_certificaciones', 'numero_vacunas'];
+const INTEGER_KEYS = ['edad', 'ciclo_laboral', 'periodo_prueba_dias', 'numero_hijos', 'numero_parientes', 'numero_documentos', 'documentos_vencidos', 'numero_certificaciones', 'numero_vacunas'];
 const TEXT_KEYS = ['documento', 'numero_cuenta', 'telefono', 'celular', 'telefono_emergencia'];
 const STATUS_OPTIONS = ['Activo', 'Inactivo', 'En retiro', 'Retirado', 'Suspendido'];
 const GENDER_OPTIONS = ['Femenino', 'Masculino'];
