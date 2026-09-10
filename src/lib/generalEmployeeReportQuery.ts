@@ -10,8 +10,8 @@ export const GENERAL_EMPLOYEE_REPORT_SELECTS = {
   schedules: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, payroll_type, is_office_schedule, rest_day',
   timeConfigs: 'employee_id, employment_cycle_id, is_active, updated_at, created_at, start_date, mode, work_schedule_id, shift_cycle_id, notes, work_schedules(name), shift_cycles(name, code)',
   centerAssignments: 'employee_id, employment_cycle_id, created_at, operation_center_id, operation_centers(name)',
-  contracts: 'employee_id, employment_cycle_id, created_at, updated_at, start_date, is_terminated, contract_number, contract_type, end_date, salary, salary_type, transport_allowance, other_allowances, trial_period_days, trial_end_date, work_address, work_city, work_labor_description, has_confidentiality_clause, has_non_compete_clause, special_clauses, is_approved, document_url, contract_extensions(end_date, document_url)',
-  documents: 'employee_id, employment_cycle_id, created_at, document_type, document_name, file_name, file_url, expiry_date, is_valid',
+  contracts: 'employee_id, employment_cycle_id, created_at, updated_at, start_date, is_terminated, contract_number, contract_type, end_date, salary, salary_type, transport_allowance, other_allowances, trial_period_days, trial_end_date, work_address, work_city, work_labor_description, has_confidentiality_clause, has_non_compete_clause, special_clauses, is_approved, document_url, contract_extensions(extension_number, end_date, document_url)',
+  documents: 'employee_id, employment_cycle_id, created_at, document_type, document_name, file_name, expiry_date, is_valid',
   certifications: 'employee_id, created_at, certification_type, certification_name, expiry_date',
   vaccinations: 'employee_id, created_at, vaccine_type, dose_number, application_date',
 } as const;

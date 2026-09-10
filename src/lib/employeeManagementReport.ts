@@ -27,9 +27,11 @@ export interface EmployeeManagementDetail {
   complementarios_aplicables: number;
   complementarios_faltantes: number;
   diligenciamiento_complementario: number;
+  adjuntos_totales: number;
   documentos_vigentes: number;
   documentos_vencidos: number;
   sin_documentos: string;
+  sin_documentos_vigentes: string;
   contrato_vigente: string;
   contrato_aprobado: string;
   soporte_contrato: string;
@@ -80,6 +82,10 @@ export interface EmployeeManagementAnalysis {
     employeesWithoutDocuments: number;
     activeWithoutDocuments: number;
     percentWithoutDocuments: number;
+    employeesWithoutCurrentDocuments: number;
+    activeWithoutCurrentDocuments: number;
+    totalAttachments: number;
+    percentExpiredAttachments: number;
     averageRequiredCompletion: number;
     employeesWithRequiredGaps: number;
     activeWithoutCurrentContract: number;
@@ -205,8 +211,11 @@ export function analyzeEmployeeManagementReport(rows: GeneralEmployeeReportRow[]
     const complementary = applicable.filter((requirement) => requirement.level === 'Complementario');
     const requiredMissing = required.filter((requirement) => !isComplete(requirement, row));
     const complementaryMissing = complementary.filter((requirement) => !isComplete(requirement, row));
-    const withoutDocuments = Number(row.numero_documentos || 0) === 0;
-    const priority = detailPriority(active, requiredMissing.length, withoutDocuments);
+    const attachments = Number(row.numero_adjuntos || 0);
+    const currentDocuments = Number(row.numero_documentos || 0);
+    const withoutDocuments = attachments === 0;
+    const withoutCurrentDocuments = currentDocuments === 0;
+    const priority = detailPriority(active, requiredMissing.length, withoutCurrentDocuments);
 
     applicable.forEach((requirement) => {
       const counterKey = `${requirement.level}|${requirement.section}|${requirement.key}`;
@@ -244,9 +253,11 @@ export function analyzeEmployeeManagementReport(rows: GeneralEmployeeReportRow[]
       complementarios_aplicables: complementary.length,
       complementarios_faltantes: complementaryMissing.length,
       diligenciamiento_complementario: percentage(complementary.length - complementaryMissing.length, complementary.length),
-      documentos_vigentes: Number(row.numero_documentos || 0),
+      adjuntos_totales: attachments,
+      documentos_vigentes: currentDocuments,
       documentos_vencidos: Number(row.documentos_vencidos || 0),
       sin_documentos: withoutDocuments ? 'Sí' : 'No',
+      sin_documentos_vigentes: withoutCurrentDocuments ? 'Sí' : 'No',
       contrato_vigente: String(row.contrato_vigente || 'No'),
       contrato_aprobado: String(row.contrato_aprobado || 'No'),
       soporte_contrato: String(row.soporte_contrato || 'No'),
@@ -283,14 +294,17 @@ export function analyzeEmployeeManagementReport(rows: GeneralEmployeeReportRow[]
     };
   });
 
-  const activeEmployees = employees.filter((employee) => employee.estado === 'Activo');
+  const activeEmployees = employees.filter((_, index) => isYes(rows[index]?.activo));
   const employeesWithoutDocuments = employees.filter((employee) => employee.sin_documentos === 'Sí');
+  const employeesWithoutCurrentDocuments = employees.filter((employee) => employee.sin_documentos_vigentes === 'Sí');
+  const priorityOrder: Record<string, number> = { Alta: 0, Media: 1, Baja: 2, Informativa: 3, 'Sin acción': 4 };
   const requiredPossible = employees.reduce((sum, employee) => sum + employee.campos_obligatorios, 0);
   const requiredComplete = employees.reduce((sum, employee) => sum + employee.campos_obligatorios - employee.obligatorios_faltantes, 0);
 
   return {
     employees,
-    missing: missing.sort((left, right) => left.prioridad.localeCompare(right.prioridad, 'es') || left.empleado.localeCompare(right.empleado, 'es')),
+    missing: missing.sort((left, right) => (priorityOrder[left.prioridad] ?? 99) - (priorityOrder[right.prioridad] ?? 99)
+      || left.empleado.localeCompare(right.empleado, 'es')),
     fields,
     modules,
     documents: employees.map((employee, index) => ({
@@ -298,9 +312,11 @@ export function analyzeEmployeeManagementReport(rows: GeneralEmployeeReportRow[]
       empleado: employee.nombre,
       estado: employee.estado,
       centro: employee.centro,
+      adjuntos_totales: employee.adjuntos_totales,
       documentos_vigentes: employee.documentos_vigentes,
       documentos_vencidos: employee.documentos_vencidos,
       sin_documentos: employee.sin_documentos,
+      sin_documentos_vigentes: employee.sin_documentos_vigentes,
       detalle_documentos: String(rows[index]?.detalle_documentos || '-'),
       certificaciones: employee.certificaciones,
       vacunas: employee.vacunas,
@@ -311,6 +327,13 @@ export function analyzeEmployeeManagementReport(rows: GeneralEmployeeReportRow[]
       employeesWithoutDocuments: employeesWithoutDocuments.length,
       activeWithoutDocuments: activeEmployees.filter((employee) => employee.sin_documentos === 'Sí').length,
       percentWithoutDocuments: percentage(employeesWithoutDocuments.length, employees.length),
+      employeesWithoutCurrentDocuments: employeesWithoutCurrentDocuments.length,
+      activeWithoutCurrentDocuments: activeEmployees.filter((employee) => employee.sin_documentos_vigentes === 'Sí').length,
+      totalAttachments: employees.reduce((sum, employee) => sum + employee.adjuntos_totales, 0),
+      percentExpiredAttachments: percentage(
+        employees.reduce((sum, employee) => sum + employee.documentos_vencidos, 0),
+        employees.reduce((sum, employee) => sum + employee.adjuntos_totales, 0),
+      ),
       averageRequiredCompletion: percentage(requiredComplete, requiredPossible),
       employeesWithRequiredGaps: employees.filter((employee) => employee.obligatorios_faltantes > 0).length,
       activeWithoutCurrentContract: activeEmployees.filter((employee) => !isYes(employee.contrato_vigente)).length,
@@ -371,21 +394,23 @@ export function createEmployeeManagementWorkbook(
     [
       { indicador: 'Total de empleados', cantidad: kpis.totalEmployees, porcentaje: 100, lectura: 'Población incluida para la empresa seleccionada.' },
       { indicador: 'Empleados activos', cantidad: kpis.activeEmployees, porcentaje: percentage(kpis.activeEmployees, kpis.totalEmployees), lectura: 'Empleados cuyo estado actual es activo.' },
-      { indicador: 'Empleados sin documentos vigentes', cantidad: kpis.employeesWithoutDocuments, porcentaje: kpis.percentWithoutDocuments, lectura: 'No tienen archivos válidos, adjuntos y no vencidos.' },
-      { indicador: 'Activos sin documentos vigentes', cantidad: kpis.activeWithoutDocuments, porcentaje: percentage(kpis.activeWithoutDocuments, kpis.activeEmployees), lectura: 'Prioridad documental sobre la población activa.' },
+      { indicador: 'Empleados sin documentos adjuntos', cantidad: kpis.employeesWithoutDocuments, porcentaje: kpis.percentWithoutDocuments, lectura: 'No tienen ningún archivo adjunto en su expediente.' },
+      { indicador: 'Activos sin documentos adjuntos', cantidad: kpis.activeWithoutDocuments, porcentaje: percentage(kpis.activeWithoutDocuments, kpis.activeEmployees), lectura: 'Población activa sin archivos en el expediente.' },
+      { indicador: 'Empleados sin documentos vigentes', cantidad: kpis.employeesWithoutCurrentDocuments, porcentaje: percentage(kpis.employeesWithoutCurrentDocuments, kpis.totalEmployees), lectura: 'No tienen archivos válidos y no vencidos.' },
+      { indicador: 'Activos sin documentos vigentes', cantidad: kpis.activeWithoutCurrentDocuments, porcentaje: percentage(kpis.activeWithoutCurrentDocuments, kpis.activeEmployees), lectura: 'Prioridad de vigencia documental sobre la población activa.' },
       { indicador: 'Diligenciamiento obligatorio promedio', cantidad: kpis.totalEmployees, porcentaje: kpis.averageRequiredCompletion, lectura: 'Cobertura ponderada de los campos obligatorios aplicables.' },
       { indicador: 'Empleados con faltantes obligatorios', cantidad: kpis.employeesWithRequiredGaps, porcentaje: percentage(kpis.employeesWithRequiredGaps, kpis.totalEmployees), lectura: 'Requieren actualización de uno o más datos obligatorios.' },
       { indicador: 'Activos sin contrato vigente', cantidad: kpis.activeWithoutCurrentContract, porcentaje: percentage(kpis.activeWithoutCurrentContract, kpis.activeEmployees), lectura: 'Contrato ausente, terminado, aún no iniciado o vencido.' },
       { indicador: 'Activos sin contrato aprobado', cantidad: kpis.activeWithoutApprovedContract, porcentaje: percentage(kpis.activeWithoutApprovedContract, kpis.activeEmployees), lectura: 'El contrato actual no figura aprobado.' },
       { indicador: 'Activos sin soporte de contrato', cantidad: kpis.activeWithoutContractSupport, porcentaje: percentage(kpis.activeWithoutContractSupport, kpis.activeEmployees), lectura: 'No hay URL en contrato ni documento vigente en Contratos y Otro sí.' },
-      { indicador: 'Documentos vencidos marcados válidos', cantidad: kpis.expiredDocuments, porcentaje: percentage(kpis.expiredDocuments, Math.max(1, kpis.totalEmployees)), lectura: 'Archivos excluidos del conteo vigente por fecha de vencimiento.' },
+      { indicador: 'Documentos adjuntos vencidos', cantidad: kpis.expiredDocuments, porcentaje: kpis.percentExpiredAttachments, lectura: 'Porcentaje calculado sobre el total de archivos adjuntos.' },
     ],
     {
       integerKeys: ['cantidad'],
       summary: [
         { label: 'Empleados', value: kpis.totalEmployees, format: 'number' },
         { label: 'Activos', value: kpis.activeEmployees, format: 'number' },
-        { label: 'Sin documentos', value: kpis.employeesWithoutDocuments, format: 'number', tone: 'warning' },
+        { label: 'Sin adjuntos', value: kpis.employeesWithoutDocuments, format: 'number', tone: 'warning' },
         { label: 'Diligenciamiento', value: `${kpis.averageRequiredCompletion}%`, tone: kpis.averageRequiredCompletion >= 90 ? 'positive' : 'warning' },
       ],
     },
@@ -401,16 +426,18 @@ export function createEmployeeManagementWorkbook(
       { key: 'obligatorios_faltantes', header: 'Obligatorios faltantes', width: 20 },
       { key: 'diligenciamiento_obligatorio', header: 'Diligenciamiento obligatorio (%)', width: 25 },
       { key: 'diligenciamiento_complementario', header: 'Diligenciamiento complementario (%)', width: 27 },
+      { key: 'adjuntos_totales', header: 'Documentos adjuntos', width: 19 },
       { key: 'documentos_vigentes', header: 'Documentos vigentes', width: 19 },
       { key: 'documentos_vencidos', header: 'Documentos vencidos', width: 19 },
-      { key: 'sin_documentos', header: 'Sin documentos', width: 17 },
+      { key: 'sin_documentos', header: 'Sin adjuntos', width: 17 },
+      { key: 'sin_documentos_vigentes', header: 'Sin documentos vigentes', width: 22 },
       { key: 'contrato_vigente', header: 'Contrato vigente', width: 17 },
       { key: 'contrato_aprobado', header: 'Contrato aprobado', width: 18 },
       { key: 'soporte_contrato', header: 'Soporte contrato', width: 17 },
       { key: 'prioridad', header: 'Prioridad', width: 15 },
     ],
     analysis.employees,
-    { integerKeys: ['campos_obligatorios', 'obligatorios_faltantes', 'documentos_vigentes', 'documentos_vencidos'], textKeys: ['documento'], statusKey: 'prioridad' },
+    { integerKeys: ['campos_obligatorios', 'obligatorios_faltantes', 'adjuntos_totales', 'documentos_vigentes', 'documentos_vencidos'], textKeys: ['documento'], statusKey: 'prioridad' },
   ));
 
   appendReport(workbook, report(
@@ -431,14 +458,16 @@ export function createEmployeeManagementWorkbook(
     [
       { key: 'documento', header: 'Documento', width: 18 }, { key: 'empleado', header: 'Empleado', width: 30 },
       { key: 'estado', header: 'Estado', width: 15 }, { key: 'centro', header: 'Centro', width: 24 },
+      { key: 'adjuntos_totales', header: 'Documentos adjuntos', width: 20 },
       { key: 'documentos_vigentes', header: 'Documentos vigentes', width: 20 },
       { key: 'documentos_vencidos', header: 'Documentos vencidos', width: 20 },
-      { key: 'sin_documentos', header: 'Sin documentos', width: 17 },
+      { key: 'sin_documentos', header: 'Sin adjuntos', width: 17 },
+      { key: 'sin_documentos_vigentes', header: 'Sin documentos vigentes', width: 22 },
       { key: 'detalle_documentos', header: 'Detalle de documentos vigentes', width: 55 },
       { key: 'certificaciones', header: 'Certificaciones', width: 17 }, { key: 'vacunas', header: 'Vacunas', width: 14 },
     ],
     analysis.documents,
-    { integerKeys: ['documentos_vigentes', 'documentos_vencidos', 'certificaciones', 'vacunas'], textKeys: ['documento'], statusKey: 'sin_documentos' },
+    { integerKeys: ['adjuntos_totales', 'documentos_vigentes', 'documentos_vencidos', 'certificaciones', 'vacunas'], textKeys: ['documento'], statusKey: 'sin_documentos' },
   ));
 
   appendReport(workbook, report(
@@ -470,8 +499,9 @@ export function createEmployeeManagementWorkbook(
     [{ key: 'concepto', header: 'Concepto', width: 34 }, { key: 'definicion', header: 'Definición aplicada', width: 105 }],
     [
       { concepto: 'Empresa analizada', definicion: `La empresa seleccionada en Empatiq al generar el reporte: ${companyName}.` },
-      { concepto: 'Documento vigente', definicion: 'Registro válido, con archivo adjunto y sin fecha de vencimiento cumplida.' },
-      { concepto: 'Empleado sin documentos', definicion: 'Empleado con cero documentos vigentes según la regla anterior.' },
+      { concepto: 'Documento adjunto', definicion: 'Registro documental que tiene un archivo asociado.' },
+      { concepto: 'Documento vigente', definicion: 'Documento adjunto, marcado como válido y sin fecha de vencimiento cumplida.' },
+      { concepto: 'Empleado sin documentos adjuntos', definicion: 'Empleado con cero archivos adjuntos, sin confundirlo con documentos vencidos o inválidos.' },
       { concepto: 'Contrato vigente', definicion: 'Contrato no terminado, ya iniciado y sin vencimiento cumplido; se considera la última prórroga registrada.' },
       { concepto: 'Soporte de contrato', definicion: 'Existe archivo en el contrato o un documento vigente clasificado como Contratos y Otro sí.' },
       { concepto: 'Diligenciamiento obligatorio', definicion: 'Campos operativos mínimos definidos para identificación, contacto, relación laboral, seguridad social, banco, jornada, documentos y, para activos, contrato.' },

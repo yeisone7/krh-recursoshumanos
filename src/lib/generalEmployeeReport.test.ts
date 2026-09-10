@@ -51,6 +51,8 @@ describe('generalEmployeeReport', () => {
     expect(GENERAL_EMPLOYEE_REPORT_SELECTS.employees).toContain('identification_types(name, code)');
     expect(GENERAL_EMPLOYEE_REPORT_SELECTS.workInfos).toContain('operation_centers(name)');
     expect(GENERAL_EMPLOYEE_REPORT_SELECTS.timeConfigs).toContain('work_schedules(name)');
+    expect(GENERAL_EMPLOYEE_REPORT_SELECTS.contracts).toContain('extension_number');
+    expect(GENERAL_EMPLOYEE_REPORT_SELECTS.documents).not.toContain('file_url');
   });
 
   it('mantiene claves de columna únicas en todas las categorías', () => {

@@ -55,8 +55,77 @@ type TimeConfigWithCatalogs = TimeConfig & {
 };
 type CenterAssignmentWithCatalog = CenterAssignment & { operation_centers: NamedRelation };
 type ContractWithExtensions = Contract & {
-  contract_extensions?: Array<{ end_date: string; document_url: string | null }> | null;
+  contract_extensions?: Array<{
+    extension_number: number;
+    end_date: string;
+    document_url: string | null;
+  }> | null;
 };
+
+export interface ReportContractCandidate {
+  start_date: string;
+  end_date: string | null;
+  is_terminated: boolean | null;
+  contract_extensions?: Array<{
+    extension_number: number;
+    end_date: string;
+    document_url: string | null;
+  }> | null;
+}
+
+export function getEffectiveContractEnd(item: ReportContractCandidate): string | undefined {
+  return [...(item.contract_extensions || [])]
+    .sort((left, right) => right.extension_number - left.extension_number
+      || right.end_date.localeCompare(left.end_date))[0]?.end_date
+    || item.end_date
+    || undefined;
+}
+
+export function selectReportContract<T extends ReportContractCandidate>(contracts: T[], today: string) {
+  const currentContracts = contracts.filter((item) => {
+    const effectiveEnd = getEffectiveContractEnd(item);
+    return item.is_terminated !== true
+      && item.start_date <= today
+      && (!effectiveEnd || effectiveEnd >= today);
+  });
+  const contract = [...(currentContracts.length ? currentContracts : contracts)]
+    .sort((left, right) => {
+      if (left.is_terminated !== right.is_terminated) return left.is_terminated ? 1 : -1;
+      return right.start_date.localeCompare(left.start_date);
+    })[0];
+  const effectiveEnd = contract ? getEffectiveContractEnd(contract) : undefined;
+  return {
+    contract,
+    effectiveEnd,
+    isCurrent: Boolean(
+      contract
+      && contract.is_terminated !== true
+      && contract.start_date <= today
+      && (!effectiveEnd || effectiveEnd >= today),
+    ),
+  };
+}
+
+export interface ReportDocumentCandidate {
+  document_type: EmployeeDocument['document_type'];
+  expiry_date: string | null;
+  is_valid: boolean | null;
+}
+
+export function classifyAttachedDocuments<T extends ReportDocumentCandidate>(documents: T[], today: string) {
+  const current = documents.filter((document) => (
+    document.is_valid === true
+    && (!document.expiry_date || document.expiry_date >= today)
+  ));
+  const expired = documents.filter((document) => Boolean(document.expiry_date && document.expiry_date < today));
+  return {
+    current,
+    expired,
+    hasContractFolder: current.some((document) => (
+      normalizeEmployeeDocumentFolder(document.document_type) === 'contratos_otrosi'
+    )),
+  };
+}
 
 type EmployeeRelated = {
   employee_id: string;
@@ -153,8 +222,17 @@ export function useGeneralEmployeeReport(enabled = true) {
       if (!currentCompanyId) return [];
 
       const companyId = currentCompanyId;
+      const employees = await fetchAllAnalyticsRows((from, to) => supabase
+        .from('employees_v2')
+        .select(SELECTS.employees)
+        .eq('company_id', companyId)
+        .order('id')
+        .range(from, to));
+      const employeeRows = employees as unknown as EmployeeWithCatalogs[];
+      const employeeIds = employeeRows.map((employee) => employee.id);
+      if (!employeeIds.length) return [];
+
       const [
-        employees,
         cycles,
         contacts,
         families,
@@ -170,21 +248,20 @@ export function useGeneralEmployeeReport(enabled = true) {
         certifications,
         vaccinations,
       ] = await Promise.all([
-        fetchAllAnalyticsRows((from, to) => supabase.from('employees_v2').select(SELECTS.employees).eq('company_id', companyId).order('id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_employment_cycles').select(SELECTS.cycles).eq('company_id', companyId).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_contact').select(SELECTS.contacts).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family').select(SELECTS.families).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family_members').select(SELECTS.familyMembers).eq('company_id', companyId).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_work_info').select(SELECTS.workInfos).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_social_security').select(SELECTS.socialSecurities).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_bank_info').select(SELECTS.bankInfos).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_schedule').select(SELECTS.schedules).eq('company_id', companyId).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_time_config').select(SELECTS.timeConfigs).eq('company_id', companyId).eq('is_active', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_operation_center_assignments').select(SELECTS.centerAssignments).eq('company_id', companyId).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('contracts').select(SELECTS.contracts).eq('company_id', companyId).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_documents').select(SELECTS.documents).eq('company_id', companyId).eq('is_valid', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_certifications').select(SELECTS.certifications).eq('company_id', companyId).eq('is_valid', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_vaccinations').select(SELECTS.vaccinations).eq('company_id', companyId).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_employment_cycles').select(SELECTS.cycles).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_contact').select(SELECTS.contacts).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family').select(SELECTS.families).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family_members').select(SELECTS.familyMembers).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_work_info').select(SELECTS.workInfos).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_social_security').select(SELECTS.socialSecurities).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_bank_info').select(SELECTS.bankInfos).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_schedule').select(SELECTS.schedules).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_time_config').select(SELECTS.timeConfigs).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_active', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_operation_center_assignments').select(SELECTS.centerAssignments).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('contracts').select(SELECTS.contracts).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_documents').select(SELECTS.documents).eq('company_id', companyId).in('employee_id', employeeIds).not('file_url', 'is', null).neq('file_url', '').order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_certifications').select(SELECTS.certifications).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_valid', true).order('employee_id').range(from, to)),
+        fetchAllAnalyticsRows((from, to) => supabase.from('employee_vaccinations').select(SELECTS.vaccinations).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
       ]);
 
       const cyclesMap = groupByEmployee(cycles as EmploymentCycle[]);
@@ -202,7 +279,7 @@ export function useGeneralEmployeeReport(enabled = true) {
       const certificationMap = groupByEmployee(certifications as Certification[]);
       const vaccinationMap = groupByEmployee(vaccinations as Vaccination[]);
 
-      return (employees as unknown as EmployeeWithCatalogs[]).map((employee) => {
+      return employeeRows.map((employee) => {
         const today = format(new Date(), 'yyyy-MM-dd');
         const employeeCycles = cyclesMap.get(employee.id) || [];
         const activeCycle = employeeCycles.find((cycle) => cycle.status === 'active')
@@ -216,35 +293,14 @@ export function useGeneralEmployeeReport(enabled = true) {
         const schedule = pickCurrent(scheduleMap.get(employee.id) || [], cycleId);
         const timeConfig = pickCurrent(timeConfigMap.get(employee.id) || [], cycleId);
         const employeeContracts = getCycleRows(contractMap.get(employee.id) || [], cycleId);
-        const getEffectiveContractEnd = (item: ContractWithExtensions) => (
-          [item.end_date, ...(item.contract_extensions || []).map((extension) => extension.end_date)]
-            .filter((value): value is string => Boolean(value))
-            .sort((left, right) => right.localeCompare(left))[0]
-        );
-        const currentContracts = employeeContracts.filter((item) => {
-          const effectiveEnd = getEffectiveContractEnd(item);
-          return item.is_terminated !== true
-            && item.start_date <= today
-            && (!effectiveEnd || effectiveEnd >= today);
-        });
-        const contract = [...(currentContracts.length ? currentContracts : employeeContracts)]
-          .sort((left, right) => {
-            if (left.is_terminated !== right.is_terminated) return left.is_terminated ? 1 : -1;
-            return right.start_date.localeCompare(left.start_date);
-          })[0];
+        const contractAssessment = selectReportContract(employeeContracts, today);
+        const contract = contractAssessment.contract;
         const relatives = getCycleRows(familyMembersMap.get(employee.id) || [], cycleId);
         const employeeAssignments = getCycleRows(assignmentMap.get(employee.id) || [], cycleId);
         const cycleDocuments = getCycleRows(documentMap.get(employee.id) || [], cycleId);
-        const employeeDocuments = cycleDocuments.filter((document) => (
-          document.is_valid === true
-          && Boolean(document.file_url?.trim())
-          && (!document.expiry_date || document.expiry_date >= today)
-        ));
-        const expiredDocuments = cycleDocuments.filter((document) => (
-          document.is_valid === true
-          && Boolean(document.file_url?.trim())
-          && Boolean(document.expiry_date && document.expiry_date < today)
-        ));
+        const documentAssessment = classifyAttachedDocuments(cycleDocuments, today);
+        const employeeDocuments = documentAssessment.current;
+        const expiredDocuments = documentAssessment.expired;
         const employeeCertifications = certificationMap.get(employee.id) || [];
         const employeeVaccinations = vaccinationMap.get(employee.id) || [];
 
@@ -255,19 +311,12 @@ export function useGeneralEmployeeReport(enabled = true) {
         const genderIdentity = employee.gender_identity === 'otro'
           ? employee.gender_identity_other
           : employee.gender_identity;
-        const effectiveContractEnd = contract ? getEffectiveContractEnd(contract) : undefined;
-        const contractIsCurrent = Boolean(
-          contract
-          && contract.is_terminated !== true
-          && contract.start_date <= today
-          && (!effectiveContractEnd || effectiveContractEnd >= today),
-        );
+        const effectiveContractEnd = contractAssessment.effectiveEnd;
+        const contractIsCurrent = contractAssessment.isCurrent;
         const hasContractSupport = Boolean(
           contract?.document_url?.trim()
           || contract?.contract_extensions?.some((extension) => extension.document_url?.trim())
-          || employeeDocuments.some((document) => (
-            normalizeEmployeeDocumentFolder(document.document_type) === 'contratos_otrosi'
-          )),
+          || documentAssessment.hasContractFolder,
         );
 
         return {
@@ -346,8 +395,8 @@ export function useGeneralEmployeeReport(enabled = true) {
           clausula_confidencialidad: yesNo(contract?.has_confidentiality_clause),
           clausula_no_competencia: yesNo(contract?.has_non_compete_clause),
           clausulas_especiales: text(contract?.special_clauses),
-          contrato_aprobado: yesNo(contract?.is_approved),
-          soporte_contrato: employee.is_active ? yesNo(hasContractSupport) : 'No aplica',
+          contrato_aprobado: employee.is_active ? yesNo(contractIsCurrent && contract?.is_approved === true) : 'No aplica',
+          soporte_contrato: employee.is_active ? yesNo(contractIsCurrent && hasContractSupport) : 'No aplica',
           nivel_riesgo: enumLabel(riskLevelLabels, socialSecurity?.risk_level),
           eps: text(socialSecurity?.eps),
           afp: text(socialSecurity?.afp),
@@ -382,6 +431,7 @@ export function useGeneralEmployeeReport(enabled = true) {
             const observations = relative.observations ? `, ${relative.observations}` : '';
             return `${relationship}: ${relative.full_name}${age}${observations}`;
           })),
+          numero_adjuntos: cycleDocuments.length,
           numero_documentos: employeeDocuments.length,
           documentos_vencidos: expiredDocuments.length,
           detalle_documentos: joinDetails(employeeDocuments.map((document) => {
