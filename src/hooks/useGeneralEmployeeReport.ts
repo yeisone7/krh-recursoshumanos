@@ -138,6 +138,29 @@ type EmployeeRelated = {
   start_date?: string | null;
 };
 
+const REPORT_EMPLOYEE_ID_BATCH_SIZE = 100;
+
+type ReportPageResult<T> = {
+  data: T[] | null;
+  error: unknown;
+};
+
+export async function fetchReportRowsInEmployeeBatches<T>(
+  employeeIds: string[],
+  fetchPage: (employeeIdBatch: string[], from: number, to: number) => Promise<ReportPageResult<T>>,
+  batchSize = REPORT_EMPLOYEE_ID_BATCH_SIZE,
+): Promise<T[]> {
+  const rows: T[] = [];
+
+  for (let index = 0; index < employeeIds.length; index += batchSize) {
+    const employeeIdBatch = employeeIds.slice(index, index + batchSize);
+    const batchRows = await fetchAllAnalyticsRows((from, to) => fetchPage(employeeIdBatch, from, to));
+    rows.push(...batchRows);
+  }
+
+  return rows;
+}
+
 function groupByEmployee<T extends { employee_id: string }>(rows: T[]): Map<string, T[]> {
   return rows.reduce((map, row) => {
     const group = map.get(row.employee_id) || [];
@@ -248,20 +271,20 @@ export function useGeneralEmployeeReport(enabled = true) {
         certifications,
         vaccinations,
       ] = await Promise.all([
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_employment_cycles').select(SELECTS.cycles).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_contact').select(SELECTS.contacts).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family').select(SELECTS.families).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_family_members').select(SELECTS.familyMembers).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_work_info').select(SELECTS.workInfos).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_social_security').select(SELECTS.socialSecurities).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_bank_info').select(SELECTS.bankInfos).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_schedule').select(SELECTS.schedules).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_current', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_time_config').select(SELECTS.timeConfigs).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_active', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_operation_center_assignments').select(SELECTS.centerAssignments).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('contracts').select(SELECTS.contracts).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_documents').select(SELECTS.documents).eq('company_id', companyId).in('employee_id', employeeIds).not('file_url', 'is', null).neq('file_url', '').order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_certifications').select(SELECTS.certifications).eq('company_id', companyId).in('employee_id', employeeIds).eq('is_valid', true).order('employee_id').range(from, to)),
-        fetchAllAnalyticsRows((from, to) => supabase.from('employee_vaccinations').select(SELECTS.vaccinations).eq('company_id', companyId).in('employee_id', employeeIds).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_employment_cycles').select(SELECTS.cycles).eq('company_id', companyId).in('employee_id', employeeIdBatch).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_contact').select(SELECTS.contacts).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_family').select(SELECTS.families).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_family_members').select(SELECTS.familyMembers).eq('company_id', companyId).in('employee_id', employeeIdBatch).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_work_info').select(SELECTS.workInfos).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_social_security').select(SELECTS.socialSecurities).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_bank_info').select(SELECTS.bankInfos).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_schedule').select(SELECTS.schedules).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_current', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_time_config').select(SELECTS.timeConfigs).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_active', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_operation_center_assignments').select(SELECTS.centerAssignments).eq('company_id', companyId).in('employee_id', employeeIdBatch).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('contracts').select(SELECTS.contracts).eq('company_id', companyId).in('employee_id', employeeIdBatch).order('employee_id').order('start_date', { ascending: false }).range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_documents').select(SELECTS.documents).eq('company_id', companyId).in('employee_id', employeeIdBatch).not('file_url', 'is', null).neq('file_url', '').order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_certifications').select(SELECTS.certifications).eq('company_id', companyId).in('employee_id', employeeIdBatch).eq('is_valid', true).order('employee_id').range(from, to)),
+        fetchReportRowsInEmployeeBatches(employeeIds, (employeeIdBatch, from, to) => supabase.from('employee_vaccinations').select(SELECTS.vaccinations).eq('company_id', companyId).in('employee_id', employeeIdBatch).order('employee_id').range(from, to)),
       ]);
 
       const cyclesMap = groupByEmployee(cycles as EmploymentCycle[]);
