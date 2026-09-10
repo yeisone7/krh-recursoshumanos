@@ -115,6 +115,8 @@ export const GENERAL_EMPLOYEE_COLUMNS: GeneralEmployeeColumn[] = [
   column('contrato', 'tipo_contrato', 'Tipo de contrato', 20),
   column('contrato', 'inicio_contrato', 'Inicio del contrato', 18),
   column('contrato', 'fin_contrato', 'Fin del contrato', 18),
+  column('contrato', 'fin_efectivo_contrato', 'Fin efectivo del contrato', 22),
+  column('contrato', 'contrato_vigente', 'Contrato vigente', 18),
   column('contrato', 'salario', 'Salario', 16),
   column('contrato', 'tipo_salario', 'Tipo de salario', 18),
   column('contrato', 'auxilio_transporte', 'Auxilio de transporte', 20),
@@ -128,6 +130,7 @@ export const GENERAL_EMPLOYEE_COLUMNS: GeneralEmployeeColumn[] = [
   column('contrato', 'clausula_no_competencia', 'Cláusula de no competencia', 24),
   column('contrato', 'clausulas_especiales', 'Cláusulas especiales', 32),
   column('contrato', 'contrato_aprobado', 'Contrato aprobado', 18),
+  column('contrato', 'soporte_contrato', 'Soporte de contrato', 19),
 
   column('seguridad_social', 'nivel_riesgo', 'Nivel de riesgo', 16),
   column('seguridad_social', 'eps', 'EPS', 22),
@@ -159,6 +162,7 @@ export const GENERAL_EMPLOYEE_COLUMNS: GeneralEmployeeColumn[] = [
   column('familia', 'detalle_parientes', 'Detalle de parientes', 45),
 
   column('soportes', 'numero_documentos', 'Documentos vigentes', 20),
+  column('soportes', 'documentos_vencidos', 'Documentos vencidos', 20),
   column('soportes', 'detalle_documentos', 'Detalle de documentos', 45),
   column('soportes', 'numero_certificaciones', 'Certificaciones vigentes', 22),
   column('soportes', 'detalle_certificaciones', 'Detalle de certificaciones', 45),

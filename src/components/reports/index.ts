@@ -2,6 +2,7 @@ export { ReportCard } from './ReportCard';
 export { EmployeeReport } from './EmployeeReport';
 export { GeneralEmployeeReport } from './GeneralEmployeeReport';
 export { EmployeeInformationCompletionReport } from './EmployeeInformationCompletionReport';
+export { EmployeeManagementReport } from './EmployeeManagementReport';
 export { IncapacityReport } from './IncapacityReport';
 export { CesantiasReport } from './CesantiasReport';
 export { DotationReport } from './DotationReport';

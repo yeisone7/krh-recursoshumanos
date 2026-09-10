@@ -4,6 +4,7 @@ import {
   EmployeeReport,
   GeneralEmployeeReport,
   EmployeeInformationCompletionReport,
+  EmployeeManagementReport,
   IncapacityReport,
   CesantiasReport,
   DotationReport,
@@ -76,6 +77,7 @@ export default function Reportes() {
         <TabsContent value="personal">
           <div className="grid gap-4 md:grid-cols-2 md:gap-6">
             <GeneralEmployeeReport />
+            <EmployeeManagementReport />
             <EmployeeReport />
             <EmployeeInformationCompletionReport />
             <MedicalExamsReport />
