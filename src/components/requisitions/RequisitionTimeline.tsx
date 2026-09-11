@@ -18,8 +18,11 @@ import { formatDateOnly } from '@/lib/dateOnly';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PersonnelRequisition } from '@/hooks/useRequisitions';
+import type { RequisitionWorkflowVersion } from '@/types/requisitionWorkflow';
+import { formatWorkflowAnswer } from '@/lib/requisitionWorkflow';
 
 interface RequisitionTimelineProps {
+  previewVersion?: RequisitionWorkflowVersion | null;
   requisition: PersonnelRequisition;
   vacancies?: { id: string; position_title: string; status: string; candidates?: { id: string; status: string }[] }[];
 }
@@ -36,6 +39,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 interface TimelineStepData {
+  customAnswers?: { label: string; value: string }[];
   key: string;
   title: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -232,8 +236,24 @@ function StatusIcon({ status }: { status: TimelineStepData['status'] }) {
   }
 }
 
-export function RequisitionTimeline({ requisition, vacancies = [] }: RequisitionTimelineProps) {
-  const steps = getTimelineSteps(requisition, requisition.autoriza);
+export function RequisitionTimeline({ requisition, vacancies = [], previewVersion }: RequisitionTimelineProps) {
+  const legacySteps = getTimelineSteps(requisition, null);
+  const version = requisition.workflow_version ?? previewVersion;
+  const steps: TimelineStepData[] = version ? [legacySteps[0], ...version.steps.map(s => {
+    const execution = requisition.step_executions?.find(e => e.step_id === s.id);
+    const standard = legacySteps.find(l => l.key === s.kind);
+    return {
+      ...standard,
+      key: s.kind === 'custom' ? s.id : s.kind,
+      title: s.name,
+      icon: standard?.icon ?? UserCheck,
+      status: execution?.approved === true ? 'approved' as const : execution?.approved === false ? 'rejected' as const : s.id === requisition.current_approval_step_id ? 'current' as const : 'pending' as const,
+      date: execution?.decided_at ?? null,
+      approver: execution?.approver_name ?? null,
+      observations: execution?.observations ?? null,
+      customAnswers: s.fields.map(f => ({ label: f.label, value: formatWorkflowAnswer(execution?.answers[f.id]) })),
+    };
+  })] : getTimelineSteps(requisition, requisition.autoriza);
 
   return (
     <div className="space-y-6">
@@ -257,16 +277,16 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
 
                 {/* Content */}
                 <Card className={cn(
-                  'flex-1',
+                  'min-w-0 flex-1',
                   step.status === 'current' && 'border-primary shadow-md',
                   step.status === 'approved' && 'border-success/30',
                   step.status === 'rejected' && 'border-destructive/30'
                 )}>
                   <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-5 w-5 text-muted-foreground" />
-                        <CardTitle className="text-base">{step.title}</CardTitle>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />
+                        <CardTitle className="text-base [overflow-wrap:anywhere]">{step.title}</CardTitle>
                       </div>
                       <Badge
                         variant="outline"
@@ -323,6 +343,7 @@ export function RequisitionTimeline({ requisition, vacancies = [] }: Requisition
                         )}
                       </div>
                     )}
+                    {!!step.customAnswers?.length && <dl className="space-y-2 border-t pt-2">{step.customAnswers.map((answer, i) => <div key={i} className="text-sm"><dt className="font-medium">{answer.label}</dt><dd className="whitespace-pre-wrap break-words text-muted-foreground">{answer.value}</dd></div>)}</dl>}
 
                     {step.key === 'juridico' && step.extraData?.tipo_contrato && (
                       <div className="pt-2 border-t">

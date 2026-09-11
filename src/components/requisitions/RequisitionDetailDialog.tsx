@@ -44,6 +44,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePsychologyUsers } from '@/hooks/usePsychologyUsers';
 import { RequisitionTimeline } from './RequisitionTimeline';
 import { RequisitionApprovalDialog } from './RequisitionApprovalDialog';
+import { CustomRequisitionApprovalDialog } from './CustomRequisitionApprovalDialog';
+import { useCompanyRequisitionWorkflow, useCanApproveConfiguredStep } from '@/hooks/useRequisitionWorkflow';
+import { getConfiguredCurrentStep } from '@/lib/requisitionWorkflow';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
 import {
   getCurrentApprovalStepForRequisition,
@@ -104,6 +107,11 @@ export function RequisitionDetailDialog({
   const [showApprovalDialog, setShowApprovalDialog] = useState(false);
   const [approvalStep, setApprovalStep] = useState<RequisitionApprovalStep | null>(null);
   const [newVacancyCodes, setNewVacancyCodes] = useState<VacancyCodeEntry[]>([]);
+  const companyWorkflow = useCompanyRequisitionWorkflow();
+  const customStep = requisition ? getConfiguredCurrentStep(requisition) : null;
+  const configuredPermission = useCanApproveConfiguredStep(requisition?.id, requisition?.current_approval_step_id);
+  const [showCustomApproval, setShowCustomApproval] = useState(false);
+  const usesConfiguredWorkflow = !!requisition?.workflow_version_id || (requisition?.estado_requisicion === 'borrador' && !!companyWorkflow.data);
 
   const { data: vacancyCodes = [], isLoading: loadingVacancyCodes } = useQuery({
     queryKey: ['requisition-vacancy-codes', requisitionId],
@@ -139,7 +147,7 @@ export function RequisitionDetailDialog({
 
   const handleSubmit = async () => {
     if (requisition) {
-      if (!requisition.autoriza) {
+      if (!usesConfiguredWorkflow && !requisition.autoriza) {
         toast({
           title: 'Campo requerido',
           description: 'Debe seleccionar quién autoriza antes de enviar la requisición.',
@@ -206,7 +214,7 @@ export function RequisitionDetailDialog({
     requisition.created_by === user?.id
   );
   const canEdit = status === 'borrador' && canManageDraft;
-  const canSubmit = status === 'borrador' && canManageDraft;
+  const canSubmit = status === 'borrador' && canManageDraft && !companyWorkflow.isLoading && !companyWorkflow.isError;
   const canCreateVacancy = status === 'aprobada' || status === 'en_seleccion';
   const canDeleteRequisition = hasPermission('requisiciones', 'delete');
   const canManageVacancyCodes = hasPermission('req_approve_seleccion', 'approve') || isAdmin || isRRHH || isSuperAdmin || canUpdate('requisiciones');
@@ -328,7 +336,7 @@ export function RequisitionDetailDialog({
                 variant="outline"
                 className={cn('max-w-full self-start truncate px-3 sm:self-auto', statusConfig.bg, statusConfig.text, statusConfig.border)}
               >
-                {requisitionStatusLabels[status]}
+                {customStep ? `En ${customStep.name}` : requisitionStatusLabels[status]}
               </Badge>
             )}
           </div>
@@ -364,6 +372,7 @@ export function RequisitionDetailDialog({
               <div className="px-4 py-4 sm:px-6 sm:py-5">
             <TabsContent value="timeline" className="mt-0 space-y-4">
               {/* Autoriza field */}
+              {!usesConfiguredWorkflow && (
               <Card className="border-primary/20">
                 <CardContent className="p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -392,6 +401,9 @@ export function RequisitionDetailDialog({
                   </div>
                 </CardContent>
               </Card>
+              )}
+              {companyWorkflow.isError && status === 'borrador' && <p role="alert" className="text-sm text-destructive">No se pudo cargar el ciclo de la empresa. <button className="underline" onClick={() => void companyWorkflow.refetch()}>Reintentar</button></p>}
+              {usesConfiguredWorkflow && <p className="text-sm text-muted-foreground">Ciclo de la empresa · Versión {requisition.workflow_version?.version ?? companyWorkflow.data?.version}{status === 'borrador' ? '. Se fijará al enviar la requisición.' : '. Se conserva el recorrido del envío.'}</p>}
 
               {/* Líder del Proceso - only in borrador */}
               {requisition && canEdit && (
@@ -448,6 +460,7 @@ export function RequisitionDetailDialog({
               <RequisitionTimeline 
                 requisition={requisition} 
                 vacancies={requisition.vacancies}
+                previewVersion={status === 'borrador' ? companyWorkflow.data : undefined}
               />
             </TabsContent>
 
@@ -782,6 +795,7 @@ export function RequisitionDetailDialog({
                   {approvalAction.label}
                 </Button>
               )}
+              {customStep?.kind === 'custom' && configuredPermission.data && <Button onClick={() => setShowCustomApproval(true)}>Aprobar {customStep.name}</Button>}
             </div>
           </div>
           </div>
@@ -793,6 +807,9 @@ export function RequisitionDetailDialog({
           requisition={requisition || null}
           step={approvalStep || 'rrhh'}
         />
+        {showCustomApproval && customStep?.kind === 'custom' && requisition && <CustomRequisitionApprovalDialog
+          key={`${requisition.id}-${customStep.id}`} requisitionId={requisition.id} step={customStep}
+          open={showCustomApproval} onOpenChange={setShowCustomApproval} />}
       </DialogContent>
     </Dialog>
   );

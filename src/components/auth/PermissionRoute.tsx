@@ -4,6 +4,7 @@ import { ShieldX } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
+import { useRequisitionWorkflowAccess } from '@/hooks/useRequisitionWorkflow';
 
 interface PermissionRouteProps {
   children: React.ReactNode;
@@ -15,12 +16,17 @@ interface PermissionRouteProps {
 
 export function PermissionRoute({ children, moduleCode, anyModuleCodes, action = 'view', fallback = 'deny' }: PermissionRouteProps) {
   const { isAdmin, permissionsLoaded, hasPermission } = useAuth();
+  const workflowAccess = useRequisitionWorkflowAccess(moduleCode === 'requisiciones' && action === 'view');
 
   // Admin always has access
   if (isAdmin) return <>{children}</>;
 
   // Wait until permissions are loaded
   if (!permissionsLoaded) return null;
+  if (moduleCode === 'requisiciones' && action === 'view') {
+    if (workflowAccess.isLoading && !hasPermission(moduleCode, action)) return null;
+    if (workflowAccess.data) return <>{children}</>;
+  }
 
   const hasAccess = anyModuleCodes?.length
     ? anyModuleCodes.some(code => hasPermission(code, action))

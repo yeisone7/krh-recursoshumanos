@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { canReceiveRequisitionNotification, escapeRequisitionEmailText } from '../_shared/requisitionNotificationAccess.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,11 +57,11 @@ serve(async (req: Request): Promise<Response> => {
     }
     const resend = resendApiKey ? new Resend(resendApiKey) : null;
     
-    const { requisitionId, currentStep, requisitionTitle }: NotifyRequest = await req.json();
+    const { requisitionId }: NotifyRequest = await req.json();
     
-    if (!requisitionId || !currentStep) {
+    if (!requisitionId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: requisitionId and currentStep' }),
+        JSON.stringify({ error: 'Missing required field: requisitionId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -68,7 +69,7 @@ serve(async (req: Request): Promise<Response> => {
     // Get requisition details
     const { data: requisition, error: reqError } = await supabase
       .from('personnel_requisitions')
-      .select('company_id, operation_center_id, is_confidential, cargo_solicitado, solicitante_nombre, created_by, solicitante_id, estado_requisicion')
+      .select('company_id, operation_center_id, is_confidential, cargo_solicitado, solicitante_nombre, created_by, solicitante_id, estado_requisicion, workflow_version_id, current_approval_step_id, workflow_version:requisition_workflow_versions!requisition_workflow_company_fk(steps)')
       .eq('id', requisitionId)
       .single();
 
@@ -79,6 +80,18 @@ serve(async (req: Request): Promise<Response> => {
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const currentStep = requisition.estado_requisicion;
+    const workflowVersion = Array.isArray(requisition.workflow_version) ? requisition.workflow_version[0] : requisition.workflow_version;
+    const configuredStep = (workflowVersion?.steps as { id: string; name: string; kind: string; role_ids: string[] }[] | undefined)
+      ?.find(s => s.id === requisition.current_approval_step_id);
+    const { data: workflowDecisions, error: decisionsError } = requisition.workflow_version_id
+      ? await supabase.from('requisition_step_executions').select('step_id').eq('requisition_id', requisitionId).eq('approver_id', userId).limit(1)
+      : { data: [], error: null };
+    if (decisionsError) throw decisionsError;
+    const { data: currentApprover } = requisition.current_approval_step_id
+      ? await authClient.rpc('can_approve_requisition_step', { p_requisition_id: requisitionId, p_step_id: requisition.current_approval_step_id })
+      : { data: false };
 
     const { data: systemRole } = await supabase
       .from('user_custom_roles')
@@ -106,7 +119,7 @@ serve(async (req: Request): Promise<Response> => {
         })
       )
     );
-    const hasPermission = permissionResults.some(({ data }) => data === true);
+    const hasPermission = permissionResults.some(({ data }) => data === true) || currentApprover === true || !!workflowDecisions?.length;
     const { data: assignment } = await supabase
       .from('user_company_assignments')
       .select('id')
@@ -121,7 +134,9 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const nextApprover = statusToNextRole[currentStep];
+    const nextApprover = configuredStep?.kind === 'custom'
+      ? { role: 'admin', stepLabel: configuredStep.name, permissionModule: undefined }
+      : statusToNextRole[currentStep] ? { ...statusToNextRole[currentStep], stepLabel: configuredStep?.name ?? statusToNextRole[currentStep].stepLabel } : null;
     
     if (!nextApprover) {
       // No more approvers (requisition is approved or rejected)
@@ -145,7 +160,14 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     let permissionUserIds: string[] = [];
-    if (activeApprovalModule) {
+    if (configuredStep?.kind === 'custom') {
+      const { data: roleUsers, error } = await supabase.from('user_custom_roles')
+        .select('user_id, custom_roles!inner(is_active,company_id)')
+        .in('role_id', configuredStep.role_ids)
+        .eq('custom_roles.is_active', true).eq('custom_roles.company_id', requisition.company_id);
+      if (error) throw error;
+      permissionUserIds = (roleUsers ?? []).map(u => u.user_id);
+    } else if (activeApprovalModule) {
       const { data: usersWithPermission, error: permissionUsersError } = await supabase
         .from('user_custom_roles')
         .select('user_id, custom_roles!inner(role_permissions!inner(permissions!inner(modules!inner(code), action)))')
@@ -221,13 +243,11 @@ serve(async (req: Request): Promise<Response> => {
       throw systemRolesError;
     }
 
-    const { data: centerAssignments, error: centerAssignmentsError } = requisition.operation_center_id
-      ? await supabase
+    const { data: centerAssignments, error: centerAssignmentsError } = await supabase
           .from('user_center_assignments')
-          .select('user_id')
+          .select('user_id, operation_center_id, operation_centers!inner(company_id)')
           .in('user_id', companyUserIds)
-          .eq('operation_center_id', requisition.operation_center_id)
-      : { data: [], error: null };
+          .eq('operation_centers.company_id', requisition.company_id);
 
     if (centerAssignmentsError) {
       console.error('Error fetching center assignments for notification filtering:', centerAssignmentsError);
@@ -236,20 +256,19 @@ serve(async (req: Request): Promise<Response> => {
 
     const adminUserIds = new Set((adminRoles || []).map(row => row.user_id));
     const systemUserIds = new Set((systemRoles || []).map(row => row.user_id));
-    const centerUserIds = new Set((centerAssignments || []).map(row => row.user_id));
+    const scopedUserIds = new Set((centerAssignments || []).map(row => row.user_id));
+    const centerUserIds = new Set((centerAssignments || []).filter(row => row.operation_center_id === requisition.operation_center_id).map(row => row.user_id));
 
     const canReceiveRequisitionApprovalNotification = (candidateUserId: string) => {
       const hasPrivilegedAccess = adminUserIds.has(candidateUserId) || systemUserIds.has(candidateUserId);
-      const hasCenterAccess = hasPrivilegedAccess || (
-        Boolean(requisition.operation_center_id) && centerUserIds.has(candidateUserId)
-      );
-
-      if (!hasCenterAccess) return false;
-      if (!requisition.is_confidential) return true;
-      if (hasPrivilegedAccess) return true;
-      if (candidateUserId === requisition.created_by || candidateUserId === requisition.solicitante_id) return true;
-
-      return activeApprovalUserIds.has(candidateUserId);
+      return canReceiveRequisitionNotification({
+        privileged: hasPrivilegedAccess,
+        hasCompanyCenterAssignments: scopedUserIds.has(candidateUserId),
+        assignedToRequisitionCenter: Boolean(requisition.operation_center_id) && centerUserIds.has(candidateUserId),
+        confidential: requisition.is_confidential,
+        requester: candidateUserId === requisition.created_by || candidateUserId === requisition.solicitante_id,
+        currentApprover: activeApprovalUserIds.has(candidateUserId),
+      });
     };
 
     const authorizedCompanyUsers = companyUsers.filter(user =>
@@ -376,22 +395,22 @@ serve(async (req: Request): Promise<Response> => {
                     <h1>📋 Requisición Pendiente</h1>
                   </div>
                   <div class="content">
-                    <span class="badge">Etapa: ${nextApprover.stepLabel}</span>
-                    <p>Hola ${displayName},</p>
+                    <span class="badge">Etapa: ${escapeRequisitionEmailText(nextApprover.stepLabel)}</span>
+                    <p>Hola ${escapeRequisitionEmailText(displayName)},</p>
                     <p>Tienes una nueva requisición de personal pendiente de tu aprobación.</p>
                     
                     <div class="info-card">
                       <div class="info-row">
                         <span class="info-label">Cargo Solicitado:</span>
-                        <span class="info-value">${requisition.cargo_solicitado}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(requisition.cargo_solicitado)}</span>
                       </div>
                       <div class="info-row">
                         <span class="info-label">Solicitante:</span>
-                        <span class="info-value">${requisition.solicitante_nombre}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(requisition.solicitante_nombre)}</span>
                       </div>
                       <div class="info-row">
                         <span class="info-label">Tu Etapa:</span>
-                        <span class="info-value">${nextApprover.stepLabel}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(nextApprover.stepLabel)}</span>
                       </div>
                     </div>
 

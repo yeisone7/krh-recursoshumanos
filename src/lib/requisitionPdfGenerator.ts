@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
 import { PersonnelRequisition } from '@/hooks/useRequisitions';
+import { formatWorkflowAnswer } from '@/lib/requisitionWorkflow';
 import {
   requisitionStatusLabels,
   requisitionReasonLabels,
@@ -349,6 +350,34 @@ export async function generateRequisitionPDF(
   y = section(doc, '7.  FLUJO DE APROBACIONES', y);
   y += 3;
 
+  if (req.workflow_version) {
+    const flowText = (label: string, text: string) => {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(...NAVY);
+      const lines: string[] = doc.splitTextToSize(`${label}: ${text}`, CW - 8);
+      for (const line of lines) {
+        y = checkPage(doc, y, 7);
+        doc.text(line, ML + 4, y + 4);
+        y += 5;
+      }
+      y += 2;
+    };
+    flowText('Versión del ciclo', String(req.workflow_version.version));
+    for (const [index, step] of req.workflow_version.steps.entries()) {
+      const execution = req.step_executions?.find(e => e.step_id === step.id);
+      y = checkPage(doc, y, 32);
+      flowText(`Etapa ${index + 1}`, step.name);
+      flowText('Estado', execution?.approved === true ? 'Aprobado' : execution?.approved === false ? 'Rechazado' : req.current_approval_step_id === step.id ? 'En revisión' : 'Pendiente');
+      if (execution?.decided_at) {
+        flowText('Responsable', execution.approver_name || '—');
+        flowText('Fecha', fmt(execution.decided_at));
+      }
+      if (execution?.observations) flowText('Observaciones', execution.observations);
+      for (const field of step.fields) flowText(field.label, formatWorkflowAnswer(execution?.answers[field.id]));
+      y += 4;
+    }
+  } else {
   const approvals = [
     { title: 'Coordinadores', approved: req.coordinadores_aprobado, who: req.coordinadores_quien_aprobo, date: req.coordinadores_fecha_aprobacion },
     { title: 'RRHH',       approved: req.rrhh_aprobado,       who: req.rrhh_quien_aprobo,       date: req.rrhh_fecha_aprobacion },
@@ -420,6 +449,7 @@ export async function generateRequisitionPDF(
   });
 
   y += boxH + 6;
+  }
 
   // ── OBSERVACIONES FINALES ────────────────────────────────────────────────
   const allObs = [req.operaciones_observaciones, req.gerencia_observaciones].filter(Boolean).join(' / ');

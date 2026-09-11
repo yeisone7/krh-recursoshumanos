@@ -15,6 +15,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppUpdateNotifier } from "@/components/system/AppUpdateNotifier";
 import { LocationPersister } from "@/components/auth/LocationPersister";
 import Dashboard from "./pages/Dashboard";
+const RequisitionWorkflowSettings = lazy(() => import('./pages/RequisitionWorkflowSettings'));
 import Empleados from "./pages/Empleados";
 import ContactosEmpleados from "./pages/ContactosEmpleados";
 import Contratos from "./pages/Contratos";
@@ -289,6 +290,7 @@ const App = () => (
                         <Route path="/seguridad" element={<P module="seguridad"><Seguridad /></P>} />
                         <Route path="/auditoria" element={<P module="auditoria"><Auditoria /></P>} />
                         <Route path="/configuracion" element={<P module="configuracion"><Configuracion /></P>} />
+                        <Route path="/configuracion/requisiciones" element={<PermissionRoute moduleCode="req_workflow_config" action="update"><Suspense fallback={null}><RequisitionWorkflowSettings /></Suspense></PermissionRoute>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </AppLayout>

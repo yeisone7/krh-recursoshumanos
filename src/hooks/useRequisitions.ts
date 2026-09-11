@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import type { RequisitionWorkflowVersion, RequisitionStepExecution } from '@/types/requisitionWorkflow';
+import { notifyRequisitionApprover } from '@/hooks/useRequisitionWorkflow';
+import type { Json } from '@/integrations/supabase/types';
 import {
   getExpectedStatusForApprovalStep,
   getNextStatusForApprovalStep,
@@ -10,6 +13,10 @@ import {
 } from '@/lib/requisitionApprovalFlow';
 
 export interface PersonnelRequisition {
+  workflow_version_id?: string | null;
+  current_approval_step_id?: string | null;
+  workflow_version?: RequisitionWorkflowVersion | null;
+  step_executions?: RequisitionStepExecution[];
   id: string;
   requisition_code: string | null;
   company_id: string;
@@ -200,6 +207,8 @@ export function useRequisitions() {
         .from('personnel_requisitions')
         .select(`
           *,
+          workflow_version:requisition_workflow_versions!requisition_workflow_company_fk(*),
+          step_executions:requisition_step_executions(*),
           areas(id, name),
           operation_centers(id, name),
           shifts(id, name, code),
@@ -225,6 +234,8 @@ export function useRequisition(id: string | undefined) {
         .from('personnel_requisitions')
         .select(`
           *,
+          workflow_version:requisition_workflow_versions!requisition_workflow_company_fk(*),
+          step_executions:requisition_step_executions(*),
           areas(id, name),
           operation_centers(id, name),
           shifts(id, name, code)
@@ -252,6 +263,8 @@ export function useRequisitionWithVacancies(id: string | undefined) {
         .from('personnel_requisitions')
         .select(`
           *,
+          workflow_version:requisition_workflow_versions!requisition_workflow_company_fk(*),
+          step_executions:requisition_step_executions(*),
           areas(id, name),
           operation_centers(id, name),
           shifts(id, name, code)
@@ -365,12 +378,30 @@ export function useApproveRequisitionStep() {
       step,
       approved,
       data,
+      configuredStepId,
+      vacancyCodes,
     }: {
       id: string;
       step: RequisitionApprovalStep;
       approved: boolean;
       data?: Record<string, any>;
+      configuredStepId?: string | null;
+      vacancyCodes?: Json;
     }) => {
+      if (configuredStepId) {
+        const standardData = { ...data };
+        delete standardData[`${step}_quien_aprobo`];
+        delete standardData[`${step}_observaciones`];
+        const { data: result, error } = await supabase.rpc('approve_requisition_step', {
+          p_requisition_id: id, p_step_id: configuredStepId, p_approved: approved,
+          p_observations: data?.[`${step}_observaciones`] ?? null,
+          p_standard_data: (approved ? standardData : {}) as Json,
+          p_vacancy_codes: vacancyCodes ?? [],
+        });
+        if (error) throw error;
+        await notifyRequisitionApprover(id, result.estado_requisicion, result.cargo_solicitado);
+        return result;
+      }
       const approverName =
         data?.[`${step}_quien_aprobo`] ||
         profile?.full_name?.trim() ||
@@ -460,6 +491,9 @@ export function useApproveRequisitionStep() {
         title: 'Aprobación registrada',
         description: 'La aprobación se ha registrado correctamente.',
       });
+      queryClient.invalidateQueries({ queryKey: ['approved-requisitions'] });
+      queryClient.invalidateQueries({ queryKey: ['can-approve-requisition-step'] });
+      queryClient.invalidateQueries({ queryKey: ['requisition-vacancy-codes', data.id] });
     },
     onError: (error) => {
       const errorText = getSupabaseErrorText(error);
@@ -467,7 +501,7 @@ export function useApproveRequisitionStep() {
         title: 'Error',
         description: errorText.includes('paso de aprobacion') || errorText.includes('flujo de aprobacion')
           ? 'No se puede aprobar este paso porque la requisicion aun no esta en esa etapa.'
-          : 'No se pudo registrar la aprobacion.',
+          : (error as Error)?.message || 'No se pudo registrar la aprobacion.',
         variant: 'destructive',
       });
       console.error('Error approving requisition:', error);
@@ -481,27 +515,11 @@ export function useSubmitRequisition() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // First approval step is Coordinadores, then the normal RRHH flow continues.
-      const { data, error } = await supabase
-        .from('personnel_requisitions')
-        .update({ estado_requisicion: 'en_coordinadores' } as any)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('submit_requisition', { p_requisition_id: id });
 
       if (error) throw error;
 
-      try {
-        await supabase.functions.invoke('notify-requisition-approver', {
-          body: {
-            requisitionId: id,
-            currentStep: 'en_coordinadores',
-            requisitionTitle: data?.cargo_solicitado || 'Requisicion',
-          },
-        });
-      } catch (notifyError) {
-        console.error('Error notifying coordinator approver:', notifyError);
-      }
+      await notifyRequisitionApprover(id, data.estado_requisicion, data.cargo_solicitado);
 
       return data;
     },

@@ -221,13 +221,18 @@ export function RequisitionApprovalDialog({
 
     await approveStep.mutateAsync({
       id: requisition.id,
+      configuredStepId: requisition.current_approval_step_id,
+      vacancyCodes: step === 'seleccion' && approved ? vacancyCodes.filter(vc => vc.platformId && vc.code.trim()).map(vc => ({
+        platform_id: vc.platformId, codigo_vacante_externa: vc.code.trim(),
+        fecha_creacion: vc.fechaCreacion || null, fecha_cierre: vc.fechaCierre || null,
+      })) : [],
       step,
       approved,
       data,
     });
 
     // Save vacancy codes if any
-    if (step === 'seleccion' && approved && vacancyCodes.length > 0) {
+    if (!requisition.workflow_version_id && step === 'seleccion' && approved && vacancyCodes.length > 0) {
       const validCodes = vacancyCodes.filter(vc => vc.platformId && vc.code.trim());
       if (validCodes.length > 0) {
         await (supabase as any)
@@ -257,7 +262,7 @@ export function RequisitionApprovalDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[calc(100vw-1rem)] max-w-2xl flex-col overflow-hidden p-0 [&_button]:min-h-11 sm:[&_button]:min-h-10 [&_input]:min-h-11 sm:[&_input]:min-h-10 [&_textarea]:min-h-24 [&_[role=combobox]]:min-h-11 sm:[&_[role=combobox]]:min-h-10">
         <DialogHeader className="shrink-0 border-b px-4 pt-4 pb-3 sm:px-6 sm:pt-6">
-          <DialogTitle className="pr-8 text-lg leading-tight sm:pr-0">{stepTitles[step]}</DialogTitle>
+          <DialogTitle className="pr-8 text-lg leading-tight sm:pr-0">{requisition.workflow_version?.steps.find(s => s.id === requisition.current_approval_step_id)?.name ?? stepTitles[step]}</DialogTitle>
           <DialogDescription className="break-words pr-8 sm:pr-0">
             Requisición: {requisition.requisition_code || 'RQ-PEND'} - {requisition.cargo_solicitado} ({requisition.cantidad_vacantes_requeridas} vacantes)
           </DialogDescription>

@@ -1,4 +1,5 @@
 import { AutorizaType, RequisitionStatus } from '@/types/requisition';
+import type { RequisitionWorkflowVersion, RequisitionStepExecution } from '@/types/requisitionWorkflow';
 
 export type RequisitionApprovalStep =
   | 'coordinadores'
@@ -9,6 +10,10 @@ export type RequisitionApprovalStep =
   | 'gerencia';
 
 type RequisitionApprovalSnapshot = {
+  workflow_version_id?: string | null;
+  current_approval_step_id?: string | null;
+  workflow_version?: RequisitionWorkflowVersion | null;
+  step_executions?: RequisitionStepExecution[];
   autoriza?: string | null;
   estado_requisicion?: string | null;
 } & Partial<Record<`${RequisitionApprovalStep}_aprobado`, boolean | null>>;
@@ -79,7 +84,9 @@ export const hasApprovalStepPrerequisites = (
 export const isApprovalStepActiveForRequisition = (
   requisition: RequisitionApprovalSnapshot,
   step: RequisitionApprovalStep,
-) =>
+) => requisition.workflow_version_id
+  ? requisition.workflow_version?.steps.some(s => s.id === requisition.current_approval_step_id && s.kind === step) === true
+  :
   requisition.estado_requisicion === getExpectedStatusForApprovalStep(step) &&
   requisition[`${step}_aprobado`] == null &&
   hasApprovalStepPrerequisites(requisition, step);
@@ -87,6 +94,10 @@ export const isApprovalStepActiveForRequisition = (
 export const getCurrentApprovalStepForRequisition = (
   requisition: RequisitionApprovalSnapshot,
 ): RequisitionApprovalStep | null => {
+  if (requisition.workflow_version_id) {
+    const step = requisition.workflow_version?.steps.find(s => s.id === requisition.current_approval_step_id);
+    return step && step.kind !== 'custom' ? step.kind : null;
+  }
   const route = getRequisitionApprovalRoute(requisition.autoriza);
 
   return route.find((step) => isApprovalStepActiveForRequisition(requisition, step)) ?? null;

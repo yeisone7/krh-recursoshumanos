@@ -43,7 +43,7 @@ interface AlertCandidate {
   selection_steps?: { updated_at?: string | null; completed_date?: string | null }[] | null;
 }
 
-const approvalStatuses = new Set<string>(['enviada', ...Object.values(requisitionApprovalStepStatus)]);
+const approvalStatuses = new Set<string>(['enviada', 'en_aprobacion', ...Object.values(requisitionApprovalStepStatus)]);
 const finishedCandidateStatuses = new Set(['hired', 'not_selected', 'withdrawn']);
 
 function elapsedDays(value: string | null | undefined, now: Date): number | null {

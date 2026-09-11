@@ -34,6 +34,115 @@ export type Database = {
   }
   public: {
     Tables: {
+      requisition_step_executions: {
+        Row: {
+          answers: Json
+          approved: boolean | null
+          approver_id: string | null
+          approver_name: string | null
+          decided_at: string | null
+          observations: string | null
+          position: number
+          requisition_id: string
+          step_id: string
+        }
+        Insert: {
+          answers?: Json
+          approved?: boolean | null
+          approver_id?: string | null
+          approver_name?: string | null
+          decided_at?: string | null
+          observations?: string | null
+          position: number
+          requisition_id: string
+          step_id: string
+        }
+        Update: {
+          answers?: Json
+          approved?: boolean | null
+          approver_id?: string | null
+          approver_name?: string | null
+          decided_at?: string | null
+          observations?: string | null
+          position?: number
+          requisition_id?: string
+          step_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_step_executions_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "personnel_requisitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_workflow_versions: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string
+          id: string
+          steps: Json
+          version: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          steps: Json
+          version: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          steps?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_workflow_versions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requisition_workflow_settings: {
+        Row: {
+          active_version_id: string
+          company_id: string
+        }
+        Insert: {
+          active_version_id: string
+          company_id: string
+        }
+        Update: {
+          active_version_id?: string
+          company_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisition_workflow_settings_company_id_active_version_id_fkey"
+            columns: ["company_id", "active_version_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_workflow_versions"
+            referencedColumns: ["company_id", "id"]
+          },
+          {
+            foreignKeyName: "requisition_workflow_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_chat_conversations: {
         Row: {
           company_id: string
@@ -8129,6 +8238,8 @@ export type Database = {
       }
       personnel_requisitions: {
         Row: {
+          workflow_version_id: string | null
+          current_approval_step_id: string | null
           area_id: string | null
           autoriza: string | null
           cantidad_vacantes_requeridas: number
@@ -8210,6 +8321,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          workflow_version_id?: string | null
+          current_approval_step_id?: string | null
           area_id?: string | null
           autoriza?: string | null
           cantidad_vacantes_requeridas?: number
@@ -8291,6 +8404,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          workflow_version_id?: string | null
+          current_approval_step_id?: string | null
           area_id?: string | null
           autoriza?: string | null
           cantidad_vacantes_requeridas?: number
@@ -8372,6 +8487,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "requisition_workflow_company_fk"
+            columns: ["company_id", "workflow_version_id"]
+            isOneToOne: false
+            referencedRelation: "requisition_workflow_versions"
+            referencedColumns: ["company_id", "id"]
+          },
           {
             foreignKeyName: "personnel_requisitions_area_id_fkey"
             columns: ["area_id"]
@@ -11639,6 +11761,227 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_approve_requisition_step: {
+        Args: { p_requisition_id: string; p_step_id: string }
+        Returns: boolean
+      }
+      has_requisition_workflow_assignment: {
+        Args: { p_company_id: string }
+        Returns: boolean
+      }
+      approve_requisition_step: {
+        Args: {
+          p_vacancy_codes?: Json
+          p_answers?: Json
+          p_approved: boolean
+          p_observations?: string
+          p_requisition_id: string
+          p_standard_data?: Json
+          p_step_id: string
+        }
+        Returns: {
+          area_id: string | null
+          autoriza: string | null
+          cantidad_vacantes_requeridas: number
+          cargo_a_reemplazar: string | null
+          cargo_solicitado: string
+          cargo_solicitante: string | null
+          company_id: string
+          coordinadores_aprobado: boolean | null
+          coordinadores_aprobador_id: string | null
+          coordinadores_fecha_aprobacion: string | null
+          coordinadores_observaciones: string | null
+          coordinadores_quien_aprobo: string | null
+          created_at: string
+          created_by: string | null
+          current_approval_step_id: string | null
+          dia_descanso_obligatorio:
+            | Database["public"]["Enums"]["day_of_week"]
+            | null
+          estado_requisicion: Database["public"]["Enums"]["requisition_status"]
+          fecha_ingreso_estimada: string | null
+          fecha_requisicion: string
+          gerencia_aprobado: boolean | null
+          gerencia_aprobado_salario: boolean | null
+          gerencia_aprobador_id: string | null
+          gerencia_fecha_aprobacion: string | null
+          gerencia_observaciones: string | null
+          gerencia_quien_aprobo: string | null
+          horario_trabajo: string | null
+          id: string
+          incluye_alimentacion: boolean | null
+          incluye_desplazamiento: boolean | null
+          is_confidential: boolean
+          juridico_aprobado: boolean | null
+          juridico_aprobador_id: string | null
+          juridico_duracion: string | null
+          juridico_fecha_aprobacion: string | null
+          juridico_observaciones: string | null
+          juridico_quien_aprobo: string | null
+          juridico_tipo_contrato: string | null
+          lider_proceso: string | null
+          motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
+          observaciones_motivo_solicitud: string | null
+          operaciones_aprobado: boolean | null
+          operaciones_aprobado_salario: boolean | null
+          operaciones_aprobador_id: string | null
+          operaciones_fecha_aprobacion: string | null
+          operaciones_observaciones: string | null
+          operaciones_quien_aprobo: string | null
+          operation_center_id: string | null
+          persona_a_reemplazar: string | null
+          proceso_exclusivo_pcd: boolean
+          requiere_herramienta_trabajo: boolean | null
+          requisition_code: string
+          rrhh_aprobado: boolean | null
+          rrhh_aprobador_id: string | null
+          rrhh_asignacion_salarial: number | null
+          rrhh_condiciones_adicionales: string | null
+          rrhh_fecha_aprobacion: string | null
+          rrhh_fuente_asignacion_salarial: string | null
+          rrhh_nivel_politica_salarial: string | null
+          rrhh_observaciones: string | null
+          rrhh_quien_aprobo: string | null
+          rrhh_tipo_convocatoria:
+            | Database["public"]["Enums"]["recruitment_type"]
+            | null
+          salario_propuesto: number | null
+          seleccion_aprobado: boolean | null
+          seleccion_aprobador_id: string | null
+          seleccion_fecha_aprobacion: string | null
+          seleccion_fecha_inicio_proceso: string | null
+          seleccion_observaciones: string | null
+          seleccion_perfil_cargo_creado: boolean | null
+          seleccion_quien_aprobo: string | null
+          seleccion_tipo_mano_obra: string | null
+          solicitante_id: string | null
+          solicitante_nombre: string
+          tipo_contrato_solicitado: string | null
+          trayecto_desplazamiento: string | null
+          turno_trabajo_id: string | null
+          updated_at: string
+          workflow_version_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "personnel_requisitions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_requisition: {
+        Args: { p_requisition_id: string }
+        Returns: {
+          area_id: string | null
+          autoriza: string | null
+          cantidad_vacantes_requeridas: number
+          cargo_a_reemplazar: string | null
+          cargo_solicitado: string
+          cargo_solicitante: string | null
+          company_id: string
+          coordinadores_aprobado: boolean | null
+          coordinadores_aprobador_id: string | null
+          coordinadores_fecha_aprobacion: string | null
+          coordinadores_observaciones: string | null
+          coordinadores_quien_aprobo: string | null
+          created_at: string
+          created_by: string | null
+          current_approval_step_id: string | null
+          dia_descanso_obligatorio:
+            | Database["public"]["Enums"]["day_of_week"]
+            | null
+          estado_requisicion: Database["public"]["Enums"]["requisition_status"]
+          fecha_ingreso_estimada: string | null
+          fecha_requisicion: string
+          gerencia_aprobado: boolean | null
+          gerencia_aprobado_salario: boolean | null
+          gerencia_aprobador_id: string | null
+          gerencia_fecha_aprobacion: string | null
+          gerencia_observaciones: string | null
+          gerencia_quien_aprobo: string | null
+          horario_trabajo: string | null
+          id: string
+          incluye_alimentacion: boolean | null
+          incluye_desplazamiento: boolean | null
+          is_confidential: boolean
+          juridico_aprobado: boolean | null
+          juridico_aprobador_id: string | null
+          juridico_duracion: string | null
+          juridico_fecha_aprobacion: string | null
+          juridico_observaciones: string | null
+          juridico_quien_aprobo: string | null
+          juridico_tipo_contrato: string | null
+          lider_proceso: string | null
+          motivo_solicitud: Database["public"]["Enums"]["requisition_reason"]
+          observaciones_motivo_solicitud: string | null
+          operaciones_aprobado: boolean | null
+          operaciones_aprobado_salario: boolean | null
+          operaciones_aprobador_id: string | null
+          operaciones_fecha_aprobacion: string | null
+          operaciones_observaciones: string | null
+          operaciones_quien_aprobo: string | null
+          operation_center_id: string | null
+          persona_a_reemplazar: string | null
+          proceso_exclusivo_pcd: boolean
+          requiere_herramienta_trabajo: boolean | null
+          requisition_code: string
+          rrhh_aprobado: boolean | null
+          rrhh_aprobador_id: string | null
+          rrhh_asignacion_salarial: number | null
+          rrhh_condiciones_adicionales: string | null
+          rrhh_fecha_aprobacion: string | null
+          rrhh_fuente_asignacion_salarial: string | null
+          rrhh_nivel_politica_salarial: string | null
+          rrhh_observaciones: string | null
+          rrhh_quien_aprobo: string | null
+          rrhh_tipo_convocatoria:
+            | Database["public"]["Enums"]["recruitment_type"]
+            | null
+          salario_propuesto: number | null
+          seleccion_aprobado: boolean | null
+          seleccion_aprobador_id: string | null
+          seleccion_fecha_aprobacion: string | null
+          seleccion_fecha_inicio_proceso: string | null
+          seleccion_observaciones: string | null
+          seleccion_perfil_cargo_creado: boolean | null
+          seleccion_quien_aprobo: string | null
+          seleccion_tipo_mano_obra: string | null
+          solicitante_id: string | null
+          solicitante_nombre: string
+          tipo_contrato_solicitado: string | null
+          trayecto_desplazamiento: string | null
+          turno_trabajo_id: string | null
+          updated_at: string
+          workflow_version_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "personnel_requisitions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      publish_requisition_workflow: {
+        Args: {
+          p_company_id: string
+          p_expected_version_id?: string
+          p_steps: Json
+        }
+        Returns: {
+          company_id: string
+          created_at: string
+          created_by: string
+          id: string
+          steps: Json
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "requisition_workflow_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       adjust_dotation_inventory: {
         Args: {
           p_adjustment: number
@@ -12683,6 +13026,7 @@ export type Database = {
         | "calamidad"
         | "licencia"
       requisition_status:
+        | "en_aprobacion"
         | "borrador"
         | "enviada"
         | "en_operaciones"
@@ -13237,6 +13581,7 @@ export const Constants = {
         "licencia",
       ],
       requisition_status: [
+        "en_aprobacion",
         "borrador",
         "enviada",
         "en_operaciones",
