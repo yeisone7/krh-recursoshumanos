@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRequisitionWorkflowAccess } from '@/hooks/useRequisitionWorkflow';
 import { UserManualDialog } from '@/components/manual/UserManualDialog';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -320,6 +321,7 @@ const adminNavItems: NavItem[] = [
   { label: 'Seguridad', icon: <ShieldCheck className="w-5 h-5" />, href: '/seguridad', moduleCode: 'seguridad' },
   { label: 'Auditoría', icon: <History className="w-5 h-5" />, href: '/auditoria', moduleCode: 'auditoria' },
   { label: 'Configuración', icon: <Settings className="w-5 h-5" />, href: '/configuracion', moduleCode: 'configuracion' },
+  { label: 'Ciclo de Requisiciones', icon: <Workflow className="w-5 h-5" />, href: '/configuracion/requisiciones', moduleCode: 'req_workflow_config' },
 ];
 
 const catalogosSeleccionItem: NavItem = {
@@ -348,7 +350,8 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
-  const { canView, isAdmin, isSuperAdmin, permissionsLoaded } = useAuth();
+  const { canView, hasPermission, isAdmin, isSuperAdmin, permissionsLoaded } = useAuth();
+  const workflowAccess = useRequisitionWorkflowAccess();
 
   // In mobile drawer mode, never collapse - always show full sidebar
   const isCollapsed = isMobileDrawer ? false : collapsed;
@@ -356,8 +359,10 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const canViewItem = useCallback((item: NavItem): boolean => {
     if (isAdmin || !permissionsLoaded) return true;
     if (!item.moduleCode) return true;
+    if (item.moduleCode === 'req_workflow_config') return hasPermission('req_workflow_config', 'update');
+    if (item.moduleCode === 'requisiciones' && workflowAccess.data) return true;
     return canView(item.moduleCode);
-  }, [canView, isAdmin, permissionsLoaded]);
+  }, [canView, hasPermission, isAdmin, permissionsLoaded, workflowAccess.data]);
 
   // Filter nav items based on permissions
   const filterItems = useCallback((items: NavItem[]): NavItem[] => {
@@ -379,8 +384,9 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     if (isAdmin || isSuperAdmin) return true;
     if (!permissionsLoaded) return false;
     if (!item.moduleCode) return true;
+    if (item.moduleCode === 'requisiciones' && workflowAccess.data) return true;
     return canView(item.moduleCode);
-  }, [canView, isAdmin, isSuperAdmin, permissionsLoaded]);
+  }, [canView, isAdmin, isSuperAdmin, permissionsLoaded, workflowAccess.data]);
 
   const filteredCoreNavItems = useMemo(() => filterItems(coreNavItems), [filterItems]);
   const filteredPersonnelNavItems = useMemo(() => filterItems(personnelNavItems), [filterItems]);

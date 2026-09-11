@@ -63,6 +63,7 @@ import { DEFAULT_WATERMARK_CONFIG } from '@/lib/watermark';
 import { SecurityTab } from '@/components/config/SecurityTab';
 import { DiversityGoalsConfig } from '@/components/config/DiversityGoalsConfig';
 import { AITab } from '@/components/config/AITab';
+import { RequisitionWorkflowConfig } from '@/components/config/RequisitionWorkflowConfig';
 
 function normalizeTwilioWhatsappSender(value: string) {
   const compact = value.trim().replace(/\s+/g, '');
@@ -76,7 +77,7 @@ function normalizeTwilioWhatsappSender(value: string) {
 }
 
 export default function Configuracion() {
-  const { currentCompanyId, isAdmin } = useAuth();
+  const { currentCompanyId, isAdmin, hasPermission } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const updateCompany = useUpdateCompany();
   
@@ -450,6 +451,7 @@ export default function Configuracion() {
               { value: 'security', label: 'Protección', icon: Shield },
               { value: 'ai', label: 'IA Cognitiva', icon: Brain },
               { value: 'watermark', label: 'Branding', icon: Stamp },
+              ...(hasPermission('req_workflow_config', 'update') ? [{ value: 'requisitions', label: 'Requisiciones', icon: FileText }] : []),
             ].map((tab) => (
               <TabsTrigger 
                 key={tab.value}
@@ -464,6 +466,7 @@ export default function Configuracion() {
         </div>
 
         {/* Company Tab */}
+        <TabsContent value="requisitions"><RequisitionWorkflowConfig /></TabsContent>
         <TabsContent value="company" className="space-y-8 focus-visible:outline-none px-1">
           <Card className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="p-8 border-b border-slate-200 bg-slate-50/60">

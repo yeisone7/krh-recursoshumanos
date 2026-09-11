@@ -36,6 +36,8 @@ import { useDeleteRequisition, useRequisitions, PersonnelRequisition } from '@/h
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { RequisitionFormDialog, RequisitionDetailDialog, RequisitionApprovalDialog } from '@/components/requisitions';
 import { exportRequisitionToPDF } from '@/lib/requisitionPdfGenerator';
+import { getConfiguredCurrentStep } from '@/lib/requisitionWorkflow';
+import { standardStepNames } from '@/types/requisitionWorkflow';
 import {
   getCurrentApprovalStepForRequisition,
   requisitionApprovalStepPermissions,
@@ -106,7 +108,7 @@ export default function Requisiciones() {
   const stats = useMemo(() => ({
     total: requisitions.length,
     borrador: requisitions.filter(r => r.estado_requisicion === 'borrador').length,
-    enProceso: requisitions.filter(r => ['en_coordinadores', 'en_operaciones', 'en_rrhh', 'en_juridico', 'en_gerencia', 'en_seleccion'].includes(r.estado_requisicion)).length,
+    enProceso: requisitions.filter(r => ['en_aprobacion', 'en_coordinadores', 'en_operaciones', 'en_rrhh', 'en_juridico', 'en_gerencia', 'en_seleccion'].includes(r.estado_requisicion)).length,
     aprobadas: requisitions.filter(r => r.estado_requisicion === 'aprobada').length,
   }), [requisitions]);
 
@@ -117,7 +119,8 @@ export default function Requisiciones() {
         r.cargo_solicitado.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.solicitante_nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (r.lider_proceso || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter;
+      const matchesStatus = statusFilter === 'all' || r.estado_requisicion === statusFilter
+        || (statusFilter.startsWith('step:') && r.current_approval_step_id === statusFilter.slice(5));
       const matchesCenter = centerFilter === 'all' || r.operation_center_id === centerFilter;
       const matchesProcessLeader = processLeaderFilter === 'all' || (r.lider_proceso || 'Sin lider asignado') === processLeaderFilter;
       const matchesVacancyClosure =
@@ -178,6 +181,9 @@ export default function Requisiciones() {
   };
 
   const getApprovalProgress = (req: PersonnelRequisition) => {
+    if (req.workflow_version) return req.workflow_version.steps.map(s => ({
+      key: s.id, label: s.name.slice(0, 2).toUpperCase(), title: s.name, approved: req.step_executions?.find(e => e.step_id === s.id)?.approved ?? null,
+    }));
     const allSteps = [
       { key: 'coordinadores', label: 'CO', approved: req.coordinadores_aprobado },
       { key: 'rrhh', label: 'RH', approved: req.rrhh_aprobado },
@@ -191,12 +197,14 @@ export default function Requisiciones() {
       if (s.key === 'operaciones' && req.autoriza === 'gerencia_administrativa') return false;
       if (s.key === 'gerencia' && req.autoriza === 'gerencia_operaciones') return false;
       return true;
-    });
+    }).map(s => ({ ...s, title: standardStepNames[s.key as RequisitionApprovalStep] }));
   };
 
   const statusOptions = [
     { value: 'all', label: 'Todos los estados' },
     ...Object.entries(requisitionStatusLabels).map(([k, v]) => ({ value: k, label: v })),
+    ...Array.from(new Map(requisitions.flatMap(r => r.workflow_version?.steps.map(s => [s.id, s.name] as const) ?? [])).entries())
+      .map(([id, name]) => ({ value: `step:${id}`, label: `Etapa: ${name}` })),
   ];
 
   const centerOptions = [
@@ -439,7 +447,7 @@ export default function Requisiciones() {
                               })
                             ) : (
                               <Badge variant="outline" className={cn('text-[9px] font-black uppercase tracking-widest px-3 py-1 border-border shadow-sm rounded-full', cfg.bg, cfg.text, cfg.border)}>
-                                {requisitionStatusLabels[status]}
+                                {getConfiguredCurrentStep(req)?.name ?? requisitionStatusLabels[status]}
                               </Badge>
                             )}
                           </div>
@@ -461,10 +469,11 @@ export default function Requisiciones() {
                         </div>
 
                         <div className="flex items-center justify-between gap-4 pt-2 border-t border-border ">
-                          <div className="flex -space-x-2">
+                          <div className="flex min-w-0 flex-wrap gap-1">
                             {progress.map((s, idx) => (
                               <div
                                 key={s.key}
+                                title={s.title}
                                 className={cn(
                                   'w-8 h-8 rounded-full flex items-center justify-center border-4 border-background text-[9px] font-black z-[1] shadow-sm',
                                   s.approved === true ? 'bg-emerald-500 text-white' : s.approved === false ? 'bg-red-500 text-white' : 'bg-background text-muted-foreground'
@@ -575,13 +584,14 @@ export default function Requisiciones() {
                           </TableCell>
                           <TableCell className="px-1.5 py-4 2xl:px-2">
                             <TooltipProvider>
-                              <div className="flex min-w-0 items-center justify-center gap-0.5">
+                              <div className="flex min-w-0 flex-wrap items-center justify-center gap-0.5">
                                 {progress.map((s, idx) => (
                                   <div key={s.key} className="flex items-center">
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <button
                                           type="button"
+                                          aria-label={s.title}
                                           className={cn(
                                             'w-5 h-5 rounded-md flex items-center justify-center text-[8px] font-black transition-all duration-300 border-2 shrink-0 2xl:h-6 2xl:w-6 2xl:rounded-full',
                                             s.approved === true && 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/10',
@@ -594,7 +604,7 @@ export default function Requisiciones() {
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent side="top" className="text-xs bg-popover/90 border-primary/20 p-3 rounded-xl shadow-lg">
-                                        <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.key === 'coordinadores' ? 'Coordinadores' : s.key === 'operaciones' ? 'Operaciones' : s.key === 'rrhh' ? 'RH' : s.key === 'juridico' ? 'Jurídico' : s.key === 'gerencia' ? 'Gerencia' : 'Selección'}</p>
+                                        <p className="font-black uppercase tracking-widest text-[10px] mb-1">{s.title}</p>
                                         <p className={cn('font-bold', s.approved === true ? 'text-emerald-500' : s.approved === false ? 'text-red-500' : 'text-muted-foreground')}>
                                           {s.approved === true ? '✓ APROBADO' : s.approved === false ? '✗ RECHAZADO' : '○ PENDIENTE'}
                                         </p>
@@ -621,7 +631,7 @@ export default function Requisiciones() {
                                 })
                               ) : (
                                 <Badge variant="outline" title={`Requisicion: ${requisitionStatusLabels[status]}`} className={cn('h-7 max-w-[120px] truncate rounded-full text-[8px] font-black uppercase tracking-wider px-2.5 border-border shadow-sm', cfg.bg, cfg.text, cfg.border)}>
-                                  {requisitionStatusLabels[status]}
+                                  {getConfiguredCurrentStep(req)?.name ?? requisitionStatusLabels[status]}
                                 </Badge>
                               )}
                               {closedVacancies.length > 0 && (

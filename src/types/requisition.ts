@@ -29,6 +29,7 @@ export const autorizaLabels: Record<AutorizaType, string> = {
 };
 
 export type RequisitionStatus = 
+  | 'en_aprobacion'
   | 'borrador' 
   | 'enviada' 
   | 'en_coordinadores'
@@ -75,6 +76,7 @@ export const recruitmentTypeLabels: Record<RecruitmentType, string> = {
 };
 
 export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
+  en_aprobacion: 'En aprobación',
   borrador: 'Borrador',
   enviada: 'Enviada',
   en_coordinadores: 'En Coordinadores',
@@ -90,6 +92,7 @@ export const requisitionStatusLabels: Record<RequisitionStatus, string> = {
 
 // Status styling - Multi-tone palette
 export const requisitionStatusConfig: Record<RequisitionStatus, { bg: string; text: string; border: string }> = {
+  en_aprobacion: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/20' },
   borrador: { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border' },
   enviada: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
   en_coordinadores: { bg: 'bg-sky-500/10', text: 'text-sky-700', border: 'border-sky-500/20' },
