@@ -30,17 +30,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search, Mail, Phone, Loader2, Calendar, Settings2, Trash2, Pencil } from 'lucide-react';
+import { MoreHorizontal, Shield, Building2, MapPin, UserX, Link, UserCheck, UserMinus, AlertTriangle, Search, Mail, Phone, Loader2, Calendar, Settings2, Trash2, Pencil, KeyRound, Copy } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { UserRoleDialog } from './UserRoleDialog';
 import { UserCenterDialog } from './UserCenterDialog';
 import { UserCompanyDialog } from './UserCompanyDialog';
 import { LinkEmployeeDialog } from './LinkEmployeeDialog';
 import { UserNameEditDialog } from './UserNameEditDialog';
-import { useDeleteSystemUser, useRemoveCompanyAssignment, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
+import { useDeleteSystemUser, useRemoveCompanyAssignment, useResetUserPassword, useToggleUserStatus, type AdminUser } from '@/hooks/useAdminUsers';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -71,6 +79,10 @@ function isPendingCompanyAssignment(user: AdminUser): boolean {
   return user.companies.length === 0;
 }
 
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 type AppRole = Database['public']['Enums']['app_role'];
 
 const ROLE_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -88,7 +100,7 @@ interface UsersTableProps {
 }
 
 export function UsersTable({ users, isLoading }: UsersTableProps) {
-  const { currentCompanyId, user: currentUser } = useAuth();
+  const { currentCompanyId, user: currentUser, isSuperAdmin } = useAuth();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roleDialogOpen, setRoleDialogOpen] = useState(false);
   const [centerDialogOpen, setCenterDialogOpen] = useState(false);
@@ -100,10 +112,15 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
   const [userToToggle, setUserToToggle] = useState<AdminUser | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] = useState(false);
+  const [temporaryPasswordDialogOpen, setTemporaryPasswordDialogOpen] = useState(false);
+  const [userToResetPassword, setUserToResetPassword] = useState<AdminUser | null>(null);
+  const [temporaryPassword, setTemporaryPassword] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const removeCompany = useRemoveCompanyAssignment();
   const toggleStatus = useToggleUserStatus();
   const deleteSystemUser = useDeleteSystemUser();
+  const resetUserPassword = useResetUserPassword();
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
@@ -205,10 +222,44 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
       toast.success('Usuario eliminado del sistema');
       setDeleteDialogOpen(false);
       setUserToDelete(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('No fue posible eliminar el usuario', {
-        description: error?.message || 'Por favor intenta de nuevo',
+        description: getErrorMessage(error, 'Por favor intenta de nuevo'),
       });
+    }
+  };
+
+  const handleResetUserPassword = (user: AdminUser) => {
+    if (user.id === currentUser?.id) {
+      toast.error('No puedes restablecer tu propia contraseña desde esta opción');
+      return;
+    }
+
+    setUserToResetPassword(user);
+    setPasswordResetDialogOpen(true);
+  };
+
+  const confirmResetUserPassword = async () => {
+    if (!userToResetPassword) return;
+
+    try {
+      const result = await resetUserPassword.mutateAsync({ userId: userToResetPassword.id });
+      setTemporaryPassword(result.temporaryPassword);
+      setPasswordResetDialogOpen(false);
+      setTemporaryPasswordDialogOpen(true);
+    } catch (error: unknown) {
+      toast.error('No fue posible restablecer la contraseña', {
+        description: getErrorMessage(error, 'Por favor intenta de nuevo'),
+      });
+    }
+  };
+
+  const copyTemporaryPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(temporaryPassword);
+      toast.success('Contraseña temporal copiada');
+    } catch {
+      toast.error('No fue posible copiar la contraseña');
     }
   };
 
@@ -243,6 +294,16 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
           Nexo Empleado
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-slate-50" />
+        {isSuperAdmin && (
+          <DropdownMenuItem
+            onClick={() => handleResetUserPassword(user)}
+            disabled={user.id === currentUser?.id || resetUserPassword.isPending}
+            className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-tight transition-colors focus:bg-amber-50 focus:text-amber-700 cursor-pointer"
+          >
+            <KeyRound className="w-4 h-4" />
+            Restablecer contraseña
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem 
           onClick={() => handleToggleStatus(user)} 
           disabled={user.id === currentUser?.id}
@@ -586,6 +647,74 @@ export function UsersTable({ users, isLoading }: UsersTableProps) {
       <UserCompanyDialog user={selectedUser} open={companyDialogOpen} onOpenChange={setCompanyDialogOpen} />
       <LinkEmployeeDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} userId={selectedUser?.id || ''} userEmail={selectedUser?.email} />
       <UserNameEditDialog user={selectedUser} open={nameDialogOpen} onOpenChange={setNameDialogOpen} />
+
+      <AlertDialog
+        open={passwordResetDialogOpen}
+        onOpenChange={(open) => {
+          setPasswordResetDialogOpen(open);
+          if (!open && !resetUserPassword.isPending && !temporaryPasswordDialogOpen) setUserToResetPassword(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restablecer contraseña</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se generará una contraseña temporal para {userToResetPassword ? getUserDisplayName(userToResetPassword) : 'este usuario'}.
+              El usuario deberá cambiarla antes de acceder a la aplicación.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetUserPassword.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                confirmResetUserPassword();
+              }}
+              disabled={resetUserPassword.isPending}
+            >
+              {resetUserPassword.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Generar contraseña temporal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <Dialog
+        open={temporaryPasswordDialogOpen}
+        onOpenChange={(open) => {
+          setTemporaryPasswordDialogOpen(open);
+          if (!open) {
+            setTemporaryPassword('');
+            setUserToResetPassword(null);
+          }
+        }}
+      >
+        <DialogContent onInteractOutside={(event) => event.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Contraseña temporal generada</DialogTitle>
+            <DialogDescription>
+              Cópiala ahora y entrégala por un canal seguro. No podrás consultarla nuevamente después de cerrar esta ventana.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Usuario</p>
+            <p className="mt-1 text-sm text-slate-700">
+              {userToResetPassword ? (userToResetPassword.email || getUserDisplayName(userToResetPassword)) : 'Usuario seleccionado'}
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <code className="min-w-0 flex-1 overflow-x-auto rounded-md bg-white px-3 py-2 text-base font-bold tracking-wider text-slate-900">
+                {temporaryPassword}
+              </code>
+              <Button type="button" size="icon" variant="outline" onClick={copyTemporaryPassword} aria-label="Copiar contraseña temporal">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={() => setTemporaryPasswordDialogOpen(false)}>Ya la guardé</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Deactivation Confirmation Dialog */}
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>

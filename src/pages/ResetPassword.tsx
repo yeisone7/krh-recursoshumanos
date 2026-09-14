@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  confirmPassword: z.string().min(6, 'Confirme su contraseña'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
+  confirmPassword: z.string().min(8, 'Confirme su contraseña'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
@@ -25,6 +26,7 @@ export default function ResetPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { mustChangePassword, signOut } = useAuth();
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -38,11 +40,28 @@ export default function ResetPassword() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: data.password });
+      if (mustChangePassword) {
+        const { data: result, error } = await supabase.functions.invoke('complete-forced-password-change', {
+          body: { password: data.password },
+        });
 
-      if (error) {
-        toast({ variant: 'destructive', title: 'No fue posible actualizar la contraseña', description: error.message });
-        return;
+        if (error || result?.error) {
+          toast({
+            variant: 'destructive',
+            title: 'No fue posible actualizar la contraseña',
+            description: result?.error || error?.message || 'Intenta nuevamente.',
+          });
+          return;
+        }
+
+        await signOut();
+      } else {
+        const { error } = await supabase.auth.updateUser({ password: data.password });
+
+        if (error) {
+          toast({ variant: 'destructive', title: 'No fue posible actualizar la contraseña', description: error.message });
+          return;
+        }
       }
 
       toast({ title: 'Contraseña actualizada', description: 'Ya puedes iniciar sesión con tu nueva contraseña.' });

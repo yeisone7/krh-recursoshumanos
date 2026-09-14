@@ -581,6 +581,22 @@ export function useDeleteSystemUser() {
   });
 }
 
+export function useResetUserPassword() {
+  return useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: { userId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.temporaryPassword) throw new Error('El servidor no devolvió la contraseña temporal');
+
+      return data as { success: true; temporaryPassword: string };
+    },
+  });
+}
+
 export function useUpdateUserProfile() {
   const queryClient = useQueryClient();
 

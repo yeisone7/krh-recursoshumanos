@@ -4,10 +4,11 @@ import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowForcedPasswordChange?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+export function ProtectedRoute({ children, allowForcedPasswordChange = false }: ProtectedRouteProps) {
+  const { user, isLoading, mustChangePassword } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -20,6 +21,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (allowForcedPasswordChange && !mustChangePassword) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (mustChangePassword && !allowForcedPasswordChange) {
+    return <Navigate to="/change-password-required" replace />;
   }
 
   return <>{children}</>;
