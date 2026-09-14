@@ -59,6 +59,7 @@ import Analitica from "./pages/Analitica";
 import AsistenteIA from "./pages/AsistenteIA";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import ForcedPasswordChange from "./pages/ForcedPasswordChange";
 import Onboarding from "./pages/Onboarding";
 import SelectCompany from "./pages/SelectCompany";
 import Empleado360 from "./pages/Empleado360";
@@ -158,6 +159,11 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/change-password-required" element={
+              <ProtectedRoute allowForcedPasswordChange>
+                <ForcedPasswordChange />
+              </ProtectedRoute>
+            } />
             <Route path="/capacitacion" element={<AccesoPublico />} />
             <Route path="/capacitacion/grupo" element={<AccesoPublico groupMode />} />
             <Route path="/copasst/votar" element={<Suspense fallback={null}><CopasstPublicVote /></Suspense>} />

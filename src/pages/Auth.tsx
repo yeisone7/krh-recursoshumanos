@@ -143,7 +143,7 @@ export default function Auth() {
   }, [countdown]);
 
   const loginErrorSummaryRef = useRef<HTMLDivElement>(null);
-  const { user, signIn, signUp, signOut } = useAuth();
+  const { user, mustChangePassword, signIn, signUp, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast, dismiss } = useToast();
@@ -154,9 +154,9 @@ export default function Auth() {
 
   useEffect(() => {
     if (user && !isRegisterFlowActive && !successType) {
-      navigate(from, { replace: true });
+      navigate(mustChangePassword ? '/change-password-required' : from, { replace: true });
     }
-  }, [user, isRegisterFlowActive, successType, navigate, from]);
+  }, [user, mustChangePassword, isRegisterFlowActive, successType, navigate, from]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setIsFormReady(true));

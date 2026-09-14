@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.public-leave-request]
 verify_jwt = false
+
+[functions.reset-user-password]
+verify_jwt = true
+
+[functions.complete-forced-password-change]
+verify_jwt = true

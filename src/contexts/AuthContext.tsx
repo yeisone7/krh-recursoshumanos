@@ -27,6 +27,7 @@ interface AuthContextType {
   currentCompanyId: string | null;
   setCurrentCompanyId: (id: string | null) => void;
   isLoading: boolean;
+  mustChangePassword: boolean;
   isAdmin: boolean;
   isRRHH: boolean;
   isAuditor: boolean;
@@ -268,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isRRHH = hasRoleFn('rrhh');
   const isAuditor = hasRoleFn('auditor');
   const isPsicologo = hasRoleFn('psicologo');
+  const mustChangePassword = user?.app_metadata?.force_password_change === true;
 
   // New permission helpers
   const hasPermission = useCallback((moduleCode: string, action: string = 'view'): boolean => {
@@ -375,6 +377,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         currentCompanyId,
         setCurrentCompanyId,
         isLoading,
+        mustChangePassword,
         isAdmin: roles.includes('admin') || isSuperAdmin,
         isRRHH: roles.includes('rrhh') || isSuperAdmin,
         isAuditor: roles.includes('auditor') || isSuperAdmin,
