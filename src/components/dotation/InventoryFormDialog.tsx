@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useQuery } from '@tanstack/react-query';
+import { getDotationSizeSuggestions } from '@/lib/dotationSizes';
 
 interface InventoryFormDialogProps {
   open: boolean;
@@ -38,9 +39,6 @@ interface InventoryFormValues {
   quantity_available: number;
   minimum_stock: number;
 }
-
-const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
 export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryFormDialogProps) {
   const { currentCompanyId } = useAuth();
@@ -91,7 +89,7 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
 
   const selectedItemType = form.watch('item_type');
   const selectedTypeData = activeItemTypes.find((t) => t.id === selectedItemType);
-  const isFootwear = selectedTypeData?.category?.toLowerCase()?.includes('calzado');
+  const sizeSuggestions = getDotationSizeSuggestions(selectedTypeData);
 
   const handleSubmit = async (values: InventoryFormValues) => {
     try {
@@ -223,23 +221,22 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
                     render={({ field }) => (
                       <FormItem className="space-y-2">
                         <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Talla</FormLabel>
-                        <Select
-                          onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)}
-                          value={field.value || '__none__'}
-                          disabled={!!editItem}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm">
-                              <SelectValue placeholder="Sin talla" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="rounded-xl">
-                            <SelectItem value="__none__" className="rounded-lg font-bold text-xs">Sin talla</SelectItem>
-                            {(isFootwear ? shoeSizeOptions : sizeOptions).map((s) => (
-                              <SelectItem key={s} value={s} className="rounded-lg font-bold text-xs">{s}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value || ''}
+                            list="inventory-size-suggestions"
+                            placeholder="Ej. S, 32 o 38"
+                            disabled={!!editItem}
+                            className="h-12 rounded-xl border-border/50 bg-background font-bold text-sm"
+                          />
+                        </FormControl>
+                        <datalist id="inventory-size-suggestions">
+                          {sizeSuggestions.map((size) => <option key={size} value={size} />)}
+                        </datalist>
+                        <FormDescription className="text-[9px] font-bold uppercase tracking-tight text-muted-foreground/70">
+                          Puedes escribir una talla numérica o alfanumérica.
+                        </FormDescription>
                         <FormMessage className="text-[10px] font-bold uppercase" />
                       </FormItem>
                     )}
