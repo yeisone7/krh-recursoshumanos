@@ -38,6 +38,7 @@ import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import type { Database } from '@/integrations/supabase/types';
+import { getDotationSizeSuggestions } from '@/lib/dotationSizes';
 
 type DotationItemType = Database['public']['Enums']['dotation_item_type'];
 
@@ -56,9 +57,6 @@ interface DeliveryItem {
   size?: string;
   fromProfesiograma: boolean;
 }
-
-const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-const shoeSizeOptions = Array.from({ length: 13 }, (_, i) => (35 + i).toString());
 
 export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFormDialogProps) {
   const { data: employees = [] } = useEmployees();
@@ -225,8 +223,6 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
       setIsSubmitting(false);
     }
   };
-
-  const isFootwear = (type: string) => type === 'calzado_seguridad' || type === 'calzado_dielectrico';
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
@@ -474,20 +470,21 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                                  className="h-10 w-full sm:w-20 rounded-xl bg-background border-border/50 text-center font-bold"
                                />
                              </div>
-                             <Select
-                               value={item.size || '__none__'}
-                               onValueChange={(v) => updateItem(idx, 'size', v === '__none__' ? undefined : v)}
-                             >
-                                <SelectTrigger className="h-10 w-full sm:w-24 rounded-xl bg-background border-border/50">
-                                 <SelectValue placeholder="Talla" />
-                               </SelectTrigger>
-                               <SelectContent className="bg-background rounded-xl shadow-2xl">
-                                 <SelectItem value="__none__" className="rounded-lg">—</SelectItem>
-                                 {(isFootwear(item.itemTypeEnum) ? shoeSizeOptions : sizeOptions).map(s => (
-                                   <SelectItem key={s} value={s} className="rounded-lg">{s}</SelectItem>
-                                 ))}
-                               </SelectContent>
-                             </Select>
+                             <div>
+                               <Input
+                                 value={item.size || ''}
+                                 onChange={(event) => updateItem(idx, 'size', event.target.value || undefined)}
+                                 list={`delivery-size-suggestions-${idx}`}
+                                 aria-label={`Talla de ${item.itemName || 'artículo'}`}
+                                 placeholder="Talla"
+                                 className="h-10 w-full sm:w-24 rounded-xl bg-background border-border/50 font-semibold"
+                               />
+                               <datalist id={`delivery-size-suggestions-${idx}`}>
+                                 {getDotationSizeSuggestions(
+                                   itemTypeCatalog.find((catalogItem) => catalogItem.id === item.itemTypeId),
+                                 ).map((size) => <option key={size} value={size} />)}
+                               </datalist>
+                             </div>
                              <Button 
                               variant="ghost" 
                               size="icon" 
