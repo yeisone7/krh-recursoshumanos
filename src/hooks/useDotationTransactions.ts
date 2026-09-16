@@ -39,15 +39,18 @@ export interface DotationTransactionItem {
 }
 
 export function useDotationTransactions() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_transactions', currentCompanyId],
+    queryKey: ['dotation_transactions', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async (): Promise<DotationTransaction[]> => {
       // Get transactions
       const { data: transactions, error } = await supabase
         .from('dotation_delivery_transactions')
         .select('*')
+        .eq('company_id', currentCompanyId!)
         .order('delivery_date', { ascending: false });
 
       if (error) throw error;
@@ -61,6 +64,7 @@ export function useDotationTransactions() {
         supabase
           .from('dotation_deliveries')
           .select('id, transaction_id, item_type, item_name, quantity, size, delivery_date, expiration_date')
+          .eq('company_id', currentCompanyId!)
           .in('transaction_id', transactionIds),
         supabase
           .from('employees_v2')
@@ -92,6 +96,12 @@ export function useDotationTransactions() {
       const employeeMap = new Map(
         (employeesResult.data || []).map((e: any) => {
           const currentWorkInfo = e.employee_work_info?.find((w: any) => w.is_current);
+          if (
+            shouldLimitByAssignedCenters
+            && (!currentWorkInfo?.operation_center_id || !assignedCenterIds.includes(currentWorkInfo.operation_center_id))
+          ) {
+            return [e.id, null] as const;
+          }
           return [e.id, {
             id: e.id,
             first_name: e.first_name,
