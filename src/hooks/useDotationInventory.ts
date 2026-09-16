@@ -23,10 +23,12 @@ export interface DotationInventoryItem {
 }
 
 export function useDotationInventory() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_inventory', currentCompanyId],
+    queryKey: ['dotation_inventory', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('dotation_inventory')
@@ -35,7 +37,10 @@ export function useDotationInventory() {
         .order('item_name');
 
       if (error) throw error;
-      return (data || []) as DotationInventoryItem[];
+      const inventory = (data || []) as DotationInventoryItem[];
+      return shouldLimitByAssignedCenters
+        ? inventory.filter((item) => !!item.operation_center_id && assignedCenterIds.includes(item.operation_center_id))
+        : inventory;
     },
     enabled: !!currentCompanyId,
   });

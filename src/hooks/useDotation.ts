@@ -63,15 +63,18 @@ async function getEmployeeV2Info(employeeId: string) {
 }
 
 export function useDotationDeliveries() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_deliveries', currentCompanyId],
+    queryKey: ['dotation_deliveries', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       // Get all dotation deliveries
       const { data: deliveries, error } = await supabase
         .from('dotation_deliveries')
         .select('*')
+        .eq('company_id', currentCompanyId!)
         .order('delivery_date', { ascending: false });
 
       if (error) throw error;
@@ -112,6 +115,12 @@ export function useDotationDeliveries() {
           if (!employee) return null; // Filter out deliveries without matching employee in company
           
           const currentWorkInfo = employee.employee_work_info?.find((w: any) => w.is_current);
+          if (
+            shouldLimitByAssignedCenters
+            && (!currentWorkInfo?.operation_center_id || !assignedCenterIds.includes(currentWorkInfo.operation_center_id))
+          ) {
+            return null;
+          }
           
           return {
             ...delivery,

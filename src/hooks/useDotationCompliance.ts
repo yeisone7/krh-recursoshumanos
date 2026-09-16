@@ -37,10 +37,12 @@ export interface CenterCompliance {
 }
 
 export function useDotationCompliance() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_compliance', currentCompanyId],
+    queryKey: ['dotation_compliance', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
@@ -55,11 +57,15 @@ export function useDotationCompliance() {
       // Get unique profesiograma IDs that have items
       const profIdsWithItems = [...new Set((profItems as any[]).map((i: any) => i.profesiograma_id))];
 
-      const { data: profs } = await supabase
+      let profesiogramaQuery = supabase
         .from('dotation_profesiograma' as any)
         .select('id, operation_center_id, position_id')
         .eq('company_id', currentCompanyId)
         .in('id', profIdsWithItems);
+      if (shouldLimitByAssignedCenters) {
+        profesiogramaQuery = profesiogramaQuery.in('operation_center_id', assignedCenterIds);
+      }
+      const { data: profs } = await profesiogramaQuery;
 
       if (!profs || profs.length === 0) return [];
 
@@ -79,12 +85,16 @@ export function useDotationCompliance() {
       }
 
       // 2. Get active employees with work info
-      const { data: employees } = await supabase
+      let employeeQuery = supabase
         .from('employee_work_info')
         .select('employee_id, operation_center_id, position_id, employees_v2!inner(id, first_name, last_name, company_id, is_active)')
         .eq('is_current', true)
         .eq('employees_v2.company_id', currentCompanyId)
         .eq('employees_v2.is_active', true);
+      if (shouldLimitByAssignedCenters) {
+        employeeQuery = employeeQuery.in('operation_center_id', assignedCenterIds);
+      }
+      const { data: employees } = await employeeQuery;
 
       if (!employees || employees.length === 0) return [];
 
@@ -101,7 +111,8 @@ export function useDotationCompliance() {
       const { data: deliveries } = await supabase
         .from('dotation_deliveries')
         .select('employee_id, item_name')
-        .eq('company_id', currentCompanyId);
+        .eq('company_id', currentCompanyId)
+        .in('employee_id', empIds);
 
       // Build a reverse map: item name -> item type IDs (from profesiograma)
       const nameToTypeIds = new Map<string, Set<string>>();

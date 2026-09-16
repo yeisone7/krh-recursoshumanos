@@ -32,27 +32,34 @@ export interface Profesiograma {
 }
 
 export function useProfesiogramas() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_profesiograma', currentCompanyId],
+    queryKey: ['dotation_profesiograma', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc('get_profesiogramas_with_items', { _company_id: currentCompanyId! });
 
       if (error) throw error;
 
-      return (data as any[] || []) as Profesiograma[];
+      const profesiogramas = (data as any[] || []) as Profesiograma[];
+      return shouldLimitByAssignedCenters
+        ? profesiogramas.filter((item) => assignedCenterIds.includes(item.operation_center_id))
+        : profesiogramas;
     },
     enabled: !!currentCompanyId,
   });
 }
 
 export function useProfesiogramaByEmployee(employeeId: string | undefined) {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_profesiograma_employee', employeeId, currentCompanyId],
+    queryKey: ['dotation_profesiograma_employee', employeeId, currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!employeeId || !currentCompanyId) return null;
 
@@ -65,6 +72,7 @@ export function useProfesiogramaByEmployee(employeeId: string | undefined) {
         .maybeSingle();
 
       if (!workInfo?.operation_center_id || !workInfo?.position_id) return null;
+      if (shouldLimitByAssignedCenters && !assignedCenterIds.includes(workInfo.operation_center_id)) return null;
 
       // Find matching profesiograma
       const { data: prof } = await supabase
@@ -206,38 +214,52 @@ export interface CoverageByCenter {
 }
 
 export function useProfesiogramaCoverage() {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
+  const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['dotation_profesiograma_coverage', currentCompanyId],
+    queryKey: ['dotation_profesiograma_coverage', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       if (!currentCompanyId) return [];
 
       // Get all active employees with their center+position
-      const { data: employees } = await supabase
+      let employeeQuery = supabase
         .from('employee_work_info')
         .select('employee_id, operation_center_id, position_id, employees_v2!inner(company_id, is_active)')
         .eq('is_current', true)
         .eq('employees_v2.company_id', currentCompanyId)
         .eq('employees_v2.is_active', true);
+      if (shouldLimitByAssignedCenters) {
+        employeeQuery = employeeQuery.in('operation_center_id', assignedCenterIds);
+      }
+      const { data: employees } = await employeeQuery;
 
       if (!employees || employees.length === 0) return [];
 
       // Get all profesiogramas for this company
-      const { data: profs } = await supabase
+      let profesiogramaQuery = supabase
         .from('dotation_profesiograma' as any)
         .select('operation_center_id, position_id')
         .eq('company_id', currentCompanyId);
+      if (shouldLimitByAssignedCenters) {
+        profesiogramaQuery = profesiogramaQuery.in('operation_center_id', assignedCenterIds);
+      }
+      const { data: profs } = await profesiogramaQuery;
 
       const profKeys = new Set(
         ((profs as any[]) || []).map((p: any) => `${p.operation_center_id}|${p.position_id}`)
       );
 
       // Get center names
-      const { data: centers } = await supabase
+      let centerQuery = supabase
         .from('operation_centers')
         .select('id, name')
         .eq('company_id', currentCompanyId);
+      if (shouldLimitByAssignedCenters) {
+        centerQuery = centerQuery.in('id', assignedCenterIds);
+      }
+      const { data: centers } = await centerQuery;
 
       const centerNameMap = new Map((centers || []).map(c => [c.id, c.name]));
 
