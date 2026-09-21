@@ -1604,7 +1604,7 @@ export default function Contratos() {
                             → {formatContractDate(effectiveEndDate)}
                           </p>
                           {extensionsCount > 0 && (
-                            <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-accent">
+                            <p className="flex items-center gap-1 text-[10px] font-bold uppercase text-primary">
                               <RotateCw className="h-2.5 w-2.5" /> {extensionsCount} prórrogas
                             </p>
                           )}
