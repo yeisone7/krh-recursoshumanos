@@ -29,6 +29,8 @@ import {
   Banknote,
   BarChart3,
   CalendarDays,
+  ChevronRight,
+  Eye,
   FileText,
   Gauge,
   HeartPulse,
@@ -57,9 +59,11 @@ import { es } from 'date-fns/locale';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { IncapacityDetailDialog } from '@/components/incapacities/IncapacityDetailDialog';
 import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
 import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
 import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
@@ -313,14 +317,160 @@ function ChartPanel({
   );
 }
 
-function InsightCard({ color, title, value, detail }: { color: string; title: string; value: string; detail: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
+function InsightCard({
+  color,
+  title,
+  value,
+  detail,
+  actionLabel,
+  onClick,
+}: {
+  color: string;
+  title: string;
+  value: string;
+  detail: string;
+  actionLabel?: string;
+  onClick?: () => void;
+}) {
+  const content = (
+    <>
       <div className="mb-3 h-2 w-16 rounded-full" style={{ backgroundColor: color }} />
       <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{title}</p>
       <p className="mt-1 text-xl font-black tracking-normal text-slate-950">{value}</p>
       <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-600">{detail}</p>
+      {actionLabel && (
+        <span className="mt-3 inline-flex items-center gap-1 text-xs font-black text-cyan-700">
+          <Eye className="h-3.5 w-3.5" />
+          {actionLabel}
+          <ChevronRight className="h-3.5 w-3.5" />
+        </span>
+      )}
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="rounded-lg border border-slate-200 bg-white p-4 text-left transition hover:border-cyan-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
+      {content}
     </div>
+  );
+}
+
+interface SensitiveCase {
+  id: string;
+  employeeName: string;
+  documentNumber: string;
+  diagnosis: string;
+  diagnosisCode: string | null;
+  chainDays: number;
+  startDate: string;
+  endDate: string;
+  milestone: {
+    title: string;
+    day: number;
+    isReached: boolean;
+    daysRemaining: number;
+  };
+}
+
+function SensitiveCasesDialog({
+  open,
+  onOpenChange,
+  cases,
+  onViewCase,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  cases: SensitiveCase[];
+  onViewCase: (id: string) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[88vh] max-w-4xl overflow-hidden p-0">
+        <DialogHeader className="shrink-0 border-b border-slate-200 bg-[#F7F7F1] px-6 py-5 pr-12">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-600">
+              <ShieldAlert className="h-5 w-5" />
+            </span>
+            <div>
+              <DialogTitle className="text-xl font-black text-slate-950">Casos sensibles</DialogTitle>
+              <DialogDescription className="mt-1 text-sm text-slate-600">
+                Incapacidades de origen común próximas a un hito legal o que ya lo alcanzaron.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6">
+          {cases.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <ShieldAlert className="mb-3 h-10 w-10 text-emerald-500" />
+              <p className="font-black text-slate-900">No hay casos sensibles</p>
+              <p className="mt-1 text-sm text-slate-500">No se encontraron casos con los filtros actuales.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {cases.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onViewCase(item.id)}
+                  className="grid w-full gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-cyan-300 hover:bg-cyan-50/30 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.5fr)_auto] sm:items-center"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-black text-slate-950">{item.employeeName}</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">CC {item.documentNumber || 'Sin documento'}</p>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {format(parseISO(`${item.startDate}T00:00:00`), 'dd MMM yyyy', { locale: es })}
+                      {' — '}
+                      {format(parseISO(`${item.endDate}T00:00:00`), 'dd MMM yyyy', { locale: es })}
+                    </p>
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-800">
+                      {item.diagnosisCode ? `${item.diagnosisCode} · ` : ''}{item.diagnosis}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-black text-orange-700">
+                        {item.chainDays} días acumulados
+                      </span>
+                      <span className={cn(
+                        'rounded-full px-2.5 py-1 text-[11px] font-black',
+                        item.milestone.isReached
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-amber-100 text-amber-700',
+                      )}>
+                        {item.milestone.isReached
+                          ? `Hito de ${item.milestone.day} días alcanzado`
+                          : `A ${item.milestone.daysRemaining} días del hito`}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs font-semibold text-slate-600">{item.milestone.title}</p>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1 justify-self-start text-xs font-black text-cyan-700 sm:justify-self-end">
+                    Ver detalle
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1071,6 +1221,8 @@ export default function AnaliticaIncapacidades() {
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
   const [recoveryStatus, setRecoveryStatus] = useState('all');
+  const [showSensitiveCases, setShowSensitiveCases] = useState(false);
+  const [selectedIncapacityId, setSelectedIncapacityId] = useState<string | null>(null);
 
   const { data: incapacityRoots = [], isPending: loadingIncapacities } = useIncapacityAnalyticsData();
   const { data: employees = [], isPending: loadingEmployees } = useIncapacityAnalyticsEmployees();
@@ -1135,6 +1287,37 @@ export default function AnaliticaIncapacidades() {
       if (!rootFlat || !matchesStaticFilters(rootFlat) || !matchesPeriod(rootFlat, range)) return false;
       return getLegalMilestones(root.origin, rootFlat.chainDays).some((milestone) => milestone.isReached || milestone.daysRemaining <= 20);
     });
+
+    const sensitiveCases: SensitiveCase[] = legalRisk
+      .map((root) => {
+        const rootFlat = rootById.get(root.id)!;
+        const milestones = getLegalMilestones(root.origin, rootFlat.chainDays);
+        const upcomingMilestone = milestones.find((milestone) => !milestone.isReached && milestone.daysRemaining <= 20);
+        const latestReachedMilestone = [...milestones].reverse().find((milestone) => milestone.isReached);
+        const milestone = upcomingMilestone || latestReachedMilestone || milestones[0];
+        const endDate = [root, ...(root.extensions || [])].reduce(
+          (latest, item) => item.end_date > latest ? item.end_date : latest,
+          root.end_date,
+        );
+
+        return {
+          id: root.id,
+          employeeName: rootFlat.employeeName,
+          documentNumber: root.employee?.document_number || '',
+          diagnosis: root.diagnosis || 'Sin diagnóstico',
+          diagnosisCode: root.cie10_code,
+          chainDays: rootFlat.chainDays,
+          startDate: root.start_date,
+          endDate,
+          milestone: {
+            title: milestone.title,
+            day: milestone.day,
+            isReached: milestone.isReached,
+            daysRemaining: milestone.daysRemaining,
+          },
+        };
+      })
+      .sort((a, b) => b.chainDays - a.chainDays);
 
     const months = range
       ? eachMonthOfInterval({ start: startOfMonth(range.start), end: endOfMonth(range.end) })
@@ -1275,6 +1458,7 @@ export default function AnaliticaIncapacidades() {
       activeEmployees,
       longCases: longCases.length,
       legalRisk: legalRisk.length,
+      sensitiveCases,
       monthly,
       originData,
       recoveryData,
@@ -1416,6 +1600,8 @@ export default function AnaliticaIncapacidades() {
           title="Seguimiento legal"
           value={`${analytics.legalRisk} casos sensibles`}
           detail={`${analytics.longCases} casos superan 30 dias y pueden requerir reintegro, concepto o seguimiento especial.`}
+          actionLabel="Ver casos sensibles"
+          onClick={() => setShowSensitiveCases(true)}
         />
       </div>
 
@@ -1633,6 +1819,22 @@ export default function AnaliticaIncapacidades() {
           <p className="mt-1 text-sm font-medium text-slate-500">Ajusta el periodo, origen o estado de recobro para visualizar la analitica.</p>
         </div>
       )}
+
+      <SensitiveCasesDialog
+        open={showSensitiveCases}
+        onOpenChange={setShowSensitiveCases}
+        cases={analytics.sensitiveCases}
+        onViewCase={(id) => {
+          setShowSensitiveCases(false);
+          setSelectedIncapacityId(id);
+        }}
+      />
+
+      <IncapacityDetailDialog
+        open={!!selectedIncapacityId}
+        onOpenChange={(open) => !open && setSelectedIncapacityId(null)}
+        incapacityId={selectedIncapacityId}
+      />
     </div>
   );
 }
