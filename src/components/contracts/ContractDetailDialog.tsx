@@ -547,7 +547,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[90vh] p-0 flex flex-col overflow-hidden">
+        <DialogContent className="max-w-[58.8rem] max-h-[90vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
