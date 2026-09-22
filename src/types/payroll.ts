@@ -102,6 +102,10 @@ export interface PreLiquidationRow {
   employeeId: string;
   employeeName: string;
   documentNumber: string;
+  operationCenterIds: string[];
+  operationCenterName: string;
+  restDay: string;
+  shiftName: string;
   jornada: number;
   dominicalTrabajado: number;
   festivoTrabajado: number;
