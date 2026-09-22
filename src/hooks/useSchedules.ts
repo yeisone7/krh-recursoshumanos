@@ -111,7 +111,15 @@ export function useShifts(kind: 'operational' | 'day' = 'operational') {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('shifts')
-        .select('*')
+        .select(`
+          *,
+          shift_operation_centers(
+            id,
+            shift_id,
+            operation_center_id,
+            operation_centers(id, name, city)
+          )
+        `)
         .eq('company_id', currentCompanyId!)
         .eq('kind', kind)
         .order('name');
@@ -128,11 +136,16 @@ export function useCreateShift() {
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
-    mutationFn: async (shift: Omit<Shift, 'id' | 'created_at' | 'updated_at' | 'company_id' | 'created_by'>) => {
+    mutationFn: async (
+      shift: Omit<Shift, 'id' | 'created_at' | 'updated_at' | 'company_id' | 'created_by' | 'shift_operation_centers'> & {
+        operation_center_ids?: string[];
+      },
+    ) => {
+      const { operation_center_ids, ...shiftValues } = shift;
       const { data, error } = await supabase
         .from('shifts')
         .insert({
-          ...shift,
+          ...shiftValues,
           company_id: currentCompanyId!,
           created_by: user?.id,
         } as never)
@@ -140,6 +153,15 @@ export function useCreateShift() {
         .single();
 
       if (error) throw error;
+
+      if (shiftValues.kind === 'day') {
+        const { error: scopeError } = await supabase.rpc('sync_shift_operation_centers' as never, {
+          p_shift_id: data.id,
+          p_operation_center_ids: operation_center_ids ?? [],
+        } as never);
+        if (scopeError) throw scopeError;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -152,15 +174,28 @@ export function useUpdateShift() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Shift> & { id: string }) => {
+    mutationFn: async ({ id, operation_center_ids, ...updates }: Partial<Shift> & {
+      id: string;
+      operation_center_ids?: string[];
+    }) => {
+      const { shift_operation_centers: _scope, ...shiftUpdates } = updates;
       const { data, error } = await supabase
         .from('shifts')
-        .update(updates)
+        .update(shiftUpdates)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
+
+      if (operation_center_ids !== undefined) {
+        const { error: scopeError } = await supabase.rpc('sync_shift_operation_centers' as never, {
+          p_shift_id: id,
+          p_operation_center_ids: operation_center_ids,
+        } as never);
+        if (scopeError) throw scopeError;
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -467,26 +502,31 @@ export function useShiftAssignments(options: {
   employeeId?: string;
   startDate?: string;
   endDate?: string;
-  centerId?: string;
 }) {
   const { currentCompanyId } = useAuth();
-  const { employeeId, startDate, endDate, centerId } = options;
+  const { employeeId, startDate, endDate } = options;
 
   return useQuery({
-    queryKey: ['shift_assignments', currentCompanyId, employeeId, startDate, endDate, centerId],
+    queryKey: ['shift_assignments', currentCompanyId, employeeId, startDate, endDate],
     queryFn: async () => {
       let query = supabase
         .from('employee_shift_assignments')
         .select(`
           *,
-          shifts(*),
+          shifts(
+            *,
+            shift_operation_centers(
+              id,
+              shift_id,
+              operation_center_id,
+              operation_centers(id, name, city)
+            )
+          ),
           employees_v2!inner(
-            id, first_name, last_name, document_number, company_id,
-            employee_work_info!inner(operation_center_id, area_id, is_current)
+            id, first_name, last_name, document_number, company_id
           )
         `)
-        .eq('employees_v2.company_id', currentCompanyId!)
-        .eq('employees_v2.employee_work_info.is_current', true);
+        .eq('employees_v2.company_id', currentCompanyId!);
 
       if (employeeId) {
         query = query.eq('employee_id', employeeId);
@@ -498,10 +538,6 @@ export function useShiftAssignments(options: {
 
       if (endDate) {
         query = query.lte('assignment_date', endDate);
-      }
-
-      if (centerId) {
-        query = query.eq('employees_v2.employee_work_info.operation_center_id', centerId);
       }
 
       const { data, error } = await query.order('assignment_date');

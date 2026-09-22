@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   Clock,
   Plus,
@@ -11,22 +10,20 @@ import {
   RotateCcw,
   Users,
   Calendar,
-  Loader2,
   Zap,
   FileSpreadsheet,
   Maximize2,
   Minimize2,
+  Building2,
 } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MobileCardList } from '@/components/shared/MobileCardList';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -64,6 +61,7 @@ import {
   useDeleteShift,
   useDeleteShiftCycle,
 } from '@/hooks/useSchedules';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import { 
   WorkScheduleFormDialog, 
   ShiftFormDialog, 
@@ -75,6 +73,7 @@ import {
 } from '@/components/schedules';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
+import { filterDayShiftsForCenter } from '@/lib/scheduleCenterScope';
 
 const DAY_BADGE_COLORS: Record<number, string> = {
   1: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20', // Lun
@@ -94,12 +93,12 @@ const getShiftColor = (color?: string) => {
 };
 
 export default function Jornadas() {
-  const isMobile = useIsMobile();
   const [searchParams] = useSearchParams();
   const isShiftsCatalog = searchParams.get('tab') === 'shifts';
   const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'day-shifts' | 'cycles'>(isShiftsCatalog ? 'shifts' : 'calendar');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [dayShiftCenterFilter, setDayShiftCenterFilter] = useState('all');
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [showShiftForm, setShowShiftForm] = useState(false);
   const [showCycleForm, setShowCycleForm] = useState(false);
@@ -117,6 +116,7 @@ export default function Jornadas() {
   const { data: shifts = [], isLoading: loadingShifts } = useShifts();
   const { data: dayShifts = [], isLoading: loadingDayShifts } = useShifts('day');
   const { data: shiftCycles = [], isLoading: loadingCycles } = useShiftCycles();
+  const { data: operationCenters = [] } = useOperationCenters();
   
   const deleteSchedule = useDeleteWorkSchedule();
   const deleteShift = useDeleteShift();
@@ -131,7 +131,18 @@ export default function Jornadas() {
   const formatTime = (time: string) => time?.slice(0, 5) || '';
   const filteredSchedules = workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredShifts = shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredDayShifts = dayShifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredDayShifts = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLocaleLowerCase('es');
+    return filterDayShiftsForCenter(dayShifts, dayShiftCenterFilter).filter((shift) => {
+      if (!normalizedQuery) return true;
+      const centerNames = shift.shift_operation_centers
+        ?.map((scope) => scope.operation_centers?.name ?? '')
+        .join(' ') ?? '';
+      return [shift.name, shift.code, shift.description, centerNames]
+        .filter(Boolean)
+        .some((value) => value!.toLocaleLowerCase('es').includes(normalizedQuery));
+    });
+  }, [dayShifts, dayShiftCenterFilter, searchQuery]);
   const filteredCycles = shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const handleDelete = async () => {
@@ -141,8 +152,8 @@ export default function Jornadas() {
       else if (deleteConfirm.type === 'shift' || deleteConfirm.type === 'day-shift') await deleteShift.mutateAsync(deleteConfirm.id);
       else if (deleteConfirm.type === 'cycle') await deleteCycle.mutateAsync(deleteConfirm.id);
       toast.success('Eliminado correctamente');
-    } catch (error: any) {
-      toast.error('Error', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Error', { description: error instanceof Error ? error.message : 'No se pudo eliminar el registro' });
     }
     setDeleteConfirm(null);
   };
@@ -232,7 +243,7 @@ export default function Jornadas() {
 
       {/* Navigation & Controls */}
       <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full md:w-auto">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full md:w-auto">
           <TabsList className="h-12 bg-slate-100 p-1 rounded-xl border border-border w-full sm:w-auto overflow-x-auto overflow-y-hidden scrollbar-hide">
             <TabsTrigger value="calendar" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
               <Calendar className="w-3.5 h-3.5" />
@@ -264,6 +275,22 @@ export default function Jornadas() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+          )}
+
+          {activeTab === 'day-shifts' && (
+            <Select value={dayShiftCenterFilter} onValueChange={setDayShiftCenterFilter}>
+              <SelectTrigger className="h-12 w-full rounded-xl border-border bg-white sm:w-64" aria-label="Filtrar Turnos Día por centro">
+                <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Todos los centros" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="global">Globales</SelectItem>
+                {operationCenters.filter((center) => center.is_active).map((center) => (
+                  <SelectItem key={center.id} value={center.id}>{center.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -380,15 +407,130 @@ export default function Jornadas() {
              )}
           </TabsContent>
 
-          {/* Turnos Content */}
-          <TabsContent value={activeTab === 'day-shifts' ? 'day-shifts' : 'shifts'} className="m-0 focus-visible:ring-0">
-             {(activeTab === 'day-shifts' ? loadingDayShifts : loadingShifts) ? (
+          {/* Turnos Día Content */}
+          <TabsContent value="day-shifts" className="m-0 focus-visible:ring-0">
+            <div className="overflow-hidden rounded-2xl border border-border bg-white">
+              <div className="overflow-x-auto">
+                <Table className="min-w-[860px]">
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead className="w-[28%]">Turno / código</TableHead>
+                      <TableHead>Horario</TableHead>
+                      <TableHead className="w-[30%]">Centros</TableHead>
+                      <TableHead>Receso</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loadingDayShifts ? (
+                      [1, 2, 3].map((row) => (
+                        <TableRow key={row}>
+                          <TableCell colSpan={6}><Skeleton className="h-10 w-full" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredDayShifts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-44 text-center">
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <Clock className="h-8 w-8 opacity-40" />
+                            <p className="font-semibold">No hay Turnos Día para estos filtros</p>
+                            <p className="text-xs">Prueba otra búsqueda o centro de operación.</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredDayShifts.map((shift) => {
+                      const shiftCenters = shift.shift_operation_centers ?? [];
+                      return (
+                        <TableRow key={shift.id} className="group">
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <span
+                                className="h-3 w-3 shrink-0 rounded-full border border-black/5"
+                                style={{ backgroundColor: getShiftColor(shift.color) }}
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate font-bold text-foreground">{shift.name}</p>
+                                <p className="truncate text-xs text-muted-foreground">
+                                  {shift.code ? `#${shift.code}` : 'Sin código'}
+                                  {shift.description ? ` · ${shift.description}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-semibold">
+                            {formatTime(shift.start_time)} — {formatTime(shift.end_time)}
+                            {shift.crosses_midnight && (
+                              <Badge variant="outline" className="ml-2 border-amber-200 bg-amber-50 text-[9px] text-amber-700">Nocturno</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {shiftCenters.length === 0 ? (
+                              <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary">Todos los centros</Badge>
+                            ) : (
+                              <div className="flex flex-wrap gap-1.5">
+                                {shiftCenters.slice(0, 3).map((scope) => (
+                                  <Badge key={scope.operation_center_id} variant="secondary" className="font-medium">
+                                    {scope.operation_centers?.name ?? 'Centro no disponible'}
+                                  </Badge>
+                                ))}
+                                {shiftCenters.length > 3 && (
+                                  <Badge variant="outline">+{shiftCenters.length - 3}</Badge>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>{shift.break_minutes} min</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={shift.is_active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}>
+                              {shift.is_active ? 'Vigente' : 'Inactivo'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9"
+                                aria-label={`Editar ${shift.name}`}
+                                onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 hover:bg-rose-50 hover:text-rose-600"
+                                aria-label={`Eliminar ${shift.name}`}
+                                onClick={() => setDeleteConfirm({ type: 'day-shift', id: shift.id })}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              {!loadingDayShifts && filteredDayShifts.length > 0 && (
+                <div className="border-t border-border bg-slate-50 px-5 py-3 text-xs font-medium text-muted-foreground">
+                  {filteredDayShifts.length} de {dayShifts.length} turnos visibles
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Turnos operativos Content */}
+          <TabsContent value="shifts" className="m-0 focus-visible:ring-0">
+             {loadingShifts ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[1,2,3].map(i => <Skeleton key={i} className="h-44 rounded-2xl" />)}
                 </div>
              ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {(activeTab === 'day-shifts' ? filteredDayShifts : filteredShifts).map((shift) => (
+                   {filteredShifts.map((shift) => (
                       <div 
                         key={shift.id}
                         className="group p-6 rounded-2xl bg-white border border-border hover:border-primary/50 transition-colors"
@@ -456,7 +598,7 @@ export default function Jornadas() {
                                   <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-slate-100 hover:text-foreground transition-all" onClick={() => { setSelectedShift(shift); setShowShiftForm(true); }}>
                                      <Edit2 className="w-4 h-4" />
                                   </Button>
-                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all" onClick={() => setDeleteConfirm({ type: activeTab === 'day-shifts' ? 'day-shift' : 'shift', id: shift.id })}>
+                                  <Button size="icon" variant="ghost" className="h-9 w-9 rounded-lg hover:bg-rose-50 hover:text-rose-600 transition-all" onClick={() => setDeleteConfirm({ type: 'shift', id: shift.id })}>
                                      <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>

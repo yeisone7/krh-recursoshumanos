@@ -47,8 +47,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { getEmployeeFullName } from '@/types/employee';
 import type { Shift, EmployeeShiftAssignment, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
+import {
+  getEmployeeOperationCenterIds,
+  isShiftEligibleForEmployee,
+  isShiftEligibleForEmployees,
+} from '@/lib/scheduleCenterScope';
 
 type ViewMode = 'quincenal' | 'mensual' | 'trimestral' | 'semestral';
+type CalendarAbsence = EmployeeAbsence & { employee_id: string };
+
+const getErrorMessage = (error: unknown, fallback = 'Ocurrió un error inesperado') => (
+  error instanceof Error ? error.message : fallback
+);
 
 interface GroupedEmployee {
   centerId: string;
@@ -76,6 +86,7 @@ interface CalendarCellProps {
   shift: Shift | null | undefined;
   assignment: EmployeeShiftAssignment | undefined;
   hasConflict: boolean;
+  hasCenterConflict: boolean;
   isAdminMode: boolean;
   adminIsWorkDay: boolean;
   adminSchedule: WorkSchedule | undefined;
@@ -83,8 +94,8 @@ interface CalendarCellProps {
   onMouseDown: (employeeId: string, date: string) => void;
   onMouseEnter: (employeeId: string, date: string) => void;
   onMouseUp: () => void;
-  createBulkAssignments: any;
-  deleteAssignment: any;
+  createBulkAssignments: ReturnType<typeof useCreateBulkShiftAssignments>;
+  deleteAssignment: ReturnType<typeof useDeleteShiftAssignment>;
 }
 
 const CalendarCell = memo(({
@@ -98,6 +109,7 @@ const CalendarCell = memo(({
   shift,
   assignment,
   hasConflict,
+  hasCenterConflict,
   isAdminMode,
   adminIsWorkDay,
   adminSchedule,
@@ -121,7 +133,7 @@ const CalendarCell = memo(({
             absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
             absence && !hasConflict && absence.type === 'leave' && 'bg-blue-50',
             absence && !hasConflict && absence.type === 'incapacity' && 'bg-orange-50',
-            hasConflict && 'bg-red-50 ring-2 ring-inset ring-destructive',
+            (hasConflict || hasCenterConflict) && 'bg-red-50 ring-2 ring-inset ring-destructive',
             selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
           )}
           onMouseDown={(e) => {
@@ -137,7 +149,7 @@ const CalendarCell = memo(({
             <TooltipTrigger asChild>
               <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
                 {/* Conflict indicator badge */}
-                {hasConflict && (
+                {(hasConflict || hasCenterConflict) && (
                   <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
                     <span className="text-[8px] text-destructive-foreground font-bold">!</span>
                   </div>
@@ -162,7 +174,7 @@ const CalendarCell = memo(({
                     className={cn(
                       'h-6 rounded text-[10px] font-medium flex items-center justify-center',
                       (!shift.color || shift.color === 'transparent') ? 'text-foreground bg-background border border-border' : 'text-white',
-                      hasConflict && 'opacity-70'
+                      (hasConflict || hasCenterConflict) && 'opacity-70'
                     )}
                     style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
                   >
@@ -192,15 +204,22 @@ const CalendarCell = memo(({
             </TooltipTrigger>
             
             {/* Conflict tooltip */}
-            {hasConflict && (
+            {(hasConflict || hasCenterConflict) && (
               <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
                 <div className="space-y-1">
                   <p className="font-semibold text-destructive flex items-center gap-1">
                     <AlertTriangle className="w-3 h-3" />
                     Conflicto detectado
                   </p>
-                  <p className="text-sm text-foreground">Turno: {shift.name}</p>
-                  <p className="text-sm text-foreground">Novedad: {absence.description}</p>
+                  <p className="text-sm text-foreground">Turno: {shift?.name}</p>
+                  {hasConflict && absence && (
+                    <p className="text-sm text-foreground">Novedad: {absence.description}</p>
+                  )}
+                  {hasCenterConflict && (
+                    <p className="text-sm text-foreground">
+                      Este Turno Día no coincide con ninguno de los centros activos del empleado.
+                    </p>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     Click derecho → Eliminar
                   </p>
@@ -219,7 +238,7 @@ const CalendarCell = memo(({
             )}
             
             {/* Shift-only tooltip */}
-            {shift && !absence && (
+            {shift && !absence && !hasCenterConflict && (
               <TooltipContent>
                 <p>{shift.name}</p>
                 <p className="text-xs text-muted-foreground">
@@ -273,7 +292,7 @@ const CalendarCell = memo(({
                         source: 'manual' as const,
                       }], {
                         onSuccess: () => toast.success('Turno asignado'),
-                        onError: (error: any) => toast.error('Error', { description: error.message })
+                        onError: (error: unknown) => toast.error('Error', { description: getErrorMessage(error) })
                       });
                     }}
                     className="flex items-center gap-2"
@@ -283,6 +302,11 @@ const CalendarCell = memo(({
                     {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
                   </ContextMenuItem>
                 ))}
+                {activeShifts.length === 0 && (
+                  <div className="px-2 py-1.5 text-xs italic text-muted-foreground">
+                    No hay Turnos Día compatibles
+                  </div>
+                )}
               </>
             )}
             
@@ -304,7 +328,7 @@ const CalendarCell = memo(({
                         source: 'manual' as const,
                       }], {
                         onSuccess: () => toast.success('Turno cambiado'),
-                        onError: (error: any) => toast.error('Error', { description: error.message })
+                        onError: (error: unknown) => toast.error('Error', { description: getErrorMessage(error) })
                       });
                     }}
                     className="flex items-center gap-2"
@@ -319,7 +343,7 @@ const CalendarCell = memo(({
                   onClick={() => {
                     deleteAssignment.mutate(assignment.id, {
                       onSuccess: () => toast.success('Asignación eliminada'),
-                      onError: (error: any) => toast.error('Error', { description: error.message })
+                      onError: (error: unknown) => toast.error('Error', { description: getErrorMessage(error) })
                     });
                   }}
                   className="text-destructive focus:text-destructive"
@@ -347,7 +371,7 @@ const CalendarCell = memo(({
                         source: 'manual' as const,
                       }], {
                         onSuccess: () => toast.success('Turno asignado'),
-                        onError: (error: any) => toast.error('Error', { description: error.message })
+                        onError: (error: unknown) => toast.error('Error', { description: getErrorMessage(error) })
                       });
                     }}
                     className="flex items-center gap-2"
@@ -377,6 +401,7 @@ const CalendarCell = memo(({
          prevProps.assignment?.id === nextProps.assignment?.id &&
          prevProps.absence?.type === nextProps.absence?.type &&
          prevProps.hasConflict === nextProps.hasConflict &&
+         prevProps.hasCenterConflict === nextProps.hasCenterConflict &&
          prevProps.isAdminMode === nextProps.isAdminMode &&
          prevProps.adminIsWorkDay === nextProps.adminIsWorkDay &&
          prevProps.adminSchedule?.id === nextProps.adminSchedule?.id &&
@@ -410,6 +435,44 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const { data: areas = [] } = useAreas();
   const { data: holidaysMap = {} } = useHolidaysMap();
   const { data: timeConfigs = [] } = useEmployeeTimeConfigs();
+
+  const activeDayShifts = useMemo(
+    () => dayShifts.filter((shift) => shift.is_active),
+    [dayShifts],
+  );
+  const employeeById = useMemo(
+    () => new Map(employees.map((employee) => [employee.id, employee])),
+    [employees],
+  );
+  const eligibleDayShiftsByEmployeeId = useMemo(() => {
+    const eligibleByEmployee = new Map<string, Shift[]>();
+    employees.forEach((employee) => {
+      eligibleByEmployee.set(
+        employee.id,
+        activeDayShifts.filter((shift) => isShiftEligibleForEmployee(shift, employee)),
+      );
+    });
+    return eligibleByEmployee;
+  }, [activeDayShifts, employees]);
+
+  const selectedEmployees = useMemo(() => {
+    const uniqueEmployeeIds = new Set(selectedCells.map((cell) => cell.employeeId));
+    return [...uniqueEmployeeIds].flatMap((employeeId) => {
+      const employee = employeeById.get(employeeId);
+      return employee ? [employee] : [];
+    });
+  }, [employeeById, selectedCells]);
+
+  const assignableDayShifts = useMemo(
+    () => activeDayShifts.filter((shift) => isShiftEligibleForEmployees(shift, selectedEmployees)),
+    [activeDayShifts, selectedEmployees],
+  );
+
+  useEffect(() => {
+    if (selectedShiftId && !assignableDayShifts.some((shift) => shift.id === selectedShiftId)) {
+      setSelectedShiftId('');
+    }
+  }, [assignableDayShifts, selectedShiftId]);
 
   // Build employee mode map: employeeId -> { mode, workSchedule }
   const employeeModeMap = useMemo(() => {
@@ -487,14 +550,13 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const { data: assignments = [], isLoading: loadingAssignments } = useShiftAssignments({
     startDate,
     endDate,
-    centerId: selectedCenterId !== 'all' ? selectedCenterId : undefined,
   });
   
   const createBulkAssignments = useCreateBulkShiftAssignments();
   const deleteAssignment = useDeleteShiftAssignment();
 
   // Fetch absences
-  const { data: absences = [] } = useQuery({
+  const { data: absences = [] } = useQuery<CalendarAbsence[]>({
     queryKey: ['employee_absences', currentCompanyId, startDate, endDate],
     queryFn: async () => {
       if (!currentCompanyId) return [];
@@ -522,7 +584,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
         .gte('end_date', startDate)
         .lte('start_date', endDate);
 
-      const result: (EmployeeAbsence & { employee_id: string })[] = [];
+      const result: CalendarAbsence[] = [];
 
       (vacations || []).forEach(v => {
         result.push({
@@ -564,7 +626,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     const map: Record<string, Record<string, EmployeeAbsence>> = {};
     if (absences.length === 0 || daysData.length === 0) return map;
 
-    absences.forEach((a: any) => {
+    absences.forEach((a) => {
       const empId = a.employee_id;
       if (!map[empId]) {
         map[empId] = {};
@@ -590,9 +652,6 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const groupedEmployees = useMemo((): GroupedEmployee[] => {
     const filtered = employees.filter(e => {
       if (!e.is_active) return false;
-      if (selectedCenterId !== 'all') {
-        if (e.work_info?.operation_center_id !== selectedCenterId) return false;
-      }
       if (modeFilter !== 'all') {
         const empMode = employeeModeMap[e.id]?.mode;
         if (empMode !== modeFilter) return false;
@@ -603,17 +662,21 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     const centerMap = new Map<string, Map<string, typeof filtered>>();
 
     filtered.forEach(emp => {
-      const centerId = emp.work_info?.operation_center_id || 'sin-centro';
       const areaId = emp.work_info?.area_id || 'sin-area';
+      const employeeCenterIds = getEmployeeOperationCenterIds(emp);
+      const visibleCenterIds = (employeeCenterIds.length > 0 ? employeeCenterIds : ['sin-centro'])
+        .filter((centerId) => selectedCenterId === 'all' || centerId === selectedCenterId);
 
-      if (!centerMap.has(centerId)) {
-        centerMap.set(centerId, new Map());
-      }
-      const areaMap = centerMap.get(centerId)!;
-      if (!areaMap.has(areaId)) {
-        areaMap.set(areaId, []);
-      }
-      areaMap.get(areaId)!.push(emp);
+      visibleCenterIds.forEach((centerId) => {
+        if (!centerMap.has(centerId)) {
+          centerMap.set(centerId, new Map());
+        }
+        const areaMap = centerMap.get(centerId)!;
+        if (!areaMap.has(areaId)) {
+          areaMap.set(areaId, []);
+        }
+        areaMap.get(areaId)!.push(emp);
+      });
     });
 
     const result: GroupedEmployee[] = [];
@@ -653,7 +716,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   // Build assignments map
   const assignmentsMap = useMemo(() => {
     const map: Record<string, Record<string, EmployeeShiftAssignment>> = {};
-    assignments.forEach((a: any) => {
+    assignments.forEach((a) => {
       if (!map[a.employee_id]) {
         map[a.employee_id] = {};
       }
@@ -774,7 +837,11 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const handleAssign = useCallback(async () => {
     if (!selectedShiftId || selectedCells.length === 0) return;
 
-    const selectedShift = dayShifts.find(shift => shift.id === selectedShiftId);
+    const selectedShift = assignableDayShifts.find(shift => shift.id === selectedShiftId);
+    if (!selectedShift) {
+      toast.error('El Turno Día no es compatible con todos los empleados seleccionados');
+      return;
+    }
     const isWorkShift = selectedShift && !selectedShift.is_rest_day;
 
     if (isWorkShift) {
@@ -811,17 +878,15 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       setShowAssignDialog(false);
       clearSelection();
       setSelectedShiftId('');
-    } catch (error: any) {
-      toast.error('Error', { description: error.message || 'No se pudieron guardar las asignaciones' });
+    } catch (error: unknown) {
+      toast.error('Error', { description: getErrorMessage(error, 'No se pudieron guardar las asignaciones') });
     }
-  }, [selectedShiftId, selectedCells, dayShifts, absencesMap, createBulkAssignments, clearSelection]);
+  }, [selectedShiftId, selectedCells, assignableDayShifts, absencesMap, createBulkAssignments, clearSelection]);
 
   const isCellSelected = useCallback((employeeId: string, date: string): boolean => {
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   }, [selectedCells]);
 
-  const activeShifts = useMemo(() => shifts.filter(s => s.is_active), [shifts]);
-  const activeDayShifts = useMemo(() => dayShifts.filter(shift => shift.is_active), [dayShifts]);
   const isLoading = loadingEmployees || loadingAssignments;
 
   const isInitializedRef = useRef(false);
@@ -914,7 +979,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
         <div className="grid grid-cols-1 gap-2 sm:flex sm:items-center sm:flex-wrap">
           {/* Mode Filter */}
-          <ToggleGroup type="single" value={modeFilter} onValueChange={(v) => v && setModeFilter(v as any)} className="grid grid-cols-3 sm:flex w-full sm:w-auto">
+          <ToggleGroup type="single" value={modeFilter} onValueChange={(v) => v && setModeFilter(v as typeof modeFilter)} className="grid grid-cols-3 sm:flex w-full sm:w-auto">
             <ToggleGroupItem value="all" aria-label="Todos" className="h-8 sm:h-7 text-xs">
               Todos
             </ToggleGroupItem>
@@ -1094,6 +1159,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                           const empConfig = employeeModeMap[employee.id];
                           const isAdminMode = empConfig?.mode === 'administrative';
                           const adminSchedule = isAdminMode ? empConfig?.workSchedule : undefined;
+                          const eligibleDayShifts = eligibleDayShiftsByEmployeeId.get(employee.id) ?? [];
 
                           return (
                             <div key={employee.id} className="flex border-y hover:bg-background -mt-px">
@@ -1115,7 +1181,10 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
 
                                 // Conflict: work shift assigned on a day with an absence
-                                const hasConflict = shift && absence && !shift.is_rest_day;
+                                const hasConflict = Boolean(shift && absence && !shift.is_rest_day);
+                                const hasCenterConflict = Boolean(
+                                  shift && !isShiftEligibleForEmployee(shift, employee),
+                                );
 
                                 return (
                                   <CalendarCell
@@ -1130,10 +1199,11 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                     shift={shift}
                                     assignment={assignment}
                                     hasConflict={hasConflict}
+                                    hasCenterConflict={hasCenterConflict}
                                     isAdminMode={isAdminMode}
                                     adminIsWorkDay={adminIsWorkDay}
                                     adminSchedule={adminSchedule}
-                                    activeShifts={activeShifts}
+                                    activeShifts={eligibleDayShifts}
                                     onMouseDown={handleCellMouseDown}
                                     onMouseEnter={handleCellMouseEnter}
                                     onMouseUp={handleCellMouseUp}
@@ -1200,7 +1270,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                   <SelectValue placeholder="Seleccione turno día" />
                 </SelectTrigger>
                 <SelectContent className="bg-background">
-                  {activeDayShifts.map((shift) => (
+                  {assignableDayShifts.map((shift) => (
                     <SelectItem key={shift.id} value={shift.id}>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
@@ -1209,6 +1279,11 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                       </div>
                     </SelectItem>
                   ))}
+                  {assignableDayShifts.length === 0 && (
+                    <div className="px-3 py-4 text-sm text-muted-foreground">
+                      No hay Turnos Día globales o compatibles con todos los empleados seleccionados.
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1236,8 +1311,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                     toast.success(`${assignmentsToDelete.length} asignación(es) eliminada(s)`);
                     setShowAssignDialog(false);
                     clearSelection();
-                  } catch (error: any) {
-                    toast.error('Error', { description: error.message });
+                  } catch (error: unknown) {
+                    toast.error('Error', { description: getErrorMessage(error) });
                   }
                 }}
                 disabled={deleteAssignment.isPending}
