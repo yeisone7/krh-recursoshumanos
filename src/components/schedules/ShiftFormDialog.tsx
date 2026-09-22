@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
-import { Loader2, Calendar, Clock, FileText, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calendar, Clock, FileText, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -27,7 +27,9 @@ import {
 } from '@/components/ui/form';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { useCreateShift, useUpdateShift } from '@/hooks/useSchedules';
+import { useOperationCenters } from '@/hooks/useCompanies';
 import type { Shift } from '@/types/schedule';
 import { SHIFT_COLORS, SHIFT_COLOR_TRANSPARENT } from '@/types/schedule';
 import { cn } from '@/lib/utils';
@@ -43,6 +45,7 @@ const shiftSchema = z.object({
   color: z.string(),
   is_rest_day: z.boolean(),
   is_active: z.boolean(),
+  operation_center_ids: z.array(z.string().uuid()),
 });
 
 type ShiftFormData = z.infer<typeof shiftSchema>;
@@ -62,6 +65,7 @@ export function ShiftFormDialog({
 }: ShiftFormDialogProps) {
   const createShift = useCreateShift();
   const updateShift = useUpdateShift();
+  const { data: operationCenters = [] } = useOperationCenters();
   const isEditing = !!shift;
 
   const [activeTab, setActiveTab] = useState('detalles');
@@ -79,6 +83,7 @@ export function ShiftFormDialog({
       color: SHIFT_COLOR_TRANSPARENT,
       is_rest_day: false,
       is_active: true,
+      operation_center_ids: [],
     },
   });
 
@@ -96,6 +101,7 @@ export function ShiftFormDialog({
           color: shift.color,
           is_rest_day: shift.is_rest_day,
           is_active: shift.is_active,
+          operation_center_ids: shift.shift_operation_centers?.map((scope) => scope.operation_center_id) ?? [],
         });
       } else {
         form.reset({
@@ -109,6 +115,7 @@ export function ShiftFormDialog({
           color: SHIFT_COLOR_TRANSPARENT,
           is_rest_day: false,
           is_active: true,
+          operation_center_ids: [],
         });
       }
       setActiveTab('detalles');
@@ -118,7 +125,11 @@ export function ShiftFormDialog({
   const onSubmit = async (data: ShiftFormData) => {
     try {
       if (isEditing) {
-        await updateShift.mutateAsync({ id: shift.id, ...data });
+        await updateShift.mutateAsync({
+          id: shift.id,
+          ...data,
+          operation_center_ids: kind === 'day' ? data.operation_center_ids : undefined,
+        });
         toast.success('Turno actualizado');
       } else {
         await createShift.mutateAsync({
@@ -133,13 +144,14 @@ export function ShiftFormDialog({
           is_rest_day: data.is_rest_day,
           is_active: data.is_active,
           kind,
+          operation_center_ids: kind === 'day' ? data.operation_center_ids : undefined,
         });
         toast.success('Turno creado');
       }
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error', {
-        description: error.message || 'No se pudo guardar el turno',
+        description: error instanceof Error ? error.message : 'No se pudo guardar el turno',
       });
     }
   };
@@ -170,7 +182,7 @@ export function ShiftFormDialog({
                   {isEditing ? 'Edición' : 'Nuevo'}
                 </Badge>
                 <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
-                  Operativo
+                  {kind === 'day' ? 'Turno Día' : 'Operativo'}
                 </Badge>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground mb-3 truncate">
@@ -268,6 +280,44 @@ export function ShiftFormDialog({
                     </FormItem>
                   )}
                 />
+
+                {kind === 'day' && (
+                  <FormField
+                    control={form.control}
+                    name="operation_center_ids"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground">
+                          <Building2 className="h-4 w-4" />
+                          Centros de operación
+                        </FormLabel>
+                        <FormControl>
+                          <MultiSelect
+                            options={operationCenters
+                              .filter((center) => center.is_active || field.value.includes(center.id))
+                              .map((center) => ({
+                                value: center.id,
+                                label: center.name,
+                                badge: center.is_active ? undefined : {
+                                  label: 'Inactivo',
+                                  className: 'border-amber-200 bg-amber-50 text-amber-700',
+                                },
+                              }))}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Todos los centros (global)"
+                            className="min-h-12 rounded-2xl bg-background border-border"
+                            maxCount={4}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Sin centros seleccionados, el turno estará disponible para todos los empleados.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}

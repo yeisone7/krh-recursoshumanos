@@ -29,6 +29,17 @@ export interface WorkSchedule {
 // =============================================
 // SHIFTS (Turnos Operativos)
 // =============================================
+export interface ShiftOperationCenter {
+  id: string;
+  shift_id: string;
+  operation_center_id: string;
+  operation_centers?: {
+    id: string;
+    name: string;
+    city?: string | null;
+  } | null;
+}
+
 export interface Shift {
   id: string;
   company_id: string;
@@ -46,6 +57,7 @@ export interface Shift {
   created_at: string;
   updated_at: string;
   created_by?: string;
+  shift_operation_centers?: ShiftOperationCenter[];
 }
 
 // =============================================
