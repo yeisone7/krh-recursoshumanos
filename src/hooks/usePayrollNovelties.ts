@@ -1,3 +1,4 @@
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +13,7 @@ export function usePayrollNovelties(filters?: {
 
   return useQuery({
     queryKey: ['payroll_novelties', currentCompanyId, filters],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       let query = supabase
         .from('payroll_novelties')
         .select(`
@@ -36,10 +37,9 @@ export function usePayrollNovelties(filters?: {
         query = query.lte('novelty_date', filters.endDate);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as PayrollNovelty[];
-    },
+      const { data, error } = await query.order('id').range(from, to);
+      return { data: data as PayrollNovelty[] | null, error };
+    }),
     enabled: !!currentCompanyId,
   });
 }
