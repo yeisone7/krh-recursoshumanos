@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Camera, Loader2 } from "lucide-react";
 import {
   useResolveTimeClockCorrection,
   useTimeClockDayEvents,
@@ -25,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export function ClockDayDetail({
   day,
@@ -39,6 +41,17 @@ export function ClockDayDetail({
     error,
   } = useTimeClockDayEvents(day?.id);
   const replaced = new Set(events.map((e) => e.supersedes_event_id));
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoLoading, setPhotoLoading] = useState<string | null>(null);
+  async function viewPhoto(eventId: string, path: string) {
+    setPhotoLoading(eventId);
+    const { data, error: photoError } = await supabase.storage
+      .from("time-clock-evidence")
+      .createSignedUrl(path, 60);
+    setPhotoLoading(null);
+    if (photoError) return toast.error("No fue posible abrir la foto");
+    setPhotoUrl(data.signedUrl);
+  }
   return (
     <Dialog
       open={!!day}
@@ -103,8 +116,42 @@ export function ClockDayDetail({
             {e.supervisor_reason && (
               <p className="mt-1 text-sm">{e.supervisor_reason}</p>
             )}
+            {e.photo_path && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                disabled={photoLoading === e.id}
+                onClick={() => void viewPhoto(e.id, e.photo_path!)}
+              >
+                {photoLoading === e.id ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="mr-2 h-4 w-4" />
+                )}
+                Ver foto de ingreso
+              </Button>
+            )}
           </div>
         ))}
+        <Dialog open={!!photoUrl} onOpenChange={(open) => !open && setPhotoUrl("")}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Foto de ingreso</DialogTitle>
+              <DialogDescription>
+                Evidencia privada asociada a la marcación seleccionada.
+              </DialogDescription>
+            </DialogHeader>
+            {photoUrl && (
+              <img
+                src={photoUrl}
+                alt="Foto tomada al registrar la entrada"
+                className="max-h-[70vh] w-full rounded-xl object-contain"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );

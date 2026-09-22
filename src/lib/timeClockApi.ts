@@ -19,13 +19,22 @@ export async function clockRpc<T>(
 export async function publicClock<T>(
   operation: string,
   payload: Record<string, unknown>,
+  photo?: File,
 ): Promise<T> {
   if (!navigator.onLine)
     throw new Error(
       "Sin conexión. Conéctate y reintenta, o solicita una marcación supervisada.",
     );
   const { data, error } = await supabase.functions.invoke("public-time-clock", {
-    body: { operation, payload },
+    body: photo
+      ? (() => {
+          const form = new FormData();
+          form.append("operation", operation);
+          form.append("payload", JSON.stringify(payload));
+          form.append("photo", photo, "entrada.jpg");
+          return form;
+        })()
+      : { operation, payload },
   });
   let code = data?.error;
   if (error && "context" in error && error.context instanceof Response) {

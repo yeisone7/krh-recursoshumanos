@@ -131,6 +131,7 @@ export function useSaveTimeClockPoint() {
         max_accuracy_meters: point.max_accuracy_meters ?? 50,
         late_tolerance_minutes: point.late_tolerance_minutes ?? 5,
         require_break_punches: point.require_break_punches ?? false,
+        require_clock_in_photo: point.require_clock_in_photo ?? false,
         is_active: point.is_active ?? true,
         created_by: user?.id,
       };

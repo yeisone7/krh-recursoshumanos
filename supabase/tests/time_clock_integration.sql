@@ -1,7 +1,7 @@
 -- Run inside BEGIN/ROLLBACK after attendance migrations. No fixture survives.
 DO $$
 DECLARE actor uuid; e record; p uuid; link jsonb; ctx jsonb; identity jsonb; result jsonb; repeated jsonb;
- session text; pin text; event_id uuid; idem uuid:=gen_random_uuid(); d uuid; q jsonb; req uuid; i integer; night uuid; start_time timestamptz; exit_event uuid;
+ session text; pin text; event_id uuid; idem uuid:=gen_random_uuid(); d uuid; q jsonb; req uuid; i integer; night uuid; start_time timestamptz; exit_event uuid; evidence_path text;
 BEGIN
  SELECT user_id INTO actor FROM public.user_roles WHERE role::text IN ('super_admin','admin') ORDER BY (role::text='super_admin') DESC LIMIT 1;
  ASSERT actor IS NOT NULL, 'Fixture requires an admin';
@@ -32,13 +32,18 @@ BEGIN
    PERFORM public.time_clock_public('punch',jsonb_build_object('session',session,'action','clock_in','idempotency_key',idem,'latitude',0,'longitude',0,'accuracy',5,'position_captured_at',now()),'test-ip');
    RAISE EXCEPTION 'TEST_FAILED: accepted outside geofence';
  EXCEPTION WHEN raise_exception THEN IF SQLERRM<>'OUTSIDE_ALLOWED_AREA' THEN RAISE; END IF; END;
- result:=public.time_clock_public('punch',jsonb_build_object('session',session,'action','clock_in','idempotency_key',idem,'latitude',4.65,'longitude',-74.1,'accuracy',5,'position_captured_at',now()),'test-ip');
+ UPDATE public.time_clock_points SET require_clock_in_photo=true WHERE id=p;
+ result:=public.time_clock_public_punch(jsonb_build_object('session',session,'action','clock_in','idempotency_key',idem,'latitude',4.65,'longitude',-74.1,'accuracy',5,'position_captured_at',now()),'test-ip',NULL);
+ ASSERT result->>'error'='PHOTO_REQUIRED', 'Required entry photo cannot be omitted';
+ evidence_path:=p::text||'/'||extract(year FROM now())::integer||'/'||gen_random_uuid()::text||'.jpg';
+ result:=public.time_clock_public_punch(jsonb_build_object('session',session,'action','clock_in','idempotency_key',idem,'latitude',4.65,'longitude',-74.1,'accuracy',5,'position_captured_at',now()),'test-ip',evidence_path);
  ASSERT result->>'event_id' IS NOT NULL, 'Punch creates event';
  event_id:=(result->>'event_id')::uuid; d:=(result->>'day_id')::uuid;
  repeated:=public.time_clock_public('punch',jsonb_build_object('session',session,'action','clock_in','idempotency_key',idem),'test-ip');
  ASSERT repeated->>'event_id'=result->>'event_id' AND (repeated->>'duplicate')::boolean, 'Lost response retries return same event';
  ASSERT (SELECT count(*)=1 FROM public.time_clock_events WHERE employee_id=e.id AND idempotency_key=idem), 'No duplicate event';
  ASSERT (SELECT identity_method='pin' AND recorded_by IS NULL AND qr_kind='qr_static' FROM public.time_clock_events WHERE id=event_id), 'PIN audit without fake auth user';
+ ASSERT (SELECT time_clock_events.photo_path=evidence_path AND photo_captured_at IS NOT NULL FROM public.time_clock_events WHERE id=event_id), 'Private photo is attached to entry';
  result:=public.time_clock_public('history',jsonb_build_object('session',session),'test-ip');
  ASSERT result->>'error'='SESSION_EXPIRED', 'Session consumed after punch';
 
@@ -86,6 +91,7 @@ BEGIN
  ASSERT result->>'error'='RATE_LIMITED', 'Five failures lock account bucket';
  ASSERT NOT has_function_privilege('anon','public.time_clock_public(text,jsonb,text)','EXECUTE'), 'Public role cannot bypass gateway';
  ASSERT NOT has_function_privilege('authenticated','public.time_clock_public(text,jsonb,text)','EXECUTE'), 'Authenticated users cannot bypass gateway';
+ ASSERT NOT has_function_privilege('authenticated','public.time_clock_public_punch(jsonb,text,text)','EXECUTE'), 'Authenticated users cannot attach arbitrary photos';
  ASSERT NOT has_schema_privilege('authenticated','time_clock_private','USAGE'), 'Private secrets are inaccessible';
  ASSERT NOT has_function_privilege('authenticated','public.time_clock_recalculate_day(uuid)','EXECUTE'), 'Clients cannot recalculate arbitrary days';
  -- Multiple explicit pauses on a night shift, plus an approved exit correction.

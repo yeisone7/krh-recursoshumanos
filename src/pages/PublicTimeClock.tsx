@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AutomaticPhotoCapture } from "@/components/time-clock/AutomaticPhotoCapture";
 import { publicClock } from "@/lib/timeClockApi";
 import {
   attendanceDate,
@@ -25,6 +26,7 @@ interface Context {
   point: string;
   center: string;
   expires_at: string;
+  require_clock_in_photo: boolean;
 }
 interface Identity {
   session: string;
@@ -40,6 +42,7 @@ interface Receipt {
 interface History {
   last_action: TimeClockAction | null;
   require_break_punches: boolean;
+  require_clock_in_photo: boolean;
   events: {
     id: string;
     action: TimeClockAction;
@@ -79,6 +82,7 @@ export default function PublicTimeClock() {
   const [workDate, setWorkDate] = useState(attendanceDate());
   const [reason, setReason] = useState("");
   const [eventId, setEventId] = useState("");
+  const [cameraAction, setCameraAction] = useState<TimeClockAction | null>(null);
   const pendingPunch = useRef<{ key: string; action: TimeClockAction } | null>(
     null,
   );
@@ -94,6 +98,7 @@ export default function PublicTimeClock() {
     let cancelled = false;
     setBusy(true);
     setError("");
+    setCameraAction(null);
     setContext(null);
     publicClock<Context>("context", { token: linkToken, point })
       .then((value) => {
@@ -185,7 +190,15 @@ export default function PublicTimeClock() {
       await loadHistory(identity.session);
     });
   }
-  async function punch(next: TimeClockAction) {
+  function punch(next: TimeClockAction) {
+    if (next === "clock_in" && history?.require_clock_in_photo) {
+      setError("");
+      setCameraAction(next);
+      return;
+    }
+    void submitPunch(next);
+  }
+  async function submitPunch(next: TimeClockAction, photo?: File) {
     if (!identity) return;
     await run(async () => {
       if (!navigator.geolocation)
@@ -199,15 +212,19 @@ export default function PublicTimeClock() {
       });
       // Keep the same key/action after a lost response; retries cannot create a second event.
       pendingPunch.current ??= { key: crypto.randomUUID(), action: next };
-      const result = await publicClock<Receipt>("punch", {
-        session: identity.session,
-        action: pendingPunch.current.action,
-        idempotency_key: pendingPunch.current.key,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        position_captured_at: new Date(position.timestamp).toISOString(),
-      });
+      const result = await publicClock<Receipt>(
+        "punch",
+        {
+          session: identity.session,
+          action: pendingPunch.current.action,
+          idempotency_key: pendingPunch.current.key,
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          position_captured_at: new Date(position.timestamp).toISOString(),
+        },
+        photo,
+      );
       setReceipt(result);
       setHistory(null);
     });
@@ -251,6 +268,11 @@ export default function PublicTimeClock() {
             <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
               {context.point} · {context.center}
+            </p>
+          )}
+          {context?.require_clock_in_photo && (
+            <p className="text-xs text-muted-foreground">
+              Este punto toma una foto automática únicamente al registrar la entrada.
             </p>
           )}
         </header>
@@ -408,6 +430,18 @@ export default function PublicTimeClock() {
         )}
         {identity && !identity.must_change && !receipt && (
           <>
+            {cameraAction && (
+              <AutomaticPhotoCapture
+                onCancel={() => setCameraAction(null)}
+                onCapture={(photo) => {
+                  const next = cameraAction;
+                  setCameraAction(null);
+                  if (next) void submitPunch(next, photo);
+                }}
+              />
+            )}
+            {!cameraAction && (
+              <>
             <div className="flex items-center justify-between gap-3">
               <p className="font-semibold">{identity.name}</p>
               <Button variant="ghost" size="sm" onClick={restart}>
@@ -625,6 +659,8 @@ export default function PublicTimeClock() {
                     ))}
                   </CardContent>
                 </Card>
+              </>
+            )}
               </>
             )}
           </>
