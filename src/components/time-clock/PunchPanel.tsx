@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getCurrentPosition, useRegisterTimeClockEvent, useTimeClockEvents, useTimeClockPoint, useTimeClockPoints } from '@/hooks/useTimeClock';
-import { getNextTimeClockActions, TIME_CLOCK_ACTION_LABELS, type TimeClockAction } from '@/types/timeClock';
+import { TIME_CLOCK_ACTION_LABELS, type TimeClockAction } from '@/types/timeClock';
+import { availableActions } from '@/lib/timeClock';
 
 const actionIcons: Record<TimeClockAction, typeof Clock3> = {
   clock_in: LogIn, break_start: Coffee, break_end: Coffee, clock_out: LogOut,
@@ -39,11 +40,11 @@ export function PunchPanel({ employeeId, fixedPointId, qrToken, compact }: Punch
   const { data: events = [], refetch } = useTimeClockEvents(20, employeeId);
   const register = useRegisterTimeClockEvent();
   const [pointId, setPointId] = useState(fixedPointId || '');
-  const lastAction = events[0]?.action;
-  const actions = useMemo(() => getNextTimeClockActions(lastAction), [lastAction]);
+  const lastAction = events.find(event => !events.some(newer => newer.supersedes_event_id === event.id))?.action;
   const activePointId = fixedPointId || pointId;
   const activePoint = fixedPoint || points.find(point => point.id === activePointId);
-  const visibleActions = activePoint?.require_break_punches ? actions : actions.filter(action => !action.startsWith('break_'));
+  const actions = useMemo(() => availableActions(lastAction, !!activePoint?.require_break_punches), [lastAction, activePoint?.require_break_punches]);
+  const visibleActions = actions;
 
   async function punch(action: TimeClockAction) {
     if (!activePointId) return toast.error('Selecciona un punto de marcación');
