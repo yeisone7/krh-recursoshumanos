@@ -808,10 +808,16 @@ export function useCreateEmployee() {
           : 'Este documento pertenece a un empleado retirado. Inicie el reingreso desde Selección.');
       }
 
+      // Generate the id client-side so the insert does not need RETURNING.
+      // employees_v2 SELECT access depends on a committed employee row, so
+      // requesting the inserted row in the same statement is rejected by RLS.
+      const employeeId = crypto.randomUUID();
+
       // 1. Create core employee
-      const { data: employee, error: empError } = await supabase
+      const { error: empError } = await supabase
         .from('employees_v2')
         .insert({
+          id: employeeId,
           company_id: currentCompanyId,
           identification_type_id: data.identificationTypeId,
           document_type: data.documentType || 'CC',
@@ -843,13 +849,10 @@ export function useCreateEmployee() {
           avatar_url: data.avatarUrl || null,
           is_active: true,
           created_by: user.id,
-        })
-        .select()
-        .single();
+        });
 
       if (empError) throw empError;
 
-      const employeeId = employee.id;
       const hireDate = format(data.hireDate, 'yyyy-MM-dd');
       const { data: employmentCycle, error: cycleError } = await supabase
         .from('employee_employment_cycles')
@@ -1077,7 +1080,7 @@ export function useCreateEmployee() {
         { firstName: data.firstName, lastName: data.lastName, position: data.positionName }
       );
 
-      return employee;
+      return { id: employeeId };
     },
     onSuccess: async (data) => {
       await Promise.all([
