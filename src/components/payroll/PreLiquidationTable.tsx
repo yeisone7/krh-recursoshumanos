@@ -67,6 +67,11 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                       <h3 className="truncate text-sm font-semibold text-card-foreground">{row.employeeName}</h3>
                     </div>
                     <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
+                    <div className="grid gap-1 pt-1 text-xs text-muted-foreground">
+                      <span><span className="font-medium text-foreground">Centro:</span> {row.operationCenterName}</span>
+                      <span><span className="font-medium text-foreground">Descanso:</span> {row.restDay}</span>
+                      <span><span className="font-medium text-foreground">Turno:</span> {row.shiftName}</span>
+                    </div>
                   </div>
                   <Badge variant={row.hasWarning ? 'destructive' : 'secondary'} className="shrink-0">
                     {row.totalDias} días
@@ -117,6 +122,9 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
           <TableHeader>
             <TableRow className="bg-background">
               <TableHead className="sticky left-0 bg-background z-10 min-w-[200px]">Empleado</TableHead>
+              <TableHead className="min-w-[180px]">Centro de Operación</TableHead>
+              <TableHead className="min-w-[130px]">Día de Descanso</TableHead>
+              <TableHead className="min-w-[140px]">Turno</TableHead>
               <TableHead className="text-center min-w-[70px]">Jornada</TableHead>
               <TableHead className="text-center min-w-[70px]">Dom. Trab.</TableHead>
               <TableHead className="text-center min-w-[70px]">Fest. Trab.</TableHead>
@@ -155,6 +163,9 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                     </div>
                   </div>
                 </TableCell>
+                <TableCell>{row.operationCenterName}</TableCell>
+                <TableCell>{row.restDay}</TableCell>
+                <TableCell>{row.shiftName}</TableCell>
                 <TableCell className="text-center">{fmt(row.jornada)}</TableCell>
                 <TableCell className="text-center">{fmt(row.dominicalTrabajado)}</TableCell>
                 <TableCell className="text-center">{fmt(row.festivoTrabajado)}</TableCell>

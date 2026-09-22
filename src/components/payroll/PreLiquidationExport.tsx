@@ -14,6 +14,9 @@ export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
     const data = rows.map(r => ({
       'Empleado': r.employeeName,
       'Documento': r.documentNumber,
+      'Centro de Operación': r.operationCenterName,
+      'Día de Descanso Obligatorio': r.restDay,
+      'Turno': r.shiftName,
       'Jornada (días)': r.jornada,
       'Dominical Trabajado': r.dominicalTrabajado,
       'Festivo Trabajado': r.festivoTrabajado,

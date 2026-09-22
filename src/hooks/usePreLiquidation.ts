@@ -60,6 +60,10 @@ interface PreLiquidationData {
     first_name: string;
     last_name: string;
     document_number: string;
+    operationCenterIds: string[];
+    operationCenterName: string;
+    restDay: string;
+    shiftName: string;
   }>;
   config: PayrollLaborConfig | null;
   filters: PreLiquidationFilters;
@@ -277,6 +281,10 @@ export function usePreLiquidation(data: PreLiquidationData | null): PreLiquidati
         employeeId: emp.id,
         employeeName: `${emp.first_name} ${emp.last_name}`,
         documentNumber: emp.document_number,
+        operationCenterIds: emp.operationCenterIds,
+        operationCenterName: emp.operationCenterName,
+        restDay: emp.restDay,
+        shiftName: emp.shiftName,
         jornada,
         dominicalTrabajado,
         festivoTrabajado,

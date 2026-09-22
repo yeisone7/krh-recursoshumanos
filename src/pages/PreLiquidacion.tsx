@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { Calculator, AlertTriangle, Lock, Loader2 } from 'lucide-react';
 import { PreLiquidationTable, PreLiquidationExport } from '@/components/payroll';
 import { usePreLiquidation } from '@/hooks/usePreLiquidation';
@@ -13,6 +14,8 @@ import { usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useShiftAssignments } from '@/hooks/useSchedules';
 import { useHolidaysSet } from '@/hooks/useHolidays';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { getEmployeeOperationCenterIds } from '@/lib/scheduleCenterScope';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -29,6 +32,27 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+const REST_DAY_LABELS: Record<string, string> = {
+  lunes: 'Lunes',
+  martes: 'Martes',
+  miercoles: 'Miércoles',
+  miércoles: 'Miércoles',
+  jueves: 'Jueves',
+  viernes: 'Viernes',
+  sabado: 'Sábado',
+  sábado: 'Sábado',
+  domingo: 'Domingo',
+};
+
+function formatRestDay(restDay?: string | null) {
+  if (!restDay) return 'Sin asignar';
+  return REST_DAY_LABELS[restDay.trim().toLowerCase()] || restDay;
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Ocurrió un error inesperado';
+}
+
 export default function PreLiquidacion() {
   const { currentCompanyId, user } = useAuth();
   const queryClient = useQueryClient();
@@ -36,12 +60,33 @@ export default function PreLiquidacion() {
   const [startDate, setStartDate] = useState(format(startOfMonth(today), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(endOfMonth(today), 'yyyy-MM-dd'));
   const [calculated, setCalculated] = useState(false);
+  const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>([]);
 
   const { data: config } = usePayrollConfig();
   const { data: employees = [] } = useEmployees();
+  const { data: operationCenters = [] } = useOperationCenters();
   const { data: holidaysSet } = useHolidaysSet();
   const { data: assignments = [] } = useShiftAssignments({ startDate, endDate });
   const { data: novelties = [] } = usePayrollNovelties({ startDate, endDate });
+
+  useEffect(() => {
+    setSelectedCenterIds([]);
+  }, [currentCompanyId]);
+
+  const { data: employeeSchedules = [] } = useQuery({
+    queryKey: ['employee_schedules_for_preliq', currentCompanyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('employee_schedule')
+        .select('employee_id, employment_cycle_id, rest_day, shift_type_id, shift_types(id, name)')
+        .eq('company_id', currentCompanyId!)
+        .eq('is_current', true)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentCompanyId && calculated,
+  });
 
   // Fetch overtime records
   const { data: overtimeRecords = [] } = useQuery({
@@ -140,7 +185,28 @@ export default function PreLiquidacion() {
     enabled: !!currentCompanyId && calculated,
   });
 
-  const preLiqData = calculated ? {
+  const operationCenterNameById = useMemo(
+    () => new Map(operationCenters.map(center => [center.id, center.name])),
+    [operationCenters],
+  );
+
+  const employeeScheduleIndexes = useMemo(() => {
+    const byEmployeeId = new Map<string, typeof employeeSchedules[number]>();
+    const byEmployeeCycle = new Map<string, typeof employeeSchedules[number]>();
+
+    employeeSchedules.forEach(schedule => {
+      if (!byEmployeeId.has(schedule.employee_id)) {
+        byEmployeeId.set(schedule.employee_id, schedule);
+      }
+      if (schedule.employment_cycle_id) {
+        byEmployeeCycle.set(`${schedule.employee_id}_${schedule.employment_cycle_id}`, schedule);
+      }
+    });
+
+    return { byEmployeeId, byEmployeeCycle };
+  }, [employeeSchedules]);
+
+  const preLiqData = useMemo(() => calculated ? {
     assignments,
     holidays: holidaysSet || new Set<string>(),
     novelties: novelties.map(n => ({
@@ -156,19 +222,55 @@ export default function PreLiquidacion() {
     leaves,
     loans: activeLoans,
     deductions: activeDeductions,
-    employees: employees.map(e => ({
-      id: e.id,
-      first_name: e.first_name,
-      last_name: e.last_name,
-      document_number: e.document_number,
-    })),
+    employees: employees.map(e => {
+      const centerIds = getEmployeeOperationCenterIds(e);
+      const centerNames = centerIds
+        .map(centerId => operationCenterNameById.get(centerId))
+        .filter((name): name is string => Boolean(name));
+      const cycleKey = e.active_employment_cycle?.id
+        ? `${e.id}_${e.active_employment_cycle.id}`
+        : null;
+      const schedule = (cycleKey ? employeeScheduleIndexes.byEmployeeCycle.get(cycleKey) : null)
+        || employeeScheduleIndexes.byEmployeeId.get(e.id);
+
+      return {
+        id: e.id,
+        first_name: e.first_name,
+        last_name: e.last_name,
+        document_number: e.document_number,
+        operationCenterIds: centerIds,
+        operationCenterName: centerNames.length > 0 ? centerNames.join(', ') : 'Sin asignar',
+        restDay: formatRestDay(schedule?.rest_day),
+        shiftName: schedule?.shift_types?.name || 'Sin asignar',
+      };
+    }),
     config,
     filters: { startDate, endDate },
-  } : null;
+  } : null, [
+    activeDeductions,
+    activeLoans,
+    assignments,
+    calculated,
+    config,
+    employeeScheduleIndexes,
+    employees,
+    endDate,
+    holidaysSet,
+    incapacities,
+    leaves,
+    novelties,
+    operationCenterNameById,
+    overtimeRecords,
+    startDate,
+    vacations,
+  ]);
 
-  const rows = usePreLiquidation(preLiqData);
+  const allRows = usePreLiquidation(preLiqData);
+  const rows = selectedCenterIds.length === 0
+    ? allRows
+    : allRows.filter(row => row.operationCenterIds.some(centerId => selectedCenterIds.includes(centerId)));
   const warningCount = rows.filter(r => r.hasWarning).length;
-  const rowsWithDeductions = rows.filter(r => r.totalDeducciones > 0);
+  const rowsWithDeductions = allRows.filter(r => r.totalDeducciones > 0);
 
   const handleCalculate = () => {
     if (!startDate || !endDate) {
@@ -184,7 +286,7 @@ export default function PreLiquidacion() {
       const period = `${startDate} a ${endDate}`;
       const promises: Promise<void>[] = [];
 
-      for (const row of rows) {
+      for (const row of allRows) {
         for (const loan of row.loanDetail) {
           promises.push((async () => {
             // Get loan current state
@@ -204,6 +306,7 @@ export default function PreLiquidacion() {
             const { error: payErr } = await supabase
               .from('employee_loan_payments')
               .insert({
+                company_id: currentCompanyId!,
                 loan_id: loan.loanId,
                 payment_number: newPaidInstallments,
                 payment_date: endDate,
@@ -212,7 +315,7 @@ export default function PreLiquidacion() {
                 payroll_period: period,
                 notes: 'Descuento automático por nómina',
                 created_by: user?.id,
-              } as any);
+              });
             if (payErr) throw payErr;
 
             // Update loan
@@ -223,7 +326,7 @@ export default function PreLiquidacion() {
                 paid_amount: newPaidAmount,
                 remaining_balance: Math.max(0, newBalance),
                 status: newStatus,
-              } as any)
+              })
               .eq('id', loan.loanId);
             if (updErr) throw updErr;
           })());
@@ -238,8 +341,8 @@ export default function PreLiquidacion() {
       queryClient.invalidateQueries({ queryKey: ['loans_for_preliq'] });
       toast({ title: 'Período cerrado exitosamente', description: 'Se registraron los descuentos de préstamos automáticamente.' });
     },
-    onError: (e: any) => {
-      toast({ title: 'Error al cerrar período', description: e.message, variant: 'destructive' });
+    onError: (error: unknown) => {
+      toast({ title: 'Error al cerrar período', description: getErrorMessage(error), variant: 'destructive' });
     },
   });
 
@@ -261,6 +364,15 @@ export default function PreLiquidacion() {
             <div className="space-y-2">
               <Label>Fecha fin</Label>
               <Input className="w-full" type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCalculated(false); }} />
+            </div>
+            <div className="space-y-2 sm:col-span-2 lg:w-72">
+              <Label>Centros de operación</Label>
+              <MultiSelect
+                options={operationCenters.map(center => ({ value: center.id, label: center.name }))}
+                value={selectedCenterIds}
+                onChange={setSelectedCenterIds}
+                placeholder="Todos los centros"
+              />
             </div>
             <Button onClick={handleCalculate} className="w-full lg:w-auto">
               <Calculator className="w-4 h-4 mr-2" />
