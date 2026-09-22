@@ -1274,7 +1274,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                     <SelectItem key={shift.id} value={shift.id}>
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
-                        <span>{shift.name}</span>
+                        <span>{shift.code ? `${shift.code} - ${shift.name}` : shift.name}</span>
                         {shift.is_rest_day && <Badge variant="secondary" className="text-xs">Descanso</Badge>}
                       </div>
                     </SelectItem>
