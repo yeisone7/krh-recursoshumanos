@@ -12,6 +12,7 @@ import {
   Calendar,
   Zap,
   FileSpreadsheet,
+  Loader2,
   Maximize2,
   Minimize2,
   Building2,
@@ -74,6 +75,7 @@ import {
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 import { filterDayShiftsForCenter } from '@/lib/scheduleCenterScope';
+import { exportDayShiftsToExcel } from '@/lib/dayShiftExporter';
 
 const DAY_BADGE_COLORS: Record<number, string> = {
   1: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20', // Lun
@@ -106,6 +108,7 @@ export default function Jornadas() {
   const [showGeneratorDialog, setShowGeneratorDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [showBulkGeneratorDialog, setShowBulkGeneratorDialog] = useState(false);
+  const [isExportingDayShifts, setIsExportingDayShifts] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<WorkSchedule | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<ShiftCycle | null>(null);
@@ -144,6 +147,34 @@ export default function Jornadas() {
     });
   }, [dayShifts, dayShiftCenterFilter, searchQuery]);
   const filteredCycles = shiftCycles.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  const selectedDayShiftCenterLabel = useMemo(() => {
+    if (dayShiftCenterFilter === 'all') return 'Todos (incluye turnos globales)';
+    if (dayShiftCenterFilter === 'global') return 'Solo turnos globales';
+    return operationCenters.find((center) => center.id === dayShiftCenterFilter)?.name ?? 'Centro seleccionado';
+  }, [dayShiftCenterFilter, operationCenters]);
+
+  const handleExportDayShifts = async () => {
+    if (filteredDayShifts.length === 0) {
+      toast.warning('No hay Turnos Día para exportar con los filtros actuales');
+      return;
+    }
+
+    setIsExportingDayShifts(true);
+    try {
+      await exportDayShiftsToExcel(filteredDayShifts, {
+        centerFilterLabel: selectedDayShiftCenterLabel,
+        searchQuery,
+      });
+      toast.success(`${filteredDayShifts.length} Turnos Día exportados a Excel`);
+    } catch (error: unknown) {
+      toast.error('No se pudo exportar Turnos Día', {
+        description: error instanceof Error ? error.message : 'Intenta nuevamente.',
+      });
+    } finally {
+      setIsExportingDayShifts(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteConfirm) return;
@@ -294,6 +325,23 @@ export default function Jornadas() {
           )}
           
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {activeTab === 'day-shifts' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-12 w-full rounded-xl border-border bg-white px-5 font-bold sm:w-auto"
+                onClick={() => void handleExportDayShifts()}
+                disabled={loadingDayShifts || isExportingDayShifts || filteredDayShifts.length === 0}
+              >
+                {isExportingDayShifts ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" />
+                )}
+                Exportar Excel
+              </Button>
+            )}
             {activeTab === 'calendar' ? (
               <Button size="sm" className="h-12 w-full sm:w-auto px-6 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px]" onClick={() => setShowGeneratorDialog(true)}>
                 <Zap className="w-4 h-4 mr-2" />
@@ -320,9 +368,11 @@ export default function Jornadas() {
                  <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setShowBulkGeneratorDialog(true)}>
                     <Users className="w-4 h-4 mr-3 text-primary" /> Generar Masivo
                  </DropdownMenuItem>
-                 <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setShowExportDialog(true)}>
-                    <FileSpreadsheet className="w-4 h-4 mr-3 text-emerald-600" /> Exportar Excel
-                 </DropdownMenuItem>
+                 {activeTab !== 'day-shifts' && (
+                   <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setShowExportDialog(true)}>
+                      <FileSpreadsheet className="w-4 h-4 mr-3 text-emerald-600" /> Exportar Excel
+                   </DropdownMenuItem>
+                 )}
                  <DropdownMenuSeparator />
                  <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setIsFullscreen(true)}>
                     <Maximize2 className="w-4 h-4 mr-3" /> Pantalla Completa
