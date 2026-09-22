@@ -1,3 +1,4 @@
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -508,7 +509,7 @@ export function useShiftAssignments(options: {
 
   return useQuery({
     queryKey: ['shift_assignments', currentCompanyId, employeeId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       let query = supabase
         .from('employee_shift_assignments')
         .select(`
@@ -540,11 +541,10 @@ export function useShiftAssignments(options: {
         query = query.lte('assignment_date', endDate);
       }
 
-      const { data, error } = await query.order('assignment_date');
+      const { data, error } = await query.order('assignment_date').order('id').range(from, to);
 
-      if (error) throw error;
-      return data as EmployeeShiftAssignment[];
-    },
+      return { data: data as EmployeeShiftAssignment[] | null, error };
+    }),
     enabled: !!currentCompanyId,
   });
 }

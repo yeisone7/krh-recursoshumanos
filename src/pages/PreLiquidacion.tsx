@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { Calculator, AlertTriangle, Lock, Loader2 } from 'lucide-react';
-import { PreLiquidationTable, PreLiquidationExport } from '@/components/payroll';
+import { PreLiquidationTable } from '@/components/payroll/PreLiquidationTable';
+import { PreLiquidationExport } from '@/components/payroll/PreLiquidationExport';
 import { usePreLiquidation } from '@/hooks/usePreLiquidation';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { usePayrollNovelties } from '@/hooks/usePayrollNovelties';
@@ -15,6 +16,7 @@ import { useShiftAssignments } from '@/hooks/useSchedules';
 import { useHolidaysSet } from '@/hooks/useHolidays';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { getEmployeeOperationCenterIds } from '@/lib/scheduleCenterScope';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,128 +64,139 @@ export default function PreLiquidacion() {
   const [calculated, setCalculated] = useState(false);
   const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>([]);
 
-  const { data: config } = usePayrollConfig();
-  const { data: employees = [] } = useEmployees();
-  const { data: operationCenters = [] } = useOperationCenters();
-  const { data: holidaysSet } = useHolidaysSet();
-  const { data: assignments = [] } = useShiftAssignments({ startDate, endDate });
-  const { data: novelties = [] } = usePayrollNovelties({ startDate, endDate });
+  const { data: config, ...configQuery } = usePayrollConfig();
+  const { data: employees = [], ...employeesQuery } = useEmployees();
+  const { data: operationCenters = [], ...operationCentersQuery } = useOperationCenters();
+  const { data: holidaysSet, ...holidaysSetQuery } = useHolidaysSet();
+  const { data: assignments = [], ...assignmentsQuery } = useShiftAssignments({ startDate, endDate });
+  const { data: novelties = [], ...noveltiesQuery } = usePayrollNovelties({ startDate, endDate });
 
   useEffect(() => {
     setSelectedCenterIds([]);
+    setCalculated(false);
   }, [currentCompanyId]);
 
-  const { data: employeeSchedules = [] } = useQuery({
+  const { data: employeeSchedules = [], ...employeeSchedulesQuery } = useQuery({
     queryKey: ['employee_schedules_for_preliq', currentCompanyId],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_schedule')
         .select('employee_id, employment_cycle_id, rest_day, shift_type_id, shift_types(id, name)')
         .eq('company_id', currentCompanyId!)
         .eq('is_current', true)
-        .order('updated_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
+        .order('updated_at', { ascending: false })
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch overtime records
-  const { data: overtimeRecords = [] } = useQuery({
+  const { data: overtimeRecords = [], ...overtimeRecordsQuery } = useQuery({
     queryKey: ['overtime_for_preliq', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('overtime_records')
         .select('employee_id, work_date, overtime_type, total_hours, status')
         .eq('company_id', currentCompanyId!)
         .gte('work_date', startDate)
         .lte('work_date', endDate)
-        .in('status', ['aprobado', 'pagado']);
-      if (error) throw error;
-      return data || [];
-    },
+        .in('status', ['aprobado', 'pagado'])
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch incapacities
-  const { data: incapacities = [] } = useQuery({
+  const { data: incapacities = [], ...incapacitiesQuery } = useQuery({
     queryKey: ['incapacities_for_preliq', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_incapacities')
         .select('employee_id, start_date, end_date')
         .eq('company_id', currentCompanyId!)
         .lte('start_date', endDate)
-        .gte('end_date', startDate);
-      if (error) throw error;
-      return data || [];
-    },
+        .gte('end_date', startDate)
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch vacations
-  const { data: vacations = [] } = useQuery({
+  const { data: vacations = [], ...vacationsQuery } = useQuery({
     queryKey: ['vacations_for_preliq', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('vacation_requests')
-        .select('employee_id, start_date, end_date, status')
+        .select('employee_id, start_date, end_date, status, request_type, interruption_date, resume_start_date, resume_end_date')
         .eq('company_id', currentCompanyId!)
-        .lte('start_date', endDate)
-        .gte('end_date', startDate)
-        .in('status', ['aprobado']);
-      if (error) throw error;
-      return data || [];
-    },
+        .or(`and(start_date.lte.${endDate},end_date.gte.${startDate}),and(resume_start_date.lte.${endDate},resume_end_date.gte.${startDate})`)
+        .in('status', ['aprobado', 'en_curso', 'completado', 'interrumpido'])
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch leaves
-  const { data: leaves = [] } = useQuery({
+  const { data: leaves = [], ...leavesQuery } = useQuery({
     queryKey: ['leaves_for_preliq', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('leave_requests')
-        .select('employee_id, start_date, end_date, status')
+        .select('employee_id, start_date, end_date, status, duration_type, total_hours')
         .eq('company_id', currentCompanyId!)
         .lte('start_date', endDate)
         .gte('end_date', startDate)
-        .in('status', ['aprobado']);
-      if (error) throw error;
-      return data || [];
-    },
+        .in('status', ['aprobado'])
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch active loans
-  const { data: activeLoans = [] } = useQuery({
+  const { data: activeLoans = [], ...activeLoansQuery } = useQuery({
     queryKey: ['loans_for_preliq', currentCompanyId],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_loans')
-        .select('id, employee_id, loan_type, description, installment_amount, status')
+        .select('id, employee_id, loan_type, description, installment_amount, status, start_date, remaining_balance')
         .eq('company_id', currentCompanyId!)
-        .eq('status', 'activo');
-      if (error) throw error;
-      return data || [];
-    },
+        .eq('status', 'activo')
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
 
   // Fetch active deductions
-  const { data: activeDeductions = [] } = useQuery({
+  const { data: activeDeductions = [], ...activeDeductionsQuery } = useQuery({
     queryKey: ['deductions_for_preliq', currentCompanyId],
-    queryFn: async () => {
+    queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_deductions')
-        .select('id, employee_id, deduction_type, description, amount, is_percentage, percentage_value, status')
+        .select('id, employee_id, deduction_type, description, amount, is_percentage, percentage_value, status, start_date, end_date')
         .eq('company_id', currentCompanyId!)
-        .eq('status', 'activo');
-      if (error) throw error;
-      return data || [];
-    },
+        .eq('status', 'activo')
+        .order('id')
+        .range(from, to);
+      return { data, error };
+    }),
     enabled: !!currentCompanyId && calculated,
   });
+
+  const sourceQueries = [configQuery, employeesQuery, operationCentersQuery, holidaysSetQuery, assignmentsQuery, noveltiesQuery, employeeSchedulesQuery, overtimeRecordsQuery, incapacitiesQuery, vacationsQuery, leavesQuery, activeLoansQuery, activeDeductionsQuery];
+  const sourceError = sourceQueries.find(query => query.isError)?.error;
+  const sourcesReady = !!currentCompanyId && sourceQueries.every(query => query.isSuccess && !query.isFetching);
 
   const operationCenterNameById = useMemo(
     () => new Map(operationCenters.map(center => [center.id, center.name])),
@@ -198,7 +211,7 @@ export default function PreLiquidacion() {
       if (!byEmployeeId.has(schedule.employee_id)) {
         byEmployeeId.set(schedule.employee_id, schedule);
       }
-      if (schedule.employment_cycle_id) {
+      if (schedule.employment_cycle_id && !byEmployeeCycle.has(`${schedule.employee_id}_${schedule.employment_cycle_id}`)) {
         byEmployeeCycle.set(`${schedule.employee_id}_${schedule.employment_cycle_id}`, schedule);
       }
     });
@@ -206,7 +219,7 @@ export default function PreLiquidacion() {
     return { byEmployeeId, byEmployeeCycle };
   }, [employeeSchedules]);
 
-  const preLiqData = useMemo(() => calculated ? {
+  const preLiqData = useMemo(() => calculated && sourcesReady ? {
     assignments,
     holidays: holidaysSet || new Set<string>(),
     novelties: novelties.map(n => ({
@@ -251,6 +264,7 @@ export default function PreLiquidacion() {
     activeLoans,
     assignments,
     calculated,
+    sourcesReady,
     config,
     employeeScheduleIndexes,
     employees,
@@ -270,19 +284,21 @@ export default function PreLiquidacion() {
     ? allRows
     : allRows.filter(row => row.operationCenterIds.some(centerId => selectedCenterIds.includes(centerId)));
   const warningCount = rows.filter(r => r.hasWarning).length;
-  const rowsWithDeductions = allRows.filter(r => r.totalDeducciones > 0);
+  const rowsWithDeductions = allRows.filter(r => r.loanDeduction > 0);
 
   const handleCalculate = () => {
-    if (!startDate || !endDate) {
+    if (!startDate || !endDate || startDate > endDate) {
       toast({ title: 'Seleccione un período válido', variant: 'destructive' });
       return;
     }
+    sourceQueries.filter(query => query.isError).forEach(query => { void query.refetch(); });
     setCalculated(true);
   };
 
   // Close period mutation — registers loan payments for all active loans
   const closePeriodMutation = useMutation({
     mutationFn: async () => {
+      if (!sourcesReady || allRows.some(row => row.hasWarning)) throw new Error('Revise las alertas y espere a que termine la carga antes de cerrar.');
       const period = `${startDate} a ${endDate}`;
       const promises: Promise<void>[] = [];
 
@@ -358,12 +374,12 @@ export default function PreLiquidacion() {
         <CardContent className="pt-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-end">
             <div className="space-y-2">
-              <Label>Fecha inicio</Label>
-              <Input className="w-full" type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setCalculated(false); }} />
+              <Label htmlFor="preliq-start">Fecha inicio</Label>
+              <Input id="preliq-start" className="w-full" type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setCalculated(false); }} />
             </div>
             <div className="space-y-2">
-              <Label>Fecha fin</Label>
-              <Input className="w-full" type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCalculated(false); }} />
+              <Label htmlFor="preliq-end">Fecha fin</Label>
+              <Input id="preliq-end" className="w-full" type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setCalculated(false); }} />
             </div>
             <div className="space-y-2 sm:col-span-2 lg:w-72">
               <Label>Centros de operación</Label>
@@ -386,7 +402,7 @@ export default function PreLiquidacion() {
             {rows.length > 0 && rowsWithDeductions.length > 0 && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="default" disabled={closePeriodMutation.isPending} className="w-full lg:w-auto">
+                  <Button variant="default" disabled={closePeriodMutation.isPending || allRows.some(row => row.hasWarning)} className="w-full lg:w-auto">
                     {closePeriodMutation.isPending ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     ) : (
@@ -420,7 +436,7 @@ export default function PreLiquidacion() {
         <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
           <AlertTriangle className="w-5 h-5" />
           <span className="text-sm font-medium">
-            {warningCount} empleado(s) con inconsistencias: total de días supera los días del período.
+            {warningCount} empleado(s) con alertas. Revise el detalle de cada empleado antes de cerrar el período.
           </span>
         </div>
       )}
@@ -434,6 +450,16 @@ export default function PreLiquidacion() {
         </div>
       )}
 
+      <p className="text-sm text-muted-foreground">
+        Dominical = trabajo en el descanso obligatorio asignado. Sin asignación se usa domingo.
+        Si coincide con un festivo, se cuenta una sola vez como festivo.
+      </p>
+      {calculated && sourceError && (
+        <p role="alert" className="text-destructive">No se pudo completar la preliquidación: {getErrorMessage(sourceError)}. Intente calcular nuevamente.</p>
+      )}
+      {calculated && !sourceError && !sourcesReady && (
+        <p role="status" className="text-muted-foreground">Cargando todos los datos de la preliquidación…</p>
+      )}
       {/* Results */}
       <PreLiquidationTable
         rows={rows}
