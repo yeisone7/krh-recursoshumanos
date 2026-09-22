@@ -115,7 +115,8 @@ const AnaliticaEmpleados = lazy(() => import("./pages/AnaliticaEmpleados"));
 const AnaliticaDiversidad = lazy(() => import("./pages/AnaliticaDiversidad"));
 const Jornadas = lazy(() => import("./pages/Jornadas"));
 const RelojChecador = lazy(() => import("./pages/RelojChecador"));
-const TimeClockPunch = lazy(() => import("./pages/TimeClockPunch"));
+const TimeClockEntry = lazy(() => import("./pages/TimeClockEntry"));
+const PublicTimeClock = lazy(() => import("./pages/PublicTimeClock"));
 const TimeClockScreen = lazy(() => import("./pages/TimeClockScreen"));
 const CopasstDashboard = lazy(() => import("./pages/copasst/Dashboard"));
 const CopasstElections = lazy(() => import("./pages/copasst/Elections"));
@@ -170,6 +171,7 @@ const App = () => (
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
             <Route path="/solicitud-permiso" element={<PublicLeaveRequest />} />
+            <Route path="/asistencia/:token" element={<Suspense fallback={null}><PublicTimeClock /></Suspense>} />
             <Route path="/verificar-certificado/:token" element={<VerificarCertificado />} />
             <Route path="/install" element={<Install />} />
             <Route path="/portal" element={
@@ -178,9 +180,7 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/marcar" element={
-              <ProtectedRoute>
-                <Suspense fallback={null}><TimeClockPunch /></Suspense>
-              </ProtectedRoute>
+              <Suspense fallback={null}><TimeClockEntry /></Suspense>
             } />
             <Route path="/reloj-checador/pantalla/:pointId" element={
               <ProtectedRoute>

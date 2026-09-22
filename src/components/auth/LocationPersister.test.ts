@@ -21,6 +21,8 @@ describe('LocationPersister public leave isolation', () => {
   });
 
   it('never persists a short-lived time clock QR token', () => {
+    expect(isIgnoredPath('/asistencia/secret-fixed-link')).toBe(true);
+    expect(getRestorablePath('/asistencia/dinamico?point=id&token=secret')).toBeNull();
     expect(isIgnoredPath('/marcar')).toBe(true);
     expect(getRestorablePath('/marcar?point=point-id&token=secret-challenge')).toBeNull();
   });

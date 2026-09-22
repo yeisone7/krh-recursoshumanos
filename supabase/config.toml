@@ -1,5 +1,8 @@
 project_id = "qmfyecdeiupgscegxbmo"
 
+[functions.public-time-clock]
+verify_jwt = false
+
 [functions.complete-onboarding]
 verify_jwt = false
 

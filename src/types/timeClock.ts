@@ -1,6 +1,8 @@
-export type TimeClockAction = 'clock_in' | 'break_start' | 'break_end' | 'clock_out';
-export type TimeClockSource = 'qr' | 'web' | 'supervised' | 'correction';
-export type TimeClockDayStatus = 'open' | 'on_break' | 'complete' | 'needs_review';
+export type TimeClockAction =
+  "clock_in" | "break_start" | "break_end" | "clock_out";
+export type TimeClockSource = "qr" | "web" | "supervised" | "correction";
+export type TimeClockDayStatus =
+  "scheduled" | "open" | "on_break" | "complete" | "needs_review";
 
 export interface TimeClockPoint {
   id: string;
@@ -36,13 +38,22 @@ export interface TimeClockDay {
   break_minutes: number;
   status: TimeClockDayStatus;
   incident_codes: string[];
-  employees_v2?: { first_name: string; last_name: string; document_number: string } | null;
+  employees_v2?: {
+    first_name: string;
+    last_name: string;
+    document_number: string;
+  } | null;
   operation_centers?: { name: string } | null;
 }
 
 export interface TimeClockEvent {
   id: string;
   day_id: string;
+  point_id: string | null;
+  operation_center_id: string | null;
+  supersedes_event_id: string | null;
+  identity_method: "portal" | "pin" | "supervisor" | "correction";
+  qr_kind: "qr_static" | "qr_dynamic" | null;
   employee_id: string;
   action: TimeClockAction;
   source: TimeClockSource;
@@ -50,7 +61,11 @@ export interface TimeClockEvent {
   location_verified: boolean;
   qr_verified: boolean;
   supervisor_reason: string | null;
-  employees_v2?: { first_name: string; last_name: string; document_number: string } | null;
+  employees_v2?: {
+    first_name: string;
+    last_name: string;
+    document_number: string;
+  } | null;
   operation_centers?: { name: string } | null;
 }
 
@@ -60,21 +75,34 @@ export interface TimeClockCorrection {
   requested_action: TimeClockAction;
   requested_at: string;
   reason: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   review_notes: string | null;
+  requested_by: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  reviewer_name: string | null;
+  identity_method: "portal" | "pin";
+  operation_center_id: string | null;
   created_at: string;
-  employees_v2?: { first_name: string; last_name: string; document_number: string } | null;
+  employees_v2?: {
+    first_name: string;
+    last_name: string;
+    document_number: string;
+  } | null;
 }
 
 export const TIME_CLOCK_ACTION_LABELS: Record<TimeClockAction, string> = {
-  clock_in: 'Entrada',
-  break_start: 'Iniciar pausa',
-  break_end: 'Finalizar pausa',
-  clock_out: 'Salida',
+  clock_in: "Entrada",
+  break_start: "Iniciar pausa",
+  break_end: "Finalizar pausa",
+  clock_out: "Salida",
 };
 
-export function getNextTimeClockActions(lastAction?: TimeClockAction | null): TimeClockAction[] {
-  if (!lastAction || lastAction === 'clock_out') return ['clock_in'];
-  if (lastAction === 'clock_in' || lastAction === 'break_end') return ['break_start', 'clock_out'];
-  return ['break_end'];
+export function getNextTimeClockActions(
+  lastAction?: TimeClockAction | null,
+): TimeClockAction[] {
+  if (!lastAction || lastAction === "clock_out") return ["clock_in"];
+  if (lastAction === "clock_in" || lastAction === "break_end")
+    return ["break_start", "clock_out"];
+  return ["break_end"];
 }

@@ -27,7 +27,7 @@ export function QrDisplay({ point }: { point: TimeClockPoint }) {
     return () => { window.clearInterval(timer); window.removeEventListener('online', update); window.removeEventListener('offline', update); };
   }, [challenge]);
 
-  const url = challenge ? `${window.location.origin}/marcar?point=${point.id}&token=${challenge.token}` : '';
+  const url = challenge ? `${window.location.origin}/asistencia/dinamico?point=${point.id}&token=${challenge.token}` : '';
   return <div className="flex min-h-[calc(100vh-2rem)] flex-col items-center justify-center rounded-3xl bg-slate-950 p-6 text-white">
     <div className="mb-7 text-center"><div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-400/15"><Clock3 className="h-8 w-8 text-emerald-400" /></div><h1 className="text-3xl font-black sm:text-5xl">Marca tu asistencia</h1><p className="mt-2 text-lg text-slate-300">{point.name} · {point.operation_centers?.name}</p></div>
     <div className="rounded-[2rem] bg-white p-5 shadow-2xl shadow-emerald-500/10 sm:p-8">
