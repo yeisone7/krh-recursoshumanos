@@ -15,6 +15,7 @@ export interface TimeClockPoint {
   max_accuracy_meters: number;
   late_tolerance_minutes: number;
   require_break_punches: boolean;
+  require_clock_in_photo: boolean;
   is_active: boolean;
   operation_centers?: { id: string; name: string } | null;
 }
@@ -61,6 +62,8 @@ export interface TimeClockEvent {
   location_verified: boolean;
   qr_verified: boolean;
   supervisor_reason: string | null;
+  photo_path: string | null;
+  photo_captured_at: string | null;
   employees_v2?: {
     first_name: string;
     last_name: string;

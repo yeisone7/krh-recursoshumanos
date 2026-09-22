@@ -138,6 +138,7 @@ export function PointsSettings({ points }: { points: TimeClockPoint[] }) {
     max_accuracy_meters: "50",
     late_tolerance_minutes: "5",
     require_break_punches: false,
+    require_clock_in_photo: false,
   };
   const [form, setForm] = useState(initial);
   function openNew() {
@@ -156,6 +157,7 @@ export function PointsSettings({ points }: { points: TimeClockPoint[] }) {
       max_accuracy_meters: String(point.max_accuracy_meters),
       late_tolerance_minutes: String(point.late_tolerance_minutes),
       require_break_punches: point.require_break_punches,
+      require_clock_in_photo: point.require_clock_in_photo,
     });
     setOpen(true);
   }
@@ -178,6 +180,7 @@ export function PointsSettings({ points }: { points: TimeClockPoint[] }) {
         max_accuracy_meters: Number(form.max_accuracy_meters),
         late_tolerance_minutes: Number(form.late_tolerance_minutes),
         require_break_punches: form.require_break_punches,
+        require_clock_in_photo: form.require_clock_in_photo,
       });
       setForm(initial);
       setEditingPointId(null);
@@ -335,6 +338,20 @@ export function PointsSettings({ points }: { points: TimeClockPoint[] }) {
                   }
                 />
               </div>
+              <div className="sm:col-span-2 flex items-center justify-between rounded-xl border p-3">
+                <div>
+                  <Label>Foto al ingreso desde QR</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Toma una foto automática al marcar Entrada desde el QR.
+                  </p>
+                </div>
+                <Switch
+                  checked={form.require_clock_in_photo}
+                  onCheckedChange={(value) =>
+                    setForm({ ...form, require_clock_in_photo: value })
+                  }
+                />
+              </div>
             </div>
             <Button onClick={submit} disabled={save.isPending}>
               Guardar punto
@@ -358,11 +375,16 @@ export function PointsSettings({ points }: { points: TimeClockPoint[] }) {
               <p className="text-sm text-muted-foreground">
                 {point.operation_centers?.name}
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+              <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
                 <div className="rounded-lg bg-muted p-2">
                   Radio
                   <br />
                   <strong>{point.radius_meters} m</strong>
+                </div>
+                <div className="rounded-lg bg-muted p-2">
+                  Foto entrada
+                  <br />
+                  <strong>{point.require_clock_in_photo ? "Activa" : "No"}</strong>
                 </div>
                 <div className="rounded-lg bg-muted p-2">
                   Pausas

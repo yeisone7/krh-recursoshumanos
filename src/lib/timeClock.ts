@@ -89,6 +89,12 @@ export const clockErrors: Record<string, string> = {
   POINT_NOT_ALLOWED: "No estás habilitado para marcar en este punto.",
   INVALID_CORRECTION:
     "Revisa la fecha, la jornada y el motivo de la corrección.",
+  PHOTO_REQUIRED:
+    "Este punto exige una foto al registrar la entrada. Permite el acceso a la cámara y reintenta.",
+  INVALID_PHOTO:
+    "No fue posible validar la foto. Activa la cámara y vuelve a intentar.",
+  PHOTO_UPLOAD_FAILED:
+    "No fue posible guardar la foto. Revisa tu conexión y vuelve a intentar.",
   INVALID_REQUEST:
     "No se pudo completar la solicitud. Revisa los datos o contacta al supervisor.",
   SERVICE_UNAVAILABLE:

@@ -16,6 +16,17 @@ const { api, position } = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/timeClockApi", () => ({ publicClock: api }));
 vi.mock("@/hooks/useTimeClock", () => ({ getCurrentPosition: position }));
+vi.mock("@/components/time-clock/AutomaticPhotoCapture", () => ({
+  AutomaticPhotoCapture: ({ onCapture }: { onCapture: (photo: File) => void }) => (
+    <button
+      onClick={() =>
+        onCapture(new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "entrada.jpg", { type: "image/jpeg" }))
+      }
+    >
+      Tomar foto automática
+    </button>
+  ),
+}));
 const expiry = () => new Date(Date.now() + 300000).toISOString();
 function mount() {
   return render(
@@ -70,6 +81,7 @@ beforeEach(() => {
       return {
         last_action: null,
         require_break_punches: false,
+        require_clock_in_photo: false,
         events: [],
         corrections: [],
       };
@@ -169,5 +181,28 @@ describe("public attendance flow", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Entrada" }));
     await screen.findByRole("alert");
     expect(api.mock.calls.some((c) => c[0] === "punch")).toBe(false);
+  });
+  it("takes and sends a photo automatically when the point requires it", async () => {
+    const original = api.getMockImplementation()!;
+    api.mockImplementation((op, body, photo) =>
+      op === "history"
+        ? Promise.resolve({
+            last_action: null,
+            require_break_punches: false,
+            require_clock_in_photo: true,
+            events: [],
+            corrections: [],
+          })
+        : original(op, body, photo),
+    );
+    mount();
+    await login();
+    fireEvent.click(await screen.findByRole("button", { name: "Entrada" }));
+    expect(api.mock.calls.some((call) => call[0] === "punch")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Tomar foto automática" }));
+    await screen.findByText("Entrada registrada");
+    const punch = api.mock.calls.find((call) => call[0] === "punch");
+    expect(punch?.[2]).toBeInstanceOf(File);
+    expect(punch?.[2].type).toBe("image/jpeg");
   });
 });
