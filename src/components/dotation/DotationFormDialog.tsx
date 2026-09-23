@@ -38,7 +38,7 @@ import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import type { Database } from '@/integrations/supabase/types';
-import { getDotationSizeSuggestions } from '@/lib/dotationSizes';
+import { getDotationSizeSuggestions, getInventorySizeSuggestions } from '@/lib/dotationSizes';
 
 type DotationItemType = Database['public']['Enums']['dotation_item_type'];
 
@@ -226,7 +226,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleReset(); onOpenChange(v); }}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
+      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-[58.8rem] sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
         {/* Header con gradiente */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
           
@@ -479,11 +479,24 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                                  placeholder="Talla"
                                  className="h-10 w-full sm:w-24 rounded-xl bg-background border-border/50 font-semibold"
                                />
-                               <datalist id={`delivery-size-suggestions-${idx}`}>
-                                 {getDotationSizeSuggestions(
-                                   itemTypeCatalog.find((catalogItem) => catalogItem.id === item.itemTypeId),
-                                 ).map((size) => <option key={size} value={size} />)}
-                               </datalist>
+                                <datalist id={`delivery-size-suggestions-${idx}`}>
+                                  {(() => {
+                                    const inventorySizes = getInventorySizeSuggestions(
+                                      inventory,
+                                      item.itemTypeId,
+                                      employeeId
+                                        ? selectedEmployee?.work_info?.operation_center_id ?? null
+                                        : undefined,
+                                    );
+                                    const suggestions = inventorySizes.length > 0
+                                      ? inventorySizes
+                                      : getDotationSizeSuggestions(
+                                        itemTypeCatalog.find((catalogItem) => catalogItem.id === item.itemTypeId),
+                                      );
+
+                                    return suggestions.map((size) => <option key={size} value={size} />);
+                                  })()}
+                                </datalist>
                              </div>
                              <Button 
                               variant="ghost" 
