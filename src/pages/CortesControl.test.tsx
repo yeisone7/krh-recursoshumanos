@@ -19,6 +19,10 @@ function mount() { render(<QueryClientProvider client={client}><CortesControl />
 describe('CortesControl', () => {
   it('only shows actions for assigned levels and filters centers', async () => {
     mount(); await screen.findByText('Centro Norte');
+    expect(screen.getByRole('columnheader', { name: 'Centro de operación' })).toBeInTheDocument();
+    expect(screen.getByText('Crear nivel 1')).toBeInTheDocument();
+    expect(screen.getByText('Abierto')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Historial de Centro Norte' })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Aplicar' })).toHaveLength(1);
     fireEvent.change(screen.getByLabelText('Buscar centro'), { target: { value: 'Sur' } });
     expect(screen.queryByText('Centro Norte')).toBeNull();

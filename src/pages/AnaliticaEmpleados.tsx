@@ -64,8 +64,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { supabase } from '@/integrations/supabase/client';
 import { parseDateOnly } from '@/lib/dateOnly';
-import { fetchAllAnalyticsRows, isOperationallyActiveEmployee } from '@/lib/employeeAnalyticsData';
-import { indexCurrentOrLatestByEmployee, indexLatestByEmployee, isContractCurrent, isHireWithinLastDays, resolveEmployeeCenter, resolveEmployeePosition } from '@/lib/employeeAnalyticsMetrics';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
+import { isHireWithinLastDays, resolveEmployeePosition } from '@/lib/employeeAnalyticsMetrics';
 import { cn } from '@/lib/utils';
 
 type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
@@ -174,8 +174,14 @@ interface RelatedData {
 
 interface EmployeeAnalyticsDataset {
   employees: any[];
-  contracts: any[];
+  contracts: AnalyticsContract[];
   related: RelatedData;
+}
+
+interface AnalyticsContract {
+  id: string;
+  employee_id: string;
+  salary: number | null;
 }
 
 const EMPTY_RELATED: RelatedData = {
@@ -185,10 +191,6 @@ const EMPTY_RELATED: RelatedData = {
   scheduleByEmployee: {},
   documentCounts: {},
 };
-
-function keepAllowedRows(rows: any[], allowedEmployeeIds: Set<string>) {
-  return rows.filter((row) => allowedEmployeeIds.has(row.employee_id));
-}
 
 function AnaliticaEmpleadosSkeleton() {
   return (
@@ -268,113 +270,93 @@ function useEmployeeAnalyticsDataset() {
         return { employees: [], contracts: [], related: EMPTY_RELATED };
       }
 
-      const [employeesRows, workInfoRows, centerAssignmentRows, contactRows, socialRows, bankRows, familyRows, scheduleRows, documentRows, contractRows] = await Promise.all([
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employees_v2')
-            .select('id, document_number, document_type, first_name, middle_name, last_name, second_last_name, birth_date, gender, marital_status, is_active, status, created_at')
-            .eq('company_id', currentCompanyId)
-            .eq('is_active', true)
-            .eq('status', 'active')
-            .order('id')
-            .range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_work_info')
-            .select('id, employee_id, operation_center_id, area_id, position_id, position_name, hire_date, termination_date, is_current, created_at, operation_centers(id, name), areas(id, name), positions(id, name)')
-            .eq('company_id', currentCompanyId).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_operation_center_assignments')
-            .select('id, employee_id, operation_center_id, created_at, operation_centers(id, name)')
-            .eq('company_id', currentCompanyId).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_contact')
-            .select('id, employee_id, email, personal_email, mobile, phone, is_current, created_at')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_social_security')
-            .select('id, employee_id, eps, afp, arl, ccf, risk_level, is_current, created_at')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_bank_info')
-            .select('id, employee_id, bank_name, account_type, account_registered, is_current, created_at')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_family')
-            .select('id, employee_id, children_count, spouse_name, is_current, created_at')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_schedule')
-            .select('id, employee_id, payroll_type, is_office_schedule, rest_day, is_current, created_at')
-            .eq('company_id', currentCompanyId).eq('is_current', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('employee_documents')
-            .select('id, employee_id, is_valid').eq('company_id', currentCompanyId).eq('is_valid', true).order('id').range(from, to);
-          return { data, error };
-        }),
-        fetchAllAnalyticsRows(async (from, to) => {
-          const { data, error } = await supabase.from('contracts')
-            .select('id, employee_id, salary, start_date, end_date, is_terminated, created_at, contract_extensions(id, end_date, extension_number)')
-            .eq('company_id', currentCompanyId).order('id').range(from, to);
-          return { data, error };
-        }),
-      ]);
-
-      const workInfoByEmployee = indexCurrentOrLatestByEmployee(workInfoRows);
-      const centerAssignmentByEmployee = indexLatestByEmployee(centerAssignmentRows);
-      const contactByEmployee = indexLatestByEmployee(contactRows);
-
-      let employees = employeesRows.filter(isOperationallyActiveEmployee).map((employee: any) => {
-        const workInfo = workInfoByEmployee[employee.id] || null;
-        const centerAssignment = centerAssignmentByEmployee[employee.id] || null;
-        const operationCenter = resolveEmployeeCenter(workInfo, centerAssignment);
-        return {
-          ...employee,
-          contact: contactByEmployee[employee.id] || null,
-          work_info: workInfo,
-          operation_centers: operationCenter,
-          areas: workInfo?.areas || null,
-        };
+      const rows = await fetchAllAnalyticsRows(async (from, to) => {
+        const { data, error } = await supabase
+          .rpc('get_employee_analytics_dataset', { p_company_id: currentCompanyId })
+          .order('id')
+          .range(from, to);
+        return { data, error };
       });
 
+      let employees = rows.map((row) => ({
+        id: row.id,
+        document_number: row.document_number,
+        document_type: row.document_type,
+        first_name: row.first_name,
+        middle_name: row.middle_name,
+        last_name: row.last_name,
+        second_last_name: row.second_last_name,
+        birth_date: row.birth_date,
+        gender: row.gender,
+        marital_status: row.marital_status,
+        is_active: true,
+        status: 'active',
+        created_at: row.created_at,
+        contact: row.contact_mobile || row.contact_phone || row.contact_email || row.contact_personal_email
+          ? {
+              mobile: row.contact_mobile,
+              phone: row.contact_phone,
+              email: row.contact_email,
+              personal_email: row.contact_personal_email,
+            }
+          : null,
+        work_info: row.work_info_id
+          ? {
+              id: row.work_info_id,
+              operation_center_id: row.operation_center_id,
+              area_id: row.area_id,
+              position_id: row.position_id,
+              position_name: row.position_name,
+              hire_date: row.hire_date,
+              termination_date: row.termination_date,
+              operation_centers: row.operation_center_id ? { id: row.operation_center_id, name: row.operation_center_name } : null,
+              areas: row.area_id ? { id: row.area_id, name: row.area_name } : null,
+              positions: row.position_id ? { id: row.position_id, name: row.catalog_position_name } : null,
+            }
+          : null,
+        operation_centers: row.operation_center_id ? { id: row.operation_center_id, name: row.operation_center_name } : null,
+        areas: row.area_id ? { id: row.area_id, name: row.area_name } : null,
+      }));
+
       if (shouldLimitByAssignedCenters) {
-        employees = employees.filter((employee: any) => {
+        employees = employees.filter((employee) => {
           const centerId = employee.work_info?.operation_center_id || employee.operation_centers?.id;
           return centerId && assignedCenterIds.includes(centerId);
         });
       }
 
-      const allowedEmployeeIds = new Set(employees.map((employee: any) => employee.id));
-      const validDocumentRows = keepAllowedRows(documentRows, allowedEmployeeIds);
-      const documentCounts = validDocumentRows.reduce<Record<string, number>>((acc, row: any) => {
-        acc[row.employee_id] = (acc[row.employee_id] || 0) + 1;
-        return acc;
-      }, {});
+      const allowedEmployeeIds = new Set(employees.map((employee) => employee.id));
+      const allowedRows = rows.filter((row) => allowedEmployeeIds.has(row.id));
+      const contracts: AnalyticsContract[] = [];
+      const related: RelatedData = {
+        socialByEmployee: {},
+        bankByEmployee: {},
+        familyByEmployee: {},
+        scheduleByEmployee: {},
+        documentCounts: {},
+      };
+
+      for (const row of allowedRows) {
+        if (row.contract_id) contracts.push({ id: row.contract_id, employee_id: row.id, salary: row.salary });
+        if (row.eps || row.afp || row.arl || row.ccf || row.risk_level) {
+          related.socialByEmployee[row.id] = { eps: row.eps, afp: row.afp, arl: row.arl, ccf: row.ccf, risk_level: row.risk_level };
+        }
+        if (row.bank_name || row.account_type || row.account_registered !== null) {
+          related.bankByEmployee[row.id] = { bank_name: row.bank_name, account_type: row.account_type, account_registered: row.account_registered };
+        }
+        if (row.children_count !== null || row.spouse_name) {
+          related.familyByEmployee[row.id] = { children_count: row.children_count, spouse_name: row.spouse_name };
+        }
+        if (row.payroll_type || row.is_office_schedule !== null || row.rest_day) {
+          related.scheduleByEmployee[row.id] = { payroll_type: row.payroll_type, is_office_schedule: row.is_office_schedule, rest_day: row.rest_day };
+        }
+        related.documentCounts[row.id] = Number(row.document_count || 0);
+      }
 
       return {
         employees,
-        contracts: keepAllowedRows(contractRows, allowedEmployeeIds),
-        related: {
-          socialByEmployee: indexLatestByEmployee(keepAllowedRows(socialRows, allowedEmployeeIds)),
-          bankByEmployee: indexLatestByEmployee(keepAllowedRows(bankRows, allowedEmployeeIds)),
-          familyByEmployee: indexLatestByEmployee(keepAllowedRows(familyRows, allowedEmployeeIds)),
-          scheduleByEmployee: indexLatestByEmployee(keepAllowedRows(scheduleRows, allowedEmployeeIds)),
-          documentCounts,
-        },
+        contracts,
+        related,
       };
     },
     enabled: !!currentCompanyId,
@@ -400,10 +382,10 @@ export default function AnaliticaEmpleados() {
     canView('compensaciones') ||
     hasPermission('compensaciones', 'view');
 
-  const activeContractsByEmployee = useMemo(() => {
-    const validContracts = contracts.filter((contract: any) => isContractCurrent(contract));
-    return indexLatestByEmployee(validContracts);
-  }, [contracts]);
+  const activeContractsByEmployee = useMemo(() => contracts.reduce<Record<string, AnalyticsContract>>((byEmployee, contract) => {
+    byEmployee[contract.employee_id] = contract;
+    return byEmployee;
+  }, {}), [contracts]);
 
   const enrichedEmployees = useMemo(() => {
     return employees.map((employee: any) => {

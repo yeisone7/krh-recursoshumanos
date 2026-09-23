@@ -852,7 +852,6 @@ export function useCreateEmployee() {
         });
 
       if (empError) throw empError;
-
       const hireDate = format(data.hireDate, 'yyyy-MM-dd');
       const { data: employmentCycle, error: cycleError } = await supabase
         .from('employee_employment_cycles')

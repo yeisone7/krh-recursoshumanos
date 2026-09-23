@@ -11988,6 +11988,52 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_employee_analytics_dataset: {
+        Args: { p_company_id: string }
+        Returns: {
+          account_registered: boolean | null
+          account_type: string | null
+          afp: string | null
+          area_id: string | null
+          area_name: string | null
+          arl: string | null
+          bank_name: string | null
+          birth_date: string | null
+          catalog_position_name: string | null
+          ccf: string | null
+          children_count: number | null
+          contact_email: string | null
+          contact_mobile: string | null
+          contact_personal_email: string | null
+          contact_phone: string | null
+          contract_id: string | null
+          created_at: string
+          document_count: number
+          document_number: string
+          document_type: string
+          eps: string | null
+          first_name: string
+          gender: string | null
+          hire_date: string | null
+          id: string
+          is_office_schedule: boolean | null
+          last_name: string
+          marital_status: string | null
+          middle_name: string | null
+          operation_center_id: string | null
+          operation_center_name: string | null
+          payroll_type: string | null
+          position_id: string | null
+          position_name: string | null
+          rest_day: string | null
+          risk_level: string | null
+          salary: number | null
+          second_last_name: string | null
+          spouse_name: string | null
+          termination_date: string | null
+          work_info_id: string | null
+        }[]
+      }
       adjust_dotation_inventory: {
         Args: {
           p_adjustment: number
