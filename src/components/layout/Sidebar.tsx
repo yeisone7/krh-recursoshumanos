@@ -306,10 +306,10 @@ const toolsNavItemsBase: NavItem[] = [
 ];
 
 const payrollNavItems: NavItem[] = [
-  { label: 'Cortes de control', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control', moduleCode: 'cortes_control' },
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Reloj de Asistencia', icon: <ScanLine className="w-5 h-5" />, href: '/reloj-checador', moduleCode: 'reloj_checador' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
+  { label: 'Cortes de control', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control', moduleCode: 'cortes_control' },
   { label: 'PILA / UGPP', icon: <Landmark className="w-5 h-5" />, href: '/pila-ugpp', moduleCode: 'pila_ugpp' },
   { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'analitica_nomina' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion', moduleCode: 'pre_liquidacion' },
