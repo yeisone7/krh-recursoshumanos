@@ -22,7 +22,6 @@ export interface ComplianceCompletion {
   employee_id: string | null;
   completed_at: string;
   operator_name: string | null;
-  token_center_id: string | null;
 }
 
 export interface CourseComplianceData {
@@ -113,9 +112,9 @@ function useActiveEmployeesByCenter(
       if (error) throw error;
 
       return (data || [])
-        .filter((e: any) => e.employee_work_info?.some((w: any) => w.is_current))
-        .map((e: any) => {
-          const currentWork = e.employee_work_info.find((w: any) => w.is_current);
+        .filter((e) => e.employee_work_info?.some((w) => w.is_current))
+        .map((e) => {
+          const currentWork = e.employee_work_info.find((w) => w.is_current);
           return {
             id: e.id,
             first_name: e.first_name,
@@ -182,16 +181,19 @@ function usePublishedCourses(companyId: string | undefined) {
 }
 
 function useTokenCenterAssociations(
+  companyId: string | undefined,
+  userId: string | undefined,
   assignedCenterIds: string[],
   shouldLimitByAssignedCenters: boolean,
   assignedCenterKey: string
 ) {
   return useQuery({
-    queryKey: ['compliance-token-center', shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['compliance-token-center', companyId, userId, shouldLimitByAssignedCenters, assignedCenterKey],
     queryFn: async () => {
       let query = supabase
         .from('training_access_tokens')
         .select('course_id, operation_center_id, created_at')
+        .eq('company_id', companyId!)
         .not('operation_center_id', 'is', null);
 
       if (shouldLimitByAssignedCenters) {
@@ -202,20 +204,21 @@ function useTokenCenterAssociations(
       if (error) throw error;
       return data || [];
     },
+    enabled: !!companyId && !!userId,
   });
 }
 
 function useAllCompletions(
   companyId: string | undefined,
-  assignedCenterIds: string[],
-  shouldLimitByAssignedCenters: boolean,
-  assignedCenterKey: string
+  userId: string | undefined
 ) {
   return useQuery({
-    queryKey: ['compliance-completions', companyId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['compliance-completions', companyId, userId],
     queryFn: async () => {
       const pageSize = 1000;
-      const rows: any[] = [];
+      const rows: Array<Omit<ComplianceCompletion, 'course_name' | 'course_code'> & {
+        course: { id: string; name: string; code: string | null } | null;
+      }> = [];
 
       for (let from = 0; ; from += pageSize) {
         const to = from + pageSize - 1;
@@ -223,11 +226,11 @@ function useAllCompletions(
           .from('training_completions')
           .select(`
             id, course_id, operator_cedula, employee_id, completed_at, operator_name,
-            course:training_courses(id, name, code),
-            training_access_tokens(operation_center_id)
+            course:training_courses(id, name, code)
           `)
           .eq('company_id', companyId!)
           .order('completed_at', { ascending: false })
+          .order('id')
           .range(from, to);
 
         if (error) throw error;
@@ -236,7 +239,10 @@ function useAllCompletions(
         if (!data || data.length < pageSize) break;
       }
 
-      const mapped = rows.map((c: any) => ({
+      // Link visibility and its optional center do not determine completion.
+      // The report below matches these company-scoped records only against
+      // active employees in the viewer's authorized centers.
+      return rows.map((c) => ({
         id: c.id,
         course_id: c.course_id,
         course_name: c.course?.name || null,
@@ -245,25 +251,14 @@ function useAllCompletions(
         employee_id: c.employee_id,
         completed_at: c.completed_at,
         operator_name: c.operator_name,
-        token_center_id: Array.isArray(c.training_access_tokens)
-          ? c.training_access_tokens[0]?.operation_center_id || null
-          : c.training_access_tokens?.operation_center_id || null,
       })) as ComplianceCompletion[];
-
-      if (!shouldLimitByAssignedCenters) return mapped;
-
-      return mapped.filter((completion) =>
-        completion.token_center_id
-          ? assignedCenterIds.includes(completion.token_center_id)
-          : false
-      );
     },
-    enabled: !!companyId,
+    enabled: !!companyId && !!userId,
   });
 }
 
 export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
-  const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
+  const { currentCompanyId, user, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
   const hasPeriodFilter = !!period;
@@ -283,11 +278,11 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const courses = usePublishedCourses(currentCompanyId);
   const completions = useAllCompletions(
     currentCompanyId,
-    assignedCenterIds,
-    shouldLimitByAssignedCenters,
-    assignedCenterKey
+    user?.id
   );
   const tokenAssociations = useTokenCenterAssociations(
+    currentCompanyId,
+    user?.id,
     assignedCenterIds,
     shouldLimitByAssignedCenters,
     assignedCenterKey
@@ -297,14 +292,13 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || (hasPeriodFilter && periodAssignments.isLoading);
 
   const complianceData: CenterComplianceData[] = [];
+  const configuredPeriodCourseIds = period
+    ? new Set((periodAssignments.data || []).map((assignment) => assignment.course_id))
+    : null;
+  const periodTokenCourseIds = new Set<string>();
 
   if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
-    const configuredPeriodCourseIds = period
-      ? new Set(periodAssignments.data.map((assignment) => assignment.course_id))
-      : null;
-
     const periodCenterCourseMap = new Map<string, Set<string>>();
-    const periodTokenCourseIds = new Set<string>();
     for (const assoc of tokenAssociations.data) {
       if (!assoc.operation_center_id) continue;
       if (period && isTrainingTokenInPeriod(assoc, period)) {
