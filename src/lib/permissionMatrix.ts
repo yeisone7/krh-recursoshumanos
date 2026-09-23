@@ -4,6 +4,7 @@ export const SENSITIVE_PERMISSION_MODULE_CODES = new Set([
 ]);
 
 export const AUTO_EXPANDED_PERMISSION_MODULE_CODES = new Set([
+  'cortes_control',
   ...SENSITIVE_PERMISSION_MODULE_CODES,
   'leave_approve_manager',
   'leave_approve_area_leader',

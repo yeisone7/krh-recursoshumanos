@@ -6,6 +6,7 @@ import { format, addDays, eachDayOfInterval, parseISO, isWithinInterval } from '
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { scheduleForDate } from '@/lib/effectiveSchedule';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -66,14 +67,14 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
   // Get all employees with active shift mode
   const shiftEmployeesWithConfig = useMemo(() => {
     return timeConfigs
-      .filter(tc => tc.is_active && tc.mode === 'shift' && tc.shift_cycle_id)
+      .filter(tc => tc.mode === 'shift' && tc.shift_cycle_id && (tc.is_active || tc.end_date) && (!endDate || tc.start_date <= format(endDate, 'yyyy-MM-dd')) && (!startDate || !tc.end_date || tc.end_date >= format(startDate, 'yyyy-MM-dd')))
       .map(tc => {
         const emp = employees.find(e => e.id === tc.employee_id);
         const cycle = shiftCycles.find(c => c.id === tc.shift_cycle_id);
         return emp && cycle ? { employee: emp, config: tc, cycle } : null;
       })
       .filter(Boolean) as { employee: any; config: any; cycle: any }[];
-  }, [timeConfigs, employees, shiftCycles]);
+  }, [timeConfigs, employees, shiftCycles, startDate, endDate]);
 
   const employeeIds = useMemo(() => shiftEmployeesWithConfig.map(e => e.employee.id), [shiftEmployeesWithConfig]);
 
@@ -122,6 +123,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
 
       days.forEach(day => {
         const dateStr = format(day, 'yyyy-MM-dd');
+        if (scheduleForDate(timeConfigs, employee.id, dateStr)?.id !== config.id) return;
 
         const hasAbsence = absences.some(a => {
           const absStart = parseISO(a.start_date);

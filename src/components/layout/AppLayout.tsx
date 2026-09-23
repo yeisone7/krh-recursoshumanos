@@ -9,6 +9,7 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { PayrollCutNotice } from '@/components/payroll/PayrollCutNotice';
 import { Bot, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -190,6 +191,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               transition={{ duration: 0.18, ease: 'easeOut' }}
               className="min-h-full"
             >
+              {['/jornadas', '/novedades', '/reloj-checador', '/prestamos', '/descuentos'].includes(location.pathname) && <PayrollCutNotice />}
               {children}
             </motion.div>
           </AnimatePresence>

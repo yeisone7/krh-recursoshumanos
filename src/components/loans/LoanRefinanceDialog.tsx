@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, ArrowRight, Calculator, FileDown, Loader2 } from 'lucide-react';
-import { useUpdateLoan, useCreateRefinancingRecord, type EmployeeLoan } from '@/hooks/useLoans';
+import { type EmployeeLoan } from '@/hooks/useLoans';
+import { payrollClient } from '@/lib/payrollControlCuts';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { generateRefinancePDF } from '@/utils/refinancePdf';
@@ -23,8 +25,7 @@ interface Props {
 }
 
 export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
-  const updateLoan = useUpdateLoan();
-  const createRecord = useCreateRefinancingRecord();
+  const qc = useQueryClient();
   const { user, currentCompanyId } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -126,54 +127,19 @@ export function LoanRefinanceDialog({ loan, open, onClose }: Props) {
         documentUrl = urlData.publicUrl;
       }
 
-      // 2. Create refinancing history record
-      await createRecord.mutateAsync({
-        loan_id: loan.id,
-        company_id: currentCompanyId,
-        employee_id: loan.employee_id,
-        previous_total_amount: Number(loan.total_amount),
-        previous_interest_rate: Number(loan.interest_rate),
-        previous_total_with_interest: Number(loan.total_with_interest),
-        previous_installments: loan.installments,
-        previous_installment_amount: Number(loan.installment_amount),
-        previous_paid_installments: loan.paid_installments,
-        previous_paid_amount: Number(loan.paid_amount),
-        previous_remaining_balance: remainingBalance,
-        new_total_amount: remainingBalance,
-        new_interest_rate: parsedRate,
-        new_total_with_interest: Math.round(newTotalWithInterest * 100) / 100,
-        new_installments: parsedInstallments,
-        new_installment_amount: Math.round(newInstallmentAmount * 100) / 100,
-        new_start_date: newStartDate,
-        reason: notes || null,
-        document_url: documentUrl,
-        created_by: user?.id || null,
-      } as any);
-
-      // 3. Update loan with new terms
-      const refinanceNotes = [
-        loan.notes,
-        `[REFINANCIAMIENTO ${format(new Date(), 'dd/MM/yyyy')}]`,
-        `Saldo refinanciado: ${formatCurrency(remainingBalance)}`,
-        `Cuotas anteriores: ${loan.installments} → Nuevas: ${parsedInstallments}`,
-        `Tasa anterior: ${loan.interest_rate}% → Nueva: ${parsedRate}%`,
-        notes ? `Observación: ${notes}` : null,
-      ].filter(Boolean).join('\n');
-
-      await updateLoan.mutateAsync({
-        id: loan.id,
-        total_amount: remainingBalance,
-        interest_rate: parsedRate,
-        total_with_interest: Math.round(newTotalWithInterest * 100) / 100,
-        installments: parsedInstallments,
-        installment_amount: Math.round(newInstallmentAmount * 100) / 100,
-        remaining_balance: Math.round(newTotalWithInterest * 100) / 100,
-        paid_installments: 0,
-        paid_amount: 0,
-        start_date: newStartDate,
-        status: 'activo',
-        notes: refinanceNotes,
+      // Save the audit and new terms together; a cut rolls back both.
+      const { error: refinanceError } = await payrollClient.rpc('payroll_refinance_loan', {
+        p_loan_id: loan.id, p_installments: parsedInstallments, p_rate: parsedRate,
+        p_start: newStartDate, p_expected_balance: remainingBalance, p_reason: notes, p_document: documentUrl,
       });
+      if (refinanceError) {
+        if (documentUrl) await supabase.storage.from('documents').remove([fileName]);
+        throw refinanceError;
+      }
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['employee_loans'] }),
+        qc.invalidateQueries({ queryKey: ['loan_refinancing_history'] }),
+      ]);
 
       toast({ title: 'Préstamo refinanciado exitosamente', description: 'Se generó el documento y el registro de auditoría.' });
       onClose();

@@ -3,6 +3,7 @@ import { format, eachDayOfInterval, parseISO, getDay, subDays } from 'date-fns';
 import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig } from '@/types/payroll';
 import type { EmployeeShiftAssignment } from '@/types/schedule';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
+import { crossingDeductionVersions } from '@/lib/deductionVersions';
 
 export interface PreLiquidationData {
   assignments: EmployeeShiftAssignment[];
@@ -55,6 +56,7 @@ export interface PreLiquidationData {
     remaining_balance?: number;
   }>;
   deductions: Array<{
+    previous_version_id?: string | null;
     id: string;
     employee_id: string;
     deduction_type: string;
@@ -196,6 +198,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
   // Index active deductions by employee
   const deductionsByEmployee: Record<string, typeof deductions> = {};
+  const crossingVersions = crossingDeductionVersions(deductions, startDate, endDate);
   deductions.filter(d => d.status === 'activo' && (!d.start_date || d.start_date <= endDate)
     && (!d.end_date || d.end_date >= startDate)).forEach(d => {
     if (!deductionsByEmployee[d.employee_id]) deductionsByEmployee[d.employee_id] = [];
@@ -335,10 +338,11 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     // Deductions
     const empDeductions = deductionsByEmployee[emp.id] || [];
+    if (empDeductions.some(d => crossingVersions.has(d.id))) warnings.add('El período cruza un cambio de vigencia de descuentos. Calcule los tramos por separado; las versiones que se cruzan no se incluyen en el total.');
     empDeductions.filter(d => d.is_percentage).forEach(d => {
       warnings.add(`Descuento pendiente: ${d.description} (${d.percentage_value || 0}%). Falta definir la base monetaria; no se incluye en el total.`);
     });
-    const deductionDetail = empDeductions.filter(d => !d.is_percentage).map(d => ({
+    const deductionDetail = empDeductions.filter(d => !d.is_percentage && !crossingVersions.has(d.id)).map(d => ({
       deductionId: d.id,
       description: d.description,
       amount: Number(d.amount),

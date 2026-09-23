@@ -184,9 +184,8 @@ export default function PreLiquidacion() {
     queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_deductions')
-        .select('id, employee_id, deduction_type, description, amount, is_percentage, percentage_value, status, start_date, end_date')
+        .select('id, employee_id, deduction_type, description, amount, is_percentage, percentage_value, status, start_date, end_date, previous_version_id')
         .eq('company_id', currentCompanyId!)
-        .eq('status', 'activo')
         .order('id')
         .range(from, to);
       return { data, error };

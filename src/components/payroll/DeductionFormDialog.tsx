@@ -35,7 +35,8 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useCreateDeduction, useUpdateDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
+import { useCreateDeduction, useUpdateDeduction, useVersionDeduction, type EmployeeDeduction } from '@/hooks/useDeductions';
+import { Label } from '@/components/ui/label';
 import { useEmployees } from '@/hooks/useEmployees';
 import { cn } from '@/lib/utils';
 
@@ -85,6 +86,9 @@ export function DeductionFormDialog({
 }: DeductionFormDialogProps) {
   const createDeduction = useCreateDeduction();
   const updateDeduction = useUpdateDeduction();
+  const versionDeduction = useVersionDeduction();
+  const [futureDate, setFutureDate] = useState('');
+  const [futureStatus, setFutureStatus] = useState('activo');
   const { data: employees = [] } = useEmployees();
   const isEditing = !!deduction;
 
@@ -110,6 +114,8 @@ export function DeductionFormDialog({
 
   useEffect(() => {
     if (open) {
+      setFutureDate('');
+      setFutureStatus(deduction?.status || 'activo');
       if (deduction) {
         form.reset({
           employee_id: deduction.employee_id,
@@ -161,7 +167,7 @@ export function DeductionFormDialog({
         deduction_type: data.deduction_type,
         description: data.description,
         is_percentage: data.is_percentage,
-        amount: data.is_percentage ? null : data.amount,
+        amount: data.is_percentage ? 0 : data.amount,
         percentage_value: data.is_percentage ? data.percentage_value : null,
         start_date: data.start_date,
         end_date: data.end_date || null,
@@ -172,7 +178,11 @@ export function DeductionFormDialog({
       };
 
       if (isEditing) {
-        await updateDeduction.mutateAsync({ id: deduction.id, ...payload });
+        if (futureDate) {
+          const { employee_id, start_date, ...changes } = payload;
+          if (employee_id !== deduction.employee_id) throw new Error('Una nueva vigencia debe conservar el empleado.');
+          await versionDeduction.mutateAsync({ id: deduction.id, date: futureDate, changes: { ...changes, status: futureStatus } });
+        } else await updateDeduction.mutateAsync({ id: deduction.id, ...payload });
         toast.success('Descuento actualizado exitosamente');
       } else {
         payload.status = 'activo';
@@ -185,7 +195,7 @@ export function DeductionFormDialog({
     }
   };
 
-  const isPending = createDeduction.isPending || updateDeduction.isPending;
+  const isPending = createDeduction.isPending || updateDeduction.isPending || versionDeduction.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,6 +206,8 @@ export function DeductionFormDialog({
           </DialogTitle>
         </DialogHeader>
 
+        {deduction?.is_recurring && <div className="space-y-2 border-b px-6 py-4"><Label htmlFor="deduction-effective-date">Nueva vigencia desde (opcional)</Label><Input id="deduction-effective-date" type="date" value={futureDate} onChange={e => setFutureDate(e.target.value)} /><p className="text-xs text-muted-foreground">Use una fecha posterior al corte para conservar las condiciones anteriores y aplicar estos cambios hacia adelante.</p></div>}
+        {futureDate && <div className="space-y-2 px-6"><Label htmlFor="future-deduction-status">Estado desde la nueva vigencia</Label><select id="future-deduction-status" className="h-10 w-full rounded-md border bg-background px-3" value={futureStatus} onChange={e => setFutureStatus(e.target.value)}><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="finalizado">Finalizado</option><option value="cancelado">Cancelado</option></select></div>}
         {/* Header Premium */}
         <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
           

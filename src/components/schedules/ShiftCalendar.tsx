@@ -3,6 +3,7 @@ import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, 
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { scheduleForDate } from '@/lib/effectiveSchedule';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -478,7 +479,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const employeeModeMap = useMemo(() => {
     const map: Record<string, { mode: EmployeeTimeMode; workSchedule?: WorkSchedule }> = {};
     timeConfigs.forEach(tc => {
-      if (tc.is_active) {
+      if (scheduleForDate(timeConfigs, tc.employee_id, format(currentMonth, 'yyyy-MM-dd'))?.id === tc.id) {
         map[tc.employee_id] = {
           mode: tc.mode,
           workSchedule: tc.work_schedules || undefined,
@@ -486,7 +487,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       }
     });
     return map;
-  }, [timeConfigs]);
+  }, [timeConfigs, currentMonth]);
   
   // Calculate date range based on view mode
   const { startDate, endDate, daysInPeriod } = useMemo(() => {
@@ -1172,6 +1173,9 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 )}
                               </div>
                               {daysData.map(({ day, dateStr, holiday, sunday, dayOfWeek }) => {
+                                const dayConfig = scheduleForDate(timeConfigs, employee.id, dateStr);
+                                const isAdminMode = dayConfig?.mode === 'administrative';
+                                const adminSchedule = isAdminMode ? dayConfig.work_schedules : undefined;
                                 const assignment = assignmentsMap[employee.id]?.[dateStr];
                                 const shift = assignment ? getShiftById(assignment.shift_id) : null;
                                 const selected = isCellSelected(employee.id, dateStr);

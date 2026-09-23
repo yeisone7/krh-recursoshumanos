@@ -96,7 +96,7 @@ Deno.serve(async (req: Request) => {
     // This RPC is restricted to service_role; it authenticates every operation
     // using the credential/session and derives employee + company on the server.
     const { data, error } = await client.rpc("time_clock_public", { _action: body.operation, _body: body.payload, _ip_hash: ipHash });
-    if (error) return respond({ error: codes.has(error.message) ? error.message : "INVALID_REQUEST" }, 400);
+    if (error) return respond({ error: error.code === 'PCC01' ? 'PAYROLL_CUT_CLOSED' : codes.has(error.message) ? error.message : "INVALID_REQUEST" }, 400);
     const result = body.operation === "history"
       ? { ...data, require_clock_in_photo: policy?.require_clock_in_photo === true }
       : data;
