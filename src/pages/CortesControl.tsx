@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { CalendarDays, History, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
+import { CalendarDays, History, Lock, LockOpen, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { payrollClient, cutModule, effectiveCut, cutFormError, colombiaToday, type PayrollCut } from '@/lib/payrollControlCuts';
 import { Button } from '@/components/ui/button';
@@ -75,7 +75,7 @@ export default function CortesControl() {
     finally { setSaving(false); }
   }
   return <div className="mx-auto max-w-7xl space-y-5 p-4 md:p-6">
-    <header className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="flex items-center gap-2 text-2xl font-semibold"><ShieldCheck />Cortes de control</h1><p className="mt-1 text-sm text-muted-foreground">Jornadas, Novedades, Asistencia, Préstamos y Descuentos · por centro de operación</p></div><Button variant="outline" onClick={() => qc.invalidateQueries({ queryKey: ['payroll-cuts'] })}><RefreshCw className="mr-2 h-4 w-4" />Actualizar</Button></header>
+    <header className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="flex items-center gap-2 text-2xl font-semibold"><ShieldCheck className="text-teal-600" />Cortes de control</h1><p className="mt-1 text-sm text-muted-foreground">Jornadas, Novedades, Asistencia, Préstamos y Descuentos · por centro de operación</p></div><Button variant="outline" onClick={() => qc.invalidateQueries({ queryKey: ['payroll-cuts'] })}><RefreshCw className="mr-2 h-4 w-4 text-sky-600" />Actualizar</Button></header>
     <div className="flex flex-wrap gap-3"><Input aria-label="Buscar centro" placeholder="Buscar centro…" className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} /><select aria-label="Estado del corte" className="rounded-md border bg-background px-3" value={state} onChange={e => setState(e.target.value)}><option value="all">Todos los centros</option><option value="active">Con corte activo</option><option value="open">Sin corte activo</option></select></div>
     {(centers.isError || cuts.isError) && <p role="alert" className="text-destructive">{(centers.error || cuts.error)?.message}</p>}
     {(hasPermission(cutModule(1), 'create') || hasPermission(cutModule(2), 'create')) && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={resolving} onClick={resolveCenters}>{resolving ? 'Revisando…' : 'Revisar centros de registros históricos'}</Button>{resolution && <p role="status" className="text-sm text-muted-foreground">{resolution}</p>}</div>}
@@ -85,17 +85,21 @@ export default function CortesControl() {
         const effective = effectiveCut(rows);
         return <TableRow key={center.id} className="border-b last:border-b-0 hover:bg-transparent"><TableCell className="px-8 py-5 align-middle text-base font-medium text-[#34425a]">{center.name}</TableCell>{([1, 2] as const).map(level => {
           const c = rows.find(x => x.level === level); return <TableCell key={level} className="min-w-64 px-8 py-4 align-top"><div className="flex min-h-24 flex-col items-start justify-center">
-            <div className="flex items-center gap-2.5 text-base text-[#34425a]"><CalendarDays className="h-5 w-5 shrink-0" strokeWidth={1.8} /><span>{formatCutDate(c?.cutoff_date)}</span></div>
+            <div className="flex items-center gap-2.5 text-base text-[#34425a]"><CalendarDays className={`h-5 w-5 shrink-0 ${level === 1 ? 'text-sky-600' : 'text-violet-600'}`} strokeWidth={1.8} /><span>{formatCutDate(c?.cutoff_date)}</span></div>
             {c && <p className="mt-1 pl-[30px] text-xs text-muted-foreground">Aplicado por {c.created_by_name}</p>}
             <div className="mt-3 flex flex-wrap gap-2">
-              {!c && hasPermission(cutModule(level), 'create') && <Button className="h-11 rounded-xl border-[#8b9ab3] px-4 text-sm font-medium text-[#34425a] hover:bg-muted" variant="outline" aria-label="Aplicar" onClick={() => open({ center, level, action: 'create' })}><Plus className="mr-2 h-4 w-4" />Crear nivel {level}</Button>}
+              {!c && hasPermission(cutModule(level), 'create') && <Button className="h-11 rounded-xl border-[#8b9ab3] px-4 text-sm font-medium text-[#34425a] hover:bg-muted" variant="outline" aria-label="Aplicar" onClick={() => open({ center, level, action: 'create' })}><Plus className={`mr-2 h-4 w-4 ${level === 1 ? 'text-sky-600' : 'text-violet-600'}`} />Crear nivel {level}</Button>}
               {c && hasPermission(cutModule(level), 'update') && <Button className="rounded-xl" size="sm" variant="outline" onClick={() => open({ center, level, action: 'update', cut: c })}>Modificar fecha</Button>}
               {c && hasPermission(cutModule(level), 'approve') && <Button className="rounded-xl" size="sm" variant="outline" onClick={() => open({ center, level, action: 'reopen', cut: c })}>Reabrir</Button>}
             </div>
           </div></TableCell>;
         })}<TableCell className="px-8 py-4 align-middle"><div className="flex flex-wrap items-center gap-2">
-          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${effective ? 'bg-amber-100 text-amber-800' : 'bg-[#e8edf3] text-[#34425a]'}`}>{effective ? `Hasta ${formatCutDate(effective.cutoff_date)}` : 'Abierto'}</span>
-          <Button className="h-9 gap-2 px-2 text-sm font-medium text-[#34425a] hover:bg-muted" variant="ghost" aria-label={`Historial de ${center.name}`} onClick={() => setHistory(center)}><History className="h-4 w-4" /><span>Historial</span></Button>
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${effective ? 'border-rose-200 bg-rose-100 text-rose-800' : 'border-emerald-200 bg-emerald-100 text-emerald-800'}`}>
+            {effective ? <Lock className="h-3.5 w-3.5" aria-hidden="true" /> : <LockOpen className="h-3.5 w-3.5" aria-hidden="true" />}
+            {effective ? 'Cerrado' : 'Abierto'}
+          </span>
+          <Button className="h-9 gap-2 px-2 text-sm font-medium text-[#34425a] hover:bg-muted" variant="ghost" aria-label={`Historial de ${center.name}`} onClick={() => setHistory(center)}><History className="h-4 w-4 text-amber-600" /><span>Historial</span></Button>
+          {effective && <p className="w-full text-xs text-muted-foreground">Hasta {formatCutDate(effective.cutoff_date)} inclusive</p>}
         </div></TableCell></TableRow>;
       })}
     </TableBody></Table>{!centers.data?.length && <p className="p-6 text-sm text-muted-foreground">No hay centros autorizados.</p>}</div>}
