@@ -2,8 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { payrollClient } from '@/lib/payrollControlCuts';
+import { useRef } from 'react';
 
 export interface EmployeeLoan {
+  operation_center_id?: string | null;
   id: string;
   company_id: string;
   employee_id: string;
@@ -145,44 +148,24 @@ export function useDeleteLoan() {
 
 export function useRegisterPayment() {
   const qc = useQueryClient();
+  const attempt = useRef<{ key: string; id: string } | null>(null);
   const { user, currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (payment: Omit<LoanPayment, 'id' | 'created_at' | 'created_by'>) => {
-      // Insert payment
-      const { error: payError } = await supabase
-        .from('employee_loan_payments')
-        .insert({ ...payment, company_id: currentCompanyId!, created_by: user?.id });
-      if (payError) throw payError;
-
-      // Update loan balances
-      const { data: loan, error: loanErr } = await supabase
-        .from('employee_loans')
-        .select('paid_installments, paid_amount, total_with_interest, installments')
-        .eq('id', payment.loan_id)
-        .single();
-      if (loanErr) throw loanErr;
-
-      const newPaidInstallments = (loan.paid_installments || 0) + 1;
-      const newPaidAmount = Number(loan.paid_amount || 0) + payment.amount;
-      const newBalance = Number(loan.total_with_interest) - newPaidAmount;
-      const newStatus = newPaidInstallments >= loan.installments ? 'pagado' : 'activo';
-
-      const { error: updErr } = await supabase
-        .from('employee_loans')
-        .update({
-          paid_installments: newPaidInstallments,
-          paid_amount: newPaidAmount,
-          remaining_balance: Math.max(0, newBalance),
-          status: newStatus,
-        })
-        .eq('id', payment.loan_id);
-      if (updErr) throw updErr;
+      const key = JSON.stringify(payment);
+      if (attempt.current?.key !== key) attempt.current = { key, id: crypto.randomUUID() };
+      const { error } = await payrollClient.rpc('payroll_register_loan_payment', {
+        p_loan_id: payment.loan_id, p_date: payment.payment_date, p_amount: payment.amount,
+        p_period: payment.payroll_period, p_notes: payment.notes, p_id: attempt.current.id,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['employee_loans'] });
       qc.invalidateQueries({ queryKey: ['loan_payments'] });
       toast({ title: 'Pago registrado correctamente' });
+      attempt.current = null;
     },
     onError: (e: any) => toast({ title: 'Error al registrar pago', description: e.message, variant: 'destructive' }),
   });

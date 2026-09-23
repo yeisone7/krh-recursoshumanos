@@ -1,5 +1,6 @@
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { payrollClient, colombiaToday } from '@/lib/payrollControlCuts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { 
@@ -419,7 +420,10 @@ export function useActiveEmployeeTimeConfig(employeeId: string) {
           )
         `)
         .eq('employee_id', employeeId)
-        .eq('is_active', true)
+        .lte('start_date', colombiaToday())
+        .or(`end_date.is.null,end_date.gte.${colombiaToday()}`)
+        .order('start_date', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) throw error;
@@ -444,24 +448,9 @@ export function useCreateEmployeeTimeConfig() {
       end_date?: string;
       notes?: string;
     }) => {
-      // First, deactivate any existing active config for this employee
-      await supabase
-        .from('employee_time_config')
-        .update({ is_active: false, end_date: config.start_date })
-        .eq('employee_id', config.employee_id)
-        .eq('is_active', true);
-
-      // Then create the new config
-      const { data, error } = await supabase
-        .from('employee_time_config')
-        .insert({
-          ...config,
-          company_id: currentCompanyId!,
-          is_active: true,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
+      const { data, error } = await payrollClient.rpc('payroll_set_time_config', {
+        p_company_id: currentCompanyId!, p_config: config,
+      });
 
       if (error) throw error;
       return data;

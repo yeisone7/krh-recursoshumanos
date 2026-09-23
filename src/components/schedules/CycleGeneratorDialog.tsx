@@ -6,6 +6,7 @@ import { format, addDays, eachDayOfInterval, parseISO, isWithinInterval } from '
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Zap, AlertTriangle, CheckCircle2, User, Calendar as CalendarIconSVG, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { scheduleForDate } from '@/lib/effectiveSchedule';
 
 import {
   Dialog,
@@ -94,7 +95,7 @@ export function CycleGeneratorDialog({
   const shiftEmployees = useMemo(() => {
     const configuredIds = new Set(
       timeConfigs
-        .filter(tc => tc.is_active && tc.mode === 'shift')
+        .filter(tc => (tc.is_active || tc.end_date) && tc.mode === 'shift')
         .map(tc => tc.employee_id)
     );
     return employees.filter(e => e.is_active && configuredIds.has(e.id));
@@ -151,11 +152,10 @@ export function CycleGeneratorDialog({
 
     selectedEmployeeIds.forEach(employeeId => {
       // Get the employee's cycle_start_date from their config
-      const config = timeConfigs.find(tc => tc.employee_id === employeeId && tc.is_active && tc.mode === 'shift');
-      const cycleStartDate = config?.cycle_start_date ? parseISO(config.cycle_start_date) : startDate;
-
       days.forEach(day => {
         const dateStr = format(day, 'yyyy-MM-dd');
+        const config = scheduleForDate(timeConfigs, employeeId, dateStr);
+        const cycleStartDate = config?.cycle_start_date ? parseISO(config.cycle_start_date) : startDate;
         
         // Check for absences
         const hasAbsence = absences.some(a => {

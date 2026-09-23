@@ -82,6 +82,7 @@ export const clockErrors: Record<string, string> = {
   INVALID_SEQUENCE:
     "La marcación no corresponde al estado actual. Actualiza tu asistencia.",
   TOO_FREQUENT: "Espera 30 segundos antes de otra marcación.",
+  PAYROLL_CUT_CLOSED: "Esta jornada está cerrada por un corte de nómina. Solicita a RRHH su reapertura para completar o corregir la asistencia.",
   STALE_OPEN_DAY:
     "Hay una jornada anterior sin cerrar. Solicita una corrección al supervisor.",
   EMPLOYEE_NOT_ACTIVE: "Tu registro no está activo. Contacta a RRHH.",

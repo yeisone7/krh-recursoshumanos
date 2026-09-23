@@ -22,6 +22,7 @@ const errorMessages: Record<string, string> = {
   QR_EXPIRED_OR_INVALID: 'El código QR venció. Escanea el nuevo código de la pantalla.',
   INVALID_SEQUENCE: 'Esta acción ya no corresponde al estado actual. Actualiza e intenta de nuevo.',
   TOO_FREQUENT: 'Espera unos segundos antes de realizar otra marcación.',
+  PAYROLL_CUT_CLOSED: 'La jornada está cerrada por un corte de nómina. Solicita su reapertura a RRHH.',
   STALE_OPEN_DAY: 'Tu jornada anterior necesita revisión. Envía una solicitud de corrección.',
   EMPLOYEE_LINK_REQUIRED: 'Tu cuenta no está vinculada a un empleado activo.',
   EMPLOYMENT_CYCLE_REQUIRED: 'Tu relación laboral activa no está configurada. Contacta a Recursos Humanos.',

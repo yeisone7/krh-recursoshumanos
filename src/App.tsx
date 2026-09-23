@@ -75,6 +75,7 @@ import PreLiquidacion from "./pages/PreLiquidacion";
 import ConfiguracionLaboral from "./pages/ConfiguracionLaboral";
 import Prestamos from "./pages/Prestamos";
 import Descuentos from "./pages/Descuentos";
+const CortesControl = lazy(() => import('./pages/CortesControl'));
 import Install from "./pages/Install";
 import Catalogos from "./pages/Catalogos";
 import Auditoria from "./pages/Auditoria";
@@ -245,6 +246,7 @@ const App = () => (
                         <Route path="/novedades" element={<P module="novedades"><Novedades /></P>} />
                         <Route path="/pre-liquidacion" element={<P module="pre_liquidacion"><PreLiquidacion /></P>} />
                         <Route path="/configuracion-laboral" element={<P module="config_laboral"><ConfiguracionLaboral /></P>} />
+                        <Route path="/cortes-control" element={<P module="cortes_control"><Suspense fallback={null}><CortesControl /></Suspense></P>} />
                         <Route path="/prestamos" element={<P module="prestamos"><Prestamos /></P>} />
                         <Route path="/descuentos" element={<P module="descuentos"><Descuentos /></P>} />
                         <Route path="/capacitaciones" element={<P module={TRAINING_PERMISSION_CODES.dashboard}><Capacitaciones /></P>} />

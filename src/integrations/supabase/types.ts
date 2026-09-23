@@ -3632,6 +3632,8 @@ export type Database = {
       }
       employee_deductions: {
         Row: {
+          operation_center_id: string | null
+          previous_version_id: string | null
           amount: number
           company_id: string
           created_at: string
@@ -3653,6 +3655,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          operation_center_id?: string | null
+          previous_version_id?: string | null
           amount: number
           company_id: string
           created_at?: string
@@ -3674,6 +3678,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          operation_center_id?: string | null
+          previous_version_id?: string | null
           amount?: number
           company_id?: string
           created_at?: string

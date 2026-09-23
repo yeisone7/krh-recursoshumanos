@@ -33,6 +33,7 @@ import {
   Permission,
 } from '@/hooks/useRolesPermissions';
 import { cn } from '@/lib/utils';
+import { cutActionLabels } from '@/lib/payrollControlCuts';
 import { Input } from '@/components/ui/input';
 import { CATALOG_PERMISSION_CODES } from '@/lib/catalogPermissions';
 import { TRAINING_PERMISSION_CODES } from '@/lib/trainingPermissions';
@@ -266,7 +267,8 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
     }
 
     return (
-      <Checkbox
+      <div className="flex flex-col items-center gap-1"><Checkbox
+        aria-label={`${modules.find(m => m.id === moduleId)?.name} · ${ACTION_LABELS[action]}`}
         checked={isChecked(permId)}
         onCheckedChange={() => togglePermission(permId)}
         disabled={role.is_system}
@@ -275,7 +277,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
           'border-slate-300 bg-white shadow-none focus-visible:ring-primary/20',
           ACTION_BG[action]
         )}
-      />
+      />{modules.find(m => m.id === moduleId)?.code.startsWith('cortes_control_nivel_') && <span className="text-[10px] text-slate-600">{cutActionLabels[action as keyof typeof cutActionLabels]}</span>}</div>
     );
   };
 

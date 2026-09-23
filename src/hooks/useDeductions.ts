@@ -2,8 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { payrollClient } from '@/lib/payrollControlCuts';
 
 export interface EmployeeDeduction {
+  operation_center_id?: string | null;
+  previous_version_id?: string | null;
   id: string;
   company_id: string;
   employee_id: string;
@@ -106,5 +109,17 @@ export function useDeleteDeduction() {
       toast({ title: 'Descuento eliminado' });
     },
     onError: (e: any) => toast({ title: 'Error al eliminar', description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useVersionDeduction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, date, changes }: { id: string; date: string; changes: Record<string, string | number | boolean | null> }) => {
+      const { data, error } = await payrollClient.rpc('payroll_version_deduction', { p_id: id, p_effective_date: date, p_changes: changes });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['employee_deductions'] }); qc.invalidateQueries({ queryKey: ['deductions_for_preliq'] }); },
   });
 }
