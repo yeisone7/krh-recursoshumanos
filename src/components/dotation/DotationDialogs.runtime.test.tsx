@@ -11,6 +11,21 @@ const createDeliveryBatch = vi.hoisted(() =>
   vi.fn(() => new Promise(() => undefined)),
 );
 const generateActaEntregaPdf = vi.hoisted(() => vi.fn());
+const dotationInventory = vi.hoisted(() => ({
+  data: [] as Array<{
+    id: string;
+    company_id: string;
+    operation_center_id: string | null;
+    item_type: string;
+    item_name: string;
+    size: string | null;
+    quantity_available: number;
+    minimum_stock: number;
+    created_by: string | null;
+    created_at: string;
+    updated_at: string;
+  }>,
+}));
 
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ currentCompanyId: 'company-1' }),
@@ -56,13 +71,24 @@ vi.mock('@/hooks/useDotationProfesiograma', () => ({
 }));
 
 vi.mock('@/hooks/useDotationInventory', () => ({
-  useDotationInventory: () => ({ data: [] }),
+  useDotationInventory: () => ({ data: dotationInventory.data }),
   useAdjustInventoryQuantity: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/hooks/useSystemConfig', () => ({
   useDotationItemTypes: () => ({
-    data: [{ id: 'item-1', name: 'BATA BLANCA', item_type: 'otros', requires_size: false, is_active: true }],
+    data: [
+      { id: 'item-1', name: 'BATA BLANCA', item_type: 'otros', requires_size: false, is_active: true },
+      {
+        id: 'item-2',
+        name: 'PANTALON DRILL',
+        item_type: 'otros',
+        category: 'uniforme',
+        requires_size: true,
+        sizes_available: ['XS', 'S', 'M', 'L', 'XL'],
+        is_active: true,
+      },
+    ],
   }),
   useSystemConfig: () => ({
     data: {
@@ -110,6 +136,8 @@ vi.mock('@/lib/dotationPdfGenerator', () => ({
 describe('Dotation dialogs runtime regressions', () => {
   beforeEach(() => {
     generateActaEntregaPdf.mockClear();
+    createDeliveryBatch.mockClear();
+    dotationInventory.data = [];
   });
 
   const renderWithQueryClient = (ui: ReactElement) => {
@@ -229,6 +257,42 @@ describe('Dotation dialogs runtime regressions', () => {
 
     await waitFor(() => expect(screen.getByText('Registrando...')).toBeInTheDocument());
     expect(createDeliveryBatch).toHaveBeenCalledOnce();
+  });
+
+  it('widens Nueva Entrega by 40% and prioritizes numeric inventory sizes', () => {
+    dotationInventory.data = ['10', '6', '8'].map((size, index) => ({
+      id: `inventory-${index}`,
+      company_id: 'company-1',
+      operation_center_id: index === 2 ? null : 'center-1',
+      item_type: 'item-2',
+      item_name: 'PANTALON DRILL',
+      size,
+      quantity_available: 5,
+      minimum_stock: 1,
+      created_by: null,
+      created_at: '2026-09-08T12:00:00Z',
+      updated_at: '2026-09-08T12:00:00Z',
+    }));
+
+    renderWithQueryClient(<DotationFormDialog open onOpenChange={vi.fn()} />);
+
+    expect(screen.getByRole('dialog')).toHaveClass('sm:max-w-[58.8rem]');
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar colaborador' }), {
+      target: { value: 'employee-1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar Ítem' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Buscar artículo...' }), {
+      target: { value: 'item-2' },
+    });
+
+    const sizeInput = screen.getByRole('combobox', { name: 'Talla de PANTALON DRILL' });
+    const listId = sizeInput.getAttribute('list');
+    const sizeOptions = Array.from(document.querySelectorAll(`#${listId} option`))
+      .map((option) => option.getAttribute('value'));
+
+    expect(sizeOptions).toEqual(['6', '8', '10']);
+    expect(sizeOptions).not.toContain('XS');
   });
 
   it('uses an outbound reason when switching an adjustment to Salida', () => {
