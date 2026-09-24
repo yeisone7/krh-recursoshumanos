@@ -746,7 +746,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         initial={false}
         animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14.75rem') }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
-        className="relative h-full min-h-0 shrink-0 overflow-visible z-20">
+        className="relative h-full min-h-0 shrink-0 overflow-visible z-20 sidebar-shell">
 
       {/* Collapse/Expand Toggle Button - hidden in mobile drawer */}
       {!isMobileDrawer && (
@@ -799,7 +799,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
 
       {/* Navigation */}
-      <nav className="min-h-0 flex-1 overflow-y-auto py-2 px-2.5 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <nav className="min-h-0 flex-1 overflow-y-auto py-2 px-2.5 sidebar-scrollbar">
         {/* Core */}
         {filteredCoreNavItems.length > 0 && (
           <div className="space-y-0.5">
