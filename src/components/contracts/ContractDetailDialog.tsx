@@ -722,7 +722,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                 </div>
 
                 {canAddExtension && isExpired && (
-                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning-foreground">
+                  <div className="mt-3 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-sm font-medium text-warning">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                     <p>
                       Esta vigencia ya esta vencida. Puedes registrar una {extensionLabelLower} tardia; el formulario iniciara la nueva vigencia desde el dia siguiente a la fecha fin actual.
@@ -964,7 +964,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                     className={cn(
                       "h-9 rounded-xl px-4",
                       hasPendingTermination 
-                        ? "border-warning/50 text-warning-foreground hover:bg-warning hover:text-warning-foreground"
+                        ? "border-warning/50 text-warning hover:bg-warning hover:text-warning-foreground"
                         : "border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                     )}
                     onClick={() => setShowTerminationDialog(true)}
@@ -1083,7 +1083,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               'flex items-start gap-3 rounded-2xl border p-4',
               previewOpenedBeforeApprove
                 ? 'border-success/25 bg-success/10 text-success'
-                : 'border-warning/25 bg-warning/10 text-warning-foreground'
+                : 'border-warning/40 bg-warning/10 text-warning'
             )}>
               {previewOpenedBeforeApprove ? (
                 <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
