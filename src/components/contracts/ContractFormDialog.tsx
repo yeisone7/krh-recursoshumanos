@@ -524,6 +524,7 @@ export function ContractFormDialog({
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button
+                                  type="button"
                                   variant="outline"
                                   className={cn(
                                     'h-11 w-full rounded-lg border-border bg-background pl-4 text-left font-medium',

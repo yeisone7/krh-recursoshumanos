@@ -32,7 +32,7 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <PersistentOverlay renderShell={(body) => (
+  <PersistentOverlay renderShell={(body, guardOutsideInteraction) => (
     <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -43,6 +43,9 @@ const DialogContent = React.forwardRef<
         className,
       )}
       {...props}
+      onPointerDownOutside={guardOutsideInteraction(props.onPointerDownOutside)}
+      onFocusOutside={guardOutsideInteraction(props.onFocusOutside)}
+      onInteractOutside={guardOutsideInteraction(props.onInteractOutside)}
     >
       {body}
       <DialogPrimitive.Close className="absolute right-3 top-3 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity data-[state=open]:bg-accent data-[state=open]:text-muted-foreground hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none sm:right-4 sm:top-4">
