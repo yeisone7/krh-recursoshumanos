@@ -581,6 +581,41 @@ body.app-ready #app-launch-screen {
   scrollbar-color: hsl(var(--primary) / 0.35) hsl(var(--muted));
 }
 
+/* Keep the sidebar gutter stable so revealing the thumb never moves the menu. */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  scrollbar-color: transparent transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+.sidebar-shell:hover .sidebar-scrollbar {
+  scrollbar-color: hsl(var(--sidebar-primary) / 0.5) transparent;
+}
+.sidebar-shell:hover .sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--sidebar-primary) / 0.5);
+}
+.sidebar-shell:hover .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--sidebar-primary) / 0.75);
+}
+/* Touch devices have no hover, so retain a subtle scroll indicator. */
+@media (hover: none) {
+  .sidebar-scrollbar {
+    scrollbar-color: hsl(var(--sidebar-primary) / 0.5) transparent;
+  }
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--sidebar-primary) / 0.5);
+  }
+}
+
 /* Hide horizontal header/tab scrollbars while preserving touch scroll */
 .scrollbar-header-auto {
   scrollbar-width: none;
