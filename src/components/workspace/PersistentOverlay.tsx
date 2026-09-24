@@ -6,6 +6,8 @@ import { useWorkspaceActive, useWorkspaceDirty, useWorkspacePane, WorkspaceVisib
 interface OpenProps { open?: boolean; defaultOpen?: boolean; onOpenChange?: (open: boolean) => void; children?: ReactNode }
 interface OverlayState { open: boolean; visible: boolean; suspend: () => void }
 const OverlayContext = createContext<OverlayState | null>(null);
+type OutsideInteraction = Event & { detail: { originalEvent: Event } };
+type GuardOutsideInteraction = <E extends OutsideInteraction>(handler?: (event: E) => void) => (event: E) => void;
 
 /** Keep the logical open state separate from Radix's focus/scroll-lock lifecycle. */
 export function createPersistentOverlayRoot<P extends OpenProps>(Root: ComponentType<P>) {
@@ -42,19 +44,31 @@ export function createPersistentOverlayRoot<P extends OpenProps>(Root: Component
  * Radix shell unmounts when suspended, releasing modal focus and body locks.
  * This preserves RHF state, uncontrolled inputs and file selections as well.
  */
-export function PersistentOverlay({ children, renderShell }: { children: ReactNode; renderShell: (body: ReactNode) => ReactNode }) {
+export function PersistentOverlay({ children, renderShell }: { children: ReactNode; renderShell: (body: ReactNode, guardOutsideInteraction: GuardOutsideInteraction) => ReactNode }) {
   const pane = useWorkspacePane();
   const overlay = useContext(OverlayContext);
   const [host] = useState(() => { const node = document.createElement('div'); node.style.display = 'contents'; return node; });
   const [dirty, setDirty] = useState(false);
+  const [internalEvents] = useState(() => new WeakSet<Event>());
+  // The stable body is a sibling of the Radix shell in React's tree. Nested
+  // portals (calendars/selects) therefore bypass the shell's capture handlers.
+  // Track the original event through our React subtree, including those portals,
+  // without blocking real outside interactions or another dialog's events.
+  const guardOutsideInteraction: GuardOutsideInteraction = handler => event => {
+    if (internalEvents.has(event.detail.originalEvent)) event.preventDefault();
+    else handler?.(event);
+  };
   const mount = useCallback((node: HTMLDivElement | null) => { if (node) node.appendChild(host); }, [host]);
   useWorkspaceDirty(!!overlay?.open && dirty);
   useEffect(() => { if (!overlay?.open) setDirty(false); }, [overlay?.open]);
-  if (!pane || !overlay) return <>{renderShell(children)}</>;
+  if (!pane || !overlay) return <>{renderShell(children, guardOutsideInteraction)}</>;
   if (!overlay.open) return null;
   return <>
     {createPortal(<WorkspaceVisibilityContext.Provider value={overlay.visible}>
-      <div style={{ display: 'contents' }} onChangeCapture={event => {
+      <div style={{ display: 'contents' }}
+      onPointerDownCapture={event => internalEvents.add(event.nativeEvent)}
+      onFocusCapture={event => internalEvents.add(event.nativeEvent)}
+      onChangeCapture={event => {
         // RHF forms register their exact dirty state; protect state-based dialogs too.
         if (!(event.target as HTMLElement).closest('[data-workspace-form]')) setDirty(true);
       }} onClickCapture={event => {
@@ -67,7 +81,7 @@ export function PersistentOverlay({ children, renderShell }: { children: ReactNo
         {children}
       </div>
     </WorkspaceVisibilityContext.Provider>, host)}
-    {overlay.visible && renderShell(<div ref={mount} style={{ display: 'contents' }} />)}
+    {overlay.visible && renderShell(<div ref={mount} style={{ display: 'contents' }} />, guardOutsideInteraction)}
   </>;
 }
 

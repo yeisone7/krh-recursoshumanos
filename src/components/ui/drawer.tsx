@@ -29,7 +29,7 @@ const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <PersistentOverlay renderShell={(body) => (
+  <PersistentOverlay renderShell={(body, guardOutsideInteraction) => (
   <DrawerPortal>
     <DrawerOverlay />
     <DrawerPrimitive.Content
@@ -39,6 +39,9 @@ const DrawerContent = React.forwardRef<
         className,
       )}
       {...props}
+      onPointerDownOutside={guardOutsideInteraction(props.onPointerDownOutside)}
+      onFocusOutside={guardOutsideInteraction(props.onFocusOutside)}
+      onInteractOutside={guardOutsideInteraction(props.onInteractOutside)}
     >
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-background " />
       {body}
