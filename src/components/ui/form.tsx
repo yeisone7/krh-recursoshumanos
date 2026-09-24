@@ -1,12 +1,17 @@
+import { useWorkspaceDirty } from "@/components/workspace/WorkspacePaneContext";
 import * as React from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
-import { Controller, ControllerProps, FieldPath, FieldValues, FormProvider, useFormContext } from "react-hook-form";
+import { Controller, ControllerProps, FieldPath, FieldValues, FormProvider, FormProviderProps, useFormState, useFormContext } from "react-hook-form";
 
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 
-const Form = FormProvider;
+function Form<T extends FieldValues>(props: FormProviderProps<T>) {
+  const { isDirty, isSubmitting } = useFormState({ control: props.control });
+  useWorkspaceDirty(isDirty || isSubmitting);
+  return <FormProvider {...props}><div data-workspace-form style={{ display: 'contents' }}>{props.children}</div></FormProvider>;
+}
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,

@@ -1,3 +1,4 @@
+import { useWorkspaceActive } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -95,6 +96,7 @@ const getShiftColor = (color?: string) => {
 };
 
 export default function Jornadas() {
+  const workspaceActive = useWorkspaceActive();
   const [searchParams] = useSearchParams();
   const isShiftsCatalog = searchParams.get('tab') === 'shifts';
   const [activeTab, setActiveTab] = useState<'calendar' | 'schedules' | 'shifts' | 'day-shifts' | 'cycles'>(isShiftsCatalog ? 'shifts' : 'calendar');
@@ -190,12 +192,13 @@ export default function Jornadas() {
   };
 
   useEffect(() => {
+    if (!workspaceActive) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) setIsFullscreen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
+  }, [isFullscreen, workspaceActive]);
 
   if (!currentCompanyId) {
     return (

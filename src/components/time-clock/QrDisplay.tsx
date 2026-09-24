@@ -1,3 +1,4 @@
+import { useWorkspaceActive } from '@/components/workspace/WorkspacePaneContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Clock3, Loader2, RefreshCw, ShieldCheck, WifiOff } from 'lucide-react';
@@ -6,6 +7,7 @@ import type { TimeClockPoint } from '@/types/timeClock';
 import { Button } from '@/components/ui/button';
 
 export function QrDisplay({ point }: { point: TimeClockPoint }) {
+  const workspaceActive = useWorkspaceActive();
   const { mutateAsync: issueQr } = useIssueTimeClockQr();
   const refreshing = useRef(false);
   const [challenge, setChallenge] = useState<{ token: string; expires_at: string } | null>(null);
@@ -19,7 +21,7 @@ export function QrDisplay({ point }: { point: TimeClockPoint }) {
     finally { refreshing.current = false; }
   }, [issueQr, point.id]);
 
-  useEffect(() => { refresh(); const timer = window.setInterval(refresh, 25_000); return () => window.clearInterval(timer); }, [refresh]);
+  useEffect(() => { if (!workspaceActive) return; refresh(); const timer = window.setInterval(refresh, 25_000); return () => window.clearInterval(timer); }, [refresh, workspaceActive]);
   useEffect(() => {
     const timer = window.setInterval(() => setSeconds(challenge ? Math.max(0, Math.ceil((new Date(challenge.expires_at).getTime() - Date.now()) / 1000)) : 0), 500);
     const update = () => setOnline(navigator.onLine);

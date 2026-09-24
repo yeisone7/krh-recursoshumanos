@@ -9,7 +9,7 @@ import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { PayrollCutNotice } from '@/components/payroll/PayrollCutNotice';
+import { WorkspaceTabBar } from '@/components/workspace/WorkspaceApp';
 import { Bot, Maximize2, Minimize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -86,10 +86,10 @@ export function AppLayout({ children }: AppLayoutProps) {
     const main = mainRef.current;
     if (!main) return;
 
-    const handleScroll = () => setAiButtonLifted(main.scrollTop > 24);
+    const handleScroll = () => setAiButtonLifted((main.querySelector<HTMLElement>('.workspace-pane:not([hidden])')?.scrollTop ?? main.scrollTop) > 24);
     handleScroll();
-    main.addEventListener('scroll', handleScroll, { passive: true });
-    return () => main.removeEventListener('scroll', handleScroll);
+    main.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    return () => main.removeEventListener('scroll', handleScroll, true);
   }, [isMobile, location.pathname]);
 
   const handleAiPanelDragStart = (event: PointerEvent<HTMLDivElement>) => {
@@ -181,20 +181,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         <Header
           onMobileMenuToggle={isMobile ? () => setMobileOpen(true) : undefined}
         />
-        <main ref={mainRef} className={`flex-1 overflow-y-auto p-2.5 sm:p-3 md:p-4 ${isMobile ? 'pb-24' : ''}`}>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div
-              key={isAiAssistant ? 'ai-assistant' : location.pathname}
-              initial={isAiAssistant ? { opacity: 0, scale: 0.98, y: 8 } : { opacity: 1, scale: 1, y: 0 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={isAiAssistant ? { opacity: 0, scale: 0.98, y: 8 } : { opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              className="min-h-full"
-            >
-              {['/jornadas', '/novedades', '/reloj-checador', '/prestamos', '/descuentos'].includes(location.pathname) && <PayrollCutNotice />}
-              {children}
-            </motion.div>
-          </AnimatePresence>
+        <WorkspaceTabBar />
+        <main ref={mainRef} className="relative min-h-0 flex-1 overflow-hidden">
+          {children}
         </main>
       </div>
 

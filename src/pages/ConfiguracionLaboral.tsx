@@ -1,3 +1,4 @@
+import { useWorkspaceEditor } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Settings, Clock, Moon, Percent, Save, Loader2, ShieldCheck } from 'luci
 import { Badge } from '@/components/ui/badge';
 
 export default function ConfiguracionLaboral() {
+  const workspaceEditor = useWorkspaceEditor();
   const { data: config, isLoading } = usePayrollConfig();
   const { data: disconnectionPolicy, isLoading: isPolicyLoading } = useLaborDisconnectionPolicy();
   const { data: policyUsers = [] } = useCompanyPolicyUsers();
@@ -118,6 +120,7 @@ export default function ConfiguracionLaboral() {
         next_review_date: disconnectionForm.next_review_date || null,
         exception_notes: disconnectionForm.exception_notes.trim() || null,
       });
+      workspaceEditor.markSaved();
       toast({ title: 'Configuracion guardada correctamente' });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'No se pudo guardar la configuracion.';
@@ -145,7 +148,7 @@ export default function ConfiguracionLaboral() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-10">
+    <div {...workspaceEditor.captureProps} className="max-w-6xl mx-auto space-y-8 pb-10">
       {/* Header Premium */}
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 rounded-[2rem] border border-border p-8 sm:p-10 shadow-sm">
         

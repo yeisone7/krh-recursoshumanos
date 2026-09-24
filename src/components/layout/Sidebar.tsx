@@ -1157,7 +1157,7 @@ function CompanyUserSection({ collapsed, onNavigate }: {collapsed: boolean; onNa
                   <button
                     key={company.id}
                     onClick={() => {
-                      setCurrentCompanyId(company.id);
+                      if (!setCurrentCompanyId(company.id)) return;
                       if (user) localStorage.setItem(`last_company_${user.id}`, company.id);
                       setCompanyOpen(false);
                     }}
