@@ -1,3 +1,4 @@
+import { useWorkspaceActive } from '@/components/workspace/WorkspacePaneContext';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, SkipBack, Volume2, Mic, RefreshCw, Loader2, Maximize, X } from 'lucide-react';
@@ -41,6 +42,7 @@ export function StoryboardViewer({
   puntosClave,
   onSceneRegenerated,
 }: StoryboardViewerProps) {
+  const workspaceActive = useWorkspaceActive();
   const [activeSceneIdx, setActiveSceneIdx] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
@@ -51,9 +53,13 @@ export function StoryboardViewer({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fullscreenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    if (!workspaceActive) { audioRef.current?.pause(); setIsPlaying(false); }
+  }, [workspaceActive]);
+
   // Auto-advance scenes during playback
   useEffect(() => {
-    if (!isPlaying || !scenes.length) return;
+    if (!workspaceActive || !isPlaying || !scenes.length) return;
     const interval = setInterval(() => {
       setActiveSceneIdx(prev => {
         const next = prev + 1;
@@ -66,11 +72,11 @@ export function StoryboardViewer({
       });
     }, 8000);
     return () => clearInterval(interval);
-  }, [isPlaying, scenes.length]);
+  }, [isPlaying, scenes.length, workspaceActive]);
 
   // Fullscreen auto-advance
   useEffect(() => {
-    if (!isFullscreen) {
+    if (!isFullscreen || !workspaceActive) {
       if (fullscreenTimerRef.current) clearInterval(fullscreenTimerRef.current);
       return;
     }
@@ -87,7 +93,7 @@ export function StoryboardViewer({
     return () => {
       if (fullscreenTimerRef.current) clearInterval(fullscreenTimerRef.current);
     };
-  }, [isFullscreen, scenes.length]);
+  }, [isFullscreen, scenes.length, workspaceActive]);
 
   const togglePlayback = useCallback(() => {
     const audio = audioRef.current;

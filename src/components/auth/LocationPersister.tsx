@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -16,8 +16,11 @@ const IGNORED_PATHS = [
   '/verificar-certificado',
   '/marcar',
   '/asistencia',
+  '/portal',
+  '/change-password-required',
+  '/reloj-checador/pantalla',
 ];
-const LAST_PATH_KEY = 'empatiq_last_visited_path';
+
 
 // Exported for the regression test that protects public-route isolation.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -31,7 +34,7 @@ export const getRestorablePath = (value: string | null) => {
 
   try {
     const url = new URL(value, window.location.origin);
-    if (isIgnoredPath(url.pathname)) return null;
+    if (url.origin !== window.location.origin || isIgnoredPath(url.pathname)) return null;
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return null;
@@ -45,42 +48,21 @@ export const getRestorablePath = (value: string | null) => {
 export function LocationPersister() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
-
-  // Guardar la ubicación actual cada vez que cambia
+  const { user, currentCompanyId, isLoading } = useAuth();
+  const restored = useRef<string | null>(null);
   useEffect(() => {
-    const isIgnored = isIgnoredPath(location.pathname);
-    if (!isIgnored && location.pathname !== '/') {
-      localStorage.setItem(LAST_PATH_KEY, location.pathname + location.search);
-      return;
-    }
-
-    const savedPath = getRestorablePath(localStorage.getItem(LAST_PATH_KEY));
-    if (!savedPath) {
-      localStorage.removeItem(LAST_PATH_KEY);
-    }
-  }, [location]);
-
-  // Restaurar la ubicación al cargar la app si estamos en la raíz (solo una vez por sesión)
-  useEffect(() => {
-    if (!isLoading && user && location.pathname === '/') {
-      const hasRestored = sessionStorage.getItem('empatiq_location_restored');
-      if (!hasRestored) {
-        const lastPath = getRestorablePath(localStorage.getItem(LAST_PATH_KEY));
-        // Marcamos como restaurado inmediatamente para evitar bucles
-        sessionStorage.setItem('empatiq_location_restored', 'true');
-        
-        if (lastPath) {
-          const timer = setTimeout(() => {
-            navigate(lastPath, { replace: true });
-          }, 100);
-          return () => clearTimeout(timer);
-        }
-
-        localStorage.removeItem(LAST_PATH_KEY);
+    // Desktop restoration belongs exclusively to the workspace. Mobile keeps
+    // its single-screen navigation, with storage isolated by user and company.
+    if (window.innerWidth >= 768 || isLoading || !user || !currentCompanyId || isIgnoredPath(location.pathname)) return;
+    const key = `empatiq_mobile_location:${user.id}:${currentCompanyId}`;
+    try {
+      if (restored.current !== key) {
+        restored.current = key;
+        const saved = getRestorablePath(sessionStorage.getItem(key));
+        if (location.pathname === '/' && saved) { navigate(saved, { replace: true }); return; }
       }
-    }
-  }, [user, isLoading, location.pathname, navigate]);
-
+      sessionStorage.setItem(key, location.pathname + location.search + location.hash);
+    } catch { /* Storage is optional. */ }
+  }, [user, currentCompanyId, isLoading, location, navigate]);
   return null;
 }

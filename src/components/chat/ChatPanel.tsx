@@ -1,3 +1,4 @@
+import { useWorkspaceActive, useWorkspaceDirty } from '@/components/workspace/WorkspacePaneContext';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { format, isToday, isYesterday } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -346,6 +347,7 @@ function Composer({
 }) {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  useWorkspaceDirty(message.trim().length > 0 || files.length > 0);
   const [isRecording, setIsRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
@@ -453,6 +455,7 @@ function Composer({
 }
 
 export function ChatPanel() {
+  const workspaceActive = useWorkspaceActive();
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [newChatOpen, setNewChatOpen] = useState(false);
@@ -477,13 +480,14 @@ export function ChatPanel() {
   }, [filteredConversations, selectedId, setSearchParams]);
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!selectedId || !workspaceActive) return;
     actions.markAsRead(selectedId).catch(() => undefined);
-  }, [messagesQuery.data?.length, selectedId]);
+  }, [messagesQuery.data?.length, selectedId, workspaceActive]);
 
   useEffect(() => {
+    if (!workspaceActive) return;
     scrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messagesQuery.data?.length, selectedId]);
+  }, [messagesQuery.data?.length, selectedId, workspaceActive]);
 
   const openConversation = (conversationId: string) => setSearchParams({ conversation: conversationId });
 

@@ -25,7 +25,7 @@ export function useInactivityTimeout() {
   const handleSignOut = useCallback(async () => {
     clearTimers();
     toast.info('Sesión cerrada por inactividad');
-    await signOut();
+    await signOut({ force: true });
   }, [signOut, clearTimers]);
 
   const resetTimer = useCallback(() => {

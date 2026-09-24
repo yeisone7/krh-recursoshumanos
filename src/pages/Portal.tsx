@@ -64,7 +64,7 @@ export default function Portal() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="outline" onClick={() => signOut()}>
               <LogOut className="h-4 w-4 mr-2" />
               Cerrar Sesión
             </Button>
@@ -82,7 +82,7 @@ export default function Portal() {
           <div className="flex items-center gap-4">
             <h1 className="text-xl font-bold text-primary">Portal del Empleado</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={signOut}>
+          <Button variant="ghost" size="sm" onClick={() => signOut()}>
             <LogOut className="h-4 w-4 mr-2" />
             Salir
           </Button>

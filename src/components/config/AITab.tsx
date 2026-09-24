@@ -1,3 +1,4 @@
+import { useWorkspaceDirty } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -64,6 +65,9 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
     temperature: 0.3,
   });
 
+  const [savedAiConfig, setSavedAiConfig] = useState(() => JSON.stringify(aiConfig));
+  useWorkspaceDirty(JSON.stringify(aiConfig) !== savedAiConfig || saving);
+
   const [showKeys, setShowKeys] = useState({
     openai: false,
     gemini: false,
@@ -73,10 +77,9 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
 
   useEffect(() => {
     if (systemConfig?.ai_config) {
-      setAiConfig({
-        ...aiConfig,
-        ...systemConfig.ai_config,
-      });
+      const loaded = { ...aiConfig, ...systemConfig.ai_config };
+      setAiConfig(loaded);
+      setSavedAiConfig(JSON.stringify(loaded));
     }
   }, [systemConfig]);
 
@@ -84,6 +87,7 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
     setSaving(true);
     try {
       await onUpdateConfig('ai_config', newConfig, 'Configuración del modelo de IA para generación de capacitaciones');
+      setSavedAiConfig(JSON.stringify(newConfig));
       toast.success('Configuración de IA actualizada');
       setIsDialogOpen(false);
       setEditingProvider(null);

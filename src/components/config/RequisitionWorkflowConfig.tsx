@@ -1,3 +1,4 @@
+import { useWorkspaceDirty } from '@/components/workspace/WorkspacePaneContext';
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Plus, Trash2, GitBranch } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,6 +33,8 @@ export function WorkflowEditor({ initialVersion, roles }: { initialVersion: Requ
   const publish = usePublishRequisitionWorkflow();
   const [baseVersion, setBaseVersion] = useState(initialVersion);
   const [steps, setSteps] = useState<WorkflowStep[]>(() => initialVersion?.steps ?? Object.keys(standardStepNames).map(k => createStep(k as WorkflowStep['kind'])));
+  const [savedSteps, setSavedSteps] = useState(() => JSON.stringify(steps));
+  useWorkspaceDirty(JSON.stringify(steps) !== savedSteps || publish.isPending);
   const [kind, setKind] = useState<WorkflowStep['kind']>('custom');
   const [error, setError] = useState<string | null>(null);
   const activeRoles = roles.filter(r => r.is_active);
@@ -62,6 +65,7 @@ export function WorkflowEditor({ initialVersion, roles }: { initialVersion: Requ
       const version = await publish.mutateAsync({ steps: cleaned, expectedVersionId: baseVersion?.id ?? null });
       setBaseVersion(version);
       setSteps(version.steps);
+      setSavedSteps(JSON.stringify(version.steps));
     } catch { /* The mutation displays the server's actionable message. */ }
   };
   return <div className="space-y-6">

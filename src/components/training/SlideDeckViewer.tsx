@@ -1,3 +1,4 @@
+import { useWorkspaceActive } from '@/components/workspace/WorkspacePaneContext';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Maximize, X, Presentation } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +37,7 @@ export function isSlideDeck(value: unknown): value is TrainingSlideDeck {
 }
 
 export function SlideDeckViewer({ deck, compact = false }: SlideDeckViewerProps) {
+  const workspaceActive = useWorkspaceActive();
   const normalizedDeck = useMemo(() => normalizeDeck(deck), [deck]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -48,7 +50,7 @@ export function SlideDeckViewer({ deck, compact = false }: SlideDeckViewerProps)
   }, [deck]);
 
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (!isFullscreen || !workspaceActive) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowRight' || event.key === ' ') {
         event.preventDefault();
@@ -62,7 +64,7 @@ export function SlideDeckViewer({ deck, compact = false }: SlideDeckViewerProps)
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen, slides.length]);
+  }, [isFullscreen, slides.length, workspaceActive]);
 
   if (!slides.length) return null;
 

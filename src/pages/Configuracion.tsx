@@ -1,3 +1,4 @@
+import { useWorkspaceEditor } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -77,6 +78,9 @@ function normalizeTwilioWhatsappSender(value: string) {
 }
 
 export default function Configuracion() {
+  const companyEditor = useWorkspaceEditor();
+  const alertEditor = useWorkspaceEditor();
+  const watermarkEditor = useWorkspaceEditor();
   const { currentCompanyId, isAdmin, hasPermission } = useAuth();
   const { data: company, isLoading: loadingCompany } = useCompany(currentCompanyId || undefined);
   const updateCompany = useUpdateCompany();
@@ -293,6 +297,7 @@ export default function Configuracion() {
           description: 'Número remitente de WhatsApp configurado en Twilio para notificaciones',
         }),
       ]);
+      alertEditor.markSaved();
       toast.success('Configuración de alertas guardada');
     } catch (error) {
       toast.error('Error al guardar la configuración');
@@ -307,6 +312,7 @@ export default function Configuracion() {
         ...companyForm
       });
       setEditingCompany(false);
+      companyEditor.markSaved();
       toast.success('Información de la empresa actualizada');
     } catch (error) {
       toast.error('Error al actualizar la información');
@@ -389,6 +395,7 @@ export default function Configuracion() {
         },
         description: 'Configuración de marca de agua para imágenes generadas con IA',
       });
+      watermarkEditor.markSaved();
       toast.success('Configuración de marca de agua guardada');
     } catch (error) {
       toast.error('Error al guardar la configuración');
@@ -467,7 +474,7 @@ export default function Configuracion() {
 
         {/* Company Tab */}
         <TabsContent value="requisitions"><RequisitionWorkflowConfig /></TabsContent>
-        <TabsContent value="company" className="space-y-8 focus-visible:outline-none px-1">
+        <TabsContent {...companyEditor.captureProps} value="company" className="space-y-8 focus-visible:outline-none px-1">
           <Card className="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
             <CardHeader className="p-8 border-b border-slate-200 bg-slate-50/60">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -644,7 +651,7 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Alerts Tab */}
-        <TabsContent value="alerts" className="focus-visible:outline-none px-1">
+        <TabsContent {...alertEditor.captureProps} value="alerts" className="focus-visible:outline-none px-1">
           <Card className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="p-8 border-b border-slate-50">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -836,7 +843,7 @@ export default function Configuracion() {
         </TabsContent>
 
         {/* Watermark Tab */}
-        <TabsContent value="watermark" className="focus-visible:outline-none px-1">
+        <TabsContent {...watermarkEditor.captureProps} value="watermark" className="focus-visible:outline-none px-1">
           <Card className="rounded-3xl bg-white border border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="p-8 border-b border-slate-50">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

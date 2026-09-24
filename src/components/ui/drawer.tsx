@@ -1,10 +1,13 @@
+import { createPersistentOverlayRoot, PersistentOverlay } from "@/components/workspace/PersistentOverlay";
 import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
 
+const PersistentDrawerRoot = createPersistentOverlayRoot(DrawerPrimitive.Root);
+
 const Drawer = ({ shouldScaleBackground = true, ...props }: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
+  <PersistentDrawerRoot shouldScaleBackground={shouldScaleBackground} {...props} />
 );
 Drawer.displayName = "Drawer";
 
@@ -26,6 +29,7 @@ const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
+  <PersistentOverlay renderShell={(body) => (
   <DrawerPortal>
     <DrawerOverlay />
     <DrawerPrimitive.Content
@@ -37,9 +41,10 @@ const DrawerContent = React.forwardRef<
       {...props}
     >
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-background " />
-      {children}
+      {body}
     </DrawerPrimitive.Content>
   </DrawerPortal>
+  )}>{children}</PersistentOverlay>
 ));
 DrawerContent.displayName = "DrawerContent";
 

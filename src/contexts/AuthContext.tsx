@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logSession } from '@/lib/sessionLogger';
+import { confirmWorkspaceExit } from '@/lib/workspaceExit';
 import type { Database } from '@/integrations/supabase/types';
 
 type AppRole = Database['public']['Enums']['app_role'];
@@ -25,7 +26,7 @@ interface AuthContextType {
   roles: AppRole[];
   companies: UserCompany[];
   currentCompanyId: string | null;
-  setCurrentCompanyId: (id: string | null) => void;
+  setCurrentCompanyId: (id: string | null) => boolean;
   isLoading: boolean;
   mustChangePassword: boolean;
   isAdmin: boolean;
@@ -50,7 +51,7 @@ interface AuthContextType {
   refreshPermissions: () => void;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: Error | null; user?: User | null; session?: Session | null }>;
-  signOut: () => Promise<void>;
+  signOut: (options?: { force?: boolean }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -348,7 +349,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error, user: data.user, session: data.session };
   };
 
-  const signOut = async () => {
+  const signOut = async (options?: { force?: boolean }) => {
+    if (!options?.force && !confirmWorkspaceExit('logout')) return;
     try {
       await supabase.auth.signOut();
     } catch {
@@ -375,7 +377,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         roles,
         companies,
         currentCompanyId,
-        setCurrentCompanyId,
+        setCurrentCompanyId: (id) => {
+          if (id === currentCompanyId) return true;
+          if (!confirmWorkspaceExit('company')) return false;
+          setCurrentCompanyId(id);
+          return true;
+        },
         isLoading,
         mustChangePassword,
         isAdmin: roles.includes('admin') || isSuperAdmin,

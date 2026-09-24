@@ -1,3 +1,4 @@
+import { useWorkspaceDirty } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useEffect } from 'react';
 import { Accessibility, CircleUserRound, Globe2, GraduationCap, Home, Target, Save, Loader2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -36,9 +37,14 @@ export function DiversityGoalsConfig() {
   const updateConfig = useUpdateSystemConfig();
   const [goals, setGoals] = useState<DiversityGoals>(DEFAULT_GOALS);
 
+  const [savedGoals, setSavedGoals] = useState(() => JSON.stringify(DEFAULT_GOALS));
+  useWorkspaceDirty(JSON.stringify(goals) !== savedGoals || updateConfig.isPending);
+
   useEffect(() => {
     if (systemConfig?.diversity_goals) {
-      setGoals({ ...DEFAULT_GOALS, ...systemConfig.diversity_goals });
+      const loaded = { ...DEFAULT_GOALS, ...systemConfig.diversity_goals };
+      setGoals(loaded);
+      setSavedGoals(JSON.stringify(loaded));
     }
   }, [systemConfig]);
 
@@ -49,6 +55,7 @@ export function DiversityGoalsConfig() {
         value: goals,
         description: 'Metas porcentuales de diversidad e inclusión en procesos de selección',
       });
+      setSavedGoals(JSON.stringify(goals));
       toast.success('Metas de diversidad guardadas');
     } catch {
       toast.error('Error al guardar');

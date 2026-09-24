@@ -1,3 +1,4 @@
+import { useWorkspaceEditor } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -26,6 +27,7 @@ const TRAINING_PUBLICOS = ['Centros de Operaci\u00f3n', 'Supervisores', 'T\u00e9
 const TRAINING_MARCOS_LEGALES = ['ISO 9001', 'ISO 14001', 'ISO 22000', 'ISO 45001', 'BPM', 'HACCP', 'Interno', 'Otro'];
 
 export default function CrearManual() {
+  const workspaceEditor = useWorkspaceEditor();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
@@ -123,12 +125,14 @@ export default function CrearManual() {
       if (activeCourseId) {
         await updateCourse.mutateAsync({ id: activeCourseId, ...courseData });
         await savePeriods.mutateAsync({ courseId: activeCourseId, periods });
+        workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Publicada' : 'Cambios guardados');
       } else {
         const result = await createCourse.mutateAsync(courseData);
         setCreatedCourseId(result.id);
-        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true });
+        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
+        workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
       }
     } catch { toast.error('Error al guardar'); }
@@ -141,7 +145,7 @@ export default function CrearManual() {
   const handleSaveChanges = () => handleSave(existingCourse?.status || 'borrador');
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div {...workspaceEditor.captureProps} className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
         
         <div className="relative z-10 flex items-center gap-5">

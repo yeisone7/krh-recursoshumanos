@@ -24,6 +24,7 @@ import { useUpdateSystemConfig } from '@/hooks/useSystemConfig';
 import { supabase } from '@/integrations/supabase/client';
 import { SessionHistory } from './SessionHistory';
 import { cn } from '@/lib/utils';
+import { confirmWorkspaceExit } from '@/lib/workspaceExit';
 
 interface SecurityTabProps {
   inactivityMinutes: number;
@@ -66,11 +67,12 @@ export function SecurityTab({
   const [savingUpdateCheck, setSavingUpdateCheck] = useState(false);
 
   const handleSignOutAll = async () => {
+    if (!confirmWorkspaceExit('logout')) return;
     setSigningOutAll(true);
     try {
       await supabase.auth.signOut({ scope: 'global' });
       toast.success('Se han cerrado todas las sesiones activas');
-      await signOut();
+      await signOut({ force: true });
     } catch {
       toast.error('Error al cerrar sesiones');
     } finally {

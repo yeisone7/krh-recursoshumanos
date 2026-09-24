@@ -1,3 +1,4 @@
+import { useWorkspaceEditor } from '@/components/workspace/WorkspacePaneContext';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -84,6 +85,7 @@ const getFunctionErrorMessage = async (error: any, fallback: string): Promise<st
 };
 
 export default function CrearCapacitacion() {
+  const workspaceEditor = useWorkspaceEditor();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
@@ -238,6 +240,7 @@ export default function CrearCapacitacion() {
       }
       const extractedText = await extractTextFromPdfFile(file);
       setPdfText(extractedText || 'No se pudo extraer texto del PDF. El archivo puede contener solo imagenes.');
+      workspaceEditor.markChanged();
       toast.success('PDF procesado exitosamente');
     } catch (err: any) {
       toast.error(err?.message || 'Error al procesar el PDF');
@@ -270,6 +273,7 @@ export default function CrearCapacitacion() {
       if (error) throw new Error(await getFunctionErrorMessage(error, 'Error al generar contenido'));
       setContent(data as TrainingCourseContent);
       setStep(2);
+      workspaceEditor.markChanged();
       toast.success('Contenido generado exitosamente');
     } catch (err: any) {
       toast.error(err?.message || 'Error al generar contenido');
@@ -305,12 +309,14 @@ export default function CrearCapacitacion() {
       if (activeCourseId) {
         await updateCourse.mutateAsync({ id: activeCourseId, ...courseData });
         await savePeriods.mutateAsync({ courseId: activeCourseId, periods });
+        workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       } else {
         const result = await createCourse.mutateAsync(courseData);
         setCreatedCourseId(result.id);
-        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true });
+        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
+        workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       }
     } catch (err: any) {
@@ -452,7 +458,7 @@ export default function CrearCapacitacion() {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div {...workspaceEditor.captureProps} className="space-y-6 max-w-5xl mx-auto pb-12">
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border border-border/50 rounded-[2rem] shadow-sm mb-8">
         
         <div className="relative z-10 flex items-center gap-5">
