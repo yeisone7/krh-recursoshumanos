@@ -77,7 +77,7 @@ interface ContractDetailDialogProps {
 
 const statusConfig = {
   active: { label: 'Vigente', class: 'bg-success-light text-success border-success/20', icon: CheckCircle },
-  expiring: { label: 'Por vencer', class: 'bg-warning-light text-warning-foreground border-warning/20', icon: Clock },
+  expiring: { label: 'Por vencer', class: 'bg-warning/10 text-warning border-warning/40', icon: Clock },
   expired: { label: 'Vencido', class: 'bg-destructive-light text-destructive border-destructive/20', icon: AlertTriangle },
   terminated: { label: 'Terminado', class: 'bg-background text-muted-foreground border-border', icon: FileText },
 };
@@ -582,7 +582,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                     "gap-1",
                     isApproved 
                       ? "bg-success-light text-success border-success/20" 
-                      : "bg-warning-light text-warning-foreground border-warning/20"
+                      : "bg-warning/10 text-warning border-warning/40"
                   )}
                 >
                   {isApproved ? (
@@ -598,7 +598,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
                   )}
                 </Badge>
                 {hasPendingTermination && (
-                  <Badge variant="outline" className="bg-warning-light text-warning-foreground border-warning/20 gap-1">
+                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning/40 gap-1">
                     <Clock className="w-3 h-3" />
                     Retiro en progreso
                   </Badge>
