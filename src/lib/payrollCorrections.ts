@@ -69,6 +69,16 @@ export function colombiaInputToISO(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) throw new Error('Seleccione fecha y hora de vencimiento.');
   return new Date(`${value}:00-05:00`).toISOString();
 }
+export function correctionExpiryError(value: string, now = Date.now()): string | null {
+  try {
+    if (Date.parse(colombiaInputToISO(value)) <= now) {
+      return 'El vencimiento debe ser posterior a la hora actual de Colombia.';
+    }
+    return null;
+  } catch {
+    return 'Seleccione fecha y hora de vencimiento.';
+  }
+}
 export function colombiaInput(value: string) {
   return new Date(new Date(value).getTime() - 5 * 3600000).toISOString().slice(0, 16);
 }
