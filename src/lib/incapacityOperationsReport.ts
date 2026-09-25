@@ -1,4 +1,5 @@
-import { differenceInCalendarDays, eachMonthOfInterval, endOfMonth, format, isValid, parseISO, startOfMonth } from 'date-fns';
+import { addDays, differenceInCalendarDays, eachMonthOfInterval, endOfMonth, format, isValid, parseISO, startOfMonth } from 'date-fns';
+import { parseIncapacityDate } from './incapacityAllocation';
 
 import type { BiologicalSexKey } from '@/lib/biologicalSex';
 
@@ -12,6 +13,8 @@ export interface IncapacityOperationsRow {
   concept: string;
   startDate: string;
   endDate: string;
+  effectiveStart?: string;
+  effectiveEnd?: string;
   totalDays: number;
   diagnosisKey: string;
   diagnosisLabel: string;
@@ -60,7 +63,10 @@ export function filterIncapacityOperationsRows(
     if (!monthInterval) return [row];
 
     const daysWithinMonth = getIncapacityDaysWithinMonth(row, filters.month);
-    return daysWithinMonth > 0 ? [{ ...row, totalDays: daysWithinMonth }] : [];
+    return daysWithinMonth > 0 ? [{ ...row, totalDays: daysWithinMonth,
+      effectiveStart: [row.effectiveStart || row.startDate, format(monthInterval.start, 'yyyy-MM-dd')].sort()[1],
+      effectiveEnd: [row.effectiveEnd || row.endDate, format(monthInterval.end, 'yyyy-MM-dd')].sort()[0],
+    }] : [];
   });
 }
 
@@ -72,8 +78,8 @@ function getMonthInterval(month: string) {
 
 export function getIncapacityDaysWithinMonth(row: IncapacityOperationsRow, month: string) {
   const monthInterval = getMonthInterval(month);
-  const incapacityStart = parseISO(`${row.startDate}T00:00:00`);
-  const incapacityEnd = parseISO(`${row.endDate}T00:00:00`);
+  const incapacityStart = parseISO(`${row.effectiveStart || row.startDate}T00:00:00`);
+  const incapacityEnd = parseISO(`${row.effectiveEnd || row.endDate}T00:00:00`);
 
   if (!monthInterval || !isValid(incapacityStart) || !isValid(incapacityEnd)) return 0;
 
@@ -88,14 +94,36 @@ export function getIncapacityOperationsMonths(rows: IncapacityOperationsRow[]) {
   const months = new Set<string>();
 
   rows.forEach((row) => {
-    const start = parseISO(`${row.startDate}T00:00:00`);
-    const end = parseISO(`${row.endDate}T00:00:00`);
+    const start = parseISO(`${row.effectiveStart || row.startDate}T00:00:00`);
+    const end = parseISO(`${row.effectiveEnd || row.endDate}T00:00:00`);
     if (!isValid(start) || !isValid(end) || start > end) return;
 
     eachMonthOfInterval({ start, end }).forEach((month) => months.add(format(month, 'yyyy-MM')));
   });
 
   return [...months].sort((left, right) => right.localeCompare(left));
+}
+
+export function buildIncapacityOperationsTimeline(rows: IncapacityOperationsRow[]) {
+  const counts = new Map<string, number>();
+  rows.forEach(row => {
+    const start = parseIncapacityDate(row.effectiveStart || row.startDate);
+    const end = parseIncapacityDate(row.effectiveEnd || row.endDate);
+    if (!start || !end || start > end) return;
+    for (let date = start; date <= end; date = addDays(date, 1)) {
+      const key = format(date, 'yyyy-MM-dd');
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+  });
+  const keys = [...counts.keys()].sort();
+  if (!keys.length) return [];
+  const result: Array<{ date: string; cases: number }> = [];
+  const end = parseISO(keys[keys.length - 1]);
+  for (let date = parseISO(keys[0]); date <= end; date = addDays(date, 1)) {
+    const key = format(date, 'yyyy-MM-dd');
+    result.push({ date: key, cases: counts.get(key) || 0 });
+  }
+  return result;
 }
 
 export function countBy(

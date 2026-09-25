@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   countBy,
+  buildIncapacityOperationsTimeline,
   filterIncapacityOperationsRows,
   getIncapacityOperationsMonths,
   getUniqueDiagnosisCount,
@@ -218,9 +219,8 @@ export function IncapacityOperationsReport({
     const positionData = countBy(filtered, (row) => row.positionName).slice(0, 10);
     const diagnosisData = countBy(filtered, (row) => row.diagnosisLabel).slice(0, 10);
     const centerData = countBy(filtered, (row) => row.operationCenterName).slice(0, 20);
-    const timelineData = countBy(filtered, (row) => row.startDate)
-      .map((item) => ({ date: item.name, label: format(parseISO(`${item.name}T00:00:00`), 'dd MMM yy', { locale: es }), cases: item.value }))
-      .sort((left, right) => left.date.localeCompare(right.date));
+    const timelineData = buildIncapacityOperationsTimeline(filtered)
+      .map((item) => ({ ...item, label: format(parseISO(item.date), 'dd MMM yy', { locale: es }) }));
     const sexData = sexDefinitions.map((definition) => {
       const matchingRows = filtered.filter((row) => row.gender === definition.key);
       return {
@@ -456,7 +456,7 @@ export function IncapacityOperationsReport({
           </ResponsiveContainer>
         </ReportChart>
 
-        <ReportChart title="Línea de tiempo de incapacidades y licencias" subtitle="Cantidad de registros por fecha de inicio">
+        <ReportChart title="Línea de tiempo de incapacidades y licencias" subtitle="Incapacidades que afectan cada día transcurrido del período">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={report.timelineData} margin={{ left: -18, right: 14 }}>
               <defs>

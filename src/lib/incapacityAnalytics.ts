@@ -1,3 +1,5 @@
+import { eachMonthOfInterval, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { allocateIncapacity, parseIncapacityDate, type AllocationMetadata } from './incapacityAllocation';
 import {
   calculateIncapacityEmployerCost,
   type IncapacityEmployerCostBreakdown,
@@ -5,6 +7,7 @@ import {
 } from '@/types/incapacity';
 
 export interface IncapacityAnalyticsRow {
+  allocation?: AllocationMetadata;
   total_days?: number | null;
   total_amount?: number | null;
   employer_days?: number | null;
@@ -139,7 +142,7 @@ export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): Incap
       + Math.max(0, Number(row.arl_amount || 0))
       + Math.max(0, Number(row.afp_amount || 0));
   const recordedRecovered = Math.max(0, Number(row.recovered_amount || 0));
-  const uncappedRecovered = row.recovery_status === 'pagado' && recordedRecovered === 0
+  const uncappedRecovered = !row.allocation && row.recovery_status === 'pagado' && recordedRecovered === 0
     ? expected
     : recordedRecovered;
   const recovered = Math.min(expected, uncappedRecovered);
@@ -155,8 +158,7 @@ export function getActualRecoveryPayment(row: IncapacityAnalyticsRow): ActualRec
   const paymentDate = row.actual_payment_date?.trim();
   if (!paymentDate || !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate)) return null;
 
-  const parsedDate = new Date(`${paymentDate}T00:00:00`);
-  if (Number.isNaN(parsedDate.getTime())) return null;
+  if (!parseIncapacityDate(paymentDate)) return null;
 
   return {
     monthKey: paymentDate.slice(0, 7),
@@ -193,7 +195,7 @@ export function buildIncapacityDurationBuckets(
 
   return definitions.map((definition) => {
     const bucketRows = validRows.filter((row) => {
-      const days = Number(row.total_days || 0);
+      const days = row.allocation?.originalDays ?? Number(row.total_days || 0);
       if (definition.key === 'one_two_days') return days === 1 || days === 2;
       return days >= 3;
     });
@@ -213,8 +215,16 @@ export function buildIncapacityDurationBuckets(
 export function buildMonthlyEpsRecovery(rows: IncapacityAnalyticsRow[]): MonthlyEpsRecoveryRow[] {
   const grouped = new Map<string, MonthlyEpsRecoveryRow>();
 
-  rows.forEach((row) => {
-    const expected = Math.max(0, Number(row.eps_amount || 0));
+  const monthlyRows = rows.flatMap(row => {
+    if (!row.allocation) return [row];
+    return eachMonthOfInterval({ start: parseISO(row.allocation.effectiveStart), end: parseISO(row.allocation.effectiveEnd) })
+      .flatMap(month => {
+        const slice = allocateIncapacity(row, { start: startOfMonth(month), end: endOfMonth(month) }, row.allocation!.cutoff);
+        return slice ? [{ ...slice, start_date: slice.allocation.effectiveStart }] : [];
+      });
+  });
+  monthlyRows.forEach((row) => {
+    const expected = row.recovery_status === 'asumido_empresa' ? 0 : Math.max(0, Number(row.eps_amount || 0));
     if (!row.start_date || expected <= 0) return;
 
     const monthKey = row.start_date.slice(0, 7);
@@ -225,7 +235,8 @@ export function buildMonthlyEpsRecovery(rows: IncapacityAnalyticsRow[]): Monthly
     const recordedRecovered = Math.max(0, Number(row.recovered_amount || 0));
     const recovered = Math.min(
       expected,
-      row.recovery_status === 'pagado' && recordedRecovered === 0 ? expected : recordedRecovered,
+      !row.allocation && row.recovery_status === 'pagado' && recordedRecovered === 0 ? expected :
+        recordedRecovered * (row.allocation ? expected / (getIncapacityRecoveryAmounts(row).expected || 1) : 1),
     );
     const current = grouped.get(key) || {
       key,
