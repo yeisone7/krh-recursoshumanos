@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
-import { correctionClient, correctionActionLabels, colombiaInput, colombiaInputToISO, type CorrectionModule } from '@/lib/payrollCorrections';
+import { correctionClient, correctionActionLabels, colombiaInput, colombiaInputToISO, correctionExpiryError, type CorrectionModule } from '@/lib/payrollCorrections';
 import { colombiaToday } from '@/lib/payrollControlCuts';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,9 +33,12 @@ function TicketRequestForm({ defaults, close }: { defaults: TicketRequestDefault
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const expiryError = correctionExpiryError(expires);
   useEffect(() => { if (!center && centers.length === 1) setCenter(centers[0].id); }, [center, centers]);
   async function save() {
     if (!currentCompanyId) return;
+    const currentExpiryError = correctionExpiryError(expires);
+    if (currentExpiryError) { setError(currentExpiryError); return; }
     setSaving(true); setError('');
     try {
       const r = await correctionClient.rpc('payroll_ticket_request', { p_company_id: currentCompanyId, p_employee_id: employee, p_center_id: center, p_start: start, p_end: end, p_expires: colombiaInputToISO(expires), p_actions: actions, p_reason: reason });
@@ -49,12 +52,13 @@ function TicketRequestForm({ defaults, close }: { defaults: TicketRequestDefault
     <label className="space-y-1 text-sm">Centro histórico<select className="w-full rounded-md border bg-background p-2" value={center} onChange={e => setCenter(e.target.value)}><option value="">Seleccione centro</option>{centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
     <p className="text-xs text-muted-foreground">Si el empleado cambió de centro durante el rango, solicite un ticket por cada centro.</p>
     <div className="grid grid-cols-2 gap-3"><label className="text-sm">Corregir desde<Input type="date" value={start} onChange={e => setStart(e.target.value)} /></label><label className="text-sm">Hasta (inclusive)<Input type="date" value={end} min={start} onChange={e => setEnd(e.target.value)} /></label></div>
-    <label className="text-sm">Permiso hasta (hora de Colombia)<Input type="datetime-local" value={expires} onChange={e => setExpires(e.target.value)} /></label>
+    <label className="text-sm">Permiso hasta (hora de Colombia)<Input type="datetime-local" value={expires} onChange={e => { setExpires(e.target.value); setError(''); }} /></label>
+    {expiryError && <p role="alert" className="text-sm text-destructive">{expiryError}</p>}
     <TicketActions value={actions} onChange={setActions} />
     <p className="text-xs text-muted-foreground">Incluya Aprobar / rechazar si los cambios deben revisarse con el corte activo. También se exigirá el permiso normal del rol.</p>
     <label className="text-sm">Motivo<Textarea value={reason} onChange={e => setReason(e.target.value)} minLength={5} /></label>
     {(error || employeesError || centersError) && <p role="alert" className="text-sm text-destructive">{error || employeesError?.message || centersError?.message}</p>}
-    <Button disabled={saving || !employee || !center || !actions.length || reason.trim().length < 5} onClick={save}>{saving ? 'Enviando…' : 'Solicitar autorización'}</Button>
+    <Button disabled={saving || !employee || !center || !actions.length || reason.trim().length < 5 || !!expiryError} onClick={save}>{saving ? 'Enviando…' : 'Solicitar autorización'}</Button>
   </DialogContent></Dialog>;
 }
 export function TicketActions({ value, onChange, allowed }: { value: string[]; onChange: (value: string[]) => void; allowed?: string[] }) {
