@@ -930,6 +930,7 @@ function DurationAnalysisPanel({
   const [selectedBucketKey, setSelectedBucketKey] = useState<IncapacityDurationBucket['key'] | null>(null);
   const totalCases = buckets.reduce((sum, bucket) => sum + bucket.cases, 0);
   const totalAmount = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
+  const totalAssumedByCompany = getTotalAssumedByCompany(buckets);
   const selectedBucket = buckets.find((bucket) => bucket.key === selectedBucketKey);
   const selectedCases = selectedBucketKey
     ? incapacities.filter((item) => {
@@ -1023,16 +1024,20 @@ function DurationAnalysisPanel({
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total con costo laboral</p>
                     <p className="mt-1 text-base font-black text-slate-950">{money(bucket.employerCost.totalCost)}</p>
                   </div>
-                  <div className="col-span-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total asumido por la empresa</p>
-                    <p className="mt-1 text-base font-black text-slate-950">
-                      {money(getTotalAssumedByCompany(bucket.employerCost))}
-                    </p>
-                  </div>
                 </div>
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:px-5">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total asumido por la empresa</p>
+            <p className="mt-1 text-xs font-medium text-slate-500">
+              Total con costo laboral de 1 y 2 días + costo laboral estimado de 3 o más días
+            </p>
+          </div>
+          <p className="mt-2 text-xl font-black text-slate-950 sm:mt-0">{money(totalAssumedByCompany)}</p>
         </div>
 
         <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
@@ -1057,12 +1062,11 @@ function DurationAnalysisPanel({
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
               {[
                 { label: 'Base', value: employerCost.paymentBase },
                 { label: 'Costo adicional', value: employerCost.additionalCost },
                 { label: 'Total con costo laboral', value: employerCost.totalCost },
-                { label: 'Total asumido por la empresa', value: getTotalAssumedByCompany(employerCost) },
               ].map((item) => (
                 <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
