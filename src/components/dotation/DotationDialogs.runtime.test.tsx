@@ -11,6 +11,9 @@ const createDeliveryBatch = vi.hoisted(() =>
   vi.fn(() => new Promise(() => undefined)),
 );
 const generateActaEntregaPdf = vi.hoisted(() => vi.fn());
+const stockConfig = vi.hoisted(() => ({ block: false, autoDeduct: true, enabled: true }));
+const toastError = vi.hoisted(() => vi.fn());
+vi.mock('sonner', () => ({ toast: { error: toastError, success: vi.fn() } }));
 const dotationInventory = vi.hoisted(() => ({
   data: [] as Array<{
     id: string;
@@ -28,10 +31,14 @@ const dotationInventory = vi.hoisted(() => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ currentCompanyId: 'company-1' }),
+  useAuth: () => ({ currentCompanyId: 'company-1', assignedCenterIds: [], isAdmin: true }),
 }));
 
 vi.mock('@/hooks/useCompanies', () => ({
+  useOperationCenters: () => ({ data: [
+    { id: 'center-1', name: 'Principal', is_active: true },
+    { id: 'center-2', name: 'Bodega Norte', is_active: true },
+  ] }),
   useCompany: () => ({
     data: {
       id: 'company-1',
@@ -92,8 +99,9 @@ vi.mock('@/hooks/useSystemConfig', () => ({
   }),
   useSystemConfig: () => ({
     data: {
-      dotation_inventory_enabled: { enabled: true },
-      dotation_block_no_stock: { enabled: false },
+      dotation_inventory_enabled: { enabled: stockConfig.enabled },
+      dotation_auto_deduct: { enabled: stockConfig.autoDeduct },
+      dotation_block_no_stock: { enabled: stockConfig.block },
     },
   }),
 }));
@@ -138,6 +146,10 @@ describe('Dotation dialogs runtime regressions', () => {
     generateActaEntregaPdf.mockClear();
     createDeliveryBatch.mockClear();
     dotationInventory.data = [];
+    stockConfig.block = false;
+    stockConfig.autoDeduct = true;
+    stockConfig.enabled = true;
+    toastError.mockClear();
   });
 
   const renderWithQueryClient = (ui: ReactElement) => {
@@ -253,6 +265,9 @@ describe('Dotation dialogs runtime regressions', () => {
     fireEvent.change(screen.getByPlaceholderText('Nombre del responsable de almacén'), {
       target: { value: 'QA E2E' },
     });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar centro o bodega' }), {
+      target: { value: 'general' },
+    });
     fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
 
     await waitFor(() => expect(screen.getByText('Registrando...')).toBeInTheDocument());
@@ -295,6 +310,103 @@ describe('Dotation dialogs runtime regressions', () => {
     expect(sizeOptions).not.toContain('XS');
   });
 
+  const prepareDelivery = () => {
+    renderWithQueryClient(<DotationFormDialog open onOpenChange={vi.fn()} />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar colaborador' }), {
+      target: { value: 'employee-1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar Ítem' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Buscar artículo...' }), {
+      target: { value: 'item-1' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('Nombre del responsable de almacén'), {
+      target: { value: 'Almacén' },
+    });
+  };
+
+  const stockIn = (center: string | null, quantity: number) => ({
+    id: `inventory-${center}`, company_id: 'company-1', operation_center_id: center,
+    item_type: 'item-1', item_name: 'BATA BLANCA', size: null,
+    quantity_available: quantity, minimum_stock: 0, created_by: null,
+    created_at: '2026-09-25', updated_at: '2026-09-25',
+  });
+
+  it('requires an explicit inventory source before registering a delivery', () => {
+    prepareDelivery();
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
+    expect(createDeliveryBatch).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith('Selecciona el centro o bodega de origen');
+  });
+
+  it.each(['center-2', 'general'])('uses selected source %s instead of the employee center', (source) => {
+    stockConfig.block = true;
+    dotationInventory.data = [stockIn('center-1', 0), stockIn('center-2', 5), stockIn(null, 3)];
+    prepareDelivery();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar centro o bodega' }), {
+      target: { value: 'center-1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
+    expect(createDeliveryBatch).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith('Stock insuficiente', expect.anything());
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar centro o bodega' }), {
+      target: { value: source },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
+    expect(createDeliveryBatch).toHaveBeenCalledWith(expect.objectContaining({
+      items: [expect.objectContaining({ source_operation_center_id: source === 'general' ? null : source })],
+    }));
+  });
+
+  it('accumulates repeated articles when checking available stock', () => {
+    stockConfig.block = true;
+    dotationInventory.data = [stockIn('center-2', 1)];
+    prepareDelivery();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Seleccionar centro o bodega' }), {
+      target: { value: 'center-2' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar Ítem' }));
+    fireEvent.change(screen.getAllByRole('combobox', { name: 'Buscar artículo...' })[1], {
+      target: { value: 'item-1' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
+    expect(createDeliveryBatch).not.toHaveBeenCalled();
+    expect(toastError).toHaveBeenCalledWith('Stock insuficiente', expect.objectContaining({
+      description: expect.stringContaining('disponible 1, solicitado 2'),
+    }));
+  });
+
+  it('updates size suggestions and availability when the source changes', () => {
+    dotationInventory.data = [
+      { ...stockIn('center-1', 4), size: 'M' },
+      { ...stockIn('center-2', 7), size: 'L' },
+      { ...stockIn(null, 9), size: 'S' },
+    ];
+    prepareDelivery();
+    const source = screen.getByRole('combobox', { name: 'Seleccionar centro o bodega' });
+    fireEvent.change(source, { target: { value: 'center-2' } });
+    const sizeInput = screen.getByRole('combobox', { name: 'Talla de BATA BLANCA' });
+    const sizeOptions = () => Array.from(document.querySelectorAll(`#${sizeInput.getAttribute('list')} option`))
+      .map(option => option.getAttribute('value'));
+    expect(sizeOptions()).toEqual(['L']);
+    fireEvent.change(sizeInput, { target: { value: ' L ' } });
+    expect(screen.getByText('Disponible en Bodega Norte: 7')).toBeInTheDocument();
+    fireEvent.change(source, { target: { value: 'general' } });
+    expect(sizeOptions()).toEqual(['S']);
+    expect(screen.getByText('Disponible en Inventario General: 0')).toBeInTheDocument();
+  });
+
+  it.each(['enabled', 'autoDeduct'] as const)('does not require a source when %s is disabled', (setting) => {
+    stockConfig[setting] = false;
+    stockConfig.block = true;
+    prepareDelivery();
+    expect(screen.queryByRole('combobox', { name: 'Seleccionar centro o bodega' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Finalizar Entrega/ }));
+    expect(createDeliveryBatch).toHaveBeenCalledOnce();
+    expect(createDeliveryBatch).toHaveBeenCalledWith(expect.objectContaining({
+      items: [{ dotation_item_type_id: 'item-1', item_type: 'otros', item_name: 'BATA BLANCA', quantity: 1, size: null }],
+    }));
+  });
+
   it('uses an outbound reason when switching an adjustment to Salida', () => {
     renderWithQueryClient(
       <InventoryAdjustDialog
@@ -309,9 +421,7 @@ describe('Dotation dialogs runtime regressions', () => {
           size: null,
           quantity_available: 5,
           minimum_stock: 1,
-          unit_cost: null,
-          supplier: null,
-          last_restock_date: null,
+          created_by: null,
           created_at: '2026-09-08T12:00:00Z',
           updated_at: '2026-09-08T12:00:00Z',
           operation_centers: { id: 'center-1', name: 'Principal' },

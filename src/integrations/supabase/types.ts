@@ -2878,6 +2878,8 @@ export type Database = {
           received_by: string | null
           signature_url: string | null
           size: string | null
+          source_operation_center_id: string | null
+          inventory_source_selected: boolean
           transaction_id: string | null
           updated_at: string
         }
@@ -2900,6 +2902,8 @@ export type Database = {
           received_by?: string | null
           signature_url?: string | null
           size?: string | null
+          source_operation_center_id?: string | null
+          inventory_source_selected?: boolean
           transaction_id?: string | null
           updated_at?: string
         }
@@ -2922,10 +2926,19 @@ export type Database = {
           received_by?: string | null
           signature_url?: string | null
           size?: string | null
+          source_operation_center_id?: string | null
+          inventory_source_selected?: boolean
           transaction_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "dotation_deliveries_source_center_company_fkey"
+            columns: ["source_operation_center_id", "company_id"]
+            isOneToOne: false
+            referencedRelation: "operation_centers"
+            referencedColumns: ["id", "company_id"]
+          },
           {
             foreignKeyName: "dotation_deliveries_company_id_fkey"
             columns: ["company_id"]
