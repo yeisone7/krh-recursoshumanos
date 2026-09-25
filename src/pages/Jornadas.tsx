@@ -127,12 +127,6 @@ export default function Jornadas() {
   const deleteShift = useDeleteShift();
   const deleteCycle = useDeleteShiftCycle();
 
-  const stats = useMemo(() => ([
-    { label: 'HORARIOS', value: workSchedules.filter(s => s.is_active).length, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'TURNOS', value: shifts.filter(s => s.is_active).length, icon: Clock, color: 'text-indigo-600', bg: 'bg-indigo-500/10' },
-    { label: 'CICLOS', value: shiftCycles.filter(c => c.is_active).length, icon: RotateCcw, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
-  ]), [workSchedules, shifts, shiftCycles]);
-
   const formatTime = (time: string) => time?.slice(0, 5) || '';
   const filteredSchedules = workSchedules.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
   const filteredShifts = shifts.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -236,45 +230,6 @@ export default function Jornadas() {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {/* Flat Premium Header */}
-      <div className="relative shrink-0 bg-white px-6 py-8 sm:px-10 sm:py-10 border-b border-border">
-        <div className="relative flex flex-col lg:flex-row lg:items-end justify-between gap-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-primary text-primary-foreground">
-                <Clock className="w-6 h-6" />
-              </div>
-              <div>
-                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-[0.2em] text-[9px] px-2 py-0.5 rounded-md">
-                  Operaciones / RRHH
-                </Badge>
-                <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter mt-1">{isShiftsCatalog ? 'Turnos' : 'Jornadas'}</h1>
-              </div>
-            </div>
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-xl leading-relaxed">
-              {isShiftsCatalog ? 'Configuración de los turnos operativos disponibles para la organización.' : 'Planificación estratégica de horarios administrativos y rotación de personal operativo con visualización en tiempo real.'}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 sm:gap-4 lg:min-w-[450px]">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="group relative overflow-hidden p-4 rounded-2xl bg-slate-50 border border-border transition-colors hover:bg-slate-100/70"
-              >
-                <div className={`absolute top-3 right-3 p-1.5 rounded-lg ${stat.bg} ${stat.color} opacity-60`}>
-                   <stat.icon className="w-3.5 h-3.5" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none">{stat.label}</p>
-                  <p className={`text-2xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Navigation & Controls */}
       <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full md:w-auto">
