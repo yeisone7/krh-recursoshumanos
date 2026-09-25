@@ -16,7 +16,8 @@ export function PayrollCutNotice() {
       const c = effectiveCut(data.filter(row => row.operation_center_id === id))!;
       return <li key={id}>{c.center_name} · Nivel {c.level} · Hasta {c.cutoff_date} inclusive. {c.reason}</li>;
     })}</ul>
-    <p className="mt-2">Las fechas cerradas se pueden consultar. Modificarlas requiere reabrir el corte correspondiente.</p>
+    <p className="mt-2">Las fechas cerradas se pueden consultar. Para corregir Jornadas o Novedades puede usar un permiso temporal autorizado. Las demás operaciones requieren reabrir el corte correspondiente.</p>
+    <Link className="mr-4 mt-2 inline-block underline" to="/cortes-control/permisos">Permisos de corrección</Link>
     {canView('cortes_control') && <Link className="mt-2 inline-block underline" to="/cortes-control">Administrar cortes</Link>}
   </details>;
 }

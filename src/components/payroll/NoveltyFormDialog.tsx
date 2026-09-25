@@ -21,6 +21,7 @@ import { useNoveltyReasons } from '@/hooks/useNoveltyReasons';
 import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { CorrectionTicketRequest } from '@/components/payroll/CorrectionTicketRequest';
 
 interface Props {
   open: boolean;
@@ -142,6 +143,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
+        <div className="px-6 pt-4"><CorrectionTicketRequest defaults={{ module: 'novedades', employeeId: form.employee_id, startDate: form.novelty_date, endDate: form.novelty_date }} /></div>
         <DialogHeader className="sr-only">
           <DialogTitle>{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
         </DialogHeader>
