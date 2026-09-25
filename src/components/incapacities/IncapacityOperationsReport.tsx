@@ -29,6 +29,7 @@ import {
   getIncapacityOperationsMonths,
   getUniqueDiagnosisCount,
   summarizeByOperationCenter,
+  summarizeCasesAndDays,
   summarizeIncapacityOperationsRows,
   type IncapacityOperationsRow,
 } from '@/lib/incapacityOperationsReport';
@@ -177,6 +178,27 @@ interface TooltipEntry {
   value?: string | number;
 }
 
+interface CasesDaysTooltipEntry extends TooltipEntry {
+  color?: string;
+  payload?: { name?: string; cases?: number; days?: number };
+}
+
+function CasesDaysTooltip({ active, payload }: { active?: boolean; payload?: CasesDaysTooltipEntry[] }) {
+  const item = payload?.[0];
+  const data = item?.payload;
+  if (!active || !item || !data) return null;
+  return (
+    <div className="min-w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-xl">
+      <p className="mb-1.5 flex items-center gap-2 font-black text-slate-900">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+        {data.name || item.name}
+      </p>
+      <p className="font-semibold text-slate-600">Casos: <span className="font-black text-slate-950">{integerFormatter.format(data.cases || 0)}</span></p>
+      <p className="font-semibold text-slate-600">Días: <span className="font-black text-slate-950">{integerFormatter.format(data.days || 0)}</span></p>
+    </div>
+  );
+}
+
 function ReportTooltip({ active, payload, label }: {
   active?: boolean;
   payload?: TooltipEntry[];
@@ -215,7 +237,7 @@ export function IncapacityOperationsReport({
 
   const report = useMemo(() => {
     const filtered = filterIncapacityOperationsRows(rows, { month, operationCenterId, positionName, employeeId });
-    const conceptData = countBy(filtered, (row) => row.concept);
+    const conceptData = summarizeCasesAndDays(filtered, (row) => row.concept);
     const positionData = countBy(filtered, (row) => row.positionName).slice(0, 10);
     const diagnosisData = countBy(filtered, (row) => row.diagnosisLabel).slice(0, 10);
     const centerData = countBy(filtered, (row) => row.operationCenterName).slice(0, 20);
@@ -341,7 +363,7 @@ export function IncapacityOperationsReport({
               <Pie data={report.conceptData} dataKey="value" nameKey="name" innerRadius={52} outerRadius={94} paddingAngle={2} label={({ percent }) => `${Math.round(percent * 100)}%`}>
                 {report.conceptData.map((item, index) => <Cell key={item.name} fill={reportColors[index % reportColors.length]} />)}
               </Pie>
-              <Tooltip content={<ReportTooltip />} />
+              <Tooltip content={<CasesDaysTooltip />} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
             </PieChart>
           </ResponsiveContainer>

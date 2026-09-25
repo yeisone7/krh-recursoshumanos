@@ -126,6 +126,13 @@ export function buildIncapacityOperationsTimeline(rows: IncapacityOperationsRow[
   return result;
 }
 
+export interface IncapacityCasesDaysRow {
+  name: string;
+  value: number;
+  cases: number;
+  days: number;
+}
+
 export function countBy(
   rows: IncapacityOperationsRow[],
   keyGetter: (row: IncapacityOperationsRow) => string
@@ -139,6 +146,22 @@ export function countBy(
   return Object.entries(counts)
     .map(([name, value]) => ({ name, value }))
     .sort((left, right) => right.value - left.value || left.name.localeCompare(right.name, 'es'));
+}
+
+export function summarizeCasesAndDays(
+  rows: IncapacityOperationsRow[],
+  keyGetter: (row: IncapacityOperationsRow) => string,
+): IncapacityCasesDaysRow[] {
+  const summaries = new Map<string, IncapacityCasesDaysRow>();
+  rows.forEach((row) => {
+    const name = keyGetter(row) || 'Sin clasificar';
+    const current = summaries.get(name) || { name, value: 0, cases: 0, days: 0 };
+    current.cases += 1;
+    current.days += row.totalDays;
+    current.value = current.cases;
+    summaries.set(name, current);
+  });
+  return [...summaries.values()].sort((left, right) => right.cases - left.cases || left.name.localeCompare(right.name, 'es'));
 }
 
 export function summarizeIncapacityOperationsRows(rows: IncapacityOperationsRow[]) {

@@ -102,6 +102,8 @@ describe('Analítica de Incapacidades calendar allocation', () => {
       recovered_amount: 500, actual_payment_date: '2026-09-30',
     })];
     open();
+    expect(screen.getByLabelText('Totales del mapa de recobros')).toHaveTextContent('Total estimado$ 100');
+    expect(screen.getByLabelText('Totales del mapa de recobros')).toHaveTextContent('Total recuperado$ 250');
     const months = JSON.parse(screen.getByTestId('monthly-data').textContent!);
     expect(months.find((row: { key: string }) => row.key === '2026-09')).toMatchObject({ Dias: 1, Incapacidades: 1, Estimado: 100, Recuperado: 250 });
     expect(months.filter((row: { key: string }) => row.key !== '2026-09').every((row: { Dias: number }) => row.Dias === 0)).toBe(true);

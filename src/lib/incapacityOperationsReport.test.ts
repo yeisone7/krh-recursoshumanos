@@ -6,6 +6,7 @@ import {
   getIncapacityOperationsMonths,
   getUniqueDiagnosisCount,
   summarizeByOperationCenter,
+  summarizeCasesAndDays,
   summarizeIncapacityOperationsRows,
   type IncapacityOperationsRow,
 } from './incapacityOperationsReport';
@@ -43,6 +44,13 @@ describe('incapacity operations report', () => {
 
   it('counts diagnoses without duplicating repeated codes', () => {
     expect(getUniqueDiagnosisCount(rows)).toBe(2);
+  });
+
+  it('summarizes cases and days for chart tooltips', () => {
+    expect(summarizeCasesAndDays(rows, (row) => row.concept)).toEqual([
+      { name: 'E.G.', value: 2, cases: 2, days: 5 },
+      { name: 'A.L.', value: 1, cases: 1, days: 1 },
+    ]);
   });
 
   it('groups cases and days by operation center', () => {

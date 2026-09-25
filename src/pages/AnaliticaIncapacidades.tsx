@@ -117,6 +117,12 @@ const palette = {
 
 const chartColors = [palette.teal, palette.orange, palette.amber, palette.navy, palette.aqua, palette.violet, palette.green, palette.sky];
 const durationColors = [palette.teal, palette.orange];
+const legalResponsibilityColors: Record<string, string> = {
+  EPS: '#7C3AED',
+  Empleador: '#F97316',
+  AFP: '#2563EB',
+  ARL: '#16A34A',
+};
 
 const operationsConceptLabels: Record<string, string> = {
   comun: 'E.G.',
@@ -226,6 +232,30 @@ interface ChartTooltipEntry {
   dataKey?: string | number;
   value?: string | number;
   color?: string;
+  payload?: CasesDaysChartDatum;
+}
+
+interface CasesDaysChartDatum {
+  name: string;
+  value: number;
+  cases: number;
+  days: number;
+}
+
+function CasesDaysChartTooltip({ active, payload }: { active?: boolean; payload?: ChartTooltipEntry[] }) {
+  const item = payload?.[0];
+  const data = item?.payload;
+  if (!active || !item || !data) return null;
+  return (
+    <div className="min-w-32 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg">
+      <p className="mb-1.5 flex items-center gap-2 font-black text-slate-900">
+        <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+        {data.name}
+      </p>
+      <p className="font-semibold text-slate-600">Casos: <span className="font-black text-slate-950">{integerFormatter.format(data.cases)}</span></p>
+      <p className="font-semibold text-slate-600">Días: <span className="font-black text-slate-950">{integerFormatter.format(data.days)}</span></p>
+    </div>
+  );
 }
 
 function CustomTooltip({ active, payload, label }: {
@@ -300,12 +330,14 @@ function ChartPanel({
   icon: Icon,
   children,
   className,
+  headerContent,
 }: {
   title: string;
   subtitle: string;
   icon: React.ElementType;
   children: React.ReactNode;
   className?: string;
+  headerContent?: React.ReactNode;
 }) {
   return (
     <Card className={cn('overflow-hidden rounded-lg border border-slate-200 bg-[#FBFAF5] shadow-sm', className)}>
@@ -318,6 +350,7 @@ function ChartPanel({
             </div>
             <p className="mt-1 text-xs font-medium text-slate-500">{subtitle}</p>
           </div>
+          {headerContent}
         </div>
         <div className="h-[260px] sm:h-[300px]">{children}</div>
       </CardContent>
@@ -761,9 +794,9 @@ interface IncapacityInfographicsAnalytics {
   incidenceRate: number;
   longCases: number;
   legalRisk: number;
-  originData: Array<{ name: string; value: number }>;
+  originData: CasesDaysChartDatum[];
   recoveryData: Array<{ name: string; value: number }>;
-  legalData: Array<{ name: string; value: number }>;
+  legalData: CasesDaysChartDatum[];
   monthly: Array<{ mes: string; Dias: number; Incapacidades: number }>;
   sexData: Array<{ key: BiologicalSexKey; label: string; color: string; cases: number; days: number; employees: number; percentage: number }>;
   insights: {
@@ -774,7 +807,7 @@ interface IncapacityInfographicsAnalytics {
 }
 
 function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfographicsAnalytics }) {
-  const originCircleData = analytics.originData.map((item: { name: string; value: number }, index: number) => ({
+  const originCircleData = analytics.originData.map((item, index: number) => ({
     label: item.name,
     value: item.value,
     color: chartColors[index % chartColors.length],
@@ -837,8 +870,8 @@ function IncapacityInfographicsTab({ analytics }: { analytics: IncapacityInfogra
             <ShieldAlert className="h-5 w-5 text-slate-500" />
           </div>
           <div className="space-y-4">
-            {analytics.legalData.map((item: { name: string; value: number }, index: number) => (
-              <MiniHorizontalBar key={item.name} label={item.name} value={item.value} max={legalMax} color={chartColors[(index + 2) % chartColors.length]} />
+            {analytics.legalData.map((item) => (
+              <MiniHorizontalBar key={item.name} label={item.name} value={item.value} max={legalMax} color={legalResponsibilityColors[item.name] || palette.navy} />
             ))}
           </div>
         </InfographicPanel>
@@ -1491,10 +1524,15 @@ export default function AnaliticaIncapacidades() {
     });
 
     const originData = incapacityOriginOptions
-      .map((option) => ({
-        name: option.shortLabel,
-        value: filtered.filter((item) => item.origin === option.value).length,
-      }))
+      .map((option) => {
+        const matching = filtered.filter((item) => item.origin === option.value);
+        return {
+          name: option.shortLabel,
+          value: matching.length,
+          cases: matching.length,
+          days: matching.reduce((sum, item) => sum + Number(item.total_days || 0), 0),
+        };
+      })
       .filter((item) => item.value > 0);
 
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
@@ -1778,7 +1816,34 @@ export default function AnaliticaIncapacidades() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Mapa de recobros" subtitle="Estimado por días transcurridos vs pagos por fecha real" icon={Banknote} className="xl:col-span-2">
+        <ChartPanel
+          title="Mapa de recobros"
+          subtitle="Estimado por días transcurridos vs pagos por fecha real"
+          icon={Banknote}
+          className="xl:col-span-2"
+          headerContent={(
+            <div className="flex shrink-0 flex-wrap justify-end gap-2" aria-label="Totales del mapa de recobros">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-right">
+                <p className="flex items-center justify-end gap-1.5 text-[9px] font-black uppercase tracking-wider text-amber-700">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: palette.amber }} />
+                  Total estimado
+                </p>
+                <p className="mt-0.5 text-sm font-black text-slate-950">
+                  {money(analytics.monthly.reduce((total, month) => total + month.Estimado, 0))}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-right">
+                <p className="flex items-center justify-end gap-1.5 text-[9px] font-black uppercase tracking-wider text-slate-600">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: palette.navy }} />
+                  Total recuperado
+                </p>
+                <p className="mt-0.5 text-sm font-black text-slate-950">
+                  {money(analytics.monthly.reduce((total, month) => total + month.Recuperado, 0))}
+                </p>
+              </div>
+            </div>
+          )}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.monthly} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
               <CartesianGrid stroke={palette.grid} vertical />
@@ -1822,7 +1887,7 @@ export default function AnaliticaIncapacidades() {
               <Pie data={analytics.originData} dataKey="value" nameKey="name" innerRadius={48} outerRadius={92} paddingAngle={3}>
                 {analytics.originData.map((entry, index) => <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />)}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CasesDaysChartTooltip />} />
               <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
             </PieChart>
           </ResponsiveContainer>
@@ -1846,9 +1911,9 @@ export default function AnaliticaIncapacidades() {
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={analytics.legalData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={98} labelLine={false} label={({ percent: value }) => `${Math.round(value * 100)}%`}>
-                {analytics.legalData.map((entry, index) => <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />)}
+                {analytics.legalData.map((entry) => <Cell key={entry.name} fill={legalResponsibilityColors[entry.name] || palette.navy} />)}
               </Pie>
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CasesDaysChartTooltip />} />
             </PieChart>
           </ResponsiveContainer>
         </ChartPanel>
