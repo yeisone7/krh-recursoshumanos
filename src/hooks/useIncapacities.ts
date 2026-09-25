@@ -525,6 +525,7 @@ export function useIncapacityAnalyticsData() {
           arl_amount,
           afp_amount,
           total_amount,
+          daily_base_salary,
           recovery_status,
           actual_payment_date,
           recovered_amount,

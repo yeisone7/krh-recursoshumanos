@@ -50,7 +50,6 @@ import {
   format,
   isAfter,
   isBefore,
-  isWithinInterval,
   parseISO,
   startOfMonth,
   subMonths,
@@ -77,10 +76,10 @@ import {
   getActualRecoveryPayment,
   getIncapacityRecoveryAmounts,
   getLongCaseShare,
-  hasIncapacityStartedBy,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
+import { allocateIncapacity, allocationWeekdays, hasValidIncapacityInterval, parseIncapacityDate } from '@/lib/incapacityAllocation';
 import type { IncapacityOperationsRow } from '@/lib/incapacityOperationsReport';
 import { cn } from '@/lib/utils';
 import {
@@ -138,6 +137,7 @@ type PeriodFilter = '6m' | '12m' | 'ytd' | 'all';
 
 type FlatIncapacity = IncapacityWithEmployee & {
   chainDays: number;
+  accumulatedDays: number;
   rootId: string;
   employeeName: string;
   startDate: Date | null;
@@ -179,21 +179,28 @@ function flattenIncapacities(items: IncapacityWithEmployee[]) {
     const rootFlat: FlatIncapacity = {
       ...root,
       rootId: root.id,
+      accumulatedDays: 0,
       chainDays,
       employeeName,
       startDate: safeDate(root.start_date),
       endDate: safeDate(root.end_date),
     };
 
-    const extensions = (root.extensions || []).map((extension) => ({
-      ...extension,
-      employee: root.employee,
-      rootId: root.id,
-      chainDays,
-      employeeName,
-      startDate: safeDate(extension.start_date),
-      endDate: safeDate(extension.end_date),
-    })) as FlatIncapacity[];
+    let accumulatedDays = root.total_days;
+    const extensions = (root.extensions || []).map((extension) => {
+      const priorDays = accumulatedDays;
+      accumulatedDays += extension.total_days;
+      return {
+        ...extension,
+        employee: root.employee,
+        rootId: root.id,
+        accumulatedDays: priorDays,
+        chainDays,
+        employeeName,
+        startDate: safeDate(extension.start_date),
+        endDate: safeDate(extension.end_date),
+      };
+    }) as FlatIncapacity[];
 
     return [rootFlat, ...extensions];
   });
@@ -503,7 +510,7 @@ function BiologicalSexInfographic({
           <Users className="h-4 w-4 text-slate-700" />
           <div>
             <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Sexo biologico</h3>
-            <p className="text-xs font-medium text-slate-500">Distribucion por casos filtrados</p>
+            <p className="text-xs font-medium text-slate-500">Casos con días en el período filtrado</p>
           </div>
         </div>
 
@@ -693,12 +700,12 @@ function MonthlyInfographic({ monthly }: { monthly: Array<{ mes: string; Dias: n
       </div>
       <div className="flex h-52 items-end gap-3 border-b border-slate-200 px-1">
         {recent.map((item, index) => {
-          const height = Math.max(12, Math.round((item.Dias / maxDays) * 100));
+          const height = Math.round((item.Dias / maxDays) * 170);
           const color = chartColors[index % chartColors.length];
           return (
             <div key={item.mes} className="flex flex-1 flex-col items-center justify-end gap-2">
               <span className="text-[10px] font-black text-slate-500">{integerFormatter.format(item.Dias)}</span>
-              <div className="w-full rounded-t-lg" style={{ height: `${height}%`, backgroundColor: color }} />
+              <div className="w-full rounded-t-lg" style={{ height: `${height}px`, backgroundColor: color }} />
             </div>
           );
         })}
@@ -1169,7 +1176,12 @@ function getFilteredIncapacities(
 
   return rows.flatMap((row) => {
     const incapacity = incapacityById.get(row.id);
-    return incapacity ? [{ ...incapacity, total_days: row.totalDays }] : [];
+    if (!incapacity) return [];
+    const slice = allocateIncapacity(incapacity, {
+      start: parseISO(row.effectiveStart || row.startDate),
+      end: parseISO(row.effectiveEnd || row.endDate),
+    });
+    return slice ? [slice] : [];
   });
 }
 
@@ -1214,7 +1226,7 @@ function OperationsRecoveryPanel({
     [filteredIncapacities],
   );
 
-  return <EpsMonthlyRecoveryTable rows={epsMonthlyRecovery} />;
+  return <div className="space-y-2"><p className="text-xs text-slate-500">Recuperación atribuida a los valores causados en cada mes; el flujo por fecha de pago se muestra en Ejecutivo.</p><EpsMonthlyRecoveryTable rows={epsMonthlyRecovery} /></div>;
 }
 
 export default function AnaliticaIncapacidades() {
@@ -1246,17 +1258,25 @@ export default function AnaliticaIncapacidades() {
       (recoveryStatus === 'all' || item.recovery_status === recoveryStatus)
     );
 
-    const matchesPeriod = (item: FlatIncapacity, targetRange: ReturnType<typeof getRange>) => {
-      if (!targetRange) return hasIncapacityStartedBy(item, today);
-      if (!item.startDate) return false;
-      return isWithinInterval(item.startDate, { start: targetRange.start, end: targetRange.end });
-    };
-
-    const filtered = all.filter((item) => matchesStaticFilters(item) && matchesPeriod(item, range));
+    const allocateRows = (targetRange: { start: Date; end: Date } | null) => all
+      .filter(matchesStaticFilters)
+      .flatMap(item => {
+        const slice = allocateIncapacity(item, targetRange, today);
+        return slice ? [slice] : [];
+      });
+    const filtered = allocateRows(range);
     const previousRange = range
       ? { start: subMonths(range.start, range.months), end: subMonths(range.end, range.months), months: range.months }
       : null;
-    const previous = previousRange ? all.filter((item) => matchesStaticFilters(item) && matchesPeriod(item, previousRange)) : [];
+    const previous = previousRange ? allocateRows(previousRange) : [];
+    const affectedRoots = new Set(filtered.map(item => item.rootId));
+    const chainDaysByRoot = new Map<string, number>();
+    all.forEach(item => {
+      const slice = allocateIncapacity(item, null, today);
+      chainDaysByRoot.set(item.rootId, (chainDaysByRoot.get(item.rootId) || 0) + (slice?.total_days || 0));
+    });
+    const invalidDates = all.filter(matchesStaticFilters).filter(item => !hasValidIncapacityInterval(item)).length;
+    const undatedPayments = all.filter(matchesStaticFilters).filter(item => Number(item.recovered_amount) > 0 && !parseIncapacityDate(item.actual_payment_date));
 
     const trend = (current: number, prev: number) => {
       if (!prev) return current > 0 ? 100 : 0;
@@ -1278,20 +1298,20 @@ export default function AnaliticaIncapacidades() {
 
     const longCases = incapacityRoots.filter((root) => {
       const rootFlat = rootById.get(root.id);
-      return !!rootFlat && matchesStaticFilters(rootFlat) && matchesPeriod(rootFlat, range) && rootFlat.chainDays > 30;
+      return !!rootFlat && affectedRoots.has(root.id) && (chainDaysByRoot.get(root.id) || 0) > 30;
     });
 
     const legalRisk = incapacityRoots.filter((root) => {
       if (root.origin !== 'comun') return false;
       const rootFlat = rootById.get(root.id);
-      if (!rootFlat || !matchesStaticFilters(rootFlat) || !matchesPeriod(rootFlat, range)) return false;
-      return getLegalMilestones(root.origin, rootFlat.chainDays).some((milestone) => milestone.isReached || milestone.daysRemaining <= 20);
+      if (!rootFlat || !affectedRoots.has(root.id)) return false;
+      return getLegalMilestones(root.origin, chainDaysByRoot.get(root.id) || 0).some((milestone) => milestone.isReached || milestone.daysRemaining <= 20);
     });
 
     const sensitiveCases: SensitiveCase[] = legalRisk
       .map((root) => {
         const rootFlat = rootById.get(root.id)!;
-        const milestones = getLegalMilestones(root.origin, rootFlat.chainDays);
+        const milestones = getLegalMilestones(root.origin, chainDaysByRoot.get(root.id) || 0);
         const upcomingMilestone = milestones.find((milestone) => !milestone.isReached && milestone.daysRemaining <= 20);
         const latestReachedMilestone = [...milestones].reverse().find((milestone) => milestone.isReached);
         const milestone = upcomingMilestone || latestReachedMilestone || milestones[0];
@@ -1306,7 +1326,7 @@ export default function AnaliticaIncapacidades() {
           documentNumber: root.employee?.document_number || '',
           diagnosis: root.diagnosis || 'Sin diagnóstico',
           diagnosisCode: root.cie10_code,
-          chainDays: rootFlat.chainDays,
+          chainDays: chainDaysByRoot.get(root.id) || 0,
           startDate: root.start_date,
           endDate,
           milestone: {
@@ -1322,23 +1342,14 @@ export default function AnaliticaIncapacidades() {
     const months = range
       ? eachMonthOfInterval({ start: startOfMonth(range.start), end: endOfMonth(range.end) })
       : eachMonthOfInterval({
-          start: startOfMonth(getEarliestIncapacityStartDate(all, subMonths(today, 11))),
+          start: startOfMonth(getEarliestIncapacityStartDate(filtered, subMonths(today, 11))),
           end: today,
         });
-
-    const itemsByMonth = new Map<string, FlatIncapacity[]>();
-    filtered.forEach((item) => {
-      if (!item.start_date) return;
-      const key = item.start_date.slice(0, 7);
-      const monthItems = itemsByMonth.get(key);
-      if (monthItems) monthItems.push(item);
-      else itemsByMonth.set(key, [item]);
-    });
 
     const recoveredByPaymentMonth = new Map<string, number>();
     all.filter(matchesStaticFilters).forEach((item) => {
       const payment = getActualRecoveryPayment(item);
-      if (!payment) return;
+      if (!payment || parseIncapacityDate(item.actual_payment_date)! > today || (range && parseIncapacityDate(item.actual_payment_date)! < range.start)) return;
       recoveredByPaymentMonth.set(
         payment.monthKey,
         (recoveredByPaymentMonth.get(payment.monthKey) || 0) + payment.amount,
@@ -1347,7 +1358,10 @@ export default function AnaliticaIncapacidades() {
 
     const monthly = months.map((month) => {
       const key = format(month, 'yyyy-MM');
-      const monthItems = itemsByMonth.get(key) || [];
+      const monthItems = filtered.flatMap(item => {
+        const slice = allocateIncapacity(item, { start: startOfMonth(month), end: endOfMonth(month) }, today);
+        return slice ? [slice] : [];
+      });
       const originDays = incapacityOriginOptions.reduce(
         (acc, option) => {
           acc[option.shortLabel] = monthItems
@@ -1379,7 +1393,8 @@ export default function AnaliticaIncapacidades() {
     const recoveryData = groupBy(filtered, (item) => recoveryStatusLabels[item.recovery_status] || item.recovery_status);
     const legalData = buildLegalResponsibilityDays(filtered);
     const diagnosisData = groupBy(filtered, (item) => item.cie10_code ? `${item.cie10_code} - ${item.diagnosis}` : item.diagnosis, (item) => item.total_days || 0).slice(0, 8);
-    const employeeData = groupBy(filtered, (item) => item.employeeName, (item) => item.total_days || 0).slice(0, 8);
+    const employeeData = groupBy(filtered, (item) => item.employee_id, (item) => item.total_days || 0)
+      .slice(0, 8).map(item => ({ ...item, name: filtered.find(row => row.employee_id === item.name)?.employeeName || item.name }));
     const entityData = groupBy(filtered, (item) => item.origin === 'laboral' ? item.arl_name || 'ARL no registrada' : item.eps_name || 'EPS no registrada', (item) => item.total_days || 0).slice(0, 8);
     const operationsReportRows = filtered.map((item) => {
       const employee = employeeById.get(item.employee_id);
@@ -1399,6 +1414,8 @@ export default function AnaliticaIncapacidades() {
         startDate: item.start_date,
         endDate: item.end_date,
         totalDays: item.total_days || 0,
+        effectiveStart: item.allocation.effectiveStart,
+        effectiveEnd: item.allocation.effectiveEnd,
         diagnosisKey: diagnosisCode || diagnosis.toLocaleLowerCase('es'),
         diagnosisLabel: diagnosisCode ? `${diagnosisCode} - ${diagnosis}` : diagnosis,
         gender,
@@ -1430,10 +1447,10 @@ export default function AnaliticaIncapacidades() {
 
     const weekdays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'].map((day) => ({ day, value: 0, count: 0 }));
     filtered.forEach((item) => {
-      if (!item.startDate) return;
-      const weekdayIndex = item.startDate.getDay() === 0 ? 6 : item.startDate.getDay() - 1;
-      weekdays[weekdayIndex].value += item.total_days || 0;
-      weekdays[weekdayIndex].count += 1;
+      allocationWeekdays(item).forEach((days, index) => {
+        weekdays[index].value += days;
+        if (days) weekdays[index].count += 1;
+      });
     });
     const weekdayData = weekdays;
 
@@ -1444,6 +1461,9 @@ export default function AnaliticaIncapacidades() {
     const strongestMonth = monthly.reduce((max, item) => item.Dias > max.Dias ? item : max, monthly[0] || { mes: 'N/A', Dias: 0 });
 
     return {
+      invalidDates,
+      undatedPaymentCount: undatedPayments.length,
+      undatedPaymentAmount: undatedPayments.reduce((sum, item) => sum + Number(item.recovered_amount || 0), 0),
       total: filtered.length,
       totalDays,
       active: activeItems.length,
@@ -1558,6 +1578,10 @@ export default function AnaliticaIncapacidades() {
         </div>
       </motion.div>
 
+      <p className="text-xs text-slate-500">Días calendario transcurridos en el período, con corte al {format(new Date(), 'dd/MM/yyyy')}. Cada registro se cuenta una vez en el período y en cada mes que afecta.</p>
+      {analytics.invalidDates > 0 && <p role="alert" className="text-sm text-amber-700">{analytics.invalidDates} registros excluidos del reparto por fechas inválidas o invertidas.</p>}
+      {analytics.undatedPaymentCount > 0 && <p role="status" className="text-sm text-amber-700">{analytics.undatedPaymentCount} pagos por {money(analytics.undatedPaymentAmount)} pendientes de asignación temporal: falta una fecha de pago válida.</p>}
+
       <Tabs defaultValue="ejecutivo" className="space-y-5">
         <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 lg:w-[720px]">
           <TabsTrigger value="ejecutivo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
@@ -1608,7 +1632,7 @@ export default function AnaliticaIncapacidades() {
       <div className="grid gap-4 xl:grid-cols-3">
         <BiologicalSexInfographic data={analytics.sexData} />
 
-        <ChartPanel title="Tendencia mensual" subtitle="Casos y dias acumulados" icon={LineChart}>
+        <ChartPanel title="Tendencia mensual" subtitle="Casos con días en cada mes; no sumar casos mensuales como únicos" icon={LineChart}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={analytics.monthly} margin={{ top: 8, right: 12, left: -18, bottom: 8 }}>
               <CartesianGrid stroke={palette.grid} strokeDasharray="0" vertical />
@@ -1647,7 +1671,7 @@ export default function AnaliticaIncapacidades() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <ChartPanel title="Mapa de recobros" subtitle="Estimado por inicio vs recuperado por fecha real de pago" icon={Banknote} className="xl:col-span-2">
+        <ChartPanel title="Mapa de recobros" subtitle="Estimado por días transcurridos vs pagos por fecha real" icon={Banknote} className="xl:col-span-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.monthly} margin={{ top: 8, right: 12, left: -8, bottom: 8 }}>
               <CartesianGrid stroke={palette.grid} vertical />
@@ -1738,7 +1762,7 @@ export default function AnaliticaIncapacidades() {
           </ResponsiveContainer>
         </ChartPanel>
 
-        <ChartPanel title="Empleados recurrentes" subtitle="Dias acumulados por colaborador" icon={Users}>
+        <ChartPanel title="Empleados recurrentes" subtitle="Días transcurridos por colaborador" icon={Users}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.employeeData} layout="vertical" margin={{ top: 8, right: 12, left: 30, bottom: 8 }}>
               <CartesianGrid stroke={palette.grid} horizontal={false} />
@@ -1758,7 +1782,7 @@ export default function AnaliticaIncapacidades() {
               <CalendarDays className="h-4 w-4 text-slate-700" />
               <div>
                 <h3 className="text-sm font-black uppercase tracking-wide text-slate-900">Pulso semanal</h3>
-                <p className="text-xs font-medium text-slate-500">Dias iniciados por dia</p>
+                <p className="text-xs font-medium text-slate-500">Días transcurridos por día de la semana</p>
               </div>
             </div>
             <div className="grid grid-cols-7 gap-2">
@@ -1812,7 +1836,7 @@ export default function AnaliticaIncapacidades() {
         </TabsContent>
       </Tabs>
 
-      {analytics.total === 0 && (
+      {analytics.total === 0 && analytics.monthly.every(item => item.Recuperado === 0) && (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
           <AlertTriangle className="mx-auto h-8 w-8 text-amber-500" />
           <h3 className="mt-3 text-lg font-black text-slate-950">Sin datos para los filtros seleccionados</h3>
