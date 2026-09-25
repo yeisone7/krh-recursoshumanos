@@ -76,6 +76,7 @@ import {
   getActualRecoveryPayment,
   getIncapacityRecoveryAmounts,
   getLongCaseShare,
+  getTotalAssumedByCompany,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
@@ -918,12 +919,26 @@ function IncapacityAnalyticsSkeleton() {
 function DurationAnalysisPanel({
   buckets,
   employerCost,
+  incapacities,
+  onViewCase,
 }: {
   buckets: IncapacityDurationBucket[];
   employerCost: IncapacityEmployerCostBreakdown;
+  incapacities: FlatIncapacity[];
+  onViewCase: (id: string) => void;
 }) {
+  const [selectedBucketKey, setSelectedBucketKey] = useState<IncapacityDurationBucket['key'] | null>(null);
   const totalCases = buckets.reduce((sum, bucket) => sum + bucket.cases, 0);
   const totalAmount = buckets.reduce((sum, bucket) => sum + bucket.amount, 0);
+  const selectedBucket = buckets.find((bucket) => bucket.key === selectedBucketKey);
+  const selectedCases = selectedBucketKey
+    ? incapacities.filter((item) => {
+        const recognizedDays = item.allocation?.originalDays ?? Number(item.total_days || 0);
+        return selectedBucketKey === 'one_two_days'
+          ? recognizedDays === 1 || recognizedDays === 2
+          : recognizedDays >= 3;
+      })
+    : [];
   const formatPercentage = (rate: number) => new Intl.NumberFormat('es-CO', {
     style: 'percent',
     minimumFractionDigits: rate * 100 % 1 === 0 ? 0 : 2,
@@ -978,6 +993,16 @@ function DurationAnalysisPanel({
                     </span>
                     <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">{integerFormatter.format(bucket.cases)}</p>
                     <p className="text-xs font-semibold text-slate-500">{bucket.description}</p>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBucketKey(bucket.key)}
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-black text-cyan-700 transition hover:text-cyan-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 focus-visible:ring-offset-2"
+                      aria-label={`Ver personas con incapacidades de ${bucket.label.toLowerCase()}`}
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Ver personas
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
 
@@ -997,6 +1022,12 @@ function DurationAnalysisPanel({
                   <div>
                     <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total con costo laboral</p>
                     <p className="mt-1 text-base font-black text-slate-950">{money(bucket.employerCost.totalCost)}</p>
+                  </div>
+                  <div className="col-span-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Total asumido por la empresa</p>
+                    <p className="mt-1 text-base font-black text-slate-950">
+                      {money(getTotalAssumedByCompany(bucket.employerCost))}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -1026,11 +1057,12 @@ function DurationAnalysisPanel({
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 text-right sm:grid-cols-4">
               {[
                 { label: 'Base', value: employerCost.paymentBase },
                 { label: 'Costo adicional', value: employerCost.additionalCost },
                 { label: 'Total con costo laboral', value: employerCost.totalCost },
+                { label: 'Total asumido por la empresa', value: getTotalAssumedByCompany(employerCost) },
               ].map((item) => (
                 <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
@@ -1061,6 +1093,68 @@ function DurationAnalysisPanel({
           </div>
         </div>
       </CardContent>
+
+      <Dialog open={selectedBucketKey !== null} onOpenChange={(open) => !open && setSelectedBucketKey(null)}>
+        <DialogContent className="max-h-[88vh] max-w-4xl overflow-hidden p-0">
+          <DialogHeader className="shrink-0 border-b border-slate-200 bg-[#F7F7F1] px-6 py-5 pr-12">
+            <DialogTitle className="text-xl font-black text-slate-950">
+              Personas con incapacidades de {selectedBucket?.label.toLowerCase()}
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-slate-600">
+              {integerFormatter.format(selectedCases.length)} casos incluidos según los filtros seleccionados.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6">
+            {selectedCases.length === 0 ? (
+              <div className="py-10 text-center">
+                <Users className="mx-auto h-9 w-9 text-slate-300" />
+                <p className="mt-3 font-black text-slate-900">No hay personas en este rango</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedCases.map((item) => {
+                  const recognizedDays = item.allocation?.originalDays ?? Number(item.total_days || 0);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedBucketKey(null);
+                        onViewCase(item.rootId || item.id);
+                      }}
+                      className="grid w-full gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-cyan-300 hover:bg-cyan-50/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_auto] sm:items-center"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-black text-slate-950">{item.employeeName}</p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                          {integerFormatter.format(recognizedDays)} {recognizedDays === 1 ? 'día reconocido' : 'días reconocidos'}
+                          {' · '}
+                          {integerFormatter.format(item.total_days || 0)} en el período
+                        </p>
+                      </div>
+                      <div className="min-w-0 text-xs text-slate-600">
+                        <p className="truncate font-bold text-slate-800">
+                          {item.cie10_code ? `${item.cie10_code} · ` : ''}{item.diagnosis || 'Sin diagnóstico'}
+                        </p>
+                        <p className="mt-1 font-medium">
+                          {format(parseISO(`${item.start_date}T00:00:00`), 'dd MMM yyyy', { locale: es })}
+                          {' — '}
+                          {format(parseISO(`${item.end_date}T00:00:00`), 'dd MMM yyyy', { locale: es })}
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1 justify-self-start text-xs font-black text-cyan-700 sm:justify-self-end">
+                        Ver detalle
+                        <ChevronRight className="h-4 w-4" />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -1189,10 +1283,12 @@ function OperationsDurationPanel({
   rows,
   incapacities,
   pilaSettings,
+  onViewCase,
 }: {
   rows: IncapacityOperationsRow[];
   incapacities: FlatIncapacity[];
   pilaSettings: Parameters<typeof buildIncapacityDurationBuckets>[1];
+  onViewCase: (id: string) => void;
 }) {
   const filteredIncapacities = useMemo(
     () => getFilteredIncapacities(rows, incapacities),
@@ -1207,7 +1303,14 @@ function OperationsDurationPanel({
     () => buildIncapacityEmployerCostSummary(filteredIncapacities, pilaSettings),
     [filteredIncapacities, pilaSettings],
   );
-  return <DurationAnalysisPanel buckets={durationBuckets} employerCost={employerCost} />;
+  return (
+    <DurationAnalysisPanel
+      buckets={durationBuckets}
+      employerCost={employerCost}
+      incapacities={filteredIncapacities}
+      onViewCase={onViewCase}
+    />
+  );
 }
 
 function OperationsRecoveryPanel({
@@ -1824,6 +1927,7 @@ export default function AnaliticaIncapacidades() {
                 rows={filteredRows}
                 incapacities={flatIncapacities}
                 pilaSettings={pilaSettings}
+                onViewCase={setSelectedIncapacityId}
               />
             )}
             renderFilteredFooter={(filteredRows) => (

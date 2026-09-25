@@ -5,9 +5,18 @@ import {
   buildIncapacityDurationBuckets,
   buildMonthlyEpsRecovery,
   getActualRecoveryPayment,
+  getTotalAssumedByCompany,
 } from './incapacityAnalytics';
 
 describe('incapacity analytics', () => {
+  it('adds total labor cost and estimated labor cost as the company-assumed total', () => {
+    const summary = buildIncapacityEmployerCostSummary([
+      { total_amount: 100_000, employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] } },
+    ]);
+
+    expect(getTotalAssumedByCompany(summary)).toBe(summary.totalCost + summary.additionalCost);
+  });
+
   it('groups cases, percentages and amounts into two duration bands', () => {
     const result = buildIncapacityDurationBuckets([
       { total_days: 1, total_amount: 100_000, employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] } },

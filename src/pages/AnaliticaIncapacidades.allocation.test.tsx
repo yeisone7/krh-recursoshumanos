@@ -48,6 +48,31 @@ describe('Analítica de Incapacidades calendar allocation', () => {
     expect(screen.getAllByText('$ 100').length).toBeGreaterThan(0);
   });
 
+  it('shows the company-assumed total and opens the people in each duration range', () => {
+    fixture.rows = [
+      certificate(),
+      certificate({
+        id: 'short-case', employee_id: 'e2', start_date: '2026-09-24', end_date: '2026-09-24', total_days: 1,
+        total_amount: 200, eps_amount: 200,
+        employee: { first_name: 'Beatriz', last_name: 'Corta', gender: 'F' },
+      }),
+    ];
+    open();
+    tab('Centros de operación');
+
+    expect(screen.getAllByText('Total asumido por la empresa')).toHaveLength(3);
+    const shortCasesButton = screen.getByRole('button', { name: 'Ver personas con incapacidades de 1 y 2 días' });
+    const longCasesButton = screen.getByRole('button', { name: 'Ver personas con incapacidades de 3 o más días' });
+    expect(shortCasesButton).toBeInTheDocument();
+    expect(longCasesButton).toBeInTheDocument();
+
+    fireEvent.click(shortCasesButton);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Personas con incapacidades de 1 y 2 días');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Beatriz Corta');
+    expect(screen.getByRole('dialog')).toHaveTextContent('1 día reconocido · 1 en el período');
+    expect(screen.getByRole('dialog')).not.toHaveTextContent('Ana Prueba');
+  });
+
   it('includes a chain through its extension without prematurely reaching a milestone', () => {
     fixture.rows = [certificate({
       origin: 'comun', start_date: '2025-08-01', end_date: '2025-08-30', total_days: 30,
