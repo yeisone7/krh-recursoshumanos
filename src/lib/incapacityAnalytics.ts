@@ -68,6 +68,10 @@ export interface MonthlyEpsRecoveryRow {
   recoveryPercentage: number;
 }
 
+export function getTotalAssumedByCompany(cost: IncapacityEmployerCostBreakdown) {
+  return cost.totalCost + cost.additionalCost;
+}
+
 export function buildIncapacityEmployerCostSummary(
   rows: IncapacityAnalyticsRow[],
   rates?: IncapacityEmployerCostRates | null,
