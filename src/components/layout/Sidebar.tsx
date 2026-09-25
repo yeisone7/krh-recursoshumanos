@@ -481,18 +481,18 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
         )}>
 
           <span className={cn(
-          "transition-colors",
+          "shrink-0 transition-colors",
           isActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
         )}>
             {item.icon}
           </span>
           {!isCollapsed &&
-            <span className={cn("text-[13px] whitespace-nowrap overflow-hidden transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>
+            <span className={cn("min-w-0 flex-1 whitespace-normal break-words text-[13px] leading-5 transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>
               {item.label}
             </span>
           }
           {item.badge && !isCollapsed &&
-        <span className="ml-auto min-w-5 rounded-md bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground">
+        <span className="ml-auto min-w-5 shrink-0 rounded-md bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground">
               {item.badge}
             </span>
         }
@@ -637,13 +637,13 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
       )}>
 
         <span className={cn(
-        "transition-colors",
+        "shrink-0 transition-colors",
         isAnyChildActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
       )}>
           {item.icon}
         </span>
         {!isCollapsed &&
-          <span className={cn("text-[13px] whitespace-nowrap overflow-hidden flex-1 transition-colors duration-100", isAnyChildActive ? "font-semibold" : "font-medium")}>
+          <span className={cn("min-w-0 flex-1 whitespace-normal break-words text-[13px] leading-5 transition-colors duration-100", isAnyChildActive ? "font-semibold" : "font-medium")}>
             {item.label}
           </span>
         }
@@ -715,12 +715,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
                     )}>
 
                       <span className={cn(
-                      "transition-colors",
+                      "shrink-0 transition-colors",
                       isActive ? "text-primary-foreground" : "text-sidebar-foreground group-hover:text-primary-foreground"
                     )}>
                         {child.icon}
                       </span>
-                      <span className={cn("text-[13px] transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
+                      <span className={cn("min-w-0 flex-1 whitespace-normal break-words text-[13px] leading-5 transition-colors duration-100", isActive ? "font-semibold" : "font-medium")}>{child.label}</span>
                     </motion.div>
                   </Link>);
 
@@ -745,7 +745,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     <TooltipProvider>
       <motion.aside
         initial={false}
-        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '14.75rem') }}
+        animate={{ width: isMobileDrawer ? '100%' : (isCollapsed ? '4.5rem' : '19rem') }}
         transition={{ duration: 0.3, ease: 'easeInOut' }}
         className="relative h-full min-h-0 shrink-0 overflow-visible z-20 sidebar-shell">
 
