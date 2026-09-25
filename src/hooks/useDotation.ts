@@ -221,13 +221,15 @@ export function useCreateDotationDelivery() {
   });
 }
 
-export interface DotationDeliveryBatchItem {
+export type DotationDeliveryBatchItem = {
   dotation_item_type_id: string;
   item_type: Database['public']['Enums']['dotation_item_type'];
   item_name: string;
   quantity: number;
   size?: string | null;
-}
+  // Omitted preserves legacy selection; null explicitly selects General.
+  source_operation_center_id?: string | null;
+};
 
 export function useCreateDotationDeliveryBatch() {
   const queryClient = useQueryClient();

@@ -37,6 +37,8 @@ import { useCreateDotationDeliveryBatch, useDotationDeliveries } from '@/hooks/u
 import { useProfesiogramaByEmployee } from '@/hooks/useDotationProfesiograma';
 import { useDotationItemTypes, useSystemConfig } from '@/hooks/useSystemConfig';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
+import { useOperationCenters } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 import { getDotationSizeSuggestions, getInventorySizeSuggestions } from '@/lib/dotationSizes';
 
@@ -62,14 +64,19 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const { data: employees = [] } = useEmployees();
   const { data: itemTypeCatalog = [] } = useDotationItemTypes();
   const { data: allDeliveries = [] } = useDotationDeliveries();
-  const { data: inventory = [] } = useDotationInventory();
+  const { data: inventory = [], isLoading: loadingInventory, isError: inventoryError } = useDotationInventory();
+  const { data: centers = [] } = useOperationCenters();
+  const { assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const { data: systemConfig } = useSystemConfig();
   const createDeliveryBatch = useCreateDotationDeliveryBatch();
 
   const inventoryEnabled = systemConfig?.dotation_inventory_enabled?.enabled !== false;
-  const blockNoStock = inventoryEnabled && systemConfig?.dotation_block_no_stock?.enabled === true;
+  const deductInventory = inventoryEnabled && systemConfig?.dotation_auto_deduct?.enabled !== false;
+  const blockNoStock = deductInventory && systemConfig?.dotation_block_no_stock?.enabled === true;
+  const canUseGeneral = isAdmin || isSuperAdmin || assignedCenterIds.length === 0;
 
   const [employeeId, setEmployeeId] = useState('');
+  const [inventorySource, setInventorySource] = useState('');
   const [deliveryDate, setDeliveryDate] = useState<Date>(new Date());
   const [expirationDate, setExpirationDate] = useState<Date>(addMonths(new Date(), DOTATION_PERIOD_MONTHS));
   const [deliveredBy, setDeliveredBy] = useState('');
@@ -79,6 +86,14 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   const selectedEmployee = employees.find(e => e.id === employeeId);
+  const sourceOptions = [
+    ...(canUseGeneral ? [{ value: 'general', label: 'Inventario General' }] : []),
+    ...centers.filter(center => center.is_active).map(center => ({ value: center.id, label: center.name })),
+  ];
+  const sourceLabel = sourceOptions.find(source => source.value === inventorySource)?.label;
+  const sourceInventory = inventory.filter(row => (
+    row.operation_center_id === (inventorySource === 'general' ? null : inventorySource)
+  ));
   const { data: profesiograma, isLoading: loadingProf } = useProfesiogramaByEmployee(employeeId || undefined);
 
   // When profesiograma loads, populate items
@@ -105,6 +120,7 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
 
   const handleReset = () => {
     setEmployeeId('');
+    setInventorySource('');
     setDeliveryDate(new Date());
     setExpirationDate(addMonths(new Date(), DOTATION_PERIOD_MONTHS));
     setDeliveredBy('');
@@ -163,26 +179,37 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
       return;
     }
 
-    // Stock validation if blocking is enabled
+    if (deductInventory && (!inventorySource || !sourceLabel)) {
+      toast.error('Selecciona el centro o bodega de origen');
+      return;
+    }
+    if (deductInventory && (loadingInventory || inventoryError)) {
+      toast.error(loadingInventory ? 'Espera a que cargue el inventario' : 'No se pudo consultar el inventario');
+      return;
+    }
+
+    // Validate the selected source only; accumulate duplicate article lines.
     if (blockNoStock) {
       const stockIssues: string[] = [];
-      const employeeCenterId = selectedEmployee?.work_info?.operation_center_id || null;
+      const requested = new Map<string, number>();
       for (const item of selectedItems) {
-        const matchingRows = inventory.filter((inv) =>
+        const size = item.size?.trim() || null;
+        const key = JSON.stringify([item.itemTypeId, item.itemName.trim(), size]);
+        const quantity = (requested.get(key) || 0) + item.quantity;
+        requested.set(key, quantity);
+        const matchingInventory = sourceInventory.find((inv) =>
           inv.item_type === item.itemTypeId
-          && inv.item_name === item.itemName
-          && inv.size === (item.size || null)
+          && inv.item_name === item.itemName.trim()
+          && inv.size === size
         );
-        const matchingInventory = matchingRows.find((inv) => inv.operation_center_id === employeeCenterId)
-          || (employeeCenterId ? matchingRows.find((inv) => inv.operation_center_id === null) : undefined);
-        if (!matchingInventory || matchingInventory.quantity_available < item.quantity) {
+        if (!matchingInventory || matchingInventory.quantity_available < quantity) {
           const available = matchingInventory?.quantity_available || 0;
-          stockIssues.push(`${item.itemName}${item.size ? ` (${item.size})` : ''}: disponible ${available}, solicitado ${item.quantity}`);
+          stockIssues.push(`${item.itemName}${size ? ` (${size})` : ''}: disponible ${available}, solicitado ${quantity}`);
         }
       }
       if (stockIssues.length > 0) {
         toast.error('Stock insuficiente', {
-          description: stockIssues.join('. '),
+          description: `${sourceLabel}: ${stockIssues.join('. ')}`,
           duration: 6000,
         });
         return;
@@ -202,7 +229,10 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
           item_type: item.itemTypeEnum,
           item_name: item.itemName,
           quantity: item.quantity,
-          size: item.size || null,
+          size: item.size?.trim() || null,
+          ...(deductInventory ? {
+            source_operation_center_id: inventorySource === 'general' ? null : inventorySource,
+          } : {}),
         })),
       });
 
@@ -246,6 +276,25 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col p-6">
+          {deductInventory && (
+            <div className="mb-4 space-y-2 shrink-0">
+              <Label>Centro de operación o bodega de origen *</Label>
+              <SearchableSelect
+                options={sourceOptions}
+                value={inventorySource}
+                onValueChange={setInventorySource}
+                placeholder="Seleccionar centro o bodega"
+                searchPlaceholder="Buscar centro o bodega..."
+                disabled={isSubmitting}
+                triggerClassName="h-12 rounded-xl"
+              />
+              <p className="text-xs text-muted-foreground">
+                Las existencias se descontarán únicamente de este origen.
+              </p>
+              {loadingInventory && <p className="text-xs text-muted-foreground">Cargando inventario...</p>}
+              {inventoryError && <p className="text-xs text-destructive">No se pudo consultar el inventario. Vuelve a abrir la entrega para reintentar.</p>}
+            </div>
+          )}
           <Tabs defaultValue="employee" className="flex-1 min-h-0 overflow-hidden flex flex-col">
             <TabsList className="grid h-14 w-full grid-cols-3 mb-6 bg-background p-1 rounded-2xl border border-border/50">
               <TabsTrigger 
@@ -482,11 +531,8 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                                 <datalist id={`delivery-size-suggestions-${idx}`}>
                                   {(() => {
                                     const inventorySizes = getInventorySizeSuggestions(
-                                      inventory,
+                                      inventorySource && deductInventory ? sourceInventory : inventory,
                                       item.itemTypeId,
-                                      employeeId
-                                        ? selectedEmployee?.work_info?.operation_center_id ?? null
-                                        : undefined,
                                     );
                                     const suggestions = inventorySizes.length > 0
                                       ? inventorySizes
@@ -508,6 +554,15 @@ export function DotationFormDialog({ open, onOpenChange, onSuccess }: DotationFo
                              </Button>
                            </div>
                          </div>
+                         {deductInventory && inventorySource && item.itemTypeId && !loadingInventory && !inventoryError && (
+                           <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
+                             Disponible en {sourceLabel}: {sourceInventory.find(row => (
+                               row.item_type === item.itemTypeId
+                               && row.item_name === item.itemName.trim()
+                               && row.size === (item.size?.trim() || null)
+                             ))?.quantity_available ?? 0}
+                           </p>
+                         )}
                       </div>
                     ))}
                   </div>
