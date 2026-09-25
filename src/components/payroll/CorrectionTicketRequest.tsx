@@ -44,7 +44,7 @@ function TicketRequestForm({ defaults, close }: { defaults: TicketRequestDefault
       const r = await correctionClient.rpc('payroll_ticket_request', { p_company_id: currentCompanyId, p_employee_id: employee, p_center_id: center, p_start: start, p_end: end, p_expires: colombiaInputToISO(expires), p_actions: actions, p_reason: reason });
       if (r.error) throw r.error;
       await qc.invalidateQueries({ queryKey: ['correction-tickets'] });
-      toast.success('Solicitud registrada. Otra persona debe autorizarla.'); close();
+      toast.success('Solicitud registrada. Un usuario con permiso puede aprobarla.'); close();
     } catch (e) { setError((e as Error).message); } finally { setSaving(false); }
   }
   return <Dialog open onOpenChange={v => !v && !saving && close()}><DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto"><DialogHeader><DialogTitle>Solicitar permiso de corrección</DialogTitle><DialogDescription>El permiso será para usted y un empleado. No reabre los cortes del centro.</DialogDescription></DialogHeader>
