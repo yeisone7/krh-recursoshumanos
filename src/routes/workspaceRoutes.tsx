@@ -80,6 +80,7 @@ import {
 import { JornadasSkeleton } from "@/components/schedules/JornadasSkeleton";
 const RequisitionWorkflowSettings = lazy(() => import('../pages/RequisitionWorkflowSettings'));
 const CortesControl = lazy(() => import('../pages/CortesControl'));
+const PermisosCorreccion = lazy(() => import('../pages/PermisosCorreccion'));
 const AnaliticaSeleccion = lazy(() => import("../pages/AnaliticaSeleccion"));
 const AnaliticaNomina = lazy(() => import("../pages/AnaliticaNomina"));
 const AnaliticaIncapacidades = lazy(() => import("../pages/AnaliticaIncapacidades"));
@@ -128,6 +129,7 @@ export const workspaceRoutes: WorkspaceRoute[] = [
   { path: "/pre-liquidacion", title: "Preliquidación", permissions: ["pre_liquidacion"], element: <PreLiquidacion /> },
   { path: "/configuracion-laboral", title: "Configuración laboral", permissions: ["config_laboral"], element: <ConfiguracionLaboral /> },
   { path: "/cortes-control", title: "Cortes control", permissions: ["cortes_control"], element: <Suspense fallback={null}><CortesControl /></Suspense> },
+  { path: "/cortes-control/permisos", title: "Permisos de corrección", element: <Suspense fallback={null}><PermisosCorreccion /></Suspense> },
   { path: "/prestamos", title: "Préstamos", permissions: ["prestamos"], element: <Prestamos /> },
   { path: "/descuentos", title: "Descuentos", permissions: ["descuentos"], element: <Descuentos /> },
   { path: "/capacitaciones", title: "Capacitaciones", permissions: [TRAINING_PERMISSION_CODES.dashboard], element: <Capacitaciones /> },

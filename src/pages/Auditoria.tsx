@@ -19,6 +19,7 @@ import { useAuditLogs } from '@/hooks/useAuditLog';
 import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { logExport } from '@/lib/auditService';
 import { cn } from '@/lib/utils';
+import { CorrectionAudit } from '@/components/payroll/CorrectionAudit';
 
 export default function Auditoria() {
   const { currentCompanyId } = useAuth();
@@ -165,6 +166,7 @@ export default function Auditoria() {
 
         <div className="min-h-[420px]">
           <AuditLogViewer />
+          <div className="mt-8"><CorrectionAudit /></div>
         </div>
       </div>
     </div>

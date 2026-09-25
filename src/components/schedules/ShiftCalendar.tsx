@@ -4,6 +4,9 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { scheduleForDate } from '@/lib/effectiveSchedule';
+import { ScheduleReviewControl } from './ScheduleReviewControl';
+import { useScheduleReviews } from '@/hooks/useScheduleReviews';
+import { reviewLabels, type ScheduleDay } from '@/lib/payrollCorrections';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,6 +80,7 @@ interface ShiftCalendarProps {
 }
 
 interface CalendarCellProps {
+  reviewStatus?: ScheduleDay['status'];
   employeeId: string;
   dateStr: string;
   day: Date;
@@ -100,6 +104,7 @@ interface CalendarCellProps {
 }
 
 const CalendarCell = memo(({
+  reviewStatus,
   employeeId,
   dateStr,
   day,
@@ -127,6 +132,7 @@ const CalendarCell = memo(({
     <ContextMenu onOpenChange={setIsMenuOpen}>
       <ContextMenuTrigger>
         <div
+          title={reviewStatus ? `Aprobación: ${reviewLabels[reviewStatus]}` : undefined}
           className={cn(
             'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
             sunday && !absence && 'bg-red-50',
@@ -149,6 +155,7 @@ const CalendarCell = memo(({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
+                {reviewStatus && <span aria-label={reviewLabels[reviewStatus]} className={cn('absolute bottom-0 right-0 z-10 rounded-sm px-0.5 text-[8px] font-bold', reviewStatus === 'approved' ? 'bg-emerald-100 text-emerald-900' : reviewStatus === 'rejected' ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900')}>{reviewStatus === 'approved' ? '✓' : reviewStatus === 'rejected' ? '×' : reviewStatus === 'historical' ? 'H' : 'P'}</span>}
                 {/* Conflict indicator badge */}
                 {(hasConflict || hasCenterConflict) && (
                   <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
@@ -396,6 +403,7 @@ const CalendarCell = memo(({
   );
 }, (prevProps, nextProps) => {
   return prevProps.selected === nextProps.selected &&
+         prevProps.reviewStatus === nextProps.reviewStatus &&
          prevProps.shift?.id === nextProps.shift?.id &&
          prevProps.shift?.color === nextProps.shift?.color &&
          prevProps.shift?.is_rest_day === nextProps.shift?.is_rest_day &&
@@ -707,6 +715,10 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     return result;
   }, [employees, selectedCenterId, modeFilter, employeeModeMap, centers, areas]);
 
+  const reviewEmployees = useMemo(() => [...new Map(groupedEmployees.flatMap(g => g.areas.flatMap(a => a.employees || [])).map(e => [e.id, e])).values()], [groupedEmployees]);
+  const reviews = useScheduleReviews(reviewEmployees, startDate, endDate);
+  const reviewByDay = useMemo(() => new Map((reviews.data || []).map(d => [`${d.employee_id}:${d.work_date}`, d.status])), [reviews.data]);
+
   // Flatten for total count
   const totalEmployees = useMemo(() => {
     return groupedEmployees.reduce((acc, g) => 
@@ -947,6 +959,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       containedScroll ? "flex-1 min-h-0 overflow-hidden" : "min-h-0 overflow-visible"
     )}>
       {/* Header Controls */}
+      <ScheduleReviewControl employees={reviewEmployees} start={startDate} end={endDate} selection={selectedCells} days={reviews.data} loading={reviews.isLoading} error={reviews.error} />
+      <p className="text-xs text-muted-foreground">Aprobación: ✓ Aprobada · × Rechazada · P Pendiente · H Sin revisión histórica</p>
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 sm:flex sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -1192,6 +1206,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
                                 return (
                                   <CalendarCell
+                                    reviewStatus={reviewByDay.get(`${employee.id}:${dateStr}`)}
                                     key={dateStr}
                                     employeeId={employee.id}
                                     dateStr={dateStr}

@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
 import { exportNoveltyToPDF, printNoveltyTicket } from '@/utils/noveltyPdf';
 import { useAuth } from '@/contexts/AuthContext';
+import { CorrectionTicketRequest } from '@/components/payroll/CorrectionTicketRequest';
+import { Link } from 'react-router-dom';
 
 export default function Novedades() {
   const { user, currentCompanyId, companies, profile } = useAuth();
@@ -155,6 +157,7 @@ export default function Novedades() {
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background">
+      <div className="flex flex-wrap items-center gap-3 px-4 pt-3"><CorrectionTicketRequest defaults={{ module: 'novedades' }} /><Link className="text-sm underline" to="/cortes-control/permisos">Consultar permisos de corrección</Link></div>
       {/* Premium Header */}
       <div className="relative shrink-0 overflow-hidden border-b border-border px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
         

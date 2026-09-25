@@ -2,6 +2,7 @@ import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { writePayrollRecords } from '@/lib/payrollCorrections';
 import type { PayrollNovelty, NoveltyType } from '@/types/payroll';
 
 export function usePayrollNovelties(filters?: {
@@ -46,7 +47,7 @@ export function usePayrollNovelties(filters?: {
 
 export function useCreatePayrollNovelty() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (novelty: {
@@ -60,17 +61,7 @@ export function useCreatePayrollNovelty() {
       end_time?: string | null;
       reason_id?: string | null;
     }) => {
-      const { data, error } = await supabase
-        .from('payroll_novelties')
-        .insert({
-          ...novelty,
-          company_id: currentCompanyId!,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const [data] = await writePayrollRecords<PayrollNovelty>(currentCompanyId, [{ module: 'novedades', action: 'create', values: novelty }]);
       return data;
     },
     onSuccess: () => {
@@ -81,6 +72,7 @@ export function useCreatePayrollNovelty() {
 
 export function useUpdatePayrollNovelty() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<{
@@ -92,14 +84,7 @@ export function useUpdatePayrollNovelty() {
       end_time: string | null;
       reason_id: string | null;
     }>) => {
-      const { data, error } = await supabase
-        .from('payroll_novelties')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const [data] = await writePayrollRecords<PayrollNovelty>(currentCompanyId, [{ module: 'novedades', action: 'update', id, values: updates }]);
       return data;
     },
     onSuccess: () => {
@@ -110,15 +95,11 @@ export function useUpdatePayrollNovelty() {
 
 export function useDeletePayrollNovelty() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('payroll_novelties')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await writePayrollRecords(currentCompanyId, [{ module: 'novedades', action: 'delete', id }]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payroll_novelties'] });
@@ -128,22 +109,11 @@ export function useDeletePayrollNovelty() {
 
 export function useApprovePayrollNovelty() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'aprobada' | 'rechazada' }) => {
-      const { data, error } = await supabase
-        .from('payroll_novelties')
-        .update({
-          status,
-          approved_by: status === 'aprobada' ? user?.id : null,
-          approved_at: status === 'aprobada' ? new Date().toISOString() : null,
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const [data] = await writePayrollRecords<PayrollNovelty>(currentCompanyId, [{ module: 'novedades', action: 'approve', id, values: { status } }]);
       return data;
     },
     onSuccess: () => {

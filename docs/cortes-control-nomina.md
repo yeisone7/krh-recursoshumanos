@@ -1,5 +1,7 @@
 # Cortes de control de NÓMINA
 
+La ampliación de aprobaciones y tickets está descrita en [Aprobación de jornadas y permisos de corrección](./aprobacion-jornadas-permisos-correccion.md). Una vez publicada esa migración junto con el frontend, Jornadas y Novedades admitirán correcciones puntuales con tickets vigentes sin reabrir los cortes. El resto de este documento describe el comportamiento base.
+
 La ruta `/cortes-control`, dentro de NÓMINA, aplica una fecha compartida por centro a Jornadas, Novedades, Reloj de Asistencia, Préstamos y Descuentos. No crea cierres de preliquidación, PILA ni configuración laboral.
 
 ## Uso y permisos

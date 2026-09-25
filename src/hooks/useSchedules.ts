@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { payrollClient, colombiaToday } from '@/lib/payrollControlCuts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { writePayrollRecords } from '@/lib/payrollCorrections';
 import type { 
   WorkSchedule, 
   Shift, 
@@ -57,6 +58,7 @@ export function useCreateWorkSchedule() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['work_schedules'] });
     },
   });
@@ -78,6 +80,7 @@ export function useUpdateWorkSchedule() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['work_schedules'] });
     },
   });
@@ -96,6 +99,7 @@ export function useDeleteWorkSchedule() {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['work_schedules'] });
     },
   });
@@ -167,6 +171,7 @@ export function useCreateShift() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
     },
   });
@@ -201,6 +206,7 @@ export function useUpdateShift() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
     },
   });
@@ -219,6 +225,7 @@ export function useDeleteShift() {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
     },
   });
@@ -294,6 +301,7 @@ export function useCreateShiftCycle() {
       return cycle;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_cycles'] });
     },
   });
@@ -349,6 +357,7 @@ export function useUpdateShiftCycle() {
       return cycle;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_cycles'] });
     },
   });
@@ -367,6 +376,7 @@ export function useDeleteShiftCycle() {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_cycles'] });
     },
   });
@@ -456,6 +466,7 @@ export function useCreateEmployeeTimeConfig() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] });
     },
@@ -478,6 +489,7 @@ export function useUpdateEmployeeTimeConfig() {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] });
     },
@@ -540,7 +552,7 @@ export function useShiftAssignments(options: {
 
 export function useCreateShiftAssignment() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (assignment: {
@@ -550,21 +562,11 @@ export function useCreateShiftAssignment() {
       source?: ShiftAssignmentSource;
       notes?: string;
     }) => {
-      const { data, error } = await supabase
-        .from('employee_shift_assignments')
-        .insert({
-          ...assignment,
-          company_id: currentCompanyId!,
-          source: assignment.source || 'manual',
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const [data] = await writePayrollRecords<EmployeeShiftAssignment>(currentCompanyId, [{ module: 'jornadas', action: 'create', values: assignment }]);
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
@@ -572,7 +574,7 @@ export function useCreateShiftAssignment() {
 
 export function useCreateBulkShiftAssignments() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (assignments: {
@@ -582,24 +584,10 @@ export function useCreateBulkShiftAssignments() {
       source?: ShiftAssignmentSource;
       notes?: string;
     }[]) => {
-      // Use upsert to handle conflicts
-      const { data, error } = await supabase
-        .from('employee_shift_assignments')
-        .upsert(
-          assignments.map(a => ({
-            ...a,
-            company_id: currentCompanyId!,
-            source: a.source || 'manual',
-            created_by: user?.id,
-          })),
-          { onConflict: 'employee_id,assignment_date' }
-        )
-        .select();
-
-      if (error) throw error;
-      return data;
+      return writePayrollRecords<EmployeeShiftAssignment>(currentCompanyId, assignments.map(values => ({ module: 'jornadas', action: 'upsert', values })));
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
@@ -607,20 +595,15 @@ export function useCreateBulkShiftAssignments() {
 
 export function useUpdateShiftAssignment() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<EmployeeShiftAssignment> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('employee_shift_assignments')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const [data] = await writePayrollRecords<EmployeeShiftAssignment>(currentCompanyId, [{ module: 'jornadas', action: 'update', id, values: updates }]);
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
@@ -628,17 +611,14 @@ export function useUpdateShiftAssignment() {
 
 export function useDeleteShiftAssignment() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('employee_shift_assignments')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      await writePayrollRecords(currentCompanyId, [{ module: 'jornadas', action: 'delete', id }]);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });
@@ -646,17 +626,14 @@ export function useDeleteShiftAssignment() {
 
 export function useDeleteBulkShiftAssignments() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
-      const { error } = await supabase
-        .from('employee_shift_assignments')
-        .delete()
-        .in('id', ids);
-
-      if (error) throw error;
+      await writePayrollRecords(currentCompanyId, ids.map(id => ({ module: 'jornadas', action: 'delete', id })));
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['shift_assignments'] });
     },
   });

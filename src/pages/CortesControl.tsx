@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { CutReviewWarning } from '@/components/payroll/CutReviewWarning';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, History, Lock, LockOpen, Plus, RefreshCw, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,6 +77,7 @@ export default function CortesControl() {
     finally { setSaving(false); }
   }
   return <div className="mx-auto max-w-7xl space-y-5 p-4 md:p-6">
+    <Link className="inline-flex rounded-md border px-4 py-2 text-sm font-medium" to="/cortes-control/permisos">Permisos de corrección</Link>
     <header className="flex flex-wrap items-center justify-between gap-3"><div><h1 className="flex items-center gap-2 text-2xl font-semibold"><ShieldCheck className="text-teal-600" />Cortes de control</h1><p className="mt-1 text-sm text-muted-foreground">Jornadas, Novedades, Asistencia, Préstamos y Descuentos · por centro de operación</p></div><Button variant="outline" onClick={() => qc.invalidateQueries({ queryKey: ['payroll-cuts'] })}><RefreshCw className="mr-2 h-4 w-4 text-sky-600" />Actualizar</Button></header>
     <div className="flex flex-wrap gap-3"><Input aria-label="Buscar centro" placeholder="Buscar centro…" className="max-w-sm" value={search} onChange={e => setSearch(e.target.value)} /><select aria-label="Estado del corte" className="rounded-md border bg-background px-3" value={state} onChange={e => setState(e.target.value)}><option value="all">Todos los centros</option><option value="active">Con corte activo</option><option value="open">Sin corte activo</option></select></div>
     {(centers.isError || cuts.isError) && <p role="alert" className="text-destructive">{(centers.error || cuts.error)?.message}</p>}
@@ -104,7 +107,7 @@ export default function CortesControl() {
       })}
     </TableBody></Table>{!centers.data?.length && <p className="p-6 text-sm text-muted-foreground">No hay centros autorizados.</p>}</div>}
     <Dialog open={!!action} onOpenChange={v => { if (!v && !saving) setAction(null); }}><DialogContent><DialogHeader><DialogTitle>{action && labels[action.action]} · Nivel {action?.level}</DialogTitle><DialogDescription>{action?.center.name}. La acción y su motivo quedarán registrados.</DialogDescription></DialogHeader>
-      {action?.action !== 'reopen' && <div className="space-y-2"><Label htmlFor="cut-date">Fecha de corte (inclusive)</Label><Input id="cut-date" type="date" max={colombiaToday()} value={date} onChange={e => setDate(e.target.value)} /><p className="text-sm text-amber-800">Se permite cerrar con jornadas pendientes. Completar o corregir esas jornadas requerirá reabrir el corte.</p></div>}
+      {action?.action !== 'reopen' && <div className="space-y-2"><Label htmlFor="cut-date">Fecha de corte (inclusive)</Label><Input id="cut-date" type="date" max={colombiaToday()} value={date} onChange={e => setDate(e.target.value)} /><p className="text-sm text-amber-800">Se permite cerrar con jornadas pendientes. Corregir o aprobar Jornadas y Novedades después requerirá un ticket vigente o reabrir el corte.</p>{action && <CutReviewWarning centerId={action.center.id} end={date} />}</div>}
       <div className="space-y-2"><Label htmlFor="cut-reason">Motivo</Label><Textarea id="cut-reason" value={reason} onChange={e => setReason(e.target.value)} minLength={5} /></div>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button disabled={saving} onClick={save}>{saving ? 'Guardando…' : action && labels[action.action]}</Button>
     </DialogContent></Dialog>
