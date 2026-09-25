@@ -85,6 +85,7 @@ interface NavItem {
   icon: React.ReactNode;
   href: string;
   badge?: number;
+  badgeVariant?: 'danger';
   moduleCode?: string;
   children?: NavItem[];
 }
@@ -352,8 +353,23 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const location = useLocation();
   const { data: unifiedAlerts } = useUnifiedAlerts();
   const alertCount = unifiedAlerts?.length || 0;
-  const { canView, hasPermission, isAdmin, isSuperAdmin, permissionsLoaded } = useAuth();
+  const { canView, hasPermission, isAdmin, isSuperAdmin, permissionsLoaded, currentCompanyId } = useAuth();
   const workflowAccess = useRequisitionWorkflowAccess();
+  const canApproveCorrections = permissionsLoaded && hasPermission('correction_tickets', 'approve');
+  const { data: pendingCorrectionCount = 0 } = useQuery({
+    queryKey: ['correction-tickets', 'pending-count', currentCompanyId],
+    enabled: !!currentCompanyId && canApproveCorrections,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { count, error } = await supabase.from('payroll_correction_tickets')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', currentCompanyId!)
+        .eq('status', 'requested')
+        .gt('expires_at', new Date().toISOString());
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
   // In mobile drawer mode, never collapse - always show full sidebar
   const isCollapsed = isMobileDrawer ? false : collapsed;
@@ -400,7 +416,11 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
   const filteredIncapacityNavItems = useMemo(() => filterItems(incapacityNavItems), [filterItems]);
   const filteredDevelopmentNavItems = useMemo(() => filterItems(developmentNavItems), [filterItems]);
   const filteredBenefitsNavItems = useMemo(() => filterItems(benefitsNavItems), [filterItems]);
-  const filteredPayrollNavItems = useMemo(() => filterItems(payrollNavItems), [filterItems]);
+  const filteredPayrollNavItems = useMemo(() => filterItems(payrollNavItems).map(item =>
+    item.moduleCode === 'correction_tickets'
+      ? { ...item, badge: canApproveCorrections && pendingCorrectionCount > 0 ? pendingCorrectionCount : undefined, badgeVariant: 'danger' as const }
+      : item
+  ), [filterItems, canApproveCorrections, pendingCorrectionCount]);
   const filteredAdminNavItems = useMemo(() => filterItems(adminNavItems), [filterItems]);
   const filteredToolsNavItemsBase = useMemo(() => filterItems(toolsNavItemsBase), [filterItems]);
 
@@ -464,6 +484,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
 
   const NavLinkItem = ({ item }: {item: NavItem;}) => {
     const isActive = location.pathname === item.href;
+    const badgeColor = item.badgeVariant === 'danger' ? 'bg-red-600 text-white' : 'bg-primary text-primary-foreground';
 
     const linkContent =
     <Link to={item.href} onClick={handleNavClick}>
@@ -493,12 +514,12 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             </span>
           }
           {item.badge && !isCollapsed &&
-        <span className="ml-auto min-w-5 shrink-0 rounded-md bg-primary px-2 py-0.5 text-center text-xs font-extrabold text-primary-foreground">
+        <span className={cn("ml-auto min-w-5 shrink-0 rounded-md px-2 py-0.5 text-center text-xs font-extrabold", badgeColor)} aria-label={item.badgeVariant === 'danger' ? `${item.badge} solicitudes pendientes por aprobar` : undefined}>
               {item.badge}
             </span>
         }
           {item.badge && isCollapsed &&
-        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-md bg-primary px-1 text-[10px] font-extrabold text-primary-foreground ring-2 ring-sidebar">
+        <span className={cn("absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-extrabold ring-2 ring-sidebar", badgeColor)} aria-label={item.badgeVariant === 'danger' ? `${item.badge} solicitudes pendientes por aprobar` : undefined}>
               {item.badge}
             </span>
         }
@@ -520,7 +541,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
             <div className="flex items-center gap-2">
               <span>{item.label}</span>
               {item.badge &&
-              <span className="rounded-md bg-primary px-1.5 py-0.5 text-xs font-extrabold text-primary-foreground">
+              <span className={cn("rounded-md px-1.5 py-0.5 text-xs font-extrabold", badgeColor)}>
                   {item.badge}
                 </span>
               }
