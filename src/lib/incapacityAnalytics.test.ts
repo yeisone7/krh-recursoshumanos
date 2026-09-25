@@ -9,12 +9,15 @@ import {
 } from './incapacityAnalytics';
 
 describe('incapacity analytics', () => {
-  it('adds total labor cost and estimated labor cost as the company-assumed total', () => {
-    const summary = buildIncapacityEmployerCostSummary([
-      { total_amount: 100_000, employee: { employee_social_security: [{ risk_level: 'I', is_current: true }] } },
+  it('adds the short-case total cost and long-case estimated labor cost as the company-assumed total', () => {
+    const buckets = buildIncapacityDurationBuckets([
+      { total_days: 2, total_amount: 100_000 },
+      { total_days: 3, total_amount: 400_000 },
     ]);
 
-    expect(getTotalAssumedByCompany(summary)).toBe(summary.totalCost + summary.additionalCost);
+    expect(getTotalAssumedByCompany(buckets)).toBe(
+      buckets[0].employerCost.totalCost + buckets[1].employerCost.additionalCost,
+    );
   });
 
   it('groups cases, percentages and amounts into two duration bands', () => {

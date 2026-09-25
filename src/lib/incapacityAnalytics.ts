@@ -68,8 +68,10 @@ export interface MonthlyEpsRecoveryRow {
   recoveryPercentage: number;
 }
 
-export function getTotalAssumedByCompany(cost: IncapacityEmployerCostBreakdown) {
-  return cost.totalCost + cost.additionalCost;
+export function getTotalAssumedByCompany(buckets: IncapacityDurationBucket[]) {
+  const shortDuration = buckets.find((bucket) => bucket.key === 'one_two_days');
+  const longDuration = buckets.find((bucket) => bucket.key === 'three_plus_days');
+  return (shortDuration?.employerCost.totalCost || 0) + (longDuration?.employerCost.additionalCost || 0);
 }
 
 export function buildIncapacityEmployerCostSummary(

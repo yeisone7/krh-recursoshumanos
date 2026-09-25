@@ -60,7 +60,8 @@ describe('Analítica de Incapacidades calendar allocation', () => {
     open();
     tab('Centros de operación');
 
-    expect(screen.getAllByText('Total asumido por la empresa')).toHaveLength(3);
+    expect(screen.getAllByText('Total asumido por la empresa')).toHaveLength(1);
+    expect(screen.getByText('Total con costo laboral de 1 y 2 días + costo laboral estimado de 3 o más días')).toBeInTheDocument();
     const shortCasesButton = screen.getByRole('button', { name: 'Ver personas con incapacidades de 1 y 2 días' });
     const longCasesButton = screen.getByRole('button', { name: 'Ver personas con incapacidades de 3 o más días' });
     expect(shortCasesButton).toBeInTheDocument();
