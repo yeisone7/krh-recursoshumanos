@@ -17,6 +17,8 @@ INSERT INTO public.operation_centers(id,company_id,name) VALUES('cc000000-0000-4
 INSERT INTO public.time_clock_center_settings(company_id,operation_center_id,tracking_start_date,enabled) VALUES('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030','2026-01-01',true);
 INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_name) VALUES('cc000000-0000-4000-8000-000000000040','cc000000-0000-4000-8000-000000000010','CUT-TEST','Payroll','Test');
 INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date) VALUES('cc000000-0000-4000-8000-000000000050','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040',1,'active','backfill','2020-01-01');
+INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_name) VALUES('cc000000-0000-4000-8000-000000000041','cc000000-0000-4000-8000-000000000010','CUT-LEGACY','Legacy','Center');
+INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date) VALUES('cc000000-0000-4000-8000-000000000051','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000041',1,'active','backfill','2020-01-01');
 -- Simulate a legacy row whose labor-center evidence is added afterwards.
 INSERT INTO public.payroll_novelties(id,company_id,employee_id,novelty_date,novelty_type,hours) VALUES('cc000000-0000-4000-8000-000000000081','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','2026-01-05','jornada',2);
 INSERT INTO public.employee_work_info(employee_id,company_id,operation_center_id,employment_cycle_id,valid_from,hire_date,is_current,position_name) VALUES('cc000000-0000-4000-8000-000000000040','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030','cc000000-0000-4000-8000-000000000050','2020-01-01','2020-01-01',true,'Prueba');
@@ -26,6 +28,10 @@ INSERT INTO public.payroll_novelties(id,company_id,employee_id,novelty_date,nove
 INSERT INTO public.time_clock_days(id,company_id,employee_id,employment_cycle_id,operation_center_id,work_date,status) VALUES('cc000000-0000-4000-8000-000000000090','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','cc000000-0000-4000-8000-000000000050','cc000000-0000-4000-8000-000000000030','2026-01-10','open');
 SELECT set_config('request.jwt.claims','{"sub":"cc000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 INSERT INTO public.work_schedules(id,company_id,name,start_time,end_time) VALUES('cc000000-0000-4000-8000-000000000100','cc000000-0000-4000-8000-000000000010','Horario prueba','08:00','16:00');
+-- Reproduce an imported configuration created before its labor history. The
+-- later work row starts after the configuration, but the cycle has one center.
+INSERT INTO public.employee_time_config(id,employee_id,company_id,employment_cycle_id,mode,work_schedule_id,start_date,is_active) VALUES('cc000000-0000-4000-8000-000000000130','cc000000-0000-4000-8000-000000000041','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000051','administrative','cc000000-0000-4000-8000-000000000100','2026-01-01',true);
+INSERT INTO public.employee_work_info(employee_id,company_id,operation_center_id,employment_cycle_id,valid_from,hire_date,is_current,position_name) VALUES('cc000000-0000-4000-8000-000000000041','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030','cc000000-0000-4000-8000-000000000051','2026-02-01','2020-01-01',true,'Prueba histórica');
 INSERT INTO public.shifts(id,company_id,name,start_time,end_time) VALUES('cc000000-0000-4000-8000-000000000110','cc000000-0000-4000-8000-000000000010','Turno prueba','08:00','16:00');
 INSERT INTO public.employee_shift_assignments(id,company_id,employee_id,shift_id,assignment_date) VALUES('cc000000-0000-4000-8000-000000000120','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','cc000000-0000-4000-8000-000000000110','2026-01-10');
 SELECT public.payroll_set_time_config('cc000000-0000-4000-8000-000000000010','{"employee_id":"cc000000-0000-4000-8000-000000000040","mode":"administrative","work_schedule_id":"cc000000-0000-4000-8000-000000000100","start_date":"2026-01-01"}');
@@ -33,6 +39,7 @@ UPDATE public.payroll_novelties SET created_by=auth.uid() WHERE company_id='cc00
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.denied($q$SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',1::smallint,'create','2026-01-15','Unresolved center test')$q$,'23514');
 SELECT pg_temp.assert((SELECT sum(unresolved_count)=0 FROM public.payroll_cut_resolve_centers('cc000000-0000-4000-8000-000000000010')),'center repair uses labor evidence');
+SELECT pg_temp.assert((SELECT operation_center_id='cc000000-0000-4000-8000-000000000030' FROM public.employee_time_config WHERE id='cc000000-0000-4000-8000-000000000130'),'legacy time config uses unique employment-cycle center');
 SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',1::smallint,'create','2026-01-15','Prueba operativo');
 SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',2::smallint,'create','2026-01-10','Prueba superior');
 SELECT pg_temp.assert((SELECT count(*)=2 FROM public.payroll_control_cut_events),'audit events');
