@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { format, addMonths, addDays } from 'date-fns';
+import { format, addMonths, addDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, FileText, Plus, AlertTriangle, Info, Scale, Pencil } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -107,11 +107,13 @@ export function ExtensionFormDialog({
 
   const legalStatus = getContractLegalStatus(contractData);
   const preavisoPassed = isPreavisoDeadlinePassed(currentEndDate);
+  const isExpired = currentEndDate < startOfDay(new Date());
   const isWorkLaborContract = contractType === 'obra_labor';
   const extensionLabel = isWorkLaborContract ? 'Adición' : 'Prórroga';
   const extensionLabelLower = isWorkLaborContract ? 'adición' : 'prórroga';
 
   const isEditMode = !!extensionToEdit;
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const extensionStartDate = useMemo(
     () => extensionToEdit?.startDate || addDays(currentEndDate, 1),
     [extensionToEdit?.id, currentEndDate]
@@ -132,6 +134,7 @@ export function ExtensionFormDialog({
 
   useEffect(() => {
     if (!open) return;
+    setEndDateOpen(false);
 
     form.reset({
       startDate: extensionStartDate,
@@ -140,6 +143,12 @@ export function ExtensionFormDialog({
       notes: extensionToEdit?.notes || '',
     });
   }, [open, extensionToEdit?.id, extensionStartDate, preavisoPassed]);
+
+  const choosePactadaEndDate = () => {
+    form.setValue('extensionType', 'pactada', { shouldValidate: true });
+    form.setValue('endDate', undefined as unknown as Date, { shouldValidate: true });
+    setEndDateOpen(true);
+  };
 
   // When extension type changes to automatic, auto-calculate end date
   useEffect(() => {
@@ -247,7 +256,9 @@ export function ExtensionFormDialog({
                   {preavisoPassed ? (
                     <p className="text-warning">
                       ⚠️ Ya pasó el plazo de {COLOMBIAN_LABOR_LAW.PREAVISO_DAYS} días de preaviso. 
-                      El contrato se prorroga automáticamente.
+                      {watchedExtensionType === 'automatica'
+                        ? ' El contrato se prorroga automáticamente.'
+                        : ' Verifique si ya operó la renovación automática y conserve el acuerdo escrito de la prórroga pactada.'}
                     </p>
                   ) : legalStatus.preavisoDeadline && (
                     <p>
@@ -270,7 +281,12 @@ export function ExtensionFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo de {extensionLabel} *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={(value: ExtensionType) => {
+                    field.onChange(value);
+                    if (!isEditMode && value === 'pactada' && watchedExtensionType === 'automatica') {
+                      form.setValue('endDate', undefined as unknown as Date, { shouldValidate: true });
+                    }
+                  }} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="h-auto min-h-12 py-2">
                         <SelectValue placeholder={`Seleccione el tipo de ${extensionLabelLower}`} />
@@ -295,6 +311,12 @@ export function ExtensionFormDialog({
                 </FormItem>
               )}
             />
+
+            {isExpired && !isEditMode && watchedExtensionType === 'automatica' && (
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={choosePactadaEndDate}>
+                <Plus className="mr-2 h-4 w-4" /> Agregar nueva fecha fin (prórroga pactada)
+              </Button>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
@@ -334,7 +356,7 @@ export function ExtensionFormDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Nueva Fecha de Fin *</FormLabel>
-                    <Popover>
+                    <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -358,9 +380,9 @@ export function ExtensionFormDialog({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => { field.onChange(date); if (date) setEndDateOpen(false); }}
                           disabled={(date) => date <= currentEndDate || (maxEndDate ? date >= maxEndDate : false)}
-                          defaultMonth={currentEndDate}
+                          defaultMonth={field.value || (isExpired ? new Date() : currentEndDate)}
                           initialFocus
                           className="pointer-events-auto"
                         />
@@ -369,6 +391,11 @@ export function ExtensionFormDialog({
                     {!isEditMode && watchedExtensionType === 'automatica' && (
                       <FormDescription className="text-xs text-muted-foreground">
                         Fecha calculada automáticamente según el término anterior
+                      </FormDescription>
+                    )}
+                    {watchedExtensionType === 'pactada' && (
+                      <FormDescription className="text-xs text-muted-foreground">
+                        Seleccione la nueva fecha fin acordada por escrito.
                       </FormDescription>
                     )}
                     {legalStatus.requiresMinOneYear && watchedExtensionType === 'pactada' && (
@@ -461,7 +488,7 @@ export function ExtensionFormDialog({
               <Button 
                 type="submit" 
                 className="gradient-primary text-primary-foreground w-full sm:w-auto"
-                disabled={!validationResult.isValid}
+                disabled={!watchedEndDate || !validationResult.isValid}
               >
                 {isEditMode ? 'Guardar Cambios' : `Registrar ${extensionLabel}`}
               </Button>
