@@ -6,6 +6,13 @@ DECLARE code text; BEGIN
  BEGIN EXECUTE command; EXCEPTION WHEN OTHERS THEN GET STACKED DIAGNOSTICS code=RETURNED_SQLSTATE; END;
  IF code IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Expected %, got %: %',expected,code,command; END IF;
 END $$;
+CREATE FUNCTION pg_temp.denied_message(command text, expected_code text, expected_message text) RETURNS void LANGUAGE plpgsql AS $$
+DECLARE code text; message text; BEGIN
+ BEGIN EXECUTE command; EXCEPTION WHEN OTHERS THEN GET STACKED DIAGNOSTICS code=RETURNED_SQLSTATE,message=MESSAGE_TEXT; END;
+ IF code IS DISTINCT FROM expected_code OR position(expected_message IN coalesce(message,''))=0 THEN
+   RAISE EXCEPTION 'Expected % containing %, got %: %',expected_code,expected_message,code,message;
+ END IF;
+END $$;
 INSERT INTO auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 VALUES('cc000000-0000-4000-8000-000000000001','00000000-0000-0000-0000-000000000000','authenticated','authenticated','payroll-cuts-test@example.invalid','','{}','{}',now(),now());
 INSERT INTO public.companies(id,name,nit) VALUES('cc000000-0000-4000-8000-000000000010','Payroll cut test','CUT-TEST');
@@ -19,9 +26,8 @@ INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_na
 INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date) VALUES('cc000000-0000-4000-8000-000000000050','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040',1,'active','backfill','2020-01-01');
 INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_name) VALUES('cc000000-0000-4000-8000-000000000041','cc000000-0000-4000-8000-000000000010','CUT-LEGACY','Legacy','Center');
 INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date) VALUES('cc000000-0000-4000-8000-000000000051','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000041',1,'active','backfill','2020-01-01');
--- Simulate a legacy row whose labor-center evidence is added afterwards.
-INSERT INTO public.payroll_novelties(id,company_id,employee_id,novelty_date,novelty_type,hours) VALUES('cc000000-0000-4000-8000-000000000081','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','2026-01-05','jornada',2);
 INSERT INTO public.employee_work_info(employee_id,company_id,operation_center_id,employment_cycle_id,valid_from,hire_date,is_current,position_name) VALUES('cc000000-0000-4000-8000-000000000040','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030','cc000000-0000-4000-8000-000000000050','2020-01-01','2020-01-01',true,'Prueba');
+INSERT INTO public.payroll_novelties(id,company_id,employee_id,novelty_date,novelty_type,hours) VALUES('cc000000-0000-4000-8000-000000000081','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','2026-01-05','jornada',2);
 INSERT INTO public.employee_loans(id,company_id,employee_id,total_amount,total_with_interest,installments,installment_amount,remaining_balance,start_date,status) VALUES('cc000000-0000-4000-8000-000000000060','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040',1000,1000,10,100,1000,'2026-01-01','activo');
 INSERT INTO public.employee_deductions(id,company_id,employee_id,deduction_type,description,amount,start_date) VALUES('cc000000-0000-4000-8000-000000000070','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','otro','Test',100,'2026-01-01');
 INSERT INTO public.payroll_novelties(id,company_id,employee_id,novelty_date,novelty_type,hours) VALUES('cc000000-0000-4000-8000-000000000080','cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000040','2026-01-10','jornada',2);
@@ -37,7 +43,7 @@ INSERT INTO public.employee_shift_assignments(id,company_id,employee_id,shift_id
 SELECT public.payroll_set_time_config('cc000000-0000-4000-8000-000000000010','{"employee_id":"cc000000-0000-4000-8000-000000000040","mode":"administrative","work_schedule_id":"cc000000-0000-4000-8000-000000000100","start_date":"2026-01-01"}');
 UPDATE public.payroll_novelties SET created_by=auth.uid() WHERE company_id='cc000000-0000-4000-8000-000000000010';
 SET LOCAL ROLE authenticated;
-SELECT pg_temp.denied($q$SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',1::smallint,'create','2026-01-15','Unresolved center test')$q$,'23514');
+SELECT pg_temp.denied_message($q$SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',1::smallint,'create','2026-01-15','Unresolved center test')$q$,'23514','Configuraciones de jornada: Legacy Center (CUT-LEGACY)');
 SELECT pg_temp.assert((SELECT sum(unresolved_count)=0 FROM public.payroll_cut_resolve_centers('cc000000-0000-4000-8000-000000000010')),'center repair uses labor evidence');
 SELECT pg_temp.assert((SELECT operation_center_id='cc000000-0000-4000-8000-000000000030' FROM public.employee_time_config WHERE id='cc000000-0000-4000-8000-000000000130'),'legacy time config uses unique employment-cycle center');
 SELECT public.payroll_cut_change('cc000000-0000-4000-8000-000000000010','cc000000-0000-4000-8000-000000000030',1::smallint,'create','2026-01-15','Prueba operativo');
