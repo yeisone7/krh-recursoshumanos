@@ -44,6 +44,8 @@ export interface ActualRecoveryPayment {
 export interface LegalResponsibilityDays {
   name: 'EPS' | 'Empleador' | 'AFP' | 'ARL';
   value: number;
+  cases: number;
+  days: number;
 }
 
 export interface IncapacityDurationBucket {
@@ -183,9 +185,11 @@ export function buildLegalResponsibilityDays(rows: IncapacityAnalyticsRow[]): Le
   return definitions
     .map(({ name, field }) => ({
       name,
-      value: rows.reduce((total, row) => total + Math.max(0, Number(row[field] || 0)), 0),
+      cases: rows.filter((row) => Math.max(0, Number(row[field] || 0)) > 0).length,
+      days: rows.reduce((total, row) => total + Math.max(0, Number(row[field] || 0)), 0),
     }))
-    .filter((item) => item.value > 0);
+    .map((item) => ({ ...item, value: item.days }))
+    .filter((item) => item.days > 0);
 }
 
 export function buildIncapacityDurationBuckets(

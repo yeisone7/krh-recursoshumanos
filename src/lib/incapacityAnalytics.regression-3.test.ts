@@ -14,10 +14,10 @@ describe('incapacity legal responsibility distribution', () => {
     ]);
 
     expect(result).toEqual([
-      { name: 'EPS', value: 178 },
-      { name: 'Empleador', value: 3 },
-      { name: 'AFP', value: 40 },
-      { name: 'ARL', value: 14 },
+      { name: 'EPS', value: 178, cases: 2, days: 178 },
+      { name: 'Empleador', value: 3, cases: 2, days: 3 },
+      { name: 'AFP', value: 40, cases: 1, days: 40 },
+      { name: 'ARL', value: 14, cases: 1, days: 14 },
     ]);
     expect(result.reduce((total, item) => total + item.value, 0)).toBe(235);
   });
