@@ -16,6 +16,18 @@ export type CorrectionEvent = {
   ticket_id: string | null; module: string; action: string; record_id: string | null; work_date: string | null;
   actor_id: string | null; actor_name: string; occurred_at: string; old_values: Json; new_values: Json; cuts: Json; reason: string | null;
 };
+export type CorrectionAnalytics = {
+  summary: { requests: number; changes: number; pending: number; active: number; expired: number };
+  statuses: { key: string; count: number }[];
+  requesters: { id: string; name: string; count: number }[];
+  employees: { id: string; name: string; count: number }[];
+  centers: { id: string; name: string; count: number }[];
+  centerOptions: { id: string; name: string }[];
+  modules: { key: string; count: number }[];
+  actions: { key: string; count: number }[];
+  decisions: { key: string; count: number }[];
+  trend: { month: string; requests: number; changes: number }[];
+};
 export type ScheduleDay = {
   employee_id: string; work_date: string; snapshot: Record<string, Json>;
   status: 'pending' | 'approved' | 'rejected' | 'historical';
@@ -33,6 +45,7 @@ type CorrectionDatabase = { public: {
     payroll_schedule_cut_summary: { Args: { p_company_id: string; p_center_id: string; p_end: string }; Returns: Json };
     payroll_ticket_request: { Args: { p_company_id: string; p_employee_id: string; p_center_id: string; p_start: string; p_end: string; p_expires: string; p_actions: string[]; p_reason: string }; Returns: string };
     payroll_ticket_transition: { Args: { p_id: string; p_action: string; p_reason: string; p_start?: string; p_end?: string; p_expires?: string; p_actions?: string[] }; Returns: undefined };
+    payroll_correction_analytics: { Args: { p_company_id: string; p_from?: string | null; p_to?: string | null; p_center_id?: string | null; p_status?: string | null }; Returns: Json };
   };
 } };
 export const correctionClient = supabase as unknown as SupabaseClient<CorrectionDatabase>;

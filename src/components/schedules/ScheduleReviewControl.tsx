@@ -16,12 +16,13 @@ const dayKey = (d: Pick<ScheduleDay, 'employee_id' | 'work_date'>) => `${d.emplo
 export function ScheduleReviewControl({ employees, start, end, selection, days = [], loading, error }: {
   employees: Employee[]; start: string; end: string; selection: Selection; days?: ScheduleDay[]; loading: boolean; error: Error | null;
 }) {
+  const { hasPermission } = useAuth();
   const [open, setOpen] = useState(false);
   const selectedEmployee = selection.length === 1 ? selection[0] : undefined;
   const dates = selectedEmployee?.dates.slice().sort();
   const pending = days.filter(d => d.status === 'pending' || d.status === 'rejected').length;
   return <div className="flex flex-wrap items-center gap-2">
-    <Button variant="outline" onClick={() => setOpen(true)}>Revisar y aprobar jornadas{pending > 0 && ` · ${pending} pendientes`}</Button>
+    {(hasPermission('jornadas', 'view') || hasPermission('jornadas', 'approve')) && <Button variant="outline" onClick={() => setOpen(true)}>Revisar y aprobar jornadas{pending > 0 && ` · ${pending} pendientes`}</Button>}
     <CorrectionTicketRequest defaults={{ module: 'jornadas', employeeId: selectedEmployee?.employeeId, startDate: dates?.[0] || start, endDate: dates?.at(-1) || end }} />
     {error && <span role="alert" className="text-sm text-destructive">No se pudo consultar la aprobación: {error.message}</span>}
     {open && <ReviewDialog employees={employees} days={days} loading={loading} selection={selection} start={start} end={end} close={() => setOpen(false)} />}

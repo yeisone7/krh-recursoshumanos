@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useLogAction } from '@/hooks/useAuditLog';
 import { CustomRole, Permission, RolePermissionEntry, useCustomRoles, useModules, usePermissionsCatalog } from '@/hooks/useRolesPermissions';
+import { PAYROLL_PERMISSION_LABELS } from '@/lib/permissionMatrix';
 
 // Show the most important modules in the quick view
 const QUICK_MODULE_CODES = [
@@ -21,6 +22,9 @@ const QUICK_MODULE_CODES = [
   'vacaciones',
   'permisos',
   'novedades',
+  'jornadas',
+  'correction_tickets',
+  'correction_tickets_analytics',
   'seleccion',
   'recontratacion_directa',
   'requisiciones',
@@ -162,6 +166,13 @@ export function QuickRolePermissions() {
     setSelectedByRole((prev) => {
       const nextSet = new Set(prev[role.id] || []);
       nextSet.has(permissionId) ? nextSet.delete(permissionId) : nextSet.add(permissionId);
+      const jornadas = quickModules.find(module => module?.code === 'jornadas');
+      if (jornadas) {
+        const viewId = getPermission(jornadas.id, 'view')?.id;
+        const approveId = getPermission(jornadas.id, 'approve')?.id;
+        if (permissionId === approveId && nextSet.has(approveId!) && viewId) nextSet.add(viewId);
+        if (permissionId === viewId && !nextSet.has(viewId!) && approveId) nextSet.delete(approveId);
+      }
       return { ...prev, [role.id]: nextSet };
     });
   };
@@ -204,12 +215,14 @@ export function QuickRolePermissions() {
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="bottom" className="text-xs">
-                          {action === 'approve' && `Aprobar en ${module!.name}`}
-                          {action === 'export' && `Exportar datos de ${module!.name}`}
-                          {action === 'view' && `Ver ${module!.name}`}
-                          {action === 'create' && `Crear en ${module!.name}`}
-                          {action === 'update' && `Modificar en ${module!.name}`}
-                          {action === 'delete' && `Eliminar en ${module!.name}`}
+                          {PAYROLL_PERMISSION_LABELS[module!.code]?.[action] || ({
+                            approve: `Aprobar en ${module!.name}`,
+                            export: `Exportar datos de ${module!.name}`,
+                            view: `Ver ${module!.name}`,
+                            create: `Crear en ${module!.name}`,
+                            update: `Modificar en ${module!.name}`,
+                            delete: `Eliminar en ${module!.name}`,
+                          } as Record<string, string>)[action]}
                         </TooltipContent>
                       </Tooltip>
                     </TableHead>

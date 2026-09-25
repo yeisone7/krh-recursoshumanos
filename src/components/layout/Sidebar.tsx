@@ -362,6 +362,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     if (isAdmin || !permissionsLoaded) return true;
     if (!item.moduleCode) return true;
     if (item.moduleCode === 'req_workflow_config') return hasPermission('req_workflow_config', 'update');
+    if (item.moduleCode === 'correction_tickets') return ['view', 'create', 'approve', 'update', 'export'].some(action => hasPermission('correction_tickets', action)) || hasPermission('correction_tickets_analytics', 'view');
     if (item.moduleCode === 'requisiciones' && workflowAccess.data) return true;
     return canView(item.moduleCode);
   }, [canView, hasPermission, isAdmin, permissionsLoaded, workflowAccess.data]);
