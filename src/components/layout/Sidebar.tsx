@@ -306,7 +306,7 @@ const toolsNavItemsBase: NavItem[] = [
 ];
 
 const payrollNavItems: NavItem[] = [
-  { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
+  { label: 'Reporte de Turnos', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Reloj de Asistencia', icon: <ScanLine className="w-5 h-5" />, href: '/reloj-checador', moduleCode: 'reloj_checador' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
   { label: 'Cortes de control', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control', moduleCode: 'cortes_control' },
@@ -416,7 +416,7 @@ export function Sidebar({ isMobileDrawer = false, onNavigate }: SidebarProps) {
     { label: 'Empleados', icon: <Users className="size-5 shrink-0" strokeWidth={2} />, href: '/empleados', moduleCode: 'empleados' },
     { label: 'Contratos', icon: <FileText className="size-5 shrink-0" strokeWidth={2} />, href: '/contratos', moduleCode: 'contratos' },
     { label: 'Requisiciones', icon: <ClipboardList className="size-5 shrink-0" strokeWidth={2} />, href: '/requisiciones', moduleCode: 'requisiciones' },
-    { label: 'Jornadas', icon: <Clock className="size-5 shrink-0" strokeWidth={2} />, href: '/jornadas', moduleCode: 'jornadas' },
+    { label: 'Reporte de Turnos', icon: <Clock className="size-5 shrink-0" strokeWidth={2} />, href: '/jornadas', moduleCode: 'jornadas' },
   ].filter(canViewQuickAccessItem), [canViewQuickAccessItem]);
 
   const quickAccessColor = 'bg-primary/10 text-primary border-primary/20';

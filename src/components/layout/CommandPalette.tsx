@@ -71,7 +71,7 @@ const MODULE_SHORTCUTS: SearchResult[] = [
   { id: 'mod-capacitaciones', title: 'Capacitaciones', subtitle: 'Formación y entrenamiento', type: 'module', icon: GraduationCap, url: '/capacitaciones' },
   { id: 'mod-evaluaciones', title: 'Evaluaciones', subtitle: 'Evaluaciones de desempeño', type: 'module', icon: Target, url: '/evaluaciones' },
   { id: 'mod-novedades', title: 'Novedades', subtitle: 'Novedades de nómina', type: 'module', icon: ClipboardList, url: '/novedades' },
-  { id: 'mod-jornadas', title: 'Jornadas y Turnos', subtitle: 'Gestión de horarios', type: 'module', icon: Clock, url: '/jornadas' },
+  { id: 'mod-jornadas', title: 'Reporte de Turnos', subtitle: 'Gestión de horarios', type: 'module', icon: Clock, url: '/jornadas' },
   { id: 'mod-seleccion', title: 'Selección', subtitle: 'Proceso de selección', type: 'module', icon: Briefcase, url: '/seleccion' },
   { id: 'mod-requisiciones', title: 'Requisiciones', subtitle: 'Requisiciones de personal', type: 'module', icon: Briefcase, url: '/requisiciones' },
   { id: 'mod-organigrama', title: 'Organigrama', subtitle: 'Estructura organizacional', type: 'module', icon: Network, url: '/organigrama' },

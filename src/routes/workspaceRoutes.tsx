@@ -119,7 +119,7 @@ export const workspaceRoutes: WorkspaceRoute[] = [
   { path: "/requisiciones", title: "Requisiciones", permissions: ["requisiciones"], element: <Requisiciones /> },
   { path: "/centros", title: "Centros", permissions: ["centros"], element: <Centros /> },
   { path: "/centros/fichas", title: "Fichas · Centros", permissions: ["centros"], element: <CentrosFichas /> },
-  { path: "/jornadas", title: "Jornadas", permissions: ["jornadas"], element: <Suspense fallback={<JornadasSkeleton />}><Jornadas /></Suspense> },
+  { path: "/jornadas", title: "Reporte de Turnos", permissions: ["jornadas"], element: <Suspense fallback={<JornadasSkeleton />}><Jornadas /></Suspense> },
   { path: "/reloj-checador", title: "Reloj checador", permissions: ["reloj_checador"], element: <Suspense fallback={null}><RelojChecador /></Suspense> },
   { path: "/nomina/analitica", title: "Analítica · Nómina", permissions: ["analitica_nomina"], element: <Suspense fallback={null}><AnaliticaNomina /></Suspense> },
   { path: "/disciplinarios", title: "Disciplinarios", permissions: ["disciplinarios"], element: <Disciplinarios /> },

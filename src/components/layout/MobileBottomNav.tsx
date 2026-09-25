@@ -7,7 +7,7 @@ const navItems = [
   { label: 'Dashboard', path: '/', icon: LayoutDashboard },
   { label: 'Contratos', path: '/contratos', icon: FileText },
   { label: 'Empleados', path: '/empleados', icon: Users },
-  { label: 'Jornadas', path: '/jornadas', icon: Clock },
+  { label: 'Reporte de Turnos', path: '/jornadas', icon: Clock },
   { label: 'Capacitación', path: '/capacitaciones', icon: BookOpen },
 ];
 
