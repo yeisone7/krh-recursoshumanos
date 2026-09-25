@@ -40,7 +40,7 @@ describe('employee contact directory helpers', () => {
   it('paginates the complete employee query instead of stopping at 1,000 rows', () => {
     const source = readFileSync(`${process.cwd()}/src/hooks/useEmployees.ts`, 'utf8');
     const directoryQuery = source.slice(
-      source.indexOf('export function useEmployees()'),
+      source.indexOf('export function useEmployees('),
       source.indexOf('export function useIncapacityAnalyticsEmployees()'),
     );
 

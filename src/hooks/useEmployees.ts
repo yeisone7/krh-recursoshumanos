@@ -374,13 +374,13 @@ async function logAuditEvent(
 // LIST EMPLOYEES
 // =====================================================
 
-export function useEmployees() {
+export function useEmployees({ calendar = false }: { calendar?: boolean } = {}) {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
 
   return useQuery({
-    queryKey: ['employees_v2', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey],
+    queryKey: ['employees_v2', currentCompanyId, shouldLimitByAssignedCenters, assignedCenterKey, ...(calendar ? ['calendar'] : [])],
     queryFn: async () => {
       if (!currentCompanyId) return [];
       const scopedEmployeeIds = shouldLimitByAssignedCenters
@@ -392,7 +392,12 @@ export function useEmployees() {
         // Left joins keep employees that do not yet have contact or current work data.
         let query = supabase
           .from('employees_v2')
-          .select(`
+          .select(calendar ? `
+            id, first_name, middle_name, last_name, second_last_name, is_active,
+            employee_employment_cycles(id, status),
+            ${getEmployeeWorkInfoSelect()},
+            ${getEmployeeCenterAssignmentsSelect()}
+          ` : `
             *,
             identification_types(id, name, code),
             employee_employment_cycles(id, cycle_number, status, source, start_date, end_date, candidate_id),
@@ -405,8 +410,11 @@ export function useEmployees() {
             ${getEmployeeCenterAssignmentsSelect()}
           `)
           .eq('company_id', currentCompanyId)
-          .eq('employee_contact.is_current', true)
           .eq('employee_work_info.is_current', true);
+
+        // The calendar only renders active employees and never uses contact data.
+        if (calendar) query = query.eq('is_active', true);
+        else query = query.eq('employee_contact.is_current', true);
 
         if (employeeIds) query = query.in('id', employeeIds);
 

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, memo, useRef, useEffect } from 'react';
-import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, isWithinInterval, addMonths } from 'date-fns';
+import { format, addDays, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isSunday, parseISO, addMonths } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -45,12 +45,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
-import { useShifts, useShiftAssignments, useCreateBulkShiftAssignments, useDeleteShiftAssignment, useEmployeeTimeConfigs } from '@/hooks/useSchedules';
+import { useShifts, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
 import { useHolidaysMap } from '@/hooks/useHolidays';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useCalendarAssignments, useCalendarTimeConfigs, useCalendarAbsences, type CalendarAssignment } from '@/hooks/useShiftCalendarData';
 import { getEmployeeFullName } from '@/types/employee';
-import type { Shift, EmployeeShiftAssignment, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
+import type { Shift, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
 import {
   getEmployeeOperationCenterIds,
   isShiftEligibleForEmployee,
@@ -58,7 +57,6 @@ import {
 } from '@/lib/scheduleCenterScope';
 
 type ViewMode = 'quincenal' | 'mensual' | 'trimestral' | 'semestral';
-type CalendarAbsence = EmployeeAbsence & { employee_id: string };
 
 const getErrorMessage = (error: unknown, fallback = 'Ocurrió un error inesperado') => (
   error instanceof Error ? error.message : fallback
@@ -89,7 +87,7 @@ interface CalendarCellProps {
   selected: boolean;
   absence: EmployeeAbsence | undefined;
   shift: Shift | null | undefined;
-  assignment: EmployeeShiftAssignment | undefined;
+  assignment: CalendarAssignment | undefined;
   hasConflict: boolean;
   hasCenterConflict: boolean;
   isAdminMode: boolean;
@@ -435,15 +433,15 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const isSelectingRef = useRef(false);
   const selectionStartRef = useRef<{ employeeId: string; date: string } | null>(null);
 
-  const { currentCompanyId, assignedCenterIds } = useAuth();
-  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const { assignedCenterIds } = useAuth();
+  const employeeQuery = useEmployees({ calendar: true });
+  const { data: employees = [], isLoading: loadingEmployees } = employeeQuery;
   const { data: operationalShifts = [] } = useShifts();
   const { data: dayShifts = [] } = useShifts('day');
   const shifts = useMemo(() => [...operationalShifts, ...dayShifts], [operationalShifts, dayShifts]);
   const { data: centers = [] } = useOperationCenters();
   const { data: areas = [] } = useAreas();
   const { data: holidaysMap = {} } = useHolidaysMap();
-  const { data: timeConfigs = [] } = useEmployeeTimeConfigs();
 
   const activeDayShifts = useMemo(
     () => dayShifts.filter((shift) => shift.is_active),
@@ -483,20 +481,6 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     }
   }, [assignableDayShifts, selectedShiftId]);
 
-  // Build employee mode map: employeeId -> { mode, workSchedule }
-  const employeeModeMap = useMemo(() => {
-    const map: Record<string, { mode: EmployeeTimeMode; workSchedule?: WorkSchedule }> = {};
-    timeConfigs.forEach(tc => {
-      if (scheduleForDate(timeConfigs, tc.employee_id, format(currentMonth, 'yyyy-MM-dd'))?.id === tc.id) {
-        map[tc.employee_id] = {
-          mode: tc.mode,
-          workSchedule: tc.work_schedules || undefined,
-        };
-      }
-    });
-    return map;
-  }, [timeConfigs, currentMonth]);
-  
   // Calculate date range based on view mode
   const { startDate, endDate, daysInPeriod } = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -556,79 +540,34 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     });
   }, [daysInPeriod, holidaysMap]);
   
-  const { data: assignments = [], isLoading: loadingAssignments } = useShiftAssignments({
-    startDate,
-    endDate,
-  });
-  
+  const assignmentQuery = useCalendarAssignments({ startDate, endDate });
+  const configQuery = useCalendarTimeConfigs({ startDate, endDate });
+  const absenceQuery = useCalendarAbsences({ startDate, endDate });
+  const { data: assignments = [], isLoading: loadingAssignments } = assignmentQuery;
+  const { data: timeConfigs = [] } = configQuery;
+  const { data: absences } = absenceQuery;
   const createBulkAssignments = useCreateBulkShiftAssignments();
   const deleteAssignment = useDeleteShiftAssignment();
 
-  // Fetch absences
-  const { data: absences = [] } = useQuery<CalendarAbsence[]>({
-    queryKey: ['employee_absences', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
-      if (!currentCompanyId) return [];
-
-      const { data: vacations } = await supabase
-        .from('vacation_requests')
-        .select('employee_id, start_date, end_date, status')
-        .eq('company_id', currentCompanyId)
-        .in('status', ['aprobado', 'en_curso', 'completado'])
-        .gte('end_date', startDate)
-        .lte('start_date', endDate);
-
-      const { data: leaves } = await supabase
-        .from('leave_requests')
-        .select('employee_id, start_date, end_date, status')
-        .eq('company_id', currentCompanyId)
-        .eq('status', 'aprobado')
-        .gte('end_date', startDate)
-        .lte('start_date', endDate);
-
-      const { data: incapacities } = await supabase
-        .from('employee_incapacities')
-        .select('employee_id, start_date, end_date')
-        .eq('company_id', currentCompanyId)
-        .gte('end_date', startDate)
-        .lte('start_date', endDate);
-
-      const result: CalendarAbsence[] = [];
-
-      (vacations || []).forEach(v => {
-        result.push({
-          employee_id: v.employee_id,
-          type: 'vacation',
-          start_date: v.start_date,
-          end_date: v.end_date,
-          description: 'Vacaciones',
-        });
-      });
-
-      (leaves || []).forEach(l => {
-        result.push({
-          employee_id: l.employee_id,
-          type: 'leave',
-          start_date: l.start_date,
-          end_date: l.end_date,
-          description: 'Permiso',
-        });
-      });
-
-      (incapacities || []).forEach(i => {
-        result.push({
-          employee_id: i.employee_id,
-          type: 'incapacity',
-          start_date: i.start_date,
-          end_date: i.end_date,
-          description: 'Incapacidad',
-        });
-      });
-
-      return result;
-    },
-    enabled: employees.length > 0 && !!currentCompanyId,
-  });
+  // Index once so each cell only examines this employee's schedule history.
+  const configsByEmployee = useMemo(() => {
+    const map = new Map<string, typeof timeConfigs>();
+    timeConfigs.forEach(config => {
+      const rows = map.get(config.employee_id) ?? [];
+      rows.push(config);
+      map.set(config.employee_id, rows);
+    });
+    return map;
+  }, [timeConfigs]);
+  const employeeModeMap = useMemo(() => {
+    const map: Record<string, { mode: EmployeeTimeMode; workSchedule?: WorkSchedule }> = {};
+    const date = format(currentMonth, 'yyyy-MM-dd');
+    configsByEmployee.forEach((configs, employeeId) => {
+      const config = scheduleForDate(configs, employeeId, date);
+      if (config) map[employeeId] = { mode: config.mode, workSchedule: config.work_schedules || undefined };
+    });
+    return map;
+  }, [configsByEmployee, currentMonth]);
 
   // Build absences map using fast lexicographical string comparison
   const absencesMap = useMemo(() => {
@@ -728,7 +667,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
   // Build assignments map
   const assignmentsMap = useMemo(() => {
-    const map: Record<string, Record<string, EmployeeShiftAssignment>> = {};
+    const map: Record<string, Record<string, CalendarAssignment>> = {};
     assignments.forEach((a) => {
       if (!map[a.employee_id]) {
         map[a.employee_id] = {};
@@ -900,7 +839,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   }, [selectedCells]);
 
-  const isLoading = loadingEmployees || loadingAssignments;
+  const isLoading = loadingEmployees || loadingAssignments || configQuery.isLoading || absenceQuery.isLoading;
+  const loadError = employeeQuery.error || assignmentQuery.error || configQuery.error || absenceQuery.error;
 
   const isInitializedRef = useRef(false);
 
@@ -943,6 +883,15 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     e.preventDefault();
     parentViewport.scrollTop += e.deltaY;
   }, [containedScroll]);
+
+  if (loadError) {
+    return <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm">
+      <p>No se pudo cargar el calendario completo. Intenta nuevamente antes de asignar turnos.</p>
+      <Button variant="outline" className="mt-2" onClick={() => {
+        void Promise.all([employeeQuery.refetch(), assignmentQuery.refetch(), configQuery.refetch(), absenceQuery.refetch()]);
+      }}>Reintentar</Button>
+    </div>;
+  }
 
   if (isLoading) {
     return (
@@ -1187,7 +1136,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 )}
                               </div>
                               {daysData.map(({ day, dateStr, holiday, sunday, dayOfWeek }) => {
-                                const dayConfig = scheduleForDate(timeConfigs, employee.id, dateStr);
+                                const dayConfig = scheduleForDate(configsByEmployee.get(employee.id) ?? [], employee.id, dateStr);
                                 const isAdminMode = dayConfig?.mode === 'administrative';
                                 const adminSchedule = isAdminMode ? dayConfig.work_schedules : undefined;
                                 const assignment = assignmentsMap[employee.id]?.[dateStr];
@@ -1319,7 +1268,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                 onClick={async () => {
                   const assignmentsToDelete = selectedCells[0]?.dates
                     .map(date => assignmentsMap[selectedCells[0].employeeId]?.[date])
-                    .filter(Boolean) as EmployeeShiftAssignment[];
+                    .filter(Boolean) as CalendarAssignment[];
                   
                   if (assignmentsToDelete.length === 0) return;
                   
