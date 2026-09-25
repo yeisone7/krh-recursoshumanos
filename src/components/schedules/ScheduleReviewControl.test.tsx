@@ -1,8 +1,8 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-const state = vi.hoisted(() => ({ canApprove: true, write: vi.fn() }));
-vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ currentCompanyId: 'company', hasPermission: (m: string, a: string) => m === 'jornadas' && (a !== 'approve' || state.canApprove) }) }));
+const state = vi.hoisted(() => ({ canApprove: true, canView: true, write: vi.fn() }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ currentCompanyId: 'company', hasPermission: (m: string, a: string) => m === 'jornadas' && (a === 'approve' ? state.canApprove : state.canView) }) }));
 vi.mock('@/lib/payrollCorrections', async importOriginal => ({ ...await importOriginal<object>(), writePayrollRecords: state.write }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
 vi.mock('@/components/payroll/CorrectionTicketRequest', () => ({ CorrectionTicketRequest: () => null }));
@@ -14,7 +14,7 @@ function mount() {
   render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><ScheduleReviewControl employees={[{ id: 'employee', first_name: 'Yeison', last_name: 'Escobar' }]} start="2026-09-05" end="2026-09-10" selection={[]} days={days} loading={false} error={null} /></QueryClientProvider>);
   fireEvent.click(screen.getByRole('button', { name: /Revisar y aprobar/ }));
 }
-afterEach(() => { cleanup(); state.canApprove = true; vi.clearAllMocks(); });
+afterEach(() => { cleanup(); state.canApprove = true; state.canView = true; vi.clearAllMocks(); });
 describe('calendar review', () => {
   it('submits the exact snapshots of selected work and rest days', async () => {
     state.write.mockResolvedValue([]); mount();
@@ -36,5 +36,10 @@ describe('calendar review', () => {
   it('keeps read-only roles from seeing approval actions', () => {
     state.canApprove = false; mount(); expect(screen.queryByRole('button', { name: 'Aprobar selección' })).toBeNull();
     expect(screen.getAllByText('Pendiente').length).toBeGreaterThan(0);
+  });
+  it('does not expose the review to a role without read or approval access', () => {
+    state.canView = false; state.canApprove = false;
+    render(<QueryClientProvider client={new QueryClient()}><ScheduleReviewControl employees={[]} start="2026-09-05" end="2026-09-10" selection={[]} days={days} loading={false} error={null} /></QueryClientProvider>);
+    expect(screen.queryByRole('button', { name: /Revisar y aprobar/ })).toBeNull();
   });
 });

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { correctionClient, correctionActionLabel, ticketStatus, ticketLabels, colombiaDateTime, colombiaInput, colombiaInputToISO, type CorrectionTicket } from '@/lib/payrollCorrections';
 import { CorrectionTicketRequest, TicketActions } from '@/components/payroll/CorrectionTicketRequest';
 import { CorrectionAudit } from '@/components/payroll/CorrectionAudit';
+import { CorrectionDashboard } from '@/components/payroll/CorrectionDashboard';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,11 +15,14 @@ import { toast } from 'sonner';
 export default function PermisosCorreccion() {
   const { currentCompanyId, user, hasPermission } = useAuth();
   const [search, setSearch] = useState(''); const [state, setState] = useState('all');
+  const [activeView, setActiveView] = useState<'dashboard' | 'requests'>('dashboard');
   const [history, setHistory] = useState<CorrectionTicket | null>(null);
   const [transition, setTransition] = useState<{ ticket: CorrectionTicket; action: string } | null>(null);
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
   const canRead = ['view', 'create', 'approve', 'update', 'export'].some(a => hasPermission('correction_tickets', a)) || hasPermission('jornadas', 'approve') || hasPermission('novedades', 'approve');
+  const canAnalytics = hasPermission('correction_tickets_analytics', 'view');
+  const view = canAnalytics && activeView === 'dashboard' ? 'dashboard' : canRead ? 'requests' : 'dashboard';
   const tickets = useQuery({ queryKey: ['correction-tickets', currentCompanyId], enabled: !!currentCompanyId && canRead, refetchInterval: 15000, queryFn: async () => {
     const result: CorrectionTicket[] = [];
     for (let offset = 0; ; offset += 500) {
@@ -26,10 +30,12 @@ export default function PermisosCorreccion() {
       if (r.error) throw r.error; result.push(...r.data); if (r.data.length < 500) return result;
     }
   } });
-  if (!canRead) return <p className="p-6">Su rol no tiene acceso a los permisos de corrección.</p>;
+  if (!canRead && !canAnalytics) return <p className="p-6">Su rol no tiene acceso a los permisos de corrección.</p>;
   const filtered = (tickets.data || []).filter(t => `${t.number} ${t.employee_name} ${t.requested_by_name} ${t.center_name}`.toLowerCase().includes(search.toLowerCase()) && (state === 'all' || ticketStatus(t, now) === state));
   return <div className="mx-auto max-w-7xl space-y-5 p-4 md:p-6"><header className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm text-muted-foreground">Cortes de control</p><h1 className="text-2xl font-semibold">Permisos de corrección</h1><p className="mt-1 text-sm text-muted-foreground">Un empleado, fechas concretas y un plazo para editar y aprobar. Los cortes permanecen activos.</p></div><CorrectionTicketRequest /></header>
     {hasPermission('cortes_control', 'view') && <Link className="text-sm underline" to="/cortes-control">Volver a cortes de control</Link>}
+    {canAnalytics && canRead && <div role="tablist" aria-label="Vistas de permisos de corrección" className="flex gap-2 border-b pb-2"><Button role="tab" aria-selected={view === 'dashboard'} variant={view === 'dashboard' ? 'default' : 'outline'} onClick={() => setActiveView('dashboard')}>Dashboard</Button><Button role="tab" aria-selected={view === 'requests'} variant={view === 'requests' ? 'default' : 'outline'} onClick={() => setActiveView('requests')}>Solicitudes</Button></div>}
+    {view === 'dashboard' ? <CorrectionDashboard /> : <>
     <div className="flex flex-wrap gap-3"><Input className="max-w-md" aria-label="Buscar permiso" placeholder="Empleado, solicitante, centro o número" value={search} onChange={e => setSearch(e.target.value)} /><select aria-label="Estado del permiso" className="rounded-md border bg-background p-2" value={state} onChange={e => setState(e.target.value)}><option value="all">Todos los estados</option>{Object.entries(ticketLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><Button variant="outline" onClick={() => tickets.refetch()}>Actualizar</Button></div>
     {tickets.isLoading && <p>Cargando permisos…</p>}{tickets.error && <p role="alert">{tickets.error.message}</p>}
     {filtered.map(t => { const status = ticketStatus(t, now); return <article key={t.id} className="space-y-3 rounded-lg border bg-card p-4"><div className="flex flex-wrap justify-between gap-2"><h2 className="font-semibold">#{t.number} · {t.employee_name}</h2><span className="rounded-full border px-3 py-1 text-xs">{ticketLabels[status]}</span></div><p className="text-sm">{t.center_name} · {t.start_date} al {t.end_date} · Solicitante: {t.requested_by_name}</p><p className="text-sm">Vence: <strong>{colombiaDateTime(t.expires_at)}</strong> (Colombia)</p><p className="text-sm text-muted-foreground">{t.reason}</p><p className="text-xs">{t.actions.map(correctionActionLabel).join(' / ')}</p>{status === 'expired' && <p className="text-sm text-amber-800">El plazo terminó. Los cambios se conservan; para editar o aprobar pendientes debe solicitar otro ticket.</p>}<div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => setHistory(t)}>Historial y cambios</Button>
@@ -40,6 +46,7 @@ export default function PermisosCorreccion() {
     {!tickets.isLoading && !filtered.length && <p className="text-sm text-muted-foreground">No hay permisos para estos filtros.</p>}
     <Dialog open={!!history} onOpenChange={v => !v && setHistory(null)}><DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>Ticket #{history?.number} · {history?.employee_name}</DialogTitle><DialogDescription>Solicitud, decisiones y cambios registrados por el servidor.</DialogDescription></DialogHeader>{history && <CorrectionAudit ticketId={history.id} />}</DialogContent></Dialog>
     {transition && <TransitionDialog {...transition} close={() => setTransition(null)} />}
+    </>}
   </div>;
 }
 function TransitionDialog({ ticket, action, close }: { ticket: CorrectionTicket; action: string; close: () => void }) {

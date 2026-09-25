@@ -41,6 +41,7 @@ import {
   AUTO_EXPANDED_PERMISSION_MODULE_CODES,
   getPermissionModuleLabel,
   SENSITIVE_PERMISSION_MODULE_CODES,
+  PAYROLL_PERMISSION_LABELS,
 } from '@/lib/permissionMatrix';
 
 interface PermissionMatrixProps {
@@ -179,6 +180,13 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
       const next = new Set(prev);
       if (next.has(permId)) next.delete(permId);
       else next.add(permId);
+      const jornadas = modules.find(module => module.code === 'jornadas');
+      if (jornadas) {
+        const viewId = getPermissionId(jornadas.id, 'view');
+        const approveId = getPermissionId(jornadas.id, 'approve');
+        if (permId === approveId && next.has(approveId!) && viewId) next.add(viewId);
+        if (permId === viewId && !next.has(viewId!) && approveId) next.delete(approveId);
+      }
       return next;
     });
     setHasChanges(true);
@@ -194,6 +202,10 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
         if (allSelected) next.delete(permission.id);
         else next.add(permission.id);
       });
+      if (!allSelected && modules.find(module => module.id === moduleId)?.code === 'jornadas') {
+        const viewId = getPermissionId(moduleId, 'view');
+        if (viewId) next.add(viewId);
+      }
       return next;
     });
     setHasChanges(true);
@@ -268,7 +280,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
 
     return (
       <div className="flex flex-col items-center gap-1"><Checkbox
-        aria-label={`${modules.find(m => m.id === moduleId)?.name} · ${ACTION_LABELS[action]}`}
+        aria-label={`${modules.find(m => m.id === moduleId)?.name} · ${PAYROLL_PERMISSION_LABELS[modules.find(m => m.id === moduleId)?.code || '']?.[action] || ACTION_LABELS[action]}`}
         checked={isChecked(permId)}
         onCheckedChange={() => togglePermission(permId)}
         disabled={role.is_system}
@@ -277,7 +289,7 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
           'border-slate-300 bg-white shadow-none focus-visible:ring-primary/20',
           ACTION_BG[action]
         )}
-      />{modules.find(m => m.id === moduleId)?.code.startsWith('cortes_control_nivel_') && <span className="text-[10px] text-slate-600">{cutActionLabels[action as keyof typeof cutActionLabels]}</span>}</div>
+      />{modules.find(m => m.id === moduleId)?.code.startsWith('cortes_control_nivel_') && <span className="text-[10px] text-slate-600">{cutActionLabels[action as keyof typeof cutActionLabels]}</span>}{PAYROLL_PERMISSION_LABELS[modules.find(m => m.id === moduleId)?.code || '']?.[action] && <span className="max-w-[92px] text-center text-[9px] leading-tight text-slate-600">{PAYROLL_PERMISSION_LABELS[modules.find(m => m.id === moduleId)?.code || '']?.[action]}</span>}</div>
     );
   };
 
