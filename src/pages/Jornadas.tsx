@@ -688,12 +688,12 @@ export default function Jornadas() {
       </ScrollArea>
 
       {/* Dialogs */}
-      <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />
-      <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} kind={activeTab === 'day-shifts' ? 'day' : 'operational'} />
-      <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />
-      <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />
-      <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />
-      <BulkCycleGeneratorDialog open={showBulkGeneratorDialog} onOpenChange={setShowBulkGeneratorDialog} />
+      {showScheduleForm && <WorkScheduleFormDialog open={showScheduleForm} onOpenChange={setShowScheduleForm} schedule={selectedSchedule} />}
+      {showShiftForm && <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} kind={activeTab === 'day-shifts' ? 'day' : 'operational'} />}
+      {showCycleForm && <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />}
+      {showGeneratorDialog && <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />}
+      {showExportDialog && <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />}
+      {showBulkGeneratorDialog && <BulkCycleGeneratorDialog open={showBulkGeneratorDialog} onOpenChange={setShowBulkGeneratorDialog} />}
 
       {/* Delete Confirm */}
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
