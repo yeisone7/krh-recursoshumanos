@@ -79,7 +79,7 @@ export function CorrectionDashboard() {
       </div>
       <div className="grid gap-4 lg:grid-cols-3"><Ranking title="Usuarios que más solicitan" rows={data.requesters} /><Ranking title="Empleados con más solicitudes" rows={data.employees} /><Ranking title="Centros con más solicitudes" rows={data.centers} onCenter={setCenter} /></div>
       <div className="grid gap-4 md:grid-cols-3">{([
-        ['Cambios por módulo', data.modules.map(row => ({ ...row, label: row.key === 'jornadas' ? 'Reporte de Turnos' : 'Novedades' }))],
+        ['Cambios por módulo', data.modules.map(row => ({ ...row, label: row.key === 'jornadas' ? 'Jornadas' : 'Novedades' }))],
         ['Tipos de cambio', data.actions.map(row => ({ ...row, label: ({ create: 'Creación', insert: 'Creación', update: 'Modificación', delete: 'Eliminación', upsert: 'Asignación' } as Record<string, string>)[row.key] || row.key }))],
         ['Decisiones de autorización', data.decisions.map(row => ({ ...row, label: row.key === 'authorize' ? 'Autorizadas' : 'Rechazadas' }))],
       ] as const).map(([title, rows]) => <section key={title} className="rounded-xl border bg-card p-4"><h3 className="mb-3 font-semibold">{title}</h3>{rows.length ? rows.map(row => <div key={row.key} className="flex justify-between py-1 text-sm"><span>{row.label}</span><strong>{number(row.count)}</strong></div>) : <p className="text-sm text-muted-foreground">Sin datos en este período.</p>}</section>)}</div>
