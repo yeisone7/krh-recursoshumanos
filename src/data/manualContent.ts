@@ -449,10 +449,10 @@ export const MODULE_DOCS: ModuleDoc[] = [
   },
   {
     moduleCode: 'jornadas',
-    title: 'Reporte de Turnos',
+    title: 'Jornadas',
     icon: 'Briefcase',
     description: 'Configuración de jornadas laborales, turnos rotativos, ciclos de trabajo y asignación de horarios a empleados.',
-    actions: ['Crear turnos de trabajo', 'Crear jornadas laborales', 'Configurar ciclos rotativos', 'Asignar turnos a empleados', 'Generar calendario de turnos', 'Exportar reporte de turnos'],
+    actions: ['Crear turnos de trabajo', 'Crear jornadas laborales', 'Configurar ciclos rotativos', 'Asignar turnos a empleados', 'Generar calendario de turnos', 'Exportar jornadas'],
     validations: ['Los turnos no pueden solaparse para un mismo empleado', 'Las horas del turno deben ser coherentes', 'El ciclo debe cubrir al menos una semana'],
     restrictions: ['Los turnos asignados afectan el cálculo de horas extras y recargos'],
     alerts: ['Empleados sin turno asignado', 'Conflictos de horario'],

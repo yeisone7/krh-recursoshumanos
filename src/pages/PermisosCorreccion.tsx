@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 export default function PermisosCorreccion() {
   const { currentCompanyId, user, hasPermission } = useAuth();
   const [search, setSearch] = useState(''); const [state, setState] = useState('all');
-  const [activeView, setActiveView] = useState<'dashboard' | 'requests'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'requests'>('requests');
   const [history, setHistory] = useState<CorrectionTicket | null>(null);
   const [transition, setTransition] = useState<{ ticket: CorrectionTicket; action: string } | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -26,7 +26,7 @@ export default function PermisosCorreccion() {
   const tickets = useQuery({ queryKey: ['correction-tickets', currentCompanyId], enabled: !!currentCompanyId && canRead, refetchInterval: 15000, queryFn: async () => {
     const result: CorrectionTicket[] = [];
     for (let offset = 0; ; offset += 500) {
-      const r = await correctionClient.from('payroll_correction_tickets').select('*').eq('company_id', currentCompanyId!).order('created_at', { ascending: false }).order('id').range(offset, offset + 499);
+      const r = await correctionClient.from('payroll_correction_tickets').select('*').eq('company_id', currentCompanyId!).order('created_at', { ascending: false }).order('id', { ascending: false }).range(offset, offset + 499);
       if (r.error) throw r.error; result.push(...r.data); if (r.data.length < 500) return result;
     }
   } });
@@ -34,7 +34,7 @@ export default function PermisosCorreccion() {
   const filtered = (tickets.data || []).filter(t => `${t.number} ${t.employee_name} ${t.requested_by_name} ${t.center_name}`.toLowerCase().includes(search.toLowerCase()) && (state === 'all' || ticketStatus(t, now) === state));
   return <div className="mx-auto max-w-7xl space-y-5 p-4 md:p-6"><header className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-sm text-muted-foreground">Cortes de control</p><h1 className="text-2xl font-semibold">Permisos de corrección</h1><p className="mt-1 text-sm text-muted-foreground">Un empleado, fechas concretas y un plazo para editar y aprobar. Los cortes permanecen activos.</p></div><CorrectionTicketRequest /></header>
     {hasPermission('cortes_control', 'view') && <Link className="text-sm underline" to="/cortes-control">Volver a cortes de control</Link>}
-    {canAnalytics && canRead && <div role="tablist" aria-label="Vistas de permisos de corrección" className="flex gap-2 border-b pb-2"><Button role="tab" aria-selected={view === 'dashboard'} variant={view === 'dashboard' ? 'default' : 'outline'} onClick={() => setActiveView('dashboard')}>Dashboard</Button><Button role="tab" aria-selected={view === 'requests'} variant={view === 'requests' ? 'default' : 'outline'} onClick={() => setActiveView('requests')}>Solicitudes</Button></div>}
+    {canAnalytics && canRead && <div role="tablist" aria-label="Vistas de permisos de corrección" className="flex gap-2 border-b pb-2"><Button role="tab" aria-selected={view === 'requests'} variant={view === 'requests' ? 'default' : 'outline'} onClick={() => setActiveView('requests')}>Solicitudes</Button><Button role="tab" aria-selected={view === 'dashboard'} variant={view === 'dashboard' ? 'default' : 'outline'} onClick={() => setActiveView('dashboard')}>Dashboard</Button></div>}
     {view === 'dashboard' ? <CorrectionDashboard /> : <>
     <div className="flex flex-wrap gap-3"><Input className="max-w-md" aria-label="Buscar permiso" placeholder="Empleado, solicitante, centro o número" value={search} onChange={e => setSearch(e.target.value)} /><select aria-label="Estado del permiso" className="rounded-md border bg-background p-2" value={state} onChange={e => setState(e.target.value)}><option value="all">Todos los estados</option>{Object.entries(ticketLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select><Button variant="outline" onClick={() => tickets.refetch()}>Actualizar</Button></div>
     {tickets.isLoading && <p>Cargando permisos…</p>}{tickets.error && <p role="alert">{tickets.error.message}</p>}
