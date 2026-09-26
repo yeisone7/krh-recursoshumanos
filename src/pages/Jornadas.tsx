@@ -231,8 +231,8 @@ export default function Jornadas() {
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Navigation & Controls */}
-      <div className="sticky top-0 z-30 px-6 py-4 sm:px-10 bg-background border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full md:w-auto">
+      <div className="sticky top-0 z-30 flex flex-col gap-4 border-b border-border bg-background px-6 py-4 sm:px-10 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full shrink-0 lg:w-auto">
           <TabsList className="h-12 bg-slate-100 p-1 rounded-xl border border-border w-full sm:w-auto overflow-x-auto overflow-y-hidden scrollbar-hide">
             <TabsTrigger value="calendar" className="flex-1 sm:flex-none gap-2 rounded-lg font-bold text-[11px] uppercase tracking-wider h-10 px-6 data-[state=active]:bg-white data-[state=active]:text-primary transition-all">
               <Calendar className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export default function Jornadas() {
           </TabsList>
         </Tabs>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        <div className="flex min-w-0 w-full flex-col items-center gap-3 sm:flex-row sm:flex-wrap lg:w-auto lg:flex-1 lg:justify-end">
           {activeTab !== 'calendar' && (
             <div className="relative w-full sm:w-64 group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -282,13 +282,13 @@ export default function Jornadas() {
             </Select>
           )}
           
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="grid w-full shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_3rem] items-center gap-2 sm:flex sm:w-auto">
             {activeTab === 'day-shifts' && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-12 w-full rounded-xl border-border bg-white px-5 font-bold sm:w-auto"
+                className="h-12 min-w-0 w-full rounded-xl border-border bg-white px-3 font-bold sm:w-auto sm:px-5"
                 onClick={() => void handleExportDayShifts()}
                 disabled={loadingDayShifts || isExportingDayShifts || filteredDayShifts.length === 0}
               >
@@ -306,7 +306,7 @@ export default function Jornadas() {
                 Generar
               </Button>
             ) : (
-              <Button size="sm" className="h-12 w-full sm:w-auto px-8 rounded-xl bg-primary text-primary-foreground font-black uppercase tracking-widest text-[11px]" onClick={() => {
+              <Button size="sm" className="h-12 min-w-0 w-full rounded-xl bg-primary px-3 text-[11px] font-black uppercase tracking-widest text-primary-foreground sm:w-auto sm:px-8" onClick={() => {
                 if (activeTab === 'schedules') { setSelectedSchedule(null); setShowScheduleForm(true); }
                 else if (activeTab === 'shifts' || activeTab === 'day-shifts') { setSelectedShift(null); setShowShiftForm(true); }
                 else if (activeTab === 'cycles') { setSelectedCycle(null); setShowCycleForm(true); }
