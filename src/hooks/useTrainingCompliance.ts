@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -208,6 +209,47 @@ function useTokenCenterAssociations(
   });
 }
 
+// Preserve the query's newest-first order, including matches by legacy course
+// name/code and document number. Build once, rather than scan every completion
+// for each course, center and employee on every keystroke.
+export function indexComplianceCompletions(completions: ComplianceCompletion[]) {
+  const index = new Map<string, Map<string, { completion: ComplianceCompletion; rank: number }>>();
+  completions.forEach((completion, rank) => {
+    const document = normalizeDocument(completion.operator_cedula);
+    const employeeKeys = [
+      completion.employee_id ? `id:${completion.employee_id}` : '',
+      document ? `document:${document}` : '',
+    ].filter(Boolean);
+    for (const key of getCourseMatchKeys({ id: completion.course_id, name: completion.course_name, code: completion.course_code })) {
+      let employees = index.get(key);
+      if (!employees) { employees = new Map(); index.set(key, employees); }
+      for (const employeeKey of employeeKeys) {
+        if (!employees.has(employeeKey)) employees.set(employeeKey, { completion, rank });
+      }
+    }
+  });
+  return index;
+}
+
+export function findComplianceCompletion(
+  index: ReturnType<typeof indexComplianceCompletions>,
+  courseKeys: string[],
+  employee: ComplianceEmployee
+) {
+  const employeeKeys = [`id:${employee.id}`];
+  const document = normalizeDocument(employee.document_number);
+  if (document) employeeKeys.push(`document:${document}`);
+  let match: { completion: ComplianceCompletion; rank: number } | undefined;
+  for (const courseKey of courseKeys) {
+    const employees = index.get(courseKey);
+    for (const employeeKey of employeeKeys) {
+      const candidate = employees?.get(employeeKey);
+      if (candidate && (!match || candidate.rank < match.rank)) match = candidate;
+    }
+  }
+  return match?.completion;
+}
+
 function useAllCompletions(
   companyId: string | undefined,
   userId: string | undefined
@@ -230,7 +272,7 @@ function useAllCompletions(
           `)
           .eq('company_id', companyId!)
           .order('completed_at', { ascending: false })
-          .order('id')
+          .order('id', { ascending: false })
           .range(from, to);
 
         if (error) throw error;
@@ -291,98 +333,94 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
 
   const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || (hasPeriodFilter && periodAssignments.isLoading);
 
-  const complianceData: CenterComplianceData[] = [];
-  const configuredPeriodCourseIds = period
-    ? new Set((periodAssignments.data || []).map((assignment) => assignment.course_id))
-    : null;
-  const periodTokenCourseIds = new Set<string>();
+  const result = useMemo(() => {
+    const complianceData: CenterComplianceData[] = [];
+    const configuredPeriodCourseIds = period
+      ? new Set((periodAssignments.data || []).map((assignment) => assignment.course_id))
+      : null;
+    const periodTokenCourseIds = new Set<string>();
 
-  if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
-    const periodCenterCourseMap = new Map<string, Set<string>>();
-    for (const assoc of tokenAssociations.data) {
-      if (!assoc.operation_center_id) continue;
-      if (period && isTrainingTokenInPeriod(assoc, period)) {
-        if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
-          periodCenterCourseMap.set(assoc.operation_center_id, new Set());
-        }
-        periodCenterCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
-        periodTokenCourseIds.add(assoc.course_id);
+    if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
+      const completionIndex = indexComplianceCompletions(completions.data);
+      const employeesByCenter = new Map<string, ComplianceEmployee[]>();
+      for (const employee of employees.data) {
+        if (!employee.operation_center_id) continue;
+        const group = employeesByCenter.get(employee.operation_center_id) || [];
+        group.push(employee);
+        employeesByCenter.set(employee.operation_center_id, group);
       }
-    }
-
-    for (const center of centers.data) {
-      const centerEmployees = employees.data.filter(
-        (e) => e.operation_center_id === center.id
-      );
-      if (centerEmployees.length === 0) continue;
-
-      const periodCenterCourseIds = periodCenterCourseMap.get(center.id);
-      const applicableCourses = getApplicableComplianceCourses(
-        courses.data,
-        period,
-        configuredPeriodCourseIds,
-        periodCenterCourseIds
-      );
-      if (applicableCourses.length === 0) continue;
-
-      const coursesData: CourseComplianceData[] = [];
-
-      for (const course of applicableCourses) {
-        const targetCourseKeys = new Set(getCourseMatchKeys(course));
-        const courseCompletions = completions.data.filter((completion) => {
-          return getCourseMatchKeys({
-            id: completion.course_id,
-            name: completion.course_name,
-            code: completion.course_code,
-          }).some((key) => targetCourseKeys.has(key));
-        });
-
-        const completed: { employee: ComplianceEmployee; completed_at: string }[] = [];
-        const pending: ComplianceEmployee[] = [];
-
-        for (const emp of centerEmployees) {
-          const employeeDocument = normalizeDocument(emp.document_number);
-          const match = courseCompletions.find(
-            (c) =>
-              (normalizeDocument(c.operator_cedula) && normalizeDocument(c.operator_cedula) === employeeDocument) ||
-              (c.employee_id && c.employee_id === emp.id)
-          );
-          if (match) {
-            completed.push({ employee: { ...emp, center_name: center.name }, completed_at: match.completed_at });
-          } else {
-            pending.push({ ...emp, center_name: center.name });
+      const periodCenterCourseMap = new Map<string, Set<string>>();
+      for (const assoc of tokenAssociations.data) {
+        if (!assoc.operation_center_id) continue;
+        if (period && isTrainingTokenInPeriod(assoc, period)) {
+          if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
+            periodCenterCourseMap.set(assoc.operation_center_id, new Set());
           }
+          periodCenterCourseMap.get(assoc.operation_center_id)!.add(assoc.course_id);
+          periodTokenCourseIds.add(assoc.course_id);
         }
-
-        coursesData.push({
-          course_id: course.id,
-          course_name: course.name,
-          course_code: course.code,
-          completed,
-          pending,
-          total: centerEmployees.length,
-          completedCount: completed.length,
-          percentage: centerEmployees.length > 0 ? Math.round((completed.length / centerEmployees.length) * 100) : 0,
-        });
       }
 
-      complianceData.push({
-        center_id: center.id,
-        center_name: center.name,
-        courses: coursesData,
-        totalEmployees: centerEmployees.length,
-      });
-    }
-  }
+      for (const center of centers.data) {
+        const centerEmployees = employeesByCenter.get(center.id) || [];
+        if (centerEmployees.length === 0) continue;
 
-  return {
-    complianceData,
-    centers: centers.data || [],
-    courses: period
-      ? (courses.data || []).filter((course) =>
-          configuredPeriodCourseIds?.has(course.id) || periodTokenCourseIds.has(course.id)
-        )
-      : courses.data || [],
-    isLoading,
-  };
+        const periodCenterCourseIds = periodCenterCourseMap.get(center.id);
+        const applicableCourses = getApplicableComplianceCourses(
+          courses.data,
+          period,
+          configuredPeriodCourseIds,
+          periodCenterCourseIds
+        );
+        if (applicableCourses.length === 0) continue;
+
+        const coursesData: CourseComplianceData[] = [];
+
+        for (const course of applicableCourses) {
+          const targetCourseKeys = getCourseMatchKeys(course);
+
+          const completed: { employee: ComplianceEmployee; completed_at: string }[] = [];
+          const pending: ComplianceEmployee[] = [];
+
+          for (const emp of centerEmployees) {
+            const match = findComplianceCompletion(completionIndex, targetCourseKeys, emp);
+            if (match) {
+              completed.push({ employee: { ...emp, center_name: center.name }, completed_at: match.completed_at });
+            } else {
+              pending.push({ ...emp, center_name: center.name });
+            }
+          }
+
+          coursesData.push({
+            course_id: course.id,
+            course_name: course.name,
+            course_code: course.code,
+            completed,
+            pending,
+            total: centerEmployees.length,
+            completedCount: completed.length,
+            percentage: centerEmployees.length > 0 ? Math.round((completed.length / centerEmployees.length) * 100) : 0,
+          });
+        }
+
+        complianceData.push({
+          center_id: center.id,
+          center_name: center.name,
+          courses: coursesData,
+          totalEmployees: centerEmployees.length,
+        });
+      }
+    }
+
+    return {
+      complianceData,
+      courses: period
+        ? (courses.data || []).filter((course) =>
+            configuredPeriodCourseIds?.has(course.id) || periodTokenCourseIds.has(course.id)
+          )
+        : courses.data || [],
+    };
+  }, [employees.data, centers.data, courses.data, completions.data, tokenAssociations.data, periodAssignments.data, period, hasPeriodFilter]);
+
+  return { ...result, centers: centers.data || [], isLoading };
 }

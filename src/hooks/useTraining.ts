@@ -38,6 +38,7 @@ type CompletionWithCenterToken = TrainingCompletion & {
 
 type TrainingCompletionPageRow = Record<string, unknown> & {
   id: string;
+  course_id: string;
   completed_at: string;
   signature_data?: string;
 };
@@ -888,8 +889,8 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
       if (!currentCompanyId) return [];
 
       const completionSelect = includeSignatures
-        ? `*, course:training_courses(${TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS}), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
-        : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, course:training_courses(${TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS}), employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
+        ? `*, employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`
+        : `id, company_id, course_id, token_id, employee_id, completed_at, operator_name, operator_cedula, quiz_score, ip_address, user_agent, employee:employees_v2(id, first_name, last_name, document_number), token:training_access_tokens(id, operation_center_id, center:operation_centers(id, name))`;
 
       const completionRows: TrainingCompletionPageRow[] = [];
       let cursor: Pick<TrainingCompletionPageRow, 'completed_at' | 'id'> | null = null;
@@ -929,8 +930,24 @@ export function useTrainingCompletions(courseId?: string, options?: { includeSig
         };
       }
 
+      // Course content is large and shared by hundreds of completions. Load each
+      // course once, retaining all fields required by PDF/Word report exports.
+      const courseIds = [...new Set(completionRows.map(completion => completion.course_id))];
+      const courseById = new Map<string, TrainingCompletion['course']>();
+      for (let start = 0; start < courseIds.length; start += 100) {
+        const { data, error } = await supabase.from('training_courses')
+          .select(TRAINING_ATTENDANCE_REPORT_COURSE_FIELDS)
+          .eq('company_id', currentCompanyId)
+          .in('id', courseIds.slice(start, start + 100));
+        if (error) throw error;
+        for (const course of (data || []) as unknown as NonNullable<TrainingCompletion['course']>[]) {
+          courseById.set(course.id, course);
+        }
+      }
+
       const completions = completionRows.map((completion) => ({
         ...completion,
+        course: courseById.get(completion.course_id) || null,
         signature_data: includeSignatures ? completion.signature_data : '',
       })) as unknown as TrainingCompletion[];
       const employeeIds = [...new Set(completions.map(completion => completion.employee_id).filter(Boolean))] as string[];

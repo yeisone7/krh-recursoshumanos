@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useDeferredValue, memo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { motion } from 'framer-motion';
@@ -190,7 +190,7 @@ function CourseComplianceCard({ course }: { course: CourseComplianceData }) {
   );
 }
 
-function CenterComplianceSection({ center, courseFilter }: { center: CenterComplianceData; courseFilter: string }) {
+const CenterComplianceSection = memo(function CenterComplianceSection({ center, courseFilter }: { center: CenterComplianceData; courseFilter: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredCourses = courseFilter === 'all'
@@ -227,14 +227,14 @@ function CenterComplianceSection({ center, courseFilter }: { center: CenterCompl
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="grid grid-cols-1 gap-3 mt-3 sm:ml-4 md:grid-cols-2">
-          {filteredCourses.map((course) => (
+          {isOpen && filteredCourses.map((course) => (
             <CourseComplianceCard key={course.course_id} course={course} />
           ))}
         </div>
       </CollapsibleContent>
     </Collapsible>
   );
-}
+});
 
 function ComplianceViewToggle({ viewMode, onChange }: { viewMode: ViewMode; onChange: (mode: ViewMode) => void }) {
   return (
@@ -263,10 +263,12 @@ function ComplianceViewToggle({ viewMode, onChange }: { viewMode: ViewMode; onCh
   );
 }
 
-function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[]; courseFilter: string }) {
+const ComplianceTable = memo(function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[]; courseFilter: string }) {
   const [selectedRow, setSelectedRow] = useState<ComplianceTableRow | null>(null);
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [data, courseFilter]);
 
-  const rows: ComplianceTableRow[] = data.flatMap((center) => {
+  const rows: ComplianceTableRow[] = useMemo(() => data.flatMap((center) => {
     const coursesToShow = courseFilter === 'all'
       ? center.courses
       : center.courses.filter((course) => course.course_id === courseFilter);
@@ -293,7 +295,9 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
         completedAt: null,
       })),
     ]);
-  });
+  }), [data, courseFilter]);
+  const pageCount = Math.max(1, Math.ceil(rows.length / 50));
+  const currentPage = Math.min(page, pageCount - 1);
 
   if (rows.length === 0) {
     return (
@@ -322,7 +326,7 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60 bg-background">
-                {rows.map((row) => {
+                {rows.slice(currentPage * 50, (currentPage + 1) * 50).map((row) => {
                   const { centerId, centerName, courseId, courseName, courseCode, employee, status, completedAt } = row;
                   const isCompleted = status === 'Completado';
                   return (
@@ -379,6 +383,13 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
                 })}
               </tbody>
             </table>
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t p-4 text-sm">
+            <span>{rows.length} registros · Página {currentPage + 1} de {pageCount}</span>
+            <div className="flex gap-2">
+              <Button variant="outline" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+              <Button variant="outline" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Siguiente</Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -462,7 +473,7 @@ function ComplianceTable({ data, courseFilter }: { data: CenterComplianceData[];
       </Dialog>
     </>
   );
-}
+});
 
 export default function Cumplimiento() {
   const [periodFilter, setPeriodFilter] = useState<TrainingPeriodInput | null>(null);
@@ -470,6 +481,7 @@ export default function Cumplimiento() {
   const [centerFilter, setCenterFilter] = useState('all');
   const [courseFilter, setCourseFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
 
@@ -484,11 +496,11 @@ export default function Cumplimiento() {
     if (centerFilter !== 'all') {
       data = data.filter((c) => c.center_id === centerFilter);
     }
-    return filterComplianceDataBySearch(data, search);
-  }, [complianceData, centerFilter, search]);
+    return filterComplianceDataBySearch(data, deferredSearch);
+  }, [complianceData, centerFilter, deferredSearch]);
 
   function handleExport() {
-    const rows: any[] = [];
+    const rows: Record<string, string>[] = [];
     for (const center of filteredData) {
       const coursesToExport = courseFilter === 'all' ? center.courses : center.courses.filter((c) => c.course_id === courseFilter);
       for (const course of coursesToExport) {

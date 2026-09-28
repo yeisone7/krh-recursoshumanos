@@ -57,6 +57,7 @@ function TreeNode({
   const isOpen = expanded.has(node.id);
   const isSelected = selectedId === node.id;
   const hasChildren = isFolder && node.children!.length > 0;
+  const [visibleCount, setVisibleCount] = useState(50);
 
   return (
     <div className="select-none">
@@ -93,7 +94,11 @@ function TreeNode({
         )}
 
         {/* Label */}
-        <span className={cn('truncate', isFolder && 'font-medium')}>{node.label}</span>
+        <span className={cn('truncate', isFolder && 'font-medium')}>
+          {node.completion
+            ? `${node.completion.operator_name} — ${node.completion.operator_cedula || 'Sin cédula'} — ${format(parseISO(node.completion.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}${node.completion.quiz_score != null ? ` — ${node.completion.quiz_score}%` : ''}`
+            : node.label}
+        </span>
 
         {/* Leaf actions */}
         {node.completion && (
@@ -113,7 +118,7 @@ function TreeNode({
             className="absolute top-0 bottom-2 border-l border-border"
             style={{ left: `${depth * 20 + 14}px` }}
           />
-          {node.children!.map((child, idx) => (
+          {node.children!.slice(0, visibleCount).map((child) => (
             <div key={child.id} className="relative group/leaf">
               {/* Horizontal connector line */}
               <div
@@ -137,6 +142,11 @@ function TreeNode({
               />
             </div>
           ))}
+          {node.children!.length > visibleCount && (
+            <Button variant="ghost" className="ml-6" onClick={() => setVisibleCount(count => count + 50)}>
+              Mostrar más ({node.children!.length - visibleCount} restantes)
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -187,7 +197,7 @@ export default function EvidenciasTreeView({ completions, onViewSignature, onExp
           for (const [area, comps] of [...areaMap.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
             const leafs: TreeNodeData[] = comps.map(c => ({
               id: c.id,
-              label: `${c.operator_name} — ${c.operator_cedula || 'Sin cédula'} — ${format(parseISO(c.completed_at), 'dd/MM/yyyy HH:mm', { locale: es })}${c.quiz_score != null ? ` — ${c.quiz_score}%` : ''}`,
+              label: c.operator_name,
               completion: c,
             }));
             areaChildren.push({ id: `${center}-${cat}-${legal}-${area}`, label: area, children: leafs });

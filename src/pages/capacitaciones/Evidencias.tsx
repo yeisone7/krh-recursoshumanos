@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useDeferredValue } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Search, Trash2, Eye, Download, List, FolderTree, Files, Loader2, FileText } from 'lucide-react';
@@ -42,6 +42,8 @@ export default function Evidencias() {
   const deleteCompletion = useDeleteCompletion();
   const bulkDelete = useBulkDeleteCompletions();
   const [search, setSearch] = useState('');
+  const deferredSearch = useDeferredValue(search);
+  const [page, setPage] = useState(0);
   const [filterCourse, setFilterCourse] = useState('all');
   const [filterCenter, setFilterCenter] = useState('all');
   const [viewMode, setViewMode] = useState<'table' | 'tree'>('tree');
@@ -109,13 +111,18 @@ export default function Evidencias() {
   }
 
   const filtered = useMemo(() => {
+    const query = deferredSearch.toLowerCase();
     return (completions as TrainingCompletion[]).filter(c => {
-      const matchSearch = c.operator_name.toLowerCase().includes(search.toLowerCase()) || (c.operator_cedula || '').includes(search);
+      const matchSearch = c.operator_name.toLowerCase().includes(query) || (c.operator_cedula || '').includes(deferredSearch);
       const matchCourse = filterCourse === 'all' || c.course_id === filterCourse;
       const matchCenter = viewMode !== 'table' || filterCenter === 'all' || getCompletionCenter(c).id === filterCenter;
       return matchSearch && matchCourse && matchCenter;
     });
-  }, [completions, search, filterCourse, filterCenter, viewMode]);
+  }, [completions, deferredSearch, filterCourse, filterCenter, viewMode]);
+  useEffect(() => setPage(0), [deferredSearch, filterCourse, filterCenter, viewMode]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 50));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleCompletions = filtered.slice(currentPage * 50, (currentPage + 1) * 50);
 
   const toggleSelect = (id: string) => setSelected(prev => {
     const n = new Set(prev);
@@ -126,7 +133,12 @@ export default function Evidencias() {
     }
     return n;
   });
-  const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(c => c.id)));
+  const toggleAll = () => setSelected(prev => {
+    const next = new Set(prev);
+    const allVisibleSelected = visibleCompletions.every(c => prev.has(c.id));
+    visibleCompletions.forEach(c => allVisibleSelected ? next.delete(c.id) : next.add(c.id));
+    return next;
+  });
 
   const centerOptions = useMemo(() => {
     const map = new Map<string, string>();
@@ -866,7 +878,7 @@ export default function Evidencias() {
             <Table>
               <TableHeader className="bg-background">
                 <TableRow>
-                  <TableHead className="w-10 h-12"><Checkbox checked={selected.size === filtered.length && filtered.length > 0} onCheckedChange={toggleAll} /></TableHead>
+                  <TableHead className="w-10 h-12"><Checkbox aria-label="Seleccionar esta página" checked={visibleCompletions.length > 0 && visibleCompletions.every(c => selected.has(c.id))} onCheckedChange={toggleAll} /></TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Nombre</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Cédula</TableHead>
                   <TableHead className="font-semibold text-xs uppercase tracking-wider text-muted-foreground h-12">Capacitación</TableHead>
@@ -878,7 +890,7 @@ export default function Evidencias() {
               <TableBody>
                 {filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-16 h-32">No hay evidencias registradas</TableCell></TableRow>
-                ) : filtered.map(c => (
+                ) : visibleCompletions.map(c => (
                   <TableRow key={c.id} className="hover:bg-background /10 transition-colors">
                     <TableCell><Checkbox checked={selected.has(c.id)} onCheckedChange={() => toggleSelect(c.id)} /></TableCell>
                     <TableCell className="font-bold text-sm">{c.operator_name}</TableCell>
@@ -901,6 +913,13 @@ export default function Evidencias() {
                 ))}
               </TableBody>
             </Table>
+            <div className="flex items-center justify-between gap-3 border-t p-4 text-sm">
+              <span>{filtered.length} registros · Página {currentPage + 1} de {pageCount}</span>
+              <div className="flex gap-2">
+                <Button variant="outline" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Anterior</Button>
+                <Button variant="outline" disabled={currentPage + 1 >= pageCount} onClick={() => setPage(currentPage + 1)}>Siguiente</Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
