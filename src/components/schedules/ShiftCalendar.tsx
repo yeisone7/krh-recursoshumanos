@@ -125,12 +125,13 @@ const CalendarCell = memo(({
   deleteAssignment,
 }: CalendarCellProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const visibleReviewStatus = reviewStatus === 'historical' ? undefined : reviewStatus;
 
   return (
     <ContextMenu onOpenChange={setIsMenuOpen}>
       <ContextMenuTrigger>
         <div
-          title={reviewStatus ? `Aprobación: ${reviewLabels[reviewStatus]}` : undefined}
+          title={visibleReviewStatus ? `Aprobación: ${reviewLabels[visibleReviewStatus]}` : undefined}
           className={cn(
             'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
             sunday && !absence && 'bg-red-50',
@@ -153,7 +154,7 @@ const CalendarCell = memo(({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
-                {reviewStatus && <span aria-label={reviewLabels[reviewStatus]} className={cn('absolute bottom-0 right-0 z-10 rounded-sm px-0.5 text-[8px] font-bold', reviewStatus === 'approved' ? 'bg-emerald-100 text-emerald-900' : reviewStatus === 'rejected' ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900')}>{reviewStatus === 'approved' ? '✓' : reviewStatus === 'rejected' ? '×' : reviewStatus === 'historical' ? 'H' : 'P'}</span>}
+                {visibleReviewStatus && <span aria-label={reviewLabels[visibleReviewStatus]} className={cn('absolute bottom-0 right-0 z-10 rounded-sm px-0.5 text-[8px] font-bold', visibleReviewStatus === 'approved' ? 'bg-emerald-100 text-emerald-900' : visibleReviewStatus === 'rejected' ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900')}>{visibleReviewStatus === 'approved' ? '✓' : visibleReviewStatus === 'rejected' ? '×' : 'P'}</span>}
                 {/* Conflict indicator badge */}
                 {(hasConflict || hasCenterConflict) && (
                   <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive rounded-full flex items-center justify-center z-10 shadow-sm">
@@ -909,7 +910,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     )}>
       {/* Header Controls */}
       <ScheduleReviewControl employees={reviewEmployees} start={startDate} end={endDate} selection={selectedCells} days={reviews.data} loading={reviews.isLoading} error={reviews.error} />
-      <p className="text-xs text-muted-foreground">Aprobación: ✓ Aprobada · × Rechazada · P Pendiente · H Sin revisión histórica</p>
+      <p className="text-xs text-muted-foreground">Aprobación: ✓ Aprobada · × Rechazada · P Pendiente</p>
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 sm:flex sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5 min-w-0">
