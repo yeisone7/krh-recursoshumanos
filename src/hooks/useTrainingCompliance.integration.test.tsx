@@ -65,6 +65,20 @@ async function mount(period?: { year: number; month: number }) {
 }
 
 describe('training compliance with restricted center access', () => {
+  it('reuses the calculated matrix when the page rerenders for a search keystroke', async () => {
+    const { result, rerender } = await mount();
+    const matrix = result.current.complianceData;
+    rerender();
+    expect(result.current.complianceData).toBe(matrix);
+  });
+
+  it('loads completions beyond the first 1000 without losing employees', async () => {
+    tables.training_completions = Array.from({ length: 1000 }, (_, i) => completion(`other-${i}`, 'unrelated'));
+    tables.training_completions.push(completion('last-page', '2'));
+    const { result } = await mount();
+    expect(result.current.complianceData[0].courses[0].completed.map(c => c.employee.id)).toEqual(['2']);
+  });
+
   it('recognizes completion when the viewer cannot read its access link (Juan)', async () => {
     const { result } = await mount();
     expect(result.current.complianceData).toHaveLength(1);
