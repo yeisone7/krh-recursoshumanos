@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -72,7 +73,14 @@ export function LeaveRequestFormDialog({
   onOpenChange,
   preselectedEmployeeId,
 }: LeaveRequestFormDialogProps) {
-  const { data: employees = [] } = useEmployees();
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
+  const employeeOptions = useMemo(() => employees
+    .filter(employee => employee.is_active)
+    .map(employee => ({
+      value: employee.id,
+      label: `${employee.first_name} ${employee.last_name} · CC: ${employee.document_number}`,
+      keywords: employee.document_number?.replace(/\D/g, '') || '',
+    })), [employees]);
   const { data: leaveTypeConfigs = [] } = useLeaveTypeConfigs();
   const { data: holidaysSet } = useHolidaysSet();
   const createRequest = useCreateLeaveRequest();
@@ -283,23 +291,21 @@ export function LeaveRequestFormDialog({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="font-bold text-xs uppercase tracking-widest text-muted-foreground">Empleado</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-14 rounded-2xl bg-background border-border/50 font-medium">
-                                <SelectValue placeholder="Seleccione un empleado" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="rounded-2xl border-border ">
-                              {employees.filter(e => e.is_active).map((emp) => (
-                                <SelectItem key={emp.id} value={emp.id} className="rounded-xl focus:bg-primary/10 focus:text-primary cursor-pointer my-1">
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{emp.first_name} {emp.last_name}</span>
-                                    <span className="text-[10px] text-muted-foreground opacity-70">CC: {emp.document_number}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <SearchableSelect
+                              options={employeeOptions}
+                              value={field.value}
+                              onValueChange={(employeeId) => {
+                                if (employeeId) field.onChange(employeeId);
+                              }}
+                              placeholder={loadingEmployees ? 'Cargando empleados...' : 'Seleccione un empleado'}
+                              searchPlaceholder="Buscar por nombre o cédula..."
+                              emptyMessage="No se encontraron empleados."
+                              disabled={loadingEmployees}
+                              triggerClassName="h-14 rounded-2xl bg-background border-border/50 font-medium"
+                              className="rounded-2xl border-border"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
