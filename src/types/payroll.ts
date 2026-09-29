@@ -110,6 +110,8 @@ export interface PreLiquidationRow {
   dominicalTrabajado: number;
   festivoTrabajado: number;
   descansoRemunerado: number;
+  noTrabajado: number;
+  suspension: number;
   hedo: number;
   heno: number;
   hedf: number;

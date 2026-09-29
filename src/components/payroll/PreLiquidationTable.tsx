@@ -47,6 +47,8 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               { label: 'Dom. Trab.', value: fmt(row.dominicalTrabajado) },
               { label: 'Fest. Trab.', value: fmt(row.festivoTrabajado) },
               { label: 'Desc. Rem.', value: fmt(row.descansoRemunerado) },
+              { label: 'No trabajado', value: fmt(row.noTrabajado) },
+              { label: 'Suspensión', value: fmt(row.suspension) },
               { label: 'HEDO', value: row.hedo > 0 ? row.hedo.toFixed(1) : '-' },
               { label: 'HENO', value: row.heno > 0 ? row.heno.toFixed(1) : '-' },
               { label: 'HEDF', value: row.hedf > 0 ? row.hedf.toFixed(1) : '-' },
@@ -129,6 +131,8 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               <TableHead className="text-center min-w-[70px]">Dom. Trab.</TableHead>
               <TableHead className="text-center min-w-[70px]">Fest. Trab.</TableHead>
               <TableHead className="text-center min-w-[70px]">Desc. Rem.</TableHead>
+              <TableHead className="text-center min-w-[90px]">No trabajado</TableHead>
+              <TableHead className="text-center min-w-[80px]">Suspensión</TableHead>
               <TableHead className="text-center min-w-[60px]">HEDO</TableHead>
               <TableHead className="text-center min-w-[60px]">HENO</TableHead>
               <TableHead className="text-center min-w-[60px]">HEDF</TableHead>
@@ -170,6 +174,8 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                 <TableCell className="text-center">{fmt(row.dominicalTrabajado)}</TableCell>
                 <TableCell className="text-center">{fmt(row.festivoTrabajado)}</TableCell>
                 <TableCell className="text-center">{fmt(row.descansoRemunerado)}</TableCell>
+                <TableCell className="text-center">{fmt(row.noTrabajado)}</TableCell>
+                <TableCell className="text-center">{fmt(row.suspension)}</TableCell>
                 <TableCell className="text-center">{row.hedo > 0 ? row.hedo.toFixed(1) : '-'}</TableCell>
                 <TableCell className="text-center">{row.heno > 0 ? row.heno.toFixed(1) : '-'}</TableCell>
                 <TableCell className="text-center">{row.hedf > 0 ? row.hedf.toFixed(1) : '-'}</TableCell>

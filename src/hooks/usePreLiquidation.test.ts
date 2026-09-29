@@ -8,11 +8,16 @@ const employee = {
   id: 'employee-1', first_name: 'Ana', last_name: 'Prueba', document_number: 'TEST-1',
   operationCenterIds: ['center-1'], operationCenterName: 'Centro de prueba', restDay: 'Martes', shiftName: 'Diurno',
 };
-export function assignment(date: string, rest = false): EmployeeShiftAssignment {
+export function assignment(date: string, classification: 'work' | 'rest' | 'not_worked' | 'suspension' = 'work'): EmployeeShiftAssignment {
   return {
     id: date, employee_id: employee.id, shift_id: 'shift-1', assignment_date: date,
     source: 'manual', created_at: '', updated_at: '',
-    shifts: { id: 'shift-1', is_rest_day: rest } as Shift,
+    shifts: {
+      id: 'shift-1',
+      is_rest_day: classification === 'rest',
+      is_not_worked_day: classification === 'not_worked',
+      is_suspension_day: classification === 'suspension',
+    } as Shift,
   };
 }
 function fixture(overrides: Partial<PreLiquidationData> = {}): PreLiquidationData {
@@ -59,11 +64,18 @@ describe('descanso obligatorio', () => {
       .toMatchObject({ festivoTrabajado: 1, dominicalTrabajado: 0, totalDias: 1 });
   });
   it('un turno de descanso no es trabajo dominical', () => {
-    expect(calculate({ assignments: [assignment('2026-09-22', true)] }))
+    expect(calculate({ assignments: [assignment('2026-09-22', 'rest')] }))
       .toMatchObject({ descansoRemunerado: 1, dominicalTrabajado: 0, totalDias: 1 });
   });
+  it.each([
+    ['not_worked', { noTrabajado: 1, suspension: 0 }],
+    ['suspension', { noTrabajado: 0, suspension: 1 }],
+  ] as const)('registra %s sin sumarlo como día remunerado', (classification, expected) => {
+    expect(calculate({ assignments: [assignment('2026-09-22', classification)] }))
+      .toMatchObject({ ...expected, jornada: 0, descansoRemunerado: 0, totalDias: 0 });
+  });
   it('concilia una semana completa: 4 ordinarios + 1 descanso trabajado + 1 festivo + 1 descanso', () => {
-    const assignments = Array.from({ length: 7 }, (_, index) => assignment(`2026-09-${21 + index}`, index === 3));
+    const assignments = Array.from({ length: 7 }, (_, index) => assignment(`2026-09-${21 + index}`, index === 3 ? 'rest' : 'work'));
     expect(calculate({ assignments, holidays: new Set(['2026-09-25']) }))
       .toMatchObject({ jornada: 4, dominicalTrabajado: 1, festivoTrabajado: 1, descansoRemunerado: 1, totalDias: 7, hasWarning: false });
   });

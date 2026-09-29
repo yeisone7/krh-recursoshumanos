@@ -18,6 +18,8 @@ const dayShift = (id: string, centerIds: string[]): Shift => ({
   crosses_midnight: false,
   color: 'transparent',
   is_rest_day: false,
+  is_not_worked_day: false,
+  is_suspension_day: false,
   is_active: true,
   kind: 'day',
   created_at: '',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +33,11 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import type { Shift } from '@/types/schedule';
 import { SHIFT_COLORS, SHIFT_COLOR_TRANSPARENT } from '@/types/schedule';
 import { cn } from '@/lib/utils';
+import {
+  getExclusiveShiftClassificationFlags,
+  normalizeNonWorkingShiftValues,
+  type NonWorkingShiftField,
+} from '@/lib/shiftClassification';
 
 const shiftSchema = z.object({
   name: z.string().min(1, 'Nombre requerido').max(100),
@@ -44,6 +49,8 @@ const shiftSchema = z.object({
   crosses_midnight: z.boolean(),
   color: z.string(),
   is_rest_day: z.boolean(),
+  is_not_worked_day: z.boolean(),
+  is_suspension_day: z.boolean(),
   is_active: z.boolean(),
   operation_center_ids: z.array(z.string().uuid()),
 });
@@ -69,6 +76,12 @@ export function ShiftFormDialog({
   const isEditing = !!shift;
 
   const [activeTab, setActiveTab] = useState('detalles');
+  const lastWorkingTiming = useRef({
+    start_time: '06:00',
+    end_time: '14:00',
+    break_minutes: 0,
+    crosses_midnight: false,
+  });
 
   const form = useForm<ShiftFormData>({
     resolver: zodResolver(shiftSchema),
@@ -82,6 +95,8 @@ export function ShiftFormDialog({
       crosses_midnight: false,
       color: SHIFT_COLOR_TRANSPARENT,
       is_rest_day: false,
+      is_not_worked_day: false,
+      is_suspension_day: false,
       is_active: true,
       operation_center_ids: [],
     },
@@ -90,6 +105,14 @@ export function ShiftFormDialog({
   useEffect(() => {
     if (open) {
       if (shift) {
+        if (!shift.is_rest_day && !shift.is_not_worked_day && !shift.is_suspension_day) {
+          lastWorkingTiming.current = {
+            start_time: shift.start_time.slice(0, 5),
+            end_time: shift.end_time.slice(0, 5),
+            break_minutes: shift.break_minutes,
+            crosses_midnight: shift.crosses_midnight,
+          };
+        }
         form.reset({
           name: shift.name,
           code: shift.code || '',
@@ -100,10 +123,15 @@ export function ShiftFormDialog({
           crosses_midnight: shift.crosses_midnight,
           color: shift.color,
           is_rest_day: shift.is_rest_day,
+          is_not_worked_day: shift.is_not_worked_day ?? false,
+          is_suspension_day: shift.is_suspension_day ?? false,
           is_active: shift.is_active,
           operation_center_ids: shift.shift_operation_centers?.map((scope) => scope.operation_center_id) ?? [],
         });
       } else {
+        lastWorkingTiming.current = {
+          start_time: '06:00', end_time: '14:00', break_minutes: 0, crosses_midnight: false,
+        };
         form.reset({
           name: '',
           code: '',
@@ -114,6 +142,8 @@ export function ShiftFormDialog({
           crosses_midnight: false,
           color: SHIFT_COLOR_TRANSPARENT,
           is_rest_day: false,
+          is_not_worked_day: false,
+          is_suspension_day: false,
           is_active: true,
           operation_center_ids: [],
         });
@@ -124,27 +154,30 @@ export function ShiftFormDialog({
 
   const onSubmit = async (data: ShiftFormData) => {
     try {
+      const normalizedData = normalizeNonWorkingShiftValues(data);
       if (isEditing) {
         await updateShift.mutateAsync({
           id: shift.id,
-          ...data,
-          operation_center_ids: kind === 'day' ? data.operation_center_ids : undefined,
+          ...normalizedData,
+          operation_center_ids: kind === 'day' ? normalizedData.operation_center_ids : undefined,
         });
         toast.success('Turno actualizado');
       } else {
         await createShift.mutateAsync({
-          name: data.name,
-          code: data.code,
-          description: data.description,
-          start_time: data.start_time,
-          end_time: data.end_time,
-          break_minutes: data.break_minutes,
-          crosses_midnight: data.crosses_midnight,
-          color: data.color,
-          is_rest_day: data.is_rest_day,
-          is_active: data.is_active,
+          name: normalizedData.name,
+          code: normalizedData.code,
+          description: normalizedData.description,
+          start_time: normalizedData.start_time,
+          end_time: normalizedData.end_time,
+          break_minutes: normalizedData.break_minutes,
+          crosses_midnight: normalizedData.crosses_midnight,
+          color: normalizedData.color,
+          is_rest_day: normalizedData.is_rest_day,
+          is_not_worked_day: normalizedData.is_not_worked_day,
+          is_suspension_day: normalizedData.is_suspension_day,
+          is_active: normalizedData.is_active,
           kind,
-          operation_center_ids: kind === 'day' ? data.operation_center_ids : undefined,
+          operation_center_ids: kind === 'day' ? normalizedData.operation_center_ids : undefined,
         });
         toast.success('Turno creado');
       }
@@ -157,6 +190,39 @@ export function ShiftFormDialog({
   };
 
   const isPending = createShift.isPending || updateShift.isPending;
+  const isNonWorking = form.watch('is_rest_day')
+    || form.watch('is_not_worked_day')
+    || form.watch('is_suspension_day');
+
+  const setExclusiveClassification = (
+    field: NonWorkingShiftField,
+    checked: boolean,
+  ) => {
+    const wasNonWorking = isNonWorking;
+    if (checked && !wasNonWorking) {
+      lastWorkingTiming.current = {
+        start_time: form.getValues('start_time'),
+        end_time: form.getValues('end_time'),
+        break_minutes: form.getValues('break_minutes'),
+        crosses_midnight: form.getValues('crosses_midnight'),
+      };
+    }
+    const flags = getExclusiveShiftClassificationFlags(field, checked);
+    form.setValue('is_rest_day', flags.is_rest_day, { shouldDirty: true });
+    form.setValue('is_not_worked_day', flags.is_not_worked_day, { shouldDirty: true });
+    form.setValue('is_suspension_day', flags.is_suspension_day, { shouldDirty: true });
+    if (checked) {
+      form.setValue('start_time', '00:00', { shouldDirty: true });
+      form.setValue('end_time', '00:00', { shouldDirty: true });
+      form.setValue('break_minutes', 0, { shouldDirty: true });
+      form.setValue('crosses_midnight', false, { shouldDirty: true });
+    } else {
+      form.setValue('start_time', lastWorkingTiming.current.start_time, { shouldDirty: true });
+      form.setValue('end_time', lastWorkingTiming.current.end_time, { shouldDirty: true });
+      form.setValue('break_minutes', lastWorkingTiming.current.break_minutes, { shouldDirty: true });
+      form.setValue('crosses_midnight', lastWorkingTiming.current.crosses_midnight, { shouldDirty: true });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -195,7 +261,7 @@ export function ShiftFormDialog({
                 </div>
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-primary/60" />
-                  {form.watch('start_time') || '00:00'} - {form.watch('end_time') || '00:00'}
+                  {isNonWorking ? '0 horas' : `${form.watch('start_time') || '00:00'} - ${form.watch('end_time') || '00:00'}`}
                 </div>
               </div>
             </div>
@@ -362,7 +428,7 @@ export function ShiftFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de inicio</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
+                          <Input type="time" {...field} disabled={isNonWorking} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -376,7 +442,7 @@ export function ShiftFormDialog({
                       <FormItem className="space-y-2">
                         <FormLabel className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de fin</FormLabel>
                         <FormControl>
-                          <Input type="time" {...field} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
+                          <Input type="time" {...field} disabled={isNonWorking} className="h-12 rounded-2xl bg-background border-border focus:bg-background" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -394,6 +460,7 @@ export function ShiftFormDialog({
                             type="number" 
                             min={0} 
                             max={180}
+                            disabled={isNonWorking}
                             {...field}
                             onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             className="h-12 rounded-2xl bg-background border-border focus:bg-background"
@@ -421,6 +488,7 @@ export function ShiftFormDialog({
                           <Switch
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            disabled={isNonWorking}
                           />
                         </FormControl>
                       </FormItem>
@@ -441,7 +509,49 @@ export function ShiftFormDialog({
                         <FormControl>
                           <Switch
                             checked={field.value}
-                            onCheckedChange={field.onChange}
+                            onCheckedChange={(checked) => setExclusiveClassification('is_rest_day', checked)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="is_not_worked_day"
+                    render={({ field }) => (
+                      <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-border bg-background /10 p-4">
+                        <div className="min-w-0 space-y-1">
+                          <FormLabel className="text-sm font-black text-foreground">No Trabajado</FormLabel>
+                          <FormDescription className="text-xs">
+                            Día no laborado y no remunerado; aporta 0 horas a la jornada
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => setExclusiveClassification('is_not_worked_day', checked)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="is_suspension_day"
+                    render={({ field }) => (
+                      <FormItem className="flex items-start sm:items-center justify-between gap-3 rounded-2xl border border-border bg-background /10 p-4">
+                        <div className="min-w-0 space-y-1">
+                          <FormLabel className="text-sm font-black text-foreground">Suspensión</FormLabel>
+                          <FormDescription className="text-xs">
+                            Día suspendido y no remunerado; aporta 0 horas a la jornada
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={(checked) => setExclusiveClassification('is_suspension_day', checked)}
                           />
                         </FormControl>
                       </FormItem>

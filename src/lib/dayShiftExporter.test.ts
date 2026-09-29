@@ -14,6 +14,8 @@ const shift = (overrides: Partial<Shift> = {}): Shift => ({
   crosses_midnight: false,
   color: '#087F9C',
   is_rest_day: false,
+  is_not_worked_day: false,
+  is_suspension_day: false,
   is_active: true,
   kind: 'day',
   created_at: '',
@@ -62,10 +64,18 @@ describe('buildDayShiftExportRows', () => {
     expect(buildDayShiftExportRows([scoped])[0]).toMatchObject({
       centers: 'Canacol, Zona Norte',
       scope: 'Específico',
-      crossesMidnight: 'Sí',
+      crossesMidnight: 'No aplica',
       type: 'Descanso',
       status: 'Inactivo',
     });
+  });
+
+  it.each([
+    ['is_not_worked_day', 'No trabajado'],
+    ['is_suspension_day', 'Suspensión'],
+  ] as const)('exports %s as a zero-hour non-working shift', (flag, label) => {
+    const row = buildDayShiftExportRows([shift({ [flag]: true })])[0];
+    expect(row).toMatchObject({ startTime: 'No aplica', endTime: 'No aplica', crossesMidnight: 'No aplica', type: label });
   });
 
   it('provides readable fallbacks for optional fields', () => {

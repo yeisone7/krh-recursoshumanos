@@ -92,7 +92,7 @@ describe('vista de preliquidación: consultas → cálculo → tabla → Excel',
     expect(cells[2]).toHaveTextContent('Martes');
     expect(cells[4]).toHaveTextContent('1.0');
     expect(cells[5]).toHaveTextContent('1.0');
-    expect(cells[17]).toHaveTextContent('2');
+    expect(cells[19]).toHaveTextContent('2');
     fireEvent.click(screen.getByRole('button', { name: 'Exportar Excel' }));
     const workbook = vi.mocked(XLSX.writeFile).mock.calls[0][0];
     expect(XLSX.utils.sheet_to_json(workbook.Sheets['Pre-Liquidación'])).toEqual([
@@ -118,7 +118,7 @@ describe('vista de preliquidación: consultas → cálculo → tabla → Excel',
     mount(); calculate();
     const cells = await resultCells();
     expect(cells[5]).toHaveTextContent('1.0');
-    expect(cells[8]).toHaveTextContent('2.0');
+    expect(cells[10]).toHaveTextContent('2.0');
     for (const table of ['employee_shift_assignments', 'employee_schedule', 'payroll_novelties']) {
       expect(requests).toContainEqual(expect.objectContaining({ table, from: 1000, to: 1999 }));
     }

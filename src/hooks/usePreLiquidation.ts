@@ -4,6 +4,7 @@ import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig } fro
 import type { EmployeeShiftAssignment } from '@/types/schedule';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { crossingDeductionVersions } from '@/lib/deductionVersions';
+import { getShiftClassification } from '@/lib/shiftClassification';
 
 export interface PreLiquidationData {
   assignments: EmployeeShiftAssignment[];
@@ -213,6 +214,8 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     let dominicalTrabajado = 0;
     let festivoTrabajado = 0;
     let descansoRemunerado = 0;
+    let noTrabajado = 0;
+    let suspension = 0;
     let incapDays = 0, vacDays = 0, permDays = 0;
     const dailyNoveltyTypes = new Set(['jornada', 'dominical_trabajado', 'festivo_trabajado', 'descanso_remunerado', 'incapacidad', 'vacaciones', 'permiso']);
     const dailyNovelties = new Map<string, PreLiquidationData['novelties']>();
@@ -273,10 +276,17 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
         return;
       }
 
-      const isRestDay = assignment.shifts?.is_rest_day ?? false;
-
-      if (isRestDay) {
+      const classification = getShiftClassification(assignment.shifts);
+      if (classification === 'rest') {
         descansoRemunerado += workedFraction;
+        return;
+      }
+      if (classification === 'not_worked') {
+        noTrabajado += workedFraction;
+        return;
+      }
+      if (classification === 'suspension') {
+        suspension += workedFraction;
         return;
       }
 
@@ -367,6 +377,8 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       dominicalTrabajado,
       festivoTrabajado,
       descansoRemunerado,
+      noTrabajado,
+      suspension,
       hedo,
       heno,
       hedf,

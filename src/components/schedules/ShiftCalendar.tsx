@@ -55,6 +55,11 @@ import {
   isShiftEligibleForEmployee,
   isShiftEligibleForEmployees,
 } from '@/lib/scheduleCenterScope';
+import {
+  getShiftClassificationCode,
+  getShiftClassificationLabel,
+  isNonWorkingShift,
+} from '@/lib/shiftClassification';
 
 type ViewMode = 'quincenal' | 'mensual' | 'trimestral' | 'semestral';
 
@@ -162,7 +167,7 @@ const CalendarCell = memo(({
                   </div>
                 )}
                 
-                {absence && (!shift || shift.is_rest_day) && (
+                {absence && (!shift || isNonWorkingShift(shift)) && (
                   <div 
                     className={cn(
                       'h-6 rounded text-[10px] font-bold flex items-center justify-center',
@@ -176,7 +181,7 @@ const CalendarCell = memo(({
                     {absence.type === 'incapacity' && 'INC'}
                   </div>
                 )}
-                {shift && !shift.is_rest_day && (
+                {shift && !isNonWorkingShift(shift) && (
                   <div
                     className={cn(
                       'h-6 rounded text-[10px] font-medium flex items-center justify-center',
@@ -188,9 +193,14 @@ const CalendarCell = memo(({
                     {shift.code || shift.name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
-                {shift && shift.is_rest_day && !absence && (
-                  <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
-                    D
+                {shift && isNonWorkingShift(shift) && !absence && (
+                  <div className={cn(
+                    'h-6 rounded text-[10px] font-bold flex items-center justify-center border',
+                    shift.is_rest_day && 'bg-emerald-100 text-emerald-700 border-emerald-300',
+                    shift.is_not_worked_day && 'bg-slate-100 text-slate-700 border-slate-300',
+                    shift.is_suspension_day && 'bg-rose-100 text-rose-700 border-rose-300',
+                  )}>
+                    {getShiftClassificationCode(shift)}
                   </div>
                 )}
                 {/* Admin schedule: working day */}
@@ -306,7 +316,7 @@ const CalendarCell = memo(({
                   >
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                     <span className="truncate">{s.name}</span>
-                    {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                    {isNonWorkingShift(s) && <Badge variant="secondary" className="text-[10px] ml-auto">{getShiftClassificationCode(s)}</Badge>}
                   </ContextMenuItem>
                 ))}
                 {activeShifts.length === 0 && (
@@ -342,7 +352,7 @@ const CalendarCell = memo(({
                   >
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                     <span className="truncate">{s.name}</span>
-                    {s.is_rest_day && <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>}
+                    {isNonWorkingShift(s) && <Badge variant="secondary" className="text-[10px] ml-auto">{getShiftClassificationCode(s)}</Badge>}
                   </ContextMenuItem>
                 ))}
                 <ContextMenuSeparator />
@@ -361,13 +371,13 @@ const CalendarCell = memo(({
               </>
             )}
             
-            {/* Absence day - can only assign rest days */}
+            {/* Absence day - can only assign non-working classifications */}
             {absence && !assignment && (
               <>
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
-                  Solo descansos (hay novedad)
+                  Solo conceptos no laborales (hay novedad)
                 </div>
-                {activeShifts.filter(s => s.is_rest_day).map((s) => (
+                {activeShifts.filter(isNonWorkingShift).map((s) => (
                   <ContextMenuItem
                     key={s.id}
                     onClick={() => {
@@ -385,12 +395,12 @@ const CalendarCell = memo(({
                   >
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: s.color }} />
                     <span className="truncate">{s.name}</span>
-                    <Badge variant="secondary" className="text-[10px] ml-auto">D</Badge>
+                    <Badge variant="secondary" className="text-[10px] ml-auto">{getShiftClassificationCode(s)}</Badge>
                   </ContextMenuItem>
                 ))}
-                {activeShifts.filter(s => s.is_rest_day).length === 0 && (
+                {activeShifts.filter(isNonWorkingShift).length === 0 && (
                   <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
-                    No hay turnos de descanso configurados
+                    No hay turnos no laborales configurados
                   </div>
                 )}
               </>
@@ -406,6 +416,8 @@ const CalendarCell = memo(({
          prevProps.shift?.id === nextProps.shift?.id &&
          prevProps.shift?.color === nextProps.shift?.color &&
          prevProps.shift?.is_rest_day === nextProps.shift?.is_rest_day &&
+         prevProps.shift?.is_not_worked_day === nextProps.shift?.is_not_worked_day &&
+         prevProps.shift?.is_suspension_day === nextProps.shift?.is_suspension_day &&
          prevProps.assignment?.id === nextProps.assignment?.id &&
          prevProps.absence?.type === nextProps.absence?.type &&
          prevProps.hasConflict === nextProps.hasConflict &&
@@ -795,7 +807,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       toast.error('El Turno Día no es compatible con todos los empleados seleccionados');
       return;
     }
-    const isWorkShift = selectedShift && !selectedShift.is_rest_day;
+    const isWorkShift = selectedShift && !isNonWorkingShift(selectedShift);
 
     if (isWorkShift) {
       const blockedDates: string[] = [];
@@ -1149,7 +1161,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
 
                                 // Conflict: work shift assigned on a day with an absence
-                                const hasConflict = Boolean(shift && absence && !shift.is_rest_day);
+                                const hasConflict = Boolean(shift && absence && !isNonWorkingShift(shift));
                                 const hasCenterConflict = Boolean(
                                   shift && !isShiftEligibleForEmployee(shift, employee),
                                 );
@@ -1244,7 +1256,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
                         <span>{shift.code ? `${shift.code} - ${shift.name}` : shift.name}</span>
-                        {shift.is_rest_day && <Badge variant="secondary" className="text-xs">Descanso</Badge>}
+                        {isNonWorkingShift(shift) && <Badge variant="secondary" className="text-xs">{getShiftClassificationLabel(shift)}</Badge>}
                       </div>
                     </SelectItem>
                   ))}

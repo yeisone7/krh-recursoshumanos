@@ -68,6 +68,7 @@ import { useEmployeeTimeConfigs, useShiftAssignments, useShiftCycles, useShifts,
 import { cn } from '@/lib/utils';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import { NOVELTY_TYPE_LABELS, type NoveltyType } from '@/types/payroll';
+import { getShiftClassificationLabel, isNonWorkingShift } from '@/lib/shiftClassification';
 
 const chartColors = [
   'hsl(var(--primary))',
@@ -983,11 +984,13 @@ export default function AnaliticaNomina() {
     const days = startDate && endDate ? Math.max(1, differenceInCalendarDays(new Date(`${endDate}T00:00:00`), new Date(`${startDate}T00:00:00`)) + 1) : 0;
     const activeEmployeeCount = new Set(activeConfigs.map((item: any) => item.employee_id)).size;
     const expectedAssignments = activeEmployeeCount * days;
-    const assignedWorkDays = assignments.filter((item: any) => !item.shifts?.is_rest_day).length;
+    const assignedWorkDays = assignments.filter((item: any) => !isNonWorkingShift(item.shifts)).length;
     const restDays = assignments.filter((item: any) => item.shifts?.is_rest_day).length;
+    const notWorkedDays = assignments.filter((item: any) => item.shifts?.is_not_worked_day).length;
+    const suspensionDays = assignments.filter((item: any) => item.shifts?.is_suspension_day).length;
     const manualAssignments = assignments.filter((item: any) => item.source === 'manual').length;
     const generatedAssignments = assignments.filter((item: any) => item.source === 'cycle').length;
-    const plannedHours = assignments.reduce((sum: number, item: any) => sum + (item.shifts?.is_rest_day ? 0 : hoursBetween(item.shifts?.start_time, item.shifts?.end_time, item.shifts?.break_minutes || 0)), 0);
+    const plannedHours = assignments.reduce((sum: number, item: any) => sum + (isNonWorkingShift(item.shifts) ? 0 : hoursBetween(item.shifts?.start_time, item.shifts?.end_time, item.shifts?.break_minutes || 0)), 0);
     const averageMonthlySalary = salaryByEmployee.size ? Array.from(salaryByEmployee.values()).reduce((sum, salary) => sum + salary, 0) / salaryByEmployee.size : 0;
     const fallbackHourlyRate = averageMonthlySalary ? averageMonthlySalary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : 0;
     const getEstimatedImpact = (item: any) => {
@@ -1010,13 +1013,15 @@ export default function AnaliticaNomina() {
           periodo: `${periodLabel(key)}${suffix}`,
           periodoBase: periodLabel(key),
           asignaciones: monthAssignments.length,
-          jornadas: monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length,
+          jornadas: monthAssignments.filter((item: any) => !isNonWorkingShift(item.shifts)).length,
           descansos: monthAssignments.filter((item: any) => item.shifts?.is_rest_day).length,
+          noTrabajados: monthAssignments.filter((item: any) => item.shifts?.is_not_worked_day).length,
+          suspensiones: monthAssignments.filter((item: any) => item.shifts?.is_suspension_day).length,
           novedades: currentCount,
           altasNovedades: Math.max(0, currentCount - previousCount),
           bajasNovedades: Math.max(0, previousCount - currentCount),
           empleadosImpactados: new Set(monthNovelties.map((item: any) => item.employee_id)).size,
-          horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !item.shifts?.is_rest_day).length)) * 10) / 10,
+          horasPorJornada: Math.round((monthNovelties.reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) / Math.max(1, monthAssignments.filter((item: any) => !isNonWorkingShift(item.shifts)).length)) * 10) / 10,
           montoEstimado: Math.round(monthNovelties.reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0)),
           horasExtra: Math.round(monthNovelties.filter((item: any) => overtimeTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
           ausencias: Math.round(monthNovelties.filter((item: any) => absenceTypes.has(item.novelty_type)).reduce((sum: number, item: any) => sum + Number(item.hours || 0), 0) * 10) / 10,
@@ -1121,7 +1126,7 @@ export default function AnaliticaNomina() {
       impactoMesAnterior: comparisonMode === 'mes_anterior' ? comparisonMonthlyTrend[index]?.montoEstimado || 0 : undefined,
       variacion: comparisonMode === 'mes_anterior' ? month.montoEstimado - (comparisonMonthlyTrend[index]?.montoEstimado || 0) : month.montoEstimado - (monthlyTrend[index - 1]?.montoEstimado || 0),
     }));
-    const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts?.is_rest_day ? 'Descanso' : 'Sin turno')).slice(0, 8);
+    const shiftDemand = groupByName(assignments, (item: any) => item.shifts?.name || (item.shifts ? getShiftClassificationLabel(item.shifts) : 'Sin turno')).slice(0, 8);
     const sourceMix = groupByName(assignments, (item: any) => item.source === 'cycle' ? 'Ciclo automático' : 'Manual');
     const noveltySourceMix = groupByName(filteredNovelties, (item: any) => item.source === 'auto' ? 'Automático' : 'Manual');
     const modeMix = groupByName(activeConfigs, (item: any) => item.mode === 'shift' ? 'Turnos rotativos' : 'Horario administrativo');
@@ -1243,6 +1248,9 @@ export default function AnaliticaNomina() {
         activeCycles: activeCycles.length,
         activeEmployeeCount,
         assignedWorkDays,
+        restDays,
+        notWorkedDays,
+        suspensionDays,
         plannedHours: Math.round(plannedHours),
         noveltyHours: Math.round(noveltyHours * 10) / 10,
         overtimeHours: Math.round(overtimeHours * 10) / 10,
@@ -1431,6 +1439,8 @@ export default function AnaliticaNomina() {
         <KpiCard title="Empleados programables" value={analytics.kpis.activeEmployeeCount} detail="Con configuración de tiempo activa" icon={Users} trend="neutral" />
         <KpiCard title="Cobertura jornadas" value={`${analytics.kpis.coverage}%`} detail={`${integerFormatter.format(analytics.kpis.assignedWorkDays)} jornadas laborales asignadas`} icon={CheckCircle2} trend={analytics.kpis.coverage >= 85 ? 'up' : 'down'} />
         <KpiCard title="Horas programadas" value={integerFormatter.format(analytics.kpis.plannedHours)} detail="Estimadas desde turnos asignados" icon={Clock} trend="neutral" />
+        <KpiCard title="Días no trabajados" value={integerFormatter.format(analytics.kpis.notWorkedDays)} detail="No remunerados en el rango" icon={TrendingDown} trend={analytics.kpis.notWorkedDays > 0 ? 'down' : 'neutral'} />
+        <KpiCard title="Suspensiones" value={integerFormatter.format(analytics.kpis.suspensionDays)} detail="Días suspendidos no remunerados" icon={ShieldCheck} trend={analytics.kpis.suspensionDays > 0 ? 'down' : 'neutral'} />
         <KpiCard title="Horas novedades" value={numberFormatter.format(analytics.kpis.noveltyHours)} detail="Total registrado en novedades" icon={Activity} trend="neutral" />
         <KpiCard title="Horas extra" value={numberFormatter.format(analytics.kpis.overtimeHours)} detail={`${analytics.kpis.overtimeRate}% frente a carga programada`} icon={Zap} trend={analytics.kpis.overtimeRate <= 8 ? 'up' : 'down'} />
         <KpiCard title="Ausencias" value={numberFormatter.format(analytics.kpis.absenceHours)} detail="Incapacidades, vacaciones y permisos" icon={AlertTriangle} trend={analytics.kpis.absenceHours > 0 ? 'down' : 'up'} />
