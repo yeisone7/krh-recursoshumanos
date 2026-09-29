@@ -44,8 +44,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useLeaveTypeConfigs, useCreateLeaveRequest, calculateBusinessDays } from '@/hooks/useLeaves';
-import { useHolidaysSet } from '@/hooks/useHolidays';
+import { useLeaveTypeConfigs, useCreateLeaveRequest } from '@/hooks/useLeaves';
+import { calculateLeaveCalendarDays } from '@/lib/leaveDuration';
 import { getAllowedLeaveDurations, LeaveType, LeaveDurationType } from '@/types/leave';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,7 +82,6 @@ export function LeaveRequestFormDialog({
       keywords: employee.document_number?.replace(/\D/g, '') || '',
     })), [employees]);
   const { data: leaveTypeConfigs = [] } = useLeaveTypeConfigs();
-  const { data: holidaysSet } = useHolidaysSet();
   const createRequest = useCreateLeaveRequest();
   
   const [selectedTypeConfig, setSelectedTypeConfig] = useState<typeof leaveTypeConfigs[0] | null>(null);
@@ -141,13 +140,13 @@ export function LeaveRequestFormDialog({
   useEffect(() => {
     if (watchStartDate && watchEndDate) {
       if (watchDurationType === 'dias_completos') {
-        const days = calculateBusinessDays(watchStartDate, watchEndDate, holidaysSet);
+        const days = calculateLeaveCalendarDays(watchStartDate, watchEndDate);
         setCalculatedDays(days);
       } else if (watchDurationType === 'medio_dia') {
         setCalculatedDays(0.5);
       }
     }
-  }, [watchStartDate, watchEndDate, watchDurationType, holidaysSet]);
+  }, [watchStartDate, watchEndDate, watchDurationType]);
 
   useEffect(() => {
     if (watchDurationType !== 'dias_completos' && watchStartDate) {
@@ -177,7 +176,9 @@ export function LeaveRequestFormDialog({
         toast.error('Indique la hora de inicio y la hora de finalización');
         return;
       }
-      let totalDays = calculatedDays;
+      let totalDays = values.duration_type === 'dias_completos'
+        ? calculateLeaveCalendarDays(values.start_date, values.end_date)
+        : calculatedDays;
       let totalHours: number | undefined;
 
       if (values.duration_type === 'horas' && values.start_time && values.end_time) {
@@ -540,7 +541,9 @@ export function LeaveRequestFormDialog({
                     {calculatedDays > 0 && (
                       <div className="rounded-2xl bg-primary/10 border border-primary/20 p-4">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm font-black uppercase tracking-widest text-primary">Días Hábiles:</span>
+                          <span className="text-sm font-black uppercase tracking-widest text-primary">
+                            {watchDurationType === 'dias_completos' ? 'Días calendario:' : 'Días equivalentes:'}
+                          </span>
                           <span className="text-xl font-black text-primary">{calculatedDays}</span>
                         </div>
                       </div>

@@ -10,8 +10,6 @@ import {
   LeaveDurationType,
   LeaveRequestStatus 
 } from '@/types/leave';
-import { addDays, format } from 'date-fns';
-import { useHolidaysSet } from '@/hooks/useHolidays';
 
 // =============================================
 // LEAVE TYPE CONFIG
@@ -500,39 +498,6 @@ export function useAnnulUnusedLeaveRequest() {
       queryClient.invalidateQueries({ queryKey: ['leave_balances'] });
     },
   });
-}
-
-// =============================================
-// UTILITY FUNCTIONS
-// =============================================
-
-/**
- * Calculate business days between two dates
- * @param startDate - Start date
- * @param endDate - End date
- * @param holidaysSet - Set of holiday dates in 'yyyy-MM-dd' format (from useHolidaysSet hook)
- */
-export function calculateBusinessDays(startDate: Date, endDate: Date, holidaysSet?: Set<string>): number {
-  let count = 0;
-  let current = new Date(startDate);
-  
-  while (current <= endDate) {
-    const dayOfWeek = current.getDay();
-    const dateStr = format(current, 'yyyy-MM-dd');
-    
-    // Only Sundays are non-business days (dayOfWeek === 0)
-    // Saturdays ARE business days for leaves/vacations
-    if (dayOfWeek !== 0) {
-      const isHoliday = holidaysSet ? holidaysSet.has(dateStr) : false;
-      if (!isHoliday) {
-        count++;
-      }
-    }
-    
-    current = addDays(current, 1);
-  }
-  
-  return count;
 }
 
 // =============================================
