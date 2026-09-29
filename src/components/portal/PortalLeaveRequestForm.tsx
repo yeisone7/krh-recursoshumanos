@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
+import { calculateLeaveCalendarDays } from '@/lib/leaveDuration';
 
 interface LeaveTypeOption {
   id: string;
@@ -37,7 +38,7 @@ export function PortalLeaveRequestForm({
   const [leaveType, setLeaveType] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [totalDays, setTotalDays] = useState(1);
+  const totalDays = calculateLeaveCalendarDays(startDate, endDate);
   const [reason, setReason] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,7 +53,6 @@ export function PortalLeaveRequestForm({
     setLeaveType('');
     setStartDate('');
     setEndDate('');
-    setTotalDays(1);
     setReason('');
   };
 
@@ -91,13 +91,12 @@ export function PortalLeaveRequestForm({
           </div>
 
           <div className="space-y-2">
-            <Label>Días solicitados</Label>
+            <Label>Días calendario solicitados</Label>
             <Input
               type="number"
               min={1}
               value={totalDays}
-              onChange={(e) => setTotalDays(Number(e.target.value))}
-              required
+              readOnly
             />
           </div>
 
@@ -110,7 +109,7 @@ export function PortalLeaveRequestForm({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting || !leaveType || !startDate || !endDate || !reason}>
+            <Button type="submit" disabled={isSubmitting || !leaveType || totalDays <= 0 || !reason}>
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Enviar Solicitud
             </Button>
