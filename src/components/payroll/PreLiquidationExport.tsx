@@ -21,6 +21,8 @@ export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
       'Dominical Trabajado': r.dominicalTrabajado,
       'Festivo Trabajado': r.festivoTrabajado,
       'Descanso Remunerado': r.descansoRemunerado,
+      'No trabajado (días)': r.noTrabajado,
+      'Suspensión (días)': r.suspension,
       'HEDO (hrs)': r.hedo,
       'HENO (hrs)': r.heno,
       'HEDF (hrs)': r.hedf,

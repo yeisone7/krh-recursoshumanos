@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { Loader2, Plus, Trash2, GripVertical, FileText, Calendar, RotateCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { getShiftClassificationCode, getShiftClassificationLabel, isNonWorkingShift } from '@/lib/shiftClassification';
 
 import {
   Dialog,
@@ -393,9 +394,9 @@ export function ShiftCycleFormDialog({
                                           style={{ backgroundColor: s.color !== 'transparent' ? s.color : '#e5e7eb' }}
                                         />
                                         <span className="font-medium">{s.name}</span>
-                                        {s.is_rest_day && (
+                                        {isNonWorkingShift(s) && (
                                           <Badge variant="secondary" className="text-[10px] ml-2 tracking-wider">
-                                            DESCANSO
+                                            {getShiftClassificationCode(s)} · {getShiftClassificationLabel(s).toUpperCase()}
                                           </Badge>
                                         )}
                                       </div>
@@ -405,7 +406,7 @@ export function ShiftCycleFormDialog({
                               </Select>
                               {shift && (
                                 <span className="hidden sm:inline text-xs font-bold text-muted-foreground/70 w-32 text-center bg-background rounded-md py-1">
-                                  {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                                  {isNonWorkingShift(shift) ? '0 horas' : `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`}
                                 </span>
                               )}
                               <Button

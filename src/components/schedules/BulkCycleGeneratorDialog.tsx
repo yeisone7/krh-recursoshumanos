@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Users, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { scheduleForDate } from '@/lib/effectiveSchedule';
+import { isNonWorkingShift } from '@/lib/shiftClassification';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -137,7 +138,7 @@ export function BulkCycleGeneratorDialog({ open, onOpenChange }: BulkCycleGenera
         if (!cycleDay) return;
 
         const shift = cycleDay.shifts;
-        if (hasAbsence && shift && !shift.is_rest_day) {
+        if (hasAbsence && shift && !isNonWorkingShift(shift)) {
           skipped++;
           return;
         }

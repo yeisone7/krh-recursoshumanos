@@ -52,6 +52,8 @@ export interface Shift {
   crosses_midnight: boolean;
   color: string;
   is_rest_day: boolean;
+  is_not_worked_day: boolean;
+  is_suspension_day: boolean;
   is_active: boolean;
   kind?: 'operational' | 'day';
   created_at: string;

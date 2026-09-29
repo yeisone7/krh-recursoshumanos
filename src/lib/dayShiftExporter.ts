@@ -1,4 +1,5 @@
 import type { Shift } from '@/types/schedule';
+import { getShiftClassificationLabel, isNonWorkingShift } from '@/lib/shiftClassification';
 
 export interface DayShiftExportOptions {
   centerFilterLabel: string;
@@ -34,13 +35,13 @@ export function buildDayShiftExportRows(shifts: Shift[]): DayShiftExportRow[] {
       name: shift.name,
       code: shift.code?.trim() || 'Sin código',
       description: shift.description?.trim() || 'Sin descripción',
-      startTime: formatTime(shift.start_time),
-      endTime: formatTime(shift.end_time),
-      crossesMidnight: shift.crosses_midnight ? 'Sí' : 'No',
+      startTime: isNonWorkingShift(shift) ? 'No aplica' : formatTime(shift.start_time),
+      endTime: isNonWorkingShift(shift) ? 'No aplica' : formatTime(shift.end_time),
+      crossesMidnight: isNonWorkingShift(shift) ? 'No aplica' : shift.crosses_midnight ? 'Sí' : 'No',
       centers: isGlobal ? 'Todos los centros' : centerNames.join(', ') || 'Centro no disponible',
       scope: isGlobal ? 'Global' : 'Específico',
       breakMinutes: shift.break_minutes,
-      type: shift.is_rest_day ? 'Descanso' : 'Laboral',
+      type: getShiftClassificationLabel(shift),
       status: shift.is_active ? 'Vigente' : 'Inactivo',
     };
   });

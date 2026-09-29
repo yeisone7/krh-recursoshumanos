@@ -7,6 +7,7 @@ import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Zap, AlertTriangle, CheckCircle2, User, Calendar as CalendarIconSVG, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { scheduleForDate } from '@/lib/effectiveSchedule';
+import { isNonWorkingShift } from '@/lib/shiftClassification';
 
 import {
   Dialog,
@@ -172,7 +173,7 @@ export function CycleGeneratorDialog({
         if (!cycleDay) return;
 
         const shift = cycleDay.shifts;
-        const isWorkShift = shift && !shift.is_rest_day;
+        const isWorkShift = shift && !isNonWorkingShift(shift);
 
         // Skip work shifts on absence days
         if (hasAbsence && isWorkShift) {

@@ -9559,7 +9559,9 @@ export type Database = {
           end_time: string
           id: string
           is_active: boolean | null
-          is_rest_day: boolean | null
+          is_not_worked_day: boolean
+          is_rest_day: boolean
+          is_suspension_day: boolean
           name: string
           start_time: string
           updated_at: string | null
@@ -9576,7 +9578,9 @@ export type Database = {
           end_time: string
           id?: string
           is_active?: boolean | null
-          is_rest_day?: boolean | null
+          is_not_worked_day?: boolean
+          is_rest_day?: boolean
+          is_suspension_day?: boolean
           name: string
           start_time: string
           updated_at?: string | null
@@ -9593,7 +9597,9 @@ export type Database = {
           end_time?: string
           id?: string
           is_active?: boolean | null
-          is_rest_day?: boolean | null
+          is_not_worked_day?: boolean
+          is_rest_day?: boolean
+          is_suspension_day?: boolean
           name?: string
           start_time?: string
           updated_at?: string | null

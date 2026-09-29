@@ -77,6 +77,7 @@ import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
 import { filterDayShiftsForCenter } from '@/lib/scheduleCenterScope';
 import { exportDayShiftsToExcel } from '@/lib/dayShiftExporter';
+import { getShiftClassificationCode, getShiftClassificationLabel, isNonWorkingShift } from '@/lib/shiftClassification';
 
 const DAY_BADGE_COLORS: Record<number, string> = {
   1: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 hover:bg-indigo-500/20', // Lun
@@ -463,12 +464,17 @@ export default function Jornadas() {
                                   {shift.code ? `#${shift.code}` : 'Sin código'}
                                   {shift.description ? ` · ${shift.description}` : ''}
                                 </p>
+                                {isNonWorkingShift(shift) && (
+                                  <Badge variant="secondary" className="mt-1 text-[9px] uppercase">
+                                    {getShiftClassificationCode(shift)} · {getShiftClassificationLabel(shift)}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </TableCell>
                           <TableCell className="font-semibold">
-                            {formatTime(shift.start_time)} — {formatTime(shift.end_time)}
-                            {shift.crosses_midnight && (
+                            {isNonWorkingShift(shift) ? '0 horas' : `${formatTime(shift.start_time)} — ${formatTime(shift.end_time)}`}
+                            {!isNonWorkingShift(shift) && shift.crosses_midnight && (
                               <Badge variant="outline" className="ml-2 border-amber-200 bg-amber-50 text-[9px] text-amber-700">Nocturno</Badge>
                             )}
                           </TableCell>
@@ -488,7 +494,7 @@ export default function Jornadas() {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell>{shift.break_minutes} min</TableCell>
+                          <TableCell>{isNonWorkingShift(shift) ? 'No aplica' : `${shift.break_minutes} min`}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className={shift.is_active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}>
                               {shift.is_active ? 'Vigente' : 'Inactivo'}
@@ -548,9 +554,9 @@ export default function Jornadas() {
                                <div className="space-y-1">
                                   <div className="flex items-center gap-2">
                                      <div className="w-2 h-2 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: getShiftColor(shift.color) }} />
-                                     {shift.is_rest_day ? (
+                                     {isNonWorkingShift(shift) ? (
                                         <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded shadow-none">
-                                           DESCANSO
+                                           {getShiftClassificationCode(shift)} · {getShiftClassificationLabel(shift)}
                                         </Badge>
                                      ) : (
                                         <Badge 
@@ -583,7 +589,7 @@ export default function Jornadas() {
                                <div className="space-y-0.5">
                                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest">Horario del Turno</p>
                                   <p className="font-black text-foreground text-sm tracking-tight">
-                                     {formatTime(shift.start_time)} — {formatTime(shift.end_time)}
+                                     {isNonWorkingShift(shift) ? '0 horas' : `${formatTime(shift.start_time)} — ${formatTime(shift.end_time)}`}
                                   </p>
                                </div>
                             </div>
@@ -596,7 +602,7 @@ export default function Jornadas() {
                                <div className="flex items-center gap-4">
                                   <div className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                                      <RotateCcw className="w-3.5 h-3.5" />
-                                     Receso: {shift.break_minutes} min
+                                     {isNonWorkingShift(shift) ? 'Sin horas programadas' : `Receso: ${shift.break_minutes} min`}
                                   </div>
                                   {shift.crosses_midnight && (
                                      <Badge variant="outline" className="text-[9px] font-black uppercase bg-amber-500/5 text-amber-600 border-amber-500/10 rounded-md">Nocturno</Badge>
