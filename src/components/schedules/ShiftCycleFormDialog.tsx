@@ -65,7 +65,9 @@ export function ShiftCycleFormDialog({
 }: ShiftCycleFormDialogProps) {
   const createCycle = useCreateShiftCycle();
   const updateCycle = useUpdateShiftCycle();
-  const { data: shifts = [] } = useShifts();
+  // Los ciclos alimentan el mismo calendario de asignaciones diarias, por lo
+  // que deben usar el catálogo de Turnos Día y no los turnos operativos.
+  const { data: shifts = [] } = useShifts('day');
   const isEditing = !!cycle;
 
   const [activeTab, setActiveTab] = useState('detalles');
@@ -115,7 +117,7 @@ export function ShiftCycleFormDialog({
 
   const addDay = () => {
     if (activeShifts.length === 0) {
-      toast.error('Primero debe crear turnos');
+      toast.error('Primero debe crear Turnos Día');
       return;
     }
     setCycleDays(prev => [
@@ -336,7 +338,7 @@ export function ShiftCycleFormDialog({
                   <div className="flex items-center justify-between gap-4 mb-4">
                     <div>
                       <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Secuencia del Ciclo</h3>
-                      <p className="text-xs text-muted-foreground mt-1">Defina el orden de los turnos para este ciclo de rotación.</p>
+                      <p className="text-xs text-muted-foreground mt-1">Defina el orden de los Turnos Día para este ciclo de rotación.</p>
                     </div>
                     <Button
                       type="button"
@@ -353,8 +355,8 @@ export function ShiftCycleFormDialog({
 
                   {activeShifts.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-background /10">
-                      <p className="font-medium text-foreground">No hay turnos activos disponibles.</p>
-                      <p className="text-sm mt-1">Debe crear turnos operativos primero antes de configurar un ciclo.</p>
+                      <p className="font-medium text-foreground">No hay Turnos Día activos disponibles.</p>
+                      <p className="text-sm mt-1">Debe crear un Turno Día antes de configurar un ciclo.</p>
                     </div>
                   ) : cycleDays.length === 0 ? (
                     <div className="text-center py-10 text-muted-foreground border border-dashed rounded-2xl bg-background /10">
