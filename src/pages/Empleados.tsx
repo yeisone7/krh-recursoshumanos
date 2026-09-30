@@ -124,6 +124,20 @@ export default function Empleados() {
     window.localStorage.setItem(EMPLOYEES_VIEW_MODE_STORAGE_KEY, nextViewMode);
   };
 
+  const handleStatusFilterChange = (nextStatus: string) => {
+    setStatusFilter(nextStatus);
+    if (nextStatus === 'retired') setShowRetiredEmployees(true);
+    else if (nextStatus !== 'all') setShowRetiredEmployees(false);
+  };
+
+  const handleRetiredVisibilityChange = (includeRetired: boolean) => {
+    setShowRetiredEmployees(includeRetired);
+    // Showing retirees clears incompatible states; hiding them exits the retired-only view.
+    if ((includeRetired && statusFilter !== 'retired') || (!includeRetired && statusFilter === 'retired')) {
+      setStatusFilter('all');
+    }
+  };
+
   const { currentCompanyId, assignedCenterIds, hasPermission } = useAuth();
   const canManageRegistrationLinks = hasPermission('emp_registration_links', 'create');
   
@@ -214,6 +228,7 @@ export default function Empleados() {
     }
     if (statusParam) {
       setStatusFilter(statusParam);
+      setShowRetiredEmployees(statusParam === 'retired');
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('status');
       setSearchParams(newParams, { replace: true });
@@ -512,7 +527,7 @@ export default function Empleados() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
               <SelectTrigger className="w-[150px] h-10 text-sm border-border">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
@@ -551,7 +566,7 @@ export default function Empleados() {
               <Switch
                 id="show-retired-employees"
                 checked={showRetiredEmployees}
-                onCheckedChange={setShowRetiredEmployees}
+                onCheckedChange={handleRetiredVisibilityChange}
                 aria-label="Mostrar empleados retirados"
               />
               <label

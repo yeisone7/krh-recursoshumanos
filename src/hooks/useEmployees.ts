@@ -562,9 +562,12 @@ export function useEmployeesPaginated(options: {
       const hasSearch = getEmployeeSearchTerms(search).length > 0;
 
       if (hasSearch) {
-        const { data, error } = await query.order('last_name', { ascending: true });
-
-        if (error) throw error;
+        // Read every database page before searching; the API caps a single response.
+        const orderedQuery = query.order('last_name', { ascending: true }).order('id', { ascending: true });
+        const data = await fetchAllAnalyticsRows(async (start, end) => {
+          const { data, error } = await orderedQuery.range(start, end);
+          return { data, error };
+        });
 
         const filtered = transformEmployees(data).filter((employee) => employeeMatchesSearch(employee, search));
 
@@ -644,9 +647,11 @@ export function useEmployeesInfinite(options: {
       const hasSearch = getEmployeeSearchTerms(search).length > 0;
 
       if (hasSearch) {
-        const { data, error } = await query.order('last_name', { ascending: true });
-
-        if (error) throw error;
+        const orderedQuery = query.order('last_name', { ascending: true }).order('id', { ascending: true });
+        const data = await fetchAllAnalyticsRows(async (start, end) => {
+          const { data, error } = await orderedQuery.range(start, end);
+          return { data, error };
+        });
 
         const filtered = transformEmployees(data).filter((employee) => employeeMatchesSearch(employee, search));
         const pageData = filtered.slice(from, to + 1);
