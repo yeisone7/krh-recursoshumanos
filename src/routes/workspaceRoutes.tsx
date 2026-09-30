@@ -83,6 +83,7 @@ const CortesControl = lazy(() => import('../pages/CortesControl'));
 const PermisosCorreccion = lazy(() => import('../pages/PermisosCorreccion'));
 const AnaliticaSeleccion = lazy(() => import("../pages/AnaliticaSeleccion"));
 const AnaliticaNomina = lazy(() => import("../pages/AnaliticaNomina"));
+const ConsultaDinamicaNomina = lazy(() => import("../pages/ConsultaDinamicaNomina"));
 const AnaliticaIncapacidades = lazy(() => import("../pages/AnaliticaIncapacidades"));
 const AnaliticaContratos = lazy(() => import("../pages/AnaliticaContratos"));
 const AnaliticaEmpleados = lazy(() => import("../pages/AnaliticaEmpleados"));
@@ -122,6 +123,7 @@ export const workspaceRoutes: WorkspaceRoute[] = [
   { path: "/jornadas", title: "Jornadas", permissions: ["jornadas"], element: <Suspense fallback={<JornadasSkeleton />}><Jornadas /></Suspense> },
   { path: "/reloj-checador", title: "Reloj checador", permissions: ["reloj_checador"], element: <Suspense fallback={null}><RelojChecador /></Suspense> },
   { path: "/nomina/analitica", title: "Analítica · Nómina", permissions: ["analitica_nomina"], element: <Suspense fallback={null}><AnaliticaNomina /></Suspense> },
+  { path: "/nomina/consulta-dinamica", title: "Consulta Dinámica · Nómina", permissions: ["analitica_nomina"], element: <Suspense fallback={null}><ConsultaDinamicaNomina /></Suspense> },
   { path: "/disciplinarios", title: "Disciplinarios", permissions: ["disciplinarios"], element: <Disciplinarios /> },
   { path: "/vacaciones", title: "Vacaciones", permissions: ["vacaciones"], element: <Vacaciones /> },
   { path: "/permisos", title: "Permisos", permissions: ["permisos"], element: <Permisos /> },

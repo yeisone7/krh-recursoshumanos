@@ -314,6 +314,7 @@ const payrollNavItems: NavItem[] = [
   { label: 'Permisos de corrección', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control/permisos', moduleCode: 'correction_tickets' },
   { label: 'PILA / UGPP', icon: <Landmark className="w-5 h-5" />, href: '/pila-ugpp', moduleCode: 'pila_ugpp' },
   { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'analitica_nomina' },
+  { label: 'Consulta Dinámica', icon: <FileBarChart className="w-5 h-5" />, href: '/nomina/consulta-dinamica', moduleCode: 'analitica_nomina' },
   { label: 'Pre-Liquidación', icon: <Calculator className="w-5 h-5" />, href: '/pre-liquidacion', moduleCode: 'pre_liquidacion' },
   { label: 'Préstamos', icon: <BanknoteIcon className="w-5 h-5" />, href: '/prestamos', moduleCode: 'prestamos' },
   { label: 'Descuentos', icon: <ClipboardList className="w-5 h-5" />, href: '/descuentos', moduleCode: 'descuentos' },
