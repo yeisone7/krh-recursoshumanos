@@ -511,7 +511,7 @@ export default function Requisiciones() {
                 })}
               </div>
 
-              <div className="hidden rounded-lg border border-border bg-background shadow-md lg:block">
+              <div className="requisition-grid hidden rounded-lg border border-border bg-background shadow-md lg:block">
                 <div className="overflow-x-auto overflow-y-visible rounded-lg">
                   <Table className="w-full min-w-[760px] table-fixed">
                     <TableHeader className="sticky top-0 z-20">

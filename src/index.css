@@ -1911,3 +1911,17 @@ html:not(.dark) .professional-density [data-radix-popper-content-wrapper] > div 
     padding-bottom: 4px !important;
   }
 }
+
+/* Tight corners on the personnel requisition grid; clip the header at the container. */
+div.requisition-grid:has(table),
+.requisition-grid div:has(> table) {
+  border-radius: 4px !important;
+}
+
+.requisition-grid table,
+.requisition-grid thead,
+.requisition-grid thead tr,
+.requisition-grid thead tr:first-child th:first-child,
+.requisition-grid thead tr:first-child th:last-child {
+  border-radius: 0 !important;
+}
