@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Requisiciones from './Requisiciones';
+import { todayDateOnlyString } from '@/lib/dateOnly';
 
 function makeRequisitions() {
   return Array.from({ length: 26 }, (_, index) => ({
@@ -59,7 +60,7 @@ afterEach(cleanup);
 describe('Requisiciones vacancy code alerts', () => {
   it('shows only code deadlines and opens the requisition even when filtered out', () => {
     mocks.requisitions[0].requisition_vacancy_codes = [{
-      id: 'code-1', codigo_vacante_externa: 'CODE-123', fecha_cierre: '2020-01-01', entidad_origen: 'SENA',
+      id: 'code-1', codigo_vacante_externa: 'CODE-123', fecha_cierre: todayDateOnlyString(), entidad_origen: 'SENA',
     }];
     render(<Requisiciones />);
     const sidebar = within(screen.getByRole('complementary', { name: 'Alertas de códigos de vacante' }));

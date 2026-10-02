@@ -731,7 +731,7 @@ export default function Requisiciones() {
         <aside aria-label="Alertas de códigos de vacante" className="min-w-0">
           <SelectionAlertsPanel
             title="Alertas de Códigos de Vacante"
-            description="Vencimientos de códigos de las requisiciones"
+            description="Vencidos en los últimos 3 días y próximos 7 días"
             alerts={vacancyCodeAlerts}
             isLoading={isLoading}
             hasError={Boolean(isError)}

@@ -19,12 +19,13 @@ describe('vacancy code deadline alerts', () => {
     });
     expect(alertsFor('2026-10-06')[0].description).toContain('1626394994-107 (COMFAMILIAR) vence en 4 día(s). Cierre: 06/10/2026');
   });
-  it.each(['2026-10-01', '2026-10-02'])('marks expired or today deadlines critical: %s', date => {
+  it.each(['2026-09-29', '2026-09-30', '2026-10-01', '2026-10-02'])('marks recently expired or today deadlines critical: %s', date => {
     expect(alertsFor(date)[0].level).toBe('critical');
   });
-  it('includes the seventh day but excludes later, missing and invalid dates', () => {
+  it('includes three days overdue and seven days ahead but excludes dates outside the window', () => {
+    expect(alertsFor('2026-09-29')).toHaveLength(1);
     expect(alertsFor('2026-10-09')).toHaveLength(1);
-    for (const date of ['2026-10-10', null, '', 'invalid', '2026-02-30']) expect(alertsFor(date)).toEqual([]);
+    for (const date of ['2026-09-28', '2020-01-01', '2026-10-10', null, '', 'invalid', '2026-02-30']) expect(alertsFor(date)).toEqual([]);
   });
   it('ignores records without codes and completed or rejected requisitions', () => {
     expect(buildRequisitionVacancyCodeAlerts([{ ...requisition, requisition_vacancy_codes: [] }], now)).toEqual([]);

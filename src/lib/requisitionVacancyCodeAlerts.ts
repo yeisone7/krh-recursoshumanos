@@ -13,7 +13,7 @@ export function buildRequisitionVacancyCodeAlerts(requisitions: AlertRequisition
       const closingDate = parseISO(code.fecha_cierre);
       if (!isValid(closingDate)) continue;
       const days = differenceInCalendarDays(closingDate, now);
-      if (days > 7) continue;
+      if (days < -3 || days > 7) continue;
       const expired = days < 0;
       const deadline = expired ? `venció hace ${-days} día(s)` : days === 0 ? 'vence hoy' : `vence en ${days} día(s)`;
       const origin = code.platform?.name || code.entidad_origen;
