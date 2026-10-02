@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { formatDateOnly, todayDateOnlyString } from '@/lib/dateOnly';
+import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Briefcase,
   Users,
@@ -74,10 +74,6 @@ import { VacancyFormDialog } from '@/components/vacancies/VacancyFormDialog';
 import { VacancyDetailDialog } from '@/components/vacancies/VacancyDetailDialog';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
-import { SelectionAlertsPanel } from '@/components/selection/SelectionAlertsPanel';
-import { RequisitionDetailDialog } from '@/components/requisitions/RequisitionDetailDialog';
-import { useRequisitions } from '@/hooks/useRequisitions';
-import { buildSelectionAlerts, type SelectionAlert } from '@/lib/selectionAlerts';
 import {
   VacancyStatus,
   CandidateStatus,
@@ -189,23 +185,8 @@ export default function Seleccion() {
 
   const vacanciesQuery = useVacancies();
   const candidatesQuery = useCandidates();
-  const requisitionsQuery = useRequisitions();
   const { data: vacancies = [], isLoading: loadingVacancies } = vacanciesQuery;
   const { data: candidates = [] } = candidatesQuery;
-  const [alertRequisitionId, setAlertRequisitionId] = useState<string | null>(null);
-  const alertsDay = todayDateOnlyString();
-  const selectionAlerts = useMemo(
-    () => buildSelectionAlerts(requisitionsQuery.data || [], vacanciesQuery.data || [], candidatesQuery.data || [], new Date(`${alertsDay}T12:00:00`)),
-    [requisitionsQuery.data, vacanciesQuery.data, candidatesQuery.data, alertsDay],
-  );
-  const handleSelectionAlertClick = (alert: SelectionAlert) => {
-    if (alert.source === 'requisition') setAlertRequisitionId(alert.entityId);
-    else if (alert.source === 'vacancy') openVacancyDetail(alert.entityId);
-    else {
-      setSelectedCandidateId(alert.entityId);
-      setShowCandidateDetail(true);
-    }
-  };
   const { data: operationCenters = [] } = useOperationCenters();
   const deleteVacancy = useDeleteVacancy();
   const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canCreate, canDelete } = useAuth();
@@ -621,7 +602,7 @@ export default function Seleccion() {
       </div>
 
       <ScrollArea className="min-h-0 flex-1 px-3 py-3 sm:px-6 sm:py-4">
-        <div className="grid w-full min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="w-full min-w-0">
         <div className="min-w-0">
           {loadingVacancies ? (
             <div className="space-y-2">
@@ -807,15 +788,6 @@ export default function Seleccion() {
             </>
           )}
         </div>
-        <aside aria-label="Alertas de requisiciones y selección" className="min-w-0">
-          <SelectionAlertsPanel
-            alerts={selectionAlerts}
-            isLoading={loadingVacancies || candidatesQuery.isLoading || requisitionsQuery.isLoading}
-            hasError={vacanciesQuery.isError || candidatesQuery.isError || requisitionsQuery.isError}
-            onRetry={() => { void vacanciesQuery.refetch(); void candidatesQuery.refetch(); void requisitionsQuery.refetch(); }}
-            onAlertClick={handleSelectionAlertClick}
-          />
-        </aside>
         </div>
       </ScrollArea>
 
@@ -1016,7 +988,6 @@ export default function Seleccion() {
       </Dialog>
 
       {/* Dialogs */}
-      {alertRequisitionId && <RequisitionDetailDialog open requisitionId={alertRequisitionId} onOpenChange={(open) => { if (!open) setAlertRequisitionId(null); }} />}
       <VacancyFormDialog open={showVacancyForm} onOpenChange={setShowVacancyForm} />
       {selectedVacancyId && <VacancyDetailDialog open={showVacancyDetail} onOpenChange={setShowVacancyDetail} vacancyId={selectedVacancyId} />}
       <CandidateFormDialog open={showCandidateForm} onOpenChange={(open) => { setShowCandidateForm(open); if (!open) { setTimeout(() => setCandidateFormVacancyId(null), 200); } }} vacancyId={candidateFormVacancyId || undefined} />

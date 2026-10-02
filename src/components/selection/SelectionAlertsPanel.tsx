@@ -14,6 +14,8 @@ interface Props {
   onRetry: () => void;
   onAlertClick: (alert: SelectionAlert) => void;
   maxItems?: number;
+  title?: string;
+  description?: string;
 }
 
 const sourceLabels = { requisition: 'Requisiciones', vacancy: 'Vacantes', candidate: 'Selección' };
@@ -45,7 +47,7 @@ function AlertCard({ alert, onClick }: { alert: SelectionAlert; onClick: () => v
   );
 }
 
-export function SelectionAlertsPanel({ alerts, isLoading, hasError, onRetry, onAlertClick, maxItems = 5 }: Props) {
+export function SelectionAlertsPanel({ alerts, isLoading, hasError, onRetry, onAlertClick, maxItems = 5, title = 'Alertas de Selección y Vacantes', description = 'Requisiciones y procesos de selección' }: Props) {
   const [showAll, setShowAll] = useState(false);
   const criticalCount = alerts.filter(alert => alert.level === 'critical').length;
   const openDetail = (alert: SelectionAlert) => {
@@ -59,11 +61,11 @@ export function SelectionAlertsPanel({ alerts, isLoading, hasError, onRetry, onA
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="flex min-w-0 items-center gap-2 text-base leading-tight">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><ClipboardList className="h-4 w-4" /></span>
-              Alertas de Selección y Vacantes
+              {title}
             </CardTitle>
             {!isLoading && !hasError && criticalCount > 0 && <Badge variant="destructive" className="shrink-0 rounded-xl">{criticalCount}</Badge>}
           </div>
-          <CardDescription>Requisiciones y procesos de selección</CardDescription>
+          <CardDescription>{description}</CardDescription>
           {!isLoading && !hasError && <p className="text-sm text-muted-foreground" aria-live="polite">{alerts.length} alerta{alerts.length !== 1 ? 's' : ''} ({criticalCount} crítica{criticalCount !== 1 ? 's' : ''})</p>}
         </CardHeader>
         <CardContent className="space-y-3 p-4">
@@ -77,8 +79,8 @@ export function SelectionAlertsPanel({ alerts, isLoading, hasError, onRetry, onA
       <Dialog open={showAll && !isLoading && !hasError} onOpenChange={setShowAll}>
         <DialogContent className="flex max-h-[90dvh] w-[calc(100vw-1rem)] max-w-3xl flex-col overflow-hidden rounded-2xl p-0">
           <DialogHeader className="shrink-0 border-b px-6 py-5 text-left">
-            <DialogTitle>Alertas de Selección y Vacantes</DialogTitle>
-            <DialogDescription>{alerts.length} alertas de requisiciones, vacantes y candidatos.</DialogDescription>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description} · {alerts.length} alertas.</DialogDescription>
           </DialogHeader>
           <div className="min-h-0 space-y-3 overflow-y-auto p-4">{alerts.map(alert => <AlertCard key={alert.id} alert={alert} onClick={() => openDetail(alert)} />)}</div>
         </DialogContent>

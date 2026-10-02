@@ -28,7 +28,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
-import { formatDateOnly } from '@/lib/dateOnly';
+import { formatDateOnly, todayDateOnlyString } from '@/lib/dateOnly';
+import { SelectionAlertsPanel } from '@/components/selection/SelectionAlertsPanel';
+import { buildRequisitionVacancyCodeAlerts } from '@/lib/requisitionVacancyCodeAlerts';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -75,7 +77,12 @@ export default function Requisiciones() {
   const [deleteTarget, setDeleteTarget] = useState<PersonnelRequisition | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const { data: requisitions = [], isLoading } = useRequisitions();
+  const { data: requisitions = [], isLoading, isError, refetch } = useRequisitions();
+  const alertsDay = todayDateOnlyString();
+  const vacancyCodeAlerts = useMemo(
+    () => buildRequisitionVacancyCodeAlerts(requisitions, new Date(`${alertsDay}T12:00:00`)),
+    [requisitions, alertsDay],
+  );
   const { data: operationCenters = [] } = useOperationCenters();
   const deleteRequisition = useDeleteRequisition();
   const { companies, currentCompanyId, hasPermission } = useAuth();
@@ -376,7 +383,8 @@ export default function Requisiciones() {
       </div>
 
       <ScrollArea className="min-h-0 flex-1 px-1.5 py-6 sm:px-2.5 sm:py-8">
-        <div className="max-w-full mx-auto w-full">
+        <div className="grid w-full min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -719,6 +727,18 @@ export default function Requisiciones() {
               </nav>
             </>
           )}
+        </div>
+        <aside aria-label="Alertas de códigos de vacante" className="min-w-0">
+          <SelectionAlertsPanel
+            title="Alertas de Códigos de Vacante"
+            description="Vencimientos de códigos de las requisiciones"
+            alerts={vacancyCodeAlerts}
+            isLoading={isLoading}
+            hasError={Boolean(isError)}
+            onRetry={() => { void refetch(); }}
+            onAlertClick={(alert) => openDetail(alert.entityId)}
+          />
+        </aside>
         </div>
       </ScrollArea>
 

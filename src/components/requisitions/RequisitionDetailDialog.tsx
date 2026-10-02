@@ -279,6 +279,7 @@ export function RequisitionDetailDialog({
 
     await queryClient.invalidateQueries({ queryKey: ['requisition-vacancy-codes', requisitionId] });
     setNewVacancyCodes([]);
+    await queryClient.invalidateQueries({ queryKey: ['requisitions'] });
     toast({
       title: 'Guardado',
       description: 'Códigos de vacante agregados correctamente.',
@@ -301,6 +302,7 @@ export function RequisitionDetailDialog({
       title: 'Eliminado',
       description: 'Código de vacante eliminado.',
     });
+    await queryClient.invalidateQueries({ queryKey: ['requisitions'] });
   };
   
   const getApprovalAction = () => {
