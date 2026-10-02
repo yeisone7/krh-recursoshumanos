@@ -775,7 +775,7 @@ export function RequisitionFormDialog({
                               <SelectSeparator className="my-1" />
                               <SelectGroup>
                                 <SelectLabel className="text-primary/70 text-[10px] font-bold uppercase tracking-widest bg-background py-2 mb-1">Turnos</SelectLabel>
-                                {(['2_dias', '4_dias', '7_dias'] as DayOfWeek[]).map((day) => (
+                                {(['2_dias', '3_dias', '4_dias', '7_dias'] as DayOfWeek[]).map((day) => (
                                   <SelectItem key={day} value={day}>
                                     {dayOfWeekLabels[day]}
                                   </SelectItem>

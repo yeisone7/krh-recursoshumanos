@@ -12876,6 +12876,7 @@ export type Database = {
         | "sabado"
         | "domingo"
         | "2_dias"
+        | "3_dias"
         | "4_dias"
         | "7_dias"
       deduction_status: "activo" | "pausado" | "finalizado" | "cancelado"
@@ -13407,6 +13408,7 @@ export const Constants = {
         "sabado",
         "domingo",
         "2_dias",
+        "3_dias",
         "4_dias",
         "7_dias",
       ],
