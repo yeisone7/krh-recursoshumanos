@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Day of Week
-export type DayOfWeek = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo' | '2_dias' | '4_dias' | '7_dias';
+export type DayOfWeek = 'lunes' | 'martes' | 'miercoles' | 'jueves' | 'viernes' | 'sabado' | 'domingo' | '2_dias' | '3_dias' | '4_dias' | '7_dias';
 
 // Requisition Reason
 export type RequisitionReason = 
@@ -52,6 +52,7 @@ export const dayOfWeekLabels: Record<DayOfWeek, string> = {
   sabado: 'Sábado',
   domingo: 'Domingo',
   '2_dias': '2 Días',
+  '3_dias': '3 Días',
   '4_dias': '4 Días',
   '7_dias': '7 Días',
 };
@@ -211,7 +212,7 @@ export const requisitionFormSchema = z.object({
     required_error: 'Indique si el proceso es exclusivo para personas en situación de discapacidad (PcD)',
   }),
   horario_trabajo: z.string().optional(),
-  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', '2_dias', '4_dias', '7_dias'], { required_error: 'El día de descanso es requerido' }),
+  dia_descanso_obligatorio: z.enum(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo', '2_dias', '3_dias', '4_dias', '7_dias'], { required_error: 'El día de descanso es requerido' }),
   // Contract type
   tipo_contrato_solicitado: z.string().optional(),
   // Turno y condiciones
