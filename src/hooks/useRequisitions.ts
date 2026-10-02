@@ -108,6 +108,13 @@ export interface PersonnelRequisition {
   operation_centers?: { id: string; name: string } | null;
   shifts?: { id: string; name: string; code: string | null } | null;
   vacancies?: { id: string; position_title: string; status: string; actual_close_date?: string | null }[];
+  requisition_vacancy_codes?: {
+    id: string;
+    codigo_vacante_externa: string;
+    fecha_cierre: string | null;
+    entidad_origen: string | null;
+    platform?: { name: string } | null;
+  }[];
 }
 
 export interface RequisitionReplacementCandidate {
@@ -212,7 +219,8 @@ export function useRequisitions() {
           areas(id, name),
           operation_centers(id, name),
           shifts(id, name, code),
-          vacancies(id, position_title, status, actual_close_date)
+          vacancies(id, position_title, status, actual_close_date),
+          requisition_vacancy_codes(id, codigo_vacante_externa, fecha_cierre, entidad_origen, platform:vacancy_publication_platforms(name))
         `)
         .eq('company_id', currentCompanyId!);
 

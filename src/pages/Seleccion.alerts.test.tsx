@@ -32,22 +32,16 @@ vi.mock('@/components/requisitions/RequisitionDetailDialog', () => ({ Requisitio
 afterEach(cleanup);
 
 describe('Selección module alerts integration', () => {
-  it.each([
-    { description: /Ver detalle: RQ-01/, detail: 'requisition-detail', id: 'r1' },
-    { description: /Ver detalle: Auxiliar/, detail: 'vacancy-detail', id: 'v1' },
-    { description: /Ver detalle: Ana Pérez/, detail: 'candidate-detail', id: 'c1' },
-  ])('opens the $detail from the module sidebar', ({ description, detail, id }) => {
+  it('does not render the former selection alerts sidebar', () => {
     render(<MemoryRouter><Seleccion /></MemoryRouter>);
-    const sidebar = screen.getByRole('complementary', { name: 'Alertas de requisiciones y selección' });
-    expect(within(sidebar).getByText('3 alertas (0 críticas)')).toBeInTheDocument();
-    fireEvent.click(within(sidebar).getByRole('button', { name: description }));
-    expect(screen.getByTestId(detail)).toHaveTextContent(id);
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    expect(screen.queryByText('Alertas de Selección y Vacantes')).not.toBeInTheDocument();
   });
-  it('keeps alerts visible independently of the vacancy search', () => {
+  it('keeps vacancy search working without the alerts sidebar', () => {
     render(<MemoryRouter><Seleccion /></MemoryRouter>);
     fireEvent.change(screen.getByPlaceholderText('Buscar por cargo, área o requisición...'), { target: { value: 'sin coincidencias' } });
     expect(screen.getByText('Sin vacantes registradas')).toBeInTheDocument();
-    expect(screen.getByText('3 alertas (0 críticas)')).toBeInTheDocument();
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   });
 });
 
@@ -65,7 +59,7 @@ describe('Selección vacancy pagination', () => {
   const navigation = () => within(screen.getByRole('navigation', { name: 'Paginación de vacantes' }));
   const next = () => fireEvent.click(navigation().getByRole('button', { name: 'Siguiente' }));
 
-  it('limits desktop rows and mobile cards to 10 without reducing alerts or KPIs', () => {
+  it('limits desktop rows and mobile cards to 10 without reducing KPIs', () => {
     renderPage();
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(11);
     expect(screen.getAllByText('Cargo 01')).toHaveLength(2);
@@ -73,7 +67,6 @@ describe('Selección vacancy pagination', () => {
     expect(navigation().getByText('Mostrando 1–10 de 26 vacantes')).toBeInTheDocument();
     expect(navigation().getByRole('button', { name: 'Anterior' })).toBeDisabled();
     expect(screen.getByText('26')).toBeInTheDocument();
-    expect(screen.getByText('27 alertas (0 críticas)')).toBeInTheDocument();
   });
 
   it('navigates through all pages with working row details and boundary buttons', () => {

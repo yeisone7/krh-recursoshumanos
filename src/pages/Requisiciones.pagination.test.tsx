@@ -12,6 +12,7 @@ function makeRequisitions() {
     operation_center_id: index === 25 ? 'center-b' : 'center-a',
     lider_proceso: index === 25 ? 'Líder B' : 'Líder A',
     vacancies: index === 25 ? [{ id: 'v26', status: 'closed', position_title: 'Cargo 26' }] : [],
+    requisition_vacancy_codes: [] as { id: string; codigo_vacante_externa: string; fecha_cierre: string | null; entidad_origen: string | null }[],
   }));
 }
 
@@ -54,6 +55,23 @@ beforeEach(() => {
   mocks.exportPDF.mockReset().mockResolvedValue(undefined);
 });
 afterEach(cleanup);
+
+describe('Requisiciones vacancy code alerts', () => {
+  it('shows only code deadlines and opens the requisition even when filtered out', () => {
+    mocks.requisitions[0].requisition_vacancy_codes = [{
+      id: 'code-1', codigo_vacante_externa: 'CODE-123', fecha_cierre: '2020-01-01', entidad_origen: 'SENA',
+    }];
+    render(<Requisiciones />);
+    const sidebar = within(screen.getByRole('complementary', { name: 'Alertas de códigos de vacante' }));
+    expect(sidebar.getByText('Alertas de Códigos de Vacante')).toBeInTheDocument();
+    expect(sidebar.getByText('1 alerta (1 crítica)')).toBeInTheDocument();
+    expect(screen.queryByText('Requisición vencida sin cubrir')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText('Buscar por codigo, cargo, solicitante...'), { target: { value: 'sin coincidencias' } });
+    expect(screen.getByText('Sin requisiciones registradas')).toBeInTheDocument();
+    fireEvent.click(sidebar.getByRole('button', { name: /Ver detalle:.*CODE-123/ }));
+    expect(screen.getByTestId('requisition-detail')).toHaveTextContent('r1');
+  });
+});
 
 const navigation = () => within(screen.getByRole('navigation', { name: 'Paginación de requisiciones' }));
 const next = () => fireEvent.click(navigation().getByRole('button', { name: 'Siguiente' }));
