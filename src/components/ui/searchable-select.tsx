@@ -34,6 +34,7 @@ interface SearchableSelectProps {
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
+  wrapLabels?: boolean;
 }
 
 const normalizeSearchText = (text: string) =>
@@ -52,6 +53,7 @@ export function SearchableSelect({
   disabled = false,
   className,
   triggerClassName,
+  wrapLabels = false,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
@@ -82,7 +84,7 @@ export function SearchableSelect({
             triggerClassName
           )}
         >
-          <span className="truncate">
+          <span className={cn(wrapLabels ? "min-w-0 flex-1 whitespace-normal break-words text-left leading-relaxed" : "truncate")}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -111,11 +113,11 @@ export function SearchableSelect({
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
+                      "mr-2 h-4 w-4 shrink-0",
                       value === option.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                  <span className="truncate">{option.label}</span>
+                  <span className={cn(wrapLabels ? "min-w-0 flex-1 whitespace-normal break-words text-left leading-relaxed" : "truncate")}>{option.label}</span>
                   {option.suffix}
                 </CommandItem>
               ))}
