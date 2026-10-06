@@ -47,7 +47,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
-import { useShifts, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
+import { useShifts, useCreateBulkShiftAssignments, useDeleteShiftAssignment, useDeleteBulkShiftAssignments } from '@/hooks/useSchedules';
 import { useHolidaysMap } from '@/hooks/useHolidays';
 import { useCalendarAssignments, useCalendarTimeConfigs, useCalendarAbsences, useCalendarRestSchedules, type CalendarAssignment } from '@/hooks/useShiftCalendarData';
 import { getEmployeeFullName } from '@/types/employee';
@@ -540,6 +540,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const { data: absences } = absenceQuery;
   const createBulkAssignments = useCreateBulkShiftAssignments();
   const deleteAssignment = useDeleteShiftAssignment();
+  const deleteBulkAssignments = useDeleteBulkShiftAssignments();
 
   // Index once so each cell only examines this employee's schedule history.
   const configsByEmployee = useMemo(() => {
@@ -1196,6 +1197,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
       {/* Assign Dialog */}
       <Dialog open={showAssignDialog} onOpenChange={(open) => {
+        if (deleteBulkAssignments.isPending) return;
         setShowAssignDialog(open);
         if (!open) clearSelection();
       }}>
@@ -1229,6 +1231,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
             <div className="space-y-2">
               <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Turno Día</label>
               <SearchableSelect
+                disabled={deleteBulkAssignments.isPending}
                 value={selectedShiftId}
                 onValueChange={setSelectedShiftId}
                 placeholder="Seleccione turno día"
@@ -1270,9 +1273,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                   if (assignmentsToDelete.length === 0) return;
                   
                   try {
-                    for (const assignment of assignmentsToDelete) {
-                      await deleteAssignment.mutateAsync(assignment.id);
-                    }
+                    await deleteBulkAssignments.mutateAsync(assignmentsToDelete.map(assignment => assignment.id));
                     toast.success(`${assignmentsToDelete.length} asignación(es) eliminada(s)`);
                     setShowAssignDialog(false);
                     clearSelection();
@@ -1280,22 +1281,22 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                     toast.error('Error', { description: getErrorMessage(error) });
                   }
                 }}
-                disabled={deleteAssignment.isPending}
+                disabled={deleteBulkAssignments.isPending || createBulkAssignments.isPending}
               >
-                {deleteAssignment.isPending ? (
+                {deleteBulkAssignments.isPending ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
                   <Trash2 className="w-4 h-4 mr-2" />
                 )}
-                Eliminar
+                {deleteBulkAssignments.isPending ? 'Eliminando...' : 'Eliminar'}
               </Button>
             )}
             
             <div className="flex flex-col-reverse sm:flex-row gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="w-full sm:w-auto h-11 px-6" onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
+              <Button variant="outline" className="w-full sm:w-auto h-11 px-6" disabled={deleteBulkAssignments.isPending} onClick={() => { setShowAssignDialog(false); clearSelection(); }}>
                 Cancelar
               </Button>
-              <Button className="w-full sm:w-auto h-11 px-6" onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending}>
+              <Button className="w-full sm:w-auto h-11 px-6" onClick={handleAssign} disabled={!selectedShiftId || createBulkAssignments.isPending || deleteBulkAssignments.isPending}>
                 {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Asignar
               </Button>
