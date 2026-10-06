@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import {
   Select,
   SelectContent,
@@ -1227,27 +1228,27 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
             <div className="space-y-2">
               <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Turno Día</label>
-              <Select value={selectedShiftId} onValueChange={setSelectedShiftId}>
-                <SelectTrigger className="h-14 rounded-xl px-4 text-base">
-                  <SelectValue placeholder="Seleccione turno día" />
-                </SelectTrigger>
-                <SelectContent className="bg-background">
-                  {assignableDayShifts.map((shift) => (
-                    <SelectItem key={shift.id} value={shift.id}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: shift.color }} />
-                        <span>{shift.code ? `${shift.code} - ${shift.name}` : shift.name}</span>
-                        {isNonWorkingShift(shift) && <Badge variant="secondary" className="text-xs">{getShiftClassificationLabel(shift)}</Badge>}
-                      </div>
-                    </SelectItem>
-                  ))}
-                  {assignableDayShifts.length === 0 && (
-                    <div className="px-3 py-4 text-sm text-muted-foreground">
-                      No hay Turnos Día globales o compatibles con todos los empleados seleccionados.
+              <SearchableSelect
+                value={selectedShiftId}
+                onValueChange={setSelectedShiftId}
+                placeholder="Seleccione turno día"
+                searchPlaceholder="Buscar por código, nombre u horario..."
+                emptyMessage={assignableDayShifts.length === 0
+                  ? 'No hay Turnos Día globales o compatibles con todos los empleados seleccionados.'
+                  : 'No se encontraron turnos para esta búsqueda.'}
+                triggerClassName="h-14 rounded-xl px-4 text-base"
+                options={assignableDayShifts.map((shift) => ({
+                  value: shift.id,
+                  label: shift.code ? `${shift.code} - ${shift.name}` : shift.name,
+                  keywords: getShiftClassificationLabel(shift),
+                  suffix: (
+                    <div className="ml-auto flex shrink-0 items-center gap-2 pl-2">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: shift.color }} />
+                      {isNonWorkingShift(shift) && <Badge variant="secondary" className="text-xs">{getShiftClassificationLabel(shift)}</Badge>}
                     </div>
-                  )}
-                </SelectContent>
-              </Select>
+                  ),
+                }))}
+              />
             </div>
           </div>
 
