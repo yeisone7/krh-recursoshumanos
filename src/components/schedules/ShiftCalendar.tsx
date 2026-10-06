@@ -1236,7 +1236,9 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                 emptyMessage={assignableDayShifts.length === 0
                   ? 'No hay Turnos Día globales o compatibles con todos los empleados seleccionados.'
                   : 'No se encontraron turnos para esta búsqueda.'}
-                triggerClassName="h-14 rounded-xl px-4 text-base"
+                wrapLabels
+                className="w-[56rem] max-w-[var(--radix-popover-content-available-width)]"
+                triggerClassName="h-auto min-h-14 rounded-xl px-4 py-3 text-base"
                 options={assignableDayShifts.map((shift) => ({
                   value: shift.id,
                   label: shift.code ? `${shift.code} - ${shift.name}` : shift.name,
