@@ -4,6 +4,7 @@ import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Users, Loader2, AlertTriangle, Building2, ChevronDown, ChevronUp, Trash2, Edit, Plus, Briefcase, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { scheduleForDate } from '@/lib/effectiveSchedule';
+import { calendarRestWeekday, hasWorkOnMandatoryRestDay, type CalendarRestSchedule } from '@/lib/calendarRestDay';
 import { ScheduleReviewControl } from './ScheduleReviewControl';
 import { useScheduleReviews } from '@/hooks/useScheduleReviews';
 import { reviewLabels, type ScheduleDay } from '@/lib/payrollCorrections';
@@ -47,9 +48,9 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import { useAreas } from '@/hooks/useSystemConfig';
 import { useShifts, useCreateBulkShiftAssignments, useDeleteShiftAssignment } from '@/hooks/useSchedules';
 import { useHolidaysMap } from '@/hooks/useHolidays';
-import { useCalendarAssignments, useCalendarTimeConfigs, useCalendarAbsences, type CalendarAssignment } from '@/hooks/useShiftCalendarData';
+import { useCalendarAssignments, useCalendarTimeConfigs, useCalendarAbsences, useCalendarRestSchedules, type CalendarAssignment } from '@/hooks/useShiftCalendarData';
 import { getEmployeeFullName } from '@/types/employee';
-import type { Shift, EmployeeAbsence, WorkSchedule, EmployeeTimeMode } from '@/types/schedule';
+import { DAY_NAMES, type Shift, type EmployeeAbsence, type WorkSchedule, type EmployeeTimeMode } from '@/types/schedule';
 import {
   getEmployeeOperationCenterIds,
   isShiftEligibleForEmployee,
@@ -83,6 +84,7 @@ interface ShiftCalendarProps {
 }
 
 interface CalendarCellProps {
+  mandatoryRestLabel?: string;
   reviewStatus?: ScheduleDay['status'];
   employeeId: string;
   dateStr: string;
@@ -106,7 +108,8 @@ interface CalendarCellProps {
   deleteAssignment: ReturnType<typeof useDeleteShiftAssignment>;
 }
 
-const CalendarCell = memo(({
+export const CalendarCell = memo(({
+  mandatoryRestLabel,
   reviewStatus,
   employeeId,
   dateStr,
@@ -131,19 +134,23 @@ const CalendarCell = memo(({
 }: CalendarCellProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const visibleReviewStatus = reviewStatus === 'historical' ? undefined : reviewStatus;
+  const restMessage = mandatoryRestLabel
+    ? `Trabajo programado en descanso obligatorio: ${mandatoryRestLabel.toLowerCase()}. Día considerado dominical para liquidación.`
+    : undefined;
 
   return (
     <ContextMenu onOpenChange={setIsMenuOpen}>
       <ContextMenuTrigger>
         <div
-          title={visibleReviewStatus ? `Aprobación: ${reviewLabels[visibleReviewStatus]}` : undefined}
+          title={[restMessage, visibleReviewStatus ? `Aprobación: ${reviewLabels[visibleReviewStatus]}` : undefined].filter(Boolean).join(' · ') || undefined}
           className={cn(
-            'w-9 sm:w-10 px-0.5 py-0.5 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+            'w-9 sm:w-10 px-0.5 pt-0.5 pb-3 border-r shrink-0 cursor-pointer transition-colors select-none relative',
             sunday && !absence && 'bg-red-50',
             holiday && !absence && 'bg-amber-50',
             absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
             absence && !hasConflict && absence.type === 'leave' && 'bg-blue-50',
             absence && !hasConflict && absence.type === 'incapacity' && 'bg-orange-50',
+            mandatoryRestLabel && !hasConflict && !hasCenterConflict && 'ring-1 ring-inset ring-amber-500',
             (hasConflict || hasCenterConflict) && 'bg-red-50 ring-2 ring-inset ring-destructive',
             selected && 'bg-primary/20 ring-2 ring-inset ring-primary'
           )}
@@ -158,7 +165,8 @@ const CalendarCell = memo(({
         >
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-full h-full min-h-[28px] sm:min-h-[20px]">
+              <div tabIndex={0} className="w-full h-full min-h-[28px] sm:min-h-[20px]">
+                {restMessage && <span aria-label={restMessage} className="absolute bottom-0 left-0.5 rounded-sm bg-amber-100 px-0.5 text-[9px] font-bold leading-3 text-amber-950">DO</span>}
                 {visibleReviewStatus && <span aria-label={reviewLabels[visibleReviewStatus]} className={cn('absolute bottom-0 right-0 z-10 rounded-sm px-0.5 text-[8px] font-bold', visibleReviewStatus === 'approved' ? 'bg-emerald-100 text-emerald-900' : visibleReviewStatus === 'rejected' ? 'bg-red-100 text-red-900' : 'bg-amber-100 text-amber-900')}>{visibleReviewStatus === 'approved' ? '✓' : visibleReviewStatus === 'rejected' ? '×' : 'P'}</span>}
                 {/* Conflict indicator badge */}
                 {(hasConflict || hasCenterConflict) && (
@@ -220,70 +228,29 @@ const CalendarCell = memo(({
               </div>
             </TooltipTrigger>
             
-            {/* Conflict tooltip */}
-            {(hasConflict || hasCenterConflict) && (
-              <TooltipContent side="top" className="bg-red-50 border-destructive/30 max-w-[200px]">
-                <div className="space-y-1">
-                  <p className="font-semibold text-destructive flex items-center gap-1">
-                    <AlertTriangle className="w-3 h-3" />
-                    Conflicto detectado
-                  </p>
-                  <p className="text-sm text-foreground">Turno: {shift?.name}</p>
-                  {hasConflict && absence && (
-                    <p className="text-sm text-foreground">Novedad: {absence.description}</p>
-                  )}
-                  {hasCenterConflict && (
-                    <p className="text-sm text-foreground">
-                      Este Turno Día no coincide con ninguno de los centros activos del empleado.
-                    </p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Click derecho → Eliminar
-                  </p>
-                </div>
-              </TooltipContent>
-            )}
-            
-            {/* Absence-only tooltip */}
-            {absence && !hasConflict && (
-              <TooltipContent>
-                <p className="font-medium">{absence.description}</p>
-                <p className="text-xs text-muted-foreground">
-                  {absence.start_date} - {absence.end_date}
-                </p>
-              </TooltipContent>
-            )}
-            
-            {/* Shift-only tooltip */}
-            {shift && !absence && !hasCenterConflict && (
-              <TooltipContent>
-                <p>{shift.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Click derecho para opciones</p>
-              </TooltipContent>
-            )}
-            
-            {/* Admin schedule tooltip */}
-            {isAdminMode && !shift && !absence && adminIsWorkDay && adminSchedule && (
-              <TooltipContent>
-                <p className="font-medium">{adminSchedule.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {adminSchedule.start_time?.slice(0, 5)} - {adminSchedule.end_time?.slice(0, 5)}
-                </p>
-                <p className="text-xs text-muted-foreground">Descanso: {adminSchedule.break_minutes} min</p>
-              </TooltipContent>
-            )}
-
-            {/* Empty cell tooltip */}
-            {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && (
-              <TooltipContent>
-                <p className="text-xs text-muted-foreground">
-                  {isAdminMode ? 'Día de descanso (horario administrativo)' : 'Click derecho para asignar turno'}
-                </p>
-              </TooltipContent>
-            )}
+            <TooltipContent side="top" className={cn('max-w-[260px]', (hasConflict || hasCenterConflict) && 'bg-red-50 border-destructive/30')}>
+              <div className="space-y-1">
+                {restMessage && <p className={cn('font-medium text-amber-900', !hasConflict && !hasCenterConflict && 'dark:text-amber-300')}>{restMessage}</p>}
+                {(hasConflict || hasCenterConflict) && <p className="font-semibold text-destructive flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Conflicto detectado</p>}
+                {shift && <>
+                  <p>{shift.name}</p>
+                  {!isNonWorkingShift(shift) && <p className="text-xs text-muted-foreground">{shift.start_time?.slice(0, 5)} - {shift.end_time?.slice(0, 5)}</p>}
+                </>}
+                {absence && <>
+                  <p className="font-medium">{absence.description}</p>
+                  <p className="text-xs text-muted-foreground">{absence.start_date} - {absence.end_date}</p>
+                </>}
+                {hasCenterConflict && <p className="text-sm">Este Turno Día no coincide con ninguno de los centros activos del empleado.</p>}
+                {isAdminMode && !shift && !absence && adminIsWorkDay && adminSchedule && <>
+                  <p className="font-medium">{adminSchedule.name}</p>
+                  <p className="text-xs text-muted-foreground">{adminSchedule.start_time?.slice(0, 5)} - {adminSchedule.end_time?.slice(0, 5)}</p>
+                  <p className="text-xs text-muted-foreground">Descanso: {adminSchedule.break_minutes} min</p>
+                </>}
+                {!shift && !absence && (!isAdminMode || !adminIsWorkDay) && <p className="text-xs text-muted-foreground">{isAdminMode ? 'Día de descanso (horario administrativo)' : 'Click derecho para asignar turno'}</p>}
+                {shift && <p className="text-xs text-muted-foreground">Click derecho para opciones</p>}
+                {visibleReviewStatus && <p className="text-xs text-muted-foreground">Aprobación: {reviewLabels[visibleReviewStatus]}</p>}
+              </div>
+            </TooltipContent>
           </Tooltip>
         </div>
       </ContextMenuTrigger>
@@ -411,7 +378,8 @@ const CalendarCell = memo(({
     </ContextMenu>
   );
 }, (prevProps, nextProps) => {
-  return prevProps.selected === nextProps.selected &&
+  return prevProps.mandatoryRestLabel === nextProps.mandatoryRestLabel &&
+         prevProps.selected === nextProps.selected &&
          prevProps.reviewStatus === nextProps.reviewStatus &&
          prevProps.shift?.id === nextProps.shift?.id &&
          prevProps.shift?.color === nextProps.shift?.color &&
@@ -556,6 +524,16 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const assignmentQuery = useCalendarAssignments({ startDate, endDate });
   const configQuery = useCalendarTimeConfigs({ startDate, endDate });
   const absenceQuery = useCalendarAbsences({ startDate, endDate });
+  const restScheduleQuery = useCalendarRestSchedules({ startDate, endDate });
+  const restSchedulesByEmployee = useMemo(() => {
+    const map = new Map<string, CalendarRestSchedule[]>();
+    (restScheduleQuery.data ?? []).forEach(schedule => {
+      const rows = map.get(schedule.employee_id) ?? [];
+      rows.push(schedule);
+      map.set(schedule.employee_id, rows);
+    });
+    return map;
+  }, [restScheduleQuery.data]);
   const { data: assignments = [], isLoading: loadingAssignments } = assignmentQuery;
   const { data: timeConfigs = [] } = configQuery;
   const { data: absences } = absenceQuery;
@@ -852,8 +830,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     return selectedCells.some(cell => cell.employeeId === employeeId && cell.dates.includes(date));
   }, [selectedCells]);
 
-  const isLoading = loadingEmployees || loadingAssignments || configQuery.isLoading || absenceQuery.isLoading;
-  const loadError = employeeQuery.error || assignmentQuery.error || configQuery.error || absenceQuery.error;
+  const isLoading = loadingEmployees || loadingAssignments || configQuery.isLoading || absenceQuery.isLoading || restScheduleQuery.isLoading;
+  const loadError = employeeQuery.error || assignmentQuery.error || configQuery.error || absenceQuery.error || restScheduleQuery.error;
 
   const isInitializedRef = useRef(false);
 
@@ -901,7 +879,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     return <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm">
       <p>No se pudo cargar el calendario completo. Intenta nuevamente antes de asignar turnos.</p>
       <Button variant="outline" className="mt-2" onClick={() => {
-        void Promise.all([employeeQuery.refetch(), assignmentQuery.refetch(), configQuery.refetch(), absenceQuery.refetch()]);
+        void Promise.all([employeeQuery.refetch(), assignmentQuery.refetch(), configQuery.refetch(), absenceQuery.refetch(), restScheduleQuery.refetch()]);
       }}>Reintentar</Button>
     </div>;
   }
@@ -923,6 +901,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
       {/* Header Controls */}
       <ScheduleReviewControl employees={reviewEmployees} start={startDate} end={endDate} selection={selectedCells} days={reviews.data} loading={reviews.isLoading} error={reviews.error} />
       <p className="text-xs text-muted-foreground">Aprobación: ✓ Aprobada · × Rechazada · P Pendiente</p>
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><span className="rounded-sm bg-amber-100 px-1 font-bold text-amber-950">DO</span> DO: trabajo en descanso obligatorio</p>
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-[1fr_auto] items-center gap-2 sm:flex sm:items-center sm:justify-between">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -1156,6 +1135,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 const shift = assignment ? getShiftById(assignment.shift_id) : null;
                                 const selected = isCellSelected(employee.id, dateStr);
                                 const absence = absencesMap[employee.id]?.[dateStr];
+                                const restWeekday = calendarRestWeekday(restSchedulesByEmployee.get(employee.id) ?? [], employee.employee_employment_cycles ?? [], dateStr);
                                 
                                 // Admin mode: derive working day from work_schedule.days_of_week
                                 const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
@@ -1168,6 +1148,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
                                 return (
                                   <CalendarCell
+                                    mandatoryRestLabel={hasWorkOnMandatoryRestDay({ date: dateStr, restWeekday, hasAssignment: !!assignment, shift, adminIsWorkDay: isAdminMode && adminIsWorkDay, hasAbsence: !!absence }) && restWeekday !== null ? DAY_NAMES[restWeekday] : undefined}
                                     reviewStatus={reviewByDay.get(`${employee.id}:${dateStr}`)}
                                     key={dateStr}
                                     employeeId={employee.id}
