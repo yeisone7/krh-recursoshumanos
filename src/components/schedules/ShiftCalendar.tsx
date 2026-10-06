@@ -145,7 +145,7 @@ export const CalendarCell = memo(({
         <div
           title={[restMessage, visibleReviewStatus ? `Aprobación: ${reviewLabels[visibleReviewStatus]}` : undefined].filter(Boolean).join(' · ') || undefined}
           className={cn(
-            'w-9 sm:w-10 px-0.5 pt-0.5 pb-3 border-r shrink-0 cursor-pointer transition-colors select-none relative',
+            'w-[2.7rem] sm:w-12 px-0.5 pt-0.5 pb-3 border-r shrink-0 cursor-pointer transition-colors select-none relative',
             sunday && !absence && 'bg-red-50',
             holiday && !absence && 'bg-amber-50',
             absence && !hasConflict && absence.type === 'vacation' && 'bg-green-50',
@@ -1042,7 +1042,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                 <div
                   key={dateStr}
                   className={cn(
-                    'w-9 sm:w-10 py-1 text-center text-[10px] border-r shrink-0 leading-tight',
+                    'w-[2.7rem] sm:w-12 py-1 text-center text-[10px] border-r shrink-0 leading-tight',
                     sunday && 'bg-red-50',
                     holiday && 'bg-amber-50',
                     today && 'ring-2 ring-inset ring-primary'
@@ -1083,7 +1083,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                       </Badge>
                     </div>
                     {daysData.map(({ dateStr }) => (
-                      <div key={dateStr} className="w-9 sm:w-10 border-r shrink-0" />
+                      <div key={dateStr} className="w-[2.7rem] sm:w-12 border-r shrink-0" />
                     ))}
                   </div>
 
@@ -1107,7 +1107,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                             </Badge>
                           </div>
                           {daysData.map(({ dateStr }) => (
-                            <div key={dateStr} className="w-9 sm:w-10 border-r shrink-0" />
+                            <div key={dateStr} className="w-[2.7rem] sm:w-12 border-r shrink-0" />
                           ))}
                         </div>
 
