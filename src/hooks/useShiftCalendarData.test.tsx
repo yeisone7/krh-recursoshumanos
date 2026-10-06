@@ -2,7 +2,7 @@ import { createElement, type ReactNode } from 'react';
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useCalendarAbsences, useCalendarAssignments, useCalendarTimeConfigs } from './useShiftCalendarData';
+import { useCalendarAbsences, useCalendarAssignments, useCalendarTimeConfigs, useCalendarRestSchedules } from './useShiftCalendarData';
 import { useEmployees } from './useEmployees';
 
 const mocks = vi.hoisted(() => ({
@@ -44,6 +44,25 @@ afterEach(() => { cleanup(); clients.splice(0).forEach(client => client.clear())
 const period = { startDate: '2026-09-16', endDate: '2026-09-30' };
 
 describe('calendar queries', () => {
+  it('paginates rest-day history, scopes the company and preserves ended versions', async () => {
+    respond = async request => ({ data: Array.from({ length: request.first === 0 ? 1000 : 1 }, (_, i) => ({ id: `s${request.first + i}` })), error: null });
+    const { result, client } = setup(() => useCalendarRestSchedules(period));
+    await waitFor(() => expect(result.current.data).toHaveLength(1001));
+    expect(requests.map(r => r.first)).toEqual([0, 1000]);
+    expect(requests[0].eq).toHaveBeenCalledWith('company_id', 'company-a');
+    expect(requests[0].lte).toHaveBeenCalledWith('valid_from', period.endDate);
+    expect(requests[0].or).toHaveBeenCalledWith('valid_to.is.null,valid_to.gte.2026-09-16');
+    expect(requests[0].eq).not.toHaveBeenCalledWith('is_current', true);
+    await act(async () => { await client.invalidateQueries({ queryKey: ['employees_v2'] }); });
+    expect(requests).toHaveLength(4);
+  });
+
+  it('exposes rest-day query failures instead of returning default Sundays', async () => {
+    respond = async () => ({ data: null, error: new Error('rest history unavailable') });
+    const { result } = setup(() => useCalendarRestSchedules(period));
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+  });
   it('starts all three absence sources together and scopes them to company and overlapping dates', async () => {
     const pending: Array<(result: Result) => void> = [];
     respond = () => new Promise(resolve => pending.push(resolve));

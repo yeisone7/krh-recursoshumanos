@@ -4,9 +4,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 import type { EmployeeAbsence, EmployeeShiftAssignment, EmployeeTimeConfig } from '@/types/schedule';
+import type { CalendarRestSchedule } from '@/lib/calendarRestDay';
 
 interface Period { startDate: string; endDate: string }
 type CalendarAbsence = EmployeeAbsence & { employee_id: string };
+
+export function useCalendarRestSchedules({ startDate, endDate }: Period) {
+  const { currentCompanyId } = useAuth();
+  return useQuery<CalendarRestSchedule[]>({
+    // Employee edits and rehires already invalidate this prefix.
+    queryKey: ['employees_v2', currentCompanyId, 'calendar-rest-days', startDate, endDate],
+    enabled: !!currentCompanyId,
+    queryFn: async () => {
+      if (!currentCompanyId) return [];
+      return fetchAllAnalyticsRows(async (from, to) => {
+        const { data, error } = await supabase.from('employee_schedule')
+          .select('id, employee_id, employment_cycle_id, rest_day, valid_from, valid_to, employees_v2!inner(id)')
+          .eq('company_id', currentCompanyId)
+          .eq('employees_v2.company_id', currentCompanyId)
+          .eq('employees_v2.is_active', true)
+          .lte('valid_from', endDate).or(`valid_to.is.null,valid_to.gte.${startDate}`)
+          .order('valid_from', { ascending: false }).order('id').range(from, to);
+        return { data, error };
+      });
+    },
+  });
+}
 
 // Keep mutation invalidation prefixes, but never share partial rows with reports.
 export function useCalendarAssignments({ startDate, endDate }: Period) {

@@ -394,7 +394,7 @@ export function useEmployees({ calendar = false }: { calendar?: boolean } = {}) 
           .from('employees_v2')
           .select(calendar ? `
             id, first_name, middle_name, last_name, second_last_name, is_active,
-            employee_employment_cycles(id, status),
+            employee_employment_cycles(id, status, start_date, end_date),
             ${getEmployeeWorkInfoSelect()},
             ${getEmployeeCenterAssignmentsSelect()}
           ` : `
