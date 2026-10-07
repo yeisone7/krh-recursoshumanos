@@ -60,6 +60,9 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
     openai_api_key: '',
     gemini_api_key: '',
     anthropic_api_key: '',
+    openai_model: '',
+    gemini_model: '',
+    anthropic_model: '',
     heygen_api_key: '',
     tokens: 1024,
     temperature: 0.3,
@@ -431,6 +434,11 @@ export function AITab({ systemConfig, onUpdateConfig }: AITabProps) {
                 </div>
               </div>
 
+              {aiConfig.model !== 'heygen' && <div className="space-y-2">
+                <Label htmlFor="report-provider-model">Modelo para el Asistente de Reportes</Label>
+                <Input id="report-provider-model" value={aiConfig[`${aiConfig.model}_model` as 'openai_model' | 'gemini_model' | 'anthropic_model'] || ''} onChange={e => setAiConfig({ ...aiConfig, [`${aiConfig.model}_model`]: e.target.value.trim() })} placeholder={aiConfig.model === 'openai' ? 'gpt-4o' : aiConfig.model === 'gemini' ? 'gemini-2.5-flash' : 'claude-sonnet-4-5'} />
+                <p className="text-xs text-muted-foreground">Opcional. Debe admitir respuestas JSON estructuradas. Se usará únicamente el proveedor seleccionado.</p>
+              </div>}
               <div className="grid gap-8 sm:grid-cols-2">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-1">
