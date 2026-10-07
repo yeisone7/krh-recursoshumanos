@@ -102,7 +102,18 @@ Deno.serve(async (req: Request) => {
       : data;
     if (body.operation === "context" && data?.challenge && !data?.error) {
       const { data: contextPolicy } = await client.rpc("time_clock_public_photo_policy", { _session: data.challenge });
-      return respond({ ...data, require_clock_in_photo: contextPolicy?.require_clock_in_photo === true });
+      // Resolve branding from the validated challenge's point, never a caller-supplied company.
+      let horizontalLogoUrl: string | null = null;
+      if (contextPolicy?.point_id && !contextPolicy?.error) {
+        const { data: clockPoint } = await client.from("time_clock_points")
+          .select("company_id").eq("id", contextPolicy.point_id).maybeSingle();
+        if (clockPoint?.company_id) {
+          const { data: company } = await client.from("companies")
+            .select("horizontal_logo_url").eq("id", clockPoint.company_id).maybeSingle();
+          horizontalLogoUrl = company?.horizontal_logo_url || null;
+        }
+      }
+      return respond({ ...data, horizontal_logo_url: horizontalLogoUrl, require_clock_in_photo: contextPolicy?.require_clock_in_photo === true });
     }
     return respond(result, result?.error === "RATE_LIMITED" ? 429 : result?.error ? 400 : 200);
   } catch (error) {

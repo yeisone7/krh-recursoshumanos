@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Clock3, Loader2, MapPin, RefreshCw } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, Clock3, Fingerprint, Loader2, LogOut, MapPin, RefreshCw, UserRound } from "lucide-react";
+import "./PublicTimeClock.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 interface Context {
   challenge: string;
   company: string;
+  horizontal_logo_url?: string | null;
   point: string;
   center: string;
   expires_at: string;
@@ -87,6 +89,12 @@ export default function PublicTimeClock() {
     null,
   );
   const inflight = useRef(false);
+  const [now, setNow] = useState(() => new Date());
+  const [failedLogo, setFailedLogo] = useState<string | null>(null);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
   useEffect(() => {
     const tag = window.document.createElement("meta");
     tag.name = "referrer";
@@ -254,24 +262,45 @@ export default function PublicTimeClock() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:py-12">
-      <main className="mx-auto max-w-lg space-y-5">
-        <header className="space-y-2 text-center">
-          <Clock3 className="mx-auto h-9 w-9 text-primary" />
-          <p className="text-sm font-semibold text-muted-foreground">
-            {context?.company || "Reloj de Asistencia"}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Registra tu asistencia
-          </h1>
+    <div className="public-clock">
+      <main className="clock-shell">
+        <header className="clock-header">
+          <div className="clock-brand-row">
+            <div className="clock-brand">
+              {context?.horizontal_logo_url && failedLogo !== context.horizontal_logo_url ? (
+                <img className="clock-company-logo" src={context.horizontal_logo_url}
+                  alt={`Logo de ${context.company}`} referrerPolicy="no-referrer"
+                  onError={() => setFailedLogo(context.horizontal_logo_url!)} />
+              ) : (
+                <span className="clock-brand-symbol"><Clock3 aria-hidden="true" /></span>
+              )}
+              <span className="clock-company-name">{context?.company || "Reloj de asistencia"}</span>
+            </div>
+            <span className="clock-product-label">Reloj de Asistencia</span>
+          </div>
+          <div className="clock-heading-row">
+            <div>
+              <p className="clock-eyebrow">Tu jornada, al día</p>
+              <h1>Registra tu asistencia</h1>
+            </div>
+            <span className="clock-heading-icon"><Fingerprint aria-hidden="true" /></span>
+          </div>
+          <div className="clock-time-panel">
+            <div>
+              <p className="clock-date">{now.toLocaleDateString("es-CO", { timeZone: "America/Bogota", weekday: "long", day: "numeric", month: "long" })}</p>
+              <time className="clock-time" dateTime={now.toISOString()}>{now.toLocaleTimeString("es-CO", { timeZone: "America/Bogota", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}</time>
+              <p className="clock-time-caption">Hora de tu dispositivo · Colombia</p>
+            </div>
           {context && (
-            <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              {context.point} · {context.center}
-            </p>
+            <div className="clock-location">
+              <MapPin aria-hidden="true" />
+              <div><span>Punto de marcación</span><strong>{context.point}</strong><p>{context.center}</p></div>
+            </div>
           )}
+          </div>
           {context?.require_clock_in_photo && (
-            <p className="text-xs text-muted-foreground">
+            <p className="clock-photo-note">
+              <Camera aria-hidden="true" />
               Este punto toma una foto automática únicamente al registrar la entrada.
             </p>
           )}
@@ -307,7 +336,7 @@ export default function PublicTimeClock() {
           </p>
         )}
         {context && !identity && (
-          <Card>
+          <Card className="clock-card clock-login-card">
             <CardHeader>
               <CardTitle>Ingresa con cédula y PIN</CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -353,9 +382,10 @@ export default function PublicTimeClock() {
                     className="h-12"
                   />
                 </div>
-                <Button type="submit" className="h-12 w-full" disabled={busy}>
+                <Button type="submit" className="clock-primary-button h-12 w-full" disabled={busy}>
                   {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{" "}
                   Continuar
+                  {!busy && <ArrowRight aria-hidden="true" />}
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   ¿Olvidaste tu PIN? Solicita a RRHH uno temporal.
@@ -365,7 +395,7 @@ export default function PublicTimeClock() {
           </Card>
         )}
         {identity?.must_change && (
-          <Card>
+          <Card className="clock-card">
             <CardHeader>
               <CardTitle>Crea tu PIN personal</CardTitle>
               <p className="text-sm text-muted-foreground">
@@ -411,7 +441,7 @@ export default function PublicTimeClock() {
           </Card>
         )}
         {receipt && identity && (
-          <Card>
+          <Card className="clock-card">
             <CardContent className="space-y-4 p-7 text-center">
               <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
               <h2 className="text-2xl font-bold">
@@ -442,21 +472,24 @@ export default function PublicTimeClock() {
             )}
             {!cameraAction && (
               <>
-            <div className="flex items-center justify-between gap-3">
-              <p className="font-semibold">{identity.name}</p>
+            <div className="clock-identity flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3"><span className="clock-avatar"><UserRound aria-hidden="true" /></span><div><p className="clock-identity-label">Hola,</p><p className="font-semibold break-words">{identity.name}</p></div></div>
               <Button variant="ghost" size="sm" onClick={restart}>
+                <LogOut aria-hidden="true" />
                 Salir
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="clock-tabs grid grid-cols-2 gap-2" role="group" aria-label="Vista de asistencia">
               <Button
                 variant={view === "punch" ? "default" : "outline"}
+                aria-pressed={view === "punch"}
                 onClick={() => setView("punch")}
               >
                 Marcar
               </Button>
               <Button
                 variant={view === "history" ? "default" : "outline"}
+                aria-pressed={view === "history"}
                 onClick={() => setView("history")}
               >
                 Mi asistencia
@@ -471,12 +504,12 @@ export default function PublicTimeClock() {
               </Button>
             )}
             {view === "punch" && history && (
-              <Card>
+              <Card className="clock-card clock-punch-card">
                 <CardHeader>
                   <CardTitle>
                     {history.last_action
                       ? `Última acción: ${TIME_CLOCK_ACTION_LABELS[history.last_action]}`
-                      : "Sin marcaciones"}
+                      : "Todo listo para iniciar"}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Confirma tu acción. Validaremos que estés en el punto de
@@ -490,7 +523,7 @@ export default function PublicTimeClock() {
                   ).map((next) => (
                     <Button
                       key={next}
-                      className="h-14 w-full text-base"
+                      className="clock-punch-button h-14 w-full text-base"
                       disabled={
                         busy ||
                         (!!pendingPunch.current &&
@@ -502,6 +535,7 @@ export default function PublicTimeClock() {
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       )}
                       {TIME_CLOCK_ACTION_LABELS[next]}
+                      {!busy && <ArrowRight aria-hidden="true" />}
                     </Button>
                   ))}
                   <p className="text-xs text-muted-foreground">
@@ -512,7 +546,7 @@ export default function PublicTimeClock() {
             )}
             {view === "history" && history && (
               <>
-                <Card>
+                <Card className="clock-card">
                   <CardHeader>
                     <CardTitle>Últimos 30 días</CardTitle>
                   </CardHeader>
@@ -565,7 +599,7 @@ export default function PublicTimeClock() {
                     ))}
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="clock-card">
                   <CardHeader>
                     <CardTitle>Solicitar corrección</CardTitle>
                     <p className="text-sm text-muted-foreground">
@@ -665,10 +699,11 @@ export default function PublicTimeClock() {
             )}
           </>
         )}
-        <p className="text-center text-xs text-muted-foreground">
+        <footer className="clock-footer">
+          <MapPin aria-hidden="true" />
           Ubicación utilizada solo al marcar. Si necesitas ayuda, contacta al
           supervisor o a RRHH.
-        </p>
+        </footer>
       </main>
     </div>
   );
