@@ -1,0 +1,72 @@
+.public-clock {
+  min-height: 100dvh;
+  padding: 40px 20px;
+  color: #183642;
+  background-color: #edf4f5;
+  background-image: radial-gradient(#066b8c12 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.clock-shell {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 32px;
+  border: 1px solid #fff;
+  border-radius: 28px;
+  background: #fafcfc;
+  box-shadow: 0 20px 70px -30px #214e5b40;
+}
+.clock-shell > * + * { margin-top: 20px; }
+.clock-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 24px; border-bottom: 1px solid #e0eaed; }
+.clock-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
+.clock-company-logo { width: auto; max-width: 240px; height: 54px; object-fit: contain; object-position: left center; }
+.clock-company-name { font-size: 12px; font-weight: 600; color: #526a75; overflow-wrap: anywhere; }
+.clock-brand-symbol { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; background: #e4f2f5; color: #066b8c; }
+.clock-product-label { font-size: 11px; font-weight: 700; color: #526a75; text-align: right; }
+.clock-heading-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 22px; }
+.clock-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #066b8c; margin-bottom: 8px; }
+.clock-header h1 { font-size: clamp(26px, 5vw, 34px); font-weight: 800; line-height: 1.15; letter-spacing: -.045em; text-wrap: balance; }
+.clock-heading-icon { color: #066b8c; flex-shrink: 0; }
+.clock-heading-icon svg { width: 40px; height: 40px; stroke-width: 1.4; }
+.clock-time-panel { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 22px; background: #e8f3f5; border-radius: 18px; }
+.clock-date { font-size: 12px; color: #46616c; text-transform: capitalize; }
+.clock-time { display: block; margin: 3px 0; font-size: clamp(30px, 7vw, 40px); font-variant-numeric: tabular-nums; font-weight: 800; letter-spacing: -.04em; line-height: 1.2; color: #07536b; }
+.clock-time-caption { font-size: 10px; color: #526a75; }
+.clock-location { display: flex; align-items: flex-start; gap: 8px; max-width: 45%; padding-left: 18px; border-left: 1px solid #c5dde3; overflow-wrap: anywhere; }
+.clock-location > svg { width: 16px; height: 16px; color: #066b8c; flex-shrink: 0; margin-top: 2px; }
+.clock-location span { display: block; color: #526a75; font-size: 10px; }
+.clock-location strong { display: block; font-size: 13px; margin: 4px 0; }
+.clock-location p { font-size: 11px; color: #526a75; }
+.clock-photo-note { display: flex; align-items: flex-start; gap: 8px; color: #526a75; font-size: 11px; line-height: 1.6; margin-top: 14px; }
+.clock-photo-note svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 2px; }
+.clock-shell .clock-card { border-color: #e1eaed; border-radius: 20px; box-shadow: 0 6px 22px -16px #214e5b30; }
+.clock-shell .clock-card h3 { font-size: 19px; letter-spacing: -.025em; }
+.clock-shell input, .clock-shell select, .clock-shell textarea { border-color: #b8cbd2; background: #fcfefe; border-radius: 10px; }
+.clock-shell input { min-height: 50px; padding-left: 14px; font-variant-numeric: tabular-nums; }
+.clock-shell input[type="password"] { letter-spacing: .25em; }
+.clock-shell label { font-size: 13px; font-weight: 600; }
+.clock-shell button { border-radius: 10px; }
+.clock-shell .clock-primary-button { min-height: 52px; margin-top: 22px; box-shadow: 0 6px 16px -8px #066b8c80; }
+.clock-identity { padding: 3px 0; }
+.clock-avatar { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 14px; background: #e4f2f5; color: #066b8c; flex-shrink: 0; }
+.clock-avatar svg { width: 20px; height: 20px; }
+.clock-identity-label { font-size: 11px; color: #526a75; }
+.clock-tabs { background: #eaf0f2; padding: 5px; border-radius: 14px; }
+.clock-tabs button { min-height: 42px; border: 0; background: transparent; color: #526a75; }
+.clock-tabs button[aria-pressed="true"] { background: white; color: #066b8c; box-shadow: 0 2px 5px #214e5b10; }
+.clock-shell .clock-punch-button { min-height: 70px; font-size: 20px; border-radius: 14px; box-shadow: 0 7px 18px -10px #066b8c80; }
+.clock-footer { display: flex; align-items: flex-start; justify-content: center; gap: 7px; color: #526a75; font-size: 10px; line-height: 1.7; padding: 0 10px; }
+.clock-footer svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 2px; }
+@media (max-width: 480px) {
+  .public-clock { padding: 16px 10px; }
+  .clock-shell { padding: 22px 18px; border-radius: 22px; }
+  .clock-company-logo { max-width: 190px; height: 45px; }
+  .clock-heading-row { gap: 10px; }
+  .clock-heading-icon svg { width: 32px; height: 32px; }
+  .clock-time-panel { padding: 16px; gap: 12px; }
+  .clock-location { padding-left: 12px; }
+  .clock-location > svg { display: none; }
+  .clock-shell .clock-card > div { padding-left: 20px; padding-right: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock-shell button { transition: none; }
+}

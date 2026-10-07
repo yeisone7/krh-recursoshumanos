@@ -99,6 +99,22 @@ afterEach(async () => {
   cleanup();
 });
 describe("public attendance flow", () => {
+  it("shows the company's header logo and keeps the company name if the image fails", async () => {
+    const original = api.getMockImplementation()!;
+    api.mockImplementation(async (op, body) => {
+      const result = await original(op, body);
+      return op === "context"
+        ? { ...result, horizontal_logo_url: "https://example.com/header.png" }
+        : result;
+    });
+    mount();
+    const logo = await screen.findByRole("img", { name: "Logo de Empresa" });
+    expect(logo.getAttribute("src")).toBe("https://example.com/header.png");
+    fireEvent.error(logo);
+    expect(screen.queryByRole("img", { name: "Logo de Empresa" })).toBeNull();
+    expect(screen.getByText("Empresa")).toBeTruthy();
+    expect(screen.getByLabelText("Cédula")).toBeTruthy();
+  });
   it("authenticates with PIN, confirms a server receipt and clears the identity", async () => {
     mount();
     await login();
