@@ -96,7 +96,7 @@ export function ShiftCycleFormDialog({
         // Load cycle days
         if (cycle.cycle_days) {
           setCycleDays(
-            cycle.cycle_days
+            [...cycle.cycle_days]
               .sort((a, b) => a.day_number - b.day_number)
               .map(d => ({ day_number: d.day_number, shift_id: d.shift_id }))
           );
@@ -180,9 +180,9 @@ export function ShiftCycleFormDialog({
         toast.success('Ciclo creado');
       }
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error', {
-        description: error.message || 'No se pudo guardar el ciclo',
+        description: error instanceof Error ? error.message : 'No se pudo guardar el ciclo',
       });
     }
   };
@@ -191,7 +191,7 @@ export function ShiftCycleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
+      <DialogContent className="gap-0 p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-[54.6rem] overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
         <DialogHeader className="sr-only">
           <DialogTitle>
             {isEditing ? 'Editar Ciclo de Rotación' : 'Nuevo Ciclo de Rotación'}
@@ -199,11 +199,11 @@ export function ShiftCycleFormDialog({
         </DialogHeader>
 
         {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
+        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-5 sm:px-7 py-5 border-b border-border ">
           
           
-          <div className="flex items-start gap-4 sm:gap-5 relative">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
+          <div className="flex items-start gap-4 relative">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl shrink-0 shadow-inner">
               NC
             </div>
             <div className="flex-1 min-w-0 pr-6">
@@ -216,7 +216,7 @@ export function ShiftCycleFormDialog({
                   Rotación
                 </Badge>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground mb-3 truncate">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground mb-1 truncate">
                 {isEditing ? 'Editar Ciclo' : 'Nuevo Ciclo'}
               </h2>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-muted-foreground/80">
@@ -234,9 +234,9 @@ export function ShiftCycleFormDialog({
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 sm:px-8 pt-4 border-b border-border/50 bg-background">
+          <div className="px-5 sm:px-7 pt-2 border-b border-border/50 bg-background">
             <TabsList className="bg-transparent h-auto p-0 gap-6 w-full justify-start overflow-x-auto no-scrollbar">
-              <TabsTrigger value="detalles" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
+              <TabsTrigger value="detalles" className="relative h-10 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
                   <FileText className={cn("w-4 h-4 transition-colors", activeTab === 'detalles' ? "text-primary" : "text-muted-foreground")} />
                   <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === 'detalles' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
@@ -247,7 +247,7 @@ export function ShiftCycleFormDialog({
                   <motion.div layoutId="activeTabDot" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
                 )}
               </TabsTrigger>
-              <TabsTrigger value="ciclo" className="relative h-12 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
+              <TabsTrigger value="ciclo" className="relative h-10 px-0 bg-transparent border-none data-[state=active]:bg-transparent data-[state=active]:shadow-none group">
                 <div className="flex items-center gap-2">
                   <RotateCw className={cn("w-4 h-4 transition-colors", activeTab === 'ciclo' ? "text-primary" : "text-muted-foreground")} />
                   <span className={cn("text-xs font-black uppercase tracking-widest transition-colors", activeTab === 'ciclo' ? "text-foreground" : "text-muted-foreground group-hover:text-foreground")}>
@@ -262,7 +262,7 @@ export function ShiftCycleFormDialog({
           </div>
 
           <Form {...form}>
-            <form id="cycleForm" onSubmit={form.handleSubmit(onSubmit)} className="p-6 sm:p-8 overflow-y-auto">
+            <form id="cycleForm" onSubmit={form.handleSubmit(onSubmit)} className="min-h-0 p-5 sm:p-6 overflow-y-auto">
               <TabsContent value="detalles" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <FormField
@@ -334,9 +334,9 @@ export function ShiftCycleFormDialog({
                 />
               </TabsContent>
 
-              <TabsContent value="ciclo" className="m-0 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <TabsContent value="ciclo" className="m-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex flex-col min-h-[12rem] sm:min-h-0">
-                  <div className="flex items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center justify-between gap-4 mb-3">
                     <div>
                       <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Secuencia del Ciclo</h3>
                       <p className="text-xs text-muted-foreground mt-1">Defina el orden de los Turnos Día para este ciclo de rotación.</p>
@@ -365,35 +365,41 @@ export function ShiftCycleFormDialog({
                       <p className="text-sm mt-1">Agregue días para comenzar a definir el ciclo de rotación.</p>
                     </div>
                   ) : (
-                    <div className="border rounded-2xl overflow-y-auto max-h-[50vh] bg-background /5 border-border ">
-                      <div className="p-3 space-y-3">
+                    <div className="border rounded-2xl overflow-y-auto max-h-[55vh] bg-background /5 border-border ">
+                      <div className="p-2 space-y-2">
                         {cycleDays.map((day, index) => {
                           const shift = getShiftById(day.shift_id);
                           return (
                             <div
                               key={index}
-                              className="grid grid-cols-[auto_1fr_auto] sm:flex sm:items-center gap-3 p-3 bg-background rounded-xl border border-border/50 shadow-sm transition-all hover:border-primary/20 hover:shadow-md"
+                              className="grid grid-cols-[auto_auto_minmax(0,1fr)_auto] sm:grid-cols-[auto_auto_minmax(0,1fr)_7rem_auto] items-center gap-2 px-2 py-1.5 bg-background rounded-xl border border-border/50 shadow-sm transition-all hover:border-primary/20 hover:shadow-md"
                             >
-                              <GripVertical className="w-5 h-5 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
-                              <Badge variant="outline" className="w-16 sm:w-20 justify-center h-8 rounded-lg bg-background border-border text-primary font-bold">
+                              <GripVertical className="w-4 h-4 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
+                              <Badge variant="outline" className="w-14 sm:w-16 justify-center h-8 rounded-lg bg-background border-border text-primary font-bold">
                                 Día {day.day_number}
                               </Badge>
                               <Select
                                 value={day.shift_id}
                                 onValueChange={(value) => updateDay(index, value)}
                               >
-                                <SelectTrigger className="min-w-0 sm:flex-1 h-10 rounded-xl bg-background /10 border-transparent hover:bg-background focus:bg-background">
-                                  <SelectValue />
+                                <SelectTrigger aria-label={`Turno del día ${day.day_number}`} className="min-w-0 h-9 rounded-xl bg-background /10 border-transparent hover:bg-background focus:bg-background [&>span]:min-w-0">
+                                  <SelectValue placeholder="Selecciona un Turno Día">
+                                    {shift && <span className="flex min-w-0 items-center gap-2">
+                                      <span className="shrink-0 font-mono text-xs font-semibold text-primary">{shift.code || '—'}</span>
+                                      <span className="truncate">{shift.name}</span>
+                                    </span>}
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent className="rounded-xl border-border ">
                                   {activeShifts.map((s) => (
-                                    <SelectItem key={s.id} value={s.id} className="py-2">
-                                      <div className="flex items-center gap-2">
+                                    <SelectItem key={s.id} value={s.id} textValue={`${s.code || 'Sin código'} · ${s.name}`} className="py-2">
+                                      <div className="flex min-w-0 items-center gap-2">
                                         <div
-                                          className="w-3.5 h-3.5 rounded-md shadow-sm border border-black/10"
+                                          className="w-3.5 h-3.5 shrink-0 rounded-md shadow-sm border border-black/10"
                                           style={{ backgroundColor: s.color !== 'transparent' ? s.color : '#e5e7eb' }}
                                         />
-                                        <span className="font-medium">{s.name}</span>
+                                        <span className="shrink-0 font-mono text-xs font-semibold text-primary">{s.code || 'Sin código'}</span>
+                                        <span className="min-w-0 truncate font-medium">{s.name}</span>
                                         {isNonWorkingShift(s) && (
                                           <Badge variant="secondary" className="text-[10px] ml-2 tracking-wider">
                                             {getShiftClassificationCode(s)} · {getShiftClassificationLabel(s).toUpperCase()}
@@ -404,16 +410,15 @@ export function ShiftCycleFormDialog({
                                   ))}
                                 </SelectContent>
                               </Select>
-                              {shift && (
-                                <span className="hidden sm:inline text-xs font-bold text-muted-foreground/70 w-32 text-center bg-background rounded-md py-1">
-                                  {isNonWorkingShift(shift) ? '0 horas' : `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`}
-                                </span>
-                              )}
+                              <span className="hidden sm:inline text-xs font-bold text-muted-foreground/70 text-center whitespace-nowrap bg-background rounded-md py-1">
+                                {shift ? (isNonWorkingShift(shift) ? '0 horas' : `${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)}`) : '—'}
+                              </span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                aria-label={`Quitar día ${day.day_number}`}
+                                className="h-9 w-9 rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                                 onClick={() => removeDay(index)}
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -430,11 +435,11 @@ export function ShiftCycleFormDialog({
           </Form>
         </Tabs>
 
-        <div className="p-6 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
+        <div className="px-5 sm:px-6 py-4 border-t border-border/50 bg-background /10 flex items-center justify-end gap-3 shrink-0">
+          <Button variant="outline" className="h-10 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button type="submit" form="cycleForm" className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>
+          <Button type="submit" form="cycleForm" className="h-10 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={isPending}>
             {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {isEditing ? 'Guardar Cambios' : 'Crear Ciclo'}
           </Button>
