@@ -9,6 +9,9 @@ vi.mock('@/hooks/useIncapacities', () => ({ useIncapacityAnalyticsData: () => ({
 vi.mock('@/hooks/useEmployees', () => ({ useIncapacityAnalyticsEmployees: () => ({ data: [{ id: 'e1', is_active: true, status: 'active' }], isPending: false }) }));
 vi.mock('@/hooks/usePilaUgpp', () => ({ usePilaUgppSettings: () => ({ data: null }) }));
 vi.mock('@/components/incapacities/IncapacityDetailDialog', () => ({ IncapacityDetailDialog: () => null }));
+vi.mock('@/components/ai/ReportWorkspace', () => ({
+  ReportWorkspace: () => <div><label htmlFor="shared-report-question">Pregunta del reporte compartido</label><input id="shared-report-question" /></div>,
+}));
 vi.mock('recharts', async importOriginal => ({
   ...await importOriginal<typeof import('recharts')>(),
   ResponsiveContainer: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -35,6 +38,21 @@ const open = () => render(<MemoryRouter><AnaliticaIncapacidades /></MemoryRouter
 const tab = (name: string) => fireEvent.mouseDown(screen.getByRole('tab', { name }), { button: 0, ctrlKey: false });
 
 describe('Analítica de Incapacidades calendar allocation', () => {
+  it('opens the shared reporting workspace and preserves its question when switching tabs', () => {
+    fixture.rows = [];
+    open();
+    expect(screen.queryByLabelText('Pregunta del reporte compartido')).not.toBeInTheDocument();
+    tab('Asistente de Reportes');
+    const question = screen.getByLabelText('Pregunta del reporte compartido');
+    fireEvent.change(question, { target: { value: 'Incapacidades por centro este mes' } });
+    expect(screen.queryByText('Sin datos para los filtros seleccionados')).not.toBeInTheDocument();
+    tab('Ejecutivo');
+    expect(question).not.toBeVisible();
+    tab('Asistente de Reportes');
+    expect(screen.getByLabelText('Pregunta del reporte compartido')).toHaveValue('Incapacidades por centro este mes');
+    expect(question).toBeVisible();
+  });
+
   it('shows elapsed days and prorated money across all three tabs', () => {
     open();
     expect(screen.getByText('Dias de incapacidad').parentElement).toHaveTextContent('1 dias promedio');

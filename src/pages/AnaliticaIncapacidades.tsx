@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Banknote,
+  Bot,
   BarChart3,
   CalendarDays,
   ChevronRight,
@@ -64,6 +65,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { IncapacityDetailDialog } from '@/components/incapacities/IncapacityDetailDialog';
 import { IncapacityOperationsReport } from '@/components/incapacities/IncapacityOperationsReport';
+import { ReportWorkspace } from '@/components/ai/ReportWorkspace';
 import { useIncapacityAnalyticsEmployees } from '@/hooks/useEmployees';
 import { useIncapacityAnalyticsData } from '@/hooks/useIncapacities';
 import { usePilaUgppSettings } from '@/hooks/usePilaUgpp';
@@ -1370,6 +1372,8 @@ function OperationsRecoveryPanel({
 }
 
 export default function AnaliticaIncapacidades() {
+  const [activeTab, setActiveTab] = useState('ejecutivo');
+  const [reportsVisited, setReportsVisited] = useState(false);
   const [period, setPeriod] = useState<PeriodFilter>('12m');
   const [origin, setOrigin] = useState('all');
   const [recoveryStatus, setRecoveryStatus] = useState('all');
@@ -1679,7 +1683,7 @@ export default function AnaliticaIncapacidades() {
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-4 xl:w-[720px]">
+          <div hidden={activeTab === 'reportes'} className={cn('grid gap-2 sm:grid-cols-4 xl:w-[720px]', activeTab === 'reportes' && 'hidden')}>
             <Select value={period} onValueChange={(value) => setPeriod(value as PeriodFilter)}>
               <SelectTrigger className="h-11 rounded-lg border-slate-200 bg-white text-xs font-bold">
                 <SelectValue />
@@ -1723,12 +1727,14 @@ export default function AnaliticaIncapacidades() {
         </div>
       </motion.div>
 
+      <div hidden={activeTab === 'reportes'} className="space-y-2">
       <p className="text-xs text-slate-500">Días calendario transcurridos en el período, con corte al {format(new Date(), 'dd/MM/yyyy')}. Cada registro se cuenta una vez en el período y en cada mes que afecta.</p>
       {analytics.invalidDates > 0 && <p role="alert" className="text-sm text-amber-700">{analytics.invalidDates} registros excluidos del reparto por fechas inválidas o invertidas.</p>}
       {analytics.undatedPaymentCount > 0 && <p role="status" className="text-sm text-amber-700">{analytics.undatedPaymentCount} pagos por {money(analytics.undatedPaymentAmount)} pendientes de asignación temporal: falta una fecha de pago válida.</p>}
+      </div>
 
-      <Tabs defaultValue="ejecutivo" className="space-y-5">
-        <TabsList className="grid h-auto w-full grid-cols-3 gap-1 rounded-xl border border-slate-200 bg-white p-1 lg:w-[720px]">
+      <Tabs value={activeTab} onValueChange={(value) => { setActiveTab(value); if (value === 'reportes') setReportsVisited(true); }} className="space-y-5">
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-white p-1 xl:max-w-[1000px] md:grid-cols-4">
           <TabsTrigger value="ejecutivo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
             <Gauge className="h-4 w-4" />
             Ejecutivo
@@ -1740,6 +1746,10 @@ export default function AnaliticaIncapacidades() {
           <TabsTrigger value="operativo" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
             <BarChart3 className="h-4 w-4" />
             Centros de operación
+          </TabsTrigger>
+          <TabsTrigger value="reportes" className="gap-2 rounded-lg text-xs font-black uppercase tracking-widest data-[state=active]:bg-cyan-600 data-[state=active]:text-white">
+            <Bot className="h-4 w-4 shrink-0" aria-hidden="true" />
+            Asistente de Reportes
           </TabsTrigger>
         </TabsList>
 
@@ -2007,9 +2017,14 @@ export default function AnaliticaIncapacidades() {
             )}
           />
         </TabsContent>
+        {reportsVisited && (
+          <TabsContent value="reportes" forceMount hidden={activeTab !== 'reportes'} className="mt-0 overflow-hidden rounded-xl border border-slate-200 data-[state=inactive]:hidden">
+            <ReportWorkspace />
+          </TabsContent>
+        )}
       </Tabs>
 
-      {analytics.total === 0 && analytics.monthly.every(item => item.Recuperado === 0) && (
+      {activeTab !== 'reportes' && analytics.total === 0 && analytics.monthly.every(item => item.Recuperado === 0) && (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
           <AlertTriangle className="mx-auto h-8 w-8 text-amber-500" />
           <h3 className="mt-3 text-lg font-black text-slate-950">Sin datos para los filtros seleccionados</h3>
