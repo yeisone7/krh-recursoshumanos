@@ -92,7 +92,7 @@ describe('generateActaEntregaPdf', () => {
 
     const renderedSources = pdfMocks.addImage.mock.calls.map(([image]) => image.currentSrc);
     expect(renderedSources.filter(source => source === logoUrl)).toHaveLength(2);
-    expect(renderedSources).not.toContain('/images/petrocasinos-watermark.png');
+    expect(renderedSources).not.toContain('/images/petrocasinos-avatar.png');
     expect(pdfMocks.save).toHaveBeenCalledOnce();
   });
 

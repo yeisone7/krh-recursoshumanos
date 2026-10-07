@@ -10,8 +10,8 @@ import type {
 } from '@/types/evaluation';
 import { DEFAULT_RATING_SCALE } from '@/types/evaluation';
 
-const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
-const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
+const WATERMARK_LOGO_PATH = '/images/petrocasinos-avatar.png';
+const COLOR_LOGO_PATH = '/images/petrocasinos-header.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
   return new Promise((resolve, reject) => {

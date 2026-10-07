@@ -22,8 +22,8 @@ export async function generatePositionProfilePdf(profile: any, positionName: str
   // Preload images
   let logoImg: HTMLImageElement | null = null;
   let wmImg: HTMLImageElement | null = null;
-  try { logoImg = await loadImage('/images/petrocasinos-watermark.png'); } catch { /* optional */ }
-  try { wmImg = await loadImage('/images/petrocasinos-watermark.png'); } catch { /* optional */ }
+  try { logoImg = await loadImage('/images/petrocasinos-header.png'); } catch { /* optional */ }
+  try { wmImg = await loadImage('/images/petrocasinos-avatar.png'); } catch { /* optional */ }
 
   const HEADER_BOTTOM = 38; // y after header ends
 

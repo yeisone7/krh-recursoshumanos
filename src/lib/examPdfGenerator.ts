@@ -48,7 +48,7 @@ export async function generateExamOrderPdf(options: ExamOrderOptions): Promise<v
 
   // Watermark
   try {
-    const wmImg = await loadImage('/images/petrocasinos-watermark.png');
+    const wmImg = await loadImage('/images/petrocasinos-avatar.png');
     const wmW = 97;
     const wmH = 54;
     doc.saveGraphicsState();

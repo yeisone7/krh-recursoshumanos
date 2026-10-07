@@ -19,7 +19,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import type { TrainingCourse, TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
-import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
+import petrocasinosIcon from '@/assets/petrocasinos-avatar.png';
 import { formatTrainingDuration } from '@/lib/trainingDuration';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';

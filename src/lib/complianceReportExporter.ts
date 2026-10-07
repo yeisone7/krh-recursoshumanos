@@ -4,8 +4,8 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { CenterCompliance } from '@/hooks/useDotationCompliance';
 
-const LOGO_PATH = '/images/petrocasinos-logo-white.png';
-const WATERMARK_PATH = '/images/petrocasinos-watermark.png';
+const LOGO_PATH = '/images/petrocasinos-header.png';
+const WATERMARK_PATH = '/images/petrocasinos-avatar.png';
 
 // ─── Excel Export ───────────────────────────────────────────
 

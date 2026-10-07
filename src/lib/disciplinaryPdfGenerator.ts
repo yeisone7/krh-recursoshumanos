@@ -10,10 +10,10 @@ import {
   FaultType,
   SanctionType,
 } from '@/types/disciplinary';
-import petrocasinosLogoFull from '@/assets/petrocasinos-logo-full.png';
+import petrocasinosLogoFull from '@/assets/petrocasinos-header.png';
 
 
-const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
+const COLOR_LOGO_PATH = '/images/petrocasinos-header.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
   return new Promise((resolve, reject) => {

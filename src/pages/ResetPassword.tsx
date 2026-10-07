@@ -10,7 +10,7 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import petrocasinosIcon from '@/assets/petrocasinos-login-icon.png';
+import petrocasinosIcon from '@/assets/petrocasinos-avatar.png';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
