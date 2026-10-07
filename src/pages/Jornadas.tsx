@@ -53,6 +53,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { scheduleDeletionMessage } from '@/lib/scheduleDeletion';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -181,7 +182,7 @@ export default function Jornadas() {
       else if (deleteConfirm.type === 'cycle') await deleteCycle.mutateAsync(deleteConfirm.id);
       toast.success('Eliminado correctamente');
     } catch (error: unknown) {
-      toast.error('Error', { description: error instanceof Error ? error.message : 'No se pudo eliminar el registro' });
+      toast.error('No se pudo eliminar', { description: scheduleDeletionMessage(error) });
     }
     setDeleteConfirm(null);
   };
