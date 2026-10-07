@@ -12,7 +12,7 @@ import {
   Loader2, Scale, Send, ShieldAlert
 } from 'lucide-react';
 import { SignatureCanvas } from '@/components/training/SignatureCanvas';
-import petrocasinosIcon from '@/assets/petrocasinos-orange-icon.png';
+import petrocasinosIcon from '@/assets/petrocasinos-avatar.png';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';

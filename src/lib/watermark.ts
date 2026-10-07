@@ -21,7 +21,7 @@ export const DEFAULT_WATERMARK_CONFIG: WatermarkConfig = {
   scale: 0.15,
 };
 
-const DEFAULT_LOGO_PATH = '/images/petrocasinos-watermark.png';
+const DEFAULT_LOGO_PATH = '/images/petrocasinos-avatar.png';
 const LOGO_PADDING = 20;
 
 function loadImage(src: string): Promise<HTMLImageElement> {

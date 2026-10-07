@@ -11,8 +11,8 @@ const LEVEL_LABELS: Record<number, string> = {
   1: 'Competencia No Desarrollada',
 };
 
-const WATERMARK_LOGO_PATH = '/images/petrocasinos-watermark.png';
-const COLOR_LOGO_PATH = '/images/petrocasinos-logo-white.png';
+const WATERMARK_LOGO_PATH = '/images/petrocasinos-avatar.png';
+const COLOR_LOGO_PATH = '/images/petrocasinos-header.png';
 
 function loadImageAsDataUrl(src: string): Promise<string> {
   return new Promise((resolve, reject) => {
