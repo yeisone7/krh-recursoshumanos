@@ -110,6 +110,7 @@ describe("public attendance flow", () => {
     mount();
     const logo = await screen.findByRole("img", { name: "Logo de Empresa" });
     expect(logo.getAttribute("src")).toBe("https://example.com/header.png");
+    expect(screen.queryByText("Empresa")).toBeNull();
     fireEvent.error(logo);
     expect(screen.queryByRole("img", { name: "Logo de Empresa" })).toBeNull();
     expect(screen.getByText("Empresa")).toBeTruthy();

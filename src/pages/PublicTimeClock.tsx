@@ -274,7 +274,9 @@ export default function PublicTimeClock() {
               ) : (
                 <span className="clock-brand-symbol"><Clock3 aria-hidden="true" /></span>
               )}
-              <span className="clock-company-name">{context?.company || "Reloj de asistencia"}</span>
+              {(!context?.horizontal_logo_url || failedLogo === context.horizontal_logo_url) && (
+                <span className="clock-company-name">{context?.company || "Reloj de asistencia"}</span>
+              )}
             </div>
             <span className="clock-product-label">Reloj de Asistencia</span>
           </div>

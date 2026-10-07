@@ -18,7 +18,7 @@
 .clock-shell > * + * { margin-top: 20px; }
 .clock-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 24px; border-bottom: 1px solid #e0eaed; }
 .clock-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
-.clock-company-logo { width: auto; max-width: 240px; height: 54px; object-fit: contain; object-position: left center; }
+.clock-company-logo { width: auto; max-width: 240px; height: 67.5px; object-fit: contain; object-position: left center; }
 .clock-company-name { font-size: 12px; font-weight: 600; color: #526a75; overflow-wrap: anywhere; }
 .clock-brand-symbol { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 13px; background: #e4f2f5; color: #066b8c; }
 .clock-product-label { font-size: 11px; font-weight: 700; color: #526a75; text-align: right; }
@@ -59,7 +59,7 @@
 @media (max-width: 480px) {
   .public-clock { padding: 16px 10px; }
   .clock-shell { padding: 22px 18px; border-radius: 22px; }
-  .clock-company-logo { max-width: 190px; height: 45px; }
+  .clock-company-logo { max-width: 190px; height: 56.25px; }
   .clock-heading-row { gap: 10px; }
   .clock-heading-icon svg { width: 32px; height: 32px; }
   .clock-time-panel { padding: 16px; gap: 12px; }
