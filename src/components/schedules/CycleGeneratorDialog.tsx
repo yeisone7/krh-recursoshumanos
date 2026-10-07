@@ -1,13 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, addDays, eachDayOfInterval, parseISO, isWithinInterval } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { CalendarIcon, Loader2, Zap, AlertTriangle, CheckCircle2, User, Calendar as CalendarIconSVG, Users } from 'lucide-react';
-import { toast } from 'sonner';
-import { scheduleForDate } from '@/lib/effectiveSchedule';
-import { isNonWorkingShift } from '@/lib/shiftClassification';
 
 import {
   Dialog,
@@ -36,14 +33,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useShiftCycles, useCreateBulkShiftAssignments } from '@/hooks/useSchedules';
+import { useShiftCycles } from '@/hooks/useSchedules';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useEmployeeTimeConfigs } from '@/hooks/useSchedules';
 import { getEmployeeFullName } from '@/types/employee';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useCycleGeneration } from '@/hooks/useCycleGeneration';
 
 const generatorSchema = z.object({
   shift_cycle_id: z.string().min(1, 'Seleccione un ciclo'),
@@ -68,14 +65,11 @@ export function CycleGeneratorDialog({
   onOpenChange,
   preselectedEmployeeIds = [],
 }: CycleGeneratorDialogProps) {
-  const [previewMode, setPreviewMode] = useState(false);
-  const [generatedAssignments, setGeneratedAssignments] = useState<{ employee_id: string; shift_id: string; assignment_date: string }[]>([]);
   
   const { currentCompanyId } = useAuth();
   const { data: employees = [] } = useEmployees();
   const { data: shiftCycles = [] } = useShiftCycles();
   const { data: timeConfigs = [] } = useEmployeeTimeConfigs();
-  const createBulkAssignments = useCreateBulkShiftAssignments();
 
   const form = useForm<GeneratorFormData>({
     resolver: zodResolver(generatorSchema),
@@ -102,133 +96,30 @@ export function CycleGeneratorDialog({
     return employees.filter(e => e.is_active && configuredIds.has(e.id));
   }, [employees, timeConfigs]);
 
-  // Fetch absences for validation
-  const { data: absences = [] } = useQuery({
-    queryKey: ['employee_absences_generator', currentCompanyId, startDate, endDate],
-    queryFn: async () => {
-      if (!startDate || !endDate || !currentCompanyId) return [];
-      
-      const startStr = format(startDate, 'yyyy-MM-dd');
-      const endStr = format(endDate, 'yyyy-MM-dd');
-
-      const { data: vacations } = await supabase
-        .from('vacation_requests')
-        .select('employee_id, start_date, end_date')
-        .eq('company_id', currentCompanyId)
-        .in('status', ['aprobado', 'en_curso'])
-        .gte('end_date', startStr)
-        .lte('start_date', endStr);
-
-      const { data: leaves } = await supabase
-        .from('leave_requests')
-        .select('employee_id, start_date, end_date')
-        .eq('company_id', currentCompanyId)
-        .eq('status', 'aprobado')
-        .gte('end_date', startStr)
-        .lte('start_date', endStr);
-
-      const { data: incapacities } = await supabase
-        .from('employee_incapacities')
-        .select('employee_id, start_date, end_date')
-        .eq('company_id', currentCompanyId)
-        .gte('end_date', startStr)
-        .lte('start_date', endStr);
-
-      return [...(vacations || []), ...(leaves || []), ...(incapacities || [])];
-    },
-    enabled: selectedEmployeeIds.length > 0 && !!startDate && !!endDate && !!currentCompanyId,
-  });
-
   const selectedCycle = shiftCycles.find(c => c.id === selectedCycleId);
-
-  const generatePreview = () => {
-    if (!selectedCycle?.cycle_days || !startDate || !endDate) return;
-
-    const days = eachDayOfInterval({ start: startDate, end: endDate });
-    const cycleDays = selectedCycle.cycle_days.sort((a, b) => a.day_number - b.day_number);
-    const totalCycleDays = selectedCycle.total_days;
-
-    const assignments: { employee_id: string; shift_id: string; assignment_date: string }[] = [];
-    let skippedDueToAbsence = 0;
-
-    selectedEmployeeIds.forEach(employeeId => {
-      // Get the employee's cycle_start_date from their config
-      days.forEach(day => {
-        const dateStr = format(day, 'yyyy-MM-dd');
-        const config = scheduleForDate(timeConfigs, employeeId, dateStr);
-        const cycleStartDate = config?.cycle_start_date ? parseISO(config.cycle_start_date) : startDate;
-        
-        // Check for absences
-        const hasAbsence = absences.some(a => {
-          const absStart = parseISO(a.start_date);
-          const absEnd = parseISO(a.end_date);
-          return a.employee_id === employeeId && isWithinInterval(day, { start: absStart, end: absEnd });
-        });
-
-        // Calculate which day of the cycle this is
-        const daysDiff = Math.floor((day.getTime() - cycleStartDate.getTime()) / (1000 * 60 * 60 * 24));
-        const cycleDayNumber = ((daysDiff % totalCycleDays) + totalCycleDays) % totalCycleDays + 1;
-        
-        const cycleDay = cycleDays.find(cd => cd.day_number === cycleDayNumber);
-        if (!cycleDay) return;
-
-        const shift = cycleDay.shifts;
-        const isWorkShift = shift && !isNonWorkingShift(shift);
-
-        // Skip work shifts on absence days
-        if (hasAbsence && isWorkShift) {
-          skippedDueToAbsence++;
-          return;
-        }
-
-        assignments.push({
-          employee_id: employeeId,
-          shift_id: cycleDay.shift_id,
-          assignment_date: dateStr,
-        });
-      });
-    });
-
-    setGeneratedAssignments(assignments);
-    setPreviewMode(true);
-
-    if (skippedDueToAbsence > 0) {
-      toast.info(`Se omitieron ${skippedDueToAbsence} asignación(es) por novedades activas`);
-    }
-  };
-
+  const generation = useCycleGeneration({
+    companyId: currentCompanyId || '', employeeIds: selectedEmployeeIds,
+    start: startDate ? format(startDate, 'yyyy-MM-dd') : '',
+    end: endDate ? format(endDate, 'yyyy-MM-dd') : '', cycleId: selectedCycleId,
+  }, open);
+  const previewMode = !!generation.preview;
+  const generatedAssignments = generation.preview?.assignments || [];
+  const generatePreview = () => generation.prepare();
   const handleGenerate = async () => {
-    if (generatedAssignments.length === 0) return;
-
-    try {
-      await createBulkAssignments.mutateAsync(
-        generatedAssignments.map(a => ({
-          ...a,
-          source: 'cycle' as const,
-        }))
-      );
-      toast.success(`${generatedAssignments.length} asignación(es) generada(s) correctamente`);
-      onOpenChange(false);
-      form.reset();
-      setPreviewMode(false);
-      setGeneratedAssignments([]);
-    } catch (error: any) {
-      toast.error('Error al generar asignaciones', { description: error.message });
-    }
+    if (await generation.confirm()) { onOpenChange(false); form.reset(); }
   };
 
   const activeCycles = shiftCycles.filter(c => c.is_active && c.cycle_days && c.cycle_days.length > 0);
 
   const totalDays = startDate && endDate 
-    ? eachDayOfInterval({ start: startDate, end: endDate }).length 
+    ? Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / 86400000) + 1)
     : 0;
 
   return (
     <Dialog open={open} onOpenChange={(o) => {
       onOpenChange(o);
       if (!o) {
-        setPreviewMode(false);
-        setGeneratedAssignments([]);
+        generation.reset();
       }
     }}>
       <DialogContent className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
@@ -318,7 +209,7 @@ export function CycleGeneratorDialog({
                     <div className="sm:col-span-2 p-4 bg-background /10 border border-border rounded-2xl">
                       <p className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-3">Secuencia del ciclo</p>
                       <div className="flex flex-wrap gap-2">
-                        {selectedCycle.cycle_days
+                        {[...selectedCycle.cycle_days]
                           .sort((a, b) => a.day_number - b.day_number)
                           .map((cd) => (
                             <Badge 
@@ -508,7 +399,8 @@ export function CycleGeneratorDialog({
                 </div>
               </div>
 
-              {absences.length > 0 && (
+              <p className="text-sm">Jornadas existentes conservadas: {generation.preview?.preserved || 0}. Fuera de configuración vigente: {generation.preview?.outsideConfig || 0}.</p>
+              {(generation.preview?.absent || 0) > 0 && (
                 <Alert variant="default" className="border-amber-200 bg-amber-50 rounded-2xl">
                   <AlertTriangle className="h-5 w-5 text-amber-600" />
                   <AlertDescription className="text-amber-800 font-medium ml-2">
@@ -526,21 +418,21 @@ export function CycleGeneratorDialog({
               <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" form="generatorForm" className="w-full sm:w-auto h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={activeCycles.length === 0 || selectedEmployeeIds.length === 0 || !startDate || !endDate}>
+              <Button type="submit" form="generatorForm" className="w-full sm:w-auto h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground" disabled={generation.busy || activeCycles.length === 0 || selectedEmployeeIds.length === 0 || !startDate || !endDate}>
                 Vista Previa
               </Button>
             </>
           ) : (
             <>
-              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => setPreviewMode(false)}>
+              <Button type="button" variant="outline" className="w-full sm:w-auto h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => generation.reset()}>
                 Volver
               </Button>
               <Button 
                 className="w-full sm:w-auto h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 bg-primary text-primary-foreground"
                 onClick={handleGenerate} 
-                disabled={createBulkAssignments.isPending || generatedAssignments.length === 0}
+                disabled={generation.busy || generatedAssignments.length === 0}
               >
-                {createBulkAssignments.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {generation.busy && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Confirmar Generación
               </Button>
             </>

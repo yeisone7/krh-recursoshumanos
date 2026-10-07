@@ -4,6 +4,7 @@ import { payrollClient, colombiaToday } from '@/lib/payrollControlCuts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { writePayrollRecords } from '@/lib/payrollCorrections';
+import { saveShiftCycle } from '@/lib/saveShiftCycle';
 import { deleteUnassignedShiftCycle } from '@/lib/scheduleDeletion';
 import type { 
   WorkSchedule, 
@@ -263,43 +264,14 @@ export function useShiftCycles() {
 
 export function useCreateShiftCycle() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (data: {
       cycle: Omit<ShiftCycle, 'id' | 'created_at' | 'updated_at' | 'company_id' | 'created_by' | 'cycle_days'>;
       days: { day_number: number; shift_id: string }[];
     }) => {
-      // Create the cycle first
-      const { data: cycle, error: cycleError } = await supabase
-        .from('shift_cycles')
-        .insert({
-          ...data.cycle,
-          company_id: currentCompanyId!,
-          created_by: user?.id,
-        })
-        .select()
-        .single();
-
-      if (cycleError) throw cycleError;
-
-      // Then create the cycle days
-      if (data.days.length > 0) {
-        const { error: daysError } = await supabase
-          .from('shift_cycle_days')
-          .insert(
-            data.days.map(day => ({
-              shift_cycle_id: cycle.id,
-              company_id: currentCompanyId!,
-              day_number: day.day_number,
-              shift_id: day.shift_id,
-            }))
-          );
-
-        if (daysError) throw daysError;
-      }
-
-      return cycle;
+      return saveShiftCycle(currentCompanyId, null, data.cycle, data.days);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
@@ -318,44 +290,7 @@ export function useUpdateShiftCycle() {
       cycle: Partial<ShiftCycle>;
       days?: { day_number: number; shift_id: string }[];
     }) => {
-      // Update the cycle
-      const { data: cycle, error: cycleError } = await supabase
-        .from('shift_cycles')
-        .update(data.cycle)
-        .eq('id', data.id)
-        .select()
-        .single();
-
-      if (cycleError) throw cycleError;
-
-      // If days are provided, replace them
-      if (data.days) {
-        // Delete existing days
-        const { error: deleteError } = await supabase
-          .from('shift_cycle_days')
-          .delete()
-          .eq('shift_cycle_id', data.id);
-
-        if (deleteError) throw deleteError;
-
-        // Insert new days
-        if (data.days.length > 0) {
-          const { error: daysError } = await supabase
-            .from('shift_cycle_days')
-            .insert(
-              data.days.map(day => ({
-                shift_cycle_id: data.id,
-                company_id: currentCompanyId!,
-                day_number: day.day_number,
-                shift_id: day.shift_id,
-              }))
-            );
-
-          if (daysError) throw daysError;
-        }
-      }
-
-      return cycle;
+      return saveShiftCycle(currentCompanyId, data.id, data.cycle, data.days ?? null);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
