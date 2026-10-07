@@ -41,6 +41,15 @@ import {
 } from '@/lib/reporting';
 import { ReportResults } from './ReportResults';
 
+const exampleAccents: Record<string, string> = {
+  employees_v2: 'border-l-sky-400 bg-sky-50/40 hover:bg-sky-50',
+  contracts: 'border-l-violet-400 bg-violet-50/40 hover:bg-violet-50',
+  time_clock_days: 'border-l-teal-400 bg-teal-50/40 hover:bg-teal-50',
+  absence_days: 'border-l-amber-400 bg-amber-50/40 hover:bg-amber-50',
+  training_compliance: 'border-l-indigo-400 bg-indigo-50/40 hover:bg-indigo-50',
+  payroll_receipts: 'border-l-emerald-400 bg-emerald-50/40 hover:bg-emerald-50',
+};
+
 type Library = ReportBootstrap & { legacy?: ReportListItem[] };
 type Recognition = {
   lang: string;
@@ -379,7 +388,7 @@ function Workspace({ companyId }: { companyId: string }) {
         <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] xl:grid-cols-[minmax(0,1fr)_310px] gap-6">
           <main className="min-w-0 space-y-5">
             <form
-              className="rounded-2xl border bg-card p-5 sm:p-7 shadow-sm"
+              className="rounded-2xl border border-t-[3px] border-t-primary/60 bg-gradient-to-br from-sky-50/60 via-card to-card p-5 sm:p-7 shadow-sm"
               onSubmit={(e) => {
                 e.preventDefault();
                 run('generate', { question, filters });
@@ -397,7 +406,7 @@ function Workspace({ companyId }: { companyId: string }) {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Por ejemplo: ¿cuántos empleados activos tenemos en cada centro?"
-                className="mt-3 min-h-[110px] resize-y bg-muted/20 text-base"
+                className="mt-3 min-h-[110px] resize-y bg-card text-base"
                 maxLength={2000}
                 disabled={busy}
               />
@@ -602,8 +611,10 @@ function Workspace({ companyId }: { companyId: string }) {
             ) : (
               !loading &&
               library && (
-                <section className="rounded-2xl border border-dashed bg-white/70 p-6 sm:p-8">
-                  <BarChart3 className="w-8 h-8 text-primary mb-4" />
+                <section className="rounded-2xl border border-sky-200/70 bg-white/80 p-6 sm:p-8">
+                  <div className="mb-4 inline-flex rounded-xl bg-sky-100/70 p-3">
+                    <BarChart3 className="w-7 h-7 text-primary" />
+                  </div>
                   <h2 className="text-lg font-semibold">
                     De una pregunta a una visión completa
                   </h2>
@@ -657,8 +668,8 @@ function Workspace({ companyId }: { companyId: string }) {
                       )
                       .map((s) => (
                         <button
-                          key={s.module}
-                          className="text-left rounded-xl border p-4 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                          key={s.key}
+                          className={`text-left rounded-xl border border-l-[3px] p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${exampleAccents[s.key] || 'border-l-primary/40 bg-card hover:bg-primary/5'}`}
                           onClick={() => {
                             setQuestion(
                               s.key === 'employees_v2'
