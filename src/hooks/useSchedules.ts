@@ -4,6 +4,7 @@ import { payrollClient, colombiaToday } from '@/lib/payrollControlCuts';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { writePayrollRecords } from '@/lib/payrollCorrections';
+import { deleteUnassignedShiftCycle } from '@/lib/scheduleDeletion';
 import type { 
   WorkSchedule, 
   Shift, 
@@ -365,15 +366,12 @@ export function useUpdateShiftCycle() {
 
 export function useDeleteShiftCycle() {
   const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('shift_cycles')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      if (!currentCompanyId) throw new Error('Selecciona una empresa antes de eliminar el ciclo.');
+      await deleteUnassignedShiftCycle(id, currentCompanyId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
