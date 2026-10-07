@@ -7,12 +7,13 @@
 import { useState } from 'react';
 import { MessageCircle, BarChart2 } from 'lucide-react';
 import { AiChatPanel } from '@/components/ai/AiChatPanel';
-import { DataAssistantChat } from '@/components/ai/DataAssistantChat';
+import { ReportWorkspace } from '@/components/ai/ReportWorkspace';
 
 type Tab = 'data' | 'help';
 
 export default function AsistenteIA() {
   const [activeTab, setActiveTab] = useState<Tab>('data');
+  const [helpVisited, setHelpVisited] = useState(false);
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -35,7 +36,7 @@ export default function AsistenteIA() {
         </button>
 
         <button
-          onClick={() => setActiveTab('help')}
+          onClick={() => { setHelpVisited(true); setActiveTab('help'); }}
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-t-lg
             transition-colors border-b-2 -mb-px
             ${activeTab === 'help'
@@ -50,10 +51,8 @@ export default function AsistenteIA() {
 
       {/* Contenido del tab activo */}
       <div className="flex-1 overflow-hidden">
-        {activeTab === 'data'
-          ? <DataAssistantChat />
-          : <AiChatPanel hideTabs />
-        }
+        <div className="h-full" hidden={activeTab !== 'data'}><ReportWorkspace /></div>
+        {helpVisited && <div className="h-full" hidden={activeTab !== 'help'}><AiChatPanel hideTabs /></div>}
       </div>
     </div>
   );
