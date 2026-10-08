@@ -62,10 +62,10 @@ function TicketRequestForm({ defaults, close }: { defaults: TicketRequestDefault
       toast.success('Solicitud registrada. Un usuario con permiso puede aprobarla.'); close();
     } catch (e) { setError((e as Error).message); } finally { setSaving(false); }
   }
-  return <Dialog open onOpenChange={v => !v && !saving && close()}><DialogContent className="max-w-2xl gap-5" aria-describedby={undefined}>
-    <DialogHeader className="border-b pb-4 text-left">
-      <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary"><ClipboardList className="h-4 w-4" />Permisos de nómina</div>
-      <DialogTitle className="pr-5 text-xl leading-tight">Solicitar permiso de corrección</DialogTitle>
+  return <Dialog open onOpenChange={v => !v && !saving && close()}><DialogContent className="correction-ticket-dialog max-w-2xl gap-5" aria-describedby={undefined}>
+    <DialogHeader className="correction-ticket-header flex-row items-center gap-3 space-y-0 text-left">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-primary/10 bg-primary/10 text-primary" aria-hidden="true"><ClipboardList className="h-5 w-5" /></div>
+      <DialogTitle className="min-w-0 text-lg font-semibold leading-snug tracking-normal">Solicitar permiso de corrección</DialogTitle>
     </DialogHeader>
     <form id={formId} className="correction-ticket-form space-y-5" onSubmit={event => { event.preventDefault(); void save(); }}>
       <fieldset disabled={saving} className="min-w-0 space-y-5">

@@ -1927,6 +1927,27 @@ div.requisition-grid:has(table),
 }
 
 /* Keep correction controls aligned despite the legacy modal label rules. */
+[role="dialog"][data-dialog-content] [data-dialog-header].correction-ticket-header {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin: -1.25rem -1.25rem 0 !important;
+  padding: 1rem 3rem 1rem 1.25rem !important;
+  border-bottom: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--secondary)) !important;
+}
+
+[role="dialog"].correction-ticket-dialog > button:last-child {
+  top: 1.75rem;
+}
+
+@media (min-width: 640px) {
+  [role="dialog"][data-dialog-content] [data-dialog-header].correction-ticket-header {
+    margin: -1.5rem -1.5rem 0 !important;
+    padding-left: 1.5rem !important;
+  }
+}
+
 [role="dialog"] form.correction-ticket-form {
   padding: 0 !important;
   background-color: transparent !important;
