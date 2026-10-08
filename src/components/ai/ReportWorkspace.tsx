@@ -50,6 +50,16 @@ const exampleAccents: Record<string, string> = {
   payroll_receipts: 'border-l-emerald-400 bg-emerald-50/40 hover:bg-emerald-50',
 };
 
+const exampleQuestions: Record<string, string> = {
+  employees_v2: '¿Cuántos empleados activos tienen menos de 30 años actualmente?',
+  employee_employment_cycles: '¿Cuántos empleados tenían menos de 25 años al contratarlos?',
+  contracts: '¿Qué contratos vencen en los próximos 30 días?',
+  time_clock_days: '¿Qué empleados acumularon más minutos de retraso este mes?',
+  absence_days: '¿Cuántos días de ausencia hubo por centro este año?',
+  training_compliance: '¿Cuál es el cumplimiento de capacitación de este año por centro?',
+  payroll_receipts: '¿Cuál fue el total pagado en nómina el mes pasado?',
+};
+
 type Library = ReportBootstrap & { legacy?: ReportListItem[] };
 type Recognition = {
   lang: string;
@@ -659,6 +669,7 @@ function Workspace({ companyId }: { companyId: string }) {
                       .filter((s) =>
                         [
                           'employees_v2',
+                          'employee_employment_cycles',
                           'contracts',
                           'time_clock_days',
                           'absence_days',
@@ -672,16 +683,14 @@ function Workspace({ companyId }: { companyId: string }) {
                           className={`text-left rounded-xl border border-l-[3px] p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${exampleAccents[s.key] || 'border-l-primary/40 bg-card hover:bg-primary/5'}`}
                           onClick={() => {
                             setQuestion(
-                              s.key === 'employees_v2'
-                                ? 'Empleados activos por centro'
-                                : `Muéstrame un listado de ${s.label.toLocaleLowerCase()}`,
+                              exampleQuestions[s.key] || `Muéstrame un listado de ${s.label.toLocaleLowerCase()}`,
                             );
                             questionRef.current?.focus();
                           }}
                         >
                           <span className="text-sm font-medium">{s.label}</span>
                           <span className="block text-xs text-muted-foreground mt-1">
-                            Explorar información →
+                            {exampleQuestions[s.key] || 'Explorar información →'}
                           </span>
                         </button>
                       ))}

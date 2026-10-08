@@ -97,6 +97,12 @@ export function validatePlan(value: unknown, sources: Source[]): ReportPlan {
       if (!object(f)) fail('Filtro inválido.');
       keys(f, ['field', 'op', 'values']);
       const col = field(f.field, s);
+      if (s.key === 'employees_v2' && col.key === 'gender' &&
+        !['is_null', 'not_null'].includes(String(f.op))) {
+        if (!['eq', 'neq', 'in'].includes(String(f.op)) ||
+          list(f.values, 100).some((v) => !['M', 'F', 'O'].includes(String(v))))
+          fail('El sexo de Empleados usa los códigos M (masculino), F (femenino) y O (otro); mujeres corresponde a F.');
+      }
       if (
         ![
           'eq',
@@ -194,6 +200,33 @@ export function validateFilters(value: unknown): ReportFilters {
   )
     fail('Centro inválido.');
   return value as ReportFilters;
+}
+
+// Screen dates are compiled independently by the database. Providers sometimes
+// repeat them despite the planning instruction; normalize only matching bounds.
+// For interval sources the database applies overlap, rather than excluding
+// records which started before the selected period.
+export function reconcileScreenPeriod(
+  plan: ReportPlan,
+  source: Source,
+  screen: ReportFilters,
+): ReportPlan {
+  if (!screen.startDate && !screen.endDate) return plan;
+  const filters = plan.filters.filter((filter) => {
+    if (filter.field !== source.dateField && filter.field !== source.endDateField)
+      return true;
+    const value = filter.values[0];
+    if (filter.values.length === 1 && (
+      (filter.op === 'gte' && screen.startDate && value === screen.startDate) ||
+      (filter.op === 'lte' && screen.endDate && value === screen.endDate) ||
+      (filter.op === 'eq' && screen.startDate === screen.endDate && value === screen.startDate)
+    )) return false;
+    throw new ReportError(
+      'CLARIFICATION',
+      `El periodo seleccionado (${screen.startDate || 'sin fecha inicial'} a ${screen.endDate || 'sin fecha final'}) difiere del filtro propuesto para ${source.fields.find((field) => field.key === filter.field)?.label || filter.field}: ${filter.op} ${filter.values.join(', ')}. Confirma el periodo en los filtros o precisa las fechas de tu pregunta.`,
+    );
+  });
+  return { ...plan, filters };
 }
 export function bogotaToday(now = new Date()) {
   return new Intl.DateTimeFormat('en-CA', {

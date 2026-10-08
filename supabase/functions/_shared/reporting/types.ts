@@ -79,6 +79,7 @@ export interface ReportResult {
   question: string;
   createdAt: string;
   provider: string;
+  context?: string[];
   plan: ReportPlan;
   filters: ReportFilters;
   effectiveFilters?: { label: string; value: string }[];

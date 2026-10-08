@@ -188,13 +188,33 @@
         "key": "report_center_name",
         "label": "Centro de operación",
         "type": "text"
+      },
+      {
+        "key": "age_years",
+        "label": "Edad actual (años cumplidos)",
+        "type": "number"
+      },
+      {
+        "key": "age_band",
+        "label": "Rango de edad actual",
+        "type": "text"
+      },
+      {
+        "key": "first_hire_date",
+        "label": "Fecha de primera contratación",
+        "type": "date"
+      },
+      {
+        "key": "age_at_first_hire",
+        "label": "Edad en la primera contratación (años cumplidos)",
+        "type": "number"
       }
     ],
     "dateField": "created_at",
     "endDateField": null,
     "employeeField": "report_employee_id",
     "centerField": "report_center_id",
-    "description": "Empleados: registros autorizados. Fecha predeterminada: created_at."
+    "description": "Una fila por empleado, activos y retirados. age_years es la edad actual; age_at_first_hire es la edad en la primera contratación registrada y autorizada. Edades desconocidas o fechas inválidas son NULL, nunca cero. birth_date es nacimiento, created_at es creación técnica, no contratación. Para contrataciones por período y centro histórico use employee_employment_cycles con is_first_hire=true; para reingresos use is_first_hire=false. gender usa M, F y O."
   },
   {
     "key": "employee_employment_cycles",
@@ -275,13 +295,39 @@
         "key": "report_center_name",
         "label": "Centro de operación",
         "type": "text"
+      },
+      {
+        "key": "age_at_hire",
+        "label": "Edad al ingreso (años cumplidos)",
+        "type": "number"
+      },
+      {
+        "key": "age_at_exit",
+        "label": "Edad al retiro (años cumplidos)",
+        "type": "number"
+      },
+      {
+        "key": "is_first_hire",
+        "label": "Es primera contratación",
+        "type": "boolean"
+      },
+      {
+        "key": "tenure_days",
+        "label": "Tiempo transcurrido en la vinculación (días)",
+        "type": "number",
+        "unit": "days"
+      },
+      {
+        "key": "tenure_years",
+        "label": "Antigüedad de la vinculación (años cumplidos)",
+        "type": "number"
       }
     ],
     "dateField": "start_date",
     "endDateField": null,
     "employeeField": "report_employee_id",
     "centerField": "report_center_id",
-    "description": "Vinculaciones y reingresos: registros autorizados. Fecha predeterminada: start_date."
+    "description": "Una fila por vinculación: primera contratación o reingreso. start_date es ingreso y end_date es retiro; el período de pantalla filtra ingresos (start_date). is_first_hire distingue primera contratación. age_at_hire y age_at_exit son años cumplidos en esas fechas; sin nacimiento válido son NULL. tenure_days y tenure_years abarcan solo esta vinculación, hasta el retiro o hoy en Bogotá si sigue abierta, no suman interrupciones entre reingresos. Los centros corresponden al ingreso. distinct(employee_id) cuenta personas; count(*) cuenta vinculaciones. Para preguntas por retiros filtre end_date explícitamente y no confunda período de ingreso con retiro."
   },
   {
     "key": "employee_work_info",
@@ -1443,13 +1489,25 @@
         "key": "report_center_name",
         "label": "Centro de operación",
         "type": "text"
+      },
+      {
+        "key": "days_until_end",
+        "label": "Días hasta vencimiento (negativo si venció)",
+        "type": "number",
+        "unit": "days"
+      },
+      {
+        "key": "contract_duration_days",
+        "label": "Duración prevista del contrato (días transcurridos)",
+        "type": "number",
+        "unit": "days"
       }
     ],
     "dateField": "effective_end_date",
     "endDateField": null,
     "employeeField": "report_employee_id",
     "centerField": "report_center_id",
-    "description": "Contratos: registros autorizados. Fecha predeterminada: effective_end_date."
+    "description": "Contratos: registros autorizados. Fecha predeterminada: effective_end_date. days_until_end compara el vencimiento con prórrogas frente a hoy en Bogotá; próximos N días requiere >=0 y <=N. Sin vencimiento definido devuelve NULL. Para ingresos use start_date; la fecha predeterminada de pantalla es vencimiento, no ingreso."
   },
   {
     "key": "contract_extensions",
