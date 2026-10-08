@@ -32,9 +32,9 @@ import {
 import {
   DEFAULT_QUERY_FIELDS,
   EMPTY_QUERY_FILTERS,
-  QUERY_COLUMNS,
+  QUERY_COLUMNS as BASE_QUERY_COLUMNS,
   QUERY_DIMENSIONS,
-  QUERY_METRICS,
+  QUERY_METRICS as BASE_QUERY_METRICS,
   filterPayrollQueryRows,
   pivotPayrollQuery,
   queryMetric,
@@ -51,7 +51,7 @@ const numberFormatter = new Intl.NumberFormat('es-CO', {
   maximumFractionDigits: 4,
 });
 const columnMap = new Map(
-  [...QUERY_COLUMNS, ...QUERY_METRICS].map((column) => [column.key, column]),
+  [...BASE_QUERY_COLUMNS, ...BASE_QUERY_METRICS].map((column) => [column.key, column]),
 );
 const selectClass =
   'flex h-10 w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm';
@@ -137,7 +137,7 @@ function FieldSelector({
               className="flex items-center justify-between gap-2 py-1 text-xs"
             >
               <span>
-                {index + 1}. {columnMap.get(key)?.label}
+                {index + 1}. {(choices.find(column => column.key === key)?.label || columnMap.get(key)?.label)}
               </span>
               <span className="flex gap-1">
                 <Button
@@ -268,6 +268,15 @@ function PayrollQueryContent() {
   const [exporting, setExporting] = useState(false);
   const query = usePayrollDynamicQuery(period);
   const rows = useMemo(() => query.data || [], [query.data]);
+  const customFields = useMemo<QueryColumn[]>(() => {
+    const concepts = [...new Map(rows.flatMap(row => row.events).filter(event => event.concept.startsWith('concept:')).map(event => [event.concept, event])).values()];
+    return concepts.flatMap(event => ['approved', 'pending', 'rejected'].map(status => ({
+      key: `${status}_${event.concept}`, label: `${event.label} (${event.unit === 'days' ? 'días' : 'horas'}) · ${status === 'approved' ? 'Aprobado' : status === 'pending' ? 'Pendiente' : 'Rechazado'}`, group: 'Conceptos adicionales', numeric: true,
+    })));
+  }, [rows]);
+  const QUERY_COLUMNS = [...BASE_QUERY_COLUMNS, ...customFields];
+  const QUERY_METRICS = [...BASE_QUERY_METRICS, ...customFields];
+  const columnMap = useMemo(() => new Map([...BASE_QUERY_COLUMNS, ...BASE_QUERY_METRICS, ...customFields].map(column => [column.key, column])), [customFields]);
   const filtered = useMemo(
     () => filterPayrollQueryRows(rows, filters),
     [rows, filters],
@@ -305,7 +314,7 @@ function PayrollQueryContent() {
       })),
       { key: 'pivotTotal', label: 'Total', group: 'Pivote', numeric: true },
     ],
-    [pivot.columns, pivotRow, pivotMetric],
+    [pivot.columns, pivotRow, pivotMetric, columnMap],
   );
   const displayColumns =
     mode === 'detalle'
@@ -634,7 +643,7 @@ function PayrollQueryContent() {
               label="Concepto registrado"
               value={filters.concept}
               onChange={(value) => setFilter('concept', value)}
-              options={Object.entries(NOVELTY_TYPE_LABELS)
+              options={Object.entries(NOVELTY_TYPE_LABELS).filter(([key]) => key !== 'custom')
                 .map(([value, label]) => ({ value, label }))
                 .concat(
                   [
@@ -645,7 +654,7 @@ function PayrollQueryContent() {
                     ),
                   ]
                     .filter((concept) => !(concept in NOVELTY_TYPE_LABELS))
-                    .map((value) => ({ value, label: value })),
+                    .map((value) => ({ value, label: rows.flatMap(row => row.events).find(event => event.concept === value)?.label || value })),
                 )}
               all
             />

@@ -11,6 +11,7 @@ interface Props {
 
 export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
   const handleExport = () => {
+    const concepts = [...new Map(rows.flatMap(row => Object.values(row.customConcepts || {})).map(c => [c.id, c])).values()].sort((a, b) => a.identifier.localeCompare(b.identifier));
     const data = rows.map(r => ({
       'Empleado': r.employeeName,
       'Documento': r.documentNumber,
@@ -32,6 +33,7 @@ export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
       'Incapacidad (días)': r.incapacidad,
       'Vacaciones (días)': r.vacaciones,
       'Permisos (días)': r.permiso,
+      ...Object.fromEntries(concepts.map(c => [`${c.identifier} · ${c.name} (${c.unit === 'days' ? 'días' : 'hrs'})`, r.customConcepts?.[c.id]?.quantity ?? 0])),
       'Total Días': r.totalDias,
       'Préstamos ($)': r.loanDeduction,
       'Descuentos ($)': r.deductionTotal,

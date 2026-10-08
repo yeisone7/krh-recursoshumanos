@@ -67,6 +67,8 @@ import { usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useEmployeeTimeConfigs, useShiftAssignments, useShiftCycles, useShifts, useWorkSchedules } from '@/hooks/useSchedules';
 import { cn } from '@/lib/utils';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
+import { noveltyConceptLabel, noveltyQuantity, conceptOptions } from '@/lib/payrollConcepts';
+import { usePayrollConcepts } from '@/hooks/usePayrollConcepts';
 import { NOVELTY_TYPE_LABELS, type NoveltyType } from '@/types/payroll';
 import { getShiftClassificationLabel, isNonWorkingShift } from '@/lib/shiftClassification';
 
@@ -858,7 +860,7 @@ export default function AnaliticaNomina() {
   const [comparisonMode, setComparisonMode] = useState<'actual' | 'mes_anterior'>('actual');
   const [volumeThreshold, setVolumeThreshold] = useState(10);
   const [severityThreshold, setSeverityThreshold] = useState(1000000);
-  const [selectedAlertType, setSelectedAlertType] = useState<NoveltyType>('hedo');
+  const [selectedAlertType, setSelectedAlertType] = useState<string>('hedo');
   const [selectedAlertCenter, setSelectedAlertCenter] = useState('all');
   const [typeAlertThresholds, setTypeAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
   const [centerAlertThresholds, setCenterAlertThresholds] = useState<Record<string, { volume: number; severity: number }>>({});
@@ -910,7 +912,9 @@ export default function AnaliticaNomina() {
 
   const centerNameMap = useMemo(() => new Map(centerOptions.map((center) => [center.id, center.name])), [centerOptions]);
 
-  const selectedAlertTypeKey = NOVELTY_TYPE_LABELS[selectedAlertType] || selectedAlertType;
+  const { data: payrollConcepts = [] } = usePayrollConcepts();
+  const selectedAlertConcept = payrollConcepts.find(c => (c.system_type || `concept:${c.id}`) === selectedAlertType);
+  const selectedAlertTypeKey = selectedAlertConcept ? `${selectedAlertConcept.identifier} · ${selectedAlertConcept.name}` : NOVELTY_TYPE_LABELS[selectedAlertType as NoveltyType] || selectedAlertType;
   const selectedAlertCenterKey = selectedAlertCenter === 'all' ? 'Sin centro' : centerNameMap.get(selectedAlertCenter) || 'Sin centro';
   const selectedTypeSeverity = typeAlertThresholds[selectedAlertTypeKey]?.severity ?? severityThreshold;
   const selectedCenterSeverity = centerAlertThresholds[selectedAlertCenterKey]?.severity ?? severityThreshold;
@@ -996,6 +1000,7 @@ export default function AnaliticaNomina() {
     const getEstimatedImpact = (item: any) => {
       const salary = salaryByEmployee.get(item.employee_id) || averageMonthlySalary;
       const hourlyRate = salary ? salary / Math.max(1, (payrollConfig?.daily_hours || 8) * 30) : fallbackHourlyRate;
+      if (item.novelty_type === 'custom') return 0;
       const multiplier = defaultImpactMultiplier[item.novelty_type] ?? 1;
       return Number(item.hours || 0) * hourlyRate * multiplier;
     };
@@ -1054,9 +1059,16 @@ export default function AnaliticaNomina() {
       };
     });
 
-    const noveltyTypes = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type);
-    const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, (item: any) => Number(item.hours || 0));
-    const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type, getEstimatedImpact);
+    const noveltyTypes = groupByName(filteredNovelties, (item: any) => noveltyConceptLabel(item));
+    const noveltyHoursByType = groupByName(filteredNovelties, (item: any) => noveltyConceptLabel(item), (item: any) => Number(item.hours || 0));
+    const customQuantities = [...filteredNovelties.filter(item => item.novelty_type === 'custom' && item.status === 'aprobada').reduce((map, item) => {
+      const key = item.concept_id || item.id;
+      const previous = map.get(key);
+      const amount = noveltyQuantity(item);
+      map.set(key, { label: noveltyConceptLabel(item), unit: amount.unit, quantity: (previous?.quantity || 0) + amount.quantity });
+      return map;
+    }, new Map<string, { label: string; unit: string; quantity: number }>()).values()];
+    const estimatedImpactByType = groupByName(filteredNovelties, (item: any) => noveltyConceptLabel(item), getEstimatedImpact);
     const employeeModeMap = new Map(activeConfigs.map((item: any) => [item.employee_id, item.mode === 'shift' ? 'Turnos' : 'Oficina']));
     const jornadaBreakdown = Object.values(filteredNovelties.reduce<Record<string, any>>((acc, item: any) => {
       const jornada = employeeModeMap.get(item.employee_id) || 'Sin jornada';
@@ -1077,7 +1089,7 @@ export default function AnaliticaNomina() {
       const row: any = { tipo: type.name };
       jornadaBreakdown.forEach((jornada: any) => {
         const impact = filteredNovelties
-          .filter((item: any) => (NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type) === type.name && (employeeModeMap.get(item.employee_id) || 'Sin jornada') === jornada.jornada)
+          .filter((item: any) => (noveltyConceptLabel(item)) === type.name && (employeeModeMap.get(item.employee_id) || 'Sin jornada') === jornada.jornada)
           .reduce((sum: number, item: any) => sum + getEstimatedImpact(item), 0);
         row[jornada.jornada] = Math.round(impact);
         row[`${jornada.jornada}Pct`] = percent(impact, estimatedImpact);
@@ -1111,7 +1123,7 @@ export default function AnaliticaNomina() {
         prioridad: item.volumen >= thresholds.volume && item.impacto >= thresholds.severity ? 'Crítica' : item.volumen >= thresholds.volume || item.impacto >= thresholds.severity ? 'Alta' : 'Normal',
       };
     }).sort((a: any, b: any) => b.impacto - a.impacto || b.volumen - a.volumen).slice(0, 8);
-    const impactRankingByType = buildImpactRanking((item: any) => NOVELTY_TYPE_LABELS[item.novelty_type as NoveltyType] || item.novelty_type || 'Sin tipo', 'type');
+    const impactRankingByType = buildImpactRanking((item: any) => noveltyConceptLabel(item) || 'Sin tipo', 'type');
     const impactRankingByCenter = buildImpactRanking((item: any) => centerNameMap.get(employeeCenterMap.get(item.employee_id) as string) || 'Sin centro', 'center');
     const shiftDistributionTrend = monthlyTrend.map((month) => ({
       periodo: month.periodo,
@@ -1270,6 +1282,7 @@ export default function AnaliticaNomina() {
       weekdayBehavior,
       noveltyTypes,
       noveltyHoursByType,
+      customQuantities,
       estimatedImpactByType,
       jornadaBreakdown,
       jornadaHeatmap,
@@ -1377,7 +1390,7 @@ export default function AnaliticaNomina() {
                     <div className="grid gap-2 sm:grid-cols-3">
                       <Select value={selectedAlertType} onValueChange={(value: NoveltyType) => setSelectedAlertType(value)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>{Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+                        <SelectContent>{conceptOptions(payrollConcepts).map(({value, label}) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
                       </Select>
                       <div className="space-y-1">
                         <span className="text-[11px] font-medium text-muted-foreground">Volumen mínimo</span>
@@ -1774,17 +1787,27 @@ export default function AnaliticaNomina() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Horas por tipo de novedad">
+        <ChartCard title="Horas equivalentes por tipo de novedad">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={analytics.noveltyHoursByType.slice(0, 8)} layout="vertical" margin={{ left: 34, right: 16, top: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis type="number" tick={{ fontSize: 12 }} />
               <YAxis dataKey="name" type="category" width={110} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="value" name="Horas" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="value" name="Horas equivalentes" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+
+        {analytics.customQuantities.length > 0 && <Card>
+          <CardHeader><CardTitle>Conceptos adicionales aprobados</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {analytics.customQuantities.map(item => <div key={item.label} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted/30 p-3">
+              <span className="text-sm font-medium">{item.label}</span>
+              <span className="shrink-0 text-sm font-semibold">{numberFormatter.format(item.quantity)} {item.unit === 'days' ? 'días' : 'horas'}</span>
+            </div>)}
+          </CardContent>
+        </Card>}
 
         <ChartCard title="Monto estimado por tipo de novedad">
           <ResponsiveContainer width="100%" height="100%">

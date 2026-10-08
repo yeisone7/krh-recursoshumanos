@@ -3,6 +3,8 @@ import type { Database } from '@/integrations/supabase/types';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { getShiftClassification } from '@/lib/shiftClassification';
 import { DAY_NAMES } from '@/types/schedule';
+import { noveltyConceptKey, noveltyConceptLabel } from '@/lib/payrollConcepts';
+import type { PayrollConcept } from '@/types/payroll';
 import { NOVELTY_TYPE_LABELS, type NoveltyType } from '@/types/payroll';
 
 type Tables = Database['public']['Tables'];
@@ -40,7 +42,7 @@ export type QueryContract = Row<'contracts'> & {
 export type QueryAssignment = Row<'employee_shift_assignments'> &
   Scope & { shifts?: Row<'shifts'> | null };
 export type QueryNovelty = Row<'payroll_novelties'> &
-  Scope & { status: string; novelty_reasons?: Named };
+  Scope & { status: string; novelty_reasons?: Named; payroll_concepts?: PayrollConcept | null };
 export type QueryTimeConfig = Row<'employee_time_config'> &
   Scope & {
     work_schedules?: Row<'work_schedules'> | null;
@@ -69,6 +71,9 @@ export type CellValue = string | number;
 export interface PayrollQueryEvent {
   id: string;
   concept: string;
+  label?: string;
+  quantity?: number;
+  unit?: string;
   status: string;
   source: string;
   hours: number;
@@ -213,13 +218,13 @@ export const QUERY_COLUMNS: QueryColumn[] = [
     },
     {
       key: `${status}Hours`,
-      label: `Horas registradas ${['aprobadas', 'pendientes', 'rechazadas'][index]}`,
+        label: `Horas equivalentes registradas ${['aprobadas', 'pendientes', 'rechazadas'][index]}`,
       group: 'Novedades',
       numeric: true,
       description:
         'Suma de horas declaradas en novedades y extras; puede incluir conceptos superpuestos.',
     },
-    ...Object.entries(NOVELTY_TYPE_LABELS).map(([concept, label]) => ({
+    ...Object.entries(NOVELTY_TYPE_LABELS).filter(([concept]) => concept !== 'custom').map(([concept, label]) => ({
       key: `${status}_${concept}`,
       label: `${label}: ${['aprobadas', 'pendientes', 'rechazadas'][index]} (h)`,
       group: `Novedades ${['aprobadas', 'pendientes', 'rechazadas'][index]}`,
@@ -741,14 +746,21 @@ export function buildPayrollQueryRows(
           }
           values[`${bucket}Hours`] =
             Number(values[`${bucket}Hours`]) + event.hours;
-          if (`${bucket}_${event.concept}` in values)
+          if (event.concept.startsWith('concept:')) {
+            const key = `${bucket}_${event.concept}`;
+            values[key] = Number(values[key] || 0) + Number(event.quantity || 0);
+          }
+          else if (`${bucket}_${event.concept}` in values)
             values[`${bucket}_${event.concept}`] =
               Number(values[`${bucket}_${event.concept}`]) + event.hours;
         };
         sameCenter(dayNovelties).forEach((item) =>
           addEvent({
             id: `novedad:${item.id}`,
-            concept: item.novelty_type,
+            concept: noveltyConceptKey(item),
+            label: noveltyConceptLabel(item),
+            quantity: item.quantity ?? item.hours,
+            unit: item.quantity_unit ?? 'hours',
             status: item.status,
             source: item.source === 'manual' ? 'Manual' : 'Automática',
             hours: Number(item.hours),
@@ -877,7 +889,7 @@ export function buildPayrollQueryRows(
               warnings.add('Novedad diaria con horas inválidas');
               return;
             }
-            const fraction = item.hours / dailyHours;
+            const fraction = item.unit === 'days' && item.quantity != null ? item.quantity : item.hours / dailyHours;
             const key = ['incapacidad', 'vacaciones', 'permiso'].includes(
               item.concept,
             )
@@ -951,7 +963,7 @@ export function buildPayrollQueryRows(
         values.concepts = join(
           events.map(
             (item) =>
-              NOVELTY_TYPE_LABELS[item.concept as NoveltyType] || item.concept,
+              item.label || NOVELTY_TYPE_LABELS[item.concept as NoveltyType] || item.concept,
           ),
         );
         values.approvalStatuses = join(events.map((item) => item.status));

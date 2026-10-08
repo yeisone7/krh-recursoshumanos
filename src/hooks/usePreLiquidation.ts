@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format, eachDayOfInterval, parseISO, getDay, subDays } from 'date-fns';
-import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig } from '@/types/payroll';
+import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig, PayrollConcept } from '@/types/payroll';
 import type { EmployeeShiftAssignment } from '@/types/schedule';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { crossingDeductionVersions } from '@/lib/deductionVersions';
@@ -14,6 +14,10 @@ export interface PreLiquidationData {
     novelty_date: string;
     novelty_type: string;
     hours: number;
+    concept_id?: string | null;
+    quantity?: number | null;
+    quantity_unit?: 'hours' | 'days' | null;
+    payroll_concepts?: PayrollConcept | null;
     status: string;
   }>;
   overtimeRecords: Array<{
@@ -234,7 +238,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       if (corrections?.length) {
         let correctedDays = 0;
         corrections.forEach(n => {
-          const fraction = Number(n.hours) / dailyHours;
+          const fraction = n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / dailyHours;
           if (!Number.isFinite(fraction) || fraction <= 0) {
             warnings.add(`Novedad con horas inválidas el ${dateStr}.`);
             return;
@@ -335,6 +339,17 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       }
     });
 
+    const customConcepts: NonNullable<PreLiquidationRow['customConcepts']> = {};
+    (noveltyByEmployee[emp.id] || []).filter(n => n.novelty_type === 'custom').forEach(n => {
+      const concept = n.payroll_concepts;
+      if (!concept || !n.concept_id || n.quantity == null || !Number.isFinite(Number(n.quantity)) || Number(n.quantity) <= 0) {
+        warnings.add('Concepto personalizado sin cantidad o referencia válida.');
+        return;
+      }
+      const accumulated = customConcepts[concept.id]?.quantity || 0;
+      customConcepts[concept.id] = { id: concept.id, identifier: concept.identifier, name: concept.name, unit: n.quantity_unit || concept.unit, quantity: accumulated + Number(n.quantity) };
+    });
+
     const totalDias = jornada + dominicalTrabajado + festivoTrabajado + descansoRemunerado + incapDays + vacDays + permDays;
 
     // Loans deduction
@@ -366,6 +381,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     const warningMessage = hasWarning ? [...warnings].join(' ') : undefined;
 
     return {
+      customConcepts,
       employeeId: emp.id,
       employeeName: `${emp.first_name} ${emp.last_name}`,
       documentNumber: emp.document_number,

@@ -17,8 +17,9 @@ import {
 } from '@/components/ui/select';
 import { NoveltyFormDialog } from '@/components/payroll';
 import { usePayrollNovelties, useDeletePayrollNovelty, useApprovePayrollNovelty } from '@/hooks/usePayrollNovelties';
-import { usePayrollConfig } from '@/hooks/usePayrollConfig';
-import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
+import { usePayrollConcepts } from '@/hooks/usePayrollConcepts';
+import { conceptOptions, noveltyConceptKey, noveltyConceptLabel, noveltyQuantity } from '@/lib/payrollConcepts';
+import { type PayrollNovelty } from '@/types/payroll';
 import { MobileCardList } from '@/components/shared/MobileCardList';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
 import { toast } from '@/hooks/use-toast';
@@ -52,7 +53,7 @@ export default function Novedades() {
     startDate: startDate || undefined,
     endDate: endDate || undefined,
   });
-  const { data: config } = usePayrollConfig();
+  const { data: concepts = [] } = usePayrollConcepts();
   const deleteNovelty = useDeletePayrollNovelty();
   const approveNovelty = useApprovePayrollNovelty();
   const isMobile = useIsMobile();
@@ -60,7 +61,7 @@ export default function Novedades() {
   const hasApprovePermission = canApprove('novedades');
 
   const filtered = novelties.filter(n => {
-    const matchesType = typeFilter === 'all' || n.novelty_type === typeFilter;
+    const matchesType = typeFilter === 'all' || noveltyConceptKey(n) === typeFilter;
     const empName = n.employees_v2
       ? `${n.employees_v2.first_name} ${n.employees_v2.last_name} ${n.employees_v2.document_number}`.toLowerCase()
       : '';
@@ -70,7 +71,8 @@ export default function Novedades() {
 
   const totalHours = filtered.reduce((s, n) => s + (n.hours || 0), 0);
   const typeDistribution = filtered.reduce((acc, n) => {
-    acc[n.novelty_type] = (acc[n.novelty_type] || 0) + 1;
+    const key = noveltyConceptKey(n);
+    acc[key] = (acc[key] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   const topType = Object.entries(typeDistribution).sort((a, b) => b[1] - a[1])[0];
@@ -120,9 +122,12 @@ export default function Novedades() {
       Empleado: n.employees_v2 ? `${n.employees_v2.first_name} ${n.employees_v2.last_name}` : n.employee_id,
       Documento: n.employees_v2?.document_number || '',
       Fecha: n.novelty_date,
-      Tipo: NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type,
+      Tipo: noveltyConceptLabel(n),
       'Hora Inicio': n.start_time ? n.start_time.slice(0, 5) : '',
-      Horas: n.hours,
+      Cantidad: noveltyQuantity(n).quantity,
+      Unidad: noveltyQuantity(n).unit === 'days' ? 'Días' : 'Horas',
+      'Horas equivalentes': n.hours,
+      Identificador: n.payroll_concepts?.identifier || '',
       'Hora Final': n.end_time ? n.end_time.slice(0, 5) : '',
       Centro: (n.employees_v2 as any)?.employee_work_info?.[0]?.operation_centers?.name || '',
       Motivo: n.novelty_reasons ? `${n.novelty_reasons.item_number}. ${n.novelty_reasons.name}` : '',
@@ -138,23 +143,16 @@ export default function Novedades() {
 
   const stats = useMemo(() => ([
     { label: 'REGISTROS', value: filtered.length, desc: 'Novedades', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-500/10' },
-    { label: 'HORAS', value: `${totalHours.toFixed(0)}h`, desc: `${manualCount} manuales`, icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'HORAS EQUIV.', value: `${totalHours.toFixed(0)}h`, desc: `${manualCount} manuales`, icon: Clock, color: 'text-primary', bg: 'bg-primary/10' },
     { label: 'CATEGORÍAS', value: Object.keys(typeDistribution).length, desc: 'Tipos activos', icon: ListFilter, color: 'text-amber-600', bg: 'bg-amber-500/10' },
-    { label: 'FRECUENTE', value: topType ? topType[1] : 0, desc: topType ? NOVELTY_TYPE_LABELS[topType[0] as NoveltyType].split(' ')[0] : 'N/A', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+    { label: 'FRECUENTE', value: topType ? topType[1] : 0, desc: topType ? noveltyConceptLabel(filtered.find(n => noveltyConceptKey(n) === topType[0])!) : 'N/A', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
   ]), [filtered.length, totalHours, typeDistribution, topType, manualCount]);
 
-  const surcharges = config ? [
-    { label: 'HEDO', pct: config.surcharge_hedo },
-    { label: 'HENO', pct: config.surcharge_heno },
-    { label: 'R.N.', pct: config.surcharge_rn },
-    { label: 'HEDF', pct: config.surcharge_hedf },
-    { label: 'HENF', pct: config.surcharge_henf },
-    { label: 'RNF', pct: config.surcharge_rnf },
-    { label: 'Dominical', pct: config.surcharge_dominical },
-    { label: 'Festivo', pct: config.surcharge_festivo ?? config.surcharge_dominical },
-  ] : [];
-
-  const noveltyTypeOptions = Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => ({ value, label }));
+  const surcharges = concepts.filter(c => c.is_active).map(c => ({ label: c.identifier, pct: c.percentage }));
+  const noveltyTypeOptions = [
+    ...conceptOptions(concepts),
+    ...concepts.filter(c => !c.is_active).map(c => ({ value: c.system_type || `concept:${c.id}`, label: `${c.identifier} · ${c.name} (inactivo)` })),
+  ];
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-background">
@@ -292,13 +290,13 @@ export default function Novedades() {
                         subtitle: formatDateOnly(n.novelty_date, 'dd MMM yyyy', { locale: es }),
                         badge: (
                           <Badge variant="outline" className="border-primary/20 text-primary text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
-                            {NOVELTY_TYPE_LABELS[n.novelty_type]?.split(' ')[0] || n.novelty_type}
+                            {noveltyConceptLabel(n)}
                           </Badge>
                         ),
                         itemClassName: "relative overflow-hidden border-border bg-background rounded-[1.5rem]",
                         fields: [
                           { label: 'Inicio', value: n.start_time?.slice(0, 5) || '—' },
-                          { label: 'Horas', value: `${n.hours}h`, className: "text-primary font-black" },
+                          { label: 'Cantidad', value: `${noveltyQuantity(n).quantity} ${noveltyQuantity(n).unit === 'days' ? 'días' : 'h'}`, className: "text-primary font-black" },
                           { label: 'Final', value: n.end_time?.slice(0, 5) || '—' },
                           { label: 'Fuente', value: n.source === 'manual' ? 'Manual' : 'Auto' },
                         ],
@@ -342,7 +340,7 @@ export default function Novedades() {
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">Fecha</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Tipo</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">Horario</TableHead>
-                  <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">Horas</TableHead>
+                  <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground text-center">Cantidad</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Estado</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Fuente</TableHead>
                   <TableHead className="h-14 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Motivo / Notas</TableHead>
@@ -376,7 +374,7 @@ export default function Novedades() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest text-primary border-border ">
-                          {NOVELTY_TYPE_LABELS[n.novelty_type] || n.novelty_type}
+                          {noveltyConceptLabel(n)}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
@@ -388,7 +386,7 @@ export default function Novedades() {
                       </TableCell>
                       <TableCell className="text-center">
                          <span className="text-lg font-black text-primary tracking-tighter">
-                           {n.hours}<span className="text-[10px] ml-0.5">h</span>
+                           {noveltyQuantity(n).quantity}<span className="text-[10px] ml-0.5">{noveltyQuantity(n).unit === 'days' ? 'días' : 'h'}</span>
                          </span>
                       </TableCell>
                       <TableCell>

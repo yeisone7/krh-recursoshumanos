@@ -7852,6 +7852,12 @@ export type Database = {
           },
         ]
       }
+      payroll_concepts: {
+        Row: { id: string; company_id: string; name: string; identifier: string; unit: string; percentage: number; is_active: boolean; system_type: string | null; sort_order: number }
+        Insert: { id?: string; company_id?: string; name: string; identifier: string; unit: string; percentage: number; is_active?: boolean; system_type?: string | null; sort_order?: number }
+        Update: { id?: string; company_id?: string; name?: string; identifier?: string; unit?: string; percentage?: number; is_active?: boolean; system_type?: string | null; sort_order?: number }
+        Relationships: []
+      }
       payroll_labor_config: {
         Row: {
           company_id: string
@@ -7925,6 +7931,9 @@ export type Database = {
       }
       payroll_novelties: {
         Row: {
+          concept_id: string | null
+          quantity: number | null
+          quantity_unit: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -7941,6 +7950,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          concept_id?: string | null
+          quantity?: number | null
+          quantity_unit?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -7957,6 +7969,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          concept_id?: string | null
+          quantity?: number | null
+          quantity_unit?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -7973,6 +7988,7 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          { foreignKeyName: "payroll_novelty_concept"; columns: ["company_id", "concept_id"]; isOneToOne: false; referencedRelation: "payroll_concepts"; referencedColumns: ["company_id", "id"] },
           {
             foreignKeyName: "payroll_novelties_company_id_fkey"
             columns: ["company_id"]
@@ -11789,6 +11805,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      list_payroll_concepts: { Args: { p_company_id: string }; Returns: Json }
+      save_payroll_settings: { Args: { p_company_id: string; p_config: Json; p_concepts: Json; p_expected_updated_at?: string | null }; Returns: Json }
       can_approve_requisition_step: {
         Args: { p_requisition_id: string; p_step_id: string }
         Returns: boolean

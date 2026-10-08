@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { usePayrollConfig, useUpsertPayrollConfig } from '@/hooks/usePayrollConfig';
+import { usePayrollConfig } from '@/hooks/usePayrollConfig';
+import { PayrollConceptEditor } from './PayrollConceptEditor';
+import { usePayrollConceptEditor, useSavePayrollSettings } from '@/hooks/usePayrollConcepts';
 import { toast } from '@/hooks/use-toast';
 import { Settings } from 'lucide-react';
 
@@ -17,7 +19,8 @@ interface Props {
 
 export function PayrollConfigDialog({ open, onOpenChange }: Props) {
   const { data: config, isLoading } = usePayrollConfig();
-  const upsert = useUpsertPayrollConfig();
+  const upsert = useSavePayrollSettings();
+  const concepts = usePayrollConceptEditor();
 
   const [form, setForm] = useState({
     max_weekly_hours: 46,
@@ -25,14 +28,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
     display_unit: 'hours' as 'hours' | 'days',
     night_start: '21:00',
     night_end: '06:00',
-    surcharge_hedo: 25,
-    surcharge_heno: 75,
-    surcharge_rn: 35,
-    surcharge_hedf: 100,
-    surcharge_henf: 150,
-    surcharge_rnf: 110,
-    surcharge_dominical: 75,
-    surcharge_festivo: 75,
+
   });
 
   useEffect(() => {
@@ -43,42 +39,25 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
         display_unit: config.display_unit as 'hours' | 'days',
         night_start: config.night_start?.substring(0, 5) || '21:00',
         night_end: config.night_end?.substring(0, 5) || '06:00',
-        surcharge_hedo: config.surcharge_hedo,
-        surcharge_heno: config.surcharge_heno,
-        surcharge_rn: config.surcharge_rn,
-        surcharge_hedf: config.surcharge_hedf,
-        surcharge_henf: config.surcharge_henf,
-        surcharge_rnf: config.surcharge_rnf,
-        surcharge_dominical: config.surcharge_dominical,
-        surcharge_festivo: config.surcharge_festivo ?? config.surcharge_dominical,
+
       });
     }
-  }, [config]);
+  }, [config, open]);
 
   const handleSave = async () => {
     try {
-      await upsert.mutateAsync(form);
+      await upsert.mutateAsync({ config: form, concepts: concepts.validate(), expectedUpdatedAt: config?.updated_at ?? null });
+      concepts.markSaved();
       toast({ title: 'Configuración guardada correctamente' });
       onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: 'Error al guardar', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Error al guardar', description: err instanceof Error ? err.message : 'No se pudo guardar la configuración.', variant: 'destructive' });
     }
   };
 
-  const surchargeFields = [
-    { key: 'surcharge_hedo', label: 'HEDO - Extra Diurna Ordinaria (%)' },
-    { key: 'surcharge_heno', label: 'HENO - Extra Nocturna Ordinaria (%)' },
-    { key: 'surcharge_rn', label: 'RN - Recargo Nocturno (%)' },
-    { key: 'surcharge_hedf', label: 'HEDF - Extra Diurna Dom/Fest (%)' },
-    { key: 'surcharge_henf', label: 'HENF - Extra Nocturna Dom/Fest (%)' },
-    { key: 'surcharge_rnf', label: 'RNF - Recargo Nocturno Fest (%)' },
-    { key: 'surcharge_dominical', label: 'Dominical Trabajado (%)' },
-    { key: 'surcharge_festivo', label: 'Festivo Trabajado (%)' },
-  ] as const;
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+    <Dialog open={open} onOpenChange={next => { if (!next) concepts.reset(); onOpenChange(next); }}>
+      <DialogContent aria-describedby={undefined} className="w-[calc(100vw-1.5rem)] max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             <Settings className="w-5 h-5 shrink-0" />
@@ -109,7 +88,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
               </div>
               <div className="space-y-2">
                 <Label>Unidad de visualización</Label>
-                <Select value={form.display_unit} onValueChange={v => setForm(f => ({ ...f, display_unit: v as any }))}>
+                <Select value={form.display_unit} onValueChange={v => setForm(f => ({ ...f, display_unit: v as 'hours' | 'days' }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="hours">Horas</SelectItem>
@@ -143,28 +122,13 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          {/* Recargos */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Porcentajes de Recargo</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {surchargeFields.map(({ key, label }) => (
-                <div key={key} className="space-y-2">
-                  <Label htmlFor={`dialog-${key}`} className="text-xs">{label}</Label>
-                  <Input
-                    id={`dialog-${key}`}
-                    type="number"
-                    value={form[key]}
-                    onChange={e => setForm(f => ({ ...f, [key]: Number(e.target.value) }))}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          {concepts.isLoading ? <p>Cargando conceptos...</p> : concepts.isError ? <p role="alert">No se pudieron cargar los conceptos.</p> :
+            <PayrollConceptEditor value={concepts.drafts} onChange={concepts.change} errors={concepts.errors} disabled={upsert.isPending} />}
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={upsert.isPending}>
+          <Button variant="outline" onClick={() => { concepts.reset(); onOpenChange(false); }}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={upsert.isPending || !concepts.isSuccess}>
             {upsert.isPending ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogFooter>

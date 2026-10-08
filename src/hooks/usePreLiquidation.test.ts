@@ -167,3 +167,21 @@ describe('horas y deducciones', () => {
     expect(calculatePreLiquidation(fixture({ employees: [employee, { ...employee, id: 'employee-2' }], assignments: [assignment('2026-09-22')] })).map(row => row.totalDias)).toEqual([1, 0]);
   });
 });
+
+
+describe('additional payroll concepts', () => {
+  it('keeps two custom concepts separate, includes approved inactive concepts and preserves original days', () => {
+    const concepts = [
+      { id: 'custom-hours', company_id: 'company-a', identifier: 'BONO_H', name: 'Bono horas', unit: 'hours' as const, percentage: 12.5, is_active: true, system_type: null, sort_order: 8 },
+      { id: 'custom-days', company_id: 'company-a', identifier: 'BONO_D', name: 'Bono días', unit: 'days' as const, percentage: 0, is_active: false, system_type: null, sort_order: 9 },
+    ];
+    const row = calculate({ assignments: [assignment('2026-09-21')], novelties: [
+      { ...novelty('custom', '2026-09-21', 3), concept_id: concepts[0].id, quantity: 3, quantity_unit: 'hours', payroll_concepts: concepts[0] },
+      { ...novelty('custom', '2026-09-21', 16), concept_id: concepts[1].id, quantity: 2, quantity_unit: 'days', payroll_concepts: concepts[1] },
+      { ...novelty('custom', '2026-09-21', 8, 'pendiente'), concept_id: concepts[0].id, quantity: 8, quantity_unit: 'hours', payroll_concepts: concepts[0] },
+    ] });
+    expect(row).toMatchObject({ jornada: 1, totalDias: 1, hedo: 0, customConcepts: {
+      'custom-hours': { quantity: 3, unit: 'hours' }, 'custom-days': { quantity: 2, unit: 'days' },
+    } });
+  });
+});

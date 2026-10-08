@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
+  const customColumns = [...new Map(rows.flatMap(row => Object.values(row.customConcepts || {})).map(c => [c.id, c])).values()].sort((a, b) => a.identifier.localeCompare(b.identifier));
   const isMobile = useIsMobile();
 
   const fmt = (value: number, isOvertimeHours = false) => {
@@ -58,6 +59,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               { label: 'Incap.', value: row.incapacidad > 0 ? row.incapacidad : '-' },
               { label: 'Vac.', value: row.vacaciones > 0 ? row.vacaciones : '-' },
               { label: 'Perm.', value: row.permiso > 0 ? row.permiso : '-' },
+              ...customColumns.map(c => ({ label: `${c.identifier} · ${c.name} (${c.unit === 'days' ? 'días' : 'h'})`, value: String(row.customConcepts?.[c.id]?.quantity ?? 0) })),
             ];
 
             return (
@@ -142,6 +144,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               <TableHead className="text-center min-w-[60px]">Incap.</TableHead>
               <TableHead className="text-center min-w-[60px]">Vac.</TableHead>
               <TableHead className="text-center min-w-[60px]">Perm.</TableHead>
+              {customColumns.map(c => <TableHead key={c.id} className="text-center min-w-[150px]">{c.identifier} · {c.name} ({c.unit === 'days' ? 'días' : 'h'})</TableHead>)}
               <TableHead className="text-center min-w-[80px]">Total Días</TableHead>
               <TableHead className="text-center min-w-[100px] bg-orange-50 dark:bg-orange-950/20">Préstamos</TableHead>
               <TableHead className="text-center min-w-[100px] bg-orange-50 dark:bg-orange-950/20">Descuentos</TableHead>
@@ -185,6 +188,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                 <TableCell className="text-center">{row.incapacidad > 0 ? row.incapacidad : '-'}</TableCell>
                 <TableCell className="text-center">{row.vacaciones > 0 ? row.vacaciones : '-'}</TableCell>
                 <TableCell className="text-center">{row.permiso > 0 ? row.permiso : '-'}</TableCell>
+                {customColumns.map(c => <TableCell key={c.id} className="text-center">{row.customConcepts?.[c.id]?.quantity ?? 0}</TableCell>)}
                 <TableCell className="text-center">
                   <Badge variant={row.hasWarning ? 'destructive' : 'secondary'}>
                     {row.totalDias}

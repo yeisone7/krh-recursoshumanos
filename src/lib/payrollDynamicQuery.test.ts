@@ -359,6 +359,19 @@ describe('Detalle diario de jornadas y novedades', () => {
 });
 
 describe('Filtros, resumen y pivote', () => {
+  it('separa conceptos personalizados y sus unidades sin aumentar los días trabajados', () => {
+    const sources = payrollQueryFixture();
+    const baseline = buildPayrollQueryRows(sources, payrollQueryOptions);
+    sources.novelties = [
+      { ...novelty('custom', 3), id: 'extra-hours', concept_id: 'hours-concept', quantity: 3, quantity_unit: 'hours' },
+      { ...novelty('custom', 12), id: 'extra-days', concept_id: 'days-concept', quantity: 1.5, quantity_unit: 'days' },
+    ];
+    const rows = buildPayrollQueryRows(sources, payrollQueryOptions);
+    expect(queryMetric(rows, 'approved_concept:hours-concept')).toBe(3);
+    expect(queryMetric(rows, 'approved_concept:days-concept')).toBe(1.5);
+    expect(queryMetric(rows, 'jornada')).toBe(queryMetric(baseline, 'jornada'));
+    expect(filterPayrollQueryRows(rows, { ...EMPTY_QUERY_FILTERS, concept: 'concept:days-concept' })).toHaveLength(1);
+  });
   it('filtra por concepto y aprobación del mismo registro preservando los demás conceptos del día', () => {
     const sources = payrollQueryFixture();
     sources.novelties = [novelty('hedo', 3, 'pendiente'), novelty('rn', 2)];
