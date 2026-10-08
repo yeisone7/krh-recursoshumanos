@@ -59,8 +59,18 @@ cuando existe, la vinculación del registro.
 
 Métricas derivadas registradas:
 
+- **Edades y vinculaciones:** `age_years` y `age_band` describen la edad actual;
+  `age_at_first_hire` y `first_hire_date` usan la primera vinculación registrada.
+  `age_at_hire`, `age_at_exit` e `is_first_hire` permiten distinguir ingresos,
+  reingresos y retiros. Las edades son años cumplidos; fechas faltantes o invertidas
+  producen NULL, nunca cero. La primera vinculación se consulta mediante la vista
+  autorizada: no revela una contratación perteneciente a un centro histórico oculto.
+  `tenure_days` y `tenure_years` miden una vinculación hasta su retiro o hasta hoy en
+  Bogotá si sigue abierta; no suman períodos separados por retiros.
 - **Contratos:** `effective_end_date` considera las prórrogas, además de conservar las
-  fechas originales.
+  fechas originales. `days_until_end` mide días calendario desde hoy hasta ese
+  vencimiento (negativo si venció); `contract_duration_days` mide el tiempo entre
+  inicio y vencimiento, sin incluir ambos extremos como días completos.
 - **Reloj:** minutos programados con la misma diferencia de horarios y descuento de
   descanso de `timeClock.scheduledMinutes`; los minutos trabajados provienen del reloj.
 - **Ausentismo:** un día calendario por persona, sin duplicar ausencias superpuestas;
@@ -77,6 +87,22 @@ Métricas derivadas registradas:
 Las fuentes de nómina conservan sus valores registrados. No se inventan fórmulas para
 recalcular liquidaciones, saldos o indicadores que no estén registrados en el catálogo.
 En esos casos el asistente debe pedir precisión, en lugar de generar expresiones SQL.
+
+El planificador utiliza nombres y significado de campos al seleccionar fuentes, y
+recibe la definición anterior al refinar. Por defecto, «menos de 25 años al
+contratarlos» cuenta personas en su primera contratación registrada, con edad
+estrictamente menor a 25, sin imponer estado activo. Un período de contrataciones
+se aplica a `start_date` de vinculaciones, nunca a `created_at` del empleado.
+Validaciones semánticas rechazan sustituir edad de contratación por edad actual,
+incluir el límite de una pregunta «menos de», omitir primera contratación en esa
+consulta o contar vinculaciones como personas. La respuesta explica el momento
+del cálculo y el tratamiento de fechas faltantes. Las consultas conservan siempre
+el alcance de permisos del usuario; no garantizan datos que no estén registrados.
+
+Los filtros de fecha repetidos por el modelo se eliminan únicamente cuando coinciden
+con el período de pantalla; una contradicción solicita aclaración. En fuentes de
+intervalos se mantiene el criterio de solapamiento del compilador. Los filtros de
+sexo emplean los códigos del catálogo (M, F, O).
 
 Los agregados se calculan antes de paginar. La tabla ordena y busca sobre la ejecución
 guardada. Los indicadores suman únicamente métricas aditivas; no promedian promedios
@@ -162,3 +188,26 @@ anteriores a este trabajo. No se aplicaron otras migraciones pendientes.
 La interfaz está implementada y compilada en este repositorio. Su publicación en Vercel
 requiere reconectar la integración: la consulta de equipos devuelve `UNAUTHORIZED`
 con solicitud de reautenticación. No se ha publicado una versión web nueva.
+
+## Ampliación de interpretación y edades
+
+- Migración `20261008042156_reporting_analytical_fields.sql` aplicada; función
+  `ai-data-assistant` desplegada después de registrar los nuevos campos.
+- 37 pruebas del asistente aprobadas: interpretación, validación, proveedores,
+  exportación y formulario. Compilación Vite, comprobación Deno y lint de los
+  archivos funcionales modificados correctos. La comprobación TypeScript global
+  continúa mostrando errores previos de otros módulos.
+- `supabase/tests/reporting_analytical_fields.sql` comprueba cumpleaños, fechas
+  faltantes/invertidas, primera contratación, reingresos, conteo distinto, períodos,
+  antigüedad, vencimiento con prórrogas y aislamiento por empresa/centro histórico.
+  Revierte todos sus datos de prueba. También pasaron `report_workspace.sql` y
+  `report_metrics.sql` después de la migración.
+- OpenAI: cinco preguntas verificadas contra empleados ficticios con edades conocidas:
+  edad al contratar, refinamiento por sexo, edad actual, contrataciones de un mes y
+  contratos próximos a vencer; también recuperación, favorita y reejecución.
+- Gemini: flujo básico y pregunta de edad al contratar correctos; la cuota del
+  proveedor impidió completar el resto. Las identidades y empresas temporales
+  fueron eliminadas. No se modificaron empleados reales.
+- Revisión de seguridad antes/después: 193 hallazgos preexistentes, sin nuevos.
+- La interfaz incluye tarjetas con preguntas de ejemplo sobre edad al contratar,
+  edad actual, vencimientos, ausencias, capacitación y nómina.
