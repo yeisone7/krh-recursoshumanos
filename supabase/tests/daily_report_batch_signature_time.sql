@@ -1,0 +1,51 @@
+-- Always run in a rolled-back transaction. Uses synthetic data only.
+CREATE FUNCTION pg_temp.assert(ok boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'ASSERT: %',label; END IF; END $$;
+CREATE FUNCTION pg_temp.denied(command text,expected text DEFAULT '42501') RETURNS void LANGUAGE plpgsql AS $$ DECLARE code text; BEGIN BEGIN EXECUTE command; EXCEPTION WHEN OTHERS THEN GET STACKED DIAGNOSTICS code=RETURNED_SQLSTATE; END; IF code IS DISTINCT FROM expected THEN RAISE EXCEPTION 'Expected % got %: %',expected,code,command; END IF; END $$;
+INSERT INTO auth.users(id,instance_id,aud,role,email,encrypted_password,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
+SELECT ('df000000-0000-4000-8000-00000000000'||n)::uuid,'00000000-0000-0000-0000-000000000000','authenticated','authenticated','daily-test-'||n||'@example.invalid','','{}','{}',now(),now() FROM generate_series(1,3) n;
+INSERT INTO public.companies(id,name,nit) VALUES('df000000-0000-4000-8000-000000000010','Daily report test','DAILY-TEST');
+INSERT INTO public.operation_centers(id,company_id,name) VALUES('df000000-0000-4000-8000-000000000030','df000000-0000-4000-8000-000000000010','Centro QA'),('df000000-0000-4000-8000-000000000031','df000000-0000-4000-8000-000000000010','Otro centro QA');
+INSERT INTO public.user_company_assignments(user_id,company_id) SELECT ('df000000-0000-4000-8000-00000000000'||n)::uuid,'df000000-0000-4000-8000-000000000010' FROM generate_series(1,3) n;
+INSERT INTO public.custom_roles(id,company_id,name,is_system) VALUES('df000000-0000-4000-8000-000000000020','df000000-0000-4000-8000-000000000010','Daily operator',false),('df000000-0000-4000-8000-000000000021','df000000-0000-4000-8000-000000000010','Daily supervisor',false);
+INSERT INTO public.user_custom_roles(user_id,role_id) VALUES('df000000-0000-4000-8000-000000000001','df000000-0000-4000-8000-000000000020'),('df000000-0000-4000-8000-000000000002','df000000-0000-4000-8000-000000000021');
+INSERT INTO public.role_permissions(role_id,permission_id) SELECT 'df000000-0000-4000-8000-000000000020',p.id FROM public.permissions p JOIN public.modules m ON m.id=p.module_id WHERE m.code IN('jornadas','novedades','reporte_diario');
+INSERT INTO public.role_permissions(role_id,permission_id) SELECT 'df000000-0000-4000-8000-000000000021',p.id FROM public.permissions p JOIN public.modules m ON m.id=p.module_id WHERE m.code='reporte_diario' AND p.action IN('view','approve');
+INSERT INTO public.employees_v2(id,company_id,document_type,document_number,first_name,last_name,birth_date,status,is_active) VALUES('df000000-0000-4000-8000-000000000040','df000000-0000-4000-8000-000000000010','CC','123456789001','María','Prueba','1980-02-29','active',true);
+INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date) VALUES('df000000-0000-4000-8000-000000000050','df000000-0000-4000-8000-000000000010','df000000-0000-4000-8000-000000000040',1,'active','backfill','2026-01-01');
+INSERT INTO public.employee_work_info(employee_id,company_id,operation_center_id,employment_cycle_id,valid_from,hire_date,is_current,position_name) VALUES('df000000-0000-4000-8000-000000000040','df000000-0000-4000-8000-000000000010','df000000-0000-4000-8000-000000000030','df000000-0000-4000-8000-000000000050','2026-01-01','2026-01-01',true,'Cargo QA');
+INSERT INTO public.work_schedules(id,company_id,name,start_time,end_time) VALUES('df000000-0000-4000-8000-000000000100','df000000-0000-4000-8000-000000000010','Administrativo','08:00','17:00');
+INSERT INTO public.overtime_records(company_id,employee_id,work_date,start_time,end_time,total_hours,overtime_type,surcharge_percentage,status)
+VALUES('df000000-0000-4000-8000-000000000010','df000000-0000-4000-8000-000000000040','2026-09-01','18:00','20:00',2,'extra_diurna',25,'aprobado');
+CREATE TEMP TABLE daily_fixture(key text PRIMARY KEY,value jsonb);
+INSERT INTO storage.objects(bucket_id,name) VALUES
+ ('daily-report-signatures','df000000-0000-4000-8000-000000000010/df000000-0000-4000-8000-000000000070.png'),
+ ('daily-report-signatures','df000000-0000-4000-8000-000000000010/df000000-0000-4000-8000-000000000071.png');
+GRANT ALL ON daily_fixture TO authenticated,service_role;
+CREATE FUNCTION pg_temp.value(k text) RETURNS jsonb LANGUAGE sql AS $$ SELECT value FROM daily_fixture WHERE key=k $$;
+CREATE FUNCTION pg_temp.pub() RETURNS uuid LANGUAGE sql AS $$ SELECT (pg_temp.value('publication')->>'id')::uuid $$;
+CREATE FUNCTION pg_temp.employee() RETURNS uuid LANGUAGE sql AS $$ SELECT 'df000000-0000-4000-8000-000000000040'::uuid $$;
+CREATE FUNCTION pg_temp.body() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('publication_id',pg_temp.pub()) $$;
+CREATE FUNCTION pg_temp.session_body() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_object('session',pg_temp.value('session')->>'session') $$;
+CREATE FUNCTION pg_temp.days() RETURNS jsonb LANGUAGE sql AS $$ SELECT jsonb_build_array(jsonb_build_object('employee_id',pg_temp.employee(),'date','2026-09-01','version',public.daily_report_public('rows',pg_temp.session_body())->'rows'->0->>'version','services','{"breakfast":true,"lunch":false,"meal":true,"dinner":false,"transport":true}'::jsonb)) $$;
+SELECT set_config('request.jwt.claims','{"sub":"df000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+SET LOCAL ROLE authenticated;
+SELECT public.payroll_set_time_config('df000000-0000-4000-8000-000000000010','{"employee_id":"df000000-0000-4000-8000-000000000040","mode":"administrative","work_schedule_id":"df000000-0000-4000-8000-000000000100","start_date":"2026-09-01"}');
+SELECT public.payroll_correction_write('df000000-0000-4000-8000-000000000010',jsonb_build_array(jsonb_build_object('module','jornadas','action','approve','values',jsonb_build_object('employee_id',pg_temp.employee(),'work_date','2026-09-01','status','approved','snapshot',public.payroll_schedule_days('df000000-0000-4000-8000-000000000010',ARRAY[pg_temp.employee()],'2026-09-01','2026-09-01')->0->'snapshot'))));
+SELECT pg_temp.assert(jsonb_array_length(public.daily_report_admin('options','{"company_id":"df000000-0000-4000-8000-000000000010"}')->'centers')=2,'options filtered and callable');
+INSERT INTO daily_fixture VALUES('publication',public.daily_report_admin('create','{"company_id":"df000000-0000-4000-8000-000000000010","center_id":"df000000-0000-4000-8000-000000000030","supervisor_id":"df000000-0000-4000-8000-000000000002","start_date":"2026-09-01","end_date":"2026-09-03"}'::jsonb||jsonb_build_object('expires_at',clock_timestamp()+interval '1 day')));
+
+SELECT public.payroll_correction_write('df000000-0000-4000-8000-000000000010',(SELECT jsonb_agg(jsonb_build_object('module','jornadas','action','approve','values',jsonb_build_object('employee_id',pg_temp.employee(),'work_date',x->>'work_date','status','approved','snapshot',x->'snapshot'))) FROM jsonb_array_elements(public.payroll_schedule_days('df000000-0000-4000-8000-000000000010',ARRAY[pg_temp.employee()],'2026-09-02','2026-09-03')) x));
+RESET ROLE;
+SET LOCAL ROLE service_role;
+INSERT INTO daily_fixture VALUES('session',public.daily_report_public('identify',jsonb_build_object('token',pg_temp.value('publication')->>'token','document_type','CC','document_number','123456789001','birth_date','1980-02-29','ip_hash','qa-batch')));
+SELECT public.daily_report_public('register_signature',pg_temp.session_body()||'{"signature_id":"df000000-0000-4000-8000-000000000070"}');
+SELECT public.daily_report_public('signed',pg_temp.session_body()||jsonb_build_object('days',(SELECT jsonb_agg(jsonb_build_object('employee_id',pg_temp.employee(),'date',x->>'date','version',x->>'version','services','{"breakfast":false,"lunch":false,"meal":false,"dinner":false,"transport":false}'::jsonb)) FROM jsonb_array_elements(public.daily_report_public('rows',pg_temp.session_body())->'rows') x),'signature_id','df000000-0000-4000-8000-000000000070','consent',true,'request_id',gen_random_uuid()));
+RESET ROLE;
+SELECT pg_temp.assert((SELECT count(*)=3 AND count(DISTINCT employee_signed_at)=1 FROM daily_report_private.decisions WHERE company_id='df000000-0000-4000-8000-000000000010' AND action='signed'),'one timestamp per employee confirmation');
+SELECT set_config('request.jwt.claims','{"sub":"df000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+SET LOCAL ROLE authenticated;
+SELECT public.daily_report_admin('register_signature',pg_temp.body()||'{"signature_id":"df000000-0000-4000-8000-000000000071"}');
+SELECT public.daily_report_admin('approved',pg_temp.body()||jsonb_build_object('days',(SELECT jsonb_agg(jsonb_build_object('employee_id',pg_temp.employee(),'date',x->>'date','version',x->>'version')) FROM jsonb_array_elements(public.daily_report_admin('rows',pg_temp.body())->'rows') x),'signature_id','df000000-0000-4000-8000-000000000071','consent',true,'request_id',gen_random_uuid()));
+RESET ROLE;
+SELECT pg_temp.assert((SELECT count(*)=3 AND count(DISTINCT supervisor_signed_at)=1 AND count(DISTINCT supervisor_signature)=1 FROM daily_report_private.decisions WHERE company_id='df000000-0000-4000-8000-000000000010' AND action='approved'),'one timestamp per supervisor confirmation');
+SELECT 'PASS: batch employee and supervisor signing timestamps' AS result;
