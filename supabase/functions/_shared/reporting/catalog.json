@@ -10141,6 +10141,11 @@
         "type": "number"
       },
       {
+        "key": "surcharge_festivo",
+        "label": "Recargo festivo (%)",
+        "type": "number"
+      },
+      {
         "key": "surcharge_hedf",
         "label": "surcharge hedf",
         "type": "number"

@@ -53,6 +53,7 @@ export interface PayrollLaborConfig {
   surcharge_henf: number;
   surcharge_rnf: number;
   surcharge_dominical: number;
+  surcharge_festivo: number;
   created_at: string;
   updated_at: string;
   created_by?: string;

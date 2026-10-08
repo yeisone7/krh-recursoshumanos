@@ -151,6 +151,7 @@ export default function Novedades() {
     { label: 'HENF', pct: config.surcharge_henf },
     { label: 'RNF', pct: config.surcharge_rnf },
     { label: 'Dominical', pct: config.surcharge_dominical },
+    { label: 'Festivo', pct: config.surcharge_festivo ?? config.surcharge_dominical },
   ] : [];
 
   const noveltyTypeOptions = Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => ({ value, label }));
