@@ -312,9 +312,10 @@ export default function PreLiquidacion() {
   ]);
 
   const allRows = usePreLiquidation(preLiqData);
-  const rows = selectedCenterIds.length === 0
+  const rows = useMemo(() => selectedCenterIds.length === 0
     ? allRows
-    : allRows.filter(row => row.operationCenterIds.some(centerId => selectedCenterIds.includes(centerId)));
+    : allRows.filter(row => row.operationCenterIds.some(centerId => selectedCenterIds.includes(centerId))),
+  [allRows, selectedCenterIds]);
   const warningCount = rows.filter(r => r.hasWarning).length;
   const rowsWithDeductions = allRows.filter(r => r.loanDeduction > 0);
 
@@ -396,11 +397,6 @@ export default function PreLiquidacion() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Pre-Liquidación de Nómina</h1>
-        <p className="text-muted-foreground">Cálculo de conceptos laborales por período</p>
-      </div>
-
       {/* Period selector */}
       <Card>
         <CardContent className="pt-6">
