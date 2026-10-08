@@ -307,12 +307,12 @@ const toolsNavItemsBase: NavItem[] = [
 ];
 
 const payrollNavItems: NavItem[] = [
-  { label: 'Reporte Diario', icon: <FileBarChart className="w-5 h-5" />, href: '/nomina/reporte-diario', moduleCode: 'reporte_diario' },
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Reloj de Asistencia', icon: <ScanLine className="w-5 h-5" />, href: '/reloj-checador', moduleCode: 'reloj_checador' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
   { label: 'Cortes de control', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control', moduleCode: 'cortes_control' },
   { label: 'Permisos de corrección', icon: <ShieldCheck className="w-5 h-5" />, href: '/cortes-control/permisos', moduleCode: 'correction_tickets' },
+  { label: 'Reporte Diario', icon: <FileBarChart className="w-5 h-5" />, href: '/nomina/reporte-diario', moduleCode: 'reporte_diario' },
   { label: 'PILA / UGPP', icon: <Landmark className="w-5 h-5" />, href: '/pila-ugpp', moduleCode: 'pila_ugpp' },
   { label: 'Analítica Nómina', icon: <BarChart3 className="w-5 h-5" />, href: '/nomina/analitica', moduleCode: 'analitica_nomina' },
   { label: 'Consulta Dinámica', icon: <FileBarChart className="w-5 h-5" />, href: '/nomina/consulta-dinamica', moduleCode: 'analitica_nomina' },
