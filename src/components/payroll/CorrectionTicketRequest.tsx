@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useEmployees } from '@/hooks/useEmployees';
 import { correctionClient, correctionActionLabels, colombiaInput, colombiaInputToISO, correctionExpiryError, type CorrectionModule } from '@/lib/payrollCorrections';
 import { colombiaToday } from '@/lib/payrollControlCuts';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,11 +62,10 @@ function TicketRequestForm({ defaults, close }: { defaults: TicketRequestDefault
       toast.success('Solicitud registrada. Un usuario con permiso puede aprobarla.'); close();
     } catch (e) { setError((e as Error).message); } finally { setSaving(false); }
   }
-  return <Dialog open onOpenChange={v => !v && !saving && close()}><DialogContent className="max-w-2xl gap-5">
+  return <Dialog open onOpenChange={v => !v && !saving && close()}><DialogContent className="max-w-2xl gap-5" aria-describedby={undefined}>
     <DialogHeader className="border-b pb-4 text-left">
       <div className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary"><ClipboardList className="h-4 w-4" />Permisos de nómina</div>
       <DialogTitle className="pr-5 text-xl leading-tight">Solicitar permiso de corrección</DialogTitle>
-      <DialogDescription className="leading-relaxed">Solicite autorización para corregir los registros de un empleado durante un periodo específico. Los cortes del centro permanecen cerrados.</DialogDescription>
     </DialogHeader>
     <form id={formId} className="correction-ticket-form space-y-5" onSubmit={event => { event.preventDefault(); void save(); }}>
       <fieldset disabled={saving} className="min-w-0 space-y-5">
