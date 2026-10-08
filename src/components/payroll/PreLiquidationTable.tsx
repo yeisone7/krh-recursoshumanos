@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Portal as TooltipPortal } from '@radix-ui/react-tooltip';
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -196,10 +197,14 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                     <div className="flex items-center gap-2">
                       {row.hasWarning && (
                         <Tooltip>
-                          <TooltipTrigger>
+                          <TooltipTrigger aria-label={`Ver alerta de ${row.employeeName}`}>
                             <AlertTriangle className="w-4 h-4 text-destructive" />
                           </TooltipTrigger>
-                          <TooltipContent>{row.warningMessage}</TooltipContent>
+                          <TooltipPortal>
+                            <TooltipContent align="start" collisionPadding={12} className="max-w-[min(24rem,calc(100vw-2rem))] whitespace-normal break-words">
+                              {row.warningMessage}
+                            </TooltipContent>
+                          </TooltipPortal>
                         </Tooltip>
                       )}
                       <div>
@@ -238,11 +243,13 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                         <TooltipTrigger>
                           <span className="text-orange-600 dark:text-orange-400 font-medium">{fmtMoney(row.loanDeduction)}</span>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          {row.loanDetail.map((l, i) => (
-                            <div key={i} className="text-xs">{l.description}: {fmtMoney(l.installmentAmount)}</div>
-                          ))}
-                        </TooltipContent>
+                        <TooltipPortal>
+                          <TooltipContent>
+                            {row.loanDetail.map((l, i) => (
+                              <div key={i} className="text-xs">{l.description}: {fmtMoney(l.installmentAmount)}</div>
+                            ))}
+                          </TooltipContent>
+                        </TooltipPortal>
                       </Tooltip>
                     ) : '-'}
                   </TableCell>
@@ -252,11 +259,13 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                         <TooltipTrigger>
                           <span className="text-orange-600 dark:text-orange-400 font-medium">{fmtMoney(row.deductionTotal)}</span>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          {row.deductionDetail.map((d, i) => (
-                            <div key={i} className="text-xs">{d.description}: {fmtMoney(d.amount)}</div>
-                          ))}
-                        </TooltipContent>
+                        <TooltipPortal>
+                          <TooltipContent>
+                            {row.deductionDetail.map((d, i) => (
+                              <div key={i} className="text-xs">{d.description}: {fmtMoney(d.amount)}</div>
+                            ))}
+                          </TooltipContent>
+                        </TooltipPortal>
                       </Tooltip>
                     ) : '-'}
                   </TableCell>
