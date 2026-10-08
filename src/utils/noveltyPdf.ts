@@ -1,7 +1,8 @@
+import { noveltyConceptLabel, noveltyQuantity } from '@/lib/payrollConcepts';
 import { jsPDF } from 'jspdf';
 import { format } from 'date-fns';
 import { formatDateOnly } from '@/lib/dateOnly';
-import { NOVELTY_TYPE_LABELS, type PayrollNovelty } from '@/types/payroll';
+import type { PayrollNovelty } from '@/types/payroll';
 
 const loadImage = (url: string): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -37,7 +38,7 @@ export const generateNoveltyPDF = async (novelty: PayrollNovelty, userName: stri
   const generatedDate = Number.isNaN(generatedAt.getTime())
     ? 'Sin información'
     : format(generatedAt, 'dd/MM/yyyy HH:mm:ss');
-  const typeLabel = NOVELTY_TYPE_LABELS[novelty.novelty_type] || novelty.novelty_type || 'Sin información';
+  const typeLabel = noveltyConceptLabel(novelty);
   const specificReason = novelty.novelty_reasons?.name || novelty.notes || 'N/A';
   let logo: string | undefined;
   if (logoUrl) {
@@ -109,8 +110,8 @@ export const generateNoveltyPDF = async (novelty: PayrollNovelty, userName: stri
     doc.setFont('courier', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(35);
-    doc.text('Horas reportadas', margin, y);
-    const hours = String(novelty.hours ?? 0);
+    doc.text(noveltyQuantity(novelty).unit === 'days' ? 'Días reportados' : 'Horas reportadas', margin, y);
+    const hours = String(noveltyQuantity(novelty).quantity);
     doc.setFontSize(18);
     if (doc.getTextWidth(hours) <= contentWidth - 100) {
       doc.text(hours, pageWidth - margin, y + 2, { align: 'right' });

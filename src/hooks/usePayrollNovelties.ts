@@ -19,6 +19,7 @@ export function usePayrollNovelties(filters?: {
         .from('payroll_novelties')
         .select(`
           *,
+          payroll_concepts(*),
           employees_v2(
             id, first_name, last_name, document_number,
             employee_work_info(operation_centers(name))
@@ -39,7 +40,7 @@ export function usePayrollNovelties(filters?: {
       }
 
       const { data, error } = await query.order('id').range(from, to);
-      return { data: data as PayrollNovelty[] | null, error };
+      return { data: data as unknown as PayrollNovelty[] | null, error };
     }),
     enabled: !!currentCompanyId,
   });
@@ -55,6 +56,9 @@ export function useCreatePayrollNovelty() {
       novelty_date: string;
       novelty_type: NoveltyType;
       hours: number;
+      concept_id?: string | null;
+      quantity?: number;
+      quantity_unit?: 'hours' | 'days';
       notes?: string;
       source?: string;
       start_time?: string | null;
@@ -79,6 +83,9 @@ export function useUpdatePayrollNovelty() {
       novelty_date: string;
       novelty_type: NoveltyType;
       hours: number;
+      concept_id?: string | null;
+      quantity?: number;
+      quantity_unit?: 'hours' | 'days';
       notes: string;
       start_time: string | null;
       end_time: string | null;

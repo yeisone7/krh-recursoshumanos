@@ -7,10 +7,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { usePayrollConfig, useUpsertPayrollConfig } from '@/hooks/usePayrollConfig';
+import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { useCompanyPolicyUsers, useLaborDisconnectionPolicy, useUpsertLaborDisconnectionPolicy } from '@/hooks/useLaborDisconnectionPolicy';
+import { PayrollConceptEditor } from '@/components/payroll/PayrollConceptEditor';
+import { usePayrollConceptEditor, useSavePayrollSettings } from '@/hooks/usePayrollConcepts';
 import { toast } from '@/hooks/use-toast';
-import { Settings, Clock, Moon, Percent, Save, Loader2, ShieldCheck } from 'lucide-react';
+import { Settings, Clock, Moon, Save, Loader2, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function ConfiguracionLaboral() {
@@ -18,7 +20,8 @@ export default function ConfiguracionLaboral() {
   const { data: config, isLoading } = usePayrollConfig();
   const { data: disconnectionPolicy, isLoading: isPolicyLoading } = useLaborDisconnectionPolicy();
   const { data: policyUsers = [] } = useCompanyPolicyUsers();
-  const upsert = useUpsertPayrollConfig();
+  const upsert = useSavePayrollSettings();
+  const concepts = usePayrollConceptEditor();
   const upsertDisconnection = useUpsertLaborDisconnectionPolicy();
 
   const [form, setForm] = useState({
@@ -27,14 +30,7 @@ export default function ConfiguracionLaboral() {
     display_unit: 'hours' as 'hours' | 'days',
     night_start: '21:00',
     night_end: '06:00',
-    surcharge_hedo: '25',
-    surcharge_heno: '75',
-    surcharge_rn: '35',
-    surcharge_hedf: '100',
-    surcharge_henf: '150',
-    surcharge_rnf: '110',
-    surcharge_dominical: '75',
-    surcharge_festivo: '75',
+
   });
   const [disconnectionForm, setDisconnectionForm] = useState({
     enabled: false,
@@ -65,14 +61,7 @@ export default function ConfiguracionLaboral() {
         display_unit: config.display_unit as 'hours' | 'days',
         night_start: config.night_start?.substring(0, 5) || '21:00',
         night_end: config.night_end?.substring(0, 5) || '06:00',
-        surcharge_hedo: String(config.surcharge_hedo ?? ''),
-        surcharge_heno: String(config.surcharge_heno ?? ''),
-        surcharge_rn: String(config.surcharge_rn ?? ''),
-        surcharge_hedf: String(config.surcharge_hedf ?? ''),
-        surcharge_henf: String(config.surcharge_henf ?? ''),
-        surcharge_rnf: String(config.surcharge_rnf ?? ''),
-        surcharge_dominical: String(config.surcharge_dominical ?? ''),
-        surcharge_festivo: String(config.surcharge_festivo ?? config.surcharge_dominical ?? ''),
+
       });
     }
   }, [config]);
@@ -97,18 +86,11 @@ export default function ConfiguracionLaboral() {
 
   const handleSave = async () => {
     try {
-      await upsert.mutateAsync({
+      await upsert.mutateAsync({ config: {
         ...form,
         max_weekly_hours: Math.max(0, Number(form.max_weekly_hours || 0)),
         daily_hours: Math.max(0, Number(form.daily_hours || 0)),
-        surcharge_hedo: Math.max(0, Number(form.surcharge_hedo || 0)),
-        surcharge_heno: Math.max(0, Number(form.surcharge_heno || 0)),
-        surcharge_rn: Math.max(0, Number(form.surcharge_rn || 0)),
-        surcharge_hedf: Math.max(0, Number(form.surcharge_hedf || 0)),
-        surcharge_henf: Math.max(0, Number(form.surcharge_henf || 0)),
-        surcharge_rnf: Math.max(0, Number(form.surcharge_rnf || 0)),
-        surcharge_dominical: Math.max(0, Number(form.surcharge_dominical || 0)),
-        surcharge_festivo: Math.max(0, Number(form.surcharge_festivo || 0)),
+      }, concepts: concepts.validate(), expectedUpdatedAt: config?.updated_at ?? null
       });
       await upsertDisconnection.mutateAsync({
         enabled: disconnectionForm.enabled,
@@ -123,6 +105,7 @@ export default function ConfiguracionLaboral() {
         next_review_date: disconnectionForm.next_review_date || null,
         exception_notes: disconnectionForm.exception_notes.trim() || null,
       });
+      concepts.markSaved();
       workspaceEditor.markSaved();
       toast({ title: 'Configuracion guardada correctamente' });
     } catch (err: unknown) {
@@ -131,18 +114,7 @@ export default function ConfiguracionLaboral() {
     }
   };
 
-  const surchargeFields = [
-    { key: 'surcharge_hedo', label: 'HEDO - Extra Diurna Ordinaria (%)', desc: 'Trabajo extra en día ordinario' },
-    { key: 'surcharge_heno', label: 'HENO - Extra Nocturna Ordinaria (%)', desc: 'Trabajo extra de noche en día ordinario' },
-    { key: 'surcharge_rn', label: 'RN - Recargo Nocturno (%)', desc: 'Trabajo nocturno sin ser extra' },
-    { key: 'surcharge_hedf', label: 'HEDF - Extra Diurna Dom/Fest (%)', desc: 'Trabajo extra de día en domingos/festivos' },
-    { key: 'surcharge_henf', label: 'HENF - Extra Nocturna Dom/Fest (%)', desc: 'Trabajo extra de noche en domingos/festivos' },
-    { key: 'surcharge_rnf', label: 'RNF - Recargo Nocturno Fest (%)', desc: 'Trabajo nocturno en domingos/festivos' },
-    { key: 'surcharge_dominical', label: 'Dominical Trabajado (%)', desc: 'Trabajo en el día de descanso obligatorio' },
-    { key: 'surcharge_festivo', label: 'Festivo Trabajado (%)', desc: 'Trabajo en un día festivo' },
-  ] as const;
-
-  if (isLoading || isPolicyLoading) {
+  if (isLoading || isPolicyLoading || concepts.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <Loader2 className="w-10 h-10 animate-spin mb-4 text-primary" />
@@ -177,7 +149,7 @@ export default function ConfiguracionLaboral() {
           </div>
           <Button 
             onClick={handleSave} 
-            disabled={upsert.isPending || upsertDisconnection.isPending} 
+            disabled={upsert.isPending || upsertDisconnection.isPending || !concepts.isSuccess}
             size="lg"
             className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all shrink-0 w-full sm:w-auto"
           >
@@ -424,42 +396,9 @@ export default function ConfiguracionLaboral() {
         {/* Columna Derecha: Recargos */}
         <div className="lg:col-span-2">
           <Card className="rounded-[2rem] border-border/50 shadow-sm overflow-hidden h-full">
-            <CardHeader className="bg-background border-b border-border/50 pb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Percent className="w-5 h-5" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg font-black tracking-tight">Porcentajes de Recargo</CardTitle>
-                  <CardDescription className="text-xs">Valores porcentuales sobre el valor de la hora ordinaria</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 sm:p-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                {surchargeFields.map(({ key, label, desc }) => (
-                  <div key={key} className="space-y-3 group">
-                    <div>
-                      <Label htmlFor={key} className="text-[11px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">
-                        {label.split(' - ')[0]}
-                      </Label>
-                      <p className="text-[10px] text-muted-foreground line-clamp-1">{label.split(' - ')[1] || label.split(' - ')[0]}</p>
-                    </div>
-                    <div className="relative">
-                      <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id={key}
-                        type="number"
-                        min="0"
-                        value={form[key as keyof typeof form]}
-                        onChange={e => setForm(f => ({ ...f, [key]: sanitizeNonNegative(e.target.value) }))}
-                        className="h-12 pl-11 rounded-2xl bg-background border-border focus:bg-background font-mono text-lg"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground/70">{desc}</p>
-                  </div>
-                ))}
-              </div>
+            <CardContent className="p-4 sm:p-6">
+              {concepts.isError ? <p role="alert" className="text-sm text-destructive">No se pudieron cargar los conceptos. Actualice la página para intentar de nuevo.</p> :
+                <PayrollConceptEditor value={concepts.drafts} onChange={concepts.change} errors={concepts.errors} disabled={upsert.isPending} />}
             </CardContent>
           </Card>
         </div>

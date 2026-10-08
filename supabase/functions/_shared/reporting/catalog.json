@@ -4570,6 +4570,31 @@
         "key": "report_center_name",
         "label": "Centro de operación",
         "type": "text"
+      },
+      {
+        "key": "concept_id",
+        "label": "Concepto (ID)",
+        "type": "text"
+      },
+      {
+        "key": "concept_name",
+        "label": "Nombre del concepto",
+        "type": "text"
+      },
+      {
+        "key": "concept_identifier",
+        "label": "Identificador del concepto",
+        "type": "text"
+      },
+      {
+        "key": "quantity",
+        "label": "Cantidad",
+        "type": "number"
+      },
+      {
+        "key": "quantity_unit",
+        "label": "Unidad de cantidad",
+        "type": "text"
       }
     ],
     "dateField": "novelty_date",

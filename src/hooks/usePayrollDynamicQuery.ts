@@ -142,7 +142,7 @@ export async function fetchPayrollQuerySources(
     ),
     fetchEmployees<'novelties'>(
       'payroll_novelties',
-      '*,novelty_reasons(name)',
+      '*,novelty_reasons(name),payroll_concepts(*)',
       'novelty_date',
     ),
     fetchEmployees<'overtime'>('overtime_records', '*', 'work_date'),

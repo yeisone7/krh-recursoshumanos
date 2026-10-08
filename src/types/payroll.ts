@@ -3,6 +3,7 @@
 // =============================================
 
 export type NoveltyType =
+  | 'custom'
   | 'jornada'
   | 'hedo'
   | 'heno'
@@ -20,6 +21,7 @@ export type NoveltyType =
 export type NoveltySource = 'manual' | 'auto';
 
 export const NOVELTY_TYPE_LABELS: Record<NoveltyType, string> = {
+  custom: 'Concepto personalizado',
   jornada: 'Jornada Laboral',
   hedo: 'H.E. Diurna Ordinaria',
   heno: 'H.E. Nocturna Ordinaria',
@@ -61,10 +63,29 @@ export interface PayrollLaborConfig {
 
 export type NoveltyStatus = 'pendiente' | 'aprobada' | 'rechazada';
 
+export interface PayrollConcept {
+  id: string;
+  company_id: string;
+  name: string;
+  identifier: string;
+  unit: 'hours' | 'days';
+  percentage: number;
+  is_active: boolean;
+  system_type: Exclude<NoveltyType, 'custom'> | null;
+  sort_order: number;
+  has_novelties?: boolean;
+}
+
+export type PayrollConceptDraft = Omit<PayrollConcept, 'percentage'> & { percentage: string };
+
 // =============================================
 // PAYROLL NOVELTIES
 // =============================================
 export interface PayrollNovelty {
+  concept_id?: string | null;
+  quantity?: number | null;
+  quantity_unit?: 'hours' | 'days' | null;
+  payroll_concepts?: PayrollConcept | null;
   id: string;
   company_id: string;
   employee_id: string;
@@ -100,6 +121,7 @@ export interface PayrollNovelty {
 // PRE-LIQUIDATION RESULT
 // =============================================
 export interface PreLiquidationRow {
+  customConcepts?: Record<string, { id: string; identifier: string; name: string; unit: 'hours' | 'days'; quantity: number }>;
   employeeId: string;
   employeeName: string;
   documentNumber: string;

@@ -18,9 +18,12 @@ import { Badge } from '@/components/ui/badge';
 import { useCreatePayrollNovelty, useUpdatePayrollNovelty, usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useNoveltyReasons } from '@/hooks/useNoveltyReasons';
-import { NOVELTY_TYPE_LABELS, type NoveltyType, type PayrollNovelty } from '@/types/payroll';
+import { type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { usePayrollConcepts } from '@/hooks/usePayrollConcepts';
+import { usePayrollConfig } from '@/hooks/usePayrollConfig';
+import { conceptOptions } from '@/lib/payrollConcepts';
 import { CorrectionTicketRequest } from '@/components/payroll/CorrectionTicketRequest';
 
 interface Props {
@@ -32,6 +35,9 @@ interface Props {
 export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const { data: employees = [] } = useEmployees();
   const { data: reasons = [] } = useNoveltyReasons(true);
+  const conceptsQuery = usePayrollConcepts();
+  const concepts = conceptsQuery.data ?? [];
+  const { data: config } = usePayrollConfig();
   const create = useCreatePayrollNovelty();
   const update = useUpdatePayrollNovelty();
   const { data: existingNovelties = [] } = usePayrollNovelties();
@@ -41,7 +47,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const [form, setForm] = useState({
     employee_id: '',
     novelty_date: '',
-    novelty_type: 'hedo' as NoveltyType,
+    novelty_type: 'hedo' as string,
     hours: 0,
     notes: '',
     start_time: '',
@@ -50,6 +56,9 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   });
 
   const isEditing = !!novelty?.id;
+  const selectedConcept = concepts.find(c => (c.system_type || `concept:${c.id}`) === form.novelty_type);
+  const unit = selectedConcept?.unit ?? 'hours';
+  const equivalentHours = unit === 'days' ? form.hours * (config?.daily_hours || 8) : form.hours;
   const selectedEmployee = employees.find(e => e.id === form.employee_id);
 
   useEffect(() => {
@@ -57,8 +66,8 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
       setForm({
         employee_id: novelty?.employee_id || '',
         novelty_date: novelty?.novelty_date || '',
-        novelty_type: (novelty?.novelty_type || 'hedo') as NoveltyType,
-        hours: novelty?.hours || 0,
+        novelty_type: novelty?.novelty_type === 'custom' ? `concept:${novelty.concept_id}` : novelty?.novelty_type || 'hedo',
+        hours: novelty?.quantity ?? novelty?.hours ?? 0,
         notes: novelty?.notes || '',
         start_time: novelty?.start_time || '',
         end_time: novelty?.end_time || '',
@@ -70,23 +79,21 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
   // Auto-calculate end_time when start_time or hours change
   useEffect(() => {
-    if (form.start_time && form.hours > 0) {
+    if (unit === 'hours' && form.start_time && form.hours > 0) {
       const [h, m] = form.start_time.split(':').map(Number);
       const totalMinutes = h * 60 + m + form.hours * 60;
       const endH = Math.floor(totalMinutes / 60) % 24;
       const endM = Math.round(totalMinutes % 60);
       setForm(f => ({ ...f, end_time: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}` }));
     }
-  }, [form.start_time, form.hours]);
+  }, [form.start_time, form.hours, unit]);
 
   const employeeOptions = employees.map(e => ({
     value: e.id,
     label: `${e.first_name} ${e.last_name} - ${e.document_number} (${(e as any).operation_centers?.name || 'S.C.'})`,
   }));
 
-  const noveltyTypeOptions = Object.entries(NOVELTY_TYPE_LABELS).map(([value, label]) => ({
-    value, label,
-  }));
+  const noveltyTypeOptions = conceptOptions(concepts, isEditing ? novelty?.concept_id : null);
 
   const handleSave = async () => {
     if (!form.employee_id || !form.novelty_date) {
@@ -95,14 +102,21 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
       return;
     }
 
+    if (!Number.isFinite(form.hours) || form.hours <= 0 || !noveltyTypeOptions.some(o => o.value === form.novelty_type) || !conceptsQuery.isSuccess) {
+      toast({ title: 'Seleccione un concepto disponible e ingrese una cantidad mayor que cero.', variant: 'destructive' });
+      return;
+    }
     const payload = {
       employee_id: form.employee_id,
       novelty_date: form.novelty_date,
-      novelty_type: form.novelty_type,
-      hours: form.hours,
+      novelty_type: (selectedConcept?.system_type || (selectedConcept ? 'custom' : form.novelty_type)) as NoveltyType,
+      concept_id: selectedConcept?.id ?? null,
+      quantity: form.hours,
+      quantity_unit: unit,
+      hours: equivalentHours,
       notes: form.notes || undefined,
-      start_time: form.start_time || null,
-      end_time: form.end_time || null,
+      start_time: unit === 'hours' ? form.start_time || null : null,
+      end_time: unit === 'hours' ? form.end_time || null : null,
       reason_id: form.reason_id || null,
     };
 
@@ -112,8 +126,9 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         n.employee_id === payload.employee_id &&
         n.novelty_date === payload.novelty_date &&
         n.novelty_type === payload.novelty_type &&
-        n.start_time === payload.start_time &&
-        n.reason_id === payload.reason_id
+        (n.concept_id ?? null) === payload.concept_id &&
+        (payload.novelty_type === 'custom' || (n.start_time === payload.start_time &&
+        n.reason_id === payload.reason_id))
       );
 
       if (isDuplicate) {
@@ -142,7 +157,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
+      <DialogContent aria-describedby={undefined} className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
         <div className="px-6 pt-4"><CorrectionTicketRequest defaults={{ module: 'novedades', employeeId: form.employee_id, startDate: form.novelty_date, endDate: form.novelty_date }} /></div>
         <DialogHeader className="sr-only">
           <DialogTitle>{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
@@ -213,7 +228,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
                <div className="space-y-2">
                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Novedad</Label>
-                 <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v as NoveltyType }))}>
+                 <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v, hours: 0, start_time: '', end_time: '' }))}>
                    <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
                      <SelectValue />
                    </SelectTrigger>
@@ -256,16 +271,17 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de Inicio</Label>
                  <Input
                    type="time"
+                   disabled={unit === 'days'}
                    value={form.start_time}
                    onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
                    className="h-12 rounded-2xl bg-background border-border focus:bg-background"
                  />
                </div>
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Cantidad Horas</Label>
+                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">{unit === 'days' ? 'Cantidad Días' : 'Cantidad Horas'}</Label>
                  <Input
                    type="number"
-                   step="0.5"
+                   step="any"
                    min="0"
                    value={form.hours || ''}
                    onChange={e => setForm(f => ({ ...f, hours: Number(e.target.value) }))}
@@ -305,7 +321,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
           <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={create.isPending || update.isPending}>
+          <Button className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={create.isPending || update.isPending || !conceptsQuery.isSuccess}>
             {isEditing ? 'Actualizar Novedad' : 'Crear Novedad'}
           </Button>
         </div>
