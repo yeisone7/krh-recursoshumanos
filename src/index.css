@@ -1925,3 +1925,23 @@ div.requisition-grid:has(table),
 .requisition-grid thead tr:first-child th:last-child {
   border-radius: 0 !important;
 }
+
+/* Keep correction controls aligned despite the legacy modal label rules. */
+[role="dialog"] form.correction-ticket-form {
+  padding: 0 !important;
+  background-color: transparent !important;
+}
+
+[role="dialog"] .correction-ticket-form label,
+[role="dialog"] label.correction-action-option {
+  margin-bottom: 0 !important;
+}
+
+[role="dialog"] label.correction-action-option,
+[role="dialog"] label.correction-ticket-expiry-label {
+  display: flex !important;
+}
+
+[role="dialog"] label.correction-action-option:has([data-state="checked"]) {
+  color: hsl(var(--foreground)) !important;
+}
