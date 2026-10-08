@@ -34,6 +34,7 @@ export default function ConfiguracionLaboral() {
     surcharge_henf: '150',
     surcharge_rnf: '110',
     surcharge_dominical: '75',
+    surcharge_festivo: '75',
   });
   const [disconnectionForm, setDisconnectionForm] = useState({
     enabled: false,
@@ -71,6 +72,7 @@ export default function ConfiguracionLaboral() {
         surcharge_henf: String(config.surcharge_henf ?? ''),
         surcharge_rnf: String(config.surcharge_rnf ?? ''),
         surcharge_dominical: String(config.surcharge_dominical ?? ''),
+        surcharge_festivo: String(config.surcharge_festivo ?? config.surcharge_dominical ?? ''),
       });
     }
   }, [config]);
@@ -106,6 +108,7 @@ export default function ConfiguracionLaboral() {
         surcharge_henf: Math.max(0, Number(form.surcharge_henf || 0)),
         surcharge_rnf: Math.max(0, Number(form.surcharge_rnf || 0)),
         surcharge_dominical: Math.max(0, Number(form.surcharge_dominical || 0)),
+        surcharge_festivo: Math.max(0, Number(form.surcharge_festivo || 0)),
       });
       await upsertDisconnection.mutateAsync({
         enabled: disconnectionForm.enabled,
@@ -135,7 +138,8 @@ export default function ConfiguracionLaboral() {
     { key: 'surcharge_hedf', label: 'HEDF - Extra Diurna Dom/Fest (%)', desc: 'Trabajo extra de día en domingos/festivos' },
     { key: 'surcharge_henf', label: 'HENF - Extra Nocturna Dom/Fest (%)', desc: 'Trabajo extra de noche en domingos/festivos' },
     { key: 'surcharge_rnf', label: 'RNF - Recargo Nocturno Fest (%)', desc: 'Trabajo nocturno en domingos/festivos' },
-    { key: 'surcharge_dominical', label: 'Dominical/Festivo Trabajado (%)', desc: 'Día de descanso laborado' },
+    { key: 'surcharge_dominical', label: 'Dominical Trabajado (%)', desc: 'Trabajo en el día de descanso obligatorio' },
+    { key: 'surcharge_festivo', label: 'Festivo Trabajado (%)', desc: 'Trabajo en un día festivo' },
   ] as const;
 
   if (isLoading || isPolicyLoading) {
@@ -436,7 +440,7 @@ export default function ConfiguracionLaboral() {
                 {surchargeFields.map(({ key, label, desc }) => (
                   <div key={key} className="space-y-3 group">
                     <div>
-                      <Label className="text-[11px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">
+                      <Label htmlFor={key} className="text-[11px] font-black uppercase tracking-widest text-foreground group-hover:text-primary transition-colors">
                         {label.split(' - ')[0]}
                       </Label>
                       <p className="text-[10px] text-muted-foreground line-clamp-1">{label.split(' - ')[1] || label.split(' - ')[0]}</p>
@@ -444,6 +448,7 @@ export default function ConfiguracionLaboral() {
                     <div className="relative">
                       <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
+                        id={key}
                         type="number"
                         min="0"
                         value={form[key as keyof typeof form]}

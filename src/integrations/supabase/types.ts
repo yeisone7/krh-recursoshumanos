@@ -7864,6 +7864,7 @@ export type Database = {
           night_end: string
           night_start: string
           surcharge_dominical: number
+          surcharge_festivo: number
           surcharge_hedf: number
           surcharge_hedo: number
           surcharge_henf: number
@@ -7883,6 +7884,7 @@ export type Database = {
           night_end?: string
           night_start?: string
           surcharge_dominical?: number
+          surcharge_festivo?: number
           surcharge_hedf?: number
           surcharge_hedo?: number
           surcharge_henf?: number
@@ -7902,6 +7904,7 @@ export type Database = {
           night_end?: string
           night_start?: string
           surcharge_dominical?: number
+          surcharge_festivo?: number
           surcharge_hedf?: number
           surcharge_hedo?: number
           surcharge_henf?: number

@@ -32,6 +32,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
     surcharge_henf: 150,
     surcharge_rnf: 110,
     surcharge_dominical: 75,
+    surcharge_festivo: 75,
   });
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
         surcharge_henf: config.surcharge_henf,
         surcharge_rnf: config.surcharge_rnf,
         surcharge_dominical: config.surcharge_dominical,
+        surcharge_festivo: config.surcharge_festivo ?? config.surcharge_dominical,
       });
     }
   }, [config]);
@@ -70,7 +72,8 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
     { key: 'surcharge_hedf', label: 'HEDF - Extra Diurna Dom/Fest (%)' },
     { key: 'surcharge_henf', label: 'HENF - Extra Nocturna Dom/Fest (%)' },
     { key: 'surcharge_rnf', label: 'RNF - Recargo Nocturno Fest (%)' },
-    { key: 'surcharge_dominical', label: 'Dominical/Festivo Trabajado (%)' },
+    { key: 'surcharge_dominical', label: 'Dominical Trabajado (%)' },
+    { key: 'surcharge_festivo', label: 'Festivo Trabajado (%)' },
   ] as const;
 
   return (
@@ -146,8 +149,9 @@ export function PayrollConfigDialog({ open, onOpenChange }: Props) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {surchargeFields.map(({ key, label }) => (
                 <div key={key} className="space-y-2">
-                  <Label className="text-xs">{label}</Label>
+                  <Label htmlFor={`dialog-${key}`} className="text-xs">{label}</Label>
                   <Input
+                    id={`dialog-${key}`}
                     type="number"
                     value={form[key]}
                     onChange={e => setForm(f => ({ ...f, [key]: Number(e.target.value) }))}
