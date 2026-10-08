@@ -22,6 +22,48 @@ export interface DotationInventoryItem {
   operation_centers?: { id: string; name: string } | null;
 }
 
+async function findMatchingInventoryItem(
+  item: Omit<DotationInventoryInsert, 'company_id' | 'created_by'>,
+  companyId: string,
+) {
+  let query = supabase
+    .from('dotation_inventory')
+    .select('*')
+    .eq('company_id', companyId)
+    .eq('item_type', item.item_type)
+    .eq('item_name', item.item_name);
+
+  query = item.operation_center_id
+    ? query.eq('operation_center_id', item.operation_center_id)
+    : query.is('operation_center_id', null);
+  query = item.size
+    ? query.eq('size', item.size)
+    : query.is('size', null);
+
+  const { data, error } = await query.maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function addStockToExistingInventoryItem(inventoryId: string, quantity: number) {
+  if (quantity > 0) {
+    const { error } = await supabase.rpc('adjust_dotation_inventory', {
+      p_inventory_id: inventoryId,
+      p_adjustment: quantity,
+      p_reason: 'Nuevo ingreso de inventario',
+    });
+    if (error) throw error;
+  }
+
+  const { data, error } = await supabase
+    .from('dotation_inventory')
+    .select()
+    .eq('id', inventoryId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export function useDotationInventory() {
   const { currentCompanyId, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
@@ -52,16 +94,29 @@ export function useCreateInventoryItem() {
 
   return useMutation({
     mutationFn: async (item: Omit<DotationInventoryInsert, 'company_id' | 'created_by'>) => {
+      const companyId = currentCompanyId!;
+      const existingItem = await findMatchingInventoryItem(item, companyId);
+      if (existingItem) {
+        return addStockToExistingInventoryItem(existingItem.id, item.quantity_available ?? 0);
+      }
+
       const { data, error } = await supabase
         .from('dotation_inventory')
         .insert({
           ...item,
-          company_id: currentCompanyId!,
+          company_id: companyId,
           created_by: user?.id,
         } as DotationInventoryInsert)
         .select()
         .single();
 
+      // Another ingreso may have created the same item after the lookup.
+      if (error?.code === '23505') {
+        const concurrentItem = await findMatchingInventoryItem(item, companyId);
+        if (concurrentItem) {
+          return addStockToExistingInventoryItem(concurrentItem.id, item.quantity_available ?? 0);
+        }
+      }
       if (error) throw error;
       return data;
     },

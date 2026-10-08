@@ -115,7 +115,12 @@ export function InventoryFormDialog({ open, onOpenChange, editItem }: InventoryF
       }
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error('Error', { description: error instanceof Error ? error.message : 'No se pudo guardar el artículo' });
+      const message = error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error
+          ? String(error.message)
+          : 'No se pudo guardar el artículo';
+      toast.error('Error', { description: message });
     }
   };
 
