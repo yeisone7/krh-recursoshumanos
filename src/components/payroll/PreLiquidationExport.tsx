@@ -19,7 +19,7 @@ export function PreLiquidationExport({ rows, startDate, endDate }: Props) {
       'Día de Descanso Obligatorio': r.restDay,
       'Turno': r.shiftName,
       'Jornada (días)': r.jornada,
-      'Dominical Trabajado': r.dominicalTrabajado,
+      'Descanso Obligatorio Trabajado (días)': r.dominicalTrabajado,
       'Festivo Trabajado': r.festivoTrabajado,
       'Descanso Remunerado': r.descansoRemunerado,
       'No trabajado (días)': r.noTrabajado,

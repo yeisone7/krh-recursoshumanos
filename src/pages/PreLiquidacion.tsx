@@ -77,16 +77,39 @@ export default function PreLiquidacion() {
   }, [currentCompanyId]);
 
   const { data: employeeSchedules = [], ...employeeSchedulesQuery } = useQuery({
-    queryKey: ['employee_schedules_for_preliq', currentCompanyId],
+    queryKey: ['employee_schedules_for_preliq', currentCompanyId, startDate, endDate],
     queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_schedule')
-        .select('employee_id, employment_cycle_id, rest_day, shift_type_id, shift_types(id, name)')
+        .select('id, employee_id, employment_cycle_id, rest_day, valid_from, valid_to, shift_type_id, shift_types(id, name)')
         .eq('company_id', currentCompanyId!)
-        .eq('is_current', true)
+        .lte('valid_from', endDate)
+        .or(`valid_to.is.null,valid_to.gte.${startDate}`)
         .order('updated_at', { ascending: false })
         .order('id')
         .range(from, to);
+      return { data, error };
+    }),
+    enabled: !!currentCompanyId && calculated,
+  });
+
+  const { data: employmentCycles = [], ...employmentCyclesQuery } = useQuery({
+    queryKey: ['employment_cycles_for_preliq', currentCompanyId],
+    queryFn: () => fetchAllAnalyticsRows(async (from, to) => {
+      const { data, error } = await supabase.from('employee_employment_cycles')
+        .select('id, employee_id, start_date, end_date').eq('company_id', currentCompanyId!)
+        .order('id').range(from, to);
+      return { data, error };
+    }),
+    enabled: !!currentCompanyId && calculated,
+  });
+  const { data: timeConfigs = [], ...timeConfigsQuery } = useQuery({
+    queryKey: ['time_configs_for_preliq', currentCompanyId, startDate, endDate],
+    queryFn: () => fetchAllAnalyticsRows(async (from, to) => {
+      const { data, error } = await supabase.from('employee_time_config')
+        .select('id, employee_id, employment_cycle_id, start_date, end_date, mode, work_schedules(name, days_of_week)')
+        .eq('company_id', currentCompanyId!).lte('start_date', endDate)
+        .or(`end_date.is.null,end_date.gte.${startDate}`).order('id').range(from, to);
       return { data, error };
     }),
     enabled: !!currentCompanyId && calculated,
@@ -193,7 +216,7 @@ export default function PreLiquidacion() {
     enabled: !!currentCompanyId && calculated,
   });
 
-  const sourceQueries = [configQuery, employeesQuery, operationCentersQuery, holidaysSetQuery, assignmentsQuery, noveltiesQuery, employeeSchedulesQuery, overtimeRecordsQuery, incapacitiesQuery, vacationsQuery, leavesQuery, activeLoansQuery, activeDeductionsQuery];
+  const sourceQueries = [configQuery, employeesQuery, operationCentersQuery, holidaysSetQuery, assignmentsQuery, noveltiesQuery, employeeSchedulesQuery, employmentCyclesQuery, timeConfigsQuery, overtimeRecordsQuery, incapacitiesQuery, vacationsQuery, leavesQuery, activeLoansQuery, activeDeductionsQuery];
   const sourceError = sourceQueries.find(query => query.isError)?.error;
   const sourcesReady = !!currentCompanyId && sourceQueries.every(query => query.isSuccess && !query.isFetching);
 
@@ -219,6 +242,9 @@ export default function PreLiquidacion() {
   }, [employeeSchedules]);
 
   const preLiqData = useMemo(() => calculated && sourcesReady ? {
+    schedules: employeeSchedules,
+    employmentCycles,
+    timeConfigs,
     assignments,
     holidays: holidaysSet || new Set<string>(),
     novelties: novelties.map(n => ({
@@ -270,6 +296,9 @@ export default function PreLiquidacion() {
     sourcesReady,
     config,
     employeeScheduleIndexes,
+    employeeSchedules,
+    employmentCycles,
+    timeConfigs,
     employees,
     endDate,
     holidaysSet,

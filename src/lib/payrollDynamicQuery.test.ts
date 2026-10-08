@@ -359,6 +359,28 @@ describe('Detalle diario de jornadas y novedades', () => {
 });
 
 describe('Filtros, resumen y pivote', () => {
+  it('aplica el descanso entre semana también a novedades manuales y concilia las horas', () => {
+    const sources = payrollQueryFixture();
+    sources.schedules[0].rest_day = 'martes';
+    sources.novelties = [novelty('hedo', 2, 'aprobada', '2026-09-15'), novelty('rnf', 3, 'aprobada', '2026-09-14')];
+    const rows = buildPayrollQueryRows(sources, payrollQueryOptions);
+    expect(queryMetric(rows, 'hedf')).toBe(2);
+    expect(queryMetric(rows, 'hedo')).toBe(0);
+    expect(queryMetric(rows, 'rn')).toBe(3);
+    expect(queryMetric(rows, 'rnf')).toBe(0);
+    expect(queryMetric(rows, 'dominicalTrabajado')).toBe(1);
+  });
+  it('un festivo administrativo sin trabajo registrado es descanso remunerado', () => {
+    const sources = payrollQueryFixture();
+    sources.assignments = [];
+    sources.timeConfigs[0].mode = 'administrative';
+    sources.timeConfigs[0].work_schedules = { name: 'Oficina', start_time: '08:00', end_time: '17:00', break_minutes: 60, days_of_week: [1,2,3,4,5] } as PayrollQuerySources['timeConfigs'][number]['work_schedules'];
+    sources.holidays = [{ company_id: 'company-1', holiday_date: '2026-09-14', is_active: true, name: 'Festivo' } as PayrollQuerySources['holidays'][number]];
+    const rows = buildPayrollQueryRows(sources, payrollQueryOptions);
+    expect(queryMetric(rows, 'descansoRemunerado')).toBe(1);
+    expect(queryMetric(rows, 'festivoTrabajado')).toBe(0);
+    expect(queryMetric(rows, 'jornada')).toBe(2);
+  });
   it('separa conceptos personalizados y sus unidades sin aumentar los días trabajados', () => {
     const sources = payrollQueryFixture();
     const baseline = buildPayrollQueryRows(sources, payrollQueryOptions);

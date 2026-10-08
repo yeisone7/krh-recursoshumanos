@@ -5,8 +5,12 @@ import type { EmployeeShiftAssignment } from '@/types/schedule';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { crossingDeductionVersions } from '@/lib/deductionVersions';
 import { getShiftClassification } from '@/lib/shiftClassification';
+import { payrollDayKind, payrollHourConcept, payrollHistoryAt, type PayrollDatedRecord } from '@/lib/payrollDayClassification';
 
 export interface PreLiquidationData {
+  schedules?: Array<PayrollDatedRecord & { rest_day: string | null; shift_types?: { name: string } | null }>;
+  employmentCycles?: Array<{ id: string; employee_id: string; start_date: string; end_date: string | null }>;
+  timeConfigs?: Array<PayrollDatedRecord & { mode: string; work_schedules?: { name: string; days_of_week: number[] } | null }>;
   assignments: EmployeeShiftAssignment[];
   holidays: Set<string>;
   novelties: Array<{
@@ -120,9 +124,11 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
   const periodDays = days.length;
   const dailyHours = config && Number.isFinite(config.daily_hours) && config.daily_hours > 0 ? config.daily_hours : 8;
 
-  // Index assignments by employee+date
+  // Detect contradictory assignments rather than silently choosing the last row.
   const assignmentIndex: Record<string, EmployeeShiftAssignment> = {};
+  const duplicateAssignments = new Set<string>();
   assignments.forEach(a => {
+    if (assignmentIndex[`${a.employee_id}_${a.assignment_date}`]) duplicateAssignments.add(`${a.employee_id}_${a.assignment_date}`);
     assignmentIndex[`${a.employee_id}_${a.assignment_date}`] = a;
   });
 
@@ -212,8 +218,24 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
   return employees.map(emp => {
     const warnings = new Set<string>();
-    const restWeekday = getPayrollRestDay(emp.restDay);
-    if (restWeekday === null) warnings.add('El descanso asignado no identifica un día semanal; revise las fechas de descanso obligatorio.');
+    const schedules = data.schedules?.filter(s => s.employee_id === emp.id);
+    const cycles = data.employmentCycles?.filter(c => c.employee_id === emp.id);
+    const timeConfigs = data.timeConfigs?.filter(c => c.employee_id === emp.id) || [];
+    const cycleAt = (date: string) => cycles?.filter(c => c.start_date <= date && (!c.end_date || c.end_date >= date)) || [];
+    const employedAt = (date: string) => !cycles?.length || cycleAt(date).length > 0;
+    const restLabels = new Set<string>();
+    const shiftLabels = new Set<string>();
+    const restAt = (date: string) => {
+      const matchingCycles = cycleAt(date);
+      if (matchingCycles.length > 1) warnings.add(`Vinculaciones superpuestas el ${date}; revise el histórico.`);
+      const schedule = schedules === undefined ? undefined : payrollHistoryAt(schedules, date, cycles?.length ? matchingCycles[0]?.id ?? null : undefined);
+      if (schedules !== undefined && !schedule) warnings.add('No existe configuración de descanso vigente en parte del período.');
+      const rest = schedules === undefined ? emp.restDay : schedule ? schedule.rest_day : 'Histórico pendiente';
+      if (getPayrollRestDay(rest) === null) warnings.add('El descanso asignado no identifica un día semanal; revise las fechas de descanso obligatorio.');
+      restLabels.add(rest || 'Domingo');
+      if (schedule?.shift_types?.name) shiftLabels.add(schedule.shift_types.name);
+      return rest;
+    };
     let jornada = 0;
     let dominicalTrabajado = 0;
     let festivoTrabajado = 0;
@@ -229,13 +251,24 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     days.forEach(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
+      if (!employedAt(dateStr)) return;
       const dayOfWeek = getDay(day);
-      const isHoliday = holidays.has(dateStr);
-      const isMandatoryRest = dayOfWeek === restWeekday;
+      const dayKind = payrollDayKind(dateStr, restAt(dateStr), holidays);
+      const isHoliday = dayKind === 'holiday';
+      const isMandatoryRest = dayKind === 'rest';
 
       // An approved daily novelty replaces the programmed day (including absences).
       const corrections = dailyNovelties.get(dateStr);
       if (corrections?.length) {
+        const validCorrections = corrections.map(n => ({ n, fraction: n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / dailyHours }));
+        if (validCorrections.some(({ fraction }) => !Number.isFinite(fraction) || fraction <= 0)) {
+          warnings.add(`Novedad con cantidad inválida el ${dateStr}; corrija el registro para incluir el día.`);
+          return;
+        }
+        if (validCorrections.reduce((sum, { fraction }) => sum + fraction, 0) > 1 + 1e-9) {
+          warnings.add(`Las novedades superan una jornada el ${dateStr}; revise posibles duplicados. El día no se incluye hasta corregirlos.`);
+          return;
+        }
         let correctedDays = 0;
         corrections.forEach(n => {
           const fraction = n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / dailyHours;
@@ -274,7 +307,25 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       if (workedFraction === 0) return;
 
       const assignment = assignmentIndex[`${emp.id}_${dateStr}`];
-      if (!assignment) return;
+      if (duplicateAssignments.has(`${emp.id}_${dateStr}`)) {
+        warnings.add(`Asignaciones duplicadas el ${dateStr}; revise la programación.`);
+        return;
+      }
+      if (!assignment) {
+        const timeConfig = payrollHistoryAt(timeConfigs, dateStr, cycles?.length ? cycleAt(dateStr)[0]?.id ?? null : undefined);
+        if (timeConfig?.mode === 'administrative' && timeConfig.work_schedules) {
+          // Holidays in an office schedule are paid rest unless work is explicitly recorded.
+          if (isHoliday || !timeConfig.work_schedules.days_of_week.includes(dayOfWeek)) descansoRemunerado += workedFraction;
+          else if (isMandatoryRest) dominicalTrabajado += workedFraction;
+          else jornada += workedFraction;
+          shiftLabels.add(timeConfig.work_schedules.name);
+        } else if (data.timeConfigs !== undefined) {
+          warnings.add(timeConfig?.mode === 'shift'
+            ? 'Hay días sin jornada registrada en el período; no se asumen como trabajados ni como descanso.'
+            : 'Falta una configuración horaria vigente en parte del período.');
+        }
+        return;
+      }
       if (!assignment.shifts) {
         warnings.add(`Falta la información del turno del ${dateStr}.`);
         return;
@@ -308,7 +359,8 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     let hedo = 0, heno = 0, hedf = 0, henf = 0, rn = 0, rnf = 0;
 
     (overtimeByEmployee[emp.id] || []).forEach(o => {
-      const specialDay = holidays.has(o.work_date) || getDay(parseISO(o.work_date)) === restWeekday;
+      if (!employedAt(o.work_date)) { warnings.add(`Horas fuera de la vinculación el ${o.work_date}.`); return; }
+      const specialDay = payrollDayKind(o.work_date, restAt(o.work_date), holidays) !== 'ordinary';
       let mapped = getOvertimeMapping(o.overtime_type);
       if (o.overtime_type === 'extra_diurna') mapped = specialDay ? 'hedf' : 'hedo';
       if (o.overtime_type === 'extra_nocturna') mapped = specialDay ? 'henf' : 'heno';
@@ -318,6 +370,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
         return;
       }
       const hrs = Number(o.total_hours);
+      if (!Number.isFinite(hrs) || hrs <= 0) { warnings.add(`Horas inválidas el ${o.work_date}; no se incluyen.`); return; }
       if (mapped === 'hedo') hedo += hrs;
       else if (mapped === 'heno') heno += hrs;
       else if (mapped === 'hedf') hedf += hrs;
@@ -328,8 +381,11 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     // Manual novelties
     (noveltyByEmployee[emp.id] || []).forEach(n => {
+      if (!employedAt(n.novelty_date)) { warnings.add(`Novedad fuera de la vinculación el ${n.novelty_date}.`); return; }
       const hrs = Number(n.hours);
-      switch (n.novelty_type) {
+      if (!['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf'].includes(n.novelty_type)) return;
+      if (!Number.isFinite(hrs) || hrs <= 0) { warnings.add(`Horas inválidas el ${n.novelty_date}; no se incluyen.`); return; }
+      switch (payrollHourConcept(n.novelty_type, payrollDayKind(n.novelty_date, restAt(n.novelty_date), holidays) !== 'ordinary')) {
         case 'hedo': hedo += hrs; break;
         case 'heno': heno += hrs; break;
         case 'hedf': hedf += hrs; break;
@@ -341,6 +397,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     const customConcepts: NonNullable<PreLiquidationRow['customConcepts']> = {};
     (noveltyByEmployee[emp.id] || []).filter(n => n.novelty_type === 'custom').forEach(n => {
+      if (!employedAt(n.novelty_date)) return;
       const concept = n.payroll_concepts;
       if (!concept || !n.concept_id || n.quantity == null || !Number.isFinite(Number(n.quantity)) || Number(n.quantity) <= 0) {
         warnings.add('Concepto personalizado sin cantidad o referencia válida.');
@@ -354,7 +411,12 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     // Loans deduction
     const empLoans = loansByEmployee[emp.id] || [];
-    const loanDetail = empLoans.map(l => ({
+    const loanDetail = empLoans.filter(l => {
+      const valid = Number.isFinite(Number(l.installment_amount)) && Number(l.installment_amount) >= 0
+        && (l.remaining_balance == null || Number.isFinite(Number(l.remaining_balance)) && Number(l.remaining_balance) >= 0);
+      if (!valid) warnings.add(`Cuota o saldo inválido en el préstamo ${l.description || l.loan_type}.`);
+      return valid;
+    }).map(l => ({
       loanId: l.id,
       description: l.description || l.loan_type,
       installmentAmount: Math.max(0, Math.min(Number(l.installment_amount), l.remaining_balance ?? Infinity)),
@@ -367,7 +429,11 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     empDeductions.filter(d => d.is_percentage).forEach(d => {
       warnings.add(`Descuento pendiente: ${d.description} (${d.percentage_value || 0}%). Falta definir la base monetaria; no se incluye en el total.`);
     });
-    const deductionDetail = empDeductions.filter(d => !d.is_percentage && !crossingVersions.has(d.id)).map(d => ({
+    const deductionDetail = empDeductions.filter(d => !d.is_percentage && !crossingVersions.has(d.id)).filter(d => {
+      const valid = Number.isFinite(Number(d.amount)) && Number(d.amount) >= 0;
+      if (!valid) warnings.add(`Valor inválido en el descuento ${d.description}.`);
+      return valid;
+    }).map(d => ({
       deductionId: d.id,
       description: d.description,
       amount: Number(d.amount),
@@ -387,8 +453,8 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       documentNumber: emp.document_number,
       operationCenterIds: emp.operationCenterIds,
       operationCenterName: emp.operationCenterName,
-      restDay: emp.restDay,
-      shiftName: emp.shiftName,
+      restDay: schedules === undefined ? emp.restDay : [...restLabels].join(' / ') || 'Sin asignar',
+      shiftName: [...shiftLabels].join(' / ') || emp.shiftName,
       jornada,
       dominicalTrabajado,
       festivoTrabajado,

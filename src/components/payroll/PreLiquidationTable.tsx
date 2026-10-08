@@ -17,12 +17,12 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
 
   const fmt = (value: number, isOvertimeHours = false) => {
     if (isOvertimeHours) {
-      return value.toFixed(1);
+      return value.toLocaleString('es-CO', { maximumFractionDigits: 4 });
     }
     if (displayUnit === 'hours') {
-      return (value * dailyHours).toFixed(1);
+      return (value * dailyHours).toLocaleString('es-CO', { maximumFractionDigits: 4 });
     }
-    return value.toFixed(1);
+    return value.toLocaleString('es-CO', { maximumFractionDigits: 4 });
   };
 
   const fmtMoney = (value: number) => {
@@ -45,20 +45,20 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
           {rows.map(row => {
             const conceptos = [
               { label: 'Jornada', value: fmt(row.jornada) },
-              { label: 'Dom. Trab.', value: fmt(row.dominicalTrabajado) },
+              { label: 'Desc. obligatorio trabajado', value: fmt(row.dominicalTrabajado) },
               { label: 'Fest. Trab.', value: fmt(row.festivoTrabajado) },
               { label: 'Desc. Rem.', value: fmt(row.descansoRemunerado) },
               { label: 'No trabajado', value: fmt(row.noTrabajado) },
               { label: 'Suspensión', value: fmt(row.suspension) },
-              { label: 'HEDO', value: row.hedo > 0 ? row.hedo.toFixed(1) : '-' },
-              { label: 'HENO', value: row.heno > 0 ? row.heno.toFixed(1) : '-' },
-              { label: 'HEDF', value: row.hedf > 0 ? row.hedf.toFixed(1) : '-' },
-              { label: 'HENF', value: row.henf > 0 ? row.henf.toFixed(1) : '-' },
-              { label: 'RN', value: row.rn > 0 ? row.rn.toFixed(1) : '-' },
-              { label: 'RNF', value: row.rnf > 0 ? row.rnf.toFixed(1) : '-' },
-              { label: 'Incap.', value: row.incapacidad > 0 ? row.incapacidad : '-' },
-              { label: 'Vac.', value: row.vacaciones > 0 ? row.vacaciones : '-' },
-              { label: 'Perm.', value: row.permiso > 0 ? row.permiso : '-' },
+              { label: 'HEDO', value: row.hedo > 0 ? fmt(row.hedo, true) : '-' },
+              { label: 'HENO', value: row.heno > 0 ? fmt(row.heno, true) : '-' },
+              { label: 'HEDF', value: row.hedf > 0 ? fmt(row.hedf, true) : '-' },
+              { label: 'HENF', value: row.henf > 0 ? fmt(row.henf, true) : '-' },
+              { label: 'RN', value: row.rn > 0 ? fmt(row.rn, true) : '-' },
+              { label: 'RNF', value: row.rnf > 0 ? fmt(row.rnf, true) : '-' },
+              { label: 'Incap. (días)', value: row.incapacidad > 0 ? row.incapacidad : '-' },
+              { label: 'Vac. (días)', value: row.vacaciones > 0 ? row.vacaciones : '-' },
+              { label: 'Perm. (días)', value: row.permiso > 0 ? row.permiso : '-' },
               ...customColumns.map(c => ({ label: `${c.identifier} · ${c.name} (${c.unit === 'days' ? 'días' : 'h'})`, value: String(row.customConcepts?.[c.id]?.quantity ?? 0) })),
             ];
 
@@ -130,7 +130,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               <TableHead className="min-w-[130px]">Día de Descanso</TableHead>
               <TableHead className="min-w-[140px]">Turno</TableHead>
               <TableHead className="text-center min-w-[70px]">Jornada</TableHead>
-              <TableHead className="text-center min-w-[70px]">Dom. Trab.</TableHead>
+              <TableHead className="text-center min-w-[70px]">Desc. obligatorio trabajado</TableHead>
               <TableHead className="text-center min-w-[70px]">Fest. Trab.</TableHead>
               <TableHead className="text-center min-w-[70px]">Desc. Rem.</TableHead>
               <TableHead className="text-center min-w-[90px]">No trabajado</TableHead>
@@ -141,9 +141,9 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
               <TableHead className="text-center min-w-[60px]">HENF</TableHead>
               <TableHead className="text-center min-w-[60px]">RN</TableHead>
               <TableHead className="text-center min-w-[60px]">RNF</TableHead>
-              <TableHead className="text-center min-w-[60px]">Incap.</TableHead>
-              <TableHead className="text-center min-w-[60px]">Vac.</TableHead>
-              <TableHead className="text-center min-w-[60px]">Perm.</TableHead>
+              <TableHead className="text-center min-w-[60px]">Incap. (días)</TableHead>
+              <TableHead className="text-center min-w-[60px]">Vac. (días)</TableHead>
+              <TableHead className="text-center min-w-[60px]">Perm. (días)</TableHead>
               {customColumns.map(c => <TableHead key={c.id} className="text-center min-w-[150px]">{c.identifier} · {c.name} ({c.unit === 'days' ? 'días' : 'h'})</TableHead>)}
               <TableHead className="text-center min-w-[80px]">Total Días</TableHead>
               <TableHead className="text-center min-w-[100px] bg-orange-50 dark:bg-orange-950/20">Préstamos</TableHead>
@@ -179,12 +179,12 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                 <TableCell className="text-center">{fmt(row.descansoRemunerado)}</TableCell>
                 <TableCell className="text-center">{fmt(row.noTrabajado)}</TableCell>
                 <TableCell className="text-center">{fmt(row.suspension)}</TableCell>
-                <TableCell className="text-center">{row.hedo > 0 ? row.hedo.toFixed(1) : '-'}</TableCell>
-                <TableCell className="text-center">{row.heno > 0 ? row.heno.toFixed(1) : '-'}</TableCell>
-                <TableCell className="text-center">{row.hedf > 0 ? row.hedf.toFixed(1) : '-'}</TableCell>
-                <TableCell className="text-center">{row.henf > 0 ? row.henf.toFixed(1) : '-'}</TableCell>
-                <TableCell className="text-center">{row.rn > 0 ? row.rn.toFixed(1) : '-'}</TableCell>
-                <TableCell className="text-center">{row.rnf > 0 ? row.rnf.toFixed(1) : '-'}</TableCell>
+                <TableCell className="text-center">{row.hedo > 0 ? fmt(row.hedo, true) : '-'}</TableCell>
+                <TableCell className="text-center">{row.heno > 0 ? fmt(row.heno, true) : '-'}</TableCell>
+                <TableCell className="text-center">{row.hedf > 0 ? fmt(row.hedf, true) : '-'}</TableCell>
+                <TableCell className="text-center">{row.henf > 0 ? fmt(row.henf, true) : '-'}</TableCell>
+                <TableCell className="text-center">{row.rn > 0 ? fmt(row.rn, true) : '-'}</TableCell>
+                <TableCell className="text-center">{row.rnf > 0 ? fmt(row.rnf, true) : '-'}</TableCell>
                 <TableCell className="text-center">{row.incapacidad > 0 ? row.incapacidad : '-'}</TableCell>
                 <TableCell className="text-center">{row.vacaciones > 0 ? row.vacaciones : '-'}</TableCell>
                 <TableCell className="text-center">{row.permiso > 0 ? row.permiso : '-'}</TableCell>

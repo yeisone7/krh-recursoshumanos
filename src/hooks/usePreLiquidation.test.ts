@@ -103,7 +103,7 @@ describe('novedades y ausencias', () => {
   });
   it('advierte duplicados por fecha aunque el total no exceda el período', () => {
     const row = calculate({ novelties: [novelty('jornada'), novelty('jornada')] });
-    expect(row.totalDias).toBe(2);
+    expect(row.totalDias).toBe(0);
     expect(row.warningMessage).toContain('posibles duplicados');
   });
   it('no suma dos veces ausencias superpuestas', () => {
@@ -183,5 +183,55 @@ describe('additional payroll concepts', () => {
     expect(row).toMatchObject({ jornada: 1, totalDias: 1, hedo: 0, customConcepts: {
       'custom-hours': { quantity: 3, unit: 'hours' }, 'custom-days': { quantity: 2, unit: 'days' },
     } });
+  });
+});
+
+describe('auditoría de preliquidación por fecha', () => {
+  const cycle = { id: 'cycle-a', employee_id: employee.id, start_date: '2026-09-01', end_date: null };
+  const schedule = { id: 'schedule-a', employee_id: employee.id, employment_cycle_id: cycle.id, valid_from: '2026-09-01', valid_to: null, rest_day: 'martes' };
+  it('usa el descanso vigente en cada tramo, aunque el descanso actual sea otro', () => {
+    const row = calculate({ employmentCycles: [cycle], employees: [{ ...employee, restDay: 'Domingo' }], schedules: [
+      { ...schedule, valid_to: '2026-09-23' },
+      { ...schedule, id: 'schedule-b', valid_from: '2026-09-24', rest_day: 'domingo' },
+    ], assignments: [assignment('2026-09-22'), assignment('2026-09-27')] });
+    expect(row).toMatchObject({ dominicalTrabajado: 2, jornada: 0, totalDias: 2, hasWarning: false });
+    expect(row.restDay).toContain('martes');
+    expect(row.restDay).toContain('domingo');
+  });
+  it('no toma el descanso de otro reingreso y alerta el histórico faltante', () => {
+    const row = calculate({ employmentCycles: [cycle], schedules: [{ ...schedule, employment_cycle_id: 'other-cycle', rest_day: 'domingo' }], assignments: [assignment('2026-09-27')] });
+    expect(row.dominicalTrabajado).toBe(0);
+    expect(row.warningMessage).toContain('configuración de descanso vigente');
+  });
+  it('no cuenta jornadas ni novedades fuera de las fechas de vinculación', () => {
+    const row = calculate({ employmentCycles: [{ ...cycle, start_date: '2026-09-23', end_date: '2026-09-25' }], schedules: [schedule], assignments: [assignment('2026-09-22'), assignment('2026-09-23'), assignment('2026-09-27')], novelties: [novelty('hedo', '2026-09-27', 2)] });
+    expect(row).toMatchObject({ jornada: 1, dominicalTrabajado: 0, totalDias: 1, hedo: 0 });
+    expect(row.warningMessage).toContain('fuera de la vinculación');
+  });
+  it('incluye jornadas administrativas, descansa festivos y cuenta trabajo explícito en festivo', () => {
+    const input = { employmentCycles: [cycle], schedules: [schedule], holidays: new Set(['2026-09-25']), timeConfigs: [{ id: 'time-a', employee_id: employee.id, employment_cycle_id: cycle.id, start_date: '2026-09-01', mode: 'administrative', work_schedules: { name: 'Oficina', days_of_week: [1, 2, 3, 4, 5] } }] };
+    expect(calculate(input)).toMatchObject({ jornada: 3, dominicalTrabajado: 1, festivoTrabajado: 0, descansoRemunerado: 3, totalDias: 7 });
+    expect(calculate({ ...input, assignments: [assignment('2026-09-25')] })).toMatchObject({ festivoTrabajado: 1, descansoRemunerado: 2, totalDias: 7 });
+  });
+  it('clasifica todas las novedades horarias por descanso obligatorio, no por el nombre escogido', () => {
+    const row = calculate({ novelties: [novelty('hedo', '2026-09-22', 2), novelty('heno', '2026-09-22', 3), novelty('rn', '2026-09-22', 4), novelty('hedf', '2026-09-27', 5), novelty('henf', '2026-09-27', 6), novelty('rnf', '2026-09-27', 7)] });
+    expect(row).toMatchObject({ hedf: 2, henf: 3, rnf: 4, hedo: 5, heno: 6, rn: 7, totalDias: 0 });
+  });
+  it('preserva fracciones de día válidas, sin redondearlas a jornadas completas', () => {
+    expect(calculate({ novelties: [novelty('jornada', '2026-09-23', 6), novelty('permiso', '2026-09-23', 2)] })).toMatchObject({ jornada: 0.75, permiso: 0.25, totalDias: 1 });
+  });
+  it('detecta asignaciones contradictorias sin elegir una al azar', () => {
+    const row = calculate({ assignments: [assignment('2026-09-22'), assignment('2026-09-22', 'rest')] });
+    expect(row.totalDias).toBe(0);
+    expect(row.warningMessage).toContain('Asignaciones duplicadas');
+  });
+  it('alerta los días sin jornadas registradas y conserva cero en los totales', () => {
+    const row = calculate({ employmentCycles: [cycle], schedules: [schedule], timeConfigs: [{ id: 'time-a', employee_id: employee.id, employment_cycle_id: cycle.id, start_date: cycle.start_date, mode: 'shift' }] });
+    expect(row.totalDias).toBe(0);
+    expect(row.warningMessage).toContain('días sin jornada registrada');
+  });
+  it('excluye horas negativas y no finitas sin contaminar los totales', () => {
+    const row = calculate({ novelties: [novelty('hedo', '2026-09-23', -2), novelty('rn', '2026-09-23', Infinity)], overtimeRecords: [{ employee_id: employee.id, work_date: '2026-09-23', overtime_type: 'extra_nocturna', total_hours: NaN, status: 'aprobado' }] });
+    expect(row).toMatchObject({ hedo: 0, heno: 0, rn: 0, hasWarning: true });
   });
 });
