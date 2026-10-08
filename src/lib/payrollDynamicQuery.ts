@@ -4,6 +4,7 @@ import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { getShiftClassification } from '@/lib/shiftClassification';
 import { DAY_NAMES } from '@/types/schedule';
 import { noveltyConceptKey, noveltyConceptLabel } from '@/lib/payrollConcepts';
+import { payrollDayKind, payrollHourConcept } from '@/lib/payrollDayClassification';
 import type { PayrollConcept } from '@/types/payroll';
 import { NOVELTY_TYPE_LABELS, type NoveltyType } from '@/types/payroll';
 
@@ -539,7 +540,7 @@ export function buildPayrollQueryRows(
         const dayAssignments = inCycle(
           assignments.get(`${employee.id}|${date}`) || [],
         ).sort((a, b) => a.id.localeCompare(b.id));
-        const assignment = dayAssignments[0];
+        const assignment = dayAssignments.length === 1 ? dayAssignments[0] : undefined;
         const dayNovelties = inCycle(
           novelties.get(`${employee.id}|${date}`) || [],
         );
@@ -575,7 +576,7 @@ export function buildPayrollQueryRows(
           !contract;
         if (missingHistory) warnings.add('Histórico incompleto');
         if (dayAssignments.length > 1)
-          warnings.add('Asignaciones duplicadas: se usa una sola');
+          warnings.add('Asignaciones duplicadas: programación excluida hasta corregir');
         if (
           employeeCycles.filter((c) => overlaps(date, c.start_date, c.end_date))
             .length > 1
@@ -585,12 +586,12 @@ export function buildPayrollQueryRows(
           );
         const shift = assignment?.shifts;
         const administrative =
-          !assignment &&
+          dayAssignments.length === 0 &&
           config?.mode === 'administrative' &&
           config.work_schedules;
         const program = shift || administrative || undefined;
         const administrativeWorkday =
-          !!administrative && administrative.days_of_week.includes(weekday);
+          !!administrative && administrative.days_of_week.includes(weekday) && !holidays.has(date);
         let classification = shift
           ? getShiftClassification(shift)
           : administrative
@@ -757,7 +758,7 @@ export function buildPayrollQueryRows(
         sameCenter(dayNovelties).forEach((item) =>
           addEvent({
             id: `novedad:${item.id}`,
-            concept: noveltyConceptKey(item),
+            concept: payrollHourConcept(noveltyConceptKey(item), payrollDayKind(date, schedule?.rest_day, holidays) !== 'ordinary'),
             label: noveltyConceptLabel(item),
             quantity: item.quantity ?? item.hours,
             unit: item.quantity_unit ?? 'hours',
@@ -883,8 +884,12 @@ export function buildPayrollQueryRows(
             dailyConcepts.has(item.concept),
         );
         if (corrections.length) {
+          const correctionFractions = corrections.map(item => item.unit === 'days' && item.quantity != null ? item.quantity : item.hours / dailyHours);
+          const invalidCorrections = correctionFractions.some(fraction => !Number.isFinite(fraction) || fraction <= 0)
+            || correctionFractions.reduce((sum, fraction) => sum + fraction, 0) > 1 + 1e-9;
+          if (invalidCorrections) warnings.add('Novedades diarias inválidas o que superan una jornada: día excluido hasta corregir');
           let correctedDays = 0;
-          corrections.forEach((item) => {
+          (invalidCorrections ? [] : corrections).forEach((item) => {
             if (!Number.isFinite(item.hours) || item.hours <= 0) {
               warnings.add('Novedad diaria con horas inválidas');
               return;
