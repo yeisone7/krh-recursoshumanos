@@ -72,6 +72,7 @@ const MODULE_SHORTCUTS: SearchResult[] = [
   { id: 'mod-evaluaciones', title: 'Evaluaciones', subtitle: 'Evaluaciones de desempeño', type: 'module', icon: Target, url: '/evaluaciones' },
   { id: 'mod-novedades', title: 'Novedades', subtitle: 'Novedades de nómina', type: 'module', icon: ClipboardList, url: '/novedades' },
   { id: 'mod-jornadas', title: 'Jornadas', subtitle: 'Gestión de horarios', type: 'module', icon: Clock, url: '/jornadas' },
+  { id: 'mod-reporte-diario', title: 'Reporte Diario', subtitle: 'Jornadas y firmas de conformidad', type: 'module', icon: Clock, url: '/nomina/reporte-diario' },
   { id: 'mod-seleccion', title: 'Selección', subtitle: 'Proceso de selección', type: 'module', icon: Briefcase, url: '/seleccion' },
   { id: 'mod-requisiciones', title: 'Requisiciones', subtitle: 'Requisiciones de personal', type: 'module', icon: Briefcase, url: '/requisiciones' },
   { id: 'mod-organigrama', title: 'Organigrama', subtitle: 'Estructura organizacional', type: 'module', icon: Network, url: '/organigrama' },

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+const ReporteDiario = lazy(() => import('../pages/ReporteDiario'));
 import { Navigate } from "react-router-dom";
 import type { WorkspaceRoute } from "@/components/workspace/workspaceModel";
 import Dashboard from "../pages/Dashboard";
@@ -124,6 +125,7 @@ export const workspaceRoutes: WorkspaceRoute[] = [
   { path: "/reloj-checador", title: "Reloj checador", permissions: ["reloj_checador"], element: <Suspense fallback={null}><RelojChecador /></Suspense> },
   { path: "/nomina/analitica", title: "Analítica · Nómina", permissions: ["analitica_nomina"], element: <Suspense fallback={null}><AnaliticaNomina /></Suspense> },
   { path: "/nomina/consulta-dinamica", title: "Consulta Dinámica · Nómina", permissions: ["analitica_nomina"], element: <Suspense fallback={null}><ConsultaDinamicaNomina /></Suspense> },
+  { path: "/nomina/reporte-diario", title: "Reporte Diario", permissions: ["reporte_diario"], element: <Suspense fallback={<p className="p-6">Cargando Reporte Diario…</p>}><ReporteDiario /></Suspense> },
   { path: "/disciplinarios", title: "Disciplinarios", permissions: ["disciplinarios"], element: <Disciplinarios /> },
   { path: "/vacaciones", title: "Vacaciones", permissions: ["vacaciones"], element: <Vacaciones /> },
   { path: "/permisos", title: "Permisos", permissions: ["permisos"], element: <Permisos /> },

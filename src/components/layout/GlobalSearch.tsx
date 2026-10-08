@@ -15,6 +15,7 @@ interface SearchResult {
 }
 
 const MODULE_SHORTCUTS: SearchResult[] = [
+  { id: 'mod-reporte-diario', title: 'Reporte Diario', subtitle: 'Jornadas y firmas de conformidad', type: 'module', icon: ClipboardList, url: '/nomina/reporte-diario' },
   { id: 'mod-dashboard', title: 'Dashboard', subtitle: 'Panel principal', type: 'module', icon: BarChart3, url: '/' },
   { id: 'mod-empleados', title: 'Empleados', subtitle: 'Gestión de empleados', type: 'module', icon: Users, url: '/empleados' },
   { id: 'mod-contratos', title: 'Contratos', subtitle: 'Gestión de contratos', type: 'module', icon: FileText, url: '/contratos' },

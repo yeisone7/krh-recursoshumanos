@@ -307,6 +307,7 @@ const toolsNavItemsBase: NavItem[] = [
 ];
 
 const payrollNavItems: NavItem[] = [
+  { label: 'Reporte Diario', icon: <FileBarChart className="w-5 h-5" />, href: '/nomina/reporte-diario', moduleCode: 'reporte_diario' },
   { label: 'Jornadas', icon: <Briefcase className="w-5 h-5" />, href: '/jornadas', moduleCode: 'jornadas' },
   { label: 'Reloj de Asistencia', icon: <ScanLine className="w-5 h-5" />, href: '/reloj-checador', moduleCode: 'reloj_checador' },
   { label: 'Novedades', icon: <Clock className="w-5 h-5" />, href: '/novedades', moduleCode: 'novedades' },
