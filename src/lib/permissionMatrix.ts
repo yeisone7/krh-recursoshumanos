@@ -4,6 +4,7 @@ export const SENSITIVE_PERMISSION_MODULE_CODES = new Set([
 ]);
 
 export const AUTO_EXPANDED_PERMISSION_MODULE_CODES = new Set([
+  'reporte_diario',
   'cortes_control',
   'correction_tickets',
   'correction_tickets_analytics',
@@ -21,6 +22,7 @@ const PERMISSION_MODULE_LABELS: Record<string, string> = {
 };
 
 export const PAYROLL_PERMISSION_LABELS: Record<string, Partial<Record<string, string>>> = {
+  reporte_diario: { view: 'Consultar reportes', create: 'Publicar y compartir', update: 'Administrar acceso y supervisor', approve: 'Aprobar como supervisor', export: 'Exportar informes firmados' },
   jornadas: { view: 'Ver revisión', approve: 'Aprobar o rechazar jornadas' },
   correction_tickets: {
     view: 'Ver solicitudes', create: 'Solicitar corrección',
