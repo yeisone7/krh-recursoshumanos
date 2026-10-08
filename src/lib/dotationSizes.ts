@@ -1,5 +1,6 @@
 const CLOTHING_SIZE_SUGGESTIONS = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 const FOOTWEAR_SIZE_SUGGESTIONS = Array.from({ length: 13 }, (_, index) => String(35 + index));
+const ADDITIONAL_NUMERIC_SIZE_SUGGESTIONS = ['39', '40', '41', '42', '43', '44', '45'];
 
 interface DotationSizeConfig {
   category?: string | null;
@@ -26,7 +27,11 @@ export function getDotationSizeSuggestions(itemType?: DotationSizeConfig | null)
     ? FOOTWEAR_SIZE_SUGGESTIONS
     : CLOTHING_SIZE_SUGGESTIONS;
 
-  return Array.from(new Set([...configuredSizes, ...fallbackSizes]));
+  return Array.from(new Set([
+    ...configuredSizes,
+    ...fallbackSizes,
+    ...ADDITIONAL_NUMERIC_SIZE_SUGGESTIONS,
+  ]));
 }
 
 export function getInventorySizeSuggestions(
