@@ -1966,3 +1966,28 @@ div.requisition-grid:has(table),
 [role="dialog"] label.correction-action-option:has([data-state="checked"]) {
   color: hsl(var(--foreground)) !important;
 }
+/* Bulk delivery owns one scroll region; keep its title/actions outside it. */
+[role="dialog"][data-dialog-content].bulk-delivery-dialog {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.bulk-delivery-grid table {
+  min-width: 760px;
+}
+
+.bulk-delivery-grid th {
+  display: table-cell !important;
+  vertical-align: middle !important;
+}
+
+[role="dialog"].bulk-delivery-dialog input.bulk-size-input {
+  height: 2rem !important;
+  padding: 0 0.5rem !important;
+  font-size: 0.8125rem !important;
+}
+
+[role="dialog"].bulk-delivery-dialog label.bulk-visible-selection {
+  display: flex !important;
+  margin: 0 !important;
+}
