@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { scheduleForDate } from '@/lib/effectiveSchedule';
 import { calendarRestWeekday, hasWorkOnMandatoryRestDay, type CalendarRestSchedule } from '@/lib/calendarRestDay';
 import { ScheduleReviewControl } from './ScheduleReviewControl';
+import { ShiftReportExport } from './ShiftReportExport';
+import { getCalendarCellContent, type ShiftCalendarExportData } from '@/lib/shiftCalendarExport';
 import { useScheduleReviews } from '@/hooks/useScheduleReviews';
 import { reviewLabels, type ScheduleDay } from '@/lib/payrollCorrections';
 
@@ -82,6 +84,8 @@ interface GroupedEmployee {
 interface ShiftCalendarProps {
   centerId?: string;
   containedScroll?: boolean;
+  exportOpen?: boolean;
+  onExportOpenChange?: (open: boolean) => void;
 }
 
 interface CalendarCellProps {
@@ -134,6 +138,7 @@ export const CalendarCell = memo(({
   deleteAssignment,
 }: CalendarCellProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const content = getCalendarCellContent({ shift, absence, isAdminMode, adminIsWorkDay, adminSchedule });
   const visibleReviewStatus = reviewStatus === 'historical' ? undefined : reviewStatus;
   const restMessage = mandatoryRestLabel
     ? `Trabajo programado en descanso obligatorio: ${mandatoryRestLabel.toLowerCase()}. Día considerado dominical para liquidación.`
@@ -185,9 +190,7 @@ export const CalendarCell = memo(({
                       absence.type === 'incapacity' && 'bg-orange-100 text-orange-700 border border-orange-300'
                     )}
                   >
-                    {absence.type === 'vacation' && 'VAC'}
-                    {absence.type === 'leave' && 'PER'}
-                    {absence.type === 'incapacity' && 'INC'}
+                    {content.label}
                   </div>
                 )}
                 {shift && !isNonWorkingShift(shift) && (
@@ -199,7 +202,7 @@ export const CalendarCell = memo(({
                     )}
                     style={shift.color && shift.color !== 'transparent' ? { backgroundColor: shift.color } : undefined}
                   >
-                    {shift.code || shift.name.slice(0, 2).toUpperCase()}
+                    {content.label}
                   </div>
                 )}
                 {shift && isNonWorkingShift(shift) && !absence && (
@@ -209,19 +212,19 @@ export const CalendarCell = memo(({
                     shift.is_not_worked_day && 'bg-slate-100 text-slate-700 border-slate-300',
                     shift.is_suspension_day && 'bg-rose-100 text-rose-700 border-rose-300',
                   )}>
-                    {getShiftClassificationCode(shift)}
+                    {content.label}
                   </div>
                 )}
                 {/* Admin schedule: working day */}
                 {isAdminMode && !shift && !absence && adminIsWorkDay && (
                   <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-indigo-100 text-indigo-700 border border-indigo-300">
-                    {adminSchedule?.name?.slice(0, 3).toUpperCase() || 'ADM'}
+                    {content.label}
                   </div>
                 )}
                 {/* Admin rest day: show D */}
                 {isAdminMode && !shift && !absence && !adminIsWorkDay && (
                   <div className="h-6 rounded text-[10px] font-bold flex items-center justify-center bg-emerald-100 text-emerald-700 border border-emerald-300">
-                    D
+                    {content.label}
                   </div>
                 )}
                 {/* Empty: non-admin with no shift/absence */}
@@ -400,7 +403,7 @@ export const CalendarCell = memo(({
          prevProps.onMouseUp === nextProps.onMouseUp;
 });
 
-export function ShiftCalendar({ centerId: propCenterId, containedScroll = false }: ShiftCalendarProps) {
+export function ShiftCalendar({ centerId: propCenterId, containedScroll = false, exportOpen = false, onExportOpenChange }: ShiftCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('quincenal');
   const [selectedCenterId, setSelectedCenterId] = useState<string>(propCenterId || 'all');
@@ -418,12 +421,17 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   const { assignedCenterIds } = useAuth();
   const employeeQuery = useEmployees({ calendar: true });
   const { data: employees = [], isLoading: loadingEmployees } = employeeQuery;
-  const { data: operationalShifts = [] } = useShifts();
-  const { data: dayShifts = [] } = useShifts('day');
+  const operationalShiftQuery = useShifts();
+  const dayShiftQuery = useShifts('day');
+  const { data: operationalShifts = [] } = operationalShiftQuery;
+  const { data: dayShifts = [] } = dayShiftQuery;
   const shifts = useMemo(() => [...operationalShifts, ...dayShifts], [operationalShifts, dayShifts]);
-  const { data: centers = [] } = useOperationCenters();
-  const { data: areas = [] } = useAreas();
-  const { data: holidaysMap = {} } = useHolidaysMap();
+  const centerQuery = useOperationCenters();
+  const areaQuery = useAreas();
+  const holidayQuery = useHolidaysMap();
+  const { data: centers = [] } = centerQuery;
+  const { data: areas = [] } = areaQuery;
+  const { data: holidaysMap = {} } = holidayQuery;
 
   const activeDayShifts = useMemo(
     () => dayShifts.filter((shift) => shift.is_active),
@@ -671,6 +679,22 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   }, [assignments]);
 
   const getShiftById = useCallback((id: string): Shift | undefined => shifts.find(s => s.id === id), [shifts]);
+
+  // Resolve each day identically for the screen and Excel, including historical schedules.
+  const getDayState = (employee: (typeof employees)[number], dateStr: string, dayOfWeek: number) => {
+    const dayConfig = scheduleForDate(configsByEmployee.get(employee.id) ?? [], employee.id, dateStr);
+    const isAdminMode = dayConfig?.mode === 'administrative';
+    const adminSchedule = isAdminMode ? dayConfig.work_schedules : undefined;
+    const assignment = assignmentsMap[employee.id]?.[dateStr];
+    const shift = assignment ? getShiftById(assignment.shift_id) : null;
+    const absence = absencesMap[employee.id]?.[dateStr];
+    const restWeekday = calendarRestWeekday(restSchedulesByEmployee.get(employee.id) ?? [], employee.employee_employment_cycles ?? [], dateStr);
+    const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
+    const hasConflict = Boolean(shift && absence && !isNonWorkingShift(shift));
+    const hasCenterConflict = Boolean(shift && !isShiftEligibleForEmployee(shift, employee));
+    const mandatoryRestLabel = hasWorkOnMandatoryRestDay({ date: dateStr, restWeekday, hasAssignment: !!assignment, shift, adminIsWorkDay: isAdminMode && adminIsWorkDay, hasAbsence: !!absence }) && restWeekday !== null ? DAY_NAMES[restWeekday] : undefined;
+    return { assignment, shift, absence, isAdminMode, adminSchedule, adminIsWorkDay, hasConflict, hasCenterConflict, mandatoryRestLabel };
+  };
   const isHoliday = useCallback((date: Date): string | null => holidaysMap[format(date, 'yyyy-MM-dd')] || null, [holidaysMap]);
 
   const navigatePeriod = useCallback((direction: 'prev' | 'next') => {
@@ -834,6 +858,37 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
 
   const isLoading = loadingEmployees || loadingAssignments || configQuery.isLoading || absenceQuery.isLoading || restScheduleQuery.isLoading;
   const loadError = employeeQuery.error || assignmentQuery.error || configQuery.error || absenceQuery.error || restScheduleQuery.error;
+  const exportLoading = isLoading || operationalShiftQuery.isLoading || dayShiftQuery.isLoading || centerQuery.isLoading || areaQuery.isLoading || holidayQuery.isLoading || reviews.isLoading;
+  const exportError = loadError || operationalShiftQuery.error || dayShiftQuery.error || centerQuery.error || areaQuery.error || holidayQuery.error || reviews.error;
+  const exportData: ShiftCalendarExportData | null = exportOpen && !exportLoading && !exportError ? {
+    startDate, endDate, days: daysData,
+    centerLabel: selectedCenterId === 'all' ? 'Todos los centros' : centers.find(c => c.id === selectedCenterId)?.name || 'Sin centro',
+    modeLabel: modeFilter === 'all' ? 'Todas' : modeFilter === 'administrative' ? 'Administrativo' : 'Turnos',
+    rows: groupedEmployees.flatMap(group => group.areas.flatMap(area => (area.employees ?? []).map(employee => ({
+      employeeId: employee.id,
+      name: getEmployeeFullName(employee), document: employee.document_number,
+      center: group.centerName, area: area.areaName,
+      cells: daysData.map(({ dateStr, dayOfWeek }) => {
+        const state = getDayState(employee, dateStr, dayOfWeek);
+        const status = reviewByDay.get(`${employee.id}:${dateStr}`);
+        const notes: string[] = [];
+        const markers: string[] = [];
+        if (state.absence) notes.push(state.absence.description);
+        if (state.hasConflict) notes.push('Conflicto: turno laboral durante una novedad.');
+        if (state.hasCenterConflict) notes.push('Conflicto: turno no compatible con los centros del empleado.');
+        if (state.hasConflict || state.hasCenterConflict) markers.push('!');
+        if (state.mandatoryRestLabel) {
+          notes.push(`Trabajo en descanso obligatorio: ${state.mandatoryRestLabel}`);
+          markers.push('DO');
+        }
+        if (status && status !== 'historical') {
+          notes.push(`Aprobación: ${reviewLabels[status]}`);
+          markers.push(status === 'approved' ? '✓' : status === 'rejected' ? '×' : 'P');
+        }
+        return { ...getCalendarCellContent(state), notes, markers, conflict: state.hasConflict || state.hasCenterConflict };
+      }),
+    })))),
+  } : null;
 
   const isInitializedRef = useRef(false);
 
@@ -877,8 +932,13 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
     parentViewport.scrollTop += e.deltaY;
   }, [containedScroll]);
 
+  const exportDialog = exportOpen && onExportOpenChange ? (
+    <ShiftReportExport open={exportOpen} onOpenChange={onExportOpenChange} data={exportData} loading={exportLoading} error={!!exportError} />
+  ) : null;
+
   if (loadError) {
     return <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm">
+      {exportDialog}
       <p>No se pudo cargar el calendario completo. Intenta nuevamente antes de asignar turnos.</p>
       <Button variant="outline" className="mt-2" onClick={() => {
         void Promise.all([employeeQuery.refetch(), assignmentQuery.refetch(), configQuery.refetch(), absenceQuery.refetch(), restScheduleQuery.refetch()]);
@@ -889,6 +949,7 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
   if (isLoading) {
     return (
       <div className="space-y-4">
+        {exportDialog}
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-[400px] w-full" />
       </div>
@@ -1130,27 +1191,12 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
                                 )}
                               </div>
                               {daysData.map(({ day, dateStr, holiday, sunday, dayOfWeek }) => {
-                                const dayConfig = scheduleForDate(configsByEmployee.get(employee.id) ?? [], employee.id, dateStr);
-                                const isAdminMode = dayConfig?.mode === 'administrative';
-                                const adminSchedule = isAdminMode ? dayConfig.work_schedules : undefined;
-                                const assignment = assignmentsMap[employee.id]?.[dateStr];
-                                const shift = assignment ? getShiftById(assignment.shift_id) : null;
+                                const { assignment, shift, absence, isAdminMode, adminSchedule, adminIsWorkDay, hasConflict, hasCenterConflict, mandatoryRestLabel } = getDayState(employee, dateStr, dayOfWeek);
                                 const selected = isCellSelected(employee.id, dateStr);
-                                const absence = absencesMap[employee.id]?.[dateStr];
-                                const restWeekday = calendarRestWeekday(restSchedulesByEmployee.get(employee.id) ?? [], employee.employee_employment_cycles ?? [], dateStr);
-                                
-                                // Admin mode: derive working day from work_schedule.days_of_week
-                                const adminIsWorkDay = adminSchedule?.days_of_week?.includes(dayOfWeek) ?? false;
-
-                                // Conflict: work shift assigned on a day with an absence
-                                const hasConflict = Boolean(shift && absence && !isNonWorkingShift(shift));
-                                const hasCenterConflict = Boolean(
-                                  shift && !isShiftEligibleForEmployee(shift, employee),
-                                );
 
                                 return (
                                   <CalendarCell
-                                    mandatoryRestLabel={hasWorkOnMandatoryRestDay({ date: dateStr, restWeekday, hasAssignment: !!assignment, shift, adminIsWorkDay: isAdminMode && adminIsWorkDay, hasAbsence: !!absence }) && restWeekday !== null ? DAY_NAMES[restWeekday] : undefined}
+                                    mandatoryRestLabel={mandatoryRestLabel}
                                     reviewStatus={reviewByDay.get(`${employee.id}:${dateStr}`)}
                                     key={dateStr}
                                     employeeId={employee.id}
@@ -1194,6 +1240,8 @@ export function ShiftCalendar({ centerId: propCenterId, containedScroll = false 
         💡 <span className="hidden sm:inline"><strong>Clic izquierdo y arrastre</strong> para selección múltiple. <strong>Clic derecho</strong> sobre un día para opciones rápidas.</span>
         <span className="sm:hidden"><strong>Desliza</strong> para selección múltiple. Mantén presionado para opciones.</span>
       </p>
+
+      {exportDialog}
 
       {/* Assign Dialog */}
       <Dialog open={showAssignDialog} onOpenChange={(open) => {

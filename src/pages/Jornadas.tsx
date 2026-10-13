@@ -72,7 +72,6 @@ import {
   ShiftCalendar,
   CycleGeneratorDialog,
   BulkCycleGeneratorDialog,
-  ShiftReportExport,
 } from '@/components/schedules';
 import { DAY_NAMES_SHORT } from '@/types/schedule';
 import type { WorkSchedule, Shift, ShiftCycle } from '@/types/schedule';
@@ -224,7 +223,7 @@ export default function Jornadas() {
           </Button>
         </div>
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-white p-4">
-          <ShiftCalendar containedScroll />
+          <ShiftCalendar containedScroll exportOpen={showExportDialog} onExportOpenChange={setShowExportDialog} />
         </div>
       </div>
     );
@@ -328,7 +327,7 @@ export default function Jornadas() {
                  <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setShowBulkGeneratorDialog(true)}>
                     <Users className="w-4 h-4 mr-3 text-primary" /> Generar Masivo
                  </DropdownMenuItem>
-                 {activeTab !== 'day-shifts' && (
+                 {activeTab === 'calendar' && (
                    <DropdownMenuItem className="p-3 rounded-xl m-1 font-bold cursor-pointer" onClick={() => setShowExportDialog(true)}>
                       <FileSpreadsheet className="w-4 h-4 mr-3 text-emerald-600" /> Exportar Excel
                    </DropdownMenuItem>
@@ -688,7 +687,7 @@ export default function Jornadas() {
           {/* Calendar Content */}
           <TabsContent value="calendar" className="m-0 focus-visible:ring-0">
              <div className="bg-white rounded-2xl border border-border p-6 sm:p-10 overflow-hidden min-h-[600px] flex flex-col">
-                <ShiftCalendar />
+                <ShiftCalendar exportOpen={showExportDialog} onExportOpenChange={setShowExportDialog} />
              </div>
           </TabsContent>
         </Tabs>
@@ -699,7 +698,6 @@ export default function Jornadas() {
       {showShiftForm && <ShiftFormDialog open={showShiftForm} onOpenChange={setShowShiftForm} shift={selectedShift} kind={activeTab === 'day-shifts' ? 'day' : 'operational'} />}
       {showCycleForm && <ShiftCycleFormDialog open={showCycleForm} onOpenChange={setShowCycleForm} cycle={selectedCycle} />}
       {showGeneratorDialog && <CycleGeneratorDialog open={showGeneratorDialog} onOpenChange={setShowGeneratorDialog} />}
-      {showExportDialog && <ShiftReportExport open={showExportDialog} onOpenChange={setShowExportDialog} />}
       {showBulkGeneratorDialog && <BulkCycleGeneratorDialog open={showBulkGeneratorDialog} onOpenChange={setShowBulkGeneratorDialog} />}
 
       {/* Delete Confirm */}
