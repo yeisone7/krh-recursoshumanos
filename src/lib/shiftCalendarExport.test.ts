@@ -31,7 +31,7 @@ describe('calendar cell content shared by screen and export', () => {
 });
 
 describe('calendar workbook', () => {
-  it('preserves dates, text documents, colors, indicators and notes through XLSX serialization', () => {
+  it('exports only the visible labels without indicators or comments, preserving dates and colors', () => {
     const data: ShiftCalendarExportData = {
       startDate: '2026-10-31', endDate: '2026-11-01', centerLabel: 'Todos los centros', modeLabel: 'Todas',
       days: [
@@ -52,14 +52,16 @@ describe('calendar workbook', () => {
     expect(sheet.E4.v).toBe('31/10/2026');
     expect(sheet.F4.v).toBe('01/11/2026');
     expect(sheet.B5).toMatchObject({ t: 's', v: '00123' });
-    expect(sheet.E5.v).toBe('TD ! DO P');
+    expect(sheet.E5.v).toBe('TD');
     expect(sheet.E5.s.fgColor.rgb).toBe('087F9C');
-    expect(sheet.E5.c[0].t).toContain('Conflicto con vacaciones');
+    expect(sheet.E5.c).toBeUndefined();
     expect(sheet.F5.s.fgColor.rgb).toBe('FEF3C7');
-    expect(sheet.F5.c[0].t).toContain('Festivo de prueba');
+    expect(sheet.F5.v).toBe('');
+    expect(Object.values(sheet).some(cell => cell?.c?.length)).toBe(false);
     expect(sheet.C6.v).toBe('Centro B');
     const summary = XLSX.utils.sheet_to_json(actual.Sheets.Resumen, { header: 1 });
     expect(summary).toContainEqual(['Empleados', 1]);
     expect(summary).toContainEqual(['TD · Mañana', 1]);
+    expect(summary).not.toContainEqual(['P', 'Pendiente']);
   });
 });

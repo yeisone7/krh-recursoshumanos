@@ -85,7 +85,7 @@ export function buildShiftCalendarWorkbook(xlsx: typeof XLSX, data: ShiftCalenda
     ['', '', '', '', ...data.days.map(d => d.dayName.toUpperCase())],
     ['Empleado', 'Documento', 'Centro', 'Área', ...data.days.map(d => d.dateStr.split('-').reverse().join('/'))],
     ...data.rows.map(row => [row.name, row.document, row.center, row.area,
-      ...row.cells.map(cell => [cell.label, ...cell.markers].filter(Boolean).join(' '))]),
+      ...row.cells.map(cell => cell.label)]),
   ];
   const sheet = xlsx.utils.aoa_to_sheet(sheetData);
   const columnCount = 4 + data.days.length;
@@ -109,8 +109,6 @@ export function buildShiftCalendarWorkbook(xlsx: typeof XLSX, data: ShiftCalenda
         alignment: { vertical: 'center', horizontal: c >= 4 ? 'center' : 'left', wrapText: true },
         border: { top: border, bottom: border, left: border, right: border },
       };
-      const notes = content ? [content.description, ...content.notes, day?.holiday].filter(Boolean) : day?.holiday ? [day.holiday] : [];
-      if (notes.length) cell.c = [{ a: 'Jornadas', t: notes.join('\n') }];
     }
   }
   xlsx.utils.book_append_sheet(workbook, sheet, 'Planilla de Turnos');
@@ -130,10 +128,7 @@ export function buildShiftCalendarWorkbook(xlsx: typeof XLSX, data: ShiftCalenda
     ['Centro', data.centerLabel], ['Modalidad', data.modeLabel],
     ['Empleados', new Set(data.rows.map(row => row.employeeId)).size],
     ['Días del período', data.days.length], [], ['Turno / novedad', 'Total días'],
-    ...summary.entries(), [], ['Indicadores', 'Significado'],
-    ['DO', 'Trabajo en descanso obligatorio'], ['!', 'Conflicto de turno con novedad o centro'],
-    ['✓', 'Aprobada'], ['×', 'Rechazada'], ['P', 'Pendiente'],
-    ['Detalle', 'Las notas de cada celda incluyen novedades, festivos y estado de aprobación.'],
+    ...summary.entries(),
   ]);
   summarySheet['!cols'] = [{ wch: 45 }, { wch: 80 }];
   xlsx.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
