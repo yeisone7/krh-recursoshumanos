@@ -141,7 +141,7 @@ export function useShifts(kind: 'operational' | 'day' = 'operational') {
 
 export function useCreateShift() {
   const queryClient = useQueryClient();
-  const { user, currentCompanyId } = useAuth();
+  const { currentCompanyId } = useAuth();
 
   return useMutation({
     mutationFn: async (
@@ -150,27 +150,14 @@ export function useCreateShift() {
       },
     ) => {
       const { operation_center_ids, ...shiftValues } = shift;
-      const { data, error } = await supabase
-        .from('shifts')
-        .insert({
-          ...shiftValues,
-          company_id: currentCompanyId!,
-          created_by: user?.id,
-        } as never)
-        .select()
-        .single();
-
+      if (!currentCompanyId) throw new Error('Selecciona una empresa para crear el turno.');
+      const { data, error } = await supabase.rpc('create_shift_with_centers' as never, {
+        p_company_id: currentCompanyId,
+        p_values: shiftValues,
+        p_operation_center_ids: shiftValues.kind === 'day' ? operation_center_ids ?? [] : [],
+      } as never);
       if (error) throw error;
-
-      if (shiftValues.kind === 'day') {
-        const { error: scopeError } = await supabase.rpc('sync_shift_operation_centers' as never, {
-          p_shift_id: data.id,
-          p_operation_center_ids: operation_center_ids ?? [],
-        } as never);
-        if (scopeError) throw scopeError;
-      }
-
-      return data;
+      return data as Shift;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });

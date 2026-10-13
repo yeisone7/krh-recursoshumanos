@@ -33,6 +33,7 @@ import { useOperationCenters } from '@/hooks/useCompanies';
 import type { Shift } from '@/types/schedule';
 import { SHIFT_COLORS, SHIFT_COLOR_TRANSPARENT } from '@/types/schedule';
 import { cn } from '@/lib/utils';
+import { shiftSaveError } from '@/lib/shiftSaveError';
 import {
   getExclusiveShiftClassificationFlags,
   normalizeNonWorkingShiftValues,
@@ -183,9 +184,8 @@ export function ShiftFormDialog({
       }
       onOpenChange(false);
     } catch (error: unknown) {
-      toast.error('Error', {
-        description: error instanceof Error ? error.message : 'No se pudo guardar el turno',
-      });
+      const feedback = shiftSaveError(error, isEditing);
+      toast.error(feedback.title, { description: feedback.description });
     }
   };
 
