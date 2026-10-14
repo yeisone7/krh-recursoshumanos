@@ -12,6 +12,7 @@ export interface ComplianceEmployee {
   document_number: string;
   operation_center_id: string | null;
   center_name: string | null;
+  hire_date?: string | null;
 }
 
 export interface ComplianceCompletion {
@@ -49,12 +50,27 @@ export interface TrainingTokenCenterAssociation {
   created_at: string;
 }
 
+const trainingTokenPeriodFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Bogota', year: 'numeric', month: '2-digit',
+});
+
 export function isTrainingTokenInPeriod(
   token: Pick<TrainingTokenCenterAssociation, 'created_at'>,
   period: TrainingPeriodInput
 ) {
-  const createdAt = new Date(token.created_at);
-  return createdAt.getFullYear() === period.year && createdAt.getMonth() + 1 === period.month;
+  const parts = trainingTokenPeriodFormatter.formatToParts(new Date(token.created_at));
+  return Number(parts.find(part => part.type === 'year')?.value) === period.year
+    && Number(parts.find(part => part.type === 'month')?.value) === period.month;
+}
+
+export function isEmployeeApplicableToTrainingPeriod(
+  hireDate: string | null | undefined,
+  period: TrainingPeriodInput
+) {
+  // SQL dates are calendar dates: parsing them as UTC can move the hire month.
+  const match = /^(\d{4})-(\d{2})-\d{2}$/.exec(hireDate || '');
+  if (!match) return true; // Do not silently exempt legacy records with no date.
+  return Number(match[1]) * 12 + Number(match[2]) <= period.year * 12 + period.month;
 }
 
 export function getApplicableComplianceCourses<T extends { id: string }>(
@@ -105,7 +121,7 @@ function useActiveEmployeesByCenter(
         .from('employees_v2')
         .select(`
           id, first_name, last_name, document_number,
-          employee_work_info!inner(operation_center_id, is_current)
+          employee_work_info!inner(operation_center_id, is_current, hire_date)
         `)
         .eq('company_id', companyId!)
         .eq('is_active', true);
@@ -123,6 +139,7 @@ function useActiveEmployeesByCenter(
             document_number: e.document_number,
             operation_center_id: currentWork?.operation_center_id || null,
             center_name: null,
+            hire_date: currentWork?.hire_date || null,
           } as ComplianceEmployee;
         })
         .filter((employee) => {
@@ -303,7 +320,6 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
   const { currentCompanyId, user, assignedCenterIds, isAdmin, isSuperAdmin } = useAuth();
   const shouldLimitByAssignedCenters = !isAdmin && !isSuperAdmin && assignedCenterIds.length > 0;
   const assignedCenterKey = assignedCenterIds.join(',');
-  const hasPeriodFilter = !!period;
 
   const employees = useActiveEmployeesByCenter(
     currentCompanyId,
@@ -329,18 +345,29 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
     shouldLimitByAssignedCenters,
     assignedCenterKey
   );
-  const periodAssignments = useTrainingCoursePeriods(period, { enabled: hasPeriodFilter });
+  // All assignments are needed to distinguish legacy links from configured
+  // courses and to evaluate a course once in the all-periods summary.
+  const periodAssignments = useTrainingCoursePeriods();
 
-  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || (hasPeriodFilter && periodAssignments.isLoading);
+  const isLoading = employees.isLoading || centers.isLoading || courses.isLoading || completions.isLoading || tokenAssociations.isLoading || periodAssignments.isLoading;
 
   const result = useMemo(() => {
     const complianceData: CenterComplianceData[] = [];
+    const latestCoursePeriods = new Map<string, TrainingPeriodInput>();
+    for (const assignment of periodAssignments.data || []) {
+      const latest = latestCoursePeriods.get(assignment.course_id);
+      if (!latest || assignment.year * 12 + assignment.month > latest.year * 12 + latest.month) {
+        latestCoursePeriods.set(assignment.course_id, assignment);
+      }
+    }
     const configuredPeriodCourseIds = period
-      ? new Set((periodAssignments.data || []).map((assignment) => assignment.course_id))
+      ? new Set((periodAssignments.data || [])
+          .filter(assignment => assignment.year === period.year && assignment.month === period.month)
+          .map((assignment) => assignment.course_id))
       : null;
     const periodTokenCourseIds = new Set<string>();
 
-    if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && (!hasPeriodFilter || periodAssignments.data)) {
+    if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && periodAssignments.data) {
       const completionIndex = indexComplianceCompletions(completions.data);
       const employeesByCenter = new Map<string, ComplianceEmployee[]>();
       for (const employee of employees.data) {
@@ -352,6 +379,7 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
       const periodCenterCourseMap = new Map<string, Set<string>>();
       for (const assoc of tokenAssociations.data) {
         if (!assoc.operation_center_id) continue;
+        if (latestCoursePeriods.has(assoc.course_id)) continue;
         if (period && isTrainingTokenInPeriod(assoc, period)) {
           if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
             periodCenterCourseMap.set(assoc.operation_center_id, new Set());
@@ -375,14 +403,21 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
         if (applicableCourses.length === 0) continue;
 
         const coursesData: CourseComplianceData[] = [];
+        const applicableEmployeeIds = new Set<string>();
 
         for (const course of applicableCourses) {
           const targetCourseKeys = getCourseMatchKeys(course);
+          const applicablePeriod = period || latestCoursePeriods.get(course.id);
+          const courseEmployees = applicablePeriod
+            ? centerEmployees.filter(employee => isEmployeeApplicableToTrainingPeriod(employee.hire_date, applicablePeriod))
+            : centerEmployees;
+          if (courseEmployees.length === 0) continue;
 
           const completed: { employee: ComplianceEmployee; completed_at: string }[] = [];
           const pending: ComplianceEmployee[] = [];
 
-          for (const emp of centerEmployees) {
+          for (const emp of courseEmployees) {
+            applicableEmployeeIds.add(emp.id);
             const match = findComplianceCompletion(completionIndex, targetCourseKeys, emp);
             if (match) {
               completed.push({ employee: { ...emp, center_name: center.name }, completed_at: match.completed_at });
@@ -397,17 +432,18 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
             course_code: course.code,
             completed,
             pending,
-            total: centerEmployees.length,
+            total: courseEmployees.length,
             completedCount: completed.length,
-            percentage: centerEmployees.length > 0 ? Math.round((completed.length / centerEmployees.length) * 100) : 0,
+            percentage: Math.round((completed.length / courseEmployees.length) * 100),
           });
         }
 
+        if (coursesData.length === 0) continue;
         complianceData.push({
           center_id: center.id,
           center_name: center.name,
           courses: coursesData,
-          totalEmployees: centerEmployees.length,
+          totalEmployees: applicableEmployeeIds.size,
         });
       }
     }
@@ -420,7 +456,7 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
           )
         : courses.data || [],
     };
-  }, [employees.data, centers.data, courses.data, completions.data, tokenAssociations.data, periodAssignments.data, period, hasPeriodFilter]);
+  }, [employees.data, centers.data, courses.data, completions.data, tokenAssociations.data, periodAssignments.data, period]);
 
   return { ...result, centers: centers.data || [], isLoading };
 }

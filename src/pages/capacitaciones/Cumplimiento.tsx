@@ -196,6 +196,10 @@ const CenterComplianceSection = memo(function CenterComplianceSection({ center, 
   const filteredCourses = courseFilter === 'all'
     ? center.courses
     : center.courses.filter((c) => c.course_id === courseFilter);
+  const applicableEmployeeCount = new Set(filteredCourses.flatMap(course => [
+    ...course.completed.map(({ employee }) => employee.id),
+    ...course.pending.map(employee => employee.id),
+  ])).size;
 
   const avgPercentage = filteredCourses.length > 0
     ? Math.round(filteredCourses.reduce((a, c) => a + c.percentage, 0) / filteredCourses.length)
@@ -215,7 +219,7 @@ const CenterComplianceSection = memo(function CenterComplianceSection({ center, 
               </div>
               <div className="min-w-0">
                 <h3 className="break-words text-lg font-bold">{center.center_name}</h3>
-                <p className="text-sm font-medium text-muted-foreground mt-0.5">{center.totalEmployees} empleados activos · {filteredCourses.length} cursos</p>
+                <p className="text-sm font-medium text-muted-foreground mt-0.5">{applicableEmployeeCount} empleados aplicables · {filteredCourses.length} cursos</p>
               </div>
             </div>
             <div className="flex w-full items-center gap-4 sm:w-auto">
@@ -641,7 +645,7 @@ export default function Cumplimiento() {
       {isLoading ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Cargando datos de cumplimiento...</CardContent></Card>
       ) : filteredData.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">No hay centros con empleados activos asignados que tengan enlaces de capacitación publicados. Verifica que los empleados tengan un centro de operación asignado en su información laboral y que existan enlaces publicados para ese centro.</CardContent></Card>
+          <Card><CardContent className="py-12 text-center text-muted-foreground">No hay empleados aplicables a las capacitaciones con los filtros seleccionados. El cumplimiento cuenta desde el mes de ingreso de la vinculación actual. Verifica los periodos de capacitación y los centros asignados.</CardContent></Card>
       ) : (
         <motion.div className="space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {viewMode === 'table' ? (

@@ -1,7 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { getApplicableComplianceCourses, isTrainingTokenInPeriod } from './useTrainingCompliance';
+import { getApplicableComplianceCourses, isTrainingTokenInPeriod, isEmployeeApplicableToTrainingPeriod } from './useTrainingCompliance';
+
+describe('hire month applicability', () => {
+  it.each([
+    ['2026-10-20', 2026, 9, false],
+    ['2026-10-31', 2026, 10, true],
+    ['2026-10-01', 2026, 10, true],
+    ['2026-10-20', 2026, 11, true],
+    ['2026-12-31', 2027, 1, true],
+    ['2027-01-01', 2026, 12, false],
+    [null, 2026, 9, true],
+  ])('compares %s against %s-%s by calendar month', (hireDate, year, month, expected) => {
+    expect(isEmployeeApplicableToTrainingPeriod(hireDate, { year, month })).toBe(expected);
+  });
+});
 
 describe('isTrainingTokenInPeriod', () => {
+  it('uses Colombia calendar months at UTC month boundaries', () => {
+    expect(isTrainingTokenInPeriod({ created_at: '2026-10-01T02:00:00Z' }, { year: 2026, month: 9 })).toBe(true);
+  });
   it('includes a training link in the month when it was generated', () => {
     const token = { created_at: '2026-08-21T16:37:00.552Z' };
 

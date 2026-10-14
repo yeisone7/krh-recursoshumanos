@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   auth: { currentCompanyId: 'company', user: { id: 'viewer' }, assignedCenterIds: ['north'], isAdmin: false, isSuperAdmin: false },
-  periods: [] as { course_id: string }[],
+  periods: [] as { course_id: string; year: number; month: number }[],
 }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: mocks.from } }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => mocks.auth }));
@@ -16,9 +16,9 @@ import { useTrainingCompliance } from './useTrainingCompliance';
 type Row = Record<string, unknown>;
 let tables: Record<string, Row[]>;
 let client: QueryClient;
-function employee(id: string, center = 'north', company = 'company') {
+function employee(id: string, center = 'north', company = 'company', hireDate = '2026-01-01') {
   return { id, company_id: company, first_name: 'Persona', last_name: id, document_number: `100${id}`, is_active: true,
-    employee_work_info: [{ operation_center_id: center, is_current: true }] };
+    employee_work_info: [{ operation_center_id: center, is_current: true, hire_date: hireDate }] };
 }
 function completion(id: string, employeeId: string | null, document: string | null = null) {
   return { id, company_id: 'company', course_id: 'course', employee_id: employeeId, operator_cedula: document,
@@ -65,6 +65,75 @@ async function mount(period?: { year: number; month: number }) {
 }
 
 describe('training compliance with restricted center access', () => {
+  it('excludes a later hire from completed evidence and the monthly denominator', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
+    tables.employees_v2 = [employee('1', 'north', 'company', '2026-09-30'), employee('2', 'north', 'company', '2026-10-20')];
+    tables.training_completions = [completion('c1', '1'), completion('c2', '2')];
+    const { result } = await mount({ year: 2026, month: 9 });
+    expect(result.current.complianceData[0]).toMatchObject({ totalEmployees: 1 });
+    expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 1, completedCount: 1, percentage: 100, pending: [] });
+    expect(result.current.complianceData[0].courses[0].completed.map(c => c.employee.id)).toEqual(['1']);
+  });
+
+  it('includes a new hire in the entry month and uses the current work record on rehire', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 10 }];
+    const rehired = employee('2', 'north', 'company', '2026-10-31');
+    rehired.employee_work_info.unshift({ operation_center_id: 'south', is_current: false, hire_date: '2024-01-01' });
+    tables.employees_v2 = [employee('1'), rehired];
+    const { result } = await mount({ year: 2026, month: 10 });
+    expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 2, completedCount: 1, percentage: 50 });
+    expect(result.current.complianceData[0].courses[0].pending[0].hire_date).toBe('2026-10-31');
+  });
+
+  it('does not count a rehire in a period before the current employment', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
+    const rehired = employee('2', 'north', 'company', '2026-10-20');
+    rehired.employee_work_info.unshift({ operation_center_id: 'north', is_current: false, hire_date: '2024-01-01' });
+    tables.employees_v2 = [employee('1'), rehired];
+    const { result } = await mount({ year: 2026, month: 9 });
+    expect(result.current.complianceData[0].courses[0].pending).toEqual([]);
+    expect(result.current.complianceData[0].courses[0].total).toBe(1);
+  });
+
+  it('counts a multi-period course once and keeps undated courses required in the all-periods summary', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }, { course_id: 'course', year: 2026, month: 11 }];
+    tables.employees_v2 = [employee('1'), employee('2', 'north', 'company', '2026-10-20')];
+    tables.training_courses.push({ ...tables.training_courses[0], id: 'undated', name: 'Sin periodo', code: 'LEGACY' });
+    const { result } = await mount();
+    expect(result.current.complianceData[0].courses).toHaveLength(2);
+    expect(result.current.complianceData[0].courses.map(c => c.total)).toEqual([2, 2]);
+    expect(result.current.complianceData[0].totalEmployees).toBe(2);
+  });
+
+  it('excludes later hires from a past-only course in the all-periods summary', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
+    tables.employees_v2 = [employee('1'), employee('2', 'north', 'company', '2026-10-20')];
+    const { result } = await mount();
+    expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 1, percentage: 100, pending: [] });
+  });
+
+  it('does not shift a configured course to the month of a later access link', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
+    tables.training_access_tokens = [{ company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-10-02T12:00:00Z' }];
+    const { result } = await mount({ year: 2026, month: 10 });
+    expect(result.current.courses).toEqual([]);
+    expect(result.current.complianceData).toEqual([]);
+  });
+
+  it('omits courses and centers with no applicable employees instead of reporting zero percent', async () => {
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
+    tables.employees_v2 = [employee('1', 'north', 'company', '2026-10-20')];
+    const { result } = await mount({ year: 2026, month: 9 });
+    expect(result.current.complianceData).toEqual([]);
+  });
+
+  it('retains legacy monthly link visibility while excluding hires after that month', async () => {
+    tables.employees_v2 = [employee('1'), employee('2', 'north', 'company', '2026-10-20')];
+    tables.training_access_tokens = [{ company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-09-02T12:00:00Z' }];
+    const { result } = await mount({ year: 2026, month: 9 });
+    expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 1, percentage: 100 });
+  });
+
   it('reuses the calculated matrix when the page rerenders for a search keystroke', async () => {
     const { result, rerender } = await mount();
     const matrix = result.current.complianceData;
@@ -125,7 +194,7 @@ describe('training compliance with restricted center access', () => {
   });
 
   it('loads configured period courses without visible links, including while queries are loading', async () => {
-    mocks.periods = [{ course_id: 'course' }];
+    mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
     const { result } = await mount({ year: 2026, month: 9 });
     expect(result.current.courses.map(c => c.id)).toEqual(['course']);
     expect(result.current.complianceData[0].courses[0].completedCount).toBe(1);
