@@ -70,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [profile, setProfile] = useState<{ full_name: string | null; display_name: string | null; avatar_url: string | null } | null>(null);
   const userRef = React.useRef<User | null>(null);
+  const authVersion = React.useRef(0);
   const currentCompanyIdRef = React.useRef<string | null>(null);
 
   // Sync ref with currentCompanyId state to prevent stale closures
@@ -102,7 +103,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchUserData = async (userId: string) => {
+  const assertUserActive = async (userId: string) => {
+    const { data, error } = await supabase.rpc('is_user_active', { _user_id: userId });
+    if (error || data !== true) {
+      throw new Error(error ? 'No fue posible verificar el estado de tu cuenta. Intenta de nuevo.' :
+        'Tu cuenta está suspendida. Contacta al administrador.');
+    }
+  };
+
+  const fetchUserData = async (userId: string, version: number) => {
+    await assertUserActive(userId);
+    if (version !== authVersion.current) return;
     // Execute all initial queries in parallel to drastically improve loading speed and avoid waterfalls
     const [
       rolesRes,
@@ -121,6 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.rpc('get_user_permissions', { _user_id: userId }),
       supabase.from('user_custom_roles').select('id').eq('user_id', userId).limit(1)
     ]);
+
+    if (version !== authVersion.current) return;
 
     // Process roles
     if (rolesRes.data) {
@@ -193,6 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    if (version !== authVersion.current) return;
     setCompanies(finalCompanies);
 
     // Atomic selection of currentCompanyId to prevent visual glitching
@@ -214,55 +228,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let disposed = false;
+    const clearAccess = () => {
+      userRef.current = null;
+      setUser(null);
+      setSession(null);
+      setRoles([]);
+      setCompanies([]);
+      setCurrentCompanyId(null);
+      setPermissions([]);
+      setPermissionsLoaded(false);
+      setHasAnyRole(true);
+      setAssignedCenterIds([]);
+      setIsSuperAdmin(false);
+      setProfile(null);
+    };
+    const acceptSession = async (nextSession: Session | null) => {
+      if (disposed) return;
+      const version = ++authVersion.current;
+      const nextUser = nextSession?.user;
+      if (!nextUser) {
+        clearAccess();
+        setIsLoading(false);
+        return;
+      }
+      if (userRef.current?.id !== nextUser.id) {
+        clearAccess();
+        setIsLoading(true);
+      }
+      try {
+        await fetchUserData(nextUser.id, version);
+        if (disposed || version !== authVersion.current) return;
+        userRef.current = nextUser;
+        setSession(nextSession);
+        setUser(nextUser);
+      } catch {
+        if (disposed || version !== authVersion.current) return;
+        clearAccess();
+        // Suspension is mandatory: never let unsaved-work prompts preserve access.
+        await supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+      } finally {
+        if (!disposed && version === authVersion.current) setIsLoading(false);
+      }
+    };
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        const newUser = session?.user ?? null;
-        const prevUser = userRef.current;
-        
-        // Update refs and state
-        userRef.current = newUser;
-        setSession(session);
-        setUser(newUser);
-        
-        if (newUser) {
-          // Si el usuario es el mismo (ej. refresco de token o foco), no activamos el loading global
-          // Esto evita que ProtectedRoute desmonte toda la app y se pierda el estado/scroll
-          const isSameUser = prevUser?.id === newUser.id;
-          
-          if (!isSameUser) {
-            setIsLoading(true);
-          }
-          
-          fetchUserData(newUser.id).finally(() => {
-            setIsLoading(false);
-          });
-        } else {
-          setRoles([]);
-          setCompanies([]);
-          setCurrentCompanyId(null);
-          setPermissions([]);
-          setPermissionsLoaded(false);
-          setHasAnyRole(true);
-          setAssignedCenterIds([]);
-          setIsSuperAdmin(false);
-          setIsLoading(false);
-        }
+      (_event, nextSession) => {
+        // Supabase queries must run outside the auth callback's internal lock.
+        const eventVersion = ++authVersion.current;
+        if (!nextSession) void acceptSession(null);
+        else setTimeout(() => {
+          if (authVersion.current === eventVersion) void acceptSession(nextSession);
+        }, 0);
       }
     );
 
+    const initialVersion = authVersion.current;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      const newUser = session?.user ?? null;
-      userRef.current = newUser;
-      setSession(session);
-      setUser(newUser);
-      if (newUser) {
-        fetchUserData(newUser.id).finally(() => setIsLoading(false));
-      } else {
-        setIsLoading(false);
-      }
-    });
+      if (authVersion.current === initialVersion) void acceptSession(session);
+    }).catch(() => { if (authVersion.current === initialVersion) void acceptSession(null); });
 
-    return () => subscription.unsubscribe();
+    const recheckAccess = () => {
+      const currentUser = userRef.current;
+      const version = authVersion.current;
+      if (currentUser) void assertUserActive(currentUser.id).catch(() => {
+        if (!disposed && version === authVersion.current) {
+          void acceptSession(null);
+          void supabase.auth.signOut({ scope: 'local' }).catch(() => undefined);
+        }
+      });
+    };
+    const interval = window.setInterval(recheckAccess, 30_000);
+    window.addEventListener('focus', recheckAccess);
+    return () => {
+      disposed = true;
+      ++authVersion.current;
+      subscription.unsubscribe();
+      window.clearInterval(interval);
+      window.removeEventListener('focus', recheckAccess);
+    };
   }, []);
 
   const hasRoleFn = (role: AppRole): boolean => roles.includes(role);
@@ -318,7 +361,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      let error: Error | null = authError;
+      if (authError?.code === 'user_banned') error = new Error('Tu cuenta está suspendida. Contacta al administrador.');
+      if (!error && data.user) {
+        try {
+          await assertUserActive(data.user.id);
+        } catch (statusError) {
+          error = statusError as Error;
+          await signOut({ force: true });
+        }
+      }
 
       // Record the attempt
       await supabase.from('login_attempts').insert({
@@ -351,6 +404,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async (options?: { force?: boolean }) => {
     if (!options?.force && !confirmWorkspaceExit('logout')) return;
+    ++authVersion.current;
+    userRef.current = null;
     try {
       await supabase.auth.signOut();
     } catch {
@@ -367,6 +422,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setHasAnyRole(true);
     setAssignedCenterIds([]);
     setIsSuperAdmin(false);
+    setProfile(null);
+    setIsLoading(false);
   };
 
   return (
