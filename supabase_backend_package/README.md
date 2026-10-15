@@ -26,7 +26,7 @@ Este paquete contiene el backend actual para montarlo en un proyecto Supabase ex
 ## Orden recomendado
 
 ```bash
-cd supabase_external_backend_package
+cd supabase_backend_package
 cp scripts/00_env_template.sh .env.deploy
 nano .env.deploy
 bash scripts/run_all.sh
@@ -64,6 +64,8 @@ VITE_SUPABASE_PROJECT_ID=TU_PROJECT_REF
 
 - Ejecuta esto sobre un proyecto Supabase vacío.
 - No compartas `.env.deploy` ni claves `service_role`.
+- `.env*` está excluido de Git en todos los directorios; solo se permiten plantillas terminadas en `.example`, sin credenciales reales. Verifica antes de publicar con `python scripts/check-secrets.py` desde la raíz del repositorio.
+- Si una credencial llegó a Git, revócala en el proveedor aunque luego borres el archivo o limpies el historial. Crear una clave nueva no revoca automáticamente una anterior.
 - Las políticas RLS están incluidas en las migraciones.
 - Los buckets incluidos por las migraciones son: `avatars`, `documents`, `training-media`, `dotation-images`.
 - Las funciones se despliegan con `--no-verify-jwt` porque el proyecto actual las tiene configuradas así; la seguridad depende de validaciones internas y RLS/Service Role donde aplica.
