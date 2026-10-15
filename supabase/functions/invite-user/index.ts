@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
     } else {
       // Create new user with invite
       const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${req.headers.get("origin") || "https://lovable.dev"}/auth`,
+        redirectTo: `${req.headers.get("origin") || "https://empatiq.portalpetrocasinos.com"}/auth`,
       });
 
       if (inviteError) {
@@ -193,8 +193,8 @@ Deno.serve(async (req) => {
     console.log("User invitation complete");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         userId: invitedUserId,
         message: existingUser ? "User added to company" : "Invitation sent"
       }),

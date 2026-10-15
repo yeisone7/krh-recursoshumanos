@@ -1,4 +1,4 @@
-project_id = "bxskgdzvypbaxcogsjhw"
+project_id = "YOUR_PROJECT_REF"
 
 [functions.complete-onboarding]
 verify_jwt = false

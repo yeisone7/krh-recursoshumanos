@@ -4,6 +4,6 @@ cd "$(dirname "$0")/.."
 source .env.deploy
 
 # Las claves modernas de Supabase son inyectadas por la plataforma.
-supabase secrets set LOVABLE_API_KEY="$LOVABLE_API_KEY" RESEND_API_KEY="$RESEND_API_KEY"
+supabase secrets set RESEND_API_KEY="$RESEND_API_KEY"
 
 echo "Secrets configurados."

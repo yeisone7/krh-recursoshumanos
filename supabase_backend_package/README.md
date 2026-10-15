@@ -20,7 +20,7 @@ Este paquete contiene el backend actual para montarlo en un proyecto Supabase ex
    - Clave pública moderna (`sb_publishable_...`)
    - Access token de Supabase CLI
    - `RESEND_API_KEY` para correos
-   - `LOVABLE_API_KEY` si vas a usar chat IA/generación de capacitaciones tal como está implementado actualmente
+   - API key propia de OpenAI o Gemini, configurada por empresa en Configuración > IA para chat y capacitaciones
 
 ## Orden recomendado
 

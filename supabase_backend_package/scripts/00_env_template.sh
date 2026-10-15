@@ -14,8 +14,8 @@ export SUPABASE_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
 # en las Edge Functions. No copies ni configures claves service_role.
 export SUPABASE_PUBLISHABLE_KEY="REEMPLAZA_PUBLISHABLE_KEY_MODERNA"
 
-# Requeridos si usas IA/capacitaciones/chat IA. En Supabase externo debes proveer tu propia llave compatible o adaptar las funciones.
-export LOVABLE_API_KEY="REEMPLAZA_LOVABLE_API_KEY_SI_APLICA"
+# IA/capacitaciones/chat: configura tu propia API key de OpenAI o Gemini
+# por empresa en Configuración > IA. Las llamadas son directas al proveedor.
 
 # Requerido para correos/notificaciones.
 export RESEND_API_KEY="REEMPLAZA_RESEND_API_KEY"

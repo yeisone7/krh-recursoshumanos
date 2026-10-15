@@ -1,7 +1,8 @@
-import { getSecretKey } from "../_shared/apiKeys.ts";
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { canReceiveRequisitionNotification, escapeRequisitionEmailText } from '../_shared/requisitionNotificationAccess.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,12 +16,22 @@ interface NotifyRequest {
 }
 
 // Map current status to the next approver role
-const statusToNextRole: Record<string, { role: string; stepLabel: string }> = {
-  'en_operaciones': { role: 'operaciones', stepLabel: 'Operaciones' },
-  'en_rrhh': { role: 'rrhh', stepLabel: 'Recursos Humanos' },
+const statusToNextRole: Record<string, { role: string; permissionModule?: string; stepLabel: string }> = {
+  'en_coordinadores': { role: 'admin', permissionModule: 'req_approve_coordinadores', stepLabel: 'Coordinadores' },
+  'en_operaciones': { role: 'operaciones', permissionModule: 'req_approve_ger_op', stepLabel: 'Operaciones' },
+  'en_rrhh': { role: 'rrhh', permissionModule: 'req_approve_rh', stepLabel: 'Recursos Humanos' },
   'en_juridico': { role: 'admin', stepLabel: 'Jurídico' },
   'en_gerencia': { role: 'admin', stepLabel: 'Gerencia' },
   'en_seleccion': { role: 'rrhh', stepLabel: 'Selección' },
+};
+
+const statusToApprovalPermission: Record<string, string> = {
+  'en_coordinadores': 'req_approve_coordinadores',
+  'en_operaciones': 'req_approve_ger_op',
+  'en_rrhh': 'req_approve_rh',
+  'en_juridico': 'req_approve_juridica',
+  'en_gerencia': 'req_approve_ger_adm',
+  'en_seleccion': 'req_approve_seleccion',
 };
 
 serve(async (req: Request): Promise<Response> => {
@@ -31,16 +42,27 @@ serve(async (req: Request): Promise<Response> => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = getSecretKey();
+    const supabaseAnonKey = getPublishableKey();
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const resend = resendApiKey ? new Resend(resendApiKey) : null;
-    
-    const { requisitionId, currentStep, requisitionTitle }: NotifyRequest = await req.json();
-    
-    if (!requisitionId || !currentStep) {
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+    const authClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    const userId = userData?.user?.id;
+    if (userError || !userId) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: requisitionId and currentStep' }),
+        JSON.stringify({ error: 'No autorizado' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    const resend = resendApiKey ? new Resend(resendApiKey) : null;
+
+    const { requisitionId }: NotifyRequest = await req.json();
+
+    if (!requisitionId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required field: requisitionId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -48,7 +70,7 @@ serve(async (req: Request): Promise<Response> => {
     // Get requisition details
     const { data: requisition, error: reqError } = await supabase
       .from('personnel_requisitions')
-      .select('company_id, cargo_solicitado, solicitante_nombre')
+      .select('company_id, operation_center_id, is_confidential, cargo_solicitado, solicitante_nombre, created_by, solicitante_id, estado_requisicion, workflow_version_id, current_approval_step_id, workflow_version:requisition_workflow_versions!requisition_workflow_company_fk(steps)')
       .eq('id', requisitionId)
       .single();
 
@@ -60,8 +82,63 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const nextApprover = statusToNextRole[currentStep];
-    
+    const currentStep = requisition.estado_requisicion;
+    const workflowVersion = Array.isArray(requisition.workflow_version) ? requisition.workflow_version[0] : requisition.workflow_version;
+    const configuredStep = (workflowVersion?.steps as { id: string; name: string; kind: string; role_ids: string[] }[] | undefined)
+      ?.find(s => s.id === requisition.current_approval_step_id);
+    const { data: workflowDecisions, error: decisionsError } = requisition.workflow_version_id
+      ? await supabase.from('requisition_step_executions').select('step_id').eq('requisition_id', requisitionId).eq('approver_id', userId).limit(1)
+      : { data: [], error: null };
+    if (decisionsError) throw decisionsError;
+    const { data: currentApprover } = requisition.current_approval_step_id
+      ? await authClient.rpc('can_approve_requisition_step', { p_requisition_id: requisitionId, p_step_id: requisition.current_approval_step_id })
+      : { data: false };
+
+    const { data: systemRole } = await supabase
+      .from('user_custom_roles')
+      .select('id, custom_roles!inner(is_system,is_active)')
+      .eq('user_id', userId)
+      .eq('custom_roles.is_system', true)
+      .eq('custom_roles.is_active', true)
+      .limit(1);
+    const permissionChecks = [
+      { module: 'requisiciones', action: 'create' },
+      { module: 'requisiciones', action: 'update' },
+      { module: 'req_approve_coordinadores', action: 'approve' },
+      { module: 'req_approve_rh', action: 'approve' },
+      { module: 'req_approve_juridica', action: 'approve' },
+      { module: 'req_approve_ger_op', action: 'approve' },
+      { module: 'req_approve_ger_adm', action: 'approve' },
+      { module: 'req_approve_seleccion', action: 'approve' },
+    ];
+    const permissionResults = await Promise.all(
+      permissionChecks.map(({ module, action }) =>
+        supabase.rpc('check_user_permission', {
+          _user_id: userId,
+          _module_code: module,
+          _action: action,
+        })
+      )
+    );
+    const hasPermission = permissionResults.some(({ data }) => data === true) || currentApprover === true || !!workflowDecisions?.length;
+    const { data: assignment } = await supabase
+      .from('user_company_assignments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('company_id', requisition.company_id)
+      .maybeSingle();
+
+    if (!systemRole?.length && (!assignment || !hasPermission)) {
+      return new Response(
+        JSON.stringify({ error: 'No tienes permiso para notificar esta requisicion.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const nextApprover = configuredStep?.kind === 'custom'
+      ? { role: 'admin', stepLabel: configuredStep.name, permissionModule: undefined }
+      : statusToNextRole[currentStep] ? { ...statusToNextRole[currentStep], stepLabel: configuredStep?.name ?? statusToNextRole[currentStep].stepLabel } : null;
+
     if (!nextApprover) {
       // No more approvers (requisition is approved or rejected)
       return new Response(
@@ -70,7 +147,9 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Find users with the appropriate role in this company
+    const activeApprovalModule = nextApprover.permissionModule || statusToApprovalPermission[currentStep];
+
+    // Find users with the legacy role and, when configured, the custom approval permission.
     const { data: usersWithRole, error: usersError } = await supabase
       .from('user_roles')
       .select('user_id')
@@ -81,8 +160,39 @@ serve(async (req: Request): Promise<Response> => {
       throw usersError;
     }
 
-    if (!usersWithRole || usersWithRole.length === 0) {
-      console.log(`No users found with role ${nextApprover.role}`);
+    let permissionUserIds: string[] = [];
+    if (configuredStep?.kind === 'custom') {
+      const { data: roleUsers, error } = await supabase.from('user_custom_roles')
+        .select('user_id, custom_roles!inner(is_active,company_id)')
+        .in('role_id', configuredStep.role_ids)
+        .eq('custom_roles.is_active', true).eq('custom_roles.company_id', requisition.company_id);
+      if (error) throw error;
+      permissionUserIds = (roleUsers ?? []).map(u => u.user_id);
+    } else if (activeApprovalModule) {
+      const { data: usersWithPermission, error: permissionUsersError } = await supabase
+        .from('user_custom_roles')
+        .select('user_id, custom_roles!inner(role_permissions!inner(permissions!inner(modules!inner(code), action)))')
+        .eq('custom_roles.is_active', true)
+        .eq('custom_roles.role_permissions.permissions.modules.code', activeApprovalModule)
+        .eq('custom_roles.role_permissions.permissions.action', 'approve');
+
+      if (permissionUsersError) {
+        console.error('Error fetching users with approval permission:', permissionUsersError);
+        throw permissionUsersError;
+      }
+
+      permissionUserIds = (usersWithPermission || []).map(u => u.user_id);
+    }
+
+    const activeApprovalUserIds = new Set(permissionUserIds);
+
+    const userIds = Array.from(new Set([
+      ...(usersWithRole || []).map(u => u.user_id),
+      ...permissionUserIds,
+    ]));
+
+    if (userIds.length === 0) {
+      console.log(`No users found for ${nextApprover.stepLabel}`);
       return new Response(
         JSON.stringify({ message: 'No users to notify for this role' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -90,7 +200,6 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Filter users that belong to this company
-    const userIds = usersWithRole.map(u => u.user_id);
     const { data: companyUsers, error: companyUsersError } = await supabase
       .from('user_company_assignments')
       .select('user_id')
@@ -110,8 +219,73 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
+    const companyUserIds = companyUsers.map(user => user.user_id);
+
+    const { data: adminRoles, error: adminRolesError } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .in('user_id', companyUserIds)
+      .eq('role', 'admin');
+
+    if (adminRolesError) {
+      console.error('Error fetching admin users for notification filtering:', adminRolesError);
+      throw adminRolesError;
+    }
+
+    const { data: systemRoles, error: systemRolesError } = await supabase
+      .from('user_custom_roles')
+      .select('user_id, custom_roles!inner(is_system,is_active)')
+      .in('user_id', companyUserIds)
+      .eq('custom_roles.is_system', true)
+      .eq('custom_roles.is_active', true);
+
+    if (systemRolesError) {
+      console.error('Error fetching system roles for notification filtering:', systemRolesError);
+      throw systemRolesError;
+    }
+
+    const { data: centerAssignments, error: centerAssignmentsError } = await supabase
+          .from('user_center_assignments')
+          .select('user_id, operation_center_id, operation_centers!inner(company_id)')
+          .in('user_id', companyUserIds)
+          .eq('operation_centers.company_id', requisition.company_id);
+
+    if (centerAssignmentsError) {
+      console.error('Error fetching center assignments for notification filtering:', centerAssignmentsError);
+      throw centerAssignmentsError;
+    }
+
+    const adminUserIds = new Set((adminRoles || []).map(row => row.user_id));
+    const systemUserIds = new Set((systemRoles || []).map(row => row.user_id));
+    const scopedUserIds = new Set((centerAssignments || []).map(row => row.user_id));
+    const centerUserIds = new Set((centerAssignments || []).filter(row => row.operation_center_id === requisition.operation_center_id).map(row => row.user_id));
+
+    const canReceiveRequisitionApprovalNotification = (candidateUserId: string) => {
+      const hasPrivilegedAccess = adminUserIds.has(candidateUserId) || systemUserIds.has(candidateUserId);
+      return canReceiveRequisitionNotification({
+        privileged: hasPrivilegedAccess,
+        hasCompanyCenterAssignments: scopedUserIds.has(candidateUserId),
+        assignedToRequisitionCenter: Boolean(requisition.operation_center_id) && centerUserIds.has(candidateUserId),
+        confidential: requisition.is_confidential,
+        requester: candidateUserId === requisition.created_by || candidateUserId === requisition.solicitante_id,
+        currentApprover: activeApprovalUserIds.has(candidateUserId),
+      });
+    };
+
+    const authorizedCompanyUsers = companyUsers.filter(user =>
+      canReceiveRequisitionApprovalNotification(user.user_id)
+    );
+
+    if (authorizedCompanyUsers.length === 0) {
+      console.log('No authorized users can receive this requisition notification');
+      return new Response(
+        JSON.stringify({ message: 'No authorized users to notify for this requisition' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create in-app notifications for each user
-    const notifications = companyUsers.map(user => ({
+    const notifications = authorizedCompanyUsers.map(user => ({
       user_id: user.user_id,
       company_id: requisition.company_id,
       title: `Requisición pendiente de aprobación`,
@@ -132,14 +306,14 @@ serve(async (req: Request): Promise<Response> => {
       throw insertError;
     }
 
-    console.log(`Created ${companyUsers.length} in-app notifications for requisition ${requisitionId}`);
+    console.log(`Created ${authorizedCompanyUsers.length} in-app notifications for requisition ${requisitionId}`);
 
     // Send email notifications if Resend is configured
     let emailsSent = 0;
     if (resend) {
       // Get user preferences and emails
-      const userIdsToNotify = companyUsers.map(u => u.user_id);
-      
+      const userIdsToNotify = authorizedCompanyUsers.map(u => u.user_id);
+
       // Get email preferences for these users
       const { data: userPreferences, error: prefsError } = await supabase
         .from('user_preferences')
@@ -165,7 +339,7 @@ serve(async (req: Request): Promise<Response> => {
 
       // Get emails from auth.users via admin API
       const emailsToSend: Array<{ userId: string; email: string; displayName: string }> = [];
-      
+
       for (const userId of userIdsToNotify) {
         // Check preferences - skip if email notifications disabled
         const userPrefs = prefsMap.get(userId);
@@ -192,7 +366,7 @@ serve(async (req: Request): Promise<Response> => {
       for (const { email, displayName } of emailsToSend) {
         try {
           await resend.emails.send({
-            from: 'KRH <notificaciones@lovable.app>',
+            from: Deno.env.get("RESEND_FROM_EMAIL") || "EmpatiQ <onboarding@resend.dev>",
             to: [email],
             subject: `🔔 Requisición pendiente de aprobación - ${requisition.cargo_solicitado}`,
             html: `
@@ -222,36 +396,36 @@ serve(async (req: Request): Promise<Response> => {
                     <h1>📋 Requisición Pendiente</h1>
                   </div>
                   <div class="content">
-                    <span class="badge">Etapa: ${nextApprover.stepLabel}</span>
-                    <p>Hola ${displayName},</p>
+                    <span class="badge">Etapa: ${escapeRequisitionEmailText(nextApprover.stepLabel)}</span>
+                    <p>Hola ${escapeRequisitionEmailText(displayName)},</p>
                     <p>Tienes una nueva requisición de personal pendiente de tu aprobación.</p>
-                    
+
                     <div class="info-card">
                       <div class="info-row">
                         <span class="info-label">Cargo Solicitado:</span>
-                        <span class="info-value">${requisition.cargo_solicitado}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(requisition.cargo_solicitado)}</span>
                       </div>
                       <div class="info-row">
                         <span class="info-label">Solicitante:</span>
-                        <span class="info-value">${requisition.solicitante_nombre}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(requisition.solicitante_nombre)}</span>
                       </div>
                       <div class="info-row">
                         <span class="info-label">Tu Etapa:</span>
-                        <span class="info-value">${nextApprover.stepLabel}</span>
+                        <span class="info-value">${escapeRequisitionEmailText(nextApprover.stepLabel)}</span>
                       </div>
                     </div>
 
                     <p>Por favor revisa la requisición y registra tu decisión lo antes posible para continuar con el proceso de contratación.</p>
-                    
+
                     <center>
-                      <a href="https://krh.lovable.app/requisiciones?id=${requisitionId}" class="cta-button">
+                      <a href="https://empatiq.portalpetrocasinos.com/requisiciones?id=${requisitionId}" class="cta-button">
                         Revisar Requisición →
                       </a>
                     </center>
                   </div>
                   <div class="footer">
-                    <p>Este es un mensaje automático del sistema KRH de gestión de recursos humanos.</p>
-                    <p>© ${new Date().getFullYear()} KRH - Gestión de Recursos Humanos</p>
+                    <p>Este es un mensaje automático del sistema EmpatiQ de gestión de recursos humanos.</p>
+                    <p>© ${new Date().getFullYear()} EmpatiQ - Gestión de Recursos Humanos</p>
                   </div>
                 </div>
               </body>
@@ -270,11 +444,11 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        notifiedUsers: companyUsers.length,
+      JSON.stringify({
+        success: true,
+        notifiedUsers: authorizedCompanyUsers.length,
         emailsSent,
-        step: nextApprover.stepLabel 
+        step: nextApprover.stepLabel
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

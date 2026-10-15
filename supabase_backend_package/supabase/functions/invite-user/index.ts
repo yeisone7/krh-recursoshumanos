@@ -8,9 +8,32 @@ const corsHeaders = {
 
 interface InviteRequest {
   email: string;
+  mobile: string;
   roles: string[];
   companyId: string;
 }
+
+const normalizeColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.length === 10 && digits.startsWith("3")) {
+    return `+57${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith("57") && digits[2] === "3") {
+    return `+${digits}`;
+  }
+
+  return value.trim();
+};
+
+const isValidColombianMobile = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return (
+    (digits.length === 10 && digits.startsWith("3")) ||
+    (digits.length === 12 && digits.startsWith("57") && digits[2] === "3")
+  );
+};
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -68,11 +91,21 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body: InviteRequest = await req.json();
-    const { email, roles: newRoles, companyId } = body;
+    const { email, mobile, roles: newRoles, companyId } = body;
 
-    if (!email || !newRoles || !companyId) {
+    if (!email || !mobile || !newRoles || !companyId) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: email, roles, companyId" }),
+        JSON.stringify({ error: "Missing required fields: email, mobile, roles, companyId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const normalizedMobile = normalizeColombianMobile(mobile);
+    if (!isValidColombianMobile(normalizedMobile)) {
+      return new Response(
+        JSON.stringify({
+          error: "Invalid Colombian mobile number. Use 300 123 4567 or +57 300 123 4567",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -106,7 +139,7 @@ Deno.serve(async (req) => {
     } else {
       // Create new user with invite
       const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: `${req.headers.get("origin") || "https://lovable.dev"}/auth`,
+        redirectTo: `${req.headers.get("origin") || "https://empatiq.portalpetrocasinos.com"}/auth`,
       });
 
       if (inviteError) {
@@ -119,6 +152,18 @@ Deno.serve(async (req) => {
 
       invitedUserId = inviteData.user.id;
       console.log("User invited successfully:", invitedUserId);
+    }
+
+    // Persist the user's mobile number for admin visibility
+    const { error: profileError } = await supabaseAdmin
+      .from("user_profiles")
+      .upsert({
+        id: invitedUserId,
+        mobile: normalizedMobile,
+      }, { onConflict: "id" });
+
+    if (profileError) {
+      console.warn("Profile mobile update skipped:", profileError);
     }
 
     // Assign roles
@@ -148,8 +193,8 @@ Deno.serve(async (req) => {
     console.log("User invitation complete");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         userId: invitedUserId,
         message: existingUser ? "User added to company" : "Invitation sent"
       }),

@@ -1,5 +1,6 @@
+import { requireDirectAIProvider } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,9 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GATEWAY_TEXT_MODEL = "google/gemini-2.5-flash-lite";
-const GATEWAY_IMAGE_MODEL = "google/gemini-2.5-flash-image";
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
@@ -252,31 +250,6 @@ async function generateScriptOpenAIDirect(apiKey: string, prompt: string): Promi
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function generateScriptGateway(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: GATEWAY_TEXT_MODEL,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!response.ok) {
-    if (response.status === 429) throw { status: 429, message: "Límite de solicitudes excedido. Configure sus propias API keys en Configuración → IA." };
-    if (response.status === 402) throw { status: 402, message: "Créditos insuficientes. Configure sus propias API keys en Configuración → IA." };
-    const errorText = await response.text();
-    console.error("Script gateway error:", response.status, errorText);
-    throw new Error(`Script generation failed: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-// --- Image generation ---
-
 async function generateImageGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string | null> {
   const modelCandidates = uniqueStrings([
     preferredModel,
@@ -403,31 +376,8 @@ async function generateImageOpenAIDirect(apiKey: string, prompt: string, preferr
   return null;
 }
 
-async function generateImageGateway(apiKey: string, prompt: string): Promise<string | null> {
-  try {
-    const response = await fetchWithRetry(GATEWAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: GATEWAY_IMAGE_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
-      }),
-    });
-    if (!response.ok) { console.warn("Gateway image failed:", response.status); return null; }
-    const data = await response.json();
-    return data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
-  } catch (e) {
-    console.warn("Gateway image error:", e);
-    return null;
-  }
-}
-
 async function storeGeneratedImage(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   source: string,
   fileName: string
 ) {
@@ -459,10 +409,9 @@ async function storeGeneratedImage(
 
 async function generateImageForConfiguredProvider(
   aiConfig: AIConfig,
-  lovableApiKey: string | undefined,
   prompt: string
 ) {
-  const provider = aiConfig.model || "gateway";
+  const provider = requireDirectAIProvider(aiConfig);
 
   if (provider === "gemini" && aiConfig.gemini_api_key) {
     return await withTimeout(
@@ -476,10 +425,6 @@ async function generateImageForConfiguredProvider(
       generateImageOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_image_model),
       IMAGE_TIMEOUT_MS
     );
-  }
-
-  if ((provider === "gateway" || provider === "lovable_ai") && lovableApiKey) {
-    return await withTimeout(generateImageGateway(lovableApiKey, prompt), IMAGE_TIMEOUT_MS);
   }
 
   return null;
@@ -504,14 +449,13 @@ Deno.serve(async (req) => {
     await requireTrainingPermission(requestUserId, companyId);
 
     const aiConfig = await getAIConfig(companyId);
-    const provider = aiConfig.model || "gateway";
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const provider = requireDirectAIProvider(aiConfig);
 
     // Determine which provider to use for text (script) and images
     const useGeminiDirect = provider === "gemini" && !!aiConfig.gemini_api_key;
     const useOpenAIDirect = provider === "openai" && !!aiConfig.openai_api_key;
 
-    if (!useGeminiDirect && !useOpenAIDirect && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
+    if (!useGeminiDirect && !useOpenAIDirect) throw new Error("No hay proveedor de IA configurado.");
 
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
     const styleLabel = STYLE_LABELS[style] || "Clásico";
@@ -536,7 +480,7 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
       } else if (useOpenAIDirect) {
         sceneText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scenePrompt);
       } else {
-        sceneText = await generateScriptGateway(LOVABLE_API_KEY!, scenePrompt);
+        throw new Error("No hay proveedor de IA configurado.");
       }
 
       let newScene: { title: string; narration: string; visual_description: string };
@@ -549,7 +493,7 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
 
       // Generate new image
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${newScene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
-      const imageSource = await generateImageForConfiguredProvider(aiConfig, LOVABLE_API_KEY || undefined, imagePrompt);
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, imagePrompt);
 
       let finalUrl = imageSource || '';
       if (imageSource) {
@@ -614,8 +558,7 @@ Responde en formato JSON con esta estructura exacta:
       console.log("Generating script via OpenAI direct...");
       scriptText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scriptPrompt);
     } else {
-      console.log("Generating script via Gateway...");
-      scriptText = await generateScriptGateway(LOVABLE_API_KEY!, scriptPrompt);
+      throw new Error("No hay proveedor de IA configurado.");
     }
 
     let script: { scenes: Array<{ title: string; narration: string; visual_description: string }>; summary: string };
@@ -635,7 +578,7 @@ Responde en formato JSON con esta estructura exacta:
     const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
 
-      const imageSource = await generateImageForConfiguredProvider(aiConfig, LOVABLE_API_KEY || undefined, imagePrompt);
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, imagePrompt);
 
       if (!imageSource) return null;
 

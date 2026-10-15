@@ -1,3 +1,4 @@
+import { requireDirectAIProvider } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,8 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const SCRIPT_MODEL = "google/gemini-1.5-flash";
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
@@ -306,7 +305,7 @@ Deno.serve(async (req) => {
     if (!title) return jsonResponse({ error: "title is required" }, 400);
 
     const aiConfig = await getAIConfig(companyId);
-    const provider = aiConfig.model || "openai";
+    const provider = requireDirectAIProvider(aiConfig);
 
     const wordCount = duration === "short" ? 150 : duration === "long" ? 750 : 400;
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
@@ -325,7 +324,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
 
     let scriptText = "";
 
-    // Step 1: Generate narration script via Direct API or Gateway
+    // Step 1: Generate narration script via the configured direct API
     try {
       if (provider === "openai" && aiConfig.openai_api_key) {
         console.log("Generating audio script via OpenAI direct...");
@@ -360,23 +359,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
         const data = await res.json();
         scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
       } else {
-        console.log("Generating audio script via Gateway (fallback)...");
-        const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-        if (!LOVABLE_API_KEY) throw new Error("No hay API Keys configuradas ni acceso al Gateway.");
-        const res = await fetch(GATEWAY_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: SCRIPT_MODEL,
-            messages: [{ role: "user", content: scriptPrompt }],
-          }),
-        });
-        if (!res.ok) throw new Error(`Gateway script error: ${res.status}`);
-        const data = await res.json();
-        scriptText = data.choices?.[0]?.message?.content?.trim();
+        throw new Error("No hay proveedor de IA configurado.");
       }
     } catch (err: any) {
       console.error("Script generation failed:", err);
@@ -433,7 +416,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
     const fileName = `${courseId}/audio_${duration}_${Date.now()}.${audioResult.extension}`;
     const { error: uploadError } = await supabase.storage
       .from("training-media")
-      .upload(fileName, audioResult.bytes.buffer, { contentType: audioResult.contentType });
+      .upload(fileName, audioResult.bytes, { contentType: audioResult.contentType });
 
     if (uploadError) {
       console.warn("Upload failed:", uploadError);

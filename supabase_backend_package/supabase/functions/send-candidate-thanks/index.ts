@@ -1,4 +1,4 @@
-import { getSecretKey } from "../_shared/apiKeys.ts";
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const corsHeaders = {
@@ -23,9 +23,20 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = getSecretKey();
+    const anonKey = getPublishableKey();
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+    const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    const userId = userData?.user?.id;
+    if (userError || !userId) {
+      return new Response(
+        JSON.stringify({ error: "No autorizado" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get candidate with vacancy and company info
     const { data: candidate, error: candidateError } = await supabase
@@ -38,6 +49,33 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Candidate not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const companyId = candidate.vacancies?.company_id;
+    const { data: systemRole } = await supabase
+      .from("user_custom_roles")
+      .select("id, custom_roles!inner(is_system,is_active)")
+      .eq("user_id", userId)
+      .eq("custom_roles.is_system", true)
+      .eq("custom_roles.is_active", true)
+      .limit(1);
+    const { data: hasPermission } = await supabase.rpc("check_user_permission", {
+      _user_id: userId,
+      _module_code: "seleccion",
+      _action: "update",
+    });
+    const { data: assignment } = await supabase
+      .from("user_company_assignments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (!systemRole?.length && (!assignment || !hasPermission)) {
+      return new Response(
+        JSON.stringify({ error: "No tienes permiso para enviar correos de candidatos." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -60,7 +98,7 @@ Deno.serve(async (req) => {
 
     // Build the public URL for the image
     const appUrl = supabaseUrl.replace('.supabase.co', '').replace('https://', '');
-    const imageUrl = `https://krh-petrocasinos.lovable.app/images/IMAGEN_AGRADECIMIENTO.png`;
+    const imageUrl = `https://empatiq.portalpetrocasinos.com/images/IMAGEN_AGRADECIMIENTO.png`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -74,7 +112,7 @@ Deno.serve(async (req) => {
               Estimado(a) ${candidate.first_name} ${candidate.last_name},
             </p>
             <p style="color:#666;font-size:14px;line-height:1.6;">
-              Agradecemos sinceramente su interés y participación en nuestro proceso de selección 
+              Agradecemos sinceramente su interés y participación en nuestro proceso de selección
               para el cargo de <strong>${positionTitle}</strong>.
             </p>
             <p style="color:#666;font-size:14px;line-height:1.6;">

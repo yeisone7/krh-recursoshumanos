@@ -44,7 +44,7 @@ serve(async (req: Request): Promise<Response> => {
     const supabaseServiceKey = getSecretKey();
     const supabaseAnonKey = getPublishableKey();
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
-    
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     const authHeader = req.headers.get('Authorization') || req.headers.get('authorization') || '';
     const authClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authHeader } } });
@@ -57,9 +57,9 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
     const resend = resendApiKey ? new Resend(resendApiKey) : null;
-    
+
     const { requisitionId }: NotifyRequest = await req.json();
-    
+
     if (!requisitionId) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: requisitionId' }),
@@ -138,7 +138,7 @@ serve(async (req: Request): Promise<Response> => {
     const nextApprover = configuredStep?.kind === 'custom'
       ? { role: 'admin', stepLabel: configuredStep.name, permissionModule: undefined }
       : statusToNextRole[currentStep] ? { ...statusToNextRole[currentStep], stepLabel: configuredStep?.name ?? statusToNextRole[currentStep].stepLabel } : null;
-    
+
     if (!nextApprover) {
       // No more approvers (requisition is approved or rejected)
       return new Response(
@@ -313,7 +313,7 @@ serve(async (req: Request): Promise<Response> => {
     if (resend) {
       // Get user preferences and emails
       const userIdsToNotify = authorizedCompanyUsers.map(u => u.user_id);
-      
+
       // Get email preferences for these users
       const { data: userPreferences, error: prefsError } = await supabase
         .from('user_preferences')
@@ -339,7 +339,7 @@ serve(async (req: Request): Promise<Response> => {
 
       // Get emails from auth.users via admin API
       const emailsToSend: Array<{ userId: string; email: string; displayName: string }> = [];
-      
+
       for (const userId of userIdsToNotify) {
         // Check preferences - skip if email notifications disabled
         const userPrefs = prefsMap.get(userId);
@@ -366,7 +366,7 @@ serve(async (req: Request): Promise<Response> => {
       for (const { email, displayName } of emailsToSend) {
         try {
           await resend.emails.send({
-            from: 'EmpatiQ <notificaciones@lovable.app>',
+            from: Deno.env.get("RESEND_FROM_EMAIL") || "EmpatiQ <onboarding@resend.dev>",
             to: [email],
             subject: `🔔 Requisición pendiente de aprobación - ${requisition.cargo_solicitado}`,
             html: `
@@ -399,7 +399,7 @@ serve(async (req: Request): Promise<Response> => {
                     <span class="badge">Etapa: ${escapeRequisitionEmailText(nextApprover.stepLabel)}</span>
                     <p>Hola ${escapeRequisitionEmailText(displayName)},</p>
                     <p>Tienes una nueva requisición de personal pendiente de tu aprobación.</p>
-                    
+
                     <div class="info-card">
                       <div class="info-row">
                         <span class="info-label">Cargo Solicitado:</span>
@@ -416,9 +416,9 @@ serve(async (req: Request): Promise<Response> => {
                     </div>
 
                     <p>Por favor revisa la requisición y registra tu decisión lo antes posible para continuar con el proceso de contratación.</p>
-                    
+
                     <center>
-                      <a href="https://krh.lovable.app/requisiciones?id=${requisitionId}" class="cta-button">
+                      <a href="https://empatiq.portalpetrocasinos.com/requisiciones?id=${requisitionId}" class="cta-button">
                         Revisar Requisición →
                       </a>
                     </center>
@@ -444,11 +444,11 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         notifiedUsers: authorizedCompanyUsers.length,
         emailsSent,
-        step: nextApprover.stepLabel 
+        step: nextApprover.stepLabel
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

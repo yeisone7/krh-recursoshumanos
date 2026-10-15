@@ -25,7 +25,6 @@
     "dotation-images"
   ],
   "required_secrets": [
-    "LOVABLE_API_KEY",
     "RESEND_API_KEY"
   ],
   "platform_injected_keys": [

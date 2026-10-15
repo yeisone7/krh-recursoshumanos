@@ -1,3 +1,4 @@
+import { requireDirectAIProvider } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,8 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GATEWAY_IMAGE_MODEL = "openai/dall-e-3"; // Usamos DALL-E-3 via gateway por estabilidad
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
@@ -129,7 +128,7 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = getSecretKey();
-    
+
     if (!supabaseUrl || !supabaseKey) {
       console.warn("SUPABASE_URL or SERVICE_ROLE_KEY missing in environment");
       return {};
@@ -142,7 +141,7 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
       .eq("company_id", companyId)
       .eq("config_key", "ai_config")
       .maybeSingle();
-    
+
     if (error) {
       console.warn("Database error fetching AI config:", error.message);
       return {};
@@ -178,11 +177,11 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string): Promis
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { 
+      generationConfig: {
         // Note: For actual image generation via Gemini API, specific endpoints like Imagen are often used.
         // If Gemini 1.5 Flash is used for text-to-image in a specific tier, this works.
         // If not, we'll suggest using OpenAI for images if they have both keys.
-        responseModalities: ["IMAGE", "TEXT"] 
+        responseModalities: ["IMAGE", "TEXT"]
       },
     }),
   });
@@ -229,7 +228,7 @@ async function generateImageOpenAIDirect(apiKey: string, prompt: string): Promis
 
   // Handle both URL and Base64 formats
   const imageData = result.data?.[0]?.url || result.data?.[0]?.b64_json;
-  
+
   if (!imageData) {
     console.error("OpenAI response missing image data. Full JSON:", JSON.stringify(result));
     throw new Error("OpenAI no devolvió ninguna imagen. Verifique si el modelo gpt-image-1.5 está disponible en su región.");
@@ -295,38 +294,6 @@ async function generateImageOpenAIWithFallback(apiKey: string, prompt: string, p
   throw new Error(lastError || "OpenAI no pudo generar la imagen.");
 }
 
-async function generateImageGateway(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: GATEWAY_IMAGE_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      modalities: ["image", "text"],
-    }),
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) {
-      throw { status: 429, message: "Límite de solicitudes excedido. Configure sus propias API keys en Configuración → IA." };
-    }
-    if (response.status === 402) {
-      throw { status: 402, message: "Créditos insuficientes. Configure sus propias API keys en Configuración → IA." };
-    }
-    const errorText = await response.text();
-    console.error("AI gateway error:", response.status, errorText);
-    throw new Error(`AI gateway error: ${response.status}`);
-  }
-
-  const aiResponse = await response.json();
-  const imageData = aiResponse.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  if (!imageData) throw new Error("No image generated");
-  return imageData;
-}
-
 async function generateTextGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
   const model = preferredModel || Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash";
   const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
@@ -361,33 +328,15 @@ async function generateTextOpenAIDirect(apiKey: string, prompt: string, preferre
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function generateTextGateway(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash-lite",
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!response.ok) throw new Error(extractProviderError("Gateway", response.status, await response.text()));
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
-
-async function generateSlidesText(aiConfig: AIConfig, lovableApiKey: string | undefined, prompt: string) {
-  const provider = aiConfig.model || "gateway";
+async function generateSlidesText(aiConfig: AIConfig, prompt: string) {
+  const provider = requireDirectAIProvider(aiConfig);
   if (provider === "gemini" && aiConfig.gemini_api_key) {
     return await generateTextGeminiDirect(aiConfig.gemini_api_key, prompt, aiConfig.gemini_model);
   }
   if (provider === "openai" && aiConfig.openai_api_key) {
     return await generateTextOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_model);
   }
-  if (!lovableApiKey) throw new Error("No hay proveedores de IA configurados. Por favor configure sus API keys de OpenAI o Gemini.");
-  return await generateTextGateway(lovableApiKey, prompt);
+  throw new Error("No hay proveedor de IA configurado.");
 }
 
 function parseSlidesResponse(text: string, title: string) {
@@ -425,7 +374,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    
+
     console.log("Request body received:", JSON.stringify(body));
     const { type, title, content, puntosClave, courseId, skipUpload, companyId } = body;
     await requireTrainingPermission(req, companyId);
@@ -476,8 +425,7 @@ Responde SOLO JSON valido con esta estructura exacta:
   ]
 }`;
 
-      const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-      const text = await generateSlidesText(aiConfig, LOVABLE_API_KEY || undefined, slidePrompt);
+      const text = await generateSlidesText(aiConfig, slidePrompt);
       const deck = parseSlidesResponse(text, title);
       if (!deck.slides.length) throw new Error("La IA no devolvio diapositivas validas.");
 
@@ -505,10 +453,10 @@ Responde SOLO JSON valido con esta estructura exacta:
     }
 
     let imageData: string;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const provider = aiConfig.model || "gateway";
-    
-    console.log("Using provider:", provider, "Has LOVABLE_API_KEY:", !!LOVABLE_API_KEY);
+
+    const provider = requireDirectAIProvider(aiConfig);
+
+    console.log("Using provider:", provider);
 
     // Route based on selected provider in configuration
     if (provider === "gemini" && aiConfig.gemini_api_key) {
@@ -528,20 +476,15 @@ Responde SOLO JSON valido con esta estructura exacta:
         throw openaiErr;
       }
     } else {
-      if (!LOVABLE_API_KEY) {
-        console.error("LOVABLE_API_KEY is missing in environment and no user keys found");
-        throw new Error("No hay proveedores de IA configurados. Por favor configure sus API keys de OpenAI o Gemini.");
-      }
-      console.log("Generating media via Gateway (default):", type);
-      imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
+      throw new Error("No hay proveedor de IA configurado.");
     }
-    
+
     console.log("Image generation successful. Length:", imageData.length);
 
     // If skipUpload is true, we should still ensure the frontend can access the image (CORS)
     // If it's an external URL, we fetch it here and return as base64
     let storedUrl = imageData;
-    
+
     if (skipUpload) {
       if (imageData.startsWith("http")) {
         console.log("Fetching external image to return as base64 (CORS bypass):", imageData);
@@ -589,7 +532,7 @@ Responde SOLO JSON valido con esta estructura exacta:
         const fileName = `${courseId}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from("training-media")
-          .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
+          .upload(fileName, bytes, { contentType: "image/png", upsert: true });
 
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
@@ -608,7 +551,7 @@ Responde SOLO JSON valido con esta estructura exacta:
     console.error("generate-training-media error:", error);
     const status = error?.status || 200;
     const message = error?.message || (error instanceof Error ? error.message : "Error generating media");
-    
+
     // Provider errors remain 200 to preserve the existing frontend handling. Auth errors use their status.
     return new Response(
       JSON.stringify({ error: message, details: error?.toString() }),

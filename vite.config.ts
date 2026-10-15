@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { writeFileSync } from "fs";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 import pkg from './package.json';
@@ -36,7 +35,6 @@ export default defineConfig(({ mode }) => {
   },
   plugins: [
     react(),
-    mode === "development" && componentTagger(),
     appVersionPlugin(),
     VitePWA({
       registerType: "prompt",

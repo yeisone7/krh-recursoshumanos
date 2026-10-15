@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
 
     // Build the public URL for the image
     const appUrl = supabaseUrl.replace('.supabase.co', '').replace('https://', '');
-    const imageUrl = `https://krh-petrocasinos.lovable.app/images/IMAGEN_AGRADECIMIENTO.png`;
+    const imageUrl = `https://empatiq.portalpetrocasinos.com/images/IMAGEN_AGRADECIMIENTO.png`;
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
               Estimado(a) ${candidate.first_name} ${candidate.last_name},
             </p>
             <p style="color:#666;font-size:14px;line-height:1.6;">
-              Agradecemos sinceramente su interés y participación en nuestro proceso de selección 
+              Agradecemos sinceramente su interés y participación en nuestro proceso de selección
               para el cargo de <strong>${positionTitle}</strong>.
             </p>
             <p style="color:#666;font-size:14px;line-height:1.6;">

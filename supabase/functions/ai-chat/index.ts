@@ -1,3 +1,4 @@
+import { getDirectAIProviders } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -7,8 +8,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_GATEWAY_MODEL = "google/gemini-3-flash-preview";
 
 type ChatRole = "user" | "assistant";
 type ChatMode = "app_help" | "data_analysis";
@@ -240,27 +239,6 @@ function extractProviderError(provider: string, status: number, errorText: strin
   return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
 }
 
-async function callGateway(apiKey: string, systemPrompt: string, messages: ChatMessage[]) {
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: DEFAULT_GATEWAY_MODEL,
-      messages: [{ role: "system", content: systemPrompt }, ...messages],
-      temperature: 0.35,
-    }),
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) throw { status: 429, message: "Limite de solicitudes de IA excedido. Intenta nuevamente en unos momentos." };
-    if (response.status === 402) throw { status: 402, message: "Creditos de IA insuficientes. Revisa el saldo de Lovable AI o configura una API Key propia en Configuracion > IA." };
-    throw new Error(extractProviderError("Lovable AI", response.status, await response.text()));
-  }
-
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || "No pude generar una respuesta.";
-}
-
 async function callGemini(apiKey: string, systemPrompt: string, messages: ChatMessage[], preferredModel?: string) {
   const modelCandidates = uniqueStrings([preferredModel, Deno.env.get("GEMINI_CHAT_MODEL"), "gemini-2.0-flash", "gemini-1.5-flash"]);
   let lastError = "";
@@ -321,7 +299,7 @@ async function callOpenAI(apiKey: string, systemPrompt: string, messages: ChatMe
 }
 
 async function generateAnswer(aiConfig: AIConfig, systemPrompt: string, messages: ChatMessage[]) {
-  const providerOrder = uniqueStrings([aiConfig.model, aiConfig.model === "openai" ? "gemini" : "openai", "lovable_ai"]);
+  const providerOrder = getDirectAIProviders(aiConfig);
   const failures: string[] = [];
 
   for (const provider of providerOrder) {
@@ -332,14 +310,7 @@ async function generateAnswer(aiConfig: AIConfig, systemPrompt: string, messages
       if (provider === "gemini" && aiConfig.gemini_api_key) {
         return { provider: "gemini", answer: await callGemini(aiConfig.gemini_api_key, systemPrompt, messages, aiConfig.gemini_model) };
       }
-      if (provider === "lovable_ai") {
-        const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-        if (!lovableApiKey) {
-          failures.push("Lovable AI no tiene clave global configurada");
-          continue;
-        }
-        return { provider: "lovable_ai", answer: await callGateway(lovableApiKey, systemPrompt, messages) };
-      }
+
     } catch (error) {
       failures.push(getErrorMessage(error));
       console.error("AI provider failed:", provider, error);
@@ -466,7 +437,7 @@ serve(async (req) => {
       role: "assistant" as const,
       content: generation.answer,
       ai_provider: generation.provider,
-      metadata: { selected_model: aiConfig.model || "gateway", temporary: true },
+      metadata: { selected_model: generation.provider, temporary: true },
       created_at: new Date().toISOString(),
     };
 

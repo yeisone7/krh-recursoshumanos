@@ -25,7 +25,7 @@ npx supabase db push --include-all --password $env:SUPABASE_DB_PASSWORD
 
 Write-Host "Setting secrets..."
 # Supabase injects SUPABASE_PUBLISHABLE_KEYS and SUPABASE_SECRET_KEYS itself.
-npx supabase secrets set LOVABLE_API_KEY="$env:LOVABLE_API_KEY" RESEND_API_KEY="$env:RESEND_API_KEY"
+npx supabase secrets set RESEND_API_KEY="$env:RESEND_API_KEY"
 
 Write-Host "Deploying Edge Functions..."
 $functions = @(

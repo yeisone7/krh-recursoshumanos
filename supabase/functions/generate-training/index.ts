@@ -1,3 +1,4 @@
+import { getDirectAIProviders } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,8 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const DEFAULT_GATEWAY_MODEL = "google/gemini-3-flash-preview";
 const TRAINING_AI_ALLOWED_PERMISSIONS = [
   { module: "capacitaciones_ia", action: "view" },
   { module: "capacitaciones_ia", action: "create" },
@@ -187,105 +186,6 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
   return response!;
 }
 
-async function callGeminiDirect(apiKey: string, systemPrompt: string, userPrompt: string): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-  const response = await fetchWithRetry(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}\n\nResponde ÚNICAMENTE con un JSON válido con las llaves: introduccion, objetivos, contenido, puntosClave, evaluacion. Sin texto adicional fuera del JSON.` }] },
-      ],
-      generationConfig: { temperature: 0.7 },
-    }),
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("Gemini direct error:", response.status, errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  const cleaned = text.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-  return JSON.parse(cleaned);
-}
-
-async function callOpenAIDirect(apiKey: string, systemPrompt: string, userPrompt: string): Promise<any> {
-  const tool = buildToolSchema();
-  const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-      tools: [tool],
-      tool_choice: { type: "function", function: { name: "generate_training_content" } },
-    }),
-  });
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error("OpenAI direct error:", response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.status}`);
-  }
-  const data = await response.json();
-  const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-  if (toolCall?.function?.arguments) {
-    return JSON.parse(toolCall.function.arguments);
-  }
-  throw new Error("No tool call in OpenAI response");
-}
-
-async function callGateway(apiKey: string, systemPrompt: string, userPrompt: string): Promise<any> {
-  const tool = buildToolSchema();
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: DEFAULT_GATEWAY_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.7,
-      tools: [tool],
-      tool_choice: { type: "function", function: { name: "generate_training_content" } },
-    }),
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) {
-      throw { status: 429, message: "Límite de solicitudes excedido. Intente de nuevo en unos momentos. Puede configurar sus propias API keys en Configuración → IA." };
-    }
-    if (response.status === 402) {
-      throw { status: 402, message: "Créditos insuficientes. Configure sus propias API keys en Configuración → IA para usar su propia cuenta." };
-    }
-    const errorText = await response.text();
-    console.error("Gateway error:", response.status, errorText);
-    throw new Error(`AI gateway error: ${response.status}`);
-  }
-
-  const aiResponse = await response.json();
-  const toolCall = aiResponse.choices?.[0]?.message?.tool_calls?.[0];
-  if (toolCall?.function?.arguments) {
-    return JSON.parse(toolCall.function.arguments);
-  }
-  // Fallback: parse from content
-  const rawContent = aiResponse.choices?.[0]?.message?.content;
-  if (!rawContent) throw new Error("No content returned from AI");
-  const cleaned = rawContent.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-  return JSON.parse(cleaned);
-}
-
 async function callGeminiTraining(apiKey: string, systemPrompt: string, userPrompt: string, preferredModel?: string): Promise<any> {
   const modelCandidates = uniqueStrings([
     preferredModel,
@@ -372,21 +272,8 @@ async function callOpenAITraining(apiKey: string, systemPrompt: string, userProm
   throw new Error(lastError || "OpenAI no pudo generar contenido.");
 }
 
-async function callGatewayTraining(apiKey: string, systemPrompt: string, userPrompt: string): Promise<any> {
-  try {
-    return await callGateway(apiKey, systemPrompt, userPrompt);
-  } catch (error) {
-    throw new Error(getErrorMessage(error));
-  }
-}
-
 async function generateTrainingWithAI(aiConfig: AIConfig, systemPrompt: string, userPrompt: string): Promise<any> {
-  const providerOrder = uniqueStrings([
-    aiConfig.model === "lovable_ai" ? "gateway" : aiConfig.model,
-    aiConfig.model === "openai" ? "gemini" : "openai",
-    aiConfig.model === "gemini" ? "openai" : "gemini",
-    "gateway",
-  ]);
+  const providerOrder = getDirectAIProviders(aiConfig);
   const failures: string[] = [];
 
   for (const provider of providerOrder) {
@@ -399,15 +286,7 @@ async function generateTrainingWithAI(aiConfig: AIConfig, systemPrompt: string, 
         console.log("Using Gemini direct API");
         return await callGeminiTraining(aiConfig.gemini_api_key, systemPrompt, userPrompt, aiConfig.gemini_model);
       }
-      if (provider === "gateway") {
-        const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-        if (!lovableApiKey) {
-          failures.push("Lovable AI no tiene clave global configurada");
-          continue;
-        }
-        console.log("Using Lovable AI Gateway with model:", DEFAULT_GATEWAY_MODEL);
-        return await callGatewayTraining(lovableApiKey, systemPrompt, userPrompt);
-      }
+
     } catch (error) {
       const message = getErrorMessage(error);
       failures.push(message);

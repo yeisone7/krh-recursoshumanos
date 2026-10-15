@@ -1,5 +1,5 @@
-import { getSecretKey } from "../_shared/apiKeys.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireDirectAIProvider } from "../_shared/aiProviders.ts";
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -8,30 +8,148 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GATEWAY_IMAGE_MODEL = "google/gemini-3-pro-image-preview";
+const TRAINING_AI_ALLOWED_PERMISSIONS = [
+  { module: "capacitaciones_ia", action: "view" },
+  { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones_ia", action: "update" },
+  { module: "capacitaciones", action: "view" },
+  { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones", action: "update" },
+  { module: "capacitaciones_manual", action: "view" },
+  { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_manual", action: "update" },
+  { module: "capacitaciones_biblioteca", action: "view" },
+  { module: "capacitaciones_biblioteca", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "update" },
+];
+const ADMIN_ROLE_NAMES = ["administrador", "admin", "super admin", "superadmin"];
 
 interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  openai_model?: string;
+  openai_image_model?: string;
+}
+
+async function requireTrainingPermission(req: Request, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: "companyId is required" };
+
+  const authHeader = req.headers.get("Authorization") || req.headers.get("authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) throw { status: 401, message: "No autorizado" };
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = getPublishableKey();
+  const serviceKey = getSecretKey();
+  const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const adminClient = createClient(supabaseUrl, serviceKey);
+
+  const { data: userData, error: userError } = await authClient.auth.getUser();
+  const userId = userData?.user?.id;
+  if (userError || !userId) throw { status: 401, message: "No autorizado" };
+
+  const { data: systemRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(is_system,is_active)")
+    .eq("user_id", userId)
+    .eq("custom_roles.is_system", true)
+    .eq("custom_roles.is_active", true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: legacyAdminRole } = await adminClient
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+
+  const isLegacyAdmin = Boolean(legacyAdminRole?.length);
+  const { data: companyAdminRole } = await adminClient
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(name,is_active,company_id)")
+    .eq("user_id", userId)
+    .eq("custom_roles.company_id", companyId)
+    .eq("custom_roles.is_active", true);
+
+  const isCompanyAdminRole = (companyAdminRole || []).some((row: any) =>
+    ADMIN_ROLE_NAMES.includes(String(row.custom_roles?.name || "").trim().toLowerCase())
+  );
+
+  const permissionChecks = await Promise.all(
+    TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
+      adminClient.rpc("check_user_permission", {
+        _user_id: userId,
+        _module_code: permission.module,
+        _action: permission.action,
+      })
+    )
+  );
+  const hasPermission = permissionChecks.some(({ data }) => data === true);
+
+  if (!isSystemRole && !isLegacyAdmin && !isCompanyAdminRole) {
+    const { data: assignment } = await adminClient
+      .from("user_company_assignments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (!assignment || !hasPermission) {
+      throw { status: 403, message: "No tienes permiso para generar medios de capacitación en esta empresa." };
+    }
+  }
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
 }
 
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
+  console.log("getAIConfig called for companyId:", companyId);
   if (!companyId) return {};
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = getSecretKey();
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn("SUPABASE_URL or SERVICE_ROLE_KEY missing in environment");
+      return {};
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const { data: configRow } = await supabase
+    const { data: configRow, error } = await supabase
       .from("system_config")
       .select("config_value")
       .eq("company_id", companyId)
       .eq("config_key", "ai_config")
       .maybeSingle();
+
+    if (error) {
+      console.warn("Database error fetching AI config:", error.message);
+      return {};
+    }
+
     return (configRow?.config_value as AIConfig) || {};
   } catch (e) {
-    console.warn("Could not read AI config:", e);
+    console.warn("Unexpected error reading AI config from DB:", e);
     return {};
   }
 }
@@ -52,19 +170,25 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
 }
 
 async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+  console.log("Generating with Gemini 1.5 Flash Direct...");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   const response = await fetchWithRetry(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      generationConfig: {
+        // Note: For actual image generation via Gemini API, specific endpoints like Imagen are often used.
+        // If Gemini 1.5 Flash is used for text-to-image in a specific tier, this works.
+        // If not, we'll suggest using OpenAI for images if they have both keys.
+        responseModalities: ["IMAGE", "TEXT"]
+      },
     }),
   });
   if (!response.ok) {
     const errorText = await response.text();
     console.error("Gemini direct image error:", response.status, errorText);
-    throw new Error(`Gemini image API error: ${response.status}`);
+    throw new Error(`Gemini image API error: ${response.status}. Asegúrese de que su API Key tenga acceso a generación de imágenes.`);
   }
   const data = await response.json();
   const parts = data.candidates?.[0]?.content?.parts || [];
@@ -73,60 +197,243 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string): Promis
       return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
     }
   }
-  throw new Error("No image in Gemini response");
+  throw new Error("No se generó ninguna imagen en la respuesta de Gemini. Considere usar OpenAI para imágenes si el problema persiste.");
 }
 
-async function generateImageGateway(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetchWithRetry(GATEWAY_URL, {
+async function generateImageOpenAIDirect(apiKey: string, prompt: string): Promise<string> {
+  console.log("Generating with OpenAI ChatGPT Images 2.0 (gpt-image-1.5) Direct...");
+  const response = await fetchWithRetry("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: GATEWAY_IMAGE_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      modalities: ["image", "text"],
+      model: "gpt-image-1.5",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
     }),
   });
 
   if (!response.ok) {
-    if (response.status === 429) {
-      throw { status: 429, message: "Límite de solicitudes excedido. Configure sus propias API keys en Configuración → IA." };
-    }
-    if (response.status === 402) {
-      throw { status: 402, message: "Créditos insuficientes. Configure sus propias API keys en Configuración → IA." };
-    }
-    const errorText = await response.text();
-    console.error("AI gateway error:", response.status, errorText);
-    throw new Error(`AI gateway error: ${response.status}`);
+    const errorBody = await response.json().catch(() => ({}));
+    const errorMessage = errorBody.error?.message || `Status ${response.status}`;
+    console.error("OpenAI direct image error details:", response.status, JSON.stringify(errorBody));
+    throw new Error(`OpenAI (gpt-image-1.5) dice: ${errorMessage}`);
   }
 
-  const aiResponse = await response.json();
-  const imageData = aiResponse.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  if (!imageData) throw new Error("No image generated");
+  const result = await response.json();
+  console.log("OpenAI full response structure:", JSON.stringify(result).substring(0, 500));
+
+  // Handle both URL and Base64 formats
+  const imageData = result.data?.[0]?.url || result.data?.[0]?.b64_json;
+
+  if (!imageData) {
+    console.error("OpenAI response missing image data. Full JSON:", JSON.stringify(result));
+    throw new Error("OpenAI no devolvió ninguna imagen. Verifique si el modelo gpt-image-1.5 está disponible en su región.");
+  }
+
+  // If it's already base64, prepend the data URI prefix if missing
+  if (result.data?.[0]?.b64_json && !imageData.startsWith("data:")) {
+    return `data:image/png;base64,${imageData}`;
+  }
+
   return imageData;
 }
 
-serve(async (req) => {
+async function generateImageOpenAIWithFallback(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_IMAGE_MODEL"),
+    "gpt-image-2",
+    "gpt-image-1.5",
+    "gpt-image-1",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    console.log("Generating media via OpenAI image model:", model);
+    const response = await fetchWithRetry("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: "1024x1024",
+      }),
+    });
+
+    if (!response.ok) {
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, await response.text());
+      console.error("OpenAI direct image error:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      throw new Error(lastError);
+    }
+
+    const result = await response.json();
+    const imageData = result.data?.[0]?.url || result.data?.[0]?.b64_json;
+
+    if (!imageData) {
+      lastError = `OpenAI ${model}: no devolvio ninguna imagen`;
+      console.error("OpenAI response missing image data. Full JSON:", JSON.stringify(result).substring(0, 500));
+      continue;
+    }
+
+    if (result.data?.[0]?.b64_json && !imageData.startsWith("data:")) {
+      return `data:image/png;base64,${imageData}`;
+    }
+
+    return imageData;
+  }
+
+  throw new Error(lastError || "OpenAI no pudo generar la imagen.");
+}
+
+async function generateTextGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const model = preferredModel || Deno.env.get("GEMINI_MODEL") || "gemini-3.5-flash";
+  const response = await fetchWithRetry(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.5 },
+    }),
+  });
+  if (!response.ok) throw new Error(extractProviderError(`Gemini ${model}`, response.status, await response.text()));
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+}
+
+async function generateTextOpenAIDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string> {
+  const model = preferredModel || Deno.env.get("OPENAI_MODEL") || "gpt-4o-mini";
+  const response = await fetchWithRetry("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.5,
+    }),
+  });
+  if (!response.ok) throw new Error(extractProviderError(`OpenAI ${model}`, response.status, await response.text()));
+  const data = await response.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
+async function generateSlidesText(aiConfig: AIConfig, prompt: string) {
+  const provider = requireDirectAIProvider(aiConfig);
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    return await generateTextGeminiDirect(aiConfig.gemini_api_key, prompt, aiConfig.gemini_model);
+  }
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    return await generateTextOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_model);
+  }
+  throw new Error("No hay proveedor de IA configurado.");
+}
+
+function parseSlidesResponse(text: string, title: string) {
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+  const slides = Array.isArray(parsed?.slides) ? parsed.slides : [];
+  return {
+    title: String(parsed?.title || title),
+    subtitle: parsed?.subtitle ? String(parsed.subtitle) : undefined,
+    slides: slides.slice(0, 12).map((slide: any) => ({
+      title: String(slide?.title || "Diapositiva"),
+      subtitle: slide?.subtitle ? String(slide.subtitle) : undefined,
+      body: slide?.body ? String(slide.body).slice(0, 420) : undefined,
+      bullets: Array.isArray(slide?.bullets)
+        ? slide.bullets.slice(0, 5).map((bullet: unknown) => String(bullet).slice(0, 180))
+        : [],
+      footer: slide?.footer ? String(slide.footer) : undefined,
+    })),
+  };
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { type, title, content, puntosClave, courseId, skipUpload, companyId } = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error("Failed to parse request JSON:", e);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log("Request body received:", JSON.stringify(body));
+    const { type, title, content, puntosClave, courseId, skipUpload, companyId } = body;
+    await requireTrainingPermission(req, companyId);
 
     if (!type || !title) {
+      console.error("Missing required fields:", { type, title });
       return new Response(
         JSON.stringify({ error: "type and title are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Processing request for type:", type, "title:", title);
     const aiConfig = await getAIConfig(companyId);
+    console.log("AI Config loaded:", { model: aiConfig.model, hasGemini: !!aiConfig.gemini_api_key, hasOpenAI: !!aiConfig.openai_api_key });
     const keyPoints = (puntosClave || []).slice(0, 5).join(", ");
     const spanishTextRule = "Idioma obligatorio: español latinoamericano. Si la imagen incluye texto, títulos, etiquetas, rótulos, ramas, iconos con palabras o secciones, TODO debe estar escrito únicamente en español, sin palabras en inglés. Revisa ortografía y tildes en español.";
     let prompt = "";
+
+    if (type === "diapositivas") {
+      const slidePrompt = `Eres un disenador instruccional experto en capacitaciones empresariales.
+Genera una presentacion tipo PowerPoint para ser vista dentro de una app.
+
+Tema: "${title}"
+Contenido base: ${content?.substring(0, 3200) || "No disponible"}
+Puntos clave: ${keyPoints || "No especificados"}
+
+Requisitos:
+- Espanol latinoamericano.
+- 7 a 9 diapositivas.
+- Cada diapositiva debe tener titulo claro, subtitulo opcional, cuerpo corto y bullets concretos.
+- Evita parrafos largos y texto decorativo.
+- Incluye portada, objetivos, desarrollo, buenas practicas, errores comunes y cierre.
+- No uses markdown.
+
+Responde SOLO JSON valido con esta estructura exacta:
+{
+  "title": "Titulo de la presentacion",
+  "subtitle": "Subtitulo breve",
+  "slides": [
+    {
+      "title": "Titulo",
+      "subtitle": "Subtitulo opcional",
+      "body": "Texto breve",
+      "bullets": ["Punto 1", "Punto 2", "Punto 3"],
+      "footer": "Texto opcional"
+    }
+  ]
+}`;
+
+      const text = await generateSlidesText(aiConfig, slidePrompt);
+      const deck = parseSlidesResponse(text, title);
+      if (!deck.slides.length) throw new Error("La IA no devolvio diapositivas validas.");
+
+      return new Response(
+        JSON.stringify({ type, deck }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     switch (type) {
       case "imagen":
@@ -146,61 +453,93 @@ serve(async (req) => {
     }
 
     let imageData: string;
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    const provider = aiConfig.model || "gateway";
+
+    const provider = requireDirectAIProvider(aiConfig);
+
+    console.log("Using provider:", provider);
 
     // Route based on selected provider in configuration
     if (provider === "gemini" && aiConfig.gemini_api_key) {
-      console.log("Generating media via Gemini direct (selected in config):", type);
+      console.log("Generating media via Gemini direct:", type);
       try {
         imageData = await generateImageGeminiDirect(aiConfig.gemini_api_key, prompt);
       } catch (geminiErr: any) {
-        console.warn("Gemini direct failed, falling back to Gateway:", geminiErr?.message);
-        if (!LOVABLE_API_KEY) throw geminiErr;
-        imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
+        console.warn("Gemini direct failed. Not falling back to avoid hiding errors.");
+        throw geminiErr;
       }
     } else if (provider === "openai" && aiConfig.openai_api_key) {
-      // OpenAI selected: use Gateway with Gemini image model (OpenAI doesn't support same image gen format)
-      console.log("Generating media via Gateway (OpenAI selected, using Gemini image model):", type);
-      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured for image generation");
-      imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
+      console.log("Generating media via OpenAI direct:", type);
+      try {
+        imageData = await generateImageOpenAIWithFallback(aiConfig.openai_api_key, prompt, aiConfig.openai_image_model);
+      } catch (openaiErr: any) {
+        console.warn("OpenAI direct failed. Not falling back to avoid hiding errors.");
+        throw openaiErr;
+      }
     } else {
-      // No provider configured or no API key: use Gateway
-      if (!LOVABLE_API_KEY) throw new Error("No AI provider configured for images");
-      console.log("Generating media via Gateway (default):", type, "model:", GATEWAY_IMAGE_MODEL);
-      imageData = await generateImageGateway(LOVABLE_API_KEY, prompt);
+      throw new Error("No hay proveedor de IA configurado.");
     }
 
-    // If skipUpload, return base64 directly (client will apply watermark and upload)
+    console.log("Image generation successful. Length:", imageData.length);
+
+    // If skipUpload is true, we should still ensure the frontend can access the image (CORS)
+    // If it's an external URL, we fetch it here and return as base64
     let storedUrl = imageData;
+
     if (skipUpload) {
-      // Return raw base64 for client-side watermarking
+      if (imageData.startsWith("http")) {
+        console.log("Fetching external image to return as base64 (CORS bypass):", imageData);
+        try {
+          const imgRes = await fetch(imageData);
+          if (imgRes.ok) {
+            const arrayBuffer = await imgRes.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            // Convert to base64 safely without call stack overflow
+            let binaryStr = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+              binaryStr += String.fromCharCode(uint8Array[i]);
+            }
+            const base64 = btoa(binaryStr);
+            const contentType = imgRes.headers.get("content-type") || "image/png";
+            storedUrl = `data:${contentType};base64,${base64}`;
+            console.log("Successfully converted external URL to base64 for frontend");
+          }
+        } catch (e) {
+          console.warn("Could not proxy image for CORS, returning original URL:", e);
+        }
+      }
     } else if (courseId) {
       try {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseKey = getSecretKey();
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        const base64Part = imageData.split(",")[1];
-        const binaryStr = atob(base64Part);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let i = 0; i < binaryStr.length; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
+        let bytes: Uint8Array;
+        if (imageData.startsWith("data:")) {
+          const base64Part = imageData.split(",")[1];
+          const binaryStr = atob(base64Part);
+          bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            bytes[i] = binaryStr.charCodeAt(i);
+          }
+        } else {
+          console.log("Fetching image from URL for storage:", imageData);
+          const imgRes = await fetch(imageData);
+          if (!imgRes.ok) throw new Error(`Failed to fetch image: ${imgRes.status}`);
+          const arrayBuffer = await imgRes.arrayBuffer();
+          bytes = new Uint8Array(arrayBuffer);
         }
 
         const fileName = `${courseId}/${type}_${Date.now()}.png`;
         const { error: uploadError } = await supabase.storage
           .from("training-media")
-          .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
+          .upload(fileName, bytes, { contentType: "image/png", upsert: true });
 
         if (!uploadError) {
           const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
           storedUrl = urlData.publicUrl;
-        } else {
-          console.warn("Upload failed, returning base64:", uploadError);
         }
       } catch (e) {
-        console.warn("Storage upload failed:", e);
+        console.warn("Storage upload process failed:", e);
       }
     }
 
@@ -210,10 +549,12 @@ serve(async (req) => {
     );
   } catch (error: any) {
     console.error("generate-training-media error:", error);
-    const status = error?.status || 500;
+    const status = error?.status || 200;
     const message = error?.message || (error instanceof Error ? error.message : "Error generating media");
+
+    // Provider errors remain 200 to preserve the existing frontend handling. Auth errors use their status.
     return new Response(
-      JSON.stringify({ error: message }),
+      JSON.stringify({ error: message, details: error?.toString() }),
       { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

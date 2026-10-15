@@ -94,4 +94,4 @@ EmpatiQ implementa un modelo de **Multi-tenancy** estricto:
 
 ## 📄 Licencia y Créditos
 Desarrollado para la gestión integral de recursos humanos.
-**Dominio:** empatiq-petrocasinos.lovable.app
+**Dominio:** empatiq.portalpetrocasinos.com

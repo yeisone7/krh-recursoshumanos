@@ -1,6 +1,6 @@
+import { requireDirectAIProvider } from "../_shared/aiProviders.ts";
 import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,14 +8,50 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GATEWAY_TEXT_MODEL = "google/gemini-2.5-flash-lite";
-const GATEWAY_IMAGE_MODEL = "google/gemini-2.5-flash-image";
+const TRAINING_AI_ALLOWED_PERMISSIONS = [
+  { module: "capacitaciones_ia", action: "view" },
+  { module: "capacitaciones_ia", action: "create" },
+  { module: "capacitaciones_ia", action: "update" },
+  { module: "capacitaciones", action: "view" },
+  { module: "capacitaciones", action: "create" },
+  { module: "capacitaciones", action: "update" },
+  { module: "capacitaciones_manual", action: "view" },
+  { module: "capacitaciones_manual", action: "create" },
+  { module: "capacitaciones_manual", action: "update" },
+  { module: "capacitaciones_biblioteca", action: "view" },
+  { module: "capacitaciones_biblioteca", action: "create" },
+  { module: "capacitaciones_biblioteca", action: "update" },
+];
+const ADMIN_ROLE_NAMES = ["administrador", "admin", "super admin", "superadmin"];
 
 interface AIConfig {
   model?: string;
   gemini_api_key?: string;
   openai_api_key?: string;
+  gemini_model?: string;
+  gemini_image_model?: string;
+  openai_model?: string;
+  openai_image_model?: string;
+}
+
+function uniqueStrings(values: Array<string | null | undefined>) {
+  const result: string[] = [];
+  for (const value of values) {
+    const cleanValue = typeof value === "string" ? value.trim() : "";
+    if (cleanValue && !result.includes(cleanValue)) result.push(cleanValue);
+  }
+  return result;
+}
+
+function extractProviderError(provider: string, status: number, errorText: string) {
+  try {
+    const parsed = JSON.parse(errorText);
+    const message = parsed?.error?.message || parsed?.message || parsed?.error;
+    if (message) return `${provider}: ${message}`;
+  } catch (_) {
+    // Keep raw text when the provider does not return JSON.
+  }
+  return `${provider}: error ${status}${errorText ? ` - ${errorText.slice(0, 240)}` : ""}`;
 }
 
 async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
@@ -111,6 +147,66 @@ async function getRequestUserId(req: Request): Promise<string> {
   return userId;
 }
 
+async function requireTrainingPermission(userId: string, companyId: string | undefined) {
+  if (!companyId) throw { status: 400, message: "companyId is required" };
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = getSecretKey();
+  const supabase = createClient(supabaseUrl, serviceKey);
+
+  const { data: systemRole } = await supabase
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(is_system,is_active)")
+    .eq("user_id", userId)
+    .eq("custom_roles.is_system", true)
+    .eq("custom_roles.is_active", true)
+    .limit(1);
+
+  const isSystemRole = Boolean(systemRole?.length);
+  const { data: legacyAdminRole } = await supabase
+    .from("user_roles")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .limit(1);
+
+  const isLegacyAdmin = Boolean(legacyAdminRole?.length);
+  const { data: companyAdminRole } = await supabase
+    .from("user_custom_roles")
+    .select("id, custom_roles!inner(name,is_active,company_id)")
+    .eq("user_id", userId)
+    .eq("custom_roles.company_id", companyId)
+    .eq("custom_roles.is_active", true);
+
+  const isCompanyAdminRole = (companyAdminRole || []).some((row: any) =>
+    ADMIN_ROLE_NAMES.includes(String(row.custom_roles?.name || "").trim().toLowerCase())
+  );
+
+  if (isSystemRole || isLegacyAdmin || isCompanyAdminRole) return;
+
+  const permissionChecks = await Promise.all(
+    TRAINING_AI_ALLOWED_PERMISSIONS.map((permission) =>
+      supabase.rpc("check_user_permission", {
+        _user_id: userId,
+        _module_code: permission.module,
+        _action: permission.action,
+      })
+    )
+  );
+  const hasPermission = permissionChecks.some(({ data }) => data === true);
+
+  const { data: assignment } = await supabase
+    .from("user_company_assignments")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (!assignment || !hasPermission) {
+    throw { status: 403, message: "No tienes permiso para generar storyboard en esta empresa." };
+  }
+}
+
 // --- Text generation (script) ---
 
 async function generateScriptGeminiDirect(apiKey: string, prompt: string): Promise<string> {
@@ -154,34 +250,52 @@ async function generateScriptOpenAIDirect(apiKey: string, prompt: string): Promi
   return data.choices?.[0]?.message?.content || "";
 }
 
-async function generateScriptGateway(apiKey: string, prompt: string): Promise<string> {
-  const response = await fetchWithRetry(GATEWAY_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: GATEWAY_TEXT_MODEL,
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-  if (!response.ok) {
-    if (response.status === 429) throw { status: 429, message: "Límite de solicitudes excedido. Configure sus propias API keys en Configuración → IA." };
-    if (response.status === 402) throw { status: 402, message: "Créditos insuficientes. Configure sus propias API keys en Configuración → IA." };
-    const errorText = await response.text();
-    console.error("Script gateway error:", response.status, errorText);
-    throw new Error(`Script generation failed: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "";
-}
+async function generateImageGeminiDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string | null> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("GEMINI_IMAGE_MODEL"),
+    "gemini-3.1-flash-image",
+    "gemini-3.1-flash-lite-image",
+    "gemini-3.1-pro-image",
+    "gemini-2.5-flash-image-preview",
+    "gemini-2.0-flash-preview-image-generation",
+    "gemini-3-flash-preview",
+  ]);
+  let lastError = "";
 
-// --- Image generation ---
+  for (const model of modelCandidates) {
+    const interactionResponse = await fetchWithRetry("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey,
+      },
+      body: JSON.stringify({
+        model,
+        input: [{ type: "text", text: prompt }],
+      }),
+    });
 
-async function generateImageGeminiDirect(apiKey: string, prompt: string): Promise<string | null> {
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+    if (interactionResponse.ok) {
+      const data = await interactionResponse.json();
+      const outputImage = data.output_image || data.outputImage;
+      if (outputImage?.data) {
+        return `data:${outputImage.mime_type || outputImage.mimeType || "image/png"};base64,${outputImage.data}`;
+      }
+
+      const steps = Array.isArray(data.steps) ? data.steps : [];
+      for (const step of steps) {
+        const image = step.output_image || step.outputImage || step.image;
+        if (image?.data) {
+          return `data:${image.mime_type || image.mimeType || "image/png"};base64,${image.data}`;
+        }
+      }
+    } else {
+      lastError = extractProviderError(`Gemini Interactions ${model}`, interactionResponse.status, await interactionResponse.text());
+      console.warn("Gemini interactions image failed:", lastError);
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const response = await fetchWithRetry(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -190,45 +304,133 @@ async function generateImageGeminiDirect(apiKey: string, prompt: string): Promis
         generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
       }),
     });
-    if (!response.ok) { console.warn("Gemini image failed:", response.status); return null; }
+
+    if (!response.ok) {
+      lastError = extractProviderError(`Gemini ${model}`, response.status, await response.text());
+      console.warn("Gemini image failed:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      return null;
+    }
+
     const data = await response.json();
     const parts = data.candidates?.[0]?.content?.parts || [];
     for (const part of parts) {
-      if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      const inlineData = part.inlineData || part.inline_data;
+      if (inlineData?.data) {
+        return `data:${inlineData.mimeType || inlineData.mime_type || "image/png"};base64,${inlineData.data}`;
+      }
+      const fileUri = part.fileData?.fileUri || part.file_data?.file_uri;
+      if (fileUri) {
+        return fileUri;
       }
     }
-    return null;
-  } catch (e) {
-    console.warn("Gemini image error:", e);
-    return null;
+    lastError = `Gemini ${model}: no devolvio ninguna imagen`;
   }
+
+  console.warn("Gemini image error:", lastError);
+  return null;
 }
 
-async function generateImageGateway(apiKey: string, prompt: string): Promise<string | null> {
-  try {
-    const response = await fetchWithRetry(GATEWAY_URL, {
+async function generateImageOpenAIDirect(apiKey: string, prompt: string, preferredModel?: string): Promise<string | null> {
+  const modelCandidates = uniqueStrings([
+    preferredModel,
+    Deno.env.get("OPENAI_IMAGE_MODEL"),
+    "gpt-image-1",
+    "dall-e-3",
+  ]);
+  let lastError = "";
+
+  for (const model of modelCandidates) {
+    const response = await fetchWithRetry("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: GATEWAY_IMAGE_MODEL,
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
+        model,
+        prompt,
+        n: 1,
+        size: "1024x1024",
       }),
     });
-    if (!response.ok) { console.warn("Gateway image failed:", response.status); return null; }
+
+    if (!response.ok) {
+      lastError = extractProviderError(`OpenAI ${model}`, response.status, await response.text());
+      console.warn("OpenAI image failed:", lastError);
+      if ([400, 403, 404].includes(response.status)) continue;
+      return null;
+    }
+
     const data = await response.json();
-    return data.choices?.[0]?.message?.images?.[0]?.image_url?.url || null;
-  } catch (e) {
-    console.warn("Gateway image error:", e);
-    return null;
+    const imageData = data.data?.[0]?.url || data.data?.[0]?.b64_json;
+    if (data.data?.[0]?.b64_json && imageData && !imageData.startsWith("data:")) {
+      return `data:image/png;base64,${imageData}`;
+    }
+    if (imageData) return imageData;
+
+    lastError = `OpenAI ${model}: no devolvio ninguna imagen`;
   }
+
+  console.warn("OpenAI image error:", lastError);
+  return null;
 }
 
-serve(async (req) => {
+async function storeGeneratedImage(
+  supabase: SupabaseClient,
+  source: string,
+  fileName: string
+) {
+  if (!source.startsWith("data:")) return source;
+
+  const base64Part = source.split(",")[1];
+  if (!base64Part) return source;
+
+  const mimeMatch = source.match(/^data:([^;]+);base64,/);
+  const contentType = mimeMatch?.[1] || "image/png";
+  const binaryStr = atob(base64Part);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let j = 0; j < binaryStr.length; j++) {
+    bytes[j] = binaryStr.charCodeAt(j);
+  }
+
+  const { error: uploadError } = await supabase.storage
+    .from("training-media")
+    .upload(fileName, bytes.buffer, { contentType, upsert: true });
+
+  if (uploadError) {
+    console.warn("Failed to upload generated image:", uploadError.message);
+    return source;
+  }
+
+  const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
+  return urlData.publicUrl;
+}
+
+async function generateImageForConfiguredProvider(
+  aiConfig: AIConfig,
+  prompt: string
+) {
+  const provider = requireDirectAIProvider(aiConfig);
+
+  if (provider === "gemini" && aiConfig.gemini_api_key) {
+    return await withTimeout(
+      generateImageGeminiDirect(aiConfig.gemini_api_key, prompt, aiConfig.gemini_image_model || aiConfig.gemini_model),
+      IMAGE_TIMEOUT_MS
+    );
+  }
+
+  if (provider === "openai" && aiConfig.openai_api_key) {
+    return await withTimeout(
+      generateImageOpenAIDirect(aiConfig.openai_api_key, prompt, aiConfig.openai_image_model),
+      IMAGE_TIMEOUT_MS
+    );
+  }
+
+  return null;
+}
+
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -244,16 +446,16 @@ serve(async (req) => {
     }
 
     const requestUserId = await getRequestUserId(req);
+    await requireTrainingPermission(requestUserId, companyId);
 
     const aiConfig = await getAIConfig(companyId);
-    const provider = aiConfig.model || "gateway";
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const provider = requireDirectAIProvider(aiConfig);
 
     // Determine which provider to use for text (script) and images
     const useGeminiDirect = provider === "gemini" && !!aiConfig.gemini_api_key;
     const useOpenAIDirect = provider === "openai" && !!aiConfig.openai_api_key;
 
-    if (!useGeminiDirect && !useOpenAIDirect && !LOVABLE_API_KEY) throw new Error("No AI provider configured");
+    if (!useGeminiDirect && !useOpenAIDirect) throw new Error("No hay proveedor de IA configurado.");
 
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.clasico;
     const styleLabel = STYLE_LABELS[style] || "Clásico";
@@ -278,7 +480,7 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
       } else if (useOpenAIDirect) {
         sceneText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scenePrompt);
       } else {
-        sceneText = await generateScriptGateway(LOVABLE_API_KEY!, scenePrompt);
+        throw new Error("No hay proveedor de IA configurado.");
       }
 
       let newScene: { title: string; narration: string; visual_description: string };
@@ -291,30 +493,14 @@ Responde en JSON: { "title": "...", "narration": "...", "visual_description": ".
 
       // Generate new image
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${newScene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
-      let imageBase64: string | null = null;
-      if (useGeminiDirect) {
-        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
-        if (!imageBase64 && LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      } else if (LOVABLE_API_KEY) {
-        imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-      }
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, imagePrompt);
 
-      let finalUrl = imageBase64 || '';
-      if (imageBase64) {
+      let finalUrl = imageSource || '';
+      if (imageSource) {
         try {
-          const base64Part = imageBase64.split(",")[1];
-          const binaryStr = atob(base64Part);
-          const bytes = new Uint8Array(binaryStr.length);
-          for (let j = 0; j < binaryStr.length; j++) bytes[j] = binaryStr.charCodeAt(j);
           const fileName = `${courseId}/video_${style}_scene_regen_${regenerateScene}_${Date.now()}.png`;
-          const { error: uploadError } = await supabase.storage.from("training-media").upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
-            finalUrl = urlData.publicUrl;
-          }
-        } catch { /* keep base64 */ }
+          finalUrl = await storeGeneratedImage(supabase, imageSource, fileName);
+        } catch { /* keep provider URL/data */ }
 
         // Update media record
         try {
@@ -372,8 +558,7 @@ Responde en formato JSON con esta estructura exacta:
       console.log("Generating script via OpenAI direct...");
       scriptText = await generateScriptOpenAIDirect(aiConfig.openai_api_key!, scriptPrompt);
     } else {
-      console.log("Generating script via Gateway...");
-      scriptText = await generateScriptGateway(LOVABLE_API_KEY!, scriptPrompt);
+      throw new Error("No hay proveedor de IA configurado.");
     }
 
     let script: { scenes: Array<{ title: string; narration: string; visual_description: string }>; summary: string };
@@ -393,41 +578,15 @@ Responde en formato JSON con esta estructura exacta:
     const imagePromises = script.scenes.map(async (scene, i) => {
       const imagePrompt = `Create an educational illustration for a training video scene. Topic: "${title}". Scene: "${scene.visual_description}". Style: ${stylePrompt}. No text overlays, clean composition, professional quality.`;
 
-      let imageBase64: string | null = null;
+      const imageSource = await generateImageForConfiguredProvider(aiConfig, imagePrompt);
 
-      if (useGeminiDirect) {
-        imageBase64 = await withTimeout(generateImageGeminiDirect(aiConfig.gemini_api_key!, imagePrompt), IMAGE_TIMEOUT_MS);
-        // Fallback to gateway if Gemini direct fails
-        if (!imageBase64 && LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      } else {
-        // OpenAI selected or no direct key: use Gateway for images
-        if (LOVABLE_API_KEY) {
-          imageBase64 = await withTimeout(generateImageGateway(LOVABLE_API_KEY, imagePrompt), IMAGE_TIMEOUT_MS);
-        }
-      }
-
-      if (!imageBase64) return null;
+      if (!imageSource) return null;
 
       try {
-        const base64Part = imageBase64.split(",")[1];
-        const binaryStr = atob(base64Part);
-        const bytes = new Uint8Array(binaryStr.length);
-        for (let j = 0; j < binaryStr.length; j++) {
-          bytes[j] = binaryStr.charCodeAt(j);
-        }
         const fileName = `${courseId}/video_${style}_scene_${i + 1}_${Date.now()}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from("training-media")
-          .upload(fileName, bytes.buffer, { contentType: "image/png", upsert: true });
-        if (!uploadError) {
-          const { data: urlData } = supabase.storage.from("training-media").getPublicUrl(fileName);
-          return urlData.publicUrl;
-        }
-        return imageBase64;
+        return await storeGeneratedImage(supabase, imageSource, fileName);
       } catch {
-        return imageBase64;
+        return imageSource;
       }
     });
 
