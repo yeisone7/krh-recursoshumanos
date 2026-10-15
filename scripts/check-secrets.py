@@ -12,6 +12,12 @@ PATTERNS = {
     "Supabase secret key": re.compile(r"\bsb_secret_[A-Za-z0-9_-]{16,}\b"),
     "Resend API key": re.compile(r"\bre_[A-Za-z0-9_]{24,}\b"),
     "private key": re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+    "GitHub token": re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{40,})\b"),
+    "AWS access key": re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"),
+    "Google API key": re.compile(r"\bAIza[A-Za-z0-9_-]{35}\b"),
+    "OpenAI or Stripe secret key": re.compile(r"\b(?:sk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{32,}|sk_(?:live|test)_[A-Za-z0-9]{20,})\b"),
+    "database connection password": re.compile(r"(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?)://[^\s:/]+:[^\s@/]{8,}@", re.I),
+    "hardcoded registration token": re.compile(r"\btokenParam\s*=\s*[\"'][A-Za-z0-9_-]{24,}[\"']"),
 }
 JWT = re.compile(r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+")
 

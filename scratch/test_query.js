@@ -18,7 +18,8 @@ const supabaseAnon = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
 });
 
 async function run() {
-  const tokenParam = 'REVOKED'; // The recent token we found
+  const tokenParam = process.env.REGISTRATION_TEST_TOKEN;
+  if (!tokenParam) throw new Error('Set REGISTRATION_TEST_TOKEN locally before running this script.');
 
   console.log('\n--- Querying as Anon ---');
   const { data: dataAnon, error: errorAnon } = await supabaseAnon
