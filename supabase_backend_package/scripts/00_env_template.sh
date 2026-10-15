@@ -10,9 +10,9 @@ export SUPABASE_DB_PASSWORD="REEMPLAZA_PASSWORD_DB"
 
 # Secrets requeridos por Edge Functions
 export SUPABASE_URL="https://${SUPABASE_PROJECT_REF}.supabase.co"
-export SUPABASE_ANON_KEY="REEMPLAZA_ANON_KEY"
-export SUPABASE_SERVICE_ROLE_KEY="REEMPLAZA_SERVICE_ROLE_KEY"
-export SUPABASE_PUBLISHABLE_KEY="$SUPABASE_ANON_KEY"
+# Supabase inyecta los mapas SUPABASE_PUBLISHABLE_KEYS y SUPABASE_SECRET_KEYS
+# en las Edge Functions. No copies ni configures claves service_role.
+export SUPABASE_PUBLISHABLE_KEY="REEMPLAZA_PUBLISHABLE_KEY_MODERNA"
 
 # Requeridos si usas IA/capacitaciones/chat IA. En Supabase externo debes proveer tu propia llave compatible o adaptar las funciones.
 export LOVABLE_API_KEY="REEMPLAZA_LOVABLE_API_KEY_SI_APLICA"

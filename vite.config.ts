@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { writeFileSync } from "fs";
@@ -18,7 +18,15 @@ const appVersionPlugin = () => ({
 });
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  // The new name lets deployments replace a write-only legacy Vercel variable.
+  // Existing local environments can keep the original name with a modern key.
+  const publicKey = env.VITE_SUPABASE_PUBLISHABLE_API_KEY || env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!publicKey?.startsWith("sb_publishable_")) {
+    throw new Error("Configure a modern Supabase publishable key in VITE_SUPABASE_PUBLISHABLE_API_KEY.");
+  }
+  return ({
   server: {
     host: "::",
     port: 8080,
@@ -118,7 +126,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
+    "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publicKey),
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
     "import.meta.env.VITE_BUILD_ID": JSON.stringify(buildId),
   },
-}));
+  });
+});

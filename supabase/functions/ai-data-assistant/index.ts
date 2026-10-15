@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.91.1';
 import {
   structured,
@@ -80,7 +81,7 @@ Deno.serve(async (req) => {
       );
     const client = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getPublishableKey(),
       {
         global: { headers: { Authorization: authorization } },
         auth: { persistSession: false },
@@ -163,7 +164,7 @@ Deno.serve(async (req) => {
     // Every analytical read, saved report and export above/below uses the caller's JWT.
     const configClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getSecretKey(),
       { auth: { persistSession: false } },
     );
     const { data: settings } = await configClient

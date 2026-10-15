@@ -25,11 +25,11 @@
     "dotation-images"
   ],
   "required_secrets": [
-    "SUPABASE_URL",
-    "SUPABASE_ANON_KEY",
-    "SUPABASE_PUBLISHABLE_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY",
     "LOVABLE_API_KEY",
     "RESEND_API_KEY"
+  ],
+  "platform_injected_keys": [
+    "SUPABASE_PUBLISHABLE_KEYS",
+    "SUPABASE_SECRET_KEYS"
   ]
 }

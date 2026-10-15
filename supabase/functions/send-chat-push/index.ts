@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
 
@@ -35,8 +36,8 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const SUPABASE_ANON_KEY = getPublishableKey();
+    const SUPABASE_SERVICE_ROLE_KEY = getSecretKey();
 
     const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },

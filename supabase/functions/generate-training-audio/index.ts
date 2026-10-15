@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -43,8 +44,8 @@ async function requireTrainingPermission(req: Request, companyId: string | undef
   if (!authHeader.startsWith("Bearer ")) throw { status: 401, message: "No autorizado" };
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const anonKey = getPublishableKey();
+  const serviceKey = getSecretKey();
   const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
   const adminClient = createClient(supabaseUrl, serviceKey);
 
@@ -136,7 +137,7 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   if (!companyId) return {};
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data: configRow } = await supabase
       .from("system_config")
@@ -426,7 +427,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
     if (!courseId) throw new Error("courseId is required to store audio");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseServiceKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const fileName = `${courseId}/audio_${duration}_${Date.now()}.${audioResult.extension}`;

@@ -1,3 +1,4 @@
+import { getSecretKey } from "../_shared/apiKeys.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -74,7 +75,7 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Método no permitido." }, 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = getSecretKey();
   if (!supabaseUrl || !serviceRoleKey) return json({ error: "Servicio no disponible." }, 503);
 
   const admin = createClient(supabaseUrl, serviceRoleKey, {

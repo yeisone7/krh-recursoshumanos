@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -20,8 +21,8 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnon = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseServiceKey = getSecretKey();
+    const supabaseAnon = getPublishableKey();
 
     // Verify caller is super admin
     const supabaseUser = createClient(supabaseUrl, supabaseAnon, {

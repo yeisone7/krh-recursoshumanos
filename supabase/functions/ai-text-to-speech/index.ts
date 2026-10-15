@@ -1,3 +1,4 @@
+import { getSecretKey } from "../_shared/apiKeys.ts";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      getSecretKey(),
     );
 
     // 1. Obtener la API Key de OpenAI desde la configuración del sistema

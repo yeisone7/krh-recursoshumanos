@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -59,7 +60,7 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   if (!companyId) return {};
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data: configRow } = await supabase
       .from("system_config")
@@ -132,7 +133,7 @@ async function getRequestUserId(req: Request): Promise<string> {
 
   const token = authHeader.replace("Bearer ", "");
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const supabaseAnonKey = getPublishableKey();
 
   const authClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -152,7 +153,7 @@ async function requireTrainingPermission(userId: string, companyId: string | und
   if (!companyId) throw { status: 400, message: "companyId is required" };
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const serviceKey = getSecretKey();
   const supabase = createClient(supabaseUrl, serviceKey);
 
   const { data: systemRole } = await supabase
@@ -516,7 +517,7 @@ Deno.serve(async (req) => {
     const styleLabel = STYLE_LABELS[style] || "Clásico";
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // ── Single scene regeneration ──

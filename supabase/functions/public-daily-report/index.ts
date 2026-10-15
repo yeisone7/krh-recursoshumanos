@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 import { Buffer } from "node:buffer";
 // @ts-types="npm:@types/pngjs@6.0.5"
@@ -96,7 +97,7 @@ Deno.serve(async (req) => {
     const input = JSON.parse(raw);
     const { action, mode, ...body } = input;
     const url = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceKey = getSecretKey();
     const service = createClient(url, serviceKey, {
       auth: { persistSession: false },
     });
@@ -111,7 +112,7 @@ Deno.serve(async (req) => {
           { error: "Inicie sesión nuevamente.", code: "session" },
           401,
         );
-      client = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      client = createClient(url, getPublishableKey(), {
         global: { headers: { Authorization: authorization } },
         auth: { persistSession: false },
       });

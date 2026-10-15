@@ -1,3 +1,4 @@
+import { getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const corsHeaders = {
@@ -21,7 +22,7 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const serviceRoleKey = getSecretKey();
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);

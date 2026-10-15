@@ -1,3 +1,4 @@
+import { getSecretKey } from "../_shared/apiKeys.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -18,7 +19,7 @@ async function getAIConfig(companyId: string | undefined): Promise<AIConfig> {
   if (!companyId) return {};
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data: configRow } = await supabase
       .from("system_config")
@@ -171,7 +172,7 @@ Responde SOLO con el texto del guion, sin comillas ni formato adicional.`;
     if (!courseId) throw new Error("courseId is required to store audio");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseServiceKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const fileName = `${courseId}/audio_${duration}_${Date.now()}.mp3`;

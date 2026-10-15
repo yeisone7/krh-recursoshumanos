@@ -1,3 +1,4 @@
+import { getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.91.1";
 
 const headers = {
@@ -53,7 +54,7 @@ Deno.serve(async (req: Request) => {
     if (body.photo && body.operation !== "punch") return respond({ error: "INVALID_PHOTO" }, 400);
 
     const url = Deno.env.get("SUPABASE_URL")!;
-    const secret = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const secret = getSecretKey();
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
@@ -119,7 +120,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     if (uploadedPath) {
       try {
-        const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false, autoRefreshToken: false } });
+        const client = createClient(Deno.env.get("SUPABASE_URL")!, getSecretKey(), { auth: { persistSession: false, autoRefreshToken: false } });
         await client.storage.from("time-clock-evidence").remove([uploadedPath]);
       } catch { /* best-effort cleanup */ }
     }

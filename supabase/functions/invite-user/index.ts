@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -52,8 +53,8 @@ Deno.serve(async (req) => {
 
     // Create Supabase clients
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = getPublishableKey();
+    const supabaseServiceKey = getSecretKey();
 
     // Client with user's auth
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {

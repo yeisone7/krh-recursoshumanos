@@ -1,3 +1,4 @@
+import { getPublishableKey, getSecretKey } from "../_shared/apiKeys.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
@@ -13,7 +14,7 @@ async function requireTrainingPermission(req: Request, supabase: any, companyId:
   if (!authHeader.startsWith('Bearer ')) throw { status: 401, message: 'No autorizado' };
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const anonKey = getPublishableKey();
   const authClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
   const { data: userData, error: userError } = await authClient.auth.getUser();
   const userId = userData?.user?.id;
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
     const { action, companyId } = body;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseKey = getSecretKey();
     const supabase = createClient(supabaseUrl, supabaseKey);
     const requestUserId = await requireTrainingPermission(req, supabase, companyId);
 

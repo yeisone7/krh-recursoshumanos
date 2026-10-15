@@ -17,8 +17,7 @@ Este paquete contiene el backend actual para montarlo en un proyecto Supabase ex
 3. Tener a mano:
    - Project ref
    - Database password
-   - Anon key
-   - Service role key
+   - Clave pública moderna (`sb_publishable_...`)
    - Access token de Supabase CLI
    - `RESEND_API_KEY` para correos
    - `LOVABLE_API_KEY` si vas a usar chat IA/generación de capacitaciones tal como está implementado actualmente
@@ -56,7 +55,7 @@ Después del backend, actualiza el frontend con:
 
 ```env
 VITE_SUPABASE_URL=https://TU_PROJECT_REF.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=TU_ANON_KEY
+VITE_SUPABASE_PUBLISHABLE_API_KEY=TU_CLAVE_PUBLICA_MODERNA
 VITE_SUPABASE_PROJECT_ID=TU_PROJECT_REF
 ```
 
@@ -64,6 +63,7 @@ VITE_SUPABASE_PROJECT_ID=TU_PROJECT_REF
 
 - Ejecuta esto sobre un proyecto Supabase vacío.
 - No compartas `.env.deploy` ni claves `service_role`.
+- Crea las claves modernas en Supabase antes de desplegar: las funciones leen `default` de los mapas inyectados `SUPABASE_PUBLISHABLE_KEYS` y `SUPABASE_SECRET_KEYS`; no dependen de las claves JWT heredadas ni hay que copiarlas al archivo de despliegue.
 - `.env*` está excluido de Git en todos los directorios; solo se permiten plantillas terminadas en `.example`, sin credenciales reales. Verifica antes de publicar con `python scripts/check-secrets.py` desde la raíz del repositorio.
 - Si una credencial llegó a Git, revócala en el proveedor aunque luego borres el archivo o limpies el historial. Crear una clave nueva no revoca automáticamente una anterior.
 - Las políticas RLS están incluidas en las migraciones.

@@ -62,9 +62,10 @@
    Crea un archivo `.env` en la raíz con las siguientes claves:
    ```env
    VITE_SUPABASE_URL=tu_url_de_supabase
-   VITE_SUPABASE_PUBLISHABLE_KEY=tu_key_publica
+   VITE_SUPABASE_PUBLISHABLE_API_KEY=tu_clave_sb_publishable
    VITE_SUPABASE_PROJECT_ID=id_del_proyecto
    ```
+   En Vercel configura la clave pública moderna (`sb_publishable_...`) como **Config** para Production y Preview. La compilación acepta también el nombre local anterior `VITE_SUPABASE_PUBLISHABLE_KEY` si contiene una clave moderna y rechaza las claves JWT heredadas. Nunca uses una clave secreta en variables `VITE_*`.
 3. **Ejecutar en desarrollo:**
    ```bash
    ```bash
