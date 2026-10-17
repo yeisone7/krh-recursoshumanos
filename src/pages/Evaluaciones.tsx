@@ -725,7 +725,7 @@ export default function Evaluaciones() {
                                   <MoreHorizontal className="h-5 w-5" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
+                              <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
                                 <DropdownMenuItem
                                   onClick={() => {
                                     setSelectedTemplate(template);
