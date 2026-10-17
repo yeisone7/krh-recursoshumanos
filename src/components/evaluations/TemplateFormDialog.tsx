@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { CriteriaRubricItem } from './CriteriaRubricItem';
+import { TemplateDialogSizeToggle } from './TemplateDialogSizeToggle';
 import { usePositions } from '@/hooks/useSystemConfig';
 import type { EvaluationTemplate } from '@/types/evaluation';
 import {
@@ -94,6 +95,11 @@ export function TemplateFormDialog({
 }: TemplateFormDialogProps) {
   const { data: positions = [] } = usePositions();
   const [posSearch, setPosSearch] = useState('');
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    if (!open) setIsMaximized(false);
+  }, [open]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -173,8 +179,14 @@ export function TemplateFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden border-primary/15 bg-muted/20 p-0 shadow-2xl shadow-primary/10 sm:h-auto sm:max-h-[92vh]">
-        <DialogHeader className="border-b border-primary/10 bg-gradient-to-r from-primary/10 via-primary/5 to-background px-4 pb-4 pr-12 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
+      <DialogContent
+        className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden border-primary/15 bg-muted/20 p-0 shadow-2xl shadow-primary/10 sm:h-auto sm:max-h-[92vh]"
+        style={isMaximized ? { width: '100vw', maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' } : undefined}
+      >
+        <div className="absolute right-12 top-2 z-[60] sm:top-3">
+          <TemplateDialogSizeToggle isMaximized={isMaximized} onToggle={() => setIsMaximized(current => !current)} />
+        </div>
+        <DialogHeader className="shrink-0 border-b border-primary/10 bg-gradient-to-r from-primary/10 via-primary/5 to-background px-4 pb-4 pr-24 pt-4 sm:px-6 sm:pb-5 sm:pr-24 sm:pt-5">
           <div className="flex items-start gap-3">
             <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm shadow-primary/20">
               <ClipboardList className="h-5 w-5" />
@@ -514,7 +526,7 @@ export function TemplateFormDialog({
             </section>
 
             </div>
-            <div className="grid grid-cols-1 gap-2 border-t border-primary/10 bg-background/95 p-4 shadow-[0_-8px_24px_-20px_hsl(var(--primary))] backdrop-blur sm:flex sm:justify-end sm:px-6">
+            <div className="grid shrink-0 grid-cols-1 gap-2 border-t border-primary/10 bg-background/95 p-4 shadow-[0_-8px_24px_-20px_hsl(var(--primary))] backdrop-blur sm:flex sm:justify-end sm:px-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
                 Cancelar
               </Button>

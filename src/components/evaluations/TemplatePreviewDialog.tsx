@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ import {
 import { motion } from 'framer-motion';
 import type { EvaluationTemplate } from '@/types/evaluation';
 import { generateTemplatePdf } from '@/lib/templatePdfGenerator';
+import { TemplateDialogSizeToggle } from './TemplateDialogSizeToggle';
 
 interface TemplatePreviewDialogProps {
   open: boolean;
@@ -37,6 +39,12 @@ const levelLabels = [
 ];
 
 export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicate }: TemplatePreviewDialogProps) {
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    if (!open) setIsMaximized(false);
+  }, [open]);
+
   if (!template) return null;
 
   const criteria = template.criteria || [];
@@ -47,8 +55,12 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        style={isMaximized ? { width: '100vw', maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' } : undefined}
         className="flex h-[100dvh] w-screen max-w-3xl flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-lg sm:border [&>button.absolute]:fixed [&>button.absolute]:right-2.5 [&>button.absolute]:top-[max(0.5rem,env(safe-area-inset-top))] [&>button.absolute]:z-[60] [&>button.absolute]:flex [&>button.absolute]:h-10 [&>button.absolute]:w-10 [&>button.absolute]:items-center [&>button.absolute]:justify-center [&>button.absolute]:rounded-full [&>button.absolute]:border-0 [&>button.absolute]:bg-accent [&>button.absolute]:text-accent-foreground [&>button.absolute]:opacity-100 [&>button.absolute]:shadow-md [&>button.absolute]:ring-0 [&>button.absolute]:ring-offset-0 [&>button.absolute]:[&>button.absolute]:hover:bg-accent/90 [&>button.absolute]:focus:ring-2 [&>button.absolute]:focus:ring-ring [&>button.absolute]:focus:ring-offset-2 [&>button.absolute_svg]:h-4 [&>button.absolute_svg]:w-4 sm:[&>button.absolute]:right-4 sm:[&>button.absolute]:top-4"
       >
+        <div className="absolute right-14 top-[max(0.5rem,env(safe-area-inset-top))] z-[60] sm:right-16 sm:top-4">
+          <TemplateDialogSizeToggle isMaximized={isMaximized} onToggle={() => setIsMaximized(current => !current)} />
+        </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-themed">
         {/* Hero header */}
         <div className="relative overflow-hidden rounded-t-lg bg-gradient-to-br from-accent-light via-background to-accent px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-6 sm:pb-5 sm:pt-6">
@@ -57,7 +69,7 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
           <div className="pointer-events-none absolute -right-2 top-3 h-24 w-24 rounded-full border border-primary/20" />
           <div className="pointer-events-none absolute left-6 top-5 h-16 w-16 rounded-full border border-primary/15 " />
           <DialogHeader className="relative z-10">
-            <div className="flex items-start gap-3 pr-12 sm:pr-0">
+            <div className="flex items-start gap-3 pr-24">
               <div className="shrink-0 rounded-xl border border-primary/15 bg-primary/10 p-2.5 ">
                 <FileText className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
               </div>
