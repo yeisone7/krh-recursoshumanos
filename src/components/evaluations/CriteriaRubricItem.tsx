@@ -30,7 +30,7 @@ const LEVEL_LABELS = [
   { level: 3, label: '3 - Bueno dentro del Estándar' },
   { level: 2, label: '2 - Competencia en Desarrollo' },
   { level: 1, label: '1 - Competencia No Desarrollada' },
-];
+] as const;
 
 export function CriteriaRubricItem({ index, form, onRemove, canRemove }: CriteriaRubricItemProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +48,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             name={`criteria.${index}.name`}
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel className="text-xs">Competencia o criterio</FormLabel>
+                <FormLabel className="text-xs">Criterio de evaluación</FormLabel>
                 <FormControl>
                   <Input placeholder="Ej: Trabajo en Equipo" {...field} />
                 </FormControl>
@@ -62,7 +62,7 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
             name={`criteria.${index}.category`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs">Categoría</FormLabel>
+                <FormLabel className="text-xs">Competencia</FormLabel>
                 <FormControl>
                   <Input placeholder="Ej: Organizacional" {...field} />
                 </FormControl>
@@ -100,6 +100,14 @@ export function CriteriaRubricItem({ index, form, onRemove, canRemove }: Criteri
         </Button>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FormField control={form.control} name={`criteria.${index}.dimension`} render={({ field }) => (
+          <FormItem><FormLabel className="text-xs">Dimensión evaluada</FormLabel><FormControl><Input {...field} value={field.value || ''} /></FormControl></FormItem>
+        )} />
+        <FormField control={form.control} name={`criteria.${index}.competency_description`} render={({ field }) => (
+          <FormItem><FormLabel className="text-xs">Descripción de la competencia</FormLabel><FormControl><Textarea {...field} value={field.value || ''} /></FormControl></FormItem>
+        )} />
+      </div>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <Button type="button" variant="ghost" size="sm" className="ml-9 gap-1 text-xs text-primary hover:bg-primary/10 hover:text-primary">

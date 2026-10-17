@@ -164,6 +164,8 @@ export function TemplatePreviewDialog({ open, onOpenChange, template, onDuplicat
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-foreground">{c.name}</p>
+                        {c.dimension && <p className="text-xs mt-1">Dimensión: {c.dimension}</p>}
+                        {c.competency_description && <p className="text-xs text-muted-foreground mt-1">{c.competency_description}</p>}
                         {c.description && (
                           <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>
                         )}

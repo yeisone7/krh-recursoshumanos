@@ -1,3 +1,6 @@
+import { EVALUATION_PRESETS } from '@/lib/evaluationPresets';
+import { templateAppliesToPosition } from '@/lib/evaluationScoring';
+import { DEFAULT_RATING_SCALE } from '@/types/evaluation';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -224,11 +227,12 @@ export default function Evaluaciones() {
   const handleDownloadPdf = async (evaluation: PerformanceEvaluation) => {
     const cycle = cycles.find(c => c.id === evaluation.cycle_id);
     const tpl = (cycle?.template_id ? templates.find(t => t.id === cycle.template_id) : cycle?.template) || null;
-    const { data: scores } = await supabase
+    const { data: scores, error } = await supabase
       .from('evaluation_scores')
       .select('*')
       .eq('evaluation_id', evaluation.id);
-    generateEvaluationPdf({
+    if (error) { toast.error(error.message); return; }
+    await generateEvaluationPdf({
       evaluation,
       template: tpl,
       scores: (scores || []) as EvaluationScore[],
@@ -242,14 +246,7 @@ export default function Evaluaciones() {
       return;
     }
     const tpl = templates.find(t => t.id === cycle.template_id);
-    const positionIds = tpl?.positions?.map(p => p.id) || [];
-
-    let targetEmployees = employees;
-    if (positionIds.length > 0) {
-      targetEmployees = employees.filter(emp =>
-        emp.work_info?.position_id && positionIds.includes(emp.work_info.position_id)
-      );
-    }
+    const targetEmployees = employees.filter(emp => templateAppliesToPosition(tpl, emp.work_info?.position_id));
 
     if (targetEmployees.length === 0) {
       toast.error('No se encontraron empleados para los cargos de la plantilla');
@@ -560,6 +557,9 @@ export default function Evaluaciones() {
                     setDeleteDialogOpen(true);
                   }}
                   onStatusChange={(evalId, newStatus) => {
+                    const previous = evaluations.find(e => e.id === evalId)?.status;
+                    const allowed = (previous === 'submitted' && newStatus === 'reviewed') || (previous === 'reviewed' && newStatus === 'approved');
+                    if (!allowed) { toast.error('Aplica la evaluación para guardar progreso o finalizarla. Solo puedes mover una evaluación enviada a revisada y una revisada a aprobada.'); return; }
                     updateEvaluation.mutate({ id: evalId, status: newStatus });
                   }}
                   showCycleFilter={false}
@@ -629,6 +629,26 @@ export default function Evaluaciones() {
                 );
               })()}
             </div>
+            <div className="rounded-xl border bg-card p-4 mb-5 space-y-3">
+              <div>
+                <h3 className="font-semibold">Formatos por nivel del cargo</h3>
+                <p className="text-sm text-muted-foreground">GH-FO-05-DR · Escala de 1 a 4. Agrega cada formato y configura sus cargos antes de crear un ciclo.</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {EVALUATION_PRESETS.map(preset => {
+                  const installed = templates.find(t => t.preset_key === preset.preset_key);
+                  return <div key={preset.preset_key} className="rounded-lg border p-3 space-y-2">
+                    <p className="font-medium">{preset.name}</p>
+                    <p className="text-xs text-muted-foreground">{new Set(preset.criteria.map(c => c.category)).size} competencias · {preset.criteria.length} criterios</p>
+                    <Button variant="outline" className="w-full" disabled={createTemplate.isPending || loadingTemplates}
+                      onClick={() => {
+                        if (installed) { setSelectedTemplate(installed); setTemplateDialogOpen(true); }
+                        else createTemplate.mutate({ ...preset, rating_scale: DEFAULT_RATING_SCALE, position_ids: [] } as any);
+                      }}>{installed ? 'Configurar cargos y criterios' : 'Agregar formato'}</Button>
+                  </div>;
+                })}
+              </div>
+            </div>
             {loadingTemplates ? (
               <p className="text-muted-foreground">Cargando...</p>
             ) : templates.length === 0 ? (
@@ -694,7 +714,7 @@ export default function Evaluaciones() {
                                 ) : (
                                   <div className="flex items-center gap-1.5 mt-1">
                                     <Briefcase className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm font-medium text-muted-foreground">Todos los cargos</span>
+                                    <span className="text-sm font-medium text-muted-foreground">{template.preset_key ? 'Cargos por configurar' : 'Todos los cargos'}</span>
                                   </div>
                                 )}
                               </div>
@@ -804,9 +824,9 @@ export default function Evaluaciones() {
         template={selectedTemplate}
         onSubmit={(data) => {
           if (selectedTemplate) {
-            updateTemplate.mutate({ id: selectedTemplate.id, ...data } as any);
+            return updateTemplate.mutateAsync({ id: selectedTemplate.id, ...data } as any);
           } else {
-            createTemplate.mutate(data as any);
+            return createTemplate.mutateAsync(data as any);
           }
         }}
         isLoading={createTemplate.isPending || updateTemplate.isPending}
@@ -833,11 +853,12 @@ export default function Evaluaciones() {
         evaluation={selectedEvaluation}
         cycles={cycles}
         employees={employees}
+        templates={templates}
         onSubmit={(data) => {
           if (selectedEvaluation) {
-            updateEvaluation.mutate({ id: selectedEvaluation.id, ...data });
+            return updateEvaluation.mutateAsync({ id: selectedEvaluation.id, ...data });
           } else {
-            createEvaluation.mutate(data);
+            return createEvaluation.mutateAsync(data);
           }
         }}
         isLoading={createEvaluation.isPending || updateEvaluation.isPending}
@@ -870,11 +891,15 @@ export default function Evaluaciones() {
             if (!open) setEvaluationToApply(null);
           }}
           evaluation={evaluationToApply}
+          employeeInfo={{
+            position: employees.find(e => e.id === evaluationToApply.employee_id)?.work_info?.position_name || '',
+            field: (evaluationToApply as PerformanceEvaluation & { operation_center_name?: string }).operation_center_name || '',
+          }}
           template={
             templates.find((t) => t.id === cycles.find((c) => c.id === evaluationToApply.cycle_id)?.template_id) || null
           }
           onSave={(data) => {
-            updateEvaluation.mutate(data as any);
+            return updateEvaluation.mutateAsync(data as any);
           }}
         />
       )}
@@ -910,6 +935,8 @@ export default function Evaluaciones() {
               name: c.name,
               description: c.description,
               category: c.category,
+              dimension: c.dimension,
+              competency_description: c.competency_description,
               weight: c.weight,
               max_score: c.max_score,
               level_4_description: c.level_4_description,

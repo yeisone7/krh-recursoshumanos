@@ -31,7 +31,7 @@ export function useEvaluations() {
       if (error) throw error;
       return data.map(t => ({
         ...t,
-        criteria: (t as any).evaluation_criteria || [],
+        criteria: [...((t as any).evaluation_criteria || [])].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
         positions: ((t as any).evaluation_template_positions || [])
           .map((etp: any) => etp.positions)
           .filter(Boolean),
@@ -45,41 +45,13 @@ export function useEvaluations() {
   const createTemplate = useMutation({
     mutationFn: async (template: Partial<EvaluationTemplate> & { criteria?: Partial<EvaluationCriteria>[]; position_ids?: string[] }) => {
       if (!currentCompanyId) throw new Error('No company ID');
-      const { criteria, position_ids, positions, ...templateData } = template as any;
-      
-      const insertData = { 
-        name: templateData.name || '', 
-        company_id: currentCompanyId, 
-        ...templateData,
-        qualitative_questions: templateData.qualitative_questions as unknown as any,
-        rating_scale: templateData.rating_scale as unknown as any,
-      };
-      const { data: newTemplate, error } = await supabase
-        .from('evaluation_templates')
-        .insert(insertData as any)
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('save_evaluation_template', {
+        p_company_id: currentCompanyId,
+        p_template_id: null,
+        p_payload: template as unknown as import('@/integrations/supabase/types').Json,
+      });
       if (error) throw error;
-
-      if (criteria && criteria.length > 0) {
-        const criteriaWithTemplateId = criteria.map((c: any, index: number) => ({
-          ...c,
-          template_id: newTemplate.id,
-          sort_order: index,
-        }));
-        const { error: criteriaError } = await supabase
-          .from('evaluation_criteria')
-          .insert(criteriaWithTemplateId);
-        if (criteriaError) throw criteriaError;
-      }
-
-      if (position_ids && position_ids.length > 0) {
-        const rows = position_ids.map((pid: string) => ({ template_id: newTemplate.id, position_id: pid }));
-        const { error: posError } = await supabase.from('evaluation_template_positions').insert(rows);
-        if (posError) throw posError;
-      }
-
-      return newTemplate;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-templates'] });
@@ -92,43 +64,13 @@ export function useEvaluations() {
 
   const updateTemplate = useMutation({
     mutationFn: async ({ id, ...data }: Partial<EvaluationTemplate> & { id: string; criteria?: Partial<EvaluationCriteria>[]; position_ids?: string[] }) => {
-      const { criteria, positions, position_ids, ...templateData } = data as any;
-      const updateData = {
-        ...templateData,
-        qualitative_questions: templateData.qualitative_questions as unknown as any,
-        rating_scale: templateData.rating_scale as unknown as any,
-      };
-      
-      const { error } = await supabase
-        .from('evaluation_templates')
-        .update(updateData)
-        .eq('id', id);
+      if (!currentCompanyId) throw new Error('Selecciona una empresa');
+      const { error } = await supabase.rpc('save_evaluation_template', {
+        p_company_id: currentCompanyId,
+        p_template_id: id,
+        p_payload: data as unknown as import('@/integrations/supabase/types').Json,
+      });
       if (error) throw error;
-
-      if (criteria) {
-        await supabase.from('evaluation_criteria').delete().eq('template_id', id);
-        if (criteria.length > 0) {
-          const criteriaWithTemplateId = criteria.map((c: any, index: number) => ({
-            ...c,
-            template_id: id,
-            sort_order: index,
-          }));
-          const { error: criteriaError } = await supabase
-            .from('evaluation_criteria')
-            .insert(criteriaWithTemplateId);
-          if (criteriaError) throw criteriaError;
-        }
-      }
-
-      // Update position associations
-      if (position_ids !== undefined) {
-        await supabase.from('evaluation_template_positions').delete().eq('template_id', id);
-        if (position_ids.length > 0) {
-          const rows = position_ids.map((pid: string) => ({ template_id: id, position_id: pid }));
-          const { error: posError } = await supabase.from('evaluation_template_positions').insert(rows);
-          if (posError) throw posError;
-        }
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-templates'] });
@@ -247,7 +189,7 @@ export function useEvaluations() {
           *,
           employees_v2!inner(
             id, first_name, last_name, document_number, company_id,
-            employee_work_info(operation_center_id, operation_centers(id, name))
+            employee_work_info(is_current, operation_center_id, operation_centers(id, name))
           ),
           evaluation_cycles!inner(*)
         `)
@@ -256,7 +198,7 @@ export function useEvaluations() {
       if (error) throw error;
       return data.map(e => {
         const empData = e.employees_v2 as any;
-        const workInfo = Array.isArray(empData.employee_work_info) ? empData.employee_work_info[0] : empData.employee_work_info;
+        const workInfo = Array.isArray(empData.employee_work_info) ? (empData.employee_work_info.find((row: { is_current?: boolean }) => row.is_current) || empData.employee_work_info[0]) : empData.employee_work_info;
         const centerName = workInfo?.operation_centers?.name || null;
         return {
           ...e,
@@ -283,7 +225,11 @@ export function useEvaluations() {
         .insert({
           cycle_id: evaluation.cycle_id || '',
           employee_id: evaluation.employee_id || '',
-          ...evaluation
+          ...evaluation,
+          company_id: currentCompanyId!,
+          status: 'pending',
+          overall_score: null,
+          overall_rating: null,
         } as any)
         .select()
         .single();
@@ -292,6 +238,7 @@ export function useEvaluations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['performance-evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-scores'] });
       toast.success('Evaluación creada');
     },
     onError: (error) => {
@@ -301,29 +248,21 @@ export function useEvaluations() {
 
   const updateEvaluation = useMutation({
     mutationFn: async ({ id, scores, ...data }: Partial<PerformanceEvaluation> & { id: string; scores?: Partial<EvaluationScore>[] }) => {
-      const { error } = await supabase
-        .from('performance_evaluations')
-        .update(data)
-        .eq('id', id);
-      if (error) throw error;
-
-      if (scores && scores.length > 0) {
-        for (const score of scores) {
-          const { error: scoreError } = await supabase
-            .from('evaluation_scores')
-            .upsert({
-              evaluation_id: id,
-              company_id: currentCompanyId!,
-              criteria_id: score.criteria_id,
-              score: score.score,
-              comments: score.comments,
-            }, { onConflict: 'evaluation_id,criteria_id' });
-          if (scoreError) throw scoreError;
-        }
+      if (scores !== undefined) {
+        const { error } = await supabase.rpc('save_performance_evaluation', {
+          p_id: id,
+          p_payload: data as unknown as import('@/integrations/supabase/types').Json,
+          p_scores: scores as unknown as import('@/integrations/supabase/types').Json,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('performance_evaluations').update(data).eq('id', id).select('id').single();
+        if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['performance-evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-scores'] });
       toast.success('Evaluación actualizada');
     },
     onError: (error) => {
@@ -341,6 +280,7 @@ export function useEvaluations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['performance-evaluations'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-scores'] });
       toast.success('Evaluación eliminada');
     },
     onError: (error) => {

@@ -1,3 +1,5 @@
+import { templateAppliesToPosition } from '@/lib/evaluationScoring';
+import type { EvaluationTemplate } from '@/types/evaluation';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -9,7 +11,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -26,13 +27,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { EvaluationCycle, PerformanceEvaluation } from '@/types/evaluation';
-import { EVALUATION_TYPE_LABELS, EVALUATION_STATUS_LABELS } from '@/types/evaluation';
 
 interface Employee {
   id: string;
   first_name: string;
   last_name: string;
   document_number: string;
+  work_info?: { position_id?: string | null } | null;
 }
 
 const formSchema = z.object({
@@ -55,7 +56,8 @@ interface EvaluationFormDialogProps {
   evaluation?: PerformanceEvaluation | null;
   cycles: EvaluationCycle[];
   employees: Employee[];
-  onSubmit: (data: FormData) => void;
+  templates: EvaluationTemplate[];
+  onSubmit: (data: Pick<FormData, 'cycle_id' | 'employee_id' | 'evaluation_type'>) => Promise<unknown>;
   isLoading?: boolean;
 }
 
@@ -65,6 +67,7 @@ export function EvaluationFormDialog({
   evaluation,
   cycles,
   employees,
+  templates,
   onSubmit,
   isLoading,
 }: EvaluationFormDialogProps) {
@@ -111,12 +114,21 @@ export function EvaluationFormDialog({
     }
   }, [evaluation, form]);
 
-  const handleSubmit = (data: FormData) => {
-    onSubmit(data);
-    onOpenChange(false);
+  const selectedCycleId = form.watch('cycle_id');
+  const selectedCycle = cycles.find(c => c.id === selectedCycleId);
+  const selectedTemplate = templates.find(t => t.id === selectedCycle?.template_id);
+  const eligibleEmployees = employees.filter(emp => templateAppliesToPosition(selectedTemplate, emp.work_info?.position_id));
+  const handleSubmit = async (data: FormData) => {
+    if (!evaluation && !eligibleEmployees.some(emp => emp.id === data.employee_id)) {
+      form.setError('employee_id', { message: 'El cargo del empleado no corresponde a esta plantilla' });
+      return;
+    }
+    try {
+      await onSubmit({ cycle_id: data.cycle_id, employee_id: data.employee_id, evaluation_type: data.evaluation_type });
+      onOpenChange(false);
+    } catch { /* Keep the form on error. */ }
   };
-
-  const activeCycles = cycles.filter(c => c.status === 'active' || c.status === 'draft');
+  const activeCycles = cycles.filter(c => c.status === 'active' || c.status === 'draft' || c.id === evaluation?.cycle_id);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -137,7 +149,7 @@ export function EvaluationFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Ciclo de Evaluación *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select disabled={!!evaluation} onValueChange={value => { field.onChange(value); form.setValue("employee_id", ""); }} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar ciclo" />
@@ -162,14 +174,14 @@ export function EvaluationFormDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Empleado *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select disabled={!!evaluation || !selectedTemplate} onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar empleado" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {employees.map((emp) => (
+                        {(evaluation ? employees : eligibleEmployees).map((emp) => (
                           <SelectItem key={emp.id} value={emp.id}>
                             {emp.first_name} {emp.last_name}
                           </SelectItem>
@@ -182,154 +194,10 @@ export function EvaluationFormDialog({
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="evaluation_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Evaluación</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(EVALUATION_TYPE_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(EVALUATION_STATUS_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="rounded-lg border p-3 text-sm text-muted-foreground">
+              {selectedTemplate ? <><strong>{selectedTemplate.name}</strong><p>{selectedTemplate.criteria?.length || 0} criterios · Escala de 1 a 4</p><p>{eligibleEmployees.length} empleados con un cargo aplicable.</p></> : 'Selecciona un ciclo para ver su plantilla y los empleados que pueden evaluarse.'}
+              <p className="mt-2">La calificación y el estado final se obtienen al aplicar la evaluación. Usa el formulario de evaluación para registrar las respuestas y las firmas.</p>
             </div>
-
-            <FormField
-              control={form.control}
-              name="overall_rating"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Calificación General</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar calificación" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="excepcional">Excepcional</SelectItem>
-                      <SelectItem value="sobresaliente">Sobresaliente</SelectItem>
-                      <SelectItem value="satisfactorio">Satisfactorio</SelectItem>
-                      <SelectItem value="en_desarrollo">En Desarrollo</SelectItem>
-                      <SelectItem value="insatisfactorio">Insatisfactorio</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="strengths"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fortalezas</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Principales fortalezas del empleado..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="areas_to_improve"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Áreas de Mejora</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Áreas donde el empleado puede mejorar..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="general_comments"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Comentarios Generales</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observaciones adicionales..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="development_plan"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Plan de Desarrollo</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Acciones sugeridas para el desarrollo del empleado..."
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             </div>
             <div className="grid grid-cols-1 gap-2 border-t bg-background p-4 sm:flex sm:justify-end sm:px-6">

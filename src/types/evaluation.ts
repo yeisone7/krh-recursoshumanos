@@ -16,13 +16,14 @@ export const DEFAULT_QUALITATIVE_QUESTIONS = [
 ];
 
 export const DEFAULT_RATING_SCALE: RatingScaleItem[] = [
-  { label: 'Sobresaliente', min: 91, max: 100, description: 'Mantener el compromiso hasta ahora alcanzado' },
-  { label: 'Bueno', min: 75, max: 90, description: 'Trabajar en mejora continua' },
-  { label: 'Aceptable', min: 60, max: 74, description: 'Requiere capacitación continua' },
-  { label: 'Deficiente', min: 0, max: 59, description: 'Requiere cumplimiento inmediato' },
+  { label: 'Sobresaliente', min: 91, max: 100, description: 'Mantener el compromiso y nivel de competencias hasta ahora alcanzado' },
+  { label: 'Bueno', min: 75, max: 90, description: 'Se debe trabajar en la mejora continua de sus competencias y fortalecer habilidades propias del cargo' },
+  { label: 'Aceptable', min: 60, max: 74, description: 'Requiere capacitación continua y seguimiento al desarrollo de las competencias requeridas para el cargo' },
+  { label: 'Deficiente', min: 0, max: 59, description: 'Requiere intervención inmediata para el cumplimiento de las actividades propias de su cargo' },
 ];
 
 export interface EvaluationTemplate {
+  preset_key?: string | null;
   id: string;
   company_id: string;
   name: string;
@@ -38,6 +39,8 @@ export interface EvaluationTemplate {
 }
 
 export interface EvaluationCriteria {
+  dimension?: string | null;
+  competency_description?: string | null;
   id: string;
   template_id: string;
   name: string;
@@ -71,6 +74,13 @@ export interface EvaluationCycle {
 }
 
 export interface PerformanceEvaluation {
+  evaluator_signature?: string | null;
+  employee_signature?: string | null;
+  evaluator_name?: string | null;
+  position_name?: string | null;
+  field_name?: string | null;
+  manager_name?: string | null;
+  evaluation_date?: string | null;
   id: string;
   cycle_id: string;
   employee_id: string;

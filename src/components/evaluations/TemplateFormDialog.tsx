@@ -45,9 +45,11 @@ import {
 const criteriaSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
   description: z.string().optional(),
+  dimension: z.string().optional(),
+  competency_description: z.string().optional(),
   category: z.string().optional(),
-  weight: z.number().min(0).default(1),
-  max_score: z.number().min(1).default(4),
+  weight: z.number().positive().default(1),
+  max_score: z.number().min(4).max(4).default(4),
   level_4_description: z.string().optional(),
   level_3_description: z.string().optional(),
   level_2_description: z.string().optional(),
@@ -79,7 +81,7 @@ interface TemplateFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   template?: EvaluationTemplate | null;
-  onSubmit: (data: FormData) => void;
+  onSubmit: (data: FormData) => Promise<unknown>;
   isLoading?: boolean;
 }
 
@@ -121,6 +123,8 @@ export function TemplateFormDialog({
         criteria: template.criteria?.length
           ? template.criteria.map(c => ({
               name: c.name,
+              dimension: c.dimension || '',
+              competency_description: c.competency_description || '',
               description: c.description || '',
               category: c.category || 'general',
               weight: c.weight || 1,
@@ -145,11 +149,13 @@ export function TemplateFormDialog({
         rating_scale: [...defaultScale],
       });
     }
-  }, [template, form]);
+  }, [template, form, open]);
 
-  const handleSubmit = (data: FormData) => {
-    onSubmit(data);
-    onOpenChange(false);
+  const handleSubmit = async (data: FormData) => {
+    try {
+      await onSubmit(data);
+      onOpenChange(false);
+    } catch { /* Mutation displays the error; preserve the form. */ }
   };
 
   const positionOptions = useMemo(() => positions.map(p => ({

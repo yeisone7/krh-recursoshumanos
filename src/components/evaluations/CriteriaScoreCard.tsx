@@ -7,10 +7,10 @@ import type { EvaluationCriteria } from '@/types/evaluation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const LEVEL_OPTIONS = [
-  { value: 1, label: 'No Desarrollada', key: 'level_1_description' as const, color: 'border-red-400 bg-red-50 dark:bg-red-950' },
-  { value: 2, label: 'En Desarrollo', key: 'level_2_description' as const, color: 'border-amber-400 bg-amber-50 dark:bg-amber-950' },
-  { value: 3, label: 'Bueno', key: 'level_3_description' as const, color: 'border-blue-400 bg-blue-50 dark:bg-blue-950' },
-  { value: 4, label: 'Ampliamente Desarrollada', key: 'level_4_description' as const, color: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950' },
+  { value: 1, label: 'Insatisfactorio', key: 'level_1_description' as const, color: 'border-red-400 bg-red-50 dark:bg-red-950' },
+  { value: 2, label: 'Mínimo', key: 'level_2_description' as const, color: 'border-amber-400 bg-amber-50 dark:bg-amber-950' },
+  { value: 3, label: 'Apropiado', key: 'level_3_description' as const, color: 'border-blue-400 bg-blue-50 dark:bg-blue-950' },
+  { value: 4, label: 'Alto', key: 'level_4_description' as const, color: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950' },
 ];
 
 interface CriteriaScoreCardProps {
@@ -47,6 +47,7 @@ export function CriteriaScoreCard({
                 <span className="text-xs text-muted-foreground">Peso: {criteria.weight}</span>
               )}
             </div>
+            {criteria.dimension && <p className="text-xs font-medium mt-1">Dimensión: {criteria.dimension}</p>}
             {criteria.description && (
               <p className="text-xs text-muted-foreground mt-0.5">{criteria.description}</p>
             )}
@@ -67,6 +68,7 @@ export function CriteriaScoreCard({
               <button
                 key={option.value}
                 type="button"
+                aria-pressed={isSelected}
                 onClick={() => onLevelChange(option.value)}
                 className={cn(
                   'relative rounded-lg border-2 p-2.5 text-left text-xs transition-all',
@@ -114,7 +116,8 @@ export function CriteriaScoreCard({
 
         {/* Comment */}
         <Textarea
-          placeholder="Comentarios sobre este criterio (opcional)"
+          aria-label={`Observación: ${criteria.name}`}
+          placeholder="Observaciones sobre este criterio (opcional)"
           value={comment}
           onChange={(e) => onCommentChange(e.target.value)}
           className="min-h-[50px] text-xs"

@@ -1,4 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { calculateEvaluationResult } from '@/lib/evaluationScoring';
+import { format } from 'date-fns';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -32,22 +35,31 @@ interface ApplyEvaluationDialogProps {
   onOpenChange: (open: boolean) => void;
   evaluation: PerformanceEvaluation;
   template: EvaluationTemplate | null;
+  employeeInfo?: { position: string; field: string };
   onSave: (data: {
     id: string;
     status: string;
-    overall_score?: number;
-    overall_rating?: string;
+    overall_score?: number | null;
+    overall_rating?: string | null;
     strengths?: string;
     areas_to_improve?: string;
     development_plan?: string;
     employee_comments?: string;
+    evaluator_signature?: string | null;
+    employee_signature?: string | null;
+    evaluator_name?: string;
+    manager_name?: string;
+    position_name?: string;
+    field_name?: string;
+    evaluation_date?: string;
     scores?: { criteria_id: string; score: number; comments?: string }[];
-  }) => void;
+  }) => Promise<unknown>;
 }
 
 interface ScoreState {
   [criteriaId: string]: { level: number | null; comments: string };
 }
+const EMPTY_CRITERIA: EvaluationCriteria[] = [];
 
 export function ApplyEvaluationDialog({
   open,
@@ -55,13 +67,14 @@ export function ApplyEvaluationDialog({
   evaluation,
   template,
   onSave,
+  employeeInfo,
 }: ApplyEvaluationDialogProps) {
-  const criteria = template?.criteria || [];
+  const criteria = template?.criteria || EMPTY_CRITERIA;
   const ratingScale: RatingScaleItem[] = template?.rating_scale || DEFAULT_RATING_SCALE;
   const qualitativeQuestions: string[] = template?.qualitative_questions || DEFAULT_QUALITATIVE_QUESTIONS;
 
   // Fetch existing scores
-  const { data: existingScores } = useQuery({
+  const { data: existingScores, isLoading: loadingScores, isError: scoresError } = useQuery({
     queryKey: ['evaluation-scores', evaluation.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -72,6 +85,7 @@ export function ApplyEvaluationDialog({
       return data as EvaluationScore[];
     },
     enabled: open,
+    refetchOnWindowFocus: false,
   });
 
   const [scores, setScores] = useState<ScoreState>({});
@@ -85,9 +99,22 @@ export function ApplyEvaluationDialog({
   const [showEvaluatorCanvas, setShowEvaluatorCanvas] = useState(false);
   const [showEmployeeCanvas, setShowEmployeeCanvas] = useState(false);
 
+  const initialized = useRef<string | null>(null);
+  const [header, setHeader] = useState({ evaluator_name: '', manager_name: '', position_name: '', field_name: '', evaluation_date: '' });
+  const readOnly = !['pending', 'in_progress'].includes(evaluation.status);
+
   // Initialize from existing data
   useEffect(() => {
-    if (!open) return;
+    if (!open) { initialized.current = null; return; }
+    if (!existingScores || initialized.current === evaluation.id) return;
+    initialized.current = evaluation.id;
+    setHeader({
+      evaluator_name: evaluation.evaluator_name || '',
+      manager_name: evaluation.manager_name || '',
+      position_name: evaluation.position_name || employeeInfo?.position || '',
+      field_name: evaluation.field_name || employeeInfo?.field || '',
+      evaluation_date: evaluation.evaluation_date || format(new Date(), 'yyyy-MM-dd'),
+    });
     const initial: ScoreState = {};
     criteria.forEach((c) => {
       const existing = existingScores?.find((s) => s.criteria_id === c.id);
@@ -108,11 +135,11 @@ export function ApplyEvaluationDialog({
     } catch {
       setQualitativeAnswers(new Array(qualitativeQuestions.length).fill(''));
     }
-    setEvaluatorSignature(null);
-    setEmployeeSignature(null);
+    setEvaluatorSignature(evaluation.evaluator_signature || null);
+    setEmployeeSignature(evaluation.employee_signature || null);
     setShowEvaluatorCanvas(false);
     setShowEmployeeCanvas(false);
-  }, [open, existingScores, criteria.length]);
+  }, [open, existingScores, criteria, evaluation, employeeInfo, qualitativeQuestions.length]);
 
   // Group criteria by category
   const groupedCriteria = useMemo(() => {
@@ -126,31 +153,17 @@ export function ApplyEvaluationDialog({
     return groups;
   }, [criteria]);
 
-  // Calculate total score
-  const { totalScore, totalRating } = useMemo(() => {
-    let weightedSum = 0;
-    let totalWeight = 0;
-    let allScored = true;
-
-    criteria.forEach((c) => {
-      const s = scores[c.id];
-      const weight = c.weight || 1;
-      const maxScore = c.max_score || 4;
-      if (s?.level !== null && s?.level !== undefined) {
-        weightedSum += (s.level / maxScore) * weight;
-        totalWeight += weight;
-      } else {
-        allScored = false;
-      }
-    });
-
-    const score = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) : 0;
-    const rating = ratingScale.find((r) => score >= r.min && score <= r.max)?.label || '-';
-    return { totalScore: score, totalRating: rating, allScored };
-  }, [scores, criteria, ratingScale]);
+  const result = calculateEvaluationResult(criteria, scores, ratingScale);
+  const totalScore = result.percentage;
+  const totalRating = result.rating;
 
   const handleSave = async (finalize: boolean) => {
+    if (readOnly || loadingScores || scoresError) return;
     if (finalize) {
+      if (Object.values(header).some(value => !value.trim())) {
+        toast.error('Completa el cargo, campo, jefe inmediato, evaluador y fecha');
+        return;
+      }
       const missing = criteria.filter((c) => !scores[c.id]?.level);
       if (missing.length > 0) {
         toast.error(`Faltan ${missing.length} criterio(s) por calificar`);
@@ -176,37 +189,42 @@ export function ApplyEvaluationDialog({
     setSaving(true);
     try {
       const scoreArray = criteria
-        .filter((c) => scores[c.id]?.level !== null)
+        .filter((c) => scores[c.id]?.level != null)
         .map((c) => ({
           criteria_id: c.id,
           score: scores[c.id].level!,
           comments: scores[c.id].comments || undefined,
         }));
 
-      onSave({
+      await onSave({
         id: evaluation.id,
         status: finalize ? 'submitted' : 'in_progress',
         overall_score: totalScore,
-        overall_rating: totalRating !== '-' ? totalRating : undefined,
-        strengths: strengths || undefined,
-        areas_to_improve: areasToImprove || undefined,
-        development_plan: developmentPlan || undefined,
-        employee_comments: qualitativeAnswers.some((a) => a) ? JSON.stringify(qualitativeAnswers) : undefined,
+        overall_rating: totalRating,
+        ...header,
+        evaluator_signature: evaluatorSignature,
+        employee_signature: employeeSignature,
+        strengths,
+        areas_to_improve: areasToImprove,
+        development_plan: developmentPlan,
+        employee_comments: JSON.stringify(qualitativeAnswers),
         scores: scoreArray,
       });
       onOpenChange(false);
+    } catch {
+      // The mutation reports the failure. Keep all inputs available for retry.
     } finally {
       setSaving(false);
     }
   };
 
-  const scoredCount = criteria.filter((c) => scores[c.id]?.level !== null).length;
+  const scoredCount = criteria.filter((c) => scores[c.id]?.level != null).length;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={value => { if (!saving) onOpenChange(value); }}>
       <DialogContent className="flex h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-4xl flex-col overflow-hidden p-0 sm:h-auto sm:max-h-[90vh]">
-        <DialogHeader className="px-4 pb-3 pt-4 pr-12 sm:px-6 sm:pt-6">
-          <DialogTitle className="text-lg">Aplicar Evaluación</DialogTitle>
+        <DialogHeader className="shrink-0 px-4 pb-3 pt-4 pr-12 sm:px-6 sm:pt-6">
+          <DialogTitle className="text-lg">{readOnly ? "Consultar evaluación" : "Aplicar evaluación"}</DialogTitle>
           <DialogDescription className="sr-only">Calificar al empleado criterio por criterio</DialogDescription>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1 sm:gap-3">
             <div className="flex items-center gap-1.5">
@@ -229,7 +247,7 @@ export function ApplyEvaluationDialog({
 
         <Separator />
 
-        {criteria.length === 0 ? (
+        {loadingScores || scoresError ? <div className="p-6">{scoresError ? 'No se pudieron cargar las respuestas. Cierra y vuelve a abrir la evaluación.' : 'Cargando respuestas…'}</div> : criteria.length === 0 ? (
           <div className="flex-1 flex items-center justify-center p-8">
             <p className="text-muted-foreground text-center">
               La plantilla del ciclo no tiene criterios configurados.<br />
@@ -238,7 +256,15 @@ export function ApplyEvaluationDialog({
           </div>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
-            <div className="space-y-6 py-4">
+            <fieldset disabled={readOnly || saving} className="space-y-6 py-4 min-w-0">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {([['position_name', 'Cargo'], ['field_name', 'Campo / centro de operación'], ['manager_name', 'Jefe inmediato'], ['evaluator_name', 'Evaluado por'], ['evaluation_date', 'Fecha']] as const).map(([key, label]) => (
+                  <div key={key} className="space-y-1">
+                    <Label htmlFor={`evaluation-${key}`}>{label}</Label>
+                    <Input id={`evaluation-${key}`} type={key === 'evaluation_date' ? 'date' : 'text'} value={header[key]} onChange={e => setHeader(prev => ({ ...prev, [key]: e.target.value }))} />
+                  </div>
+                ))}
+              </div>
               {/* Score summary bar */}
               <div className="flex flex-col gap-2 bg-background rounded-lg p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm">
@@ -246,20 +272,25 @@ export function ApplyEvaluationDialog({
                   <span className="font-medium">{scoredCount}/{criteria.length} criterios</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-foreground">{totalScore}</span>
+                  <span className="text-2xl font-bold text-foreground">{totalScore === null ? '—' : totalScore.toFixed(2)}</span>
                   <span className="text-muted-foreground">/100</span>
-                  {totalRating !== '-' && (
+                  {totalRating && (
                     <Badge className="ml-2 bg-primary text-primary-foreground">{totalRating}</Badge>
                   )}
                 </div>
               </div>
 
+              <p className="text-xs text-muted-foreground">
+                {result.complete ? `Promedio: ${result.average?.toFixed(2)} de 4. ` : 'Completa todos los criterios para obtener el resultado. '}
+                El porcentaje se conserva con dos decimales; la categoría usa el porcentaje redondeado al entero.
+              </p>
               {/* Criteria by category */}
               {Object.entries(groupedCriteria).map(([category, items]) => (
                 <div key={category} className="space-y-3">
                   <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                     {category}
                   </h3>
+                  {items[0]?.competency_description && <p className="text-sm text-muted-foreground">{items[0].competency_description}</p>}
                   {items.map((c) => (
                     <CriteriaScoreCard
                       key={c.id}
@@ -315,7 +346,7 @@ export function ApplyEvaluationDialog({
                   Resumen
                 </h3>
                 <div className="space-y-1.5">
-                  <Label className="text-xs">Fortalezas</Label>
+                  <Label className="text-xs">Aspectos a destacar</Label>
                   <Textarea
                     placeholder="Principales fortalezas del evaluado..."
                     value={strengths}
@@ -404,19 +435,19 @@ export function ApplyEvaluationDialog({
                   </div>
                 </div>
               </div>
-            </div>
+            </fieldset>
           </div>
         )}
 
         {/* Footer */}
-        <div className="grid max-h-[38dvh] grid-cols-1 gap-2 overflow-y-auto border-t bg-background px-4 py-4 sm:max-h-none sm:grid-cols-3 sm:px-6">
+        <div className="grid shrink-0 max-h-[38dvh] grid-cols-1 gap-2 overflow-y-auto border-t bg-background px-4 py-4 sm:max-h-none sm:grid-cols-3 sm:px-6">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving} className="w-full">
             Cancelar
           </Button>
           <Button
             variant="secondary"
             onClick={() => handleSave(false)}
-            disabled={saving || criteria.length === 0}
+            disabled={saving || readOnly || loadingScores || scoresError || criteria.length === 0}
             className="w-full"
           >
             <Save className="h-4 w-4 mr-1.5" />
@@ -424,7 +455,7 @@ export function ApplyEvaluationDialog({
           </Button>
           <Button
             onClick={() => handleSave(true)}
-            disabled={saving || criteria.length === 0}
+            disabled={saving || readOnly || loadingScores || scoresError || criteria.length === 0}
             className="w-full"
           >
             <SendHorizonal className="h-4 w-4 mr-1.5" />

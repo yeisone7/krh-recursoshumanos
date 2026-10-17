@@ -5506,6 +5506,8 @@ export type Database = {
       }
       evaluation_criteria: {
         Row: {
+          dimension: string | null
+          competency_description: string | null
           category: string | null
           company_id: string
           created_at: string
@@ -5522,6 +5524,8 @@ export type Database = {
           weight: number | null
         }
         Insert: {
+          dimension?: string | null
+          competency_description?: string | null
           category?: string | null
           company_id: string
           created_at?: string
@@ -5538,6 +5542,8 @@ export type Database = {
           weight?: number | null
         }
         Update: {
+          dimension?: string | null
+          competency_description?: string | null
           category?: string | null
           company_id?: string
           created_at?: string
@@ -5733,6 +5739,7 @@ export type Database = {
       }
       evaluation_templates: {
         Row: {
+          preset_key: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -5745,6 +5752,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          preset_key?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -5757,6 +5765,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          preset_key?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -8077,6 +8086,13 @@ export type Database = {
       }
       performance_evaluations: {
         Row: {
+          evaluator_signature: string | null
+          employee_signature: string | null
+          evaluator_name: string | null
+          position_name: string | null
+          field_name: string | null
+          manager_name: string | null
+          evaluation_date: string | null
           areas_to_improve: string | null
           company_id: string
           created_at: string
@@ -8098,6 +8114,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          evaluator_signature?: string | null
+          employee_signature?: string | null
+          evaluator_name?: string | null
+          position_name?: string | null
+          field_name?: string | null
+          manager_name?: string | null
+          evaluation_date?: string | null
           areas_to_improve?: string | null
           company_id: string
           created_at?: string
@@ -8119,6 +8142,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          evaluator_signature?: string | null
+          employee_signature?: string | null
+          evaluator_name?: string | null
+          position_name?: string | null
+          field_name?: string | null
+          manager_name?: string | null
+          evaluation_date?: string | null
           areas_to_improve?: string | null
           company_id?: string
           created_at?: string
@@ -11805,6 +11835,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      save_evaluation_template: {
+        Args: { p_company_id: string; p_template_id: string | null; p_payload: Json }
+        Returns: string
+      }
+      save_performance_evaluation: {
+        Args: { p_id: string; p_payload: Json; p_scores: Json }
+        Returns: undefined
+      }
       list_payroll_concepts: { Args: { p_company_id: string }; Returns: Json }
       save_payroll_settings: { Args: { p_company_id: string; p_config: Json; p_concepts: Json; p_expected_updated_at?: string | null }; Returns: Json }
       can_approve_requisition_step: {

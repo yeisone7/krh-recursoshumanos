@@ -138,7 +138,8 @@ export default function AnaliticasEvaluaciones() {
     ];
     evaluations.forEach(e => {
       if (e.overall_score == null || e.overall_score === 0) return;
-      const bucket = buckets.find(b => e.overall_score! >= b.min && e.overall_score! <= b.max);
+      const roundedScore = Math.round(e.overall_score);
+      const bucket = buckets.find(b => roundedScore >= b.min && roundedScore <= b.max);
       if (bucket) bucket.count++;
     });
     return buckets.map(b => ({ name: b.range, cantidad: b.count }));
@@ -345,7 +346,7 @@ export default function AnaliticasEvaluaciones() {
                     <p className="text-sm font-bold truncate">
                       {ev.employee?.first_name} {ev.employee?.last_name}
                     </p>
-                    <Progress value={ev.overall_score || 0} className="h-2 mt-2 bg-emerald-100 dark:bg-emerald-950" indicatorClassName="bg-emerald-500" />
+                    <Progress value={ev.overall_score || 0} className="h-2 mt-2 bg-emerald-100 dark:bg-emerald-950 [&>div]:bg-emerald-500" />
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-black ${getScoreColor(ev.overall_score || 0)}`}>
@@ -379,7 +380,7 @@ export default function AnaliticasEvaluaciones() {
                     <p className="text-sm font-bold truncate">
                       {ev.employee?.first_name} {ev.employee?.last_name}
                     </p>
-                    <Progress value={ev.overall_score || 0} className="h-2 mt-2 bg-amber-100 dark:bg-amber-950" indicatorClassName="bg-amber-500" />
+                    <Progress value={ev.overall_score || 0} className="h-2 mt-2 bg-amber-100 dark:bg-amber-950 [&>div]:bg-amber-500" />
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-black ${getScoreColor(ev.overall_score || 0)}`}>
@@ -510,11 +511,11 @@ export default function AnaliticasEvaluaciones() {
                       </TableCell>
                       <TableCell>
                         <Badge className={`${
-                          (ev.overall_score || 0) >= 91
+                          Math.round(ev.overall_score || 0) >= 91
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
-                            : (ev.overall_score || 0) >= 75
+                            : Math.round(ev.overall_score || 0) >= 75
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
-                            : (ev.overall_score || 0) >= 60
+                            : Math.round(ev.overall_score || 0) >= 60
                             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300'
                             : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
                         } border-0 font-bold shadow-sm`}>
