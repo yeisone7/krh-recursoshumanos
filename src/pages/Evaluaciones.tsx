@@ -1,4 +1,5 @@
 import { EVALUATION_PRESETS } from '@/lib/evaluationPresets';
+import { canTransitionEvaluation, EVALUATION_PERMISSION_CODES } from '@/lib/evaluationPermissions';
 import { templateAppliesToPosition } from '@/lib/evaluationScoring';
 import { DEFAULT_RATING_SCALE } from '@/types/evaluation';
 import { useState } from 'react';
@@ -87,6 +88,7 @@ import {
   type EvaluationTemplate,
   type EvaluationCycle,
   type PerformanceEvaluation,
+  type EvaluationStatus,
   
 } from '@/types/evaluation';
 import { format } from 'date-fns';
@@ -137,7 +139,10 @@ export default function Evaluaciones() {
     newEmployees: any[];
     alreadyAssigned: number;
   } | null>(null);
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, hasPermission } = useAuth();
+  const canCreateEvaluations = hasPermission(EVALUATION_PERMISSION_CODES.base, 'create');
+  const canReviewEvaluations = hasPermission(EVALUATION_PERMISSION_CODES.review, 'approve');
+  const canApproveEvaluations = hasPermission(EVALUATION_PERMISSION_CODES.approve, 'approve');
   const {
     templates,
     loadingTemplates,
@@ -194,6 +199,7 @@ export default function Evaluaciones() {
       : 'Nueva Evaluación';
 
   const handleNewAction = () => {
+    if (!canCreateEvaluations) return;
     if (activeTab === 'templates') {
       setSelectedTemplate(null);
       setTemplateDialogOpen(true);
@@ -204,6 +210,17 @@ export default function Evaluaciones() {
       setSelectedEvaluation(null);
       setEvaluationDialogOpen(true);
     }
+  };
+
+  const handleEvaluationStatusChange = (evaluationId: string, newStatus: EvaluationStatus) => {
+    if (updateEvaluation.isPending) return;
+    const previous = evaluations.find(e => e.id === evaluationId)?.status;
+    const allowed = previous && canTransitionEvaluation(previous, newStatus, { canReview: canReviewEvaluations, canApprove: canApproveEvaluations });
+    if (!allowed) {
+      toast.error('No tienes permiso para realizar esta transición. El orden es Enviada → Revisada → Aprobada.');
+      return;
+    }
+    updateEvaluation.mutate({ id: evaluationId, status: newStatus });
   };
 
   const handleDelete = () => {
@@ -240,6 +257,7 @@ export default function Evaluaciones() {
   };
 
   const handleBulkPreview = (cycleId: string) => {
+    if (!canCreateEvaluations) return;
     const cycle = cycles.find(c => c.id === cycleId);
     if (!cycle?.template_id) {
       toast.error('El ciclo no tiene una plantilla asociada');
@@ -269,6 +287,7 @@ export default function Evaluaciones() {
   };
 
   const handleBulkConfirm = async () => {
+    if (!canCreateEvaluations) return;
     if (!bulkPreviewData) return;
     const { cycleId, newEmployees } = bulkPreviewData;
 
@@ -381,11 +400,11 @@ export default function Evaluaciones() {
               </TabsTrigger>
             </TabsList>
 
-            <Button className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto" onClick={handleNewAction}>
+            {canCreateEvaluations && <Button className="h-12 px-6 rounded-xl font-bold uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto" onClick={handleNewAction}>
               <Plus className="h-4 w-4 mr-2" />
               <span className="sm:hidden">Nuevo</span>
               <span className="hidden sm:inline">{newButtonLabel}</span>
-            </Button>
+            </Button>}
           </div>
         </div>
 
@@ -459,6 +478,7 @@ export default function Evaluaciones() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
                                 onClick={() => handleBulkPreview(cycle.id)}
+                                disabled={!canCreateEvaluations}
                               >
                                 <UsersRound className="h-4 w-4 mr-2" />
                                 Generar Evaluaciones
@@ -556,13 +576,10 @@ export default function Evaluaciones() {
                     setItemToDelete({ type: 'evaluation', id: ev.id });
                     setDeleteDialogOpen(true);
                   }}
-                  onStatusChange={(evalId, newStatus) => {
-                    const previous = evaluations.find(e => e.id === evalId)?.status;
-                    const allowed = (previous === 'submitted' && newStatus === 'reviewed') || (previous === 'reviewed' && newStatus === 'approved');
-                    if (!allowed) { toast.error('Aplica la evaluación para guardar progreso o finalizarla. Solo puedes mover una evaluación enviada a revisada y una revisada a aprobada.'); return; }
-                    updateEvaluation.mutate({ id: evalId, status: newStatus });
-                  }}
+                  onStatusChange={handleEvaluationStatusChange}
                   showCycleFilter={false}
+                  canReview={canReviewEvaluations}
+                  canApprove={canApproveEvaluations}
                 />
               ) : loadingEvaluations ? (
                 <p className="text-muted-foreground">Cargando...</p>
@@ -591,6 +608,10 @@ export default function Evaluaciones() {
                   onDownloadPdf={handleDownloadPdf}
                   onEdit={(ev) => { setSelectedEvaluation(ev); setEvaluationDialogOpen(true); }}
                   onDelete={(ev) => { setItemToDelete({ type: 'evaluation', id: ev.id }); setDeleteDialogOpen(true); }}
+                  onStatusChange={handleEvaluationStatusChange}
+                  isUpdatingStatus={updateEvaluation.isPending}
+                  canReview={canReviewEvaluations}
+                  canApprove={canApproveEvaluations}
                 />;
               })()}
             </CardContent>
@@ -640,7 +661,7 @@ export default function Evaluaciones() {
                   return <div key={preset.preset_key} className="rounded-lg border p-3 space-y-2">
                     <p className="font-medium">{preset.name}</p>
                     <p className="text-xs text-muted-foreground">{new Set(preset.criteria.map(c => c.category)).size} competencias · {preset.criteria.length} criterios</p>
-                    <Button variant="outline" className="w-full" disabled={createTemplate.isPending || loadingTemplates}
+                    <Button variant="outline" className="w-full" disabled={(!installed && !canCreateEvaluations) || createTemplate.isPending || loadingTemplates}
                       onClick={() => {
                         if (installed) { setSelectedTemplate(installed); setTemplateDialogOpen(true); }
                         else createTemplate.mutate({ ...preset, rating_scale: DEFAULT_RATING_SCALE, position_ids: [] } as any);
@@ -736,7 +757,9 @@ export default function Evaluaciones() {
                                   Editar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  disabled={!canCreateEvaluations}
                                   onClick={() => {
+                                    if (!canCreateEvaluations) return;
                                     const duplicated: any = {
                                       name: `${template.name} (copia)`,
                                       description: template.description,
@@ -923,7 +946,7 @@ export default function Evaluaciones() {
         open={!!previewTemplate}
         onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }}
         template={previewTemplate}
-        onDuplicate={(tpl) => {
+        onDuplicate={canCreateEvaluations ? (tpl) => {
           createTemplate.mutate({
             name: `${tpl.name} (copia)`,
             description: tpl.description,
@@ -945,7 +968,7 @@ export default function Evaluaciones() {
               level_1_description: c.level_1_description,
             })) as any || [],
           });
-        }}
+        } : undefined}
       />
     </div>
   );

@@ -10,23 +10,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   ChevronDown, ChevronUp, Briefcase, Calendar, MoreHorizontal,
-  PlayCircle, Download, Edit, Trash2, ClipboardCheck,
+  PlayCircle, Download, Edit, Trash2, ClipboardCheck, CheckCircle2,
 } from 'lucide-react';
-import type { PerformanceEvaluation } from '@/types/evaluation';
+import type { EvaluationStatus, PerformanceEvaluation } from '@/types/evaluation';
 import { EVALUATION_TYPE_LABELS, EVALUATION_STATUS_LABELS } from '@/types/evaluation';
 
 interface Props {
   centerNames: string[];
-  grouped: Record<string, Record<string, any[]>>;
+  grouped: Record<string, Record<string, PerformanceEvaluation[]>>;
   statusColors: Record<string, string>;
   onApply: (ev: PerformanceEvaluation) => void;
   onDownloadPdf: (ev: PerformanceEvaluation) => void;
   onEdit: (ev: PerformanceEvaluation) => void;
   onDelete: (ev: PerformanceEvaluation) => void;
+  onStatusChange: (evaluationId: string, status: EvaluationStatus) => void;
+  isUpdatingStatus?: boolean;
+  canReview?: boolean;
+  canApprove?: boolean;
 }
 
 export function EvaluationTreeView({
   centerNames, grouped, statusColors, onApply, onDownloadPdf, onEdit, onDelete,
+  onStatusChange, isUpdatingStatus = false,
+  canReview = false, canApprove = false,
 }: Props) {
   const [expandedCenters, setExpandedCenters] = useState<Set<string>>(new Set());
   const [expandedCycles, setExpandedCycles] = useState<Set<string>>(new Set());
@@ -166,7 +172,7 @@ export function EvaluationTreeView({
                                             <TableCell>
                                               <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                  <Button variant="ghost" size="icon">
+                                                  <Button variant="ghost" size="icon" aria-label={`Acciones de ${evaluation.employee?.first_name || ''} ${evaluation.employee?.last_name || ''}`}>
                                                     <MoreHorizontal className="h-4 w-4" />
                                                   </Button>
                                                 </DropdownMenuTrigger>
@@ -177,6 +183,16 @@ export function EvaluationTreeView({
                                                   <DropdownMenuItem onClick={() => onDownloadPdf(evaluation)}>
                                                     <Download className="h-4 w-4 mr-2" /> Descargar PDF
                                                   </DropdownMenuItem>
+                                                  {canReview && evaluation.status === 'submitted' && (
+                                                    <DropdownMenuItem disabled={isUpdatingStatus} onSelect={() => onStatusChange(evaluation.id, 'reviewed')}>
+                                                      <ClipboardCheck className="h-4 w-4 mr-2" /> Marcar como Revisada
+                                                    </DropdownMenuItem>
+                                                  )}
+                                                  {canApprove && evaluation.status === 'reviewed' && (
+                                                    <DropdownMenuItem disabled={isUpdatingStatus} onSelect={() => onStatusChange(evaluation.id, 'approved')}>
+                                                      <CheckCircle2 className="h-4 w-4 mr-2" /> Marcar como Aprobada
+                                                    </DropdownMenuItem>
+                                                  )}
                                                   <DropdownMenuItem onClick={() => onEdit(evaluation)}>
                                                     <Edit className="h-4 w-4 mr-2" /> Editar
                                                   </DropdownMenuItem>

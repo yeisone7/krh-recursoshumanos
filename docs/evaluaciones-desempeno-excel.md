@@ -20,6 +20,14 @@ Los criterios, descripciones de competencias y dimensiones proceden del Excel. S
 6. Finalizar cuando estén completas las valoraciones, datos del encabezado y firmas. Las firmas dibujadas se conservan con la evaluación; no representan una integración con un proveedor de firma certificada.
 7. Consultar/exportar el PDF. Una evaluación enviada puede pasar a revisada y luego a aprobada.
 
+## Permisos de roles
+
+En la matriz de acceso, **Evaluaciones → Crear** controla la creación de evaluaciones, ciclos, plantillas y duplicados. Las filas independientes **Marcar como Revisada** y **Marcar como Aprobada** utilizan su propia casilla en la columna **Aprobar**. También debe otorgarse **Ver** en Evaluaciones para acceder al módulo.
+
+El permiso de revisión permite únicamente Enviada → Revisada; el de aprobación permite únicamente Revisada → Aprobada. Ninguno depende de Modificar ni concede acceso para cambiar las respuestas finalizadas. Los permisos se aplican en la lista, en el tablero y en PostgreSQL. Los administradores conservan su acceso y los roles personalizados requieren asignación explícita de los nuevos permisos. La revisión registra usuario y fecha.
+
+La migración `20261018125458_evaluation_workflow_permissions.sql` fue aplicada al proyecto vinculado el 18 de octubre de 2026. Se verificaron el catálogo, la ausencia de asignaciones automáticas a roles personalizados y los tres disparadores de autorización. Las pruebas locales en PostgreSQL comprobaron creación denegada, separación de revisión/aprobación y conservación de respuestas finalizadas en los tres formatos.
+
 ## Cálculo y conservación
 
 El resultado no se calcula mientras existan criterios sin respuesta. Al completar todos, se conserva el porcentaje con dos decimales. El archivo presenta rangos enteros (91–100, 75–90, 60–74, 0–59), sin regla para decimales entre ellos. La implementación clasifica usando el porcentaje original redondeado al entero más cercano y muestra esta regla en pantalla y PDF. Ejemplo: 90,5 % corresponde a Sobresaliente.

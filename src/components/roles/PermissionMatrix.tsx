@@ -113,8 +113,10 @@ export function PermissionMatrix({ role, onBack }: PermissionMatrixProps) {
         .filter(module => [CATALOG_PERMISSION_CODES.index, TRAINING_PERMISSION_CODES.index].includes(module.code))
         .map(module => module.id)
     );
-    if (hiddenParentModuleIds.size === 0) return permissionsCatalog;
-    return permissionsCatalog.filter(permission => !hiddenParentModuleIds.has(permission.module_id));
+    const evaluationsModuleId = modules.find(module => module.code === 'evaluaciones')?.id;
+    // Evaluation approval is assigned on the two independent workflow rows.
+    return permissionsCatalog.filter(permission => !hiddenParentModuleIds.has(permission.module_id)
+      && !(permission.module_id === evaluationsModuleId && permission.action === 'approve'));
   }, [modules, permissionsCatalog]);
 
   const permsByModule = useMemo(() => {

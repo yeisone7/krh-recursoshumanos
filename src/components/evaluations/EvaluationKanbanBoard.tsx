@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import { canTransitionEvaluation } from '@/lib/evaluationPermissions';
 import { DragDropContext, Droppable, Draggable, type DropResult } from '@hello-pangea/dnd';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -84,6 +85,8 @@ interface Props {
   onDelete: (evaluation: PerformanceEvaluation) => void;
   onStatusChange?: (evaluationId: string, newStatus: EvaluationStatus) => void;
   showCycleFilter?: boolean;
+  canReview?: boolean;
+  canApprove?: boolean;
 }
 
 export function EvaluationKanbanBoard({
@@ -96,6 +99,8 @@ export function EvaluationKanbanBoard({
   onDelete,
   onStatusChange,
   showCycleFilter = true,
+  canReview = false,
+  canApprove = false,
 }: Props) {
   const [cycleFilter, setCycleFilter] = useState<string>('all');
 
@@ -189,7 +194,7 @@ export function EvaluationKanbanBoard({
                           <p className="text-xs text-muted-foreground text-center py-8">Sin evaluaciones</p>
                         )}
                         {items.map((ev, i) => (
-                          <Draggable key={ev.id} draggableId={ev.id} index={i}>
+                          <Draggable key={ev.id} draggableId={ev.id} index={i} isDragDisabled={!canTransitionEvaluation(ev.status, 'reviewed', { canReview, canApprove }) && !canTransitionEvaluation(ev.status, 'approved', { canReview, canApprove })}>
                             {(dragProvided, dragSnapshot) => (
                               <div
                                 ref={dragProvided.innerRef}

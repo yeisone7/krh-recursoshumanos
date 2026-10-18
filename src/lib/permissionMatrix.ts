@@ -12,6 +12,8 @@ export const AUTO_EXPANDED_PERMISSION_MODULE_CODES = new Set([
   'leave_approve_manager',
   'leave_approve_area_leader',
   'leave_type_configuration',
+  'evaluaciones_review',
+  'evaluaciones_approve',
 ]);
 
 const PERMISSION_MODULE_LABELS: Record<string, string> = {
@@ -19,9 +21,14 @@ const PERMISSION_MODULE_LABELS: Record<string, string> = {
   leave_approve_area_leader: 'Aprobar como Líder de Área',
   leave_type_configuration: 'Configurar tipos de permisos',
   correction_tickets_analytics: 'Ver analítica de correcciones',
+  evaluaciones_review: 'Marcar como Revisada',
+  evaluaciones_approve: 'Marcar como Aprobada',
 };
 
 export const PAYROLL_PERMISSION_LABELS: Record<string, Partial<Record<string, string>>> = {
+  evaluaciones: { create: 'Crear evaluaciones, ciclos y plantillas' },
+  evaluaciones_review: { approve: 'Marcar como Revisada' },
+  evaluaciones_approve: { approve: 'Marcar como Aprobada' },
   reporte_diario: { view: 'Consultar reportes', create: 'Publicar y compartir', update: 'Administrar acceso y supervisor', approve: 'Aprobar como supervisor', export: 'Exportar informes firmados' },
   jornadas: { view: 'Ver revisión', approve: 'Aprobar o rechazar jornadas' },
   correction_tickets: {

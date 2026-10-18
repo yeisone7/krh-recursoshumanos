@@ -7,6 +7,13 @@ import {
 } from './permissionMatrix';
 
 describe('permission matrix helpers', () => {
+  it('expone las decisiones de evaluaciones sin confundirlas con crear', () => {
+    for (const [code, label] of [['evaluaciones_review', 'Marcar como Revisada'], ['evaluaciones_approve', 'Marcar como Aprobada']]) {
+      expect(AUTO_EXPANDED_PERMISSION_MODULE_CODES.has(code)).toBe(true);
+      expect(getPermissionModuleLabel({ code, name: code })).toBe(label);
+    }
+    expect(PAYROLL_PERMISSION_LABELS.evaluaciones.create).toBe('Crear evaluaciones, ciclos y plantillas');
+  });
   it('keeps both leave approval stages visible by default', () => {
     expect(AUTO_EXPANDED_PERMISSION_MODULE_CODES.has('leave_approve_manager')).toBe(true);
     expect(AUTO_EXPANDED_PERMISSION_MODULE_CODES.has('leave_approve_area_leader')).toBe(true);
