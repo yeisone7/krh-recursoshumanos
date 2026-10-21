@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import { formatDateOnly } from '@/lib/dateOnly';
-import { User, Calendar, Clock, FileText, MessageSquare, Briefcase } from 'lucide-react';
+import { Clock, FileText, MessageSquare, Loader2 } from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -13,14 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { useCreatePayrollNovelty, useUpdatePayrollNovelty, usePayrollNovelties } from '@/hooks/usePayrollNovelties';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useNoveltyReasons } from '@/hooks/useNoveltyReasons';
 import { type NoveltyType, type PayrollNovelty } from '@/types/payroll';
 import { toast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
 import { usePayrollConcepts } from '@/hooks/usePayrollConcepts';
 import { usePayrollConfig } from '@/hooks/usePayrollConfig';
 import { conceptOptions } from '@/lib/payrollConcepts';
@@ -42,8 +35,6 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const update = useUpdatePayrollNovelty();
   const { data: existingNovelties = [] } = usePayrollNovelties();
 
-  const [activeTab, setActiveTab] = useState('detalles');
-
   const [form, setForm] = useState({
     employee_id: '',
     novelty_date: '',
@@ -59,7 +50,6 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const selectedConcept = concepts.find(c => (c.system_type || `concept:${c.id}`) === form.novelty_type);
   const unit = selectedConcept?.unit ?? 'hours';
   const equivalentHours = unit === 'days' ? form.hours * (config?.daily_hours || 8) : form.hours;
-  const selectedEmployee = employees.find(e => e.id === form.employee_id);
 
   useEffect(() => {
     if (open) {
@@ -73,7 +63,6 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         end_time: novelty?.end_time || '',
         reason_id: novelty?.reason_id || '',
       });
-      setActiveTab('detalles');
     }
   }, [open, novelty]);
 
@@ -90,7 +79,7 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
 
   const employeeOptions = employees.map(e => ({
     value: e.id,
-    label: `${e.first_name} ${e.last_name} - ${e.document_number} (${(e as any).operation_centers?.name || 'S.C.'})`,
+    label: `${e.first_name} ${e.last_name} - ${e.document_number} (${e.operation_centers?.name || 'S.C.'})`,
   }));
 
   const noveltyTypeOptions = conceptOptions(concepts, isEditing ? novelty?.concept_id : null);
@@ -98,7 +87,6 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
   const handleSave = async () => {
     if (!form.employee_id || !form.novelty_date) {
       toast({ title: 'Complete los campos requeridos', variant: 'destructive' });
-      setActiveTab('detalles');
       return;
     }
 
@@ -150,63 +138,33 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
         toast({ title: 'Novedad creada' });
       }
       onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'No se pudo guardar la novedad.', variant: 'destructive' });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby={undefined} className="p-0 border-0 shadow-2xl w-[calc(100vw-2rem)] sm:max-w-2xl overflow-hidden rounded-[2rem] flex flex-col max-h-[90vh]">
-        <div className="px-6 pt-4"><CorrectionTicketRequest defaults={{ module: 'novedades', employeeId: form.employee_id, startDate: form.novelty_date, endDate: form.novelty_date }} /></div>
-        <DialogHeader className="sr-only">
-          <DialogTitle>{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
+      <DialogContent aria-describedby={undefined} className="novelty-form-dialog gap-0 p-0 sm:p-0 w-[calc(100vw-1rem)] sm:max-w-2xl overflow-hidden flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[90dvh]">
+        <DialogHeader className="novelty-form-header shrink-0 text-left">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/10" aria-hidden="true">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-muted-foreground">Nómina</p>
+            <DialogTitle className="text-xl font-semibold leading-7 tracking-tight">{isEditing ? 'Editar Novedad' : 'Nueva Novedad'}</DialogTitle>
+          </div>
         </DialogHeader>
 
-        {/* Header Premium */}
-        <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 via-background to-accent/5 px-6 sm:px-8 py-6 sm:py-8 border-b border-border ">
-          
-          
-          <div className="flex items-start gap-4 sm:gap-5 relative">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] bg-primary/10 text-primary flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 shadow-inner">
-              NN
-            </div>
-            <div className="flex-1 min-w-0 pr-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
-                  {isEditing ? 'Edición' : 'Nueva'}
-                </Badge>
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20 font-bold uppercase tracking-widest text-[9px] px-2.5 py-0.5">
-                  Nómina
-                </Badge>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tighter text-foreground mb-3 truncate">
-                {isEditing ? 'Editar Novedad' : 'Nueva Novedad'}
-              </h2>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-muted-foreground/80">
-                <div className="flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-primary/60" />
-                  {selectedEmployee ? `${selectedEmployee.first_name} ${selectedEmployee.last_name}` : 'Empleado no seleccionado'}
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-primary/60" />
-                  {form.novelty_date ? formatDateOnly(`${form.novelty_date}T12:00:00`, 'MMMM yyyy', { locale: es }) : 'Mes sin definir'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-8">
-          <section className="space-y-6">
-             <div className="flex items-center gap-2 border-b border-border pb-2">
+        <div className="novelty-form-body min-h-0 flex-1 overflow-y-auto overscroll-contain space-y-3 p-3 sm:p-4">
+          <section className="novelty-form-section space-y-3 rounded-xl border border-border/70 bg-card p-3 sm:p-4 shadow-sm" aria-labelledby="novelty-general-heading">
+             <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Información General</h3>
+                <h3 id="novelty-general-heading" className="text-sm font-semibold text-foreground">Información general</h3>
              </div>
              
              <div className="space-y-2">
-               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Empleado Requerido *</Label>
+               <Label className="text-sm font-medium text-muted-foreground">Empleado *</Label>
                <SearchableSelect
                  options={employeeOptions}
                  value={form.employee_id}
@@ -215,21 +173,22 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
                />
              </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fecha Novedad *</Label>
+                 <Label htmlFor="novelty-date" className="text-sm font-medium text-muted-foreground">Fecha de la novedad *</Label>
                  <Input
+                   id="novelty-date"
                    type="date"
                    value={form.novelty_date}
                    onChange={e => setForm(f => ({ ...f, novelty_date: e.target.value }))}
-                   className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                   className="h-11 rounded-lg bg-card border-input"
                  />
                </div>
 
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Tipo de Novedad</Label>
+                 <Label htmlFor="novelty-type" className="text-sm font-medium text-muted-foreground">Tipo de novedad</Label>
                  <Select value={form.novelty_type} onValueChange={v => setForm(f => ({ ...f, novelty_type: v, hours: 0, start_time: '', end_time: '' }))}>
-                   <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
+                   <SelectTrigger id="novelty-type" className="h-11 rounded-lg bg-card border-input">
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent className="rounded-2xl border-border ">
@@ -244,9 +203,9 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
              </div>
              
              <div className="space-y-2">
-               <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Motivo Específico</Label>
+               <Label htmlFor="novelty-reason" className="text-sm font-medium text-muted-foreground">Motivo específico</Label>
                <Select value={form.reason_id} onValueChange={v => setForm(f => ({ ...f, reason_id: v }))}>
-                 <SelectTrigger className="h-12 rounded-2xl bg-background border-border focus:bg-background">
+                 <SelectTrigger id="novelty-reason" className="h-11 rounded-lg bg-card border-input">
                    <SelectValue placeholder="Seleccionar motivo..." />
                  </SelectTrigger>
                  <SelectContent className="rounded-2xl border-border ">
@@ -260,70 +219,81 @@ export function NoveltyFormDialog({ open, onOpenChange, novelty }: Props) {
              </div>
           </section>
 
-          <section className="space-y-6">
-             <div className="flex items-center gap-2 border-b border-border pb-2">
+          <section className="novelty-form-section novelty-form-time space-y-3 rounded-xl border border-primary/15 bg-card p-3 sm:p-4 shadow-sm" aria-labelledby="novelty-time-heading">
+             <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-primary" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Horario y Tiempos</h3>
+                <h3 id="novelty-time-heading" className="text-sm font-semibold text-foreground">Horario y tiempos</h3>
              </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora de Inicio</Label>
+                 <Label htmlFor="novelty-start" className="text-sm font-medium text-muted-foreground">Hora de inicio</Label>
                  <Input
+                   id="novelty-start"
                    type="time"
                    disabled={unit === 'days'}
                    value={form.start_time}
                    onChange={e => setForm(f => ({ ...f, start_time: e.target.value }))}
-                   className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                   className="h-11 rounded-lg bg-card border-input tabular-nums"
                  />
                </div>
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">{unit === 'days' ? 'Cantidad Días' : 'Cantidad Horas'}</Label>
+                 <Label htmlFor="novelty-quantity" className="text-sm font-medium text-muted-foreground">{unit === 'days' ? 'Cantidad Días' : 'Cantidad Horas'}</Label>
                  <Input
+                   id="novelty-quantity"
                    type="number"
                    step="any"
                    min="0"
                    value={form.hours || ''}
                    onChange={e => setForm(f => ({ ...f, hours: Number(e.target.value) }))}
-                   className="h-12 rounded-2xl bg-background border-border focus:bg-background"
+                   className="h-11 rounded-lg bg-card border-input tabular-nums"
                  />
                </div>
                <div className="space-y-2">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">Hora Final</Label>
+                 <Label htmlFor="novelty-end" className="text-sm font-medium text-muted-foreground">Hora final</Label>
                  <Input
+                   id="novelty-end"
                    type="time"
+                   disabled={unit === 'days'}
                    value={form.end_time}
                    readOnly
-                   className="h-12 rounded-2xl bg-background border-transparent text-muted-foreground pointer-events-none"
+                   className="novelty-calculated-time h-11 rounded-lg tabular-nums text-muted-foreground"
                  />
                </div>
              </div>
           </section>
 
-          <section className="space-y-6">
-             <div className="flex items-center gap-2 border-b border-border pb-2">
+          <section className="novelty-form-section space-y-3 rounded-xl border border-border/70 bg-card p-3 sm:p-4 shadow-sm" aria-labelledby="novelty-notes-heading">
+             <div className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-primary" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-foreground">Observaciones</h3>
+                <Label htmlFor="novelty-notes" id="novelty-notes-heading" className="novelty-notes-label text-sm font-semibold text-foreground">Observaciones <span className="ml-1 text-xs font-normal text-muted-foreground">Opcional</span></Label>
              </div>
              <div className="space-y-2">
                <Textarea
+                 id="novelty-notes"
                  value={form.notes}
                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                 rows={4}
+                 rows={2}
                  placeholder="Detalles adicionales relevantes..."
-                 className="rounded-2xl bg-background border-border focus:bg-background p-4 resize-none"
+                 className="rounded-lg bg-card border-border resize-y"
                />
              </div>
           </section>
         </div>
 
-        <div className="p-6 border-t border-border/50 bg-background/10 flex items-center justify-end gap-3 shrink-0">
-          <Button variant="outline" className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-[11px] border-border " onClick={() => onOpenChange(false)}>
+        <div className="novelty-form-footer border-t border-border bg-card flex flex-wrap items-center justify-end gap-2 px-3 py-3 sm:px-4 shrink-0">
+          <div className="mr-auto empty:hidden [&>button]:h-9 [&>button]:px-2 [&>button]:text-xs [&>button]:text-muted-foreground [&>button]:border-transparent [&>button]:shadow-none">
+            <CorrectionTicketRequest label="Permiso de corrección" defaults={{ module: 'novedades', employeeId: form.employee_id, startDate: form.novelty_date, endDate: form.novelty_date }} />
+          </div>
+          <div className="flex flex-1 items-center justify-end gap-2 sm:flex-none">
+          <Button variant="outline" className="h-10 px-4 rounded-lg font-medium" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[11px] bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave} disabled={create.isPending || update.isPending || !conceptsQuery.isSuccess}>
+          <Button className="h-10 px-4 rounded-lg font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={handleSave} disabled={create.isPending || update.isPending || !conceptsQuery.isSuccess}>
+            {(create.isPending || update.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
             {isEditing ? 'Actualizar Novedad' : 'Crear Novedad'}
           </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
