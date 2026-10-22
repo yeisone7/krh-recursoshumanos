@@ -1,3 +1,5 @@
+import { buildShareLink } from '@/lib/shareLink';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Copy, Link2, Loader2 } from 'lucide-react';
@@ -9,6 +11,7 @@ import { callDotationSignature } from '@/lib/dotationSignature';
 import { useWorkspaceActive } from '@/components/workspace/WorkspacePaneContext';
 
 export function DotationSignatureLink({ transactionId, open }: { transactionId: string; open: boolean }) {
+  const { currentCompanyId } = useAuth();
   const [link, setLink] = useState<{ url: string; expiresAt: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [pageVisible, setPageVisible] = useState(document.visibilityState === 'visible');
@@ -21,10 +24,10 @@ export function DotationSignatureLink({ transactionId, open }: { transactionId: 
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
   useEffect(() => {
-    if (!open) { generation.current++; setLink(null); setBusy(false); }
+    generation.current++; setLink(null); setBusy(false);
     const requestGeneration = generation;
     return () => { requestGeneration.current++; };
-  }, [open, transactionId]);
+  }, [open, transactionId, currentCompanyId]);
   const status = useQuery({
     queryKey: ['dotation-signature-status', transactionId],
     enabled: open && active && pageVisible && Boolean(link),
@@ -48,7 +51,7 @@ export function DotationSignatureLink({ transactionId, open }: { transactionId: 
     try {
       const data = await callDotationSignature<{ token: string; expires_at: string }>({ action: 'generate', transaction_id: transactionId });
       if (request !== generation.current) return;
-      const url = new URL('/dotacion/firma', window.location.origin);
+      const url = new URL(buildShareLink('/dotacion/firma', currentCompanyId));
       url.hash = `token=${data.token}`;
       setLink({ url: url.toString(), expiresAt: data.expires_at });
     } catch (error) {

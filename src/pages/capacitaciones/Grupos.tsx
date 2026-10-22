@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useMemo, useState } from 'react';
 import { addDays, format, parseISO } from 'date-fns';
 import * as XLSX from 'xlsx';
@@ -264,7 +265,7 @@ export default function TrainingGroups() {
   const canUpdate = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'update');
   const canDelete = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'delete');
   const canExport = isAdmin || isSuperAdmin || hasPermission('capacitaciones_grupos', 'export');
-  const accessUrl = (token: string) => `${window.location.origin}/capacitacion/grupo?token=${token}`;
+  const accessUrl = (token: string) => buildShareLink(`/capacitacion/grupo?token=${token}`, currentCompanyId);
 
   const filtered = useMemo(() => groups.filter((group) => {
     const effectiveStatus = group.status === 'closed' ? 'closed' : !group.token_id ? 'without_link' : new Date(group.expires_at) < new Date() ? 'expired' : 'active';

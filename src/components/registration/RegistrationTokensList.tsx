@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useMemo, useState } from 'react';
@@ -52,7 +53,7 @@ export function RegistrationTokensList({ vacancyId, targetType }: Props) {
   };
 
   const handleCopy = (token: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/registro?token=${token}`);
+    navigator.clipboard.writeText(buildShareLink(`/registro?token=${token}`, currentCompanyId));
     toast.success('Enlace copiado');
   };
 

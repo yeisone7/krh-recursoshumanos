@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DotationSignatureLink } from './DotationSignatureLink';
 const mocks = vi.hoisted(() => ({call:vi.fn(),single:vi.fn(),active:true,copy:vi.fn()}));
+vi.mock('@/contexts/AuthContext',()=>({useAuth:()=>({currentCompanyId:'company-a'})}));
 vi.mock('@/lib/dotationSignature',()=>({callDotationSignature:mocks.call}));
 vi.mock('@/components/workspace/WorkspacePaneContext',()=>({useWorkspaceActive:()=>mocks.active}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{from:()=>({select:()=>({eq:()=>({single:mocks.single})})})}}));
@@ -17,8 +18,8 @@ describe('temporary signature link in the preview',()=>{
   it('generates only on request, copies the fragment URL and forgets it on close',async()=>{
     const {rerender,client}=setup();expect(mocks.call).not.toHaveBeenCalled();
     fireEvent.click(screen.getByText('Generar enlace de firma'));
-    expect(await screen.findByLabelText('Enlace de firma')).toHaveValue(`${location.origin}/dotacion/firma#token=secret-token`);
-    fireEvent.click(screen.getByText('Copiar enlace'));await waitFor(()=>expect(mocks.copy).toHaveBeenCalledWith(`${location.origin}/dotacion/firma#token=secret-token`));
+    expect(await screen.findByLabelText('Enlace de firma')).toHaveValue(`${location.origin}/dotacion/firma?company=company-a#token=secret-token`);
+    fireEvent.click(screen.getByText('Copiar enlace'));await waitFor(()=>expect(mocks.copy).toHaveBeenCalledWith(`${location.origin}/dotacion/firma?company=company-a#token=secret-token`));
     rerender(<QueryClientProvider client={client}><DotationSignatureLink transactionId="tx" open={false} /></QueryClientProvider>);
     expect(screen.queryByLabelText('Enlace de firma')).not.toBeInTheDocument();
   });

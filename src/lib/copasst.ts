@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { supabase } from '@/integrations/supabase/client';
 import type {
   CopasstAnalyticsData, CopasstCandidate, CopasstElection, CopasstElectionPayload,
@@ -124,6 +125,6 @@ export async function uploadCopasstCandidatePhoto(companyId: string, employeeId:
   return client.storage.from('copasst-assets').getPublicUrl(path).data.publicUrl as string;
 }
 
-export function publicCopasstUrl(token: string) {
-  return `${window.location.origin}/copasst/votar?token=${encodeURIComponent(token)}`;
+export function publicCopasstUrl(token: string, companyId?: string | null) {
+  return buildShareLink(`/copasst/votar?token=${encodeURIComponent(token)}`, companyId);
 }

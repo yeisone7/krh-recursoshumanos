@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -224,7 +225,7 @@ export function IssueCertificateDialog({ open, onOpenChange, employee, onGenerat
 
       if (updateError) throw updateError;
 
-      const verificationUrl = `${window.location.origin}/verificar-certificado/${verificationToken}`;
+      const verificationUrl = buildShareLink(`/verificar-certificado/${verificationToken}`, currentCompanyId);
 
       // Ensure the PDF generator receives the required params
       const doc = await generateLaborCertificatePdf({

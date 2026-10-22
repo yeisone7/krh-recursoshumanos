@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Download, QrCode, Printer } from "lucide-react";
@@ -20,7 +21,7 @@ export function ClockPointLink({ point }: { point: TimeClockPoint }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
-  const url = link ? `${window.location.origin}/asistencia/${link.token}` : "";
+  const url = link ? buildShareLink(`/asistencia/${link.token}`, point.company_id) : "";
   async function manage(action: string) {
     setBusy(true);
     try {

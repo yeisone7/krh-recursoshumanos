@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -30,7 +31,7 @@ export default function GenerarAcceso() {
   const { data: centers = [] } = useOperationCenters();
   const createToken = useCreateAccessToken();
   const toggleToken = useToggleAccessToken();
-  const { isAdmin } = useAuth();
+  const { isAdmin, currentCompanyId } = useAuth();
   const canEditLinkSettings = isAdmin;
 
   const [courseId, setCourseId] = useState(preselectedCourseId);
@@ -66,7 +67,7 @@ export default function GenerarAcceso() {
     } catch { toast.error('Error al crear enlace'); }
   };
 
-  const getAccessUrl = (token: string) => `${window.location.origin}/capacitacion?token=${token}`;
+  const getAccessUrl = (token: string) => buildShareLink(`/capacitacion?token=${token}`, currentCompanyId);
 
   const handleCopy = (token: string) => {
     navigator.clipboard.writeText(getAccessUrl(token));

@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState } from 'react';
 import { addDays } from 'date-fns';
 import { CalendarClock, Check, Copy, Link2, RefreshCw, ShieldCheck } from 'lucide-react';
@@ -162,8 +163,7 @@ export function GenerateRegistrationLinkDialog({ open, onOpenChange, targetType,
           : addDays(new Date(), parseInt(expirationDays)).toISOString(),
         is_reusable: reusable,
       });
-      const baseUrl = window.location.origin;
-      setGeneratedLink(`${baseUrl}/registro?token=${(token as any).token}`);
+      setGeneratedLink(buildShareLink(`/registro?token=${(token as any).token}`, currentCompanyId));
     } catch {
       toast.error('Error al generar el enlace');
     }

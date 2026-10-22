@@ -107,7 +107,7 @@ export default function CopasstElections() {
       <Card><CardContent className="flex flex-col items-center gap-3 py-14 text-center"><Vote className="h-10 w-10 text-muted-foreground" /><p className="font-medium">Aún no hay elecciones COPASST</p><p className="text-sm text-muted-foreground">Crea un borrador y selecciona los candidatos.</p></CardContent></Card> :
       <div className="grid gap-4 lg:grid-cols-2">{electionsQuery.data.map((election) => {
         const effective = getEffectiveCopasstStatus(election);
-        const url = publicCopasstUrl(election.public_token);
+        const url = publicCopasstUrl(election.public_token, election.company_id);
         return <Card key={election.id}><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle>{election.title}</CardTitle><CardDescription>{election.term_label} · {election.seats} puesto(s)</CardDescription></div><Badge variant={effective === 'open' ? 'default' : 'secondary'}>{statusLabel[effective]}</Badge></div></CardHeader>
           <CardContent className="space-y-4"><div className="text-sm text-muted-foreground"><p>Inicio: {new Date(election.starts_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</p><p>Cierre: {new Date(election.ends_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</p></div>
           {election.status !== 'draft' && <div className="flex gap-2"><Input value={url} readOnly aria-label="Enlace público" /><Button variant="outline" size="icon" onClick={() => navigator.clipboard.writeText(url).then(() => toast.success('Enlace copiado'))}><Copy className="h-4 w-4" /></Button><Button variant="outline" size="icon" asChild><a href={url} target="_blank" rel="noreferrer"><ExternalLink className="h-4 w-4" /></a></Button></div>}

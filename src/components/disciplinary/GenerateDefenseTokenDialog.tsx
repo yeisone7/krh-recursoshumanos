@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -49,7 +50,7 @@ export function GenerateDefenseTokenDialog({
       if (error) throw error;
 
       const token = data.token;
-      const url = `${window.location.origin}/descargos?token=${token}`;
+      const url = buildShareLink(`/descargos?token=${token}`, currentCompanyId);
       setGeneratedUrl(url);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Error al generar el enlace');

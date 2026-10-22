@@ -308,7 +308,7 @@ async function createNotifications(supabase: any, contracts: ContractPreaviso[])
         category: 'contracts',
         entity_type: 'contract',
         entity_id: contract.contract_id,
-        action_url: `/contratos?detail=${contract.contract_id}`,
+        action_url: `/contratos?detail=${contract.contract_id}&company=${encodeURIComponent(contract.company_id)}`,
         is_read: false,
       });
     }

@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useState, useEffect, useRef, type KeyboardEvent } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -143,7 +144,7 @@ export default function Auth() {
   }, [countdown]);
 
   const loginErrorSummaryRef = useRef<HTMLDivElement>(null);
-  const { user, mustChangePassword, signIn, signUp, signOut } = useAuth();
+  const { user, mustChangePassword, signIn, signUp, signOut, currentCompanyId } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast, dismiss } = useToast();
@@ -265,7 +266,7 @@ export default function Auth() {
     setIsRecoverySent(false);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: buildShareLink('/reset-password', currentCompanyId),
       });
 
       if (error) {
@@ -364,7 +365,7 @@ export default function Auth() {
         }
       } else if (successType === 'recovery') {
         const { error } = await supabase.auth.resetPasswordForEmail(successEmail, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: buildShareLink('/reset-password', currentCompanyId),
         });
         if (error) {
           toast({ variant: 'destructive', title: 'Error al reenviar', description: error.message });

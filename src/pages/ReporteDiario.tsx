@@ -1,3 +1,4 @@
+import { buildShareLink } from '@/lib/shareLink';
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -184,7 +185,7 @@ export default function ReporteDiario() {
     const link = await dailyRequest<{ token: string }>("link", {
       publication_id: id,
     });
-    setShareUrl(`${window.location.origin}/reporte-diario/${link.token}`);
+    setShareUrl(buildShareLink(`/reporte-diario/${link.token}`, company));
   }
   async function exportRows(employeeId?: string) {
     let offset = 0,
@@ -755,7 +756,7 @@ export default function ReporteDiario() {
                   setPublicationId(created.id);
                   setPage(0);
                   setShareUrl(
-                    `${window.location.origin}/reporte-diario/${created.token}`,
+                    buildShareLink(`/reporte-diario/${created.token}`, company),
                   );
                 });
               }}

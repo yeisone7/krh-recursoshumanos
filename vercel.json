@@ -30,8 +30,16 @@
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/:path*",
+      "destination": "/api/link-preview?previewPath=/:path*"
     }
-  ]
+  ],
+  "functions": {
+    "api/link-preview.ts": {
+      "includeFiles": "dist/index.html"
+    },
+    "api/link-preview-image.ts": {
+      "maxDuration": 15
+    }
+  }
 }

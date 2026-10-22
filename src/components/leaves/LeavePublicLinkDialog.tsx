@@ -1,3 +1,5 @@
+import { buildShareLink } from '@/lib/shareLink';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useMemo, useState } from 'react';
 import { addYears, format } from 'date-fns';
 import { Check, Copy, ExternalLink, Link2, Loader2, RefreshCw, ShieldCheck, Unlink } from 'lucide-react';
@@ -34,6 +36,7 @@ const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
 export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDialogProps) {
+  const { currentCompanyId } = useAuth();
   const defaultExpiry = useMemo(() => format(addYears(new Date(), 1), 'yyyy-MM-dd'), []);
   const [expiryDate, setExpiryDate] = useState(defaultExpiry);
   const [neverExpires, setNeverExpires] = useState(false);
@@ -46,26 +49,24 @@ export function LeavePublicLinkDialog({ open, onOpenChange }: LeavePublicLinkDia
 
   const savedLink = useMemo(() => {
     if (!status.data?.token) return null;
-    const url = new URL('/solicitud-permiso', window.location.origin);
+    const url = new URL(buildShareLink('/solicitud-permiso', currentCompanyId));
     url.searchParams.set('token', status.data.token);
     return url.toString();
-  }, [status.data?.token]);
+  }, [status.data?.token, currentCompanyId]);
 
   const visibleLink = generatedLink ?? savedLink;
 
   useEffect(() => {
-    if (!open) {
-      setGeneratedLink(null);
-      setCopied(false);
-      setConfirmAction(null);
-    }
-  }, [open]);
+    setGeneratedLink(null);
+    setCopied(false);
+    setConfirmAction(null);
+  }, [open, currentCompanyId]);
 
   const generate = async () => {
     try {
       const expiresAt = neverExpires ? null : new Date(`${expiryDate}T23:59:59`).toISOString();
       const result = await rotate.mutateAsync(expiresAt);
-      const url = new URL('/solicitud-permiso', window.location.origin);
+      const url = new URL(buildShareLink('/solicitud-permiso', currentCompanyId));
       url.searchParams.set('token', result.token);
       setGeneratedLink(url.toString());
       setCopied(false);

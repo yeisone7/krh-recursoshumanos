@@ -293,7 +293,7 @@ serve(async (req: Request): Promise<Response> => {
       type: 'requisition_approval',
       entity_type: 'requisition',
       entity_id: requisitionId,
-      action_url: `/requisiciones?id=${requisitionId}`,
+      action_url: `/requisiciones?id=${requisitionId}&company=${encodeURIComponent(requisition.company_id)}`,
       is_read: false,
     }));
 
@@ -418,7 +418,7 @@ serve(async (req: Request): Promise<Response> => {
                     <p>Por favor revisa la requisición y registra tu decisión lo antes posible para continuar con el proceso de contratación.</p>
 
                     <center>
-                      <a href="https://empatiq.portalpetrocasinos.com/requisiciones?id=${requisitionId}" class="cta-button">
+                      <a href="https://empatiq.portalpetrocasinos.com/requisiciones?id=${requisitionId}&amp;company=${encodeURIComponent(requisition.company_id)}" class="cta-button">
                         Revisar Requisición →
                       </a>
                     </center>
