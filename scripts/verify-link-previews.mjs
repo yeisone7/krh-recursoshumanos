@@ -72,7 +72,8 @@ try {
     const response = await fetch(new URL(appAsset, origin));
     assert.equal(response.status, 200);
     assert.ok(response.headers.get('content-type').includes('javascript'));
-    for (const path of ['/app-version.json', '/sw.js', '/registerSW.js']) {
+    // This app registers the worker from its JS bundle; no registerSW.js is emitted.
+    for (const path of ['/app-version.json', '/sw.js']) {
       const response = await fetch(new URL(path, origin));
       assert.equal(response.status, 200, path);
       assert.ok(response.headers.get('cache-control').includes('no-store'), path);
