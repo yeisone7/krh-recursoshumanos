@@ -1,22 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User, Upload, Paperclip, ExternalLink, Trash2, Loader2 } from 'lucide-react';
+import { Package, Calendar, FileText, AlertTriangle, CheckCircle, FileDown, PenTool, MapPin, User, Upload, ExternalLink, Trash2, Loader2 } from 'lucide-react';
 
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
@@ -24,6 +21,8 @@ import { useCompany } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 import { getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
 import { toast } from 'sonner';
+import { DotationSignatureLink } from './DotationSignatureLink';
+import { getDotationSignatureUrl } from '@/lib/dotationSignature';
 import type { DotationTransaction } from '@/hooks/useDotationTransactions';
 
 const dotationItemTypeLabels: Record<string, string> = {
@@ -58,7 +57,8 @@ interface DotationDetailDialogProps {
 }
 
 export function DotationDetailDialog({ open, onOpenChange, transaction }: DotationDetailDialogProps) {
-  const { currentCompanyId } = useAuth();
+  const { currentCompanyId, isAdmin, isRRHH, isSuperAdmin, canUpdate } = useAuth();
+  const canSign = isAdmin || isRRHH || isSuperAdmin || canUpdate('dotacion');
   const { data: company } = useCompany(currentCompanyId || undefined);
   const queryClient = useQueryClient();
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
@@ -104,42 +104,33 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
   const sc = statusConfig[overallStatus];
   const StatusIcon = sc.icon;
 
+  const hasSignature = Boolean(signatureDataUrl || transaction.signature_path || transaction.signed_at);
   const handleSaveSignature = async (dataUrl: string) => {
-    setSignatureDataUrl(dataUrl);
+    if (!canSign || isSavingSignature || transaction.signature_source === 'mobile') return;
     setIsSavingSignature(true);
+    let uploadedPath: string | null = null;
     try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const fileName = `signatures/${transaction.id}_${Date.now()}.png`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('dotation-images')
-        .upload(fileName, blob, { contentType: 'image/png', upsert: true });
-
+      const blob = await (await fetch(dataUrl)).blob();
+      const fileName = `${transaction.employees?.company_id}/${transaction.id}/${crypto.randomUUID()}.png`;
+      const { error: uploadError } = await supabase.storage.from('dotation-signatures')
+        .upload(fileName, blob, { contentType: 'image/png', upsert: false });
       if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('dotation-images')
-        .getPublicUrl(fileName);
-
-      const publicUrl = urlData.publicUrl;
-
-      const { error: updateError } = await supabase
-        .from('dotation_delivery_transactions')
-        .update({ signature_url: publicUrl })
-        .eq('id', transaction.id);
-
+      uploadedPath = fileName;
+      const { error: updateError } = await supabase.rpc('save_local_dotation_signature', {
+        p_transaction_id: transaction.id, p_path: fileName, p_updated_at: transaction.updated_at,
+      });
       if (updateError) throw updateError;
-
-      setSignatureDataUrl(publicUrl);
-      queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+      uploadedPath = null;
+      setSignatureDataUrl(dataUrl);
+      setShowSignature(false);
+      await queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
       toast.success('Firma guardada correctamente');
-    } catch (error) {
-      console.error('Error saving signature:', error);
-      toast.error('Error al guardar la firma');
-    } finally {
-      setIsSavingSignature(false);
-    }
+    } catch {
+      // Storage policy permits cleanup only if the object is not attached.
+      if (uploadedPath) await supabase.storage.from('dotation-signatures').remove([uploadedPath]);
+      toast.error('No se pudo guardar la firma. Actualiza el detalle e intenta nuevamente.');
+      void queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
+    } finally { setIsSavingSignature(false); }
   };
 
   const handleExportPdf = async () => {
@@ -164,7 +155,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         companyNit: company?.nit || '',
         logoUrl: company?.horizontal_logo_url || company?.logo_url || null,
         deliveries,
-        signatureDataUrl,
+        signatureDataUrl: transaction.signature_path ? await getDotationSignatureUrl(transaction) : signatureDataUrl,
       });
       toast.success('Acta de entrega generada');
     } catch (error) {
@@ -236,16 +227,16 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
+      <DialogContent className="dotation-detail-dialog flex h-[100dvh] w-screen max-w-2xl flex-col overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[90vh] sm:w-full sm:rounded-[2rem] sm:border sm:shadow-lg bg-background ">
         {/* Header con gradiente */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
+        <div className="dotation-detail-header shrink-0 relative bg-gradient-to-br from-primary/10 via-background to-primary/5 px-6 py-8 border-b border-border/50">
           
-          <div className="relative flex items-center gap-4">
+          <div className="relative flex items-start gap-3 sm:gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-md shadow-primary/20">
               <Package className="w-7 h-7 text-primary-foreground" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
                 <Badge variant="outline" className="h-5 rounded-lg px-2 bg-background border-border/50 font-bold text-[9px] uppercase tracking-widest text-muted-foreground">
                   {transaction.items.length} Artículos
                 </Badge>
@@ -254,13 +245,13 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                   {sc.label}
                 </Badge>
               </div>
-              <DialogTitle className="font-black text-xl tracking-tighter sm:text-2xl truncate text-foreground">
+              <DialogTitle className="font-bold text-xl leading-tight tracking-tight sm:text-2xl whitespace-normal break-words text-foreground">
                 {employeeName}
               </DialogTitle>
               <DialogDescription className="sr-only">
                 Detalle de entrega de dotación de {employeeName}
               </DialogDescription>
-              <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
                 <span>C.C. {transaction.employees?.document_number}</span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
@@ -401,23 +392,27 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
           {/* Signature Section */}
           <div className="space-y-3">
             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Firma del Colaborador</Label>
+            {canSign && !hasSignature && <DotationSignatureLink key={transaction.id} transactionId={transaction.id} open={open} />}
             <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-background /10">
-              {signatureDataUrl && !showSignature ? (
+              {hasSignature && !showSignature ? (
                 <div className="p-6 space-y-4">
                   <div className="bg-background rounded-2xl p-6 border border-border/30 flex items-center justify-center">
-                    <img src={signatureDataUrl} alt="Firma" className="max-h-[120px] object-contain drop-shadow-sm" />
+                    {signatureDataUrl ? <img src={signatureDataUrl} alt="Firma" className="max-h-[120px] object-contain drop-shadow-sm" /> : <p className="text-sm">Firma registrada. Vuelve a abrir el detalle para cargar la imagen.</p>}
                   </div>
-                  <div className="flex justify-center">
-                    <Button variant="ghost" size="sm" className="rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest hover:bg-background" onClick={() => { setSignatureDataUrl(null); setShowSignature(true); }}>
+                  {canSign && transaction.signature_source !== 'mobile' && <div className="flex justify-center">
+                    <Button variant="ghost" size="sm" className="rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest hover:bg-background" onClick={() => setShowSignature(true)}>
                       <PenTool className="w-3.5 h-3.5" /> Re-firmar Documento
                     </Button>
-                  </div>
+                  </div>}
+                  {transaction.signed_at && <p className="text-center text-xs text-muted-foreground">Firmado el {new Date(transaction.signed_at).toLocaleString('es-CO')}</p>}
                 </div>
               ) : (
                 <div className="p-6 bg-background ">
                   <div className="bg-white/80 rounded-2xl p-4 border border-primary/20 shadow-inner">
                     <SignatureCanvas
                       onSave={handleSaveSignature}
+                      disabled={isSavingSignature || !canSign}
+                      saving={isSavingSignature}
                       width={480}
                       height={140}
                     />
@@ -426,7 +421,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
                     {isSavingSignature ? (
                       <><Loader2 className="w-3 h-3 animate-spin" /> Procesando firma...</>
                     ) : (
-                      <>Captura de firma biométrica en pantalla</>
+                      <>Firma de recibido en pantalla</>
                     )}
                   </p>
                 </div>
@@ -436,11 +431,11 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="dotation-detail-footer shrink-0 flex flex-col gap-3 p-6 border-t border-border/50 bg-background /10 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col">
              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Estado de Registro</span>
              <p className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-               <CheckCircle className="w-3.5 h-3.5 text-primary" /> Entrega validada correctamente
+               <CheckCircle className="w-3.5 h-3.5 text-primary" /> {hasSignature ? 'Firmado' : 'Pendiente de firma'}
              </p>
           </div>
           <div className="flex items-center gap-3">

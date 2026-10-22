@@ -1967,6 +1967,26 @@ div.requisition-grid:has(table),
   color: hsl(var(--foreground)) !important;
 }
 /* Bulk delivery owns one scroll region; keep its title/actions outside it. */
+[role="dialog"][data-dialog-content].dotation-detail-dialog {
+  padding: 0 !important;
+  gap: 0;
+  overflow: hidden !important;
+  max-height: calc(100dvh - 1rem);
+}
+.dotation-detail-dialog [data-workspace-back] { flex-shrink: 0; margin: 0.5rem 2.5rem 0.5rem 0.75rem; }
+[role="dialog"].dotation-detail-dialog .dotation-detail-header {
+  flex-shrink: 0;
+  padding: 1.25rem 2.75rem 1.25rem 1.25rem !important;
+}
+[role="dialog"].dotation-detail-dialog .dotation-detail-footer {
+  flex-shrink: 0;
+  padding: 1rem 1.25rem !important;
+}
+@media (max-width: 639px) {
+  [role="dialog"][data-dialog-content].dotation-detail-dialog { max-height: 100dvh; }
+  .dotation-detail-footer > div:last-child { width: 100%; }
+  .dotation-detail-footer > div:last-child > button { flex: 1; padding-left: 0.5rem; padding-right: 0.5rem; }
+}
 [role="dialog"][data-dialog-content].bulk-delivery-dialog {
   padding: 0 !important;
   overflow: hidden !important;

@@ -31,6 +31,7 @@ import Install from "./pages/Install";
 
 const TimeClockEntry = lazy(() => import("./pages/TimeClockEntry"));
 const PublicDailyReport = lazy(() => import("./pages/PublicDailyReport"));
+const PublicDotationSignature = lazy(() => import("./pages/PublicDotationSignature"));
 const PublicTimeClock = lazy(() => import("./pages/PublicTimeClock"));
 const TimeClockScreen = lazy(() => import("./pages/TimeClockScreen"));
 const CopasstPublicVote = lazy(() => import("./pages/copasst/PublicVote"));
@@ -73,6 +74,7 @@ const App = () => (
             <Route path="/descargos" element={<DescargosPublico />} />
             <Route path="/registro" element={<RegistroPublico />} />
             <Route path="/solicitud-permiso" element={<PublicLeaveRequest />} />
+            <Route path="/dotacion/firma" element={<Suspense fallback={<p className="p-8">Cargando entrega…</p>}><PublicDotationSignature /></Suspense>} />
             <Route path="/reporte-diario/:token" element={<Suspense fallback={<p className="p-8">Cargando reporte…</p>}><PublicDailyReport /></Suspense>} />
             <Route path="/asistencia/:token" element={<Suspense fallback={null}><PublicTimeClock /></Suspense>} />
             <Route path="/verificar-certificado/:token" element={<VerificarCertificado />} />

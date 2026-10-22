@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { getRestorablePath, isIgnoredPath } from './LocationPersister';
 
 describe('LocationPersister public leave isolation', () => {
+  it('never stores or restores mobile dotation links', () => {
+    expect(isIgnoredPath('/dotacion/firma')).toBe(true);
+    expect(getRestorablePath('/dotacion/firma#token=private-link')).toBeNull();
+  });
   it('never stores or restores the public leave request as an application module', () => {
     expect(isIgnoredPath('/solicitud-permiso')).toBe(true);
     expect(isIgnoredPath('/solicitud-permiso/')).toBe(true);

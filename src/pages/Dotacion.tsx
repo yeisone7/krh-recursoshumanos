@@ -63,6 +63,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCompany } from '@/hooks/useCompanies';
 import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
 import { toast } from 'sonner';
+import { getDotationSignatureUrl } from '@/lib/dotationSignature';
 
 type DotationStatus = 'vigente' | 'por_vencer' | 'vencida';
 
@@ -234,7 +235,7 @@ export default function Dotacion() {
         companyNit: company?.nit || '',
         logoUrl: company?.horizontal_logo_url || company?.logo_url || null,
         deliveries,
-        signatureDataUrl: tx.signature_url || null,
+        signatureDataUrl: await getDotationSignatureUrl(tx),
       });
       toast.success('Acta de entrega generada');
     } catch (error) {

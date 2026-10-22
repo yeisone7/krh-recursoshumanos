@@ -9,6 +9,10 @@ export interface DotationTransaction {
   delivered_by: string | null;
   received_by: string | null;
   signature_url: string | null;
+  signature_path?: string | null;
+  signed_at?: string | null;
+  acceptance_version?: string | null;
+  signature_source?: string | null;
   document_url: string | null;
   observations: string | null;
   created_by: string | null;
@@ -115,12 +119,19 @@ export function useDotationTransactions() {
         })
       );
 
+      const paths = transactions.map(t => t.signature_path).filter((path): path is string => Boolean(path));
+      const signedUrls = new Map<string, string>();
+      if (paths.length) {
+        const { data } = await supabase.storage.from('dotation-signatures').createSignedUrls(paths, 3600);
+        for (const item of data || []) if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
+      }
       return transactions
         .map(t => {
           const employee = employeeMap.get(t.employee_id);
           if (!employee) return null;
           return {
             ...t,
+            signature_url: t.signature_path ? signedUrls.get(t.signature_path) || null : t.signature_url,
             employees: employee,
             items: itemsByTransaction.get(t.id) || [],
           };

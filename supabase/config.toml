@@ -1,5 +1,9 @@
 project_id = "qmfyecdeiupgscegxbmo"
 
+[functions.public-dotation-signature]
+# Generation verifies the user JWT; public acceptance verifies its signed token.
+verify_jwt = false
+
 [functions.public-time-clock]
 verify_jwt = false
 

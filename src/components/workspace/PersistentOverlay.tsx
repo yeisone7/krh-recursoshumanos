@@ -74,7 +74,7 @@ export function PersistentOverlay({ children, renderShell }: { children: ReactNo
       }} onClickCapture={event => {
         if (!host.querySelector('[data-workspace-form]') && (event.target as HTMLElement).closest('[role="option"], [role="checkbox"], [role="switch"], [role="radio"]')) setDirty(true);
       }}>
-        {pane.desktop && <button type="button" className="mb-1 flex w-fit items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => {
+        {pane.desktop && <button type="button" data-workspace-back className="mb-1 flex w-fit items-center gap-1.5 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground" onClick={() => {
           overlay.suspend();
           requestAnimationFrame(() => document.querySelector<HTMLButtonElement>('[data-workspace-tabs] [aria-selected="true"]')?.focus());
         }}><PanelsTopLeft className="h-3.5 w-3.5" />Volver a pestañas</button>}

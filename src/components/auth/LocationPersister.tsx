@@ -13,6 +13,7 @@ const IGNORED_PATHS = [
   '/copasst/votar',
   '/descargos',
   '/solicitud-permiso',
+  '/dotacion/firma',
   '/verificar-certificado',
   '/marcar',
   '/asistencia',

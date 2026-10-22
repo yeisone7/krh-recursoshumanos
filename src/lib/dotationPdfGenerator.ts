@@ -270,13 +270,13 @@ export async function generateActaEntregaPdf(options: ActaOptions): Promise<void
     try {
       const sigImg = await loadImage(signatureDataUrl);
       doc.addImage(sigImg, 'PNG', sig1X, sigY - 25, 60, 22);
-    } catch { /* signature load optional */ }
+    } catch { throw new Error('No fue posible cargar la firma para el acta. Intenta nuevamente.'); }
   } else if (first.signature_url) {
     // Fallback: use stored signature if any
     try {
       const sigImg = await loadImage(first.signature_url);
       doc.addImage(sigImg, 'PNG', sig1X, sigY - 25, 60, 22);
-    } catch { /* signature load optional */ }
+    } catch { throw new Error('No fue posible cargar la firma para el acta. Intenta nuevamente.'); }
   }
 
   doc.line(sig1X, sigY, sig1X + 70, sigY);

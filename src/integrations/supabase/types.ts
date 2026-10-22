@@ -2981,6 +2981,11 @@ export type Database = {
           id: string
           observations: string | null
           received_by: string | null
+          signature_path: string | null
+          signed_at: string | null
+          acceptance_version: string | null
+          signature_source: string | null
+          signature_revision: number
           signature_url: string | null
           updated_at: string
         }
@@ -2995,6 +3000,11 @@ export type Database = {
           id?: string
           observations?: string | null
           received_by?: string | null
+          signature_path?: string | null
+          signed_at?: string | null
+          acceptance_version?: string | null
+          signature_source?: string | null
+          signature_revision?: number
           signature_url?: string | null
           updated_at?: string
         }
@@ -3009,6 +3019,11 @@ export type Database = {
           id?: string
           observations?: string | null
           received_by?: string | null
+          signature_path?: string | null
+          signed_at?: string | null
+          acceptance_version?: string | null
+          signature_source?: string | null
+          signature_revision?: number
           signature_url?: string | null
           updated_at?: string
         }
@@ -11835,6 +11850,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      save_local_dotation_signature: {
+        Args: { p_transaction_id: string; p_path: string; p_updated_at: string }
+        Returns: string
+      }
+      authorize_dotation_signature: {
+        Args: { p_transaction_id: string }
+        Returns: Json
+      }
       save_evaluation_template: {
         Args: { p_company_id: string; p_template_id: string | null; p_payload: Json }
         Returns: string
