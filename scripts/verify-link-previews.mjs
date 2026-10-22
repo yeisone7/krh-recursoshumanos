@@ -1,7 +1,7 @@
 // Reads public company branding only; never consumes a real access token.
 import assert from 'node:assert/strict';
 import { createServer as createHttpServer } from 'node:http';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer, loadEnv } from 'vite';
 
 Object.assign(process.env, loadEnv('production', process.cwd(), 'VITE_'));
@@ -28,8 +28,12 @@ try {
   assert.equal(response.status, 200);
   const companies = await response.json();
   assert.ok(companies.length >= 2, 'Need two brands to check isolation');
+  const home = await fetch(new URL(`/?company=${companies[0].id}`, origin));
+  assert.equal(home.status, 200);
+  assert.ok((await home.text()).includes(`Gestión de talento humano | ${companies[0].name}`), 'Home must retain company branding');
   const output = 'tmp/link-preview-verification';
   await mkdir(output, { recursive: true });
+  let appAsset;
   for (const company of companies) {
     const url = new URL('/dotacion/firma', origin);
     url.searchParams.set('company', company.id);
@@ -41,12 +45,14 @@ try {
     assert.ok(!html.includes('PRIVATE_TEST_TOKEN'));
     assert.ok(html.includes('id="root"'));
     assert.ok(html.includes('/assets/'));
+    appAsset = html.match(/src="(\/assets\/[^\"]+)"/)[1];
     const imageUrl = html.match(/property="og:image" content="([^"]+)"/)[1].replaceAll('&amp;', '&');
     assert.deepEqual([...new URL(imageUrl).searchParams.keys()].sort(), ['company', 'module']);
     const image = await fetch(imageUrl);
     assert.equal(image.status, 200);
     assert.equal(image.headers.get('content-type'), 'image/png');
-    assert.ok(image.headers.get('cache-control').includes('s-maxage=300'), 'Company logo must have loaded');
+    // Vercel consumes s-maxage at the CDN and strips it from the browser response.
+    assert.ok(image.headers.get('cache-control').includes('public, max-age=300'), 'Company logo must have loaded');
     const bytes = Buffer.from(await image.arrayBuffer());
     assert.equal(bytes.toString('hex', 0, 8), '89504e470d0a1a0a');
     assert.equal(bytes.readUInt32BE(16), 1200);
@@ -62,10 +68,8 @@ try {
     assert.ok(html.includes(`content="${moduleForPath(path).title} | EmpatiQ"`), path);
     assert.ok(!html.includes('PRIVATE_TEST_TOKEN') && !html.includes('PRIVATE_TEST_EMPLOYEE'));
   }
-  const shell = await readFile('dist/index.html', 'utf8');
-  const asset = shell.match(/src="(\/assets\/[^\"]+)"/)[1];
   if (live) {
-    const response = await fetch(new URL(asset, origin));
+    const response = await fetch(new URL(appAsset, origin));
     assert.equal(response.status, 200);
     assert.ok(response.headers.get('content-type').includes('javascript'));
   }

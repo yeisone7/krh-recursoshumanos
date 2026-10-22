@@ -30,6 +30,10 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "/api/link-preview?previewPath=/"
+    },
+    {
       "source": "/:path*",
       "destination": "/api/link-preview?previewPath=/:path*"
     }
