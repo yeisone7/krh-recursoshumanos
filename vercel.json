@@ -1,43 +1,4 @@
 {
-  "headers": [
-    {
-      "source": "/app-version.json",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/sw.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/registerSW.js",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/api/link-preview?previewPath=/"
-    },
-    {
-      "source": "/:path*",
-      "destination": "/api/link-preview?previewPath=/:path*"
-    }
-  ],
   "functions": {
     "api/link-preview.ts": {
       "includeFiles": "dist/index.html"
@@ -45,5 +6,39 @@
     "api/link-preview-image.ts": {
       "maxDuration": 15
     }
-  }
+  },
+  "routes": [
+    {
+      "src": "/app-version\\.json",
+      "headers": {
+        "Cache-Control": "no-store, max-age=0"
+      },
+      "continue": true
+    },
+    {
+      "src": "/sw\\.js",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "continue": true
+    },
+    {
+      "src": "/registerSW\\.js",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/$",
+      "dest": "/api/link-preview?previewPath=/"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/link-preview?previewPath=/$1"
+    }
+  ]
 }

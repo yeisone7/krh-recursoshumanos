@@ -8,7 +8,10 @@ mantiene su token exclusivamente en el fragmento.
 Vercel sirve el HTML compilado de la aplicación mediante `api/link-preview.ts`.
 Antes de enviarlo añade Open Graph y Twitter Cards, incluso para clientes que no
 ejecutan JavaScript. Los archivos estáticos y las funciones existentes se sirven
-desde el sistema de archivos de Vercel antes de la regla de respaldo.
+desde el sistema de archivos de Vercel antes de la regla de respaldo. La ruta `/`
+se resuelve explícitamente antes del sistema de archivos para que `index.html`
+no oculte la marca de los enlaces de inicio. Por eso se utiliza `routes`, con una
+fase `filesystem`, en lugar de las reglas `rewrites` habituales.
 
 `server/link-preview/modules.ts` es el catálogo de títulos y descripciones fijos.
 Las rutas de cada módulo incluyen sus subrutas. Las pruebas comprueban la cobertura
