@@ -24,6 +24,9 @@ import { cn } from '@/lib/utils';
 interface Tab360TimelineProps {
   events: Employee360TimelineEvent[];
   isLoading: boolean;
+  isError?: boolean;
+  isFetching?: boolean;
+  onRetry?: () => void;
 }
 
 const eventConfig = {
@@ -41,7 +44,7 @@ function formatEventDate(value: string): string {
   return format(new Date(value), "d 'de' MMMM yyyy", { locale: es });
 }
 
-export function Tab360Timeline({ events, isLoading }: Tab360TimelineProps) {
+export function Tab360Timeline({ events, isLoading, isError = false, isFetching = false, onRetry }: Tab360TimelineProps) {
   const [eventType, setEventType] = useState<string>('all');
   const [query, setQuery] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -92,6 +95,31 @@ export function Tab360Timeline({ events, isLoading }: Tab360TimelineProps) {
     );
   }
 
+  const errorNotice = isError ? (
+    <Card role="alert">
+      <CardContent className="space-y-3 p-6">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div>
+            <h3 className="font-semibold">No se pudo cargar la línea de tiempo</h3>
+            <p className="text-sm text-muted-foreground">
+              {events.length > 0
+                ? 'Se muestran los últimos eventos cargados. Intenta actualizar el historial.'
+                : 'Ocurrió un error al consultar el historial. Intenta cargarlo nuevamente.'}
+            </p>
+          </div>
+        </div>
+        {onRetry && (
+          <Button type="button" variant="outline" onClick={onRetry} disabled={isFetching}>
+            {isFetching ? 'Reintentando...' : 'Reintentar'}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  ) : null;
+
+  if (events.length === 0 && isError) return errorNotice;
+
   if (events.length === 0) {
     return (
       <Card>
@@ -108,6 +136,7 @@ export function Tab360Timeline({ events, isLoading }: Tab360TimelineProps) {
 
   return (
     <div className="space-y-4">
+      {errorNotice}
       <Card className="border-none shadow-sm">
         <CardContent className="grid gap-3 p-4 lg:grid-cols-[1.3fr_0.8fr_0.8fr_0.8fr_auto]">
           <div className="relative">

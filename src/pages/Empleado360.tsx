@@ -237,7 +237,13 @@ export default function Empleado360() {
               />
             </TabsContent>
             <TabsContent value="timeline" className="m-0">
-              <Tab360Timeline events={data.timeline} isLoading={data.isLoadingTimeline} />
+              <Tab360Timeline
+                events={data.timeline}
+                isLoading={data.isLoadingTimeline}
+                isError={data.isErrorTimeline}
+                isFetching={data.isFetchingTimeline}
+                onRetry={() => void data.refetchTimeline()}
+              />
             </TabsContent>
             <TabsContent value="timeoff" className="m-0">
               <Tab360TimeOff

@@ -143,7 +143,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           .limit(20),
         supabase
           .from('vacation_requests')
-          .select('id, start_date, end_date, status, days_requested, created_at')
+          .select('id, start_date, end_date, status, total_requested_days, created_at')
           .eq('employee_id', employeeId!)
           .order('start_date', { ascending: false })
           .limit(20),
@@ -155,13 +155,13 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           .limit(20),
         supabase
           .from('employee_incapacities')
-          .select('id, start_date, end_date, diagnosis, status, created_at')
+          .select('id, start_date, end_date, diagnosis, recovery_status, created_at')
           .eq('employee_id', employeeId!)
           .order('start_date', { ascending: false })
           .limit(20),
         supabase
           .from('disciplinary_processes')
-          .select('*')
+          .select('id, opening_date, created_at, facts_description, status, case_number')
           .eq('employee_id', employeeId!)
           .order('opening_date', { ascending: false })
           .limit(20),
@@ -173,7 +173,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           .limit(20),
         supabase
           .from('training_completions')
-          .select('id, completed_at, status, score, course:training_courses(name)')
+          .select('id, completed_at, quiz_score, course:training_courses(name)')
           .eq('employee_id', employeeId!)
           .order('completed_at', { ascending: false })
           .limit(20),
@@ -223,7 +223,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           date: vacation.start_date,
           type: 'vacation',
           title: 'Vacaciones',
-          description: `${vacation.days_requested || 0} dia(s) solicitados`,
+          description: `${vacation.total_requested_days ?? 0} dia(s) solicitados`,
           status: vacation.status,
           meta: vacation.end_date ? `Hasta ${vacation.end_date}` : undefined,
         });
@@ -248,7 +248,7 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           type: 'incapacity',
           title: 'Incapacidad',
           description: incapacity.diagnosis || 'Sin diagnostico registrado',
-          status: incapacity.status,
+          status: incapacity.recovery_status,
           meta: incapacity.end_date ? `Hasta ${incapacity.end_date}` : undefined,
         });
       }
@@ -259,9 +259,9 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           date: process.opening_date || process.created_at,
           type: 'disciplinary',
           title: 'Proceso disciplinario',
-          description: process.reason || process.description || process.process_type || 'Proceso registrado',
+          description: process.facts_description || 'Proceso registrado',
           status: process.status,
-          meta: process.process_number,
+          meta: process.case_number,
         });
       }
 
@@ -282,8 +282,8 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
           date: completion.completed_at,
           type: 'training',
           title: completion.course?.name || 'Capacitacion completada',
-          description: completion.score != null ? `Puntaje ${completion.score}` : undefined,
-          status: completion.status,
+          description: completion.quiz_score != null ? `Puntaje ${completion.quiz_score}` : undefined,
+          status: 'Completada',
         });
       }
 
@@ -813,6 +813,9 @@ export function useEmployee360(employeeId: string | undefined, activeTab: string
     isLoadingTerminations: terminationsQuery.isLoading,
     timeline: timelineQuery.data || [],
     isLoadingTimeline: timelineQuery.isLoading,
+    isErrorTimeline: timelineQuery.isError,
+    isFetchingTimeline: timelineQuery.isFetching,
+    refetchTimeline: timelineQuery.refetch,
     dataQuality,
     isLoadingDataQuality: qualityContractsQuery.isLoading,
     summaryContracts: qualityContractsQuery.data || [],
