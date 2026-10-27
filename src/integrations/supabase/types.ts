@@ -4033,6 +4033,11 @@ export type Database = {
       }
       employee_incapacities: {
         Row: {
+          rehabilitation_origin: string | null
+          rehabilitation_outcome: string | null
+          pcl_percentage: number | null
+          pcl_origin: string | null
+          pcl_diagnosis_codes: string[]
           actual_payment_date: string | null
           afp_amount: number | null
           afp_days: number
@@ -4078,6 +4083,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          rehabilitation_origin?: string | null
+          rehabilitation_outcome?: string | null
+          pcl_percentage?: number | null
+          pcl_origin?: string | null
+          pcl_diagnosis_codes?: string[]
           actual_payment_date?: string | null
           afp_amount?: number | null
           afp_days?: number
@@ -4123,6 +4133,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          rehabilitation_origin?: string | null
+          rehabilitation_outcome?: string | null
+          pcl_percentage?: number | null
+          pcl_origin?: string | null
+          pcl_diagnosis_codes?: string[]
           actual_payment_date?: string | null
           afp_amount?: number | null
           afp_days?: number

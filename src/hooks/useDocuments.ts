@@ -15,6 +15,7 @@ export type EntityType =
   | 'incapacity_afp_follow_up'
   | 'incapacity_economic_responsibility'
   | 'incapacity_capacity_loss_rating'
+  | 'incapacity_540_follow_up'
   | 'disciplinary_opening'
   | 'disciplinary_notification'
   | 'disciplinary_hearing'
@@ -29,6 +30,7 @@ const incapacityDocumentTypes: EntityType[] = [
   'incapacity_afp_follow_up',
   'incapacity_economic_responsibility',
   'incapacity_capacity_loss_rating',
+  'incapacity_540_follow_up',
 ];
 
 function isIncapacityDocumentType(entityType: EntityType) {

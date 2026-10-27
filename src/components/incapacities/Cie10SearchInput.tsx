@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 
 interface Cie10SearchInputProps {
+  id?: string;
   value: string;
   onChange: (code: string) => void;
   onDiagnosisFound: (diagnosis: string) => void;
@@ -14,6 +15,7 @@ interface Cie10SearchInputProps {
 }
 
 export function Cie10SearchInput({
+  id,
   value,
   onChange,
   onDiagnosisFound,
@@ -92,6 +94,7 @@ export function Cie10SearchInput({
     <div ref={containerRef} className="relative">
       <div className="relative">
         <Input
+          id={id}
           ref={inputRef}
           value={query}
           onChange={(e) => {

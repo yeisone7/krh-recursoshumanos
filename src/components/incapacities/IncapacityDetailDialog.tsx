@@ -79,6 +79,7 @@ import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { useCurrentDocument } from '@/hooks/useDocuments';
 import { cn } from '@/lib/utils';
 import { IncapacityDialogSizeToggle } from './IncapacityDialogSizeToggle';
+import { IncapacityLegalFollowUpFields } from './IncapacityLegalFollowUpFields';
 
 interface IncapacityDetailDialogProps {
   open: boolean;
@@ -422,6 +423,12 @@ export function IncapacityDetailDialog({
                             {milestone.isReached ? 'Alcanzado' : `Faltan ${milestone.daysRemaining} dias`}
                           </Badge>
                         </div>
+                        {!isLoadingChainRoot && chainRoot && (milestone.key === 'day_120' || milestone.key === 'day_540') && (
+                          <IncapacityLegalFollowUpFields
+                            incapacity={chainRoot}
+                            kind={milestone.key === 'day_120' ? 'rehabilitation' : 'pcl'}
+                          />
+                        )}
                         <MilestoneDocumentAttachment
                           entityType={milestone.documentEntityType}
                           entityId={followUpDocumentEntityId}

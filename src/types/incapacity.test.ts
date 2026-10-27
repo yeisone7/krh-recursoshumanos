@@ -179,6 +179,16 @@ describe('calculateIncapacityEmployerCost', () => {
 });
 
 describe('incapacity follow-up documents', () => {
+  it('uses the requested thresholds consistently for cards and document uploads', () => {
+    const expectedDays = [120, 120, 150, 180, 540];
+    for (const days of [119, 120, 149, 150, 179, 180, 539, 540]) {
+      const milestones = getLegalMilestones('comun', days);
+      const documents = getFollowUpDocumentAvailability('comun', days);
+      expect(milestones.map((milestone) => milestone.day)).toEqual(expectedDays);
+      expect(milestones.map((milestone) => milestone.isReached)).toEqual(expectedDays.map((day) => days >= day));
+      expect(documents.map((document) => document.isAvailable)).toEqual(milestones.map((milestone) => milestone.isReached));
+    }
+  });
   it('habilita el concepto de rehabilitación desde el día 120', () => {
     expect(getFollowUpDocumentAvailability('comun', 119)[0].isAvailable).toBe(false);
     expect(getFollowUpDocumentAvailability('comun', 119)[0].daysRemaining).toBe(1);
@@ -187,9 +197,9 @@ describe('incapacity follow-up documents', () => {
 
   it('habilita la calificación PCL desde el día 540', () => {
     const beforeThreshold = getFollowUpDocumentAvailability('comun', 539)
-      .find((document) => document.entityType === 'incapacity_capacity_loss_rating');
+      .find((document) => document.entityType === 'incapacity_540_follow_up');
     const atThreshold = getFollowUpDocumentAvailability('comun', 540)
-      .find((document) => document.entityType === 'incapacity_capacity_loss_rating');
+      .find((document) => document.entityType === 'incapacity_540_follow_up');
 
     expect(beforeThreshold?.isAvailable).toBe(false);
     expect(atThreshold?.isAvailable).toBe(true);
@@ -201,9 +211,10 @@ describe('incapacity follow-up documents', () => {
       milestone.documentEntityType,
     ])).toEqual([
       ['day_120', 'incapacity_rehabilitation_concept'],
-      ['day_150', 'incapacity_afp_follow_up'],
-      ['day_180', 'incapacity_economic_responsibility'],
-      ['day_540', 'incapacity_capacity_loss_rating'],
+      ['prolonged_notification', 'incapacity_afp_follow_up'],
+      ['day_150', 'incapacity_economic_responsibility'],
+      ['day_180', 'incapacity_capacity_loss_rating'],
+      ['day_540', 'incapacity_540_follow_up'],
     ]);
   });
 

@@ -44,7 +44,7 @@ export interface IncapacityPaymentSegment {
 }
 
 export interface IncapacityLegalMilestone {
-  key: 'day_120' | 'day_150' | 'day_180' | 'day_540' | 'day_541_plus';
+  key: 'day_120' | 'prolonged_notification' | 'day_150' | 'day_180' | 'day_540';
   day: number;
   title: string;
   description: string;
@@ -84,7 +84,22 @@ export type IncapacityFollowUpDocumentType =
   | 'incapacity_rehabilitation_concept'
   | 'incapacity_afp_follow_up'
   | 'incapacity_economic_responsibility'
-  | 'incapacity_capacity_loss_rating';
+  | 'incapacity_capacity_loss_rating'
+  | 'incapacity_540_follow_up';
+
+export const rehabilitationConceptSchema = z.object({
+  rehabilitation_origin: z.enum(['comun', 'laboral']).nullable(),
+  rehabilitation_outcome: z.enum(['favorable', 'desfavorable']).nullable(),
+});
+
+export const capacityLossFollowUpSchema = z.object({
+  pcl_percentage: z.number().finite().min(0).max(100).nullable(),
+  pcl_origin: z.enum(['comun', 'laboral']).nullable(),
+  pcl_diagnosis_codes: z.array(z.string().trim().regex(/^[A-Z][0-9]{2}[A-Z0-9]{0,2}$/)),
+});
+
+export type RehabilitationConceptData = z.infer<typeof rehabilitationConceptSchema>;
+export type CapacityLossFollowUpData = z.infer<typeof capacityLossFollowUpSchema>;
 
 export interface IncapacityFollowUpDocumentAvailability {
   entityType: IncapacityFollowUpDocumentType;
@@ -213,6 +228,11 @@ export const recoveryStatusColors: Record<RecoveryStatus, string> = {
 // =====================================================
 
 export interface EmployeeIncapacity {
+  rehabilitation_origin?: 'comun' | 'laboral' | null;
+  rehabilitation_outcome?: 'favorable' | 'desfavorable' | null;
+  pcl_percentage?: number | null;
+  pcl_origin?: 'comun' | 'laboral' | null;
+  pcl_diagnosis_codes?: string[];
   id: string;
   employee_id: string;
   company_id: string;
@@ -670,27 +690,35 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
       level: accumulatedDays >= 120 ? 'critical' : accumulatedDays >= 105 ? 'warning' : 'info',
     },
     {
+      key: 'prolonged_notification',
+      day: 120,
+      title: 'Notificación de incapacidad prolongada (120 días)',
+      description: 'Registre la notificación de incapacidad prolongada y sus soportes.',
+      documentEntityType: 'incapacity_afp_follow_up',
+      level: accumulatedDays >= 120 ? 'critical' : accumulatedDays >= 105 ? 'warning' : 'info',
+    },
+    {
       key: 'day_150',
       day: 150,
-      title: 'Seguimiento ante AFP',
-      description: 'Revise envío del concepto y preparación para reconocimiento después del día 180.',
-      documentEntityType: 'incapacity_afp_follow_up',
+      title: 'Seguimiento al concepto de rehabilitación (150 días)',
+      description: 'Registre el seguimiento al concepto de rehabilitación y las comunicaciones relacionadas.',
+      documentEntityType: 'incapacity_economic_responsibility',
       level: accumulatedDays >= 150 ? 'critical' : accumulatedDays >= 135 ? 'warning' : 'info',
     },
     {
       key: 'day_180',
       day: 180,
-      title: 'Cambio de responsable económico',
-      description: 'Desde el día 181, valide responsabilidad de AFP según concepto de rehabilitación.',
-      documentEntityType: 'incapacity_economic_responsibility',
+      title: '4. Actualización del caso y seguimiento prestacional (180 días)',
+      description: 'Actualice el estado del caso y registre los soportes del seguimiento prestacional.',
+      documentEntityType: 'incapacity_capacity_loss_rating',
       level: accumulatedDays >= 180 ? 'critical' : accumulatedDays >= 165 ? 'warning' : 'info',
     },
     {
       key: 'day_540',
       day: 540,
-      title: 'Umbral de 540 días',
-      description: 'Revise calificación, concepto desfavorable o causales para pago EPS desde el día 541.',
-      documentEntityType: 'incapacity_capacity_loss_rating',
+      title: 'Seguimiento de incapacidades (540 días)',
+      description: 'Registre el dictamen, el porcentaje de PCL, el origen y los diagnósticos calificados.',
+      documentEntityType: 'incapacity_540_follow_up',
       level: accumulatedDays >= 540 ? 'critical' : accumulatedDays >= 510 ? 'warning' : 'info',
     },
   ];
@@ -706,39 +734,13 @@ export function getFollowUpDocumentAvailability(
   origin: IncapacityOrigin,
   accumulatedDays: number
 ): IncapacityFollowUpDocumentAvailability[] {
-  if (origin !== 'comun') return [];
-
-  const definitions: Array<Omit<IncapacityFollowUpDocumentAvailability, 'isAvailable' | 'daysRemaining'>> = [
-    {
-      entityType: 'incapacity_rehabilitation_concept',
-      title: 'Concepto de rehabilitación',
-      description: 'Concepto favorable o desfavorable emitido para el seguimiento de la rehabilitación.',
-      thresholdDays: 120,
-    },
-    {
-      entityType: 'incapacity_afp_follow_up',
-      title: 'Seguimiento ante AFP',
-      description: 'Constancias de envío, radicación y comunicaciones del seguimiento ante la AFP.',
-      thresholdDays: 150,
-    },
-    {
-      entityType: 'incapacity_economic_responsibility',
-      title: 'Cambio de responsable económico',
-      description: 'Conceptos y soportes que acreditan el cambio de responsable económico.',
-      thresholdDays: 180,
-    },
-    {
-      entityType: 'incapacity_capacity_loss_rating',
-      title: 'Calificación de pérdida de capacidad laboral',
-      description: 'Dictamen o calificación de pérdida de capacidad laboral (PCL).',
-      thresholdDays: 540,
-    },
-  ];
-
-  return definitions.map((definition) => ({
-    ...definition,
-    isAvailable: accumulatedDays >= definition.thresholdDays,
-    daysRemaining: Math.max(0, definition.thresholdDays - accumulatedDays),
+  return getLegalMilestones(origin, accumulatedDays).map((milestone) => ({
+    entityType: milestone.documentEntityType,
+    title: milestone.title,
+    description: milestone.description,
+    thresholdDays: milestone.day,
+    isAvailable: milestone.isReached,
+    daysRemaining: Math.max(0, milestone.daysRemaining),
   }));
 }
 

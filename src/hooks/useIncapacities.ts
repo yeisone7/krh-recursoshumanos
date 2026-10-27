@@ -803,7 +803,10 @@ export function useDeleteIncapacity() {
           'incapacity',
           'incapacity_clinical_history',
           'incapacity_rehabilitation_concept',
+          'incapacity_afp_follow_up',
+          'incapacity_economic_responsibility',
           'incapacity_capacity_loss_rating',
+          'incapacity_540_follow_up',
         ]);
 
       if (documentsError) throw documentsError;
