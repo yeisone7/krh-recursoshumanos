@@ -708,7 +708,7 @@ export function getLegalMilestones(origin: IncapacityOrigin, accumulatedDays: nu
     {
       key: 'day_180',
       day: 180,
-      title: '4. Actualización del caso y seguimiento prestacional (180 días)',
+      title: 'Actualización del caso y seguimiento prestacional (180 días)',
       description: 'Actualice el estado del caso y registre los soportes del seguimiento prestacional.',
       documentEntityType: 'incapacity_capacity_loss_rating',
       level: accumulatedDays >= 180 ? 'critical' : accumulatedDays >= 165 ? 'warning' : 'info',
