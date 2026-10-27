@@ -145,7 +145,7 @@ export function RecoveryFormDialog({
                     <SelectContent>
                       {Object.entries(recoveryStatusLabels).map(([value, label]) => (
                         <SelectItem key={value} value={value}>
-                          {value === 'aprobado' ? 'No cumple con las semanas cotizadas' : label}
+                          {label}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -207,7 +207,7 @@ export const recoveryStatusLabels: Record<RecoveryStatus, string> = {
   pendiente: 'Pendiente de Radicar',
   radicado: 'Radicado',
   en_tramite: 'En Trámite',
-  aprobado: 'Aprobado',
+  aprobado: 'No cumple con las semanas cotizadas',
   rechazado: 'Rechazado',
   pagado: 'Pagado',
   asumido_empresa: 'Asumido Empresa',
