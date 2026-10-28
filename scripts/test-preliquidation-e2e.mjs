@@ -31,6 +31,14 @@ const cases = [
   { id: 'manual', name: 'Conciliado', start: '08:00', end: '18:00', manual: true, expected: { 'Jornada (días)': 1, 'HEDO (hrs)': 3 } },
   { id: 'short', name: 'Parcial', start: '08:00', end: '11:30', expected: { 'Jornada (días)': 0.5 } },
   { id: 'rest', name: 'Descanso', start: '08:00', end: '18:00', rest: true, expected: { 'Descanso Remunerado': 1 } },
+  { id: 'novelty-only', name: 'Novedades sin turno', unassigned: true,
+    novelties: [{ type: 'hedo', hours: 2 }, { type: 'hedo', hours: 1.5 }, { type: 'hedo', hours: 10, status: 'pendiente' }, { type: 'hedo', hours: 20, status: 'rechazada' }],
+    expected: { 'Jornada (días)': 0, 'HEDO (hrs)': 3.5 } },
+  { id: 'novelty-override', name: 'Novedad conciliada', start: '08:00', end: '18:00', reconcileNovelty: true,
+    novelties: [{ type: 'hedo', hours: 1 }], expected: { 'Jornada (días)': 1, 'HEDO (hrs)': 1 } },
+  { id: 'novelty-holiday', name: 'Novedad festiva', start: '08:00', end: '15:00', date: '2026-10-28',
+    novelties: [{ type: 'hedo', hours: 1.5 }, { type: 'heno', hours: 2 }, { type: 'rn', hours: 0.5 }],
+    expected: { 'Festivo Trabajado': 1, 'HEDF (hrs)': 1.5, 'HENF (hrs)': 2, 'RNF (hrs)': 0.5 } },
 ];
 const uuid = i => `00000000-0000-4000-8000-${String(i + 10).padStart(12, '0')}`;
 cases.forEach((c, i) => { c.employee = uuid(i); });
@@ -42,9 +50,12 @@ const fixtures = {
     employee_work_info: [{ is_current: true, operation_center_id: 'center', operation_centers: { id: 'center', name: 'Centro E2E' } }], employee_employment_cycles: [], employee_contact: [] })),
   employee_schedule: cases.map(c => ({ id: `schedule-${c.id}`, employee_id: c.employee, valid_from: '2026-01-01', valid_to: null, rest_day: 'domingo',
     shift_types: { id: 'seven', name: 'Jornada 7 horas', start_time: '08:00', end_time: '16:00', break_duration_minutes: 60 } })),
-  employee_shift_assignments: cases.map(c => ({ id: `assignment-${c.id}`, employee_id: c.employee, assignment_date: c.date || day,
+  employee_shift_assignments: cases.filter(c => !c.unassigned).map(c => ({ id: `assignment-${c.id}`, employee_id: c.employee, assignment_date: c.date || day,
     shifts: { name: c.name, start_time: c.start, end_time: c.end, break_minutes: c.pause || 0, crosses_midnight: c.end <= c.start, is_rest_day: !!c.rest } })),
   overtime_records: cases.filter(c => c.manual).map(c => ({ employee_id: c.employee, work_date: day, overtime_type: 'extra_diurna', total_hours: 3, status: 'aprobado' })),
+  payroll_novelties: cases.flatMap(c => (c.novelties || []).map((n, i) => ({ id: `novelty-${c.id}-${i}`, company_id: company,
+    employee_id: c.employee, novelty_date: c.date || day, novelty_type: n.type, hours: n.hours, quantity: n.hours, quantity_unit: 'hours',
+    status: n.status || 'aprobada', source: 'manual' }))),
 };
 const authCode = `export const useAuth = () => ({currentCompanyId: '${company}', user: {id:'e2e'}, assignedCenterIds: [], isAdmin: true, isSuperAdmin: true, canView:()=>true, canCreate:()=>true, canExport:()=>true});`;
 const entry = `import React from 'react'; import {createRoot} from 'react-dom/client'; import {QueryClient,QueryClientProvider} from '@tanstack/react-query'; import Page from '/src/pages/PreLiquidacion.tsx'; import '/src/index.css'; createRoot(document.getElementById('root')).render(React.createElement(QueryClientProvider,{client:new QueryClient({defaultOptions:{queries:{retry:false}}})},React.createElement(Page)));`;
@@ -110,7 +121,7 @@ try {
     }
     for (const [key, value] of Object.entries(c.expected)) assert.equal(row[key], value, `${c.id}: ${key}`);
     if (c.id === 'pause') assert.match(row.Alerta, /proporcionalmente/);
-    if (c.manual) assert.match(row.Alerta, /sin duplicar/);
+    if (c.manual || c.reconcileNovelty) assert.match(row.Alerta, /sin duplicar/);
   }
   await page.screenshot({ path: path.join(out, 'results.png'), fullPage: true });
   // A one-day period must include prior-day shift tails, but not pay the day twice.
@@ -122,8 +133,9 @@ try {
   assert.equal(await cross.locator('td').nth(13).innerText(), '3');
   assert.equal(await cross.locator('td').nth(15).innerText(), '3');
   assert.ok(requests.some(r => r.table === 'employee_shift_assignments' && r.assignmentBounds.includes('gte.2026-10-27') && r.assignmentBounds.includes('lte.2026-10-28')));
+  assert.ok(requests.some(r => r.table === 'payroll_novelties' && r.query.company_id === `eq.${company}`), 'Novedades must be fetched for the selected company');
   assert.deepEqual(errors, []);
-  const result = { status: 'PASS', scenarios: cases.length, checks: ['real HTTP queries', 'Jornada 7h despite company 8h', 'day/night/holiday/rest', 'midnight and period carry-in', 'proportional break alert', 'approved overtime reconciliation', 'partial Jornada', 'downloaded Excel'], browserErrors: errors, productionWrites: 0 };
+  const result = { status: 'PASS', scenarios: cases.length, checks: ['real HTTP queries', 'Jornada 7h despite company 8h', 'day/night/holiday/rest', 'midnight and period carry-in', 'proportional break alert', 'approved overtime reconciliation', 'partial Jornada', 'approved Novedades without assigned shift', 'pending/rejected Novedades excluded', 'Novedades replace automatic hours with reconciliation alert', 'holiday reclassification of Novedades', 'downloaded Excel'], browserErrors: errors, productionWrites: 0 };
   await writeFile(path.join(out, 'result.json'), JSON.stringify({ ...result, requests, rows }, null, 2));
   console.log(JSON.stringify(result, null, 2));
 } finally { if (browser) await browser.close(); await server.close(); }

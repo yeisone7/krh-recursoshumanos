@@ -108,3 +108,17 @@ Evidencias locales generadas: `outputs/preliquidacion-e2e/result.json`, `results
 - Compilación de producción aprobada. ESLint de los archivos de código modificados aprobado.
 - TypeScript global no aprobado: presenta errores en otros módulos; no reporta errores en los archivos modificados para esta tarea.
 - Esta vista consolida cantidades y deducciones. No liquida importes salariales de extras/recargos ni salario neto. Esta revisión tampoco certifica máximos semanales, excepciones contractuales especiales o el calendario/configuración real de cada empresa.
+
+### Comprobación adicional del módulo de Novedades
+
+Se trazó el flujo real `usePayrollNovelties` → consulta de `payroll_novelties` por empresa/período → `PreLiquidacion` → motor → tabla → Excel. Las horas guardadas por el formulario están en `hours`; los conceptos personalizados conservan `quantity` y `quantity_unit`.
+
+La E2E se amplió de 8 a **11 escenarios** y pasó con datos HTTP controlados. Los tres nuevos casos verifican:
+
+- Dos novedades HEDO aprobadas de 2 y 1,5 horas, sin turno asignado: **3,5 HEDO**. Otras novedades de 10 horas pendiente y 20 horas rechazada se excluyen.
+- Turno que deriva 3 HEDO y novedad aprobada de 1 HEDO en la misma fecha: **1 HEDO**, con alerta. La cantidad aprobada sustituye la automática para ese concepto/fecha; no se suma a ella.
+- Novedades aprobadas en festivo simulado: 1,5 HEDO, 2 HENO y 0,5 RN se reclasifican a **1,5 HEDF, 2 HENF y 0,5 RNF**, respectivamente.
+
+Los resultados se verificaron en el Excel descargado. También pasaron **96 pruebas** del motor, la vista y el formulario de Novedades. No se modificó el motor durante esta comprobación.
+
+**Límite identificado:** las horas de una novedad se toman de su cantidad y concepto registrados, y se reclasifican por su fecha de descanso/festivo. Sus campos `start_time` y `end_time` no se transmiten al motor; por tanto, el desglose automático por cambio diurno/nocturno o por medianoche implementado para el Turno Día no se aplica a esos horarios de Novedades. Esta verificación no prueba que una novedad horaria con concepto incorrecto o que cruce medianoche se corrija automáticamente.
