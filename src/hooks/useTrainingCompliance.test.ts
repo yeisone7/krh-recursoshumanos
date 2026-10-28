@@ -33,7 +33,7 @@ describe('getApplicableComplianceCourses', () => {
     { id: 'plagas', name: 'CONTROL DE PLAGAS' },
   ];
 
-  it('includes every active catalog course when no period is selected', () => {
+  it('includes only assigned courses when no period is selected', () => {
     const result = getApplicableComplianceCourses(
       courses,
       null,
@@ -41,7 +41,7 @@ describe('getApplicableComplianceCourses', () => {
       new Set(['bienestar'])
     );
 
-    expect(result).toEqual(courses);
+    expect(result).toEqual([courses[0]]);
   });
 
   it('includes courses configured for the period even without a center link', () => {

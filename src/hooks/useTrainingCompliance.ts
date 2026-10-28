@@ -54,13 +54,20 @@ const trainingTokenPeriodFormatter = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'America/Bogota', year: 'numeric', month: '2-digit',
 });
 
+function getTrainingTokenPeriod(token: Pick<TrainingTokenCenterAssociation, 'created_at'>): TrainingPeriodInput {
+  const parts = trainingTokenPeriodFormatter.formatToParts(new Date(token.created_at));
+  return {
+    year: Number(parts.find(part => part.type === 'year')?.value),
+    month: Number(parts.find(part => part.type === 'month')?.value),
+  };
+}
+
 export function isTrainingTokenInPeriod(
   token: Pick<TrainingTokenCenterAssociation, 'created_at'>,
   period: TrainingPeriodInput
 ) {
-  const parts = trainingTokenPeriodFormatter.formatToParts(new Date(token.created_at));
-  return Number(parts.find(part => part.type === 'year')?.value) === period.year
-    && Number(parts.find(part => part.type === 'month')?.value) === period.month;
+  const tokenPeriod = getTrainingTokenPeriod(token);
+  return tokenPeriod.year === period.year && tokenPeriod.month === period.month;
 }
 
 export function isEmployeeApplicableToTrainingPeriod(
@@ -79,8 +86,6 @@ export function getApplicableComplianceCourses<T extends { id: string }>(
   configuredPeriodCourseIds: Set<string> | null,
   periodCenterCourseIds?: Set<string>
 ) {
-  if (!period) return courses;
-
   return courses.filter((course) =>
     configuredPeriodCourseIds?.has(course.id) || periodCenterCourseIds?.has(course.id)
   );
@@ -360,11 +365,9 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
         latestCoursePeriods.set(assignment.course_id, assignment);
       }
     }
-    const configuredPeriodCourseIds = period
-      ? new Set((periodAssignments.data || [])
-          .filter(assignment => assignment.year === period.year && assignment.month === period.month)
-          .map((assignment) => assignment.course_id))
-      : null;
+    const configuredPeriodCourseIds = new Set((periodAssignments.data || [])
+      .filter(assignment => !period || (assignment.year === period.year && assignment.month === period.month))
+      .map((assignment) => assignment.course_id));
     const periodTokenCourseIds = new Set<string>();
 
     if (employees.data && centers.data && courses.data && completions.data && tokenAssociations.data && periodAssignments.data) {
@@ -377,10 +380,21 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
         employeesByCenter.set(employee.operation_center_id, group);
       }
       const periodCenterCourseMap = new Map<string, Set<string>>();
+      const latestCenterCoursePeriods = new Map<string, Map<string, TrainingPeriodInput>>();
       for (const assoc of tokenAssociations.data) {
         if (!assoc.operation_center_id) continue;
         if (latestCoursePeriods.has(assoc.course_id)) continue;
-        if (period && isTrainingTokenInPeriod(assoc, period)) {
+        const tokenPeriod = getTrainingTokenPeriod(assoc);
+        let centerPeriods = latestCenterCoursePeriods.get(assoc.operation_center_id);
+        if (!centerPeriods) {
+          centerPeriods = new Map();
+          latestCenterCoursePeriods.set(assoc.operation_center_id, centerPeriods);
+        }
+        const latest = centerPeriods.get(assoc.course_id);
+        if (!latest || tokenPeriod.year * 12 + tokenPeriod.month > latest.year * 12 + latest.month) {
+          centerPeriods.set(assoc.course_id, tokenPeriod);
+        }
+        if (!period || (tokenPeriod.year === period.year && tokenPeriod.month === period.month)) {
           if (!periodCenterCourseMap.has(assoc.operation_center_id)) {
             periodCenterCourseMap.set(assoc.operation_center_id, new Set());
           }
@@ -407,7 +421,10 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
 
         for (const course of applicableCourses) {
           const targetCourseKeys = getCourseMatchKeys(course);
-          const applicablePeriod = period || latestCoursePeriods.get(course.id);
+          // Configured periods take precedence. Legacy links apply only to
+          // their center and month, including in the all-periods summary.
+          const applicablePeriod = period || latestCoursePeriods.get(course.id)
+            || latestCenterCoursePeriods.get(center.id)?.get(course.id);
           const courseEmployees = applicablePeriod
             ? centerEmployees.filter(employee => isEmployeeApplicableToTrainingPeriod(employee.hire_date, applicablePeriod))
             : centerEmployees;
@@ -450,11 +467,9 @@ export function useTrainingCompliance(period?: TrainingPeriodInput | null) {
 
     return {
       complianceData,
-      courses: period
-        ? (courses.data || []).filter((course) =>
-            configuredPeriodCourseIds?.has(course.id) || periodTokenCourseIds.has(course.id)
-          )
-        : courses.data || [],
+      courses: (courses.data || []).filter((course) =>
+        configuredPeriodCourseIds.has(course.id) || periodTokenCourseIds.has(course.id)
+      ),
     };
   }, [employees.data, centers.data, courses.data, completions.data, tokenAssociations.data, periodAssignments.data, period]);
 

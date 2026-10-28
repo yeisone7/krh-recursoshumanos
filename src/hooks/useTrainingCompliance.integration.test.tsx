@@ -27,7 +27,7 @@ function completion(id: string, employeeId: string | null, document: string | nu
 }
 beforeEach(() => {
   mocks.auth = { currentCompanyId: 'company', user: { id: 'viewer' }, assignedCenterIds: ['north'], isAdmin: false, isSuperAdmin: false };
-  mocks.periods = [];
+  mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }];
   tables = {
     employees_v2: [employee('1'), employee('2'), employee('3', 'south'), employee('4', 'other', 'other-company')],
     operation_centers: [{ id: 'north', name: 'Norte', company_id: 'company' }, { id: 'south', name: 'Sur', company_id: 'company' }, { id: 'other', name: 'Otra empresa', company_id: 'other-company' }],
@@ -95,13 +95,13 @@ describe('training compliance with restricted center access', () => {
     expect(result.current.complianceData[0].courses[0].total).toBe(1);
   });
 
-  it('counts a multi-period course once and keeps undated courses required in the all-periods summary', async () => {
+  it('counts a multi-period course once and excludes unassigned catalog courses', async () => {
     mocks.periods = [{ course_id: 'course', year: 2026, month: 9 }, { course_id: 'course', year: 2026, month: 11 }];
     tables.employees_v2 = [employee('1'), employee('2', 'north', 'company', '2026-10-20')];
     tables.training_courses.push({ ...tables.training_courses[0], id: 'undated', name: 'Sin periodo', code: 'LEGACY' });
     const { result } = await mount();
-    expect(result.current.complianceData[0].courses).toHaveLength(2);
-    expect(result.current.complianceData[0].courses.map(c => c.total)).toEqual([2, 2]);
+    expect(result.current.complianceData[0].courses).toHaveLength(1);
+    expect(result.current.complianceData[0].courses.map(c => c.total)).toEqual([2]);
     expect(result.current.complianceData[0].totalEmployees).toBe(2);
   });
 
@@ -128,10 +128,47 @@ describe('training compliance with restricted center access', () => {
   });
 
   it('retains legacy monthly link visibility while excluding hires after that month', async () => {
+    mocks.periods = [];
     tables.employees_v2 = [employee('1'), employee('2', 'north', 'company', '2026-10-20')];
     tables.training_access_tokens = [{ company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-09-02T12:00:00Z' }];
     const { result } = await mount({ year: 2026, month: 9 });
     expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 1, percentage: 100 });
+  });
+
+  it('excludes the three reported October hires from legacy August/September courses in all periods', async () => {
+    mocks.periods = [];
+    tables.employees_v2 = [employee('1'), ...[
+      ['37687372', '2026-10-28'], ['1002319385', '2026-10-28'], ['1005180158', '2026-10-22'],
+    ].map(([document, hireDate]) => ({ ...employee(document, 'north', 'company', hireDate), document_number: document }))];
+    tables.training_access_tokens = ['2026-08-02T12:00:00Z', '2026-09-02T12:00:00Z'].map(created_at => ({
+      company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at,
+    }));
+    const { result } = await mount();
+    expect(result.current.complianceData[0]).toMatchObject({ totalEmployees: 1 });
+    expect(result.current.complianceData[0].courses[0]).toMatchObject({ total: 1, completedCount: 1, percentage: 100, pending: [] });
+  });
+
+  it('uses the latest legacy link month per center, including Colombia month boundaries', async () => {
+    mocks.periods = [];
+    mocks.auth.isAdmin = true;
+    tables.employees_v2 = [employee('1', 'north', 'company', '2026-10-31'), employee('2', 'south', 'company', '2026-10-01')];
+    tables.training_completions = [];
+    tables.training_access_tokens = [
+      { company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-09-02T12:00:00Z' },
+      { company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-10-02T12:00:00Z' },
+      { company_id: 'company', course_id: 'course', operation_center_id: 'south', created_at: '2026-10-01T02:00:00Z' },
+    ];
+    const { result } = await mount();
+    expect(result.current.complianceData).toHaveLength(1);
+    expect(result.current.complianceData[0]).toMatchObject({ center_id: 'north', totalEmployees: 1 });
+    expect(result.current.complianceData[0].courses[0].pending.map(e => e.id)).toEqual(['1']);
+  });
+
+  it('does not shift configured past courses to a later link month in all periods', async () => {
+    tables.employees_v2 = [employee('1', 'north', 'company', '2026-10-01')];
+    tables.training_access_tokens = [{ company_id: 'company', course_id: 'course', operation_center_id: 'north', created_at: '2026-10-02T12:00:00Z' }];
+    const { result } = await mount();
+    expect(result.current.complianceData).toEqual([]);
   });
 
   it('reuses the calculated matrix when the page rerenders for a search keystroke', async () => {
@@ -201,6 +238,7 @@ describe('training compliance with restricted center access', () => {
   });
 
   it('keeps period link associations scoped to the selected company', async () => {
+    mocks.periods = [];
     mocks.auth.isAdmin = true;
     tables.training_access_tokens = [{ company_id: 'other-company', course_id: 'course', operation_center_id: 'north', created_at: '2026-09-02T12:00:00Z' }];
     const { result } = await mount({ year: 2026, month: 9 });
