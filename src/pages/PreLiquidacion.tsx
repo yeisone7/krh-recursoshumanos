@@ -279,7 +279,9 @@ export default function PreLiquidacion() {
       return {
         id: e.id,
         first_name: e.first_name,
+        middle_name: e.middle_name,
         last_name: e.last_name,
+        second_last_name: e.second_last_name,
         document_number: e.document_number,
         operationCenterIds: centerIds,
         operationCenterName: centerNames.length > 0 ? centerNames.join(', ') : 'Sin asignar',
@@ -424,7 +426,7 @@ export default function PreLiquidacion() {
               Calcular
             </Button>
             <div className="w-full lg:w-auto">
-              <PreLiquidationExport rows={rows} startDate={startDate} endDate={endDate} />
+              <PreLiquidationExport rows={rows} startDate={startDate} endDate={endDate} dailyHours={config?.daily_hours || 8} />
             </div>
             
             {/* Close period button */}

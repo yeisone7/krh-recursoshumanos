@@ -122,3 +122,13 @@ La E2E se amplió de 8 a **11 escenarios** y pasó con datos HTTP controlados. L
 Los resultados se verificaron en el Excel descargado. También pasaron **96 pruebas** del motor, la vista y el formulario de Novedades. No se modificó el motor durante esta comprobación.
 
 **Límite identificado:** las horas de una novedad se toman de su cantidad y concepto registrados, y se reclasifican por su fecha de descanso/festivo. Sus campos `start_time` y `end_time` no se transmiten al motor; por tanto, el desglose automático por cambio diurno/nocturno o por medianoche implementado para el Turno Día no se aplica a esos horarios de Novedades. Esta verificación no prueba que una novedad horaria con concepto incorrecto o que cruce medianoche se corrija automáticamente.
+
+### Nombres completos, documento y horas en Excel
+
+La preliquidación ahora transmite y muestra primer nombre, segundo nombre, primer apellido y segundo apellido, omitiendo partes vacías. Las tarjetas móviles permiten que el nombre se distribuya en varias líneas.
+
+La exportación usa `dayConceptHours` para Jornada, Descanso Obligatorio Trabajado, Festivo Trabajado, Descanso Remunerado, No trabajado y Suspensión. Las cabeceras indican `(hrs)`. Así, una Jornada individual de 7 horas se exporta como 7 y dos Jornadas de 7 y 8 horas se exportan como 15, independientemente de las horas generales de la empresa. Incapacidad, Vacaciones, Permisos y Total Días conservan las unidades indicadas en sus cabeceras; los conceptos personalizados conservan su unidad propia.
+
+La columna Documento se escribe explícitamente como texto (`t: 's'`, formato `@`), con ancho suficiente para documentos largos. Se verifica que `001234567890123456` conserve sus ceros y dígitos después de serializar y volver a leer el XLSX. Esto no crea documentos ausentes en los datos de origen.
+
+Verificación: **102 pruebas específicas aprobadas**, incluidos nombres completos en el grid y lectura de los bytes reales del XLSX; **11 escenarios E2E aprobados** con comprobación del archivo descargado. Compilación de producción y ESLint aprobados. No se alteraron las reglas del cálculo de horas en este ajuste.

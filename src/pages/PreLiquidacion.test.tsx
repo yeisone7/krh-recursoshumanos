@@ -6,7 +6,7 @@ import PreLiquidacion from './PreLiquidacion';
 
 const mocks = vi.hoisted(() => ({
   company: 'company-1', from: vi.fn(), toast: vi.fn(),
-  employees: [{ id: 'employee-1', first_name: 'Ana', last_name: 'Prueba', document_number: 'TEST-1', work_info: { operation_center_id: 'center-1' }, active_employment_cycle: { id: 'cycle-1' } }],
+  employees: [{ id: 'employee-1', first_name: 'Ana', middle_name: null as string | null, last_name: 'Prueba', second_last_name: null as string | null, document_number: 'TEST-1', work_info: { operation_center_id: 'center-1' }, active_employment_cycle: { id: 'cycle-1' } }],
 }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: mocks.from } }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ currentCompanyId: mocks.company, user: { id: 'user-1' } }) }));
@@ -30,6 +30,7 @@ let clients: QueryClient[];
 
 beforeEach(() => {
   mocks.company = 'company-1';
+  Object.assign(mocks.employees[0], { middle_name: null, second_last_name: null, document_number: 'TEST-1' });
   tables = {
     employee_schedule: [
       { id: 'current', valid_from: '2026-09-01', employee_id: 'employee-1', employment_cycle_id: 'cycle-1', rest_day: 'martes', shift_types: { name: 'Diurno', start_time: '08:00', end_time: '16:00', break_duration_minutes: 0 } },
@@ -96,9 +97,26 @@ describe('vista de preliquidación: consultas → cálculo → tabla → Excel',
     fireEvent.click(screen.getByRole('button', { name: 'Exportar Excel' }));
     const workbook = vi.mocked(XLSX.writeFile).mock.calls[0][0];
     expect(XLSX.utils.sheet_to_json(workbook.Sheets['Pre-Liquidación'])).toEqual([
-      expect.objectContaining({ 'Día de Descanso Obligatorio': 'martes', 'Jornada (días)': 1, 'Descanso Obligatorio Trabajado (días)': 1, 'Total Días': 2 }),
+      expect.objectContaining({ 'Día de Descanso Obligatorio': 'martes', 'Jornada (hrs)': 8, 'Descanso Obligatorio Trabajado (hrs)': 8, 'Total Días': 2 }),
     ]);
     expect(requests.every(request => request.filters.some(([key, value]) => ['company_id', 'employees_v2.company_id'].includes(key) && value === 'company-1'))).toBe(true);
+  });
+  it('muestra nombres completos y conserva documento y horas en un Excel real', async () => {
+    Object.assign(mocks.employees[0], { middle_name: 'María', second_last_name: 'Gómez', document_number: '001234567890123456' });
+    tables.employee_schedule[0].shift_types = { name: 'Jornada 7h', start_time: '08:00', end_time: '15:00', break_duration_minutes: 0 };
+    mount(); calculate();
+    await screen.findByText('Ana María Prueba Gómez');
+    expect(screen.getByText('001234567890123456')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Exportar Excel' }));
+    const workbook = vi.mocked(XLSX.writeFile).mock.calls[0][0];
+    // Serialize and read the XLSX bytes, rather than inspecting only a mocked data array.
+    const readback = XLSX.read(XLSX.write(workbook, { type: 'array', bookType: 'xlsx' }), { type: 'array' });
+    const sheet = readback.Sheets['Pre-Liquidación'];
+    expect(XLSX.utils.sheet_to_json(sheet)).toEqual([expect.objectContaining({
+      Empleado: 'Ana María Prueba Gómez', Documento: '001234567890123456',
+      'Jornada (hrs)': 7, 'Descanso Obligatorio Trabajado (hrs)': 7,
+    })]);
+    expect(sheet.B2).toMatchObject({ t: 's', v: '001234567890123456' });
   });
   it('oculta resultados y bloquea exportación si una consulta falla; permite reintentar', async () => {
     failTable = 'employee_schedule';

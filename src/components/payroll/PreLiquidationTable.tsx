@@ -108,7 +108,7 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2">
                       {row.hasWarning && <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />}
-                      <h3 className="truncate text-sm font-semibold text-card-foreground">{row.employeeName}</h3>
+                      <h3 className="break-words text-sm font-semibold text-card-foreground">{row.employeeName}</h3>
                     </div>
                     <p className="text-xs text-muted-foreground">{row.documentNumber}</p>
                     <div className="grid gap-1 pt-1 text-xs text-muted-foreground">

@@ -81,7 +81,9 @@ export interface PreLiquidationData {
   employees: Array<{
     id: string;
     first_name: string;
+    middle_name?: string | null;
     last_name: string;
+    second_last_name?: string | null;
     document_number: string;
     operationCenterIds: string[];
     operationCenterName: string;
@@ -543,8 +545,8 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       customConcepts,
       dayConceptHours,
       employeeId: emp.id,
-      employeeName: `${emp.first_name} ${emp.last_name}`,
-      documentNumber: emp.document_number,
+      employeeName: [emp.first_name, emp.middle_name, emp.last_name, emp.second_last_name].map(part => part?.trim()).filter(Boolean).join(' '),
+      documentNumber: String(emp.document_number ?? '').trim(),
       operationCenterIds: emp.operationCenterIds,
       operationCenterName: emp.operationCenterName,
       restDay: schedules === undefined ? emp.restDay : [...restLabels].join(' / ') || 'Sin asignar',

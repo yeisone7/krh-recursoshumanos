@@ -23,30 +23,30 @@ await mkdir(out, { recursive: true });
 const company = '00000000-0000-4000-8000-000000000001';
 const day = '2026-10-27';
 const cases = [
-  { id: 'day', name: 'Diurno', start: '08:00', end: '18:00', expected: { 'Jornada (días)': 1, 'HEDO (hrs)': 3 } },
-  { id: 'mixed', name: 'Mixto', start: '14:00', end: '23:00', expected: { 'Jornada (días)': 1, 'HENO (hrs)': 2, 'RN (hrs)': 2 } },
-  { id: 'holiday', name: 'Festivo', start: '08:00', end: '18:00', date: '2026-10-28', expected: { 'Festivo Trabajado': 1, 'HEDF (hrs)': 3 } },
-  { id: 'cross', name: 'Medianoche', start: '20:00', end: '06:00', expected: { 'Jornada (días)': 1, 'RN (hrs)': 4, 'RNF (hrs)': 3, 'HENF (hrs)': 3 } },
-  { id: 'pause', name: 'Pausa', start: '14:00', end: '00:00', pause: 60, expected: { 'Jornada (días)': 1, 'HENO (hrs)': 2, 'RN (hrs)': 2.5 } },
-  { id: 'manual', name: 'Conciliado', start: '08:00', end: '18:00', manual: true, expected: { 'Jornada (días)': 1, 'HEDO (hrs)': 3 } },
-  { id: 'short', name: 'Parcial', start: '08:00', end: '11:30', expected: { 'Jornada (días)': 0.5 } },
-  { id: 'rest', name: 'Descanso', start: '08:00', end: '18:00', rest: true, expected: { 'Descanso Remunerado': 1 } },
+  { id: 'day', name: 'Diurno', start: '08:00', end: '18:00', expected: { 'Jornada (hrs)': 7, 'HEDO (hrs)': 3 } },
+  { id: 'mixed', name: 'Mixto', start: '14:00', end: '23:00', expected: { 'Jornada (hrs)': 7, 'HENO (hrs)': 2, 'RN (hrs)': 2 } },
+  { id: 'holiday', name: 'Festivo', start: '08:00', end: '18:00', date: '2026-10-28', expected: { 'Festivo Trabajado (hrs)': 7, 'HEDF (hrs)': 3 } },
+  { id: 'cross', name: 'Medianoche', start: '20:00', end: '06:00', expected: { 'Jornada (hrs)': 7, 'RN (hrs)': 4, 'RNF (hrs)': 3, 'HENF (hrs)': 3 } },
+  { id: 'pause', name: 'Pausa', start: '14:00', end: '00:00', pause: 60, expected: { 'Jornada (hrs)': 7, 'HENO (hrs)': 2, 'RN (hrs)': 2.5 } },
+  { id: 'manual', name: 'Conciliado', start: '08:00', end: '18:00', manual: true, expected: { 'Jornada (hrs)': 7, 'HEDO (hrs)': 3 } },
+  { id: 'short', name: 'Parcial', start: '08:00', end: '11:30', expected: { 'Jornada (hrs)': 3.5 } },
+  { id: 'rest', name: 'Descanso', start: '08:00', end: '18:00', rest: true, expected: { 'Descanso Remunerado (hrs)': 7 } },
   { id: 'novelty-only', name: 'Novedades sin turno', unassigned: true,
     novelties: [{ type: 'hedo', hours: 2 }, { type: 'hedo', hours: 1.5 }, { type: 'hedo', hours: 10, status: 'pendiente' }, { type: 'hedo', hours: 20, status: 'rechazada' }],
-    expected: { 'Jornada (días)': 0, 'HEDO (hrs)': 3.5 } },
+    expected: { 'Jornada (hrs)': 0, 'HEDO (hrs)': 3.5 } },
   { id: 'novelty-override', name: 'Novedad conciliada', start: '08:00', end: '18:00', reconcileNovelty: true,
-    novelties: [{ type: 'hedo', hours: 1 }], expected: { 'Jornada (días)': 1, 'HEDO (hrs)': 1 } },
+    novelties: [{ type: 'hedo', hours: 1 }], expected: { 'Jornada (hrs)': 7, 'HEDO (hrs)': 1 } },
   { id: 'novelty-holiday', name: 'Novedad festiva', start: '08:00', end: '15:00', date: '2026-10-28',
     novelties: [{ type: 'hedo', hours: 1.5 }, { type: 'heno', hours: 2 }, { type: 'rn', hours: 0.5 }],
-    expected: { 'Festivo Trabajado': 1, 'HEDF (hrs)': 1.5, 'HENF (hrs)': 2, 'RNF (hrs)': 0.5 } },
+    expected: { 'Festivo Trabajado (hrs)': 7, 'HEDF (hrs)': 1.5, 'HENF (hrs)': 2, 'RNF (hrs)': 0.5 } },
 ];
 const uuid = i => `00000000-0000-4000-8000-${String(i + 10).padStart(12, '0')}`;
-cases.forEach((c, i) => { c.employee = uuid(i); });
+cases.forEach((c, i) => { c.employee = uuid(i); c.document = i === 0 ? '001234567890123456' : c.id; });
 const fixtures = {
   payroll_labor_config: { daily_hours: 8, display_unit: 'hours', night_start: '19:00', night_end: '06:00', max_weekly_hours: 42 },
   operation_centers: [{ id: 'center', name: 'Centro E2E', company_id: company }],
   company_holidays: [{ holiday_date: '2026-10-28' }],
-  employees_v2: cases.map(c => ({ id: c.employee, company_id: company, first_name: c.name, last_name: 'E2E', document_number: c.id, is_active: true,
+  employees_v2: cases.map(c => ({ id: c.employee, company_id: company, first_name: c.name, middle_name: c.id === 'day' ? 'María' : null, last_name: 'E2E', second_last_name: c.id === 'day' ? 'Gómez' : null, document_number: c.document, is_active: true,
     employee_work_info: [{ is_current: true, operation_center_id: 'center', operation_centers: { id: 'center', name: 'Centro E2E' } }], employee_employment_cycles: [], employee_contact: [] })),
   employee_schedule: cases.map(c => ({ id: `schedule-${c.id}`, employee_id: c.employee, valid_from: '2026-01-01', valid_to: null, rest_day: 'domingo',
     shift_types: { id: 'seven', name: 'Jornada 7 horas', start_time: '08:00', end_time: '16:00', break_duration_minutes: 60 } })),
@@ -99,10 +99,10 @@ try {
   await page.getByLabel('Fecha inicio').fill(day);
   await page.getByLabel('Fecha fin').fill('2026-10-28');
   await page.getByRole('button', { name: 'Calcular', exact: true }).click();
-  await page.getByText('Diurno E2E', { exact: true }).waitFor();
+  await page.getByText('Diurno María E2E Gómez', { exact: true }).waitFor();
   assert.equal(await page.locator('tbody tr').count(), cases.length);
   // General company daily_hours=8 must not turn this employee's Jornada into 8h.
-  const diurno = page.locator('tbody tr').filter({ hasText: 'Diurno E2E' });
+  const diurno = page.locator('tbody tr').filter({ hasText: 'Diurno María E2E Gómez' });
   assert.equal(await diurno.locator('td').nth(4).innerText(), '7');
   assert.equal(await diurno.locator('td').nth(10).innerText(), '3');
   const partial = page.locator('tbody tr').filter({ hasText: 'Parcial E2E' });
@@ -114,8 +114,9 @@ try {
   await download.saveAs(excelPath);
   const wb = XLSX.readFile(excelPath), rows = XLSX.utils.sheet_to_json(wb.Sheets['Pre-Liquidación']);
   for (const c of cases) {
-    const row = rows.find(r => r.Documento === c.id);
+    const row = rows.find(r => r.Documento === c.document);
     assert.ok(row, `Missing Excel row ${c.id}`);
+    if (c.id === 'day') assert.equal(row.Empleado, 'Diurno María E2E Gómez');
     for (const concept of ['HEDO (hrs)', 'HENO (hrs)', 'HEDF (hrs)', 'HENF (hrs)', 'RN (hrs)', 'RNF (hrs)']) {
       assert.equal(row[concept], c.expected[concept] || 0, `${c.id}: ${concept}`);
     }
@@ -123,6 +124,7 @@ try {
     if (c.id === 'pause') assert.match(row.Alerta, /proporcionalmente/);
     if (c.manual || c.reconcileNovelty) assert.match(row.Alerta, /sin duplicar/);
   }
+  assert.equal(wb.Sheets['Pre-Liquidación'].B2.t, 's');
   await page.screenshot({ path: path.join(out, 'results.png'), fullPage: true });
   // A one-day period must include prior-day shift tails, but not pay the day twice.
   await page.getByLabel('Fecha inicio').fill('2026-10-28');
@@ -135,7 +137,7 @@ try {
   assert.ok(requests.some(r => r.table === 'employee_shift_assignments' && r.assignmentBounds.includes('gte.2026-10-27') && r.assignmentBounds.includes('lte.2026-10-28')));
   assert.ok(requests.some(r => r.table === 'payroll_novelties' && r.query.company_id === `eq.${company}`), 'Novedades must be fetched for the selected company');
   assert.deepEqual(errors, []);
-  const result = { status: 'PASS', scenarios: cases.length, checks: ['real HTTP queries', 'Jornada 7h despite company 8h', 'day/night/holiday/rest', 'midnight and period carry-in', 'proportional break alert', 'approved overtime reconciliation', 'partial Jornada', 'approved Novedades without assigned shift', 'pending/rejected Novedades excluded', 'Novedades replace automatic hours with reconciliation alert', 'holiday reclassification of Novedades', 'downloaded Excel'], browserErrors: errors, productionWrites: 0 };
+  const result = { status: 'PASS', scenarios: cases.length, checks: ['real HTTP queries', 'Jornada 7h despite company 8h', 'day/night/holiday/rest', 'midnight and period carry-in', 'proportional break alert', 'approved overtime reconciliation', 'partial Jornada', 'approved Novedades without assigned shift', 'pending/rejected Novedades excluded', 'Novedades replace automatic hours with reconciliation alert', 'holiday reclassification of Novedades', 'full names in grid and Excel', 'Jornadas exported in individual hours', 'document preserved as Excel text', 'downloaded Excel'], browserErrors: errors, productionWrites: 0 };
   await writeFile(path.join(out, 'result.json'), JSON.stringify({ ...result, requests, rows }, null, 2));
   console.log(JSON.stringify(result, null, 2));
 } finally { if (browser) await browser.close(); await server.close(); }
