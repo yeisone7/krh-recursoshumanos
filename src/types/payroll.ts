@@ -120,7 +120,10 @@ export interface PayrollNovelty {
 // =============================================
 // PRE-LIQUIDATION RESULT
 // =============================================
+export type PayrollDayConcept = 'jornada' | 'dominicalTrabajado' | 'festivoTrabajado' | 'descansoRemunerado' | 'noTrabajado' | 'suspension' | 'incapacidad' | 'vacaciones' | 'permiso';
 export interface PreLiquidationRow {
+  // Hours are accumulated per date using that employee's effective Jornada.
+  dayConceptHours?: Record<PayrollDayConcept, number>;
   customConcepts?: Record<string, { id: string; identifier: string; name: string; unit: 'hours' | 'days'; quantity: number }>;
   employeeId: string;
   employeeName: string;

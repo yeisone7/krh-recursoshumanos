@@ -38,7 +38,73 @@ Según la confirmación del usuario, una novedad diaria aprobada reemplaza lo pr
 - Las opciones `2_dias`, `4_dias` y `7_dias` no identifican por sí solas fechas concretas. Se consultó al usuario cómo obtenerlas. Mientras se define, generan una alerta y no se presume domingo.
 - Registros antiguos `dominical_*`/`festivo_*` de horas no distinguen trabajo ordinario con recargo de horas extra. Se dejan pendientes, con alerta, en lugar de convertirlos automáticamente en HEDF/HENF.
 - La vista consolida días/horas y deducciones; no calcula salario neto ni liquida monetariamente recargos. No se han validado aquí las tasas de otros módulos.
-- Se utiliza el descanso vigente del empleado y los turnos registrados. No se ha incorporado una reconstrucción histórica de cambios de descanso ni un desglose de turnos por hora a través de medianoche.
+- Esta limitación de la revisión inicial quedó superada por el histórico de jornadas y el desglose horario descrito en la verificación del 28 de octubre de 2026.
 - El cierre de préstamos no se ejecutó. Esta revisión no certifica su idempotencia o atomicidad.
 
 Las alertas se conservan en el Excel y bloquean el cierre cuando existen préstamos por registrar. Los cambios están en el workspace; no se desplegaron.
+
+
+## Verificación del motor horario — 28 de octubre de 2026
+
+Estado: **DONE_WITH_CONCERNS**. Motor y E2E verificados localmente; la suite general y TypeScript tienen fallos ajenos a estos cambios. No se desplegó ni se escribieron datos en producción.
+
+### Causa y regla de cálculo
+
+El motor anterior contabilizaba el día, pero no descomponía el horario del Turno Día. Las extras y los recargos dependían exclusivamente de registros adicionales. Una prueba ejecutada contra el código anterior confirmó que Jornada de 7 horas + Turno Día de 08:00 a 18:00 producía incorrectamente 0 HEDO.
+
+Ahora se obtiene la duración ordinaria de la Jornada vigente del empleado (`employee_schedule.shift_types`): intervalo entre inicio y fin menos `break_duration_minutes`. El Turno Día (`employee_shift_assignments.shifts`) aporta inicio, fin, cruce de medianoche y pausa. No se utiliza el horario de la Jornada como horario trabajado; se utiliza su duración neta como límite ordinario.
+
+El intervalo se divide por cambio de fecha, inicio/fin de la franja nocturna y agotamiento de las horas ordinarias. Cada hora excedente se clasifica en HEDO, HENO, HEDF o HENF. RN y RNF se aplican únicamente a horas ordinarias nocturnas; una misma hora no se suma también como extra.
+
+Se respeta la franja nocturna configurada por la empresa. Sin configuración se usa 19:00–06:00 desde el 25 de diciembre de 2025 y 21:00–06:00 antes de esa fecha. Referencia para la regla supletoria: [Ley 2466 de 2025, artículo 10](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=260676). Esto no verifica que las configuraciones existentes de cada empresa estén actualizadas.
+
+### Consistencia y decisiones
+
+- Cambios de Jornada y descanso se consultan por vigencia y ciclo laboral.
+- Las pausas del Turno Día se distribuyen proporcionalmente por todo el intervalo, por decisión del usuario. Si el turno atraviesa franjas diferentes, se emite alerta para revisar la ubicación real del descanso.
+- Un turno inferior a la duración ordinaria produce una fracción de Jornada; uno superior produce una Jornada y extras separadas.
+- La tabla en modo horas acumula las horas por concepto y por fecha usando la Jornada individual, incluso si cambia durante el período. No multiplica todo por las horas generales de la empresa. El Excel conserva días y extras/recargos en horas, con unidades explícitas.
+- Los días se atribuyen a la fecha de inicio de la asignación. Las extras y los recargos se atribuyen a la fecha civil de cada tramo. Por ello, un turno iniciado antes del período puede aportar horas sin sumar otra Jornada al período.
+- Se consulta también el día anterior, incluyendo Jornada histórica, correcciones, incapacidades, vacaciones y permisos, para calcular correctamente el arrastre de medianoche.
+- Descanso, no trabajado, suspensión, ausencias completas y correcciones diarias no generan horas automáticas de trabajo.
+- Un permiso parcial sin hora de inicio/fin conserva las fracciones del día, pero deja las horas automáticas pendientes con alerta: su ubicación no puede deducirse.
+- Cuando coinciden horas derivadas y registros aprobados para el mismo empleado, fecha civil y concepto, prevalece la suma de registros aprobados para ese concepto, con alerta de conciliación. No se suman de nuevo las automáticas. Los registros explícitos entre sí conservan su suma.
+- Turnos duplicados o solapados se dejan pendientes con alerta. Horarios inválidos, descansos negativos/excesivos y banderas de medianoche contradictorias no generan extras/recargos inventados.
+- Las alertas siguen exportándose y bloqueando el cierre del período.
+
+### E2E reproducible
+
+Ejecutar desde el repositorio:
+
+```powershell
+node scripts/test-preliquidation-e2e.mjs
+```
+
+El script usa Chromium, una instancia temporal de Vite, la página real, los hooks reales, el cliente HTTP de Supabase, el motor, la tabla y el archivo Excel descargado. La identidad y las respuestas HTTP se simulan con datos controlados. No valida autenticación, RLS ni persistencia contra una base real. Usa Playwright instalado o la instalación local de gstack; admite `PLAYWRIGHT_MODULE` para especificar otra ubicación.
+
+Se configuraron 8 horas generales por empresa y una Jornada individual de 7 horas. La tabla debe mostrar 7 horas ordinarias, no 8.
+
+| Caso | Turno Día | Resultado esperado y obtenido |
+|---|---|---|
+| Diurno | 08:00–18:00 | 1 Jornada; 3 HEDO |
+| Mixto | 14:00–23:00 | 1 Jornada; 2 RN; 2 HENO |
+| Festivo simulado | 08:00–18:00 | 1 festivo trabajado; 3 HEDF |
+| Medianoche hacia festivo simulado | 20:00–06:00 | 1 Jornada; 4 RN; 3 RNF; 3 HENF |
+| Pausa proporcional | 14:00–00:00, pausa 60 min | 1 Jornada; 2,5 RN; 2 HENO; alerta de pausa |
+| Conciliación | 08:00–18:00 + registro aprobado de 3 HEDO | 3 HEDO; alerta de conciliación |
+| Parcial | 08:00–11:30 | 0,5 Jornada; sin extras |
+| Descanso | Turno marcado como descanso | 1 descanso remunerado; sin extras ni recargos |
+
+Los festivos de la E2E son artificiales y no representan el calendario festivo real de octubre. Se verifican los seis conceptos horarios en el Excel, incluidos los valores cero. También se repite el cálculo para un período de un día: debe conservar el arrastre nocturno del turno anterior sin volver a sumar la Jornada.
+
+Evidencias locales generadas: `outputs/preliquidacion-e2e/result.json`, `results.png` y `pre-liquidacion_2026-10-27_2026-10-28.xlsx`. El JSON conserva consultas y filas exportadas. La captura incluye alertas de días sin programación que se dejan deliberadamente vacíos en los datos de prueba.
+
+### Verificaciones finales y límites
+
+- **99 pruebas específicas aprobadas**: 88 del hook/motor, 6 de la vista, 4 de tabla y 1 de exportación. La matriz interna de conservación de horas cubre 40 combinaciones de horarios y pausas.
+- **E2E aprobada: 8 escenarios**, sin errores de JavaScript ni escrituras a producción.
+- **Regresión probada**: el caso 7h + 08:00–18:00 falla contra el motor anterior (0 HEDO) y pasa con el actual (3 HEDO).
+- **Suite completa: 1124 aprobadas y 5 fallidas**, en 176 archivos. Las mismas cinco fallan con las fuentes de preliquidación anteriores: dos en `CortesControl.test.tsx` por falta de contexto Router; dos en `dotationSizes.test.ts` por expectativas de tallas; una en `hooks-company-filter.test.ts` por `useIncapacityLegalFollowUp.ts`.
+- Compilación de producción aprobada. ESLint de los archivos de código modificados aprobado.
+- TypeScript global no aprobado: presenta errores en otros módulos; no reporta errores en los archivos modificados para esta tarea.
+- Esta vista consolida cantidades y deducciones. No liquida importes salariales de extras/recargos ni salario neto. Esta revisión tampoco certifica máximos semanales, excepciones contractuales especiales o el calendario/configuración real de cada empresa.

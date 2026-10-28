@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { format, startOfMonth, endOfMonth } from 'date-fns';
+import { format, startOfMonth, endOfMonth, subDays } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,7 @@ export default function PreLiquidacion() {
   const today = new Date();
   const [startDate, setStartDate] = useState(format(startOfMonth(today), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(endOfMonth(today), 'yyyy-MM-dd'));
+  const calculationStart = format(subDays(new Date(`${startDate || format(today, 'yyyy-MM-dd')}T12:00:00`), 1), 'yyyy-MM-dd');
   const [calculated, setCalculated] = useState(false);
   const [selectedCenterIds, setSelectedCenterIds] = useState<string[]>([]);
 
@@ -68,8 +69,8 @@ export default function PreLiquidacion() {
   const { data: employees = [], ...employeesQuery } = useEmployees();
   const { data: operationCenters = [], ...operationCentersQuery } = useOperationCenters();
   const { data: holidaysSet, ...holidaysSetQuery } = useHolidaysSet();
-  const { data: assignments = [], ...assignmentsQuery } = useShiftAssignments({ startDate, endDate });
-  const { data: novelties = [], ...noveltiesQuery } = usePayrollNovelties({ startDate, endDate });
+  const { data: assignments = [], ...assignmentsQuery } = useShiftAssignments({ startDate: calculationStart, endDate });
+  const { data: novelties = [], ...noveltiesQuery } = usePayrollNovelties({ startDate: calculationStart, endDate });
 
   useEffect(() => {
     setSelectedCenterIds([]);
@@ -81,10 +82,10 @@ export default function PreLiquidacion() {
     queryFn: async () => fetchAllAnalyticsRows(async (from, to) => {
       const { data, error } = await supabase
         .from('employee_schedule')
-        .select('id, employee_id, employment_cycle_id, rest_day, valid_from, valid_to, shift_type_id, shift_types(id, name)')
+        .select('id, employee_id, employment_cycle_id, rest_day, valid_from, valid_to, shift_type_id, shift_types(id, name, start_time, end_time, break_duration_minutes)')
         .eq('company_id', currentCompanyId!)
         .lte('valid_from', endDate)
-        .or(`valid_to.is.null,valid_to.gte.${startDate}`)
+        .or(`valid_to.is.null,valid_to.gte.${calculationStart}`)
         .order('updated_at', { ascending: false })
         .order('id')
         .range(from, to);
@@ -109,7 +110,7 @@ export default function PreLiquidacion() {
       const { data, error } = await supabase.from('employee_time_config')
         .select('id, employee_id, employment_cycle_id, start_date, end_date, mode, work_schedules(name, days_of_week)')
         .eq('company_id', currentCompanyId!).lte('start_date', endDate)
-        .or(`end_date.is.null,end_date.gte.${startDate}`).order('id').range(from, to);
+        .or(`end_date.is.null,end_date.gte.${calculationStart}`).order('id').range(from, to);
       return { data, error };
     }),
     enabled: !!currentCompanyId && calculated,
@@ -142,7 +143,7 @@ export default function PreLiquidacion() {
         .select('employee_id, start_date, end_date')
         .eq('company_id', currentCompanyId!)
         .lte('start_date', endDate)
-        .gte('end_date', startDate)
+        .gte('end_date', calculationStart)
         .order('id')
         .range(from, to);
       return { data, error };
@@ -158,7 +159,7 @@ export default function PreLiquidacion() {
         .from('vacation_requests')
         .select('employee_id, start_date, end_date, status, request_type, interruption_date, resume_start_date, resume_end_date')
         .eq('company_id', currentCompanyId!)
-        .or(`and(start_date.lte.${endDate},end_date.gte.${startDate}),and(resume_start_date.lte.${endDate},resume_end_date.gte.${startDate})`)
+        .or(`and(start_date.lte.${endDate},end_date.gte.${calculationStart}),and(resume_start_date.lte.${endDate},resume_end_date.gte.${calculationStart})`)
         .in('status', ['aprobado', 'en_curso', 'completado', 'interrumpido'])
         .order('id')
         .range(from, to);
@@ -176,7 +177,7 @@ export default function PreLiquidacion() {
         .select('employee_id, start_date, end_date, status, duration_type, total_hours')
         .eq('company_id', currentCompanyId!)
         .lte('start_date', endDate)
-        .gte('end_date', startDate)
+        .gte('end_date', calculationStart)
         .in('status', ['aprobado'])
         .order('id')
         .range(from, to);
@@ -472,7 +473,7 @@ export default function PreLiquidacion() {
       {/* Config summary */}
       {config && (
         <div className="flex gap-2 flex-wrap">
-          <Badge variant="outline">Jornada: {config.daily_hours}h/día</Badge>
+          <Badge variant="outline">Jornada supletoria: {config.daily_hours}h/día</Badge>
           <Badge variant="outline">Máx semanal: {config.max_weekly_hours}h</Badge>
           <Badge variant="outline">Nocturno: {config.night_start?.substring(0, 5)}-{config.night_end?.substring(0, 5)}</Badge>
         </div>

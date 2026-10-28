@@ -32,12 +32,12 @@ beforeEach(() => {
   mocks.company = 'company-1';
   tables = {
     employee_schedule: [
-      { employee_id: 'employee-1', employment_cycle_id: 'cycle-1', rest_day: 'martes', shift_types: { name: 'Diurno' } },
+      { id: 'current', valid_from: '2026-09-01', employee_id: 'employee-1', employment_cycle_id: 'cycle-1', rest_day: 'martes', shift_types: { name: 'Diurno', start_time: '08:00', end_time: '16:00', break_duration_minutes: 0 } },
       // Older current rows must not overwrite the newest row in the same cycle.
-      { employee_id: 'employee-1', employment_cycle_id: 'cycle-1', rest_day: 'domingo', shift_types: { name: 'Anterior' } },
+      { id: 'old', valid_from: '2026-08-01', valid_to: '2026-08-31', employee_id: 'employee-1', employment_cycle_id: 'cycle-1', rest_day: 'domingo', shift_types: { name: 'Anterior' } },
     ],
     employee_shift_assignments: ['2026-09-22', '2026-09-27'].map(assignment_date => ({
-      id: assignment_date, employee_id: 'employee-1', assignment_date, shifts: { is_rest_day: false },
+      id: assignment_date, employee_id: 'employee-1', assignment_date, shifts: { is_rest_day: false, start_time: '08:00', end_time: '16:00', break_minutes: 0, crosses_midnight: false },
     })),
   };
   failTable = undefined;
@@ -89,14 +89,14 @@ describe('vista de preliquidación: consultas → cálculo → tabla → Excel',
     expect(screen.getByRole('button', { name: 'Exportar Excel' })).toBeDisabled();
     release();
     const cells = await resultCells();
-    expect(cells[2]).toHaveTextContent('Martes');
-    expect(cells[4]).toHaveTextContent('1.0');
-    expect(cells[5]).toHaveTextContent('1.0');
+    expect(cells[2]).toHaveTextContent('martes');
+    expect(cells[4]).toHaveTextContent('1');
+    expect(cells[5]).toHaveTextContent('1');
     expect(cells[19]).toHaveTextContent('2');
     fireEvent.click(screen.getByRole('button', { name: 'Exportar Excel' }));
     const workbook = vi.mocked(XLSX.writeFile).mock.calls[0][0];
     expect(XLSX.utils.sheet_to_json(workbook.Sheets['Pre-Liquidación'])).toEqual([
-      expect.objectContaining({ 'Día de Descanso Obligatorio': 'Martes', 'Jornada (días)': 1, 'Dominical Trabajado': 1, 'Total Días': 2 }),
+      expect.objectContaining({ 'Día de Descanso Obligatorio': 'martes', 'Jornada (días)': 1, 'Descanso Obligatorio Trabajado (días)': 1, 'Total Días': 2 }),
     ]);
     expect(requests.every(request => request.filters.some(([key, value]) => ['company_id', 'employees_v2.company_id'].includes(key) && value === 'company-1'))).toBe(true);
   });
@@ -117,8 +117,8 @@ describe('vista de preliquidación: consultas → cálculo → tabla → Excel',
     }
     mount(); calculate();
     const cells = await resultCells();
-    expect(cells[5]).toHaveTextContent('1.0');
-    expect(cells[10]).toHaveTextContent('2.0');
+    expect(cells[5]).toHaveTextContent('1');
+    expect(cells[10]).toHaveTextContent('2');
     for (const table of ['employee_shift_assignments', 'employee_schedule', 'payroll_novelties']) {
       expect(requests).toContainEqual(expect.objectContaining({ table, from: 1000, to: 1999 }));
     }

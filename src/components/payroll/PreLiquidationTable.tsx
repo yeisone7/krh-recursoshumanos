@@ -62,6 +62,9 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
     return value.toLocaleString('es-CO', { maximumFractionDigits: 4 });
   };
 
+  const fmtDay = (row: PreLiquidationRow, key: 'jornada' | 'dominicalTrabajado' | 'festivoTrabajado' | 'descansoRemunerado' | 'noTrabajado' | 'suspension') =>
+    displayUnit === 'hours' && row.dayConceptHours ? fmt(row.dayConceptHours[key], true) : fmt(row[key]);
+
   const fmtMoney = (value: number) => {
     if (value === 0) return '-';
     return `$${value.toLocaleString('es-CO', { minimumFractionDigits: 0 })}`;
@@ -81,12 +84,12 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
         <div className="space-y-3">
           {pageRows.map(row => {
             const conceptos = [
-              { label: 'Jornada', value: fmt(row.jornada) },
-              { label: 'Desc. obligatorio trabajado', value: fmt(row.dominicalTrabajado) },
-              { label: 'Fest. Trab.', value: fmt(row.festivoTrabajado) },
-              { label: 'Desc. Rem.', value: fmt(row.descansoRemunerado) },
-              { label: 'No trabajado', value: fmt(row.noTrabajado) },
-              { label: 'Suspensión', value: fmt(row.suspension) },
+              { label: 'Jornada', value: fmtDay(row, 'jornada') },
+              { label: 'Desc. obligatorio trabajado', value: fmtDay(row, 'dominicalTrabajado') },
+              { label: 'Fest. Trab.', value: fmtDay(row, 'festivoTrabajado') },
+              { label: 'Desc. Rem.', value: fmtDay(row, 'descansoRemunerado') },
+              { label: 'No trabajado', value: fmtDay(row, 'noTrabajado') },
+              { label: 'Suspensión', value: fmtDay(row, 'suspension') },
               { label: 'HEDO', value: row.hedo > 0 ? fmt(row.hedo, true) : '-' },
               { label: 'HENO', value: row.heno > 0 ? fmt(row.heno, true) : '-' },
               { label: 'HEDF', value: row.hedf > 0 ? fmt(row.hedf, true) : '-' },
@@ -216,12 +219,12 @@ export function PreLiquidationTable({ rows, displayUnit, dailyHours }: Props) {
                   <TableCell>{row.operationCenterName}</TableCell>
                   <TableCell>{row.restDay}</TableCell>
                   <TableCell>{row.shiftName}</TableCell>
-                  <TableCell className="text-center">{fmt(row.jornada)}</TableCell>
-                  <TableCell className="text-center">{fmt(row.dominicalTrabajado)}</TableCell>
-                  <TableCell className="text-center">{fmt(row.festivoTrabajado)}</TableCell>
-                  <TableCell className="text-center">{fmt(row.descansoRemunerado)}</TableCell>
-                  <TableCell className="text-center">{fmt(row.noTrabajado)}</TableCell>
-                  <TableCell className="text-center">{fmt(row.suspension)}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'jornada')}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'dominicalTrabajado')}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'festivoTrabajado')}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'descansoRemunerado')}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'noTrabajado')}</TableCell>
+                  <TableCell className="text-center">{fmtDay(row, 'suspension')}</TableCell>
                   <TableCell className="text-center">{row.hedo > 0 ? fmt(row.hedo, true) : '-'}</TableCell>
                   <TableCell className="text-center">{row.heno > 0 ? fmt(row.heno, true) : '-'}</TableCell>
                   <TableCell className="text-center">{row.hedf > 0 ? fmt(row.hedf, true) : '-'}</TableCell>

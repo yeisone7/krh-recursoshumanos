@@ -1,14 +1,15 @@
 import { useMemo } from 'react';
 import { format, eachDayOfInterval, parseISO, getDay, subDays } from 'date-fns';
-import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig, PayrollConcept } from '@/types/payroll';
+import type { PreLiquidationRow, PreLiquidationFilters, PayrollLaborConfig, PayrollConcept, PayrollDayConcept } from '@/types/payroll';
 import type { EmployeeShiftAssignment } from '@/types/schedule';
+import { calculateShiftHours, clockSeconds, scheduleHours, emptyHourTotals, HOUR_CONCEPTS, type HourTotals, type HourConcept } from '@/lib/payrollShiftHours';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 import { crossingDeductionVersions } from '@/lib/deductionVersions';
 import { getShiftClassification } from '@/lib/shiftClassification';
 import { payrollDayKind, payrollHourConcept, payrollHistoryAt, type PayrollDatedRecord } from '@/lib/payrollDayClassification';
 
 export interface PreLiquidationData {
-  schedules?: Array<PayrollDatedRecord & { rest_day: string | null; shift_types?: { name: string } | null }>;
+  schedules?: Array<PayrollDatedRecord & { rest_day: string | null; shift_types?: { name: string; start_time?: string; end_time?: string; break_duration_minutes?: number | null } | null }>;
   employmentCycles?: Array<{ id: string; employee_id: string; start_date: string; end_date: string | null }>;
   timeConfigs?: Array<PayrollDatedRecord & { mode: string; work_schedules?: { name: string; days_of_week: number[] } | null }>;
   assignments: EmployeeShiftAssignment[];
@@ -120,6 +121,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
   if (!startDate || !endDate || startDate > endDate
     || !Number.isFinite(parseISO(startDate).getTime()) || !Number.isFinite(parseISO(endDate).getTime())) return [];
 
+  const previousDate = format(subDays(parseISO(startDate), 1), 'yyyy-MM-dd');
   const days = eachDayOfInterval({ start: parseISO(startDate), end: parseISO(endDate) });
   const periodDays = days.length;
   const dailyHours = config && Number.isFinite(config.daily_hours) && config.daily_hours > 0 ? config.daily_hours : 8;
@@ -142,7 +144,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     });
     incDays.forEach(d => {
       const ds = format(d, 'yyyy-MM-dd');
-      if (isDateInRange(ds, startDate, endDate)) {
+      if (isDateInRange(ds, previousDate, endDate)) {
         incapacityDays[inc.employee_id].add(ds);
       }
     });
@@ -161,24 +163,26 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       eachDayOfInterval({ start: parseISO(range.start), end: parseISO(range.end) }));
     vacDays.forEach(d => {
       const ds = format(d, 'yyyy-MM-dd');
-      if (isDateInRange(ds, startDate, endDate)) {
+      if (isDateInRange(ds, previousDate, endDate)) {
         vacationDays[vac.employee_id].add(ds);
       }
     });
   });
 
   const leaveDays: Record<string, Map<string, number>> = {};
+  const leaveHours: Record<string, Map<string, number>> = {};
   leaves.filter(l => l.status === 'aprobado' || l.status === 'aprobada').forEach(lv => {
     if (!leaveDays[lv.employee_id]) leaveDays[lv.employee_id] = new Map();
+    if (!leaveHours[lv.employee_id]) leaveHours[lv.employee_id] = new Map();
     const lvDays = eachDayOfInterval({
       start: parseISO(lv.start_date),
       end: parseISO(lv.end_date)
     });
     lvDays.forEach(d => {
       const ds = format(d, 'yyyy-MM-dd');
-      if (isDateInRange(ds, startDate, endDate)) {
-        const fraction = lv.duration_type === 'medio_dia' ? 0.5
-          : lv.duration_type === 'horas' ? Math.max(0, Number(lv.total_hours || 0)) / dailyHours : 1;
+      if (isDateInRange(ds, previousDate, endDate)) {
+        const fraction = lv.duration_type === 'medio_dia' ? 0.5 : lv.duration_type === 'horas' ? 0 : 1;
+        if (lv.duration_type === 'horas') leaveHours[lv.employee_id].set(ds, (leaveHours[lv.employee_id].get(ds) || 0) + Math.max(0, Number(lv.total_hours || 0)));
         leaveDays[lv.employee_id].set(ds, (leaveDays[lv.employee_id].get(ds) || 0) + fraction);
       }
     });
@@ -195,7 +199,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
   // Index manual novelties by employee - Only approved ones
   const noveltyByEmployee: Record<string, Array<typeof novelties[0]>> = {};
-  novelties.filter(n => n.status === 'aprobada' && isDateInRange(n.novelty_date, startDate, endDate)).forEach(n => {
+  novelties.filter(n => n.status === 'aprobada' && isDateInRange(n.novelty_date, previousDate, endDate)).forEach(n => {
     if (!noveltyByEmployee[n.employee_id]) noveltyByEmployee[n.employee_id] = [];
     noveltyByEmployee[n.employee_id].push(n);
   });
@@ -225,10 +229,18 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
     const employedAt = (date: string) => !cycles?.length || cycleAt(date).length > 0;
     const restLabels = new Set<string>();
     const shiftLabels = new Set<string>();
+    const scheduleAt = (date: string) => schedules === undefined ? undefined : payrollHistoryAt(schedules, date, cycles?.length ? cycleAt(date)[0]?.id ?? null : undefined);
+    const hoursAt = (date: string) => {
+      const schedule = scheduleAt(date);
+      if (!schedule?.shift_types) return dailyHours;
+      const hours = scheduleHours(schedule.shift_types);
+      if (hours === null) warnings.add(`La Jornada del ${date} no tiene un horario ordinario válido; se usa la configuración laboral para días y se dejan las horas automáticas pendientes.`);
+      return hours ?? dailyHours;
+    };
     const restAt = (date: string) => {
       const matchingCycles = cycleAt(date);
       if (matchingCycles.length > 1) warnings.add(`Vinculaciones superpuestas el ${date}; revise el histórico.`);
-      const schedule = schedules === undefined ? undefined : payrollHistoryAt(schedules, date, cycles?.length ? matchingCycles[0]?.id ?? null : undefined);
+      const schedule = scheduleAt(date);
       if (schedules !== undefined && !schedule) warnings.add('No existe configuración de descanso vigente en parte del período.');
       const rest = schedules === undefined ? emp.restDay : schedule ? schedule.rest_day : 'Histórico pendiente';
       if (getPayrollRestDay(rest) === null) warnings.add('El descanso asignado no identifica un día semanal; revise las fechas de descanso obligatorio.');
@@ -249,6 +261,69 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       dailyNovelties.set(n.novelty_date, [...(dailyNovelties.get(n.novelty_date) || []), n]);
     });
 
+    const automaticHours = new Map<string, HourTotals>();
+    const ordinaryFractions = new Map<string, number>();
+    const partialLeaveAt = (date: string) => (leaveDays[emp.id]?.get(date) || 0) + (leaveHours[emp.id]?.get(date) || 0) / hoursAt(date);
+    const employeeAssignments = assignments.filter(a => a.employee_id === emp.id && a.assignment_date >= previousDate && a.assignment_date <= endDate
+      && (a.assignment_date >= startDate || a.shifts?.crosses_midnight));
+    const overlappingDates = new Set<string>();
+    const intervals = employeeAssignments.flatMap(a => {
+      if (!a.shifts || getShiftClassification(a.shifts) !== 'work') return [];
+      if (!employedAt(a.assignment_date) || dailyNovelties.has(a.assignment_date)
+        || incapacityDays[emp.id]?.has(a.assignment_date) || vacationDays[emp.id]?.has(a.assignment_date)
+        || partialLeaveAt(a.assignment_date) > 0) return [];
+      const start = clockSeconds(a.shifts.start_time), end = clockSeconds(a.shifts.end_time);
+      if (start === null || end === null) return [];
+      const midnight = Date.parse(`${a.assignment_date}T00:00:00Z`) / 1000;
+      return [{ date: a.assignment_date, start: midnight + start, end: midnight + end + (end <= start ? 86400 : 0) }];
+    }).sort((a, b) => a.start - b.start);
+    for (let i = 1; i < intervals.length; i++) {
+      if (intervals[i].start < intervals[i - 1].end) {
+        overlappingDates.add(intervals[i - 1].date); overlappingDates.add(intervals[i].date);
+        warnings.add(`Turnos superpuestos el ${intervals[i - 1].date} y ${intervals[i].date}; jornadas y horas pendientes hasta corregirlos.`);
+      }
+    }
+    employeeAssignments.forEach(a => {
+      const date = a.assignment_date;
+      if (overlappingDates.has(date) || !employedAt(date) || duplicateAssignments.has(`${emp.id}_${date}`) || !a.shifts || getShiftClassification(a.shifts) !== 'work') return;
+      if (dailyNovelties.has(date) || incapacityDays[emp.id]?.has(date) || vacationDays[emp.id]?.has(date) || partialLeaveAt(date) >= 1) return;
+      if (partialLeaveAt(date) > 0) {
+        warnings.add(`Permiso parcial el ${date} sin horario de ausencia; revise extras y recargos, no se generan automáticamente.`);
+        return;
+      }
+      const scheduled = scheduleAt(date)?.shift_types;
+      // Legacy/incomplete records can contribute a day, but cannot produce invented hours.
+      if (!a.shifts.start_time || !a.shifts.end_time) {
+        warnings.add(`Falta el horario del Turno Día del ${date}; extras y recargos pendientes.`);
+        return;
+      }
+      if (schedules !== undefined && (!scheduled || scheduleHours(scheduled) === null)) {
+        warnings.add(`Falta un horario de Jornada válido el ${date}; extras y recargos pendientes.`);
+        return;
+      }
+      try {
+        const calculated = calculateShiftHours({ date, shift: a.shifts, ordinaryHours: hoursAt(date),
+          nightStart: config?.night_start || (date >= '2025-12-25' ? '19:00' : '21:00'), nightEnd: config?.night_end || '06:00',
+          specialAt: d => payrollDayKind(d, restAt(d), holidays) !== 'ordinary' });
+        ordinaryFractions.set(date, calculated.ordinaryHours / hoursAt(date));
+        if (calculated.proportionalBreak) warnings.add(`Descanso del ${date} distribuido proporcionalmente entre franjas; revise su horario real.`);
+        for (const [d, hours] of Object.entries(calculated.byDate)) {
+          if (!isDateInRange(d, startDate, endDate) || !employedAt(d)) continue;
+          if (d !== date && (dailyNovelties.has(d) || incapacityDays[emp.id]?.has(d) || vacationDays[emp.id]?.has(d) || partialLeaveAt(d) > 0)) {
+            warnings.add(`El turno del ${date} cruza una ausencia o corrección el ${d}; horas de ese tramo pendientes.`);
+            continue;
+          }
+          const accumulated = automaticHours.get(d) || emptyHourTotals();
+          HOUR_CONCEPTS.forEach(key => { accumulated[key] += hours[key]; });
+          automaticHours.set(d, accumulated);
+        }
+      } catch (error) {
+        warnings.add(`Turno Día del ${date}: ${error instanceof Error ? error.message : 'horario inválido'}; extras y recargos pendientes.`);
+      }
+    });
+
+    const dayConceptHours = Object.fromEntries(['jornada', 'dominicalTrabajado', 'festivoTrabajado', 'descansoRemunerado', 'noTrabajado', 'suspension', 'incapacidad', 'vacaciones', 'permiso'].map(key => [key, 0])) as Record<PayrollDayConcept, number>;
+    const dayCounters = () => ({ jornada, dominicalTrabajado, festivoTrabajado, descansoRemunerado, noTrabajado, suspension, incapacidad: incapDays, vacaciones: vacDays, permiso: permDays });
     days.forEach(day => {
       const dateStr = format(day, 'yyyy-MM-dd');
       if (!employedAt(dateStr)) return;
@@ -257,105 +332,123 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       const isHoliday = dayKind === 'holiday';
       const isMandatoryRest = dayKind === 'rest';
 
-      // An approved daily novelty replaces the programmed day (including absences).
-      const corrections = dailyNovelties.get(dateStr);
-      if (corrections?.length) {
-        const validCorrections = corrections.map(n => ({ n, fraction: n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / dailyHours }));
-        if (validCorrections.some(({ fraction }) => !Number.isFinite(fraction) || fraction <= 0)) {
-          warnings.add(`Novedad con cantidad inválida el ${dateStr}; corrija el registro para incluir el día.`);
-          return;
-        }
-        if (validCorrections.reduce((sum, { fraction }) => sum + fraction, 0) > 1 + 1e-9) {
-          warnings.add(`Las novedades superan una jornada el ${dateStr}; revise posibles duplicados. El día no se incluye hasta corregirlos.`);
-          return;
-        }
-        let correctedDays = 0;
-        corrections.forEach(n => {
-          const fraction = n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / dailyHours;
-          if (!Number.isFinite(fraction) || fraction <= 0) {
-            warnings.add(`Novedad con horas inválidas el ${dateStr}.`);
+      const before = dayCounters();
+      try {
+        // An approved daily novelty replaces the programmed day (including absences).
+        const corrections = dailyNovelties.get(dateStr);
+        if (corrections?.length) {
+          const validCorrections = corrections.map(n => ({ n, fraction: n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / hoursAt(dateStr) }));
+          if (validCorrections.some(({ fraction }) => !Number.isFinite(fraction) || fraction <= 0)) {
+            warnings.add(`Novedad con cantidad inválida el ${dateStr}; corrija el registro para incluir el día.`);
             return;
           }
-          correctedDays += fraction;
-          switch (n.novelty_type) {
-            case 'incapacidad': incapDays += fraction; break;
-            case 'vacaciones': vacDays += fraction; break;
-            case 'permiso': permDays += fraction; break;
-            case 'descanso_remunerado': descansoRemunerado += fraction; break;
-            default:
-              if (isHoliday) festivoTrabajado += fraction;
-              else if (isMandatoryRest) dominicalTrabajado += fraction;
-              else jornada += fraction;
+          if (validCorrections.reduce((sum, { fraction }) => sum + fraction, 0) > 1 + 1e-9) {
+            warnings.add(`Las novedades superan una jornada el ${dateStr}; revise posibles duplicados. El día no se incluye hasta corregirlos.`);
+            return;
           }
-        });
-        if (correctedDays > 1) warnings.add(`Las novedades superan una jornada el ${dateStr}; revise posibles duplicados.`);
-        return;
-      }
-
-      // Check absences first
-      const incapacity = incapacityDays[emp.id]?.has(dateStr);
-      const vacation = vacationDays[emp.id]?.has(dateStr);
-      const leave = leaveDays[emp.id]?.get(dateStr) || 0;
-      if (Number(Boolean(incapacity)) + Number(Boolean(vacation)) + Number(leave > 0) > 1) {
-        warnings.add(`Ausencias superpuestas el ${dateStr}; se contabiliza una sola vez (incapacidad, vacaciones, permiso).`);
-      }
-      if (incapacity) { incapDays += 1; return; }
-      if (vacation) { vacDays += 1; return; }
-      if (leave > 1) warnings.add(`Los permisos superan una jornada el ${dateStr}.`);
-      permDays += Math.min(1, leave);
-      const workedFraction = 1 - Math.min(1, leave);
-      if (workedFraction === 0) return;
-
-      const assignment = assignmentIndex[`${emp.id}_${dateStr}`];
-      if (duplicateAssignments.has(`${emp.id}_${dateStr}`)) {
-        warnings.add(`Asignaciones duplicadas el ${dateStr}; revise la programación.`);
-        return;
-      }
-      if (!assignment) {
-        const timeConfig = payrollHistoryAt(timeConfigs, dateStr, cycles?.length ? cycleAt(dateStr)[0]?.id ?? null : undefined);
-        if (timeConfig?.mode === 'administrative' && timeConfig.work_schedules) {
-          // Holidays in an office schedule are paid rest unless work is explicitly recorded.
-          if (isHoliday || !timeConfig.work_schedules.days_of_week.includes(dayOfWeek)) descansoRemunerado += workedFraction;
-          else if (isMandatoryRest) dominicalTrabajado += workedFraction;
-          else jornada += workedFraction;
-          shiftLabels.add(timeConfig.work_schedules.name);
-        } else if (data.timeConfigs !== undefined) {
-          warnings.add(timeConfig?.mode === 'shift'
-            ? 'Hay días sin jornada registrada en el período; no se asumen como trabajados ni como descanso.'
-            : 'Falta una configuración horaria vigente en parte del período.');
+          let correctedDays = 0;
+          corrections.forEach(n => {
+            const fraction = n.quantity_unit === 'days' && n.quantity != null ? Number(n.quantity) : Number(n.hours) / hoursAt(dateStr);
+            if (!Number.isFinite(fraction) || fraction <= 0) {
+              warnings.add(`Novedad con horas inválidas el ${dateStr}.`);
+              return;
+            }
+            correctedDays += fraction;
+            switch (n.novelty_type) {
+              case 'incapacidad': incapDays += fraction; break;
+              case 'vacaciones': vacDays += fraction; break;
+              case 'permiso': permDays += fraction; break;
+              case 'descanso_remunerado': descansoRemunerado += fraction; break;
+              default:
+                if (isHoliday) festivoTrabajado += fraction;
+                else if (isMandatoryRest) dominicalTrabajado += fraction;
+                else jornada += fraction;
+            }
+          });
+          if (correctedDays > 1) warnings.add(`Las novedades superan una jornada el ${dateStr}; revise posibles duplicados.`);
+          return;
         }
-        return;
-      }
-      if (!assignment.shifts) {
-        warnings.add(`Falta la información del turno del ${dateStr}.`);
-        return;
-      }
 
-      const classification = getShiftClassification(assignment.shifts);
-      if (classification === 'rest') {
-        descansoRemunerado += workedFraction;
-        return;
-      }
-      if (classification === 'not_worked') {
-        noTrabajado += workedFraction;
-        return;
-      }
-      if (classification === 'suspension') {
-        suspension += workedFraction;
-        return;
-      }
+        // Check absences first
+        const incapacity = incapacityDays[emp.id]?.has(dateStr);
+        const vacation = vacationDays[emp.id]?.has(dateStr);
+        const leave = partialLeaveAt(dateStr);
+        if (Number(Boolean(incapacity)) + Number(Boolean(vacation)) + Number(leave > 0) > 1) {
+          warnings.add(`Ausencias superpuestas el ${dateStr}; se contabiliza una sola vez (incapacidad, vacaciones, permiso).`);
+        }
+        if (incapacity) { incapDays += 1; return; }
+        if (vacation) { vacDays += 1; return; }
+        if (leave > 1) warnings.add(`Los permisos superan una jornada el ${dateStr}.`);
+        permDays += Math.min(1, leave);
+        const workedFraction = 1 - Math.min(1, leave);
+        if (workedFraction === 0) return;
 
-      // Worked day
-      if (isHoliday) {
-        festivoTrabajado += workedFraction;
-      } else if (isMandatoryRest) {
-        dominicalTrabajado += workedFraction;
-      } else {
-        jornada += workedFraction;
+        const assignment = assignmentIndex[`${emp.id}_${dateStr}`];
+        if (duplicateAssignments.has(`${emp.id}_${dateStr}`)) {
+          warnings.add(`Asignaciones duplicadas el ${dateStr}; revise la programación.`);
+          return;
+        }
+        if (!assignment) {
+          const timeConfig = payrollHistoryAt(timeConfigs, dateStr, cycles?.length ? cycleAt(dateStr)[0]?.id ?? null : undefined);
+          if (timeConfig?.mode === 'administrative' && timeConfig.work_schedules) {
+            // Holidays in an office schedule are paid rest unless work is explicitly recorded.
+            if (isHoliday || !timeConfig.work_schedules.days_of_week.includes(dayOfWeek)) descansoRemunerado += workedFraction;
+            else if (isMandatoryRest) dominicalTrabajado += workedFraction;
+            else jornada += workedFraction;
+            shiftLabels.add(timeConfig.work_schedules.name);
+          } else if (data.timeConfigs !== undefined) {
+            warnings.add(timeConfig?.mode === 'shift'
+              ? 'Hay días sin jornada registrada en el período; no se asumen como trabajados ni como descanso.'
+              : 'Falta una configuración horaria vigente en parte del período.');
+          }
+          return;
+        }
+        if (!assignment.shifts) {
+          warnings.add(`Falta la información del turno del ${dateStr}.`);
+          return;
+        }
+
+        if (overlappingDates.has(dateStr)) return;
+        const classification = getShiftClassification(assignment.shifts);
+        if (classification === 'rest') {
+          descansoRemunerado += workedFraction;
+          return;
+        }
+        if (classification === 'not_worked') {
+          noTrabajado += workedFraction;
+          return;
+        }
+        if (classification === 'suspension') {
+          suspension += workedFraction;
+          return;
+        }
+
+        const paidFraction = Math.min(workedFraction, ordinaryFractions.get(dateStr) ?? workedFraction);
+        // Worked day, capped at one ordinary Jornada; excess hours are separate.
+        if (isHoliday) {
+          festivoTrabajado += paidFraction;
+        } else if (isMandatoryRest) {
+          dominicalTrabajado += paidFraction;
+        } else {
+          jornada += paidFraction;
+        }
+      } finally {
+        const after = dayCounters();
+        (Object.keys(dayConceptHours) as PayrollDayConcept[]).forEach(key => {
+          dayConceptHours[key] += (after[key] - before[key]) * hoursAt(dateStr);
+        });
       }
     });
 
-    // Overtime from overtime_records
+    // Approved hourly entries replace the derived concept on that civil date.
+    // Distinct manual entries retain their additive behavior. Never pay both sources.
+    const explicitHours = new Map<string, HourTotals>();
+    const addExplicit = (date: string, concept: string | null, hours: number) => {
+      if (!HOUR_CONCEPTS.includes(concept as HourConcept)) return;
+      const totals = explicitHours.get(date) || emptyHourTotals();
+      totals[concept as HourConcept] += hours;
+      explicitHours.set(date, totals);
+    };
     let hedo = 0, heno = 0, hedf = 0, henf = 0, rn = 0, rnf = 0;
 
     (overtimeByEmployee[emp.id] || []).forEach(o => {
@@ -371,33 +464,33 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
       }
       const hrs = Number(o.total_hours);
       if (!Number.isFinite(hrs) || hrs <= 0) { warnings.add(`Horas inválidas el ${o.work_date}; no se incluyen.`); return; }
-      if (mapped === 'hedo') hedo += hrs;
-      else if (mapped === 'heno') heno += hrs;
-      else if (mapped === 'hedf') hedf += hrs;
-      else if (mapped === 'henf') henf += hrs;
-      else if (mapped === 'rn') rn += hrs;
-      else if (mapped === 'rnf') rnf += hrs;
+      addExplicit(o.work_date, mapped, hrs);
     });
 
     // Manual novelties
     (noveltyByEmployee[emp.id] || []).forEach(n => {
+      if (!isDateInRange(n.novelty_date, startDate, endDate)) return;
       if (!employedAt(n.novelty_date)) { warnings.add(`Novedad fuera de la vinculación el ${n.novelty_date}.`); return; }
       const hrs = Number(n.hours);
       if (!['hedo', 'heno', 'hedf', 'henf', 'rn', 'rnf'].includes(n.novelty_type)) return;
       if (!Number.isFinite(hrs) || hrs <= 0) { warnings.add(`Horas inválidas el ${n.novelty_date}; no se incluyen.`); return; }
-      switch (payrollHourConcept(n.novelty_type, payrollDayKind(n.novelty_date, restAt(n.novelty_date), holidays) !== 'ordinary')) {
-        case 'hedo': hedo += hrs; break;
-        case 'heno': heno += hrs; break;
-        case 'hedf': hedf += hrs; break;
-        case 'henf': henf += hrs; break;
-        case 'rn': rn += hrs; break;
-        case 'rnf': rnf += hrs; break;
-      }
+      addExplicit(n.novelty_date, payrollHourConcept(n.novelty_type, payrollDayKind(n.novelty_date, restAt(n.novelty_date), holidays) !== 'ordinary'), hrs);
     });
+
+    const hourTotals = emptyHourTotals();
+    for (const date of new Set([...automaticHours.keys(), ...explicitHours.keys()])) {
+      HOUR_CONCEPTS.forEach(key => {
+        const automatic = automaticHours.get(date)?.[key] || 0;
+        const explicit = explicitHours.get(date)?.[key] || 0;
+        if (automatic > 0 && explicit > 0) warnings.add(`Coinciden horas calculadas y registradas de ${key.toUpperCase()} el ${date}; se usa el registro aprobado sin duplicar. Revise la conciliación.`);
+        hourTotals[key] += explicit > 0 ? explicit : automatic;
+      });
+    }
+    [hedo, heno, hedf, henf, rn, rnf] = HOUR_CONCEPTS.map(key => Math.round(hourTotals[key] * 1e8) / 1e8);
 
     const customConcepts: NonNullable<PreLiquidationRow['customConcepts']> = {};
     (noveltyByEmployee[emp.id] || []).filter(n => n.novelty_type === 'custom').forEach(n => {
-      if (!employedAt(n.novelty_date)) return;
+      if (!isDateInRange(n.novelty_date, startDate, endDate) || !employedAt(n.novelty_date)) return;
       const concept = n.payroll_concepts;
       if (!concept || !n.concept_id || n.quantity == null || !Number.isFinite(Number(n.quantity)) || Number(n.quantity) <= 0) {
         warnings.add('Concepto personalizado sin cantidad o referencia válida.');
@@ -448,6 +541,7 @@ export function calculatePreLiquidation(data: PreLiquidationData | null): PreLiq
 
     return {
       customConcepts,
+      dayConceptHours,
       employeeId: emp.id,
       employeeName: `${emp.first_name} ${emp.last_name}`,
       documentNumber: emp.document_number,

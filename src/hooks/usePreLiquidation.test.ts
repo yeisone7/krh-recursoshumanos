@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { calculatePreLiquidation, usePreLiquidation, type PreLiquidationData } from './usePreLiquidation';
 import type { EmployeeShiftAssignment, Shift } from '@/types/schedule';
+import { calculateShiftHours, scheduleHours } from '@/lib/payrollShiftHours';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
 
 const employee = {
@@ -13,7 +14,7 @@ export function assignment(date: string, classification: 'work' | 'rest' | 'not_
     id: date, employee_id: employee.id, shift_id: 'shift-1', assignment_date: date,
     source: 'manual', created_at: '', updated_at: '',
     shifts: {
-      id: 'shift-1',
+      id: 'shift-1', start_time: '08:00', end_time: '16:00', break_minutes: 0, crosses_midnight: false,
       is_rest_day: classification === 'rest',
       is_not_worked_day: classification === 'not_worked',
       is_suspension_day: classification === 'suspension',
@@ -188,7 +189,7 @@ describe('additional payroll concepts', () => {
 
 describe('auditoría de preliquidación por fecha', () => {
   const cycle = { id: 'cycle-a', employee_id: employee.id, start_date: '2026-09-01', end_date: null };
-  const schedule = { id: 'schedule-a', employee_id: employee.id, employment_cycle_id: cycle.id, valid_from: '2026-09-01', valid_to: null, rest_day: 'martes' };
+  const schedule = { id: 'schedule-a', employee_id: employee.id, employment_cycle_id: cycle.id, valid_from: '2026-09-01', valid_to: null, rest_day: 'martes', shift_types: { name: 'Jornada 8h', start_time: '08:00', end_time: '16:00', break_duration_minutes: 0 } };
   it('usa el descanso vigente en cada tramo, aunque el descanso actual sea otro', () => {
     const row = calculate({ employmentCycles: [cycle], employees: [{ ...employee, restDay: 'Domingo' }], schedules: [
       { ...schedule, valid_to: '2026-09-23' },
@@ -233,5 +234,129 @@ describe('auditoría de preliquidación por fecha', () => {
   it('excluye horas negativas y no finitas sin contaminar los totales', () => {
     const row = calculate({ novelties: [novelty('hedo', '2026-09-23', -2), novelty('rn', '2026-09-23', Infinity)], overtimeRecords: [{ employee_id: employee.id, work_date: '2026-09-23', overtime_type: 'extra_nocturna', total_hours: NaN, status: 'aprobado' }] });
     expect(row).toMatchObject({ hedo: 0, heno: 0, rn: 0, hasWarning: true });
+  });
+});
+
+
+describe('motor horario de Jornada y Turno Día', () => {
+  const date = '2026-09-23';
+  const seven = { id: 'seven', employee_id: employee.id, valid_from: '2026-01-01', rest_day: 'domingo',
+    shift_types: { name: 'Jornada 7h', start_time: '08:00', end_time: '16:00', break_duration_minutes: 60 } };
+  const shift = (start: string, end: string, day = date, pause = 0) => ({ ...assignment(day), shifts: {
+    ...assignment(day).shifts!, start_time: start, end_time: end, break_minutes: pause, crosses_midnight: end <= start,
+  } });
+  const run = (assignments: EmployeeShiftAssignment[], extra: Partial<PreLiquidationData> = {}) => calculate({ schedules: [seven], assignments, ...extra });
+  it('regresión: Jornada 7h + turno 08–18 produce una jornada y 3 HEDO', () => {
+    expect(run([shift('08:00', '18:00')])).toMatchObject({ jornada: 1, hedo: 3, heno: 0, rn: 0, totalDias: 1, hasWarning: false });
+  });
+  it.each([
+    ['12:00', '22:00', { hedo: 0, heno: 3, rn: 0 }],
+    ['14:00', '23:00', { hedo: 0, heno: 2, rn: 2 }],
+    ['08:00', '15:00', { hedo: 0, heno: 0, rn: 0 }],
+  ])('distingue horas ordinarias nocturnas de extras: %s–%s', (start, end, expected) => {
+    expect(run([shift(start, end)])).toMatchObject({ jornada: 1, ...expected });
+  });
+  it('reparte una extra entre franja diurna y nocturna con precisión de segundos', () => {
+    const row = run([shift('11:30:30', '20:00:30')]);
+    expect(row.hedo).toBeCloseTo(29.5 / 60, 7);
+    expect(row.heno).toBeCloseTo(1 + 0.5 / 60, 7);
+  });
+  it('un turno corto se liquida como fracción de la Jornada', () => {
+    expect(run([shift('08:00', '11:30')])).toMatchObject({ jornada: 0.5, totalDias: 0.5, hedo: 0 });
+  });
+  it('clasifica extras festivas sin duplicar el descanso coincidente', () => {
+    expect(run([shift('08:00', '18:00', '2026-09-27')], { holidays: new Set(['2026-09-27']) }))
+      .toMatchObject({ festivoTrabajado: 1, dominicalTrabajado: 0, hedf: 3, hedo: 0 });
+  });
+  it('cruza medianoche y reclasifica cada tramo según el festivo real', () => {
+    expect(run([shift('20:00', '06:00')], { holidays: new Set(['2026-09-24']) }))
+      .toMatchObject({ jornada: 1, rn: 4, rnf: 3, henf: 3, heno: 0 });
+  });
+  it('usa descanso vigente en el día siguiente del turno', () => {
+    expect(run([shift('20:00', '06:00')], { schedules: [{ ...seven, rest_day: 'jueves' }] }))
+      .toMatchObject({ rn: 4, rnf: 3, henf: 3, heno: 0 });
+  });
+  it('recorta horas al período e incluye el arrastre del día anterior', () => {
+    const assignments = [shift('20:00', '06:00')];
+    expect(run(assignments, { filters: { startDate: date, endDate: date } })).toMatchObject({ jornada: 1, rn: 4, heno: 0 });
+    expect(run(assignments, { filters: { startDate: '2026-09-24', endDate: '2026-09-24' } })).toMatchObject({ jornada: 0, rn: 3, heno: 3 });
+  });
+  it('respeta correcciones y ausencias del día anterior al calcular el arrastre', () => {
+    const extra = { filters: { startDate: '2026-09-24', endDate: '2026-09-24' } };
+    expect(run([shift('20:00', '06:00')], { ...extra, novelties: [novelty('descanso_remunerado', date, 7)] }))
+      .toMatchObject({ jornada: 0, rn: 0, heno: 0, descansoRemunerado: 0 });
+    expect(run([shift('20:00', '06:00')], { ...extra, incapacities: [absence] }))
+      .toMatchObject({ jornada: 0, rn: 0, heno: 0, incapacidad: 0 });
+  });
+  it('descuenta proporcionalmente la pausa y advierte cuando cruza franjas', () => {
+    const row = run([shift('14:00', '00:00', date, 60)]);
+    expect(row).toMatchObject({ jornada: 1, hedo: 0, heno: 2, rn: 2.5 });
+    expect(row.warningMessage).toContain('proporcionalmente');
+  });
+  it('la pausa diurna reduce las extras sin generar alerta de distribución', () => {
+    expect(run([shift('08:00', '18:00', date, 60)])).toMatchObject({ jornada: 1, hedo: 2, hasWarning: false });
+  });
+  it('respeta cambios de Jornada durante el período', () => {
+    expect(run([shift('08:00', '18:00'), shift('08:00', '18:00', '2026-09-24')], { schedules: [
+      { ...seven, valid_to: date }, { ...seven, id: 'eight', valid_from: '2026-09-24', shift_types: { ...seven.shift_types, break_duration_minutes: 0 } },
+    ] })).toMatchObject({ jornada: 2, hedo: 5, dayConceptHours: { jornada: 15 } });
+  });
+  it('usa la Jornada individual para permisos por horas y correcciones diarias', () => {
+    expect(run([], { novelties: [novelty('jornada', date, 7)] })).toMatchObject({ jornada: 1 });
+    expect(run([shift('08:00', '18:00')], { leaves: [{ ...absence, duration_type: 'horas', total_hours: 3.5 }] }))
+      .toMatchObject({ permiso: 0.5, jornada: 0.5, hedo: 0, hasWarning: true });
+  });
+  it.each(['rest', 'not_worked', 'suspension'] as const)('no genera horas en %s', classification => {
+    expect(run([assignment(date, classification)])).toMatchObject({ hedo: 0, heno: 0, rn: 0 });
+  });
+  it('una ausencia completa o corrección diaria elimina horas derivadas', () => {
+    expect(run([shift('08:00', '18:00')], { incapacities: [absence] })).toMatchObject({ incapacidad: 1, jornada: 0, hedo: 0 });
+    expect(run([shift('08:00', '18:00')], { novelties: [novelty('descanso_remunerado', date, 7)] }))
+      .toMatchObject({ descansoRemunerado: 1, jornada: 0, hedo: 0 });
+  });
+  it('concilia las horas aprobadas sin sumar de nuevo las automáticas', () => {
+    const row = run([shift('08:00', '18:00')], { overtimeRecords: [{ employee_id: employee.id, work_date: date, overtime_type: 'extra_diurna', total_hours: 3, status: 'aprobado' }] });
+    expect(row).toMatchObject({ hedo: 3, jornada: 1, hasWarning: true });
+    expect(row.warningMessage).toContain('sin duplicar');
+  });
+  it('una novedad aprobada sustituye el mismo concepto automático de la fecha', () => {
+    expect(run([shift('14:00', '23:00')], { novelties: [novelty('heno', date, 1)] }))
+      .toMatchObject({ heno: 1, rn: 2, hasWarning: true });
+  });
+  it('respeta las franjas nocturnas configuradas', () => {
+    expect(run([shift('14:00', '23:00')], { config: { daily_hours: 8, night_start: '21:00', night_end: '06:00' } as PreLiquidationData['config'] }))
+      .toMatchObject({ rn: 0, heno: 2 });
+  });
+  it.each([
+    { start_time: 'xx:00' }, { end_time: '25:00' }, { break_minutes: -1 }, { break_minutes: 600 },
+    { start_time: '20:00', end_time: '06:00', crosses_midnight: false },
+    { start_time: '08:00', end_time: '18:00', crosses_midnight: true },
+  ])('rechaza horarios incoherentes: %j', changes => {
+    const a = shift('08:00', '18:00'); Object.assign(a.shifts!, changes);
+    expect(run([a])).toMatchObject({ hedo: 0, heno: 0, rn: 0, hasWarning: true });
+  });
+  it('rechaza una Jornada sin duración neta válida', () => {
+    expect(run([shift('08:00', '18:00')], { schedules: [{ ...seven, shift_types: { ...seven.shift_types, end_time: '08:00' } }] }))
+      .toMatchObject({ hedo: 0, hasWarning: true });
+    expect(scheduleHours({ start_time: '22:00', end_time: '06:00', break_duration_minutes: 60 })).toBe(7);
+  });
+  it('detecta turnos solapados entre fechas y no paga dos veces ese tiempo', () => {
+    const row = run([shift('20:00', '08:00'), shift('06:00', '16:00', '2026-09-24')]);
+    expect(row).toMatchObject({ jornada: 0, hedo: 0, heno: 0, rn: 0, hasWarning: true });
+    expect(row.warningMessage).toContain('superpuestos');
+  });
+  it('conserva todas las horas netas en una matriz de turnos', () => {
+    for (const start of ['00:00', '05:30', '12:00', '18:00', '23:30']) {
+      for (const end of ['03:00', '08:00', '17:00', '22:00']) {
+        for (const pause of [0, 30]) {
+          const a = shift(start, end, date, pause);
+          const result = calculateShiftHours({ date, shift: a.shifts!, ordinaryHours: 7, nightStart: '19:00', nightEnd: '06:00', specialAt: d => d === '2026-09-24' });
+          const extras = Object.values(result.byDate).reduce((sum, h) => sum + h.hedo + h.heno + h.hedf + h.henf, 0);
+          const surcharges = Object.values(result.byDate).reduce((sum, h) => sum + h.rn + h.rnf, 0);
+          expect(result.ordinaryHours + extras).toBeCloseTo(result.workedHours, 10);
+          expect(surcharges).toBeLessThanOrEqual(result.ordinaryHours + 1e-9);
+        }
+      }
+    }
   });
 });
