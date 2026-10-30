@@ -77,6 +77,7 @@ import { useUpdateCandidate, useConvertToEmployee, useDeleteCandidate } from '@/
 import { CandidateFormDialog } from './CandidateFormDialog';
 import { CandidateDetailDialog } from '@/components/selection/CandidateDetailDialog';
 import { CandidateTransferDialog } from '@/components/selection/CandidateTransferDialog';
+import { HiringReversalDialog } from '@/components/selection/HiringReversalDialog';
 import { CandidateReasonDialog } from '@/components/selection/CandidateReasonDialog';
 import { CandidateKanban } from '@/components/selection/CandidateKanban';
 import { GenerateRegistrationLinkDialog } from '@/components/registration/GenerateRegistrationLinkDialog';
@@ -122,13 +123,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
   const [actingCandidate, setActingCandidate] = useState<{ id: string; name: string } | null>(null);
   const [deleteCandidateTarget, setDeleteCandidateTarget] = useState<any | null>(null);
   const [transferCandidateTarget, setTransferCandidateTarget] = useState<any | null>(null);
+  const [hiringReversalCandidateId, setHiringReversalCandidateId] = useState<string | null>(null);
   const [showGenerateLink, setShowGenerateLink] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [uploadingColocadoDocs, setUploadingColocadoDocs] = useState(false);
   const navigate = useNavigate();
-  const { user, currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canDelete } = useAuth();
+  const { user, currentCompanyId, isAdmin, isRRHH, isSuperAdmin, isPsicologo, canDelete, hasPermission } = useAuth();
   const queryClient = useQueryClient();
   
   const { data: vacancy, isLoading } = useVacancy(vacancyId);
@@ -981,6 +983,14 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
                                 <Badge className={cn('text-xs', statusStyle.bg, statusStyle.text)}>
                                   {candidateStatusLabels[candidateStatus]}
                                 </Badge>
+                                {candidateStatus === 'hired' && candidate.employee_id && hasPermission('seleccion', 'update') && hasPermission('empleados', 'delete') && (
+                                  <Button size="sm" variant="outline" className="h-auto whitespace-normal text-destructive" onClick={event => {
+                                    event.stopPropagation();
+                                    setHiringReversalCandidateId(candidate.id);
+                                  }}>
+                                    <UserX className="mr-1 h-4 w-4 shrink-0" />No ingresó / Revertir contratación
+                                  </Button>
+                                )}
                               </div>
 
                               <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
@@ -1337,6 +1347,7 @@ export function VacancyDetailDialog({ open, onOpenChange, vacancyId }: VacancyDe
           operation_centers: (vacancy as any).operation_centers,
         }}
       />
+      {hiringReversalCandidateId && <HiringReversalDialog candidateId={hiringReversalCandidateId} open onOpenChange={value => { if (!value) setHiringReversalCandidateId(null); }} />}
 
       {/* Generate Registration Link Dialog */}
       <GenerateRegistrationLinkDialog

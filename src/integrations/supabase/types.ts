@@ -34,6 +34,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      candidate_hiring_reversals: {
+        Row: {
+          id: string; company_id: string; candidate_id: string; employee_id: string;
+          vacancy_id: string; reason: string; performed_by: string; performed_by_name: string;
+          created_at: string; documents_preserved: number; contract_numbers: string[]; review_token: string;
+        }
+        Insert: {
+          id?: string; company_id: string; candidate_id: string; employee_id: string;
+          vacancy_id: string; reason: string; performed_by: string; performed_by_name: string;
+          created_at?: string; documents_preserved: number; contract_numbers: string[]; review_token: string;
+        }
+        Update: {
+          id?: string; company_id?: string; candidate_id?: string; employee_id?: string;
+          vacancy_id?: string; reason?: string; performed_by?: string; performed_by_name?: string;
+          created_at?: string; documents_preserved?: number; contract_numbers?: string[]; review_token?: string;
+        }
+        Relationships: []
+      }
       requisition_step_executions: {
         Row: {
           answers: Json
@@ -12235,6 +12253,14 @@ export type Database = {
       }
       complete_candidate_hiring: {
         Args: { p_candidate_id: string; p_hiring: Json }
+        Returns: Json
+      }
+      preview_candidate_hiring_reversal: {
+        Args: { p_candidate_id: string; p_company_id: string }
+        Returns: Json
+      }
+      revert_candidate_hiring: {
+        Args: { p_candidate_id: string; p_company_id: string; p_employee_id: string; p_review_token: string; p_reason: string; p_document_number: string }
         Returns: Json
       }
       complete_training_access: {

@@ -72,6 +72,8 @@ import { CandidateReasonDialog } from './CandidateReasonDialog';
 import { FamilyMembersSection } from './FamilyMembersSection';
 import { CandidateFormDialog } from '@/components/vacancies/CandidateFormDialog';
 import { CandidateTransferDialog } from './CandidateTransferDialog';
+import { HiringReversalDialog } from './HiringReversalDialog';
+import { HiringReversalHistory } from './HiringReversalHistory';
 import { generateCandidatePdf } from '@/lib/candidatePdf';
 import { generateExamOrderPdf } from '@/lib/examOrderPdf';
 import { CandidateBackgroundAlerts } from './CandidateBackgroundAlerts';
@@ -134,6 +136,7 @@ export function CandidateDetailDialog({
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
   const [showThanksDialog, setShowThanksDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
+  const [showHiringReversal, setShowHiringReversal] = useState(false);
 
   const { data: candidate, isLoading } = useCandidate(candidateId);
   const updateCandidate = useUpdateCandidate();
@@ -471,6 +474,7 @@ export function CandidateDetailDialog({
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3 scrollbar-themed">
               {/* Timeline Tab */}
               <TabsContent value="timeline" className="p-4 mt-0 sm:p-6">
+                <HiringReversalHistory candidateId={candidate.id} />
                 <SelectionTimeline
                   steps={steps}
                   candidateId={candidate.id}
@@ -1084,6 +1088,11 @@ export function CandidateDetailDialog({
           {/* Footer Actions */}
           <div className="shrink-0 px-4 py-4 border-t border-border bg-background flex flex-col gap-3 sm:flex-row sm:justify-between sm:px-6">
             <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto sm:flex-wrap" role="group" aria-label="Acciones del candidato">
+              {status === 'hired' && candidate.employee_id && hasPermission('seleccion', 'update') && hasPermission('empleados', 'delete') && (
+                <Button variant="outline" className="text-destructive" onClick={() => setShowHiringReversal(true)}>
+                  <UserX className="mr-2 h-4 w-4" />No ingresó / Revertir contratación
+                </Button>
+              )}
               {status === 'selected' && (
                 <>
                   <Button 
@@ -1245,6 +1254,7 @@ export function CandidateDetailDialog({
       />
 
       {/* Withdrawal Reason Dialog */}
+      <HiringReversalDialog candidateId={candidate.id} open={showHiringReversal} onOpenChange={setShowHiringReversal} />
       <CandidateReasonDialog
         open={showWithdrawDialog}
         onOpenChange={setShowWithdrawDialog}
