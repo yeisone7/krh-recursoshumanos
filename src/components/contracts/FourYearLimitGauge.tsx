@@ -1,8 +1,7 @@
-import { differenceInDays, differenceInMonths, format } from 'date-fns';
+import { addYears, differenceInCalendarDays, differenceInMonths, format, max, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Scale, AlertTriangle, CheckCircle, Info, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
@@ -27,31 +26,24 @@ export function FourYearLimitGauge({
   extensionCount,
   contractType,
 }: FourYearLimitGaugeProps) {
-  // Solo aplica para contratos a término fijo
-  if (contractType === 'indefinite' || contractType === 'indefinido') {
-    return null;
-  }
+  if (contractType !== 'fixed') return null;
 
   const endDate = currentEndDate || originalEndDate;
   if (!endDate) return null;
 
-  // Calcular duración total
-  const totalMonths = differenceInMonths(endDate, startDate);
-  const totalDays = differenceInDays(endDate, startDate);
-  const totalYears = totalMonths / 12;
-  
-  // Límite de 4 años
+  const lawEffectiveDate = new Date(2025, 5, 25);
+  const countingStart = max([startOfDay(startDate), lawEffectiveDate]);
   const maxYears = COLOMBIAN_LABOR_LAW.MAX_FIXED_TERM_YEARS;
-  const maxMonths = maxYears * 12;
-  const maxDays = maxYears * 365;
-
-  // Calcular porcentaje utilizado
-  const percentageUsed = Math.min((totalMonths / maxMonths) * 100, 100);
-  
-  // Calcular tiempo restante
-  const remainingMonths = maxMonths - totalMonths;
-  const remainingYears = Math.floor(remainingMonths / 12);
-  const remainingMonthsAfterYears = remainingMonths % 12;
+  const limitDate = addYears(countingStart, maxYears);
+  const totalMonths = Math.max(0, differenceInMonths(endDate, countingStart));
+  const totalDays = Math.max(0, differenceInCalendarDays(endDate, countingStart));
+  const maxDays = differenceInCalendarDays(limitDate, countingStart);
+  const percentageUsed = Math.min((totalDays / maxDays) * 100, 100);
+  const remainingDays = Math.max(0, maxDays - totalDays);
+  const remainingMonths = Math.min(maxYears * 12, differenceInMonths(limitDate, endDate));
+  const formatRemaining = () => remainingMonths > 0
+    ? formatDuration(remainingMonths)
+    : `${remainingDays} días`;
 
   // Determinar estado visual
   const getStatusConfig = () => {
@@ -63,7 +55,7 @@ export function FourYearLimitGauge({
         lightBg: 'bg-destructive-light',
         borderColor: 'border-destructive/30',
         icon: AlertTriangle,
-        label: 'Límite superado',
+        label: totalDays > maxDays ? 'Límite superado' : 'Límite alcanzado',
       };
     }
     if (percentageUsed >= 75) {
@@ -137,16 +129,15 @@ export function FourYearLimitGauge({
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-xs">
-                      <strong>Art. 46 CST:</strong> Los contratos a término fijo pueden prorrogarse indefinidamente, 
-                      pero la empresa puede establecer políticas internas que limiten la duración total a 4 años 
-                      para evaluar conversión a contrato indefinido.
+                      El artículo 6 de la Ley 2466 de 2025 establece un máximo de cuatro años.
+                      Para los contratos vigentes al entrar en vigor la ley, el conteo comienza el 25 de junio de 2025.
                     </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </h4>
             <p className="text-xs text-muted-foreground">
-              Control de duración según política empresarial
+              Desde el {format(countingStart, 'dd/MM/yyyy')} hasta el {format(limitDate, 'dd/MM/yyyy')}
             </p>
           </div>
         </div>
@@ -211,10 +202,10 @@ export function FourYearLimitGauge({
         </div>
         <div className="text-center">
           <p className="text-xs text-muted-foreground">Disponible</p>
-          <p className={cn("font-bold text-sm", remainingMonths <= 0 ? "text-destructive" : "text-success")}>
-            {remainingMonths <= 0 
+          <p className={cn("font-bold text-sm", remainingDays === 0 ? "text-destructive" : "text-success")}>
+            {remainingDays === 0
               ? 'Agotado' 
-              : formatDuration(remainingMonths)
+              : formatRemaining()
             }
           </p>
         </div>
@@ -232,10 +223,10 @@ export function FourYearLimitGauge({
             <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
             <span>
               {status.level === 'exceeded' 
-                ? `El contrato ha superado el límite de ${maxYears} años. Considere evaluar conversión a contrato indefinido o terminación.`
+                ? `Se alcanzó el límite de ${maxYears} años. Si la relación laboral continúa más allá del límite, corresponde el término indefinido.`
                 : status.level === 'critical'
-                ? `Quedan ${formatDuration(remainingMonths)} para alcanzar el límite. Planifique las próximas acciones.`
-                : `El contrato ha utilizado más del 50% del límite recomendado. Monitoree las próximas prórrogas.`
+                ? `Quedan ${formatRemaining()} para alcanzar el límite. Planifique las próximas acciones.`
+                : `El contrato ha utilizado más del 50% del límite legal. Monitoree las próximas prórrogas.`
               }
             </span>
           </p>

@@ -834,7 +834,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               </div>
 
               {/* Four Year Limit Gauge - Colombian Labor Law */}
-              {contract.contractType !== 'indefinite' && (
+              {contract.contractType === 'fixed' && (
                 <>
                   <Separator />
                   <FourYearLimitGauge
