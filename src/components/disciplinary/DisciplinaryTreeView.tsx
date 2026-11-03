@@ -1,17 +1,16 @@
 import { useState, useMemo } from 'react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { formatDateOnly } from '@/lib/dateOnly';
 import {
   Building2,
   ChevronDown,
-  ChevronRight,
   FileDown,
   MoreHorizontal,
   Trash2,
+  Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,163 +53,143 @@ export function DisciplinaryTreeView({
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [processes]);
 
-  // All expanded by default
-  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
-    const init: Record<string, boolean> = {};
-    for (const [key] of grouped) {
-      init[key] = true;
-    }
-    return init;
-  });
 
-  // Keep new centers expanded
-  useMemo(() => {
-    setExpanded((prev) => {
-      const next = { ...prev };
-      for (const [key] of grouped) {
-        if (!(key in next)) next[key] = true;
-      }
-      return next;
-    });
-  }, [grouped]);
-
-  const toggle = (key: string) => {
-    setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   return (
-    <div className="space-y-6">
-      {grouped.map(([centerName, centerProcesses]) => (
-        <div
-          key={centerName}
-          className="overflow-hidden rounded-[2.5rem] border border-border bg-background shadow-xl transition-all duration-500"
-        >
-          {/* Center header */}
-          <button
-            onClick={() => toggle(centerName)}
-            className="flex w-full items-center justify-between gap-4 px-8 py-6 text-left transition-all hover:"
-          >
-            <div className="flex min-w-0 items-center gap-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent text-primary">
-                <Building2 className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] leading-none mb-1">
-                  Centro de Operación
-                </span>
-                <span className="truncate text-lg font-black tracking-tight text-foreground">
-                  {centerName}
-                </span>
-              </div>
-              <Badge
-                variant="secondary"
-                className="bg-primary/10 text-primary font-black rounded-full text-[10px] px-3 py-1 h-6"
-              >
-                {centerProcesses.length} Procesos
-              </Badge>
-            </div>
-            <div className={cn("transition-transform duration-500", expanded[centerName] ? "rotate-180" : "")}>
-              <ChevronDown className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </button>
+    <div className="space-y-4">
+      {grouped.map(([centerName, centerProcesses]) => {
+        const isExpanded = !collapsed[centerName];
 
-          {/* Process rows */}
-          {expanded[centerName] && (
-            <div className="border-t border-border bg-background divide-y divide-primary/5">
-              {centerProcesses.map((process) => (
-                <div
-                  key={process.id}
-                  className="group relative flex flex-col xl:flex-row xl:items-center justify-between gap-4 px-10 py-5 transition-all hover:bg-background cursor-pointer"
-                  onClick={() => onOpenDetail(process.id)}
-                >
-                  {/* Hover indicator */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 flex-1 min-w-0">
-                    <div className="flex flex-col min-w-[120px]">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Radicado</span>
-                      <span className="text-sm font-black tracking-tight text-foreground group-hover:text-primary transition-colors">
-                        {process.case_number}
-                      </span>
-                    </div>
+        return (
+          <section key={centerName} className="overflow-hidden rounded-lg border border-border bg-card">
+            <button
+              type="button"
+              aria-expanded={isExpanded}
+              onClick={() => setCollapsed((previous) => ({ ...previous, [centerName]: isExpanded }))}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-muted/60"
+            >
+              <Building2 className="h-4 w-4 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1 truncate font-semibold">{centerName}</span>
+              <Badge variant="secondary">{centerProcesses.length}</Badge>
+              <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
+            </button>
 
-                    <div className="flex flex-col min-w-[200px]">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Empleado</span>
-                      <span className="text-sm font-black text-foreground/80 truncate">
-                        {process.employee
-                          ? `${process.employee.first_name} ${process.employee.last_name}`
-                          : '-'}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-col min-w-[140px]">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Tipo de Falta</span>
-                      <Badge className={cn('w-fit h-6 text-[9px] font-black uppercase tracking-widest px-2 py-0', getFaultColor(process.fault_type))}>
-                        {faultTypeLabels[process.fault_type]}
-                      </Badge>
-                    </div>
-
-                    <div className="flex flex-col min-w-[100px]">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Fecha Falta</span>
-                      <span className="text-[11px] font-bold text-muted-foreground">
-                        {formatDateOnly(process.fault_date, 'dd MMM yyyy', { locale: es })}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between xl:justify-end gap-4 mt-2 xl:mt-0">
-                    <Badge className={cn('h-8 text-[10px] font-black uppercase tracking-widest px-4 rounded-full', getStatusColor(process.status))}>
-                      {disciplinaryStatusLabels[process.status]}
-                    </Badge>
-
-                    <div className="flex items-center gap-2">
-                       <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-10 w-10 rounded-xl hover:bg-primary/10 text-primary transition-all"
-                          onClick={(e) => onExportPdf(e, process)}
-                          disabled={exportingId === process.id}
+            {isExpanded && (
+              <Table className="min-w-[42rem]" aria-label={`Procesos disciplinarios de ${centerName}`}>
+                <TableHeader className="bg-[#102a36] [&_th]:h-11 [&_th]:text-white">
+                  <TableRow className="bg-transparent hover:bg-transparent">
+                    <TableHead>Empleado</TableHead>
+                    <TableHead>Radicado</TableHead>
+                    <TableHead>Fecha de la falta</TableHead>
+                    <TableHead>Tipo de falta</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {centerProcesses.map((process) => (
+                    <TableRow
+                      key={process.id}
+                      className="cursor-pointer even:bg-muted/45 hover:bg-primary/10 even:hover:bg-primary/10 [&>td]:py-3"
+                      onClick={() => onOpenDetail(process.id)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <Users className="h-4 w-4" />
+                          </span>
+                          <div>
+                            <p className="font-medium">
+                              {process.employee ? `${process.employee.first_name} ${process.employee.last_name}` : '—'}
+                            </p>
+                            {process.employee?.document_number && (
+                              <p className="text-xs text-muted-foreground">{process.employee.document_number}</p>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          className="whitespace-nowrap font-medium text-primary hover:underline"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onOpenDetail(process.id);
+                          }}
                         >
-                          <FileDown className="w-5 h-5" />
-                       </Button>
-
-                       <DropdownMenu>
-                         <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-background transition-all">
-                             <MoreHorizontal className="h-5 w-5" />
-                           </Button>
-                         </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end" className="rounded-2xl border-border shadow-2xl p-2">
-                           <DropdownMenuItem
-                             onClick={(e) => onExportPdf(e, process)}
-                             disabled={exportingId === process.id}
-                             className="rounded-xl font-bold text-xs uppercase p-3"
-                           >
-                             <FileDown className="h-4 w-4 mr-2" />
-                             {exportingId === process.id ? 'Generando...' : 'Exportar Informe PDF'}
-                           </DropdownMenuItem>
-                           {onDelete && process.status !== 'cerrado' && (
-                             <DropdownMenuItem
-                               className="rounded-xl font-bold text-xs uppercase p-3 text-destructive focus:text-destructive focus:bg-destructive/10"
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 onDelete(process);
-                               }}
-                             >
-                               <Trash2 className="h-4 w-4 mr-2" />
-                               Eliminar Proceso
-                             </DropdownMenuItem>
-                           )}
-                         </DropdownMenuContent>
-                       </DropdownMenu>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+                          {process.case_number}
+                        </button>
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap tabular-nums">
+                        {formatDateOnly(process.fault_date, 'dd/MM/yyyy')}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={cn('rounded-md', getFaultColor(process.fault_type))}>
+                          {faultTypeLabels[process.fault_type]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={cn('rounded-md', getStatusColor(process.status))}>
+                          {disciplinaryStatusLabels[process.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-primary"
+                            aria-label={`Exportar PDF de ${process.case_number}`}
+                            onClick={(event) => onExportPdf(event, process)}
+                            disabled={exportingId === process.id}
+                          >
+                            <FileDown className="h-4 w-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label={`Acciones de ${process.case_number}`}
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(event) => onExportPdf(event, process)}
+                                disabled={exportingId === process.id}
+                              >
+                                <FileDown className="mr-2 h-4 w-4" />
+                                {exportingId === process.id ? 'Generando...' : 'Exportar Informe PDF'}
+                              </DropdownMenuItem>
+                              {onDelete && process.status !== 'cerrado' && (
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    onDelete(process);
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Eliminar Proceso
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }

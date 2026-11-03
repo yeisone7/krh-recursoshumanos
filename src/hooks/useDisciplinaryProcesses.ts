@@ -594,6 +594,7 @@ export function useAddDefense() {
   return useMutation({
     mutationFn: async ({
       processId,
+      currentStatus,
       data,
       fileUrl,
       answers = [],
@@ -604,6 +605,7 @@ export function useAddDefense() {
       witnessDocument,
     }: {
       processId: string;
+      currentStatus: DisciplinaryStatus;
       data: DefenseFormData;
       fileUrl?: string;
       answers?: Array<{ question_id: string; question: string; answer: string }>;
@@ -637,13 +639,28 @@ export function useAddDefense() {
 
       if (error) throw error;
 
-      await supabase
+      const { error: statusError } = await supabase
         .from('disciplinary_processes')
         .update({ status: 'descargos' })
         .eq('id', processId);
+      if (statusError) throw statusError;
+
+      const { error: timelineError } = await supabase.from('disciplinary_timeline').insert({
+        company_id: currentCompanyId!,
+        process_id: processId,
+        action_type: 'descargos',
+        description: 'Descargos registrados desde el panel interno.',
+        previous_status: currentStatus,
+        new_status: 'descargos',
+        performed_by: user?.id,
+        performed_by_name: user?.email,
+      });
+      if (timelineError) throw timelineError;
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_processes'] });
       queryClient.invalidateQueries({ queryKey: ['disciplinary_process', variables.processId] });
+      queryClient.invalidateQueries({ queryKey: ['disciplinary_stats'] });
       toast({
         title: 'Descargos registrados',
         description: 'Los descargos del empleado han sido registrados.',

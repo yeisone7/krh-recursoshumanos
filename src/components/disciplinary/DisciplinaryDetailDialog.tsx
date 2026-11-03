@@ -1,5 +1,5 @@
 import { Component, ReactNode, useState } from 'react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
   AlertTriangle,
@@ -156,6 +156,8 @@ export function DisciplinaryDetailDialog({
   const handleAdvanceStatus = () => {
     if (process.status === 'investigacion') {
       setShowCitationForm(true);
+    } else if (process.status === 'citacion_descargos') {
+      setShowDefenseForm(true);
     } else if (process.status === 'analisis') {
       setShowDecisionForm(true);
     } else if (process.status === 'decision') {
@@ -185,7 +187,7 @@ export function DisciplinaryDetailDialog({
 
   const formatDate = (date: string | null) => {
     if (!date) return '-';
-    return format(new Date(date), 'dd/MM/yyyy', { locale: es });
+    return format(parseISO(date), 'dd/MM/yyyy', { locale: es });
   };
 
   return (

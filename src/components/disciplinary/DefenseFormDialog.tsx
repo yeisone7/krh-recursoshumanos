@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
@@ -91,7 +92,7 @@ export function DefenseFormDialog({
       return;
     }
     await addDefense.mutateAsync({
-      processId, data, answers: questionAnswers, rightsAcknowledged, signatureData,
+      processId, currentStatus: process.status, data, answers: questionAnswers, rightsAcknowledged, signatureData,
       employeeEmail, witnessName, witnessDocument,
     });
     form.reset();
