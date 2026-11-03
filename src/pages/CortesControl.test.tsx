@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -15,7 +16,15 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 });
 afterEach(() => { cleanup(); client.clear(); });
-function mount() { render(<QueryClientProvider client={client}><CortesControl /></QueryClientProvider>); }
+function mount() {
+  render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <CortesControl />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
 describe('CortesControl', () => {
   it('only shows actions for assigned levels and filters centers', async () => {
     mount(); await screen.findByText('Centro Norte');

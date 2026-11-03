@@ -133,7 +133,7 @@ function hasSupabaseImport(content: string): boolean {
 }
 
 function hasUseQuery(content: string): boolean {
-  return content.includes('useQuery');
+  return /\buseQuery\b/.test(content);
 }
 
 describe('Multi-company isolation: Hook query filters', () => {
