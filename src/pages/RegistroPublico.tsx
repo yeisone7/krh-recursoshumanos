@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { digitsOnly, DOCUMENT_NUMBER_PATTERN, formatProperName } from '@/lib/employeeIdentity';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -139,18 +140,18 @@ const EMPLOYEE_REQUIRED = ['firstName', 'lastName', 'identificationTypeId', 'doc
 const CANDIDATE_SECTIONS = ['Personal', 'Contacto', 'Familia', 'Profesional', 'Especificaciones'];
 const EMPLOYEE_SECTIONS = ['Identidad', 'Contacto', 'Familia', 'Seguridad Social', 'Información Bancaria', 'Perfil Profesional', 'Especificaciones'];
 
-const normalizeNameText = (value?: string | null) => (value || '').trim().replace(/\s+/g, ' ');
+const NAME_FIELDS = new Set(['firstName', 'middleName', 'lastName', 'secondLastName']);
 const compareNameText = (value?: string | null) =>
-  normalizeNameText(value)
+  formatProperName(value)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase();
 
 const getEmployeeNamePayload = (formData: Record<string, any>) => {
-  const firstName = normalizeNameText(formData.firstName);
-  const middleName = normalizeNameText(formData.middleName);
-  const lastName = normalizeNameText(formData.lastName);
-  const secondLastName = normalizeNameText(formData.secondLastName);
+  const firstName = formatProperName(formData.firstName);
+  const middleName = formatProperName(formData.middleName);
+  const lastName = formatProperName(formData.lastName);
+  const secondLastName = formatProperName(formData.secondLastName);
 
   return {
     firstName,
@@ -377,6 +378,14 @@ export default function RegistroPublico() {
       if (rawDraft) {
         const draft = JSON.parse(rawDraft);
         if (draft && typeof draft === 'object' && !Array.isArray(draft)) {
+          if (typeof draft.documentNumber === 'string' && /[^0-9]/.test(draft.documentNumber)) {
+            delete draft.documentNumber;
+            delete draft.candidateId;
+            delete draft.employeeId;
+          }
+          for (const key of NAME_FIELDS) {
+            if (typeof draft[key] === 'string') draft[key] = formatProperName(draft[key]);
+          }
           setFormData(prev => ({ ...prev, ...draft }));
         }
       }
@@ -483,6 +492,11 @@ export default function RegistroPublico() {
         toast.error(`El campo "${fieldLabel}" es obligatorio`);
         return;
       }
+    }
+
+    if (!DOCUMENT_NUMBER_PATTERN.test(formData.documentNumber)) {
+      toast.error('El documento solo puede contener dígitos');
+      return;
     }
 
     const mapGender = (val: string | undefined) => {
@@ -683,8 +697,8 @@ export default function RegistroPublico() {
           const response = await (supabase as any).rpc('submit_employee_rehire_registration', {
             p_token: tokenParam!,
             p_profile: {
-              first_name: formData.firstName || '',
-              last_name: formData.lastName || '',
+              first_name: formatProperName(formData.firstName),
+              last_name: formatProperName(formData.lastName),
               document_type: formData.documentType || 'CC',
               document_number: formData.documentNumber || '',
               email: formData.email || null,
@@ -727,8 +741,8 @@ export default function RegistroPublico() {
         } else {
           const response = await supabase.rpc('submit_candidate_registration', {
           p_token: tokenParam!,
-          p_first_name: formData.firstName || '',
-          p_last_name: formData.lastName || '',
+          p_first_name: formatProperName(formData.firstName),
+          p_last_name: formatProperName(formData.lastName),
           p_document_type: formData.documentType || 'CC',
           p_document_number: formData.documentNumber || '',
           p_email: formData.email || null,
@@ -1263,10 +1277,10 @@ export default function RegistroPublico() {
               const bank = result.bank;
               const updates: Record<string, any> = {
                 employeeId: emp.id,
-                firstName: emp.first_name,
-                middleName: emp.middle_name,
-                lastName: emp.last_name,
-                secondLastName: emp.second_last_name,
+                firstName: formatProperName(emp.first_name),
+                middleName: formatProperName(emp.middle_name),
+                lastName: formatProperName(emp.last_name),
+                secondLastName: formatProperName(emp.second_last_name),
                 birthDate: emp.birth_date,
                 birthCity: emp.birth_city,
                 birthDepartment: emp.birth_department,
@@ -1351,8 +1365,8 @@ export default function RegistroPublico() {
               setRehireEmployeeId(candidateLookup.rehire ? candidateLookup.rehire_employee_id : null);
               const updates: Record<string, any> = {
                 candidateId: candidate.id,
-                firstName: candidate.first_name,
-                lastName: candidate.last_name,
+                firstName: formatProperName(candidate.first_name),
+                lastName: formatProperName(candidate.last_name),
                 email: candidate.email,
                 mobile: candidate.mobile,
                 phone: candidate.phone,
@@ -1416,8 +1430,8 @@ export default function RegistroPublico() {
             if (result?.previous_candidacies?.length > 0) {
               const latest = result.previous_candidacies[0];
               const updates: Record<string, string> = {};
-              if (!formData.firstName && latest.first_name) updates.firstName = latest.first_name;
-              if (!formData.lastName && latest.last_name) updates.lastName = latest.last_name;
+              if (!formData.firstName && latest.first_name) updates.firstName = formatProperName(latest.first_name);
+              if (!formData.lastName && latest.last_name) updates.lastName = formatProperName(latest.last_name);
               if (!formData.email && latest.email) updates.email = latest.email;
               if (!formData.mobile && latest.mobile) updates.mobile = latest.mobile;
               if (!formData.phone && latest.phone) updates.phone = latest.phone;
@@ -1456,8 +1470,14 @@ export default function RegistroPublico() {
         <Input
           type={config.type}
           value={formData[key] || ''}
-          onChange={e => handleChange(key, e.target.value)}
-          onBlur={handleDocumentBlur}
+          inputMode={key === 'documentNumber' ? 'numeric' : undefined}
+          onChange={event => handleChange(
+            key,
+            key === 'documentNumber' ? digitsOnly(event.target.value) : event.target.value,
+          )}
+          onBlur={NAME_FIELDS.has(key)
+            ? event => handleChange(key, formatProperName(event.target.value))
+            : handleDocumentBlur}
           placeholder={config.placeholder || `Ingrese ${config.label.toLowerCase()}`}
         />
       </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Switch } from '@/components/ui/switch';
+import { digitsOnly, formatProperName } from '@/lib/employeeIdentity';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
@@ -315,10 +316,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         documentNumber: currentEmployeeData.document_number,
         documentIssueCity: currentEmployeeData.document_issue_city || undefined,
         documentIssueDate: parseDateOnly(currentEmployeeData.document_issue_date),
-        firstName: currentEmployeeData.first_name,
-        middleName: currentEmployeeData.middle_name || undefined,
-        lastName: currentEmployeeData.last_name,
-        secondLastName: currentEmployeeData.second_last_name || undefined,
+        firstName: formatProperName(currentEmployeeData.first_name),
+        middleName: formatProperName(currentEmployeeData.middle_name) || undefined,
+        lastName: formatProperName(currentEmployeeData.last_name),
+        secondLastName: formatProperName(currentEmployeeData.second_last_name) || undefined,
         birthCountry: currentEmployeeData.birth_country || 'Colombia',
         birthDepartment: currentEmployeeData.birth_department || undefined,
         birthCity: currentEmployeeData.birth_city || undefined,
@@ -654,7 +655,12 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           <FormItem>
                             <FormLabel>Número *</FormLabel>
                             <FormControl>
-                              <Input placeholder="1234567890" {...field} />
+                              <Input
+                                placeholder="1234567890"
+                                {...field}
+                                inputMode="numeric"
+                                onChange={event => field.onChange(digitsOnly(event.target.value))}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -723,7 +729,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primer Nombre *</FormLabel>
-                            <FormControl><Input placeholder="Juan" {...field} /></FormControl>
+                            <FormControl>
+                              <Input
+                                placeholder="Juan"
+                                {...field}
+                                value={field.value ?? ''}
+                                onBlur={event => {
+                                  field.onChange(formatProperName(event.target.value));
+                                  field.onBlur();
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -734,7 +750,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Segundo Nombre</FormLabel>
-                            <FormControl><Input placeholder="Carlos" {...field} /></FormControl>
+                            <FormControl>
+                              <Input
+                                placeholder="Carlos"
+                                {...field}
+                                value={field.value ?? ''}
+                                onBlur={event => {
+                                  field.onChange(formatProperName(event.target.value));
+                                  field.onBlur();
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -745,7 +771,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Primer Apellido *</FormLabel>
-                            <FormControl><Input placeholder="García" {...field} /></FormControl>
+                            <FormControl>
+                              <Input
+                                placeholder="García"
+                                {...field}
+                                value={field.value ?? ''}
+                                onBlur={event => {
+                                  field.onChange(formatProperName(event.target.value));
+                                  field.onBlur();
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -756,7 +792,17 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Segundo Apellido</FormLabel>
-                            <FormControl><Input placeholder="López" {...field} /></FormControl>
+                            <FormControl>
+                              <Input
+                                placeholder="López"
+                                {...field}
+                                value={field.value ?? ''}
+                                onBlur={event => {
+                                  field.onChange(formatProperName(event.target.value));
+                                  field.onBlur();
+                                }}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

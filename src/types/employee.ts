@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { DOCUMENT_NUMBER_PATTERN, formatProperName } from '@/lib/employeeIdentity';
 import type { Database } from '@/integrations/supabase/types';
 
 // =====================================================
@@ -196,19 +197,22 @@ export const employeeCoreSchema = z.object({
   documentType: z.enum(['CC', 'CE', 'TI', 'PA', 'PEP']).optional(),
   documentNumber: z.string()
     .min(5, 'El documento debe tener al menos 5 caracteres')
-    .max(20, 'El documento no puede exceder 20 caracteres'),
+    .max(20, 'El documento no puede exceder 20 caracteres')
+    .regex(DOCUMENT_NUMBER_PATTERN, 'El documento solo puede contener dígitos'),
   documentIssueCity: z.string().max(100).optional(),
   documentIssueDate: z.date().optional(),
   
   // Names
-  firstName: z.string()
+  firstName: z.string().trim()
     .min(2, 'El nombre debe tener al menos 2 caracteres')
-    .max(50, 'El nombre no puede exceder 50 caracteres'),
-  middleName: z.string().max(50).optional(),
-  lastName: z.string()
+    .max(50, 'El nombre no puede exceder 50 caracteres')
+    .transform(formatProperName),
+  middleName: z.string().trim().max(50).transform(formatProperName).optional(),
+  lastName: z.string().trim()
     .min(2, 'El apellido debe tener al menos 2 caracteres')
-    .max(50, 'El apellido no puede exceder 50 caracteres'),
-  secondLastName: z.string().max(50).optional(),
+    .max(50, 'El apellido no puede exceder 50 caracteres')
+    .transform(formatProperName),
+  secondLastName: z.string().trim().max(50).transform(formatProperName).optional(),
   
   // Birth
   birthCountry: z.string().max(100).default('Colombia'),
