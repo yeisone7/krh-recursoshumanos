@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
+import { getRenewedDotationIds } from '@/lib/dotationRenewals';
+import { fetchAllAnalyticsRows } from '@/lib/employeeAnalyticsData';
 
 export interface UnifiedAlert {
   id: string;
@@ -262,13 +264,17 @@ export function useUnifiedAlerts() {
       }
 
       // 3. Fetch expiring dotation deliveries
-      const { data: dotations } = await supabase
+      const dotations = await fetchAllAnalyticsRows(async (from, to) => supabase
         .from('dotation_deliveries')
-        .select('id, employee_id, item_name, expiration_date, created_at')
-        .eq('company_id', currentCompanyId!);
+        .select('id, employee_id, dotation_item_type_id, item_name, delivery_date, expiration_date, created_at')
+        .eq('company_id', currentCompanyId!)
+        .order('id')
+        .range(from, to));
+      const renewedDotationIds = getRenewedDotationIds(dotations);
 
       if (dotations) {
         for (const dotation of dotations) {
+          if (renewedDotationIds.has(dotation.id)) continue;
           const employee = employeeMap.get(dotation.employee_id);
           if (!employee) continue;
 
@@ -609,14 +615,8 @@ export function useUnifiedAlerts() {
           .eq('is_current', true);
 
         if (workInfos) {
-          // Get all deliveries for date checking
-          const { data: allDeliveries } = await supabase
-            .from('dotation_deliveries')
-            .select('employee_id, item_name, expiration_date')
-            .eq('company_id', currentCompanyId!);
-
           const deliveryByEmpItem = new Map<string, string>(); // emp|itemName -> latest expiration
-          for (const d of (allDeliveries || []) as any[]) {
+          for (const d of dotations) {
             const key = `${d.employee_id}|${d.item_name}`;
             const existing = deliveryByEmpItem.get(key);
             if (!existing || d.expiration_date > existing) {

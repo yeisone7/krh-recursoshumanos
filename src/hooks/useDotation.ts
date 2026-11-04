@@ -276,6 +276,8 @@ export function useCreateDotationDeliveryBatch() {
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['dotation_inventory'] });
       queryClient.invalidateQueries({ queryKey: ['inventory_movements'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_compliance'] });
     },
   });
 }

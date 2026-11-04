@@ -54,7 +54,7 @@ import { ProfesiogramaTab } from '@/components/dotation/ProfesiogramaTab';
 import { DotationComplianceTab } from '@/components/dotation/DotationComplianceTab';
 import { BulkDeliveryDialog } from '@/components/dotation/BulkDeliveryDialog';
 import { getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
-import { useDotationTransactions, useDeleteDotationTransaction } from '@/hooks/useDotationTransactions';
+import { getDotationTransactionStatus, useDotationTransactions, useDeleteDotationTransaction } from '@/hooks/useDotationTransactions';
 import type { DotationTransaction } from '@/hooks/useDotationTransactions';
 import { useDotationInventory } from '@/hooks/useDotationInventory';
 import { useOperationCenters } from '@/hooks/useCompanies';
@@ -65,9 +65,10 @@ import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
 import { toast } from 'sonner';
 import { getDotationSignatureUrl } from '@/lib/dotationSignature';
 
-type DotationStatus = 'vigente' | 'por_vencer' | 'vencida';
+type DotationStatus = ReturnType<typeof getDotationTransactionStatus>;
 
 const statusStyles: Record<DotationStatus, { bg: string; text: string; icon: typeof CheckCircle; label: string }> = {
+  renovada: { bg: 'bg-muted', text: 'text-muted-foreground', icon: CheckCircle, label: 'Renovada' },
   vigente: {
     bg: 'bg-success-light',
     text: 'text-success',
@@ -87,17 +88,6 @@ const statusStyles: Record<DotationStatus, { bg: string; text: string; icon: typ
     label: 'Vencida',
   },
 };
-
-function getTransactionStatus(transaction: DotationTransaction): DotationStatus {
-  let worst: DotationStatus = 'vigente';
-  for (const item of transaction.items) {
-    if (!item.expiration_date) continue;
-    const s = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date }) as DotationStatus;
-    if (s === 'vencida') return 'vencida';
-    if (s === 'por_vencer') worst = 'por_vencer';
-  }
-  return worst;
-}
 
 function getAlertLevel(daysRemaining: number): 'info' | 'warning' | 'critical' {
   if (daysRemaining <= 7) return 'critical';
@@ -152,7 +142,7 @@ export default function Dotacion() {
     const alertList: any[] = [];
     for (const tx of transactions) {
       for (const item of tx.items) {
-        if (!item.expiration_date) continue;
+        if (item.renewed || !item.expiration_date) continue;
         const status = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date });
         if (status === 'por_vencer' || status === 'vencida') {
           const daysRemaining = getDaysRemaining(item.expiration_date);
@@ -181,6 +171,7 @@ export default function Dotacion() {
     for (const tx of transactions) {
       for (const item of tx.items) {
         totalItems++;
+        if (item.renewed) continue;
         if (!item.expiration_date) { vigentes++; continue; }
         const s = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date });
         if (s === 'vigente') vigentes++;
@@ -202,7 +193,7 @@ export default function Dotacion() {
         employeeName.includes(searchQuery.toLowerCase()) ||
         itemNames.includes(searchQuery.toLowerCase());
       
-      const txStatus = getTransactionStatus(tx);
+      const txStatus = getDotationTransactionStatus(tx);
       const matchesStatus = statusFilter === 'all' || txStatus === statusFilter;
       
       return matchesSearch && matchesStatus;
@@ -434,7 +425,7 @@ export default function Dotacion() {
                         </TableHeader>
                         <TableBody>
                           {filteredTransactions.map((tx) => {
-                            const txStatus = getTransactionStatus(tx);
+                            const txStatus = getDotationTransactionStatus(tx);
                             const sc = statusStyles[txStatus];
                             const StatusIcon = sc.icon;
                             const itemsSummary = tx.items.length <= 2

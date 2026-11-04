@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { getRenewedDotationIds } from '@/lib/dotationRenewals';
+import { getDotationStatus } from '@/hooks/useDotation';
 
 export interface DotationTransaction {
   id: string;
@@ -34,12 +36,28 @@ export interface DotationTransaction {
 
 export interface DotationTransactionItem {
   id: string;
+  dotation_item_type_id?: string | null;
+  created_at?: string;
+  renewed?: boolean;
   item_type: string;
   item_name: string;
   quantity: number;
   size: string | null;
   delivery_date: string;
   expiration_date: string;
+}
+
+export function getDotationItemStatus(item: DotationTransactionItem) {
+  if (item.renewed) return 'renovada';
+  return item.expiration_date ? getDotationStatus(item) : 'vigente';
+}
+
+export function getDotationTransactionStatus(transaction: DotationTransaction) {
+  const statuses = transaction.items.map(getDotationItemStatus);
+  if (statuses.includes('vencida')) return 'vencida';
+  if (statuses.includes('por_vencer')) return 'por_vencer';
+  if (statuses.length && statuses.every(status => status === 'renovada')) return 'renovada';
+  return 'vigente';
 }
 
 export function useDotationTransactions() {
@@ -67,7 +85,7 @@ export function useDotationTransactions() {
       const [itemsResult, employeesResult] = await Promise.all([
         supabase
           .from('dotation_deliveries')
-          .select('id, transaction_id, item_type, item_name, quantity, size, delivery_date, expiration_date')
+          .select('id, transaction_id, dotation_item_type_id, item_type, item_name, quantity, size, delivery_date, expiration_date, created_at')
           .eq('company_id', currentCompanyId!)
           .in('transaction_id', transactionIds),
         supabase
@@ -88,6 +106,8 @@ export function useDotationTransactions() {
         }
         itemsByTransaction.get(item.transaction_id)!.push({
           id: item.id,
+          dotation_item_type_id: item.dotation_item_type_id,
+          created_at: item.created_at,
           item_type: item.item_type,
           item_name: item.item_name,
           quantity: item.quantity,
@@ -125,7 +145,7 @@ export function useDotationTransactions() {
         const { data } = await supabase.storage.from('dotation-signatures').createSignedUrls(paths, 3600);
         for (const item of data || []) if (item.path && item.signedUrl) signedUrls.set(item.path, item.signedUrl);
       }
-      return transactions
+      const visibleTransactions = transactions
         .map(t => {
           const employee = employeeMap.get(t.employee_id);
           if (!employee) return null;
@@ -137,6 +157,13 @@ export function useDotationTransactions() {
           };
         })
         .filter(Boolean) as DotationTransaction[];
+      const renewedIds = getRenewedDotationIds(visibleTransactions.flatMap(tx =>
+        tx.items.map(item => ({ ...item, employee_id: tx.employee_id, created_at: item.created_at ?? tx.created_at })),
+      ));
+      return visibleTransactions.map(tx => ({
+        ...tx,
+        items: tx.items.map(item => ({ ...item, renewed: renewedIds.has(item.id) })),
+      }));
     },
     enabled: !!currentCompanyId,
   });
@@ -189,6 +216,8 @@ export function useDeleteDotationTransaction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dotation_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['dotation_deliveries'] });
+      queryClient.invalidateQueries({ queryKey: ['unified-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['dotation_compliance'] });
     },
   });
 }

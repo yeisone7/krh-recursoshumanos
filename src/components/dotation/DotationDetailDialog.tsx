@@ -19,7 +19,8 @@ import { SignatureCanvas } from '@/components/training/SignatureCanvas';
 import { generateActaEntregaPdf } from '@/lib/dotationPdfGenerator';
 import { useCompany } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
-import { getDotationStatus, getDaysRemaining } from '@/hooks/useDotation';
+import { getDaysRemaining } from '@/hooks/useDotation';
+import { getDotationItemStatus, getDotationTransactionStatus } from '@/hooks/useDotationTransactions';
 import { toast } from 'sonner';
 import { DotationSignatureLink } from './DotationSignatureLink';
 import { getDotationSignatureUrl } from '@/lib/dotationSignature';
@@ -42,9 +43,10 @@ const dotationItemTypeLabels: Record<string, string> = {
   otros: 'Otros',
 };
 
-type DotationStatus = 'vigente' | 'por_vencer' | 'vencida';
+type DotationStatus = ReturnType<typeof getDotationItemStatus>;
 
 const statusConfig: Record<DotationStatus, { bg: string; text: string; icon: typeof CheckCircle; label: string }> = {
+  renovada: { bg: 'bg-muted', text: 'text-muted-foreground', icon: CheckCircle, label: 'Renovada' },
   vigente: { bg: 'bg-success-light', text: 'text-success', icon: CheckCircle, label: 'Vigente' },
   por_vencer: { bg: 'bg-warning-light', text: 'text-warning', icon: AlertTriangle, label: 'Por Vencer' },
   vencida: { bg: 'bg-destructive-light', text: 'text-destructive', icon: AlertTriangle, label: 'Vencida' },
@@ -89,18 +91,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
     transaction.employees?.second_last_name,
   ].filter(Boolean).join(' ');
 
-  const getWorstStatus = (): DotationStatus => {
-    let worst: DotationStatus = 'vigente';
-    for (const item of transaction.items) {
-      if (!item.expiration_date) continue;
-      const s = getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date }) as DotationStatus;
-      if (s === 'vencida') return 'vencida';
-      if (s === 'por_vencer') worst = 'por_vencer';
-    }
-    return worst;
-  };
-
-  const overallStatus = getWorstStatus();
+  const overallStatus = getDotationTransactionStatus(transaction);
   const sc = statusConfig[overallStatus];
   const StatusIcon = sc.icon;
 
@@ -270,9 +261,7 @@ export function DotationDetailDialog({ open, onOpenChange, transaction }: Dotati
             <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground ml-1">Detalle de Entrega</Label>
             {transaction.items.map((item) => {
               const hasExpDate = item.expiration_date && !isNaN(new Date(item.expiration_date).getTime());
-              const itemStatus = hasExpDate
-                ? (getDotationStatus({ delivery_date: item.delivery_date, expiration_date: item.expiration_date }) as DotationStatus)
-                : 'vigente';
+              const itemStatus = getDotationItemStatus(item);
               const itemSc = statusConfig[itemStatus];
               const ItemStatusIcon = itemSc.icon;
               const daysRem = hasExpDate ? getDaysRemaining(item.expiration_date) : 0;
