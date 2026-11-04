@@ -894,13 +894,15 @@ export default function Evaluaciones() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar este elemento?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El elemento será eliminado permanentemente.
+              {itemToDelete?.type === 'template'
+                ? 'Si la plantilla está vinculada a algún ciclo, se desactivará para futuros ciclos y se conservará en los existentes. Si está sin uso, se eliminará permanentemente.'
+                : 'Esta acción no se puede deshacer. El elemento será eliminado permanentemente.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Eliminar
+              {itemToDelete?.type === 'template' ? 'Confirmar' : 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

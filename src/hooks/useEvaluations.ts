@@ -83,15 +83,38 @@ export function useEvaluations() {
 
   const deleteTemplate = useMutation({
     mutationFn: async (id: string) => {
+      if (!currentCompanyId) throw new Error('Selecciona una empresa');
+
       const { error } = await supabase
         .from('evaluation_templates')
         .delete()
-        .eq('id', id);
-      if (error) throw error;
+        .eq('company_id', currentCompanyId)
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (!error) return 'deleted';
+      if (error.code !== '23503' || !error.message.includes('evaluation_cycles_template_id_fkey')) {
+        throw error;
+      }
+
+      const { error: deactivateError } = await supabase
+        .from('evaluation_templates')
+        .update({ is_active: false })
+        .eq('company_id', currentCompanyId)
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (deactivateError) throw deactivateError;
+      return 'deactivated';
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-templates'] });
-      toast.success('Plantilla eliminada');
+      if (result === 'deactivated') {
+        queryClient.invalidateQueries({ queryKey: ['evaluation-cycles'] });
+        toast.success('Plantilla desactivada. Se conserva en los ciclos que ya la usan.');
+      } else {
+        toast.success('Plantilla eliminada');
+      }
     },
     onError: (error) => {
       toast.error('Error al eliminar plantilla: ' + error.message);

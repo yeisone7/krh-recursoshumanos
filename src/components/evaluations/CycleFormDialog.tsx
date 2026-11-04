@@ -153,9 +153,9 @@ export function CycleFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                          {templates.filter(t => t.is_active).map((template) => (
-                            <SelectItem key={template.id} value={template.id} className="rounded-lg py-3">
-                              {template.name}
+                          {templates.filter(t => t.is_active || t.id === cycle?.template_id).map((template) => (
+                            <SelectItem key={template.id} value={template.id} disabled={!template.is_active} className="rounded-lg py-3">
+                              {template.name}{!template.is_active && ' (inactiva)'}
                             </SelectItem>
                           ))}
                         </SelectContent>
