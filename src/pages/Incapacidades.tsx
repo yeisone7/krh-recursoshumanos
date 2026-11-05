@@ -12,6 +12,7 @@ import {
   BarChart3,
   Bell,
   ChevronRight,
+  CircleAlert,
   ClipboardList,
   Clock,
   Eye,
@@ -494,7 +495,7 @@ export default function Incapacidades() {
               <Button size="sm" variant="ghost" onClick={() => setPreviewId(null)}>Cerrar</Button>
             </div>
           </header>
-          <div className="grid min-h-0 grid-cols-2 gap-3 overflow-y-auto overscroll-contain break-words bg-primary/5 p-3 text-sm lg:grid-cols-4 lg:divide-x lg:divide-primary/20 sm:p-4">
+          <div className="grid min-h-0 grid-cols-2 gap-3 overflow-y-auto overscroll-contain break-words bg-primary/5 p-3 text-sm sm:p-4 lg:grid-cols-4 lg:divide-x lg:divide-primary/20 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(8.5rem,0.75fr)]">
             <div className="space-y-1">
               <h3 className="font-semibold text-primary">Empleado</h3>
               <p>Documento · {preview.employee?.document_number || '—'}</p>
@@ -518,7 +519,19 @@ export default function Incapacidades() {
               <Badge className={recoveryStatusColors[preview.recovery_status]}>{recoveryStatusLabels[preview.recovery_status]}</Badge>
               <p>Valor liquidado · {formatCurrency(preview.total_amount)}</p>
               <p>Valor recobrado · {formatCurrency(preview.recovered_amount)}</p>
-              <p className="font-semibold">Saldo pendiente · {formatCurrency(previewRecovery.pending)}</p>
+            </div>
+            <div className="col-span-2 self-center lg:col-span-4 lg:!border-0 xl:col-span-1">
+              <div className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 ${
+                previewRecovery.pending > 0
+                  ? 'border-destructive/20 bg-destructive/10 text-destructive'
+                  : 'border-border bg-muted text-muted-foreground'
+              }`}>
+                {previewRecovery.pending > 0 && <CircleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                <div className="text-center">
+                  <p className="text-xs font-semibold">Saldo pendiente</p>
+                  <p className="text-xl font-bold leading-tight tabular-nums">{formatCurrency(previewRecovery.pending)}</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
