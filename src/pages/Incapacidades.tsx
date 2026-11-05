@@ -13,14 +13,17 @@ import {
   Bell,
   ChevronRight,
   CircleAlert,
+  CircleDollarSign,
   ClipboardList,
   Clock,
   Eye,
   Filter,
   Home,
+  HeartPulse,
   List,
   AlertTriangle,
   Download,
+  UserRound,
 } from 'lucide-react';
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -62,6 +65,15 @@ import {
   type IncapacityWithEmployee,
 } from '@/types/incapacity';
 import { MobileCardList } from '@/components/shared/MobileCardList';
+
+function PreviewField({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 font-medium">{value}</dd>
+    </div>
+  );
+}
 
 function getPosition(incapacity: IncapacityWithEmployee) {
   return incapacity.employee?.employee_work_info?.find((info) => info.is_current)?.position_name;
@@ -486,8 +498,8 @@ export default function Incapacidades() {
 
       {preview && previewRecovery && (
         <section id="incapacity-preview" aria-labelledby="incapacity-preview-title" className="flex max-h-[55%] min-h-0 shrink-0 flex-col overflow-hidden rounded-xl border border-primary/20 bg-card">
-          <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-primary/20 bg-primary/5 px-3 py-2 sm:px-4">
-            <h2 id="incapacity-preview-title" className="font-semibold">
+          <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-primary/20 bg-primary/10 px-3 py-2 sm:px-4">
+            <h2 id="incapacity-preview-title" className="!text-sm font-bold !leading-5">
               Detalle de la incapacidad{preview.employee && ` · ${preview.employee.first_name} ${preview.employee.last_name}`}
             </h2>
             <div className="flex gap-1">
@@ -495,41 +507,63 @@ export default function Incapacidades() {
               <Button size="sm" variant="ghost" onClick={() => setPreviewId(null)}>Cerrar</Button>
             </div>
           </header>
-          <div className="grid min-h-0 grid-cols-2 gap-3 overflow-y-auto overscroll-contain break-words bg-primary/5 p-3 text-sm sm:p-4 lg:grid-cols-4 lg:divide-x lg:divide-primary/20 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(8.5rem,0.75fr)]">
-            <div className="space-y-1">
-              <h3 className="font-semibold text-primary">Empleado</h3>
-              <p>Documento · {preview.employee?.document_number || '—'}</p>
-              <p>Cargo · {getPosition(preview) || '—'}</p>
-              <p>EPS · {preview.eps_name || '—'}</p>
+          <div className="grid min-h-0 grid-cols-1 gap-3 overflow-y-auto overscroll-contain break-words bg-primary/5 p-3 text-xs leading-5 sm:grid-cols-2 sm:p-4 lg:grid-cols-4 lg:divide-x lg:divide-primary/20 xl:grid-cols-[repeat(4,minmax(0,1fr))_minmax(9rem,0.8fr)]">
+            <div className="flex min-w-0 items-start gap-2">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                <UserRound className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold">
+                  {preview.employee ? `${preview.employee.first_name} ${preview.employee.last_name}` : 'Empleado'}
+                </h3>
+                <dl className="mt-1">
+                  <PreviewField label="Documento" value={preview.employee?.document_number || '—'} />
+                  <PreviewField label="Cargo" value={getPosition(preview) || '—'} />
+                  <PreviewField label="EPS" value={preview.eps_name || '—'} />
+                </dl>
+              </div>
             </div>
             <div className="space-y-1 lg:pl-3">
-              <h3 className="font-semibold text-primary">Incapacidad</h3>
-              <p>Origen · {getIncapacityOriginShortLabel(preview.origin)}</p>
-              <p>N.º incapacidad · {preview.certificate_number || '—'}</p>
-              <p>Días · {preview.total_days}</p>
-              <p>{formatDateOnly(preview.start_date, 'dd/MM/yyyy')} – {formatDateOnly(preview.end_date, 'dd/MM/yyyy')}</p>
+              <h3 className="flex items-center gap-2 font-bold !text-primary">
+                <ClipboardList className="h-4 w-4 shrink-0" aria-hidden="true" /> Información de la incapacidad
+              </h3>
+              <dl>
+                <PreviewField label="Origen" value={getIncapacityOriginShortLabel(preview.origin)} />
+                <PreviewField label="N.º incapacidad" value={preview.certificate_number || '—'} />
+                <PreviewField label="Días" value={preview.total_days} />
+                <PreviewField label="Fecha de inicio" value={formatDateOnly(preview.start_date, 'dd/MM/yyyy')} />
+                <PreviewField label="Fecha final" value={formatDateOnly(preview.end_date, 'dd/MM/yyyy')} />
+              </dl>
             </div>
             <div className="space-y-1 lg:pl-3">
-              <h3 className="font-semibold text-primary">Diagnóstico</h3>
-              {preview.cie10_code && <p className="font-medium">{preview.cie10_code}</p>}
-              <p>{preview.diagnosis}</p>
+              <h3 className="flex items-center gap-2 font-bold !text-primary">
+                <HeartPulse className="h-4 w-4 shrink-0" aria-hidden="true" /> Diagnóstico
+              </h3>
+              <dl>
+                {preview.cie10_code && <PreviewField label="Código" value={preview.cie10_code} />}
+                <PreviewField label="Descripción" value={preview.diagnosis} />
+              </dl>
             </div>
             <div className="space-y-1 lg:pl-3">
-              <h3 className="font-semibold text-primary">Recobro</h3>
-              <Badge className={recoveryStatusColors[preview.recovery_status]}>{recoveryStatusLabels[preview.recovery_status]}</Badge>
-              <p>Valor liquidado · {formatCurrency(preview.total_amount)}</p>
-              <p>Valor recobrado · {formatCurrency(preview.recovered_amount)}</p>
+              <h3 className="flex items-center gap-2 font-bold !text-primary">
+                <CircleDollarSign className="h-4 w-4 shrink-0" aria-hidden="true" /> Información del recobro
+              </h3>
+              <dl>
+                <PreviewField label="Estado" value={<Badge className={recoveryStatusColors[preview.recovery_status]}>{recoveryStatusLabels[preview.recovery_status]}</Badge>} />
+                <PreviewField label="Valor liquidado" value={formatCurrency(preview.total_amount)} />
+                <PreviewField label="Valor recobrado" value={formatCurrency(preview.recovered_amount)} />
+              </dl>
             </div>
-            <div className="col-span-2 self-center lg:col-span-4 lg:!border-0 xl:col-span-1">
-              <div className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 ${
+            <div className="self-center sm:col-span-2 lg:col-span-4 lg:!border-0 xl:col-span-1">
+              <div className={`flex items-center justify-center gap-2 rounded-lg border px-2.5 py-3 ${
                 previewRecovery.pending > 0
-                  ? 'border-destructive/20 bg-destructive/10 text-destructive'
+                  ? 'border-red-200 bg-red-50 text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200'
                   : 'border-border bg-muted text-muted-foreground'
               }`}>
                 {previewRecovery.pending > 0 && <CircleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />}
                 <div className="text-center">
-                  <p className="text-xs font-semibold">Saldo pendiente</p>
-                  <p className="text-xl font-bold leading-tight tabular-nums">{formatCurrency(previewRecovery.pending)}</p>
+                  <p className="font-semibold">Saldo pendiente</p>
+                  <p className="mt-0.5 text-xl font-bold leading-tight tabular-nums">{formatCurrency(previewRecovery.pending)}</p>
                 </div>
               </div>
             </div>
