@@ -5,6 +5,7 @@ import { format, differenceInDays, isBefore, isAfter } from 'date-fns';
 import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
+import { getIncapacityRecoveryAmounts } from '@/lib/incapacityAnalytics';
 import { logAuditEvent } from '@/lib/auditService';
 import type { 
   EmployeeIncapacity, 
@@ -43,9 +44,13 @@ export function useIncapacities() {
         .from('employee_incapacities')
         .select(`
           *,
-          employee:employees_v2(id, first_name, last_name, document_number, gender)
+          employee:employees_v2(
+            id, first_name, last_name, document_number, gender,
+            employee_work_info(position_name, is_current)
+          )
         `)
         .eq('company_id', currentCompanyId!)
+        .eq('employee.employee_work_info.is_current', true)
         .order('start_date', { ascending: false });
       
       if (error) throw error;
@@ -999,6 +1004,7 @@ export interface IncapacityStats {
   totalDaysThisMonth: number;
   pendingRecovery: number;
   pendingRecoveryAmount: number;
+  pendingBalance: number;
   byOrigin: Record<IncapacityOrigin, number>;
   avgDuration: number;
 }
@@ -1065,6 +1071,7 @@ export function useIncapacityStats() {
         totalDaysThisMonth: thisMonth.reduce((sum, inc) => sum + inc.total_days, 0),
         pendingRecovery: pendingRecovery.length,
         pendingRecoveryAmount: pendingRecovery.reduce((sum, inc) => sum + (inc.total_amount || 0), 0),
+        pendingBalance: incapacities.reduce((sum, inc) => sum + getIncapacityRecoveryAmounts(inc).pending, 0),
         byOrigin,
         avgDuration: Math.round(avgDuration * 10) / 10,
       } as IncapacityStats;
