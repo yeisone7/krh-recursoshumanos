@@ -1,0 +1,40 @@
+/* Own the spacing and scroll region despite the application's legacy modal rules. */
+[role="dialog"][data-dialog-content].dotation-form-dialog {
+  padding: 0 !important;
+  overflow: hidden !important;
+  max-height: calc(100dvh - 2rem);
+  gap: 0;
+}
+
+.dotation-form-dialog [data-workspace-back] {
+  flex-shrink: 0;
+  margin: 0.5rem 3rem 0 1rem;
+}
+
+[role="dialog"].dotation-form-dialog label {
+  margin-bottom: 0 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+[role="dialog"].dotation-form-dialog input:not([type="checkbox"]):not([type="radio"]),
+[role="dialog"].dotation-form-dialog button[role="combobox"] {
+  height: 2.5rem !important;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8125rem !important;
+  border-radius: 0.5rem !important;
+}
+
+[role="dialog"].dotation-form-dialog textarea {
+  min-height: 4.75rem !important;
+  padding: 0.75rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 0.8125rem !important;
+}
+
+@media (max-width: 639px) {
+  [role="dialog"][data-dialog-content].dotation-form-dialog {
+    max-height: calc(100dvh - 1rem);
+  }
+}

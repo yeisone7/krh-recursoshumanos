@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement, ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -274,7 +274,7 @@ describe('Dotation dialogs runtime regressions', () => {
     expect(createDeliveryBatch).toHaveBeenCalledOnce();
   });
 
-  it('widens Nueva Entrega by 40% and prioritizes numeric inventory sizes', () => {
+  it('keeps the wide delivery form and prioritizes numeric inventory sizes', () => {
     dotationInventory.data = ['10', '6', '8'].map((size, index) => ({
       id: `inventory-${index}`,
       company_id: 'company-1',
@@ -329,6 +329,24 @@ describe('Dotation dialogs runtime regressions', () => {
     item_type: 'item-1', item_name: 'BATA BLANCA', size: null,
     quantity_available: quantity, minimum_stock: 0, created_by: null,
     created_at: '2026-09-25', updated_at: '2026-09-25',
+  });
+
+  it('groups the delivery in visible sections and totals only selected articles', () => {
+    prepareDelivery();
+    const recipient = screen.getByRole('region', { name: 'Empleado y origen' });
+    expect(within(recipient).getByRole('combobox', { name: 'Seleccionar colaborador' })).toBeVisible();
+    expect(within(recipient).getByRole('combobox', { name: 'Seleccionar centro o bodega' })).toBeVisible();
+    expect(within(screen.getByRole('region', { name: 'Datos de la entrega' })).getByLabelText('Entregado por *')).toBeVisible();
+
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Cantidad de BATA BLANCA' }), {
+      target: { value: '3' },
+    });
+    expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === '1 artículo·3 unidades')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Incluir BATA BLANCA' }));
+    expect(screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === '0 artículos·0 unidades')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar BATA BLANCA' }));
+    expect(screen.getByText('Aún no hay artículos')).toBeVisible();
   });
 
   it('requires an explicit inventory source before registering a delivery', () => {
