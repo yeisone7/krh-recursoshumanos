@@ -1065,6 +1065,108 @@ div[class*="DialogContent"] {
   }
 }
 
+/* Employee editor owns its dimensions; only the form body scrolls. */
+[role="dialog"][data-dialog-content].employee-form-dialog {
+  max-height: calc(100dvh - 2rem);
+  padding: 0 !important;
+  gap: 0;
+  overflow: hidden !important;
+}
+.employee-form-dialog [data-workspace-back] {
+  flex-shrink: 0;
+  margin: 0.5rem 2.75rem 0 1rem;
+}
+[role="dialog"] form.employee-form {
+  padding: 0 !important;
+  background: hsl(var(--background)) !important;
+}
+.employee-form-dialog .employee-form-header {
+  margin: 0;
+  padding: 1.25rem 3rem 1rem 1.5rem;
+  text-align: left;
+}
+.employee-form-dialog .employee-form-tabs [role="tab"] {
+  white-space: normal;
+  line-height: 1.25;
+}
+.employee-form-tabs [role="tab"] > span:first-of-type {
+  overflow: visible;
+  white-space: normal;
+}
+.employee-form-body {
+  scrollbar-gutter: stable;
+  background: hsl(var(--muted) / 0.25);
+}
+.employee-form-body [role="tabpanel"] > .space-y-4 {
+  padding: 1rem;
+  border: 1px solid hsl(var(--border) / 0.8);
+  border-radius: 0.75rem;
+  background: hsl(var(--card));
+}
+.employee-form-body [role="tabpanel"] > div > h3 {
+  padding: 0 0 0.75rem;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.875rem;
+  font-weight: 650;
+  color: hsl(var(--foreground));
+}
+.employee-form-body [role="tabpanel"] > div > h3 > span {
+  display: none;
+}
+[role="dialog"].employee-form-dialog .employee-form-body label {
+  margin-bottom: 0 !important;
+}
+.employee-form-body button[aria-haspopup="dialog"] {
+  height: 2.75rem;
+}
+.employee-form-photo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px dashed hsl(var(--primary) / 0.25);
+  border-radius: 0.75rem;
+  background: hsl(var(--primary) / 0.035);
+}
+.employee-form-photo h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.employee-form-avatar > div {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.employee-form-avatar {
+  max-width: 100%;
+}
+.employee-form-avatar > div > .group {
+  flex-shrink: 0;
+}
+.employee-form-avatar button:focus-visible {
+  opacity: 1;
+}
+.employee-form-footer {
+  box-shadow: 0 -4px 16px hsl(var(--foreground) / 0.035);
+}
+@media (max-width: 639px) {
+  [role="dialog"][data-dialog-content].employee-form-dialog {
+    height: calc(100dvh - 1rem);
+    max-height: calc(100dvh - 1rem);
+  }
+  .employee-form-dialog .employee-form-header {
+    padding: 1rem 2.5rem 0.875rem 1rem;
+  }
+  .employee-form-photo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .employee-form-body [role="tabpanel"] > .space-y-4 {
+    padding: 0.875rem;
+  }
+}
+
 /* Selection catalog pages share a clearer visual hierarchy without changing
    the application-wide catalog styles. */
 .selection-catalog-page > header {

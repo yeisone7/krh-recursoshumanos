@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { digitsOnly, formatProperName } from '@/lib/employeeIdentity';
 import { useForm } from 'react-hook-form';
@@ -215,6 +215,10 @@ interface EmployeeFormDialogProps {
 
 export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: EmployeeFormDialogProps) {
   const [activeTab, setActiveTab] = useState('identity');
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bodyRef.current?.scrollTo({ top: 0 });
+  }, [activeTab]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const { currentCompanyId } = useAuth();
   const { data: operationCenters = [] } = useOperationCenters();
@@ -538,17 +542,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-4xl flex-col overflow-hidden p-0">
+        <DialogContent className="employee-form-dialog flex h-[min(880px,calc(100dvh-2rem))] w-[calc(100vw-1.5rem)] max-w-5xl flex-col overflow-hidden p-0">
         <Form {...form}>
-          <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <form onSubmit={handleFormSubmit} className="employee-form flex flex-col flex-1 min-h-0 overflow-hidden">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-              <div className="relative shrink-0 overflow-hidden bg-sidebar border-b">
-                <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] bg-[size:26px_26px] opacity-10" />
-                <div className="absolute -top-20 -right-16 h-56 w-56 rounded-full border border-primary/30 " />
-                <div className="absolute -bottom-28 -left-16 h-72 w-72 rounded-full border border-primary/20 " />
-                <div className="absolute top-8 right-28 h-28 w-28 rounded-full border border-primary/25" />
+              <div className="shrink-0 border-b bg-background">
                 
-                <DialogHeader className="relative z-10 px-4 pt-6 pb-2 text-foreground sm:px-6">
+                <DialogHeader className="employee-form-header">
                   <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-foreground sm:text-xl">
                     <Building className="w-5 h-5 text-primary" />
                     {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
@@ -559,14 +559,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   <DialogDescription className="text-muted-foreground mt-1">
                     {isEditMode 
                       ? 'Modifique la información del empleado según sea necesario.'
-                      : 'Complete la información del empleado en cada una de las secciones.'
+                      : 'Complete los datos del empleado. Los campos con * son obligatorios.'
                     }
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="relative z-10 px-4 pb-3 sm:px-6">
-                  <div className="-mx-1 overflow-x-auto px-1 pb-1 scrollbar-themed">
-                    <TabsList className="inline-flex h-auto min-w-max justify-start gap-1 rounded-xl border border-border/70 bg-background p-1 shadow-sm">
+                <div className="px-4 pb-3 sm:px-6">
+                    <TabsList aria-label="Secciones del empleado" className="employee-form-tabs grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-muted/60 p-1 md:grid-cols-8">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -576,11 +575,11 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         key={tab.value}
                         value={tab.value}
                         className={cn(
-                          "relative min-h-9 w-auto min-w-[7.5rem] shrink-0 justify-center gap-1.5 rounded-lg px-2 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none sm:min-w-[8.75rem]",
+                          "relative min-h-10 min-w-0 justify-center gap-1.5 rounded-lg px-1.5 text-xs font-medium transition-colors hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
                           hasErrors && "text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground"
                         )}
                       >
-                        <tab.icon className={cn("w-3.5 h-3.5", hasErrors && "text-destructive")} />
+                        <tab.icon className="hidden h-3.5 w-3.5 shrink-0 lg:block" />
                         <span className="truncate">{tab.label}</span>
                         {hasErrors && (
                           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
@@ -591,23 +590,25 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     );
                   })}
                     </TabsList>
-                  </div>
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 scrollbar-themed sm:px-6">
+            <div ref={bodyRef} className="employee-form-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 scrollbar-themed sm:px-6">
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2"><span className="w-1 h-4 bg-secondary rounded-full inline-block"></span>Foto del Empleado</h3>
-                    <div className="flex justify-center">
+                  <div className="employee-form-photo">
+                    <div>
+                      <h3>Foto del empleado</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">Opcional · Suba una imagen o tome una foto.</p>
+                    </div>
+                    <div className="employee-form-avatar">
                       <AvatarUpload
                         currentAvatarUrl={avatarUrl}
                         employeeId={employee?.id}
                         employeeName={`${form.watch('firstName') || ''} ${form.watch('lastName') || ''}`}
                         onAvatarChange={(url) => setAvatarUrl(url)}
-                        size="lg"
+                        size="sm"
                       />
                     </div>
                   </div>
@@ -2251,14 +2252,15 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               {/* Footer */}
-              <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-background px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
+              <div className="employee-form-footer flex shrink-0 items-center gap-2 border-t border-border bg-background px-4 py-3 sm:px-6">
+                <span className="mr-auto hidden text-xs text-muted-foreground sm:block">{tabItems.findIndex(tab => tab.value === activeTab) + 1} de {tabItems.length} secciones · {tabItems.find(tab => tab.value === activeTab)?.label}</span>
                 <Button type="button" variant="outline" className="h-10 w-full px-5 sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={createEmployee.isPending || updateEmployee.isPending}
-                  className="gradient-primary h-10 w-full px-5 text-primary-foreground shadow-sm sm:w-auto"
+                  className="h-10 w-full px-5 shadow-sm sm:w-auto"
                 >
                   {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
                 </Button>
