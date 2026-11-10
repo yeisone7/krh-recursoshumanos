@@ -1,8 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileSpreadsheet, FileText, Loader2, Download, ArrowRight } from 'lucide-react';
+import { FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface ReportCardProps {
   title: string;
@@ -29,97 +28,49 @@ export function ReportCard({
   className,
   headerExtra,
 }: ReportCardProps) {
+  const exportDisabled = isLoading || recordCount === 0;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
-      className={cn('group relative', className)}
-    >
-      <Card className="overflow-hidden rounded-[2.5rem] border-border/50 bg-background shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all duration-300 group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.04)] group-hover:border-primary/20">
-        <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity duration-500 pointer-events-none">
-          <div className="scale-[4] transform rotate-12">
-            {icon}
-          </div>
-        </div>
-
-        <div className="relative p-6 sm:p-8">
-          <div className="flex flex-col gap-6">
-            {/* Header Section */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner">
-                  {icon}
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-lg font-black tracking-tight text-foreground uppercase leading-tight sm:text-xl">
-                    {title}
-                  </h3>
-                  <p className="mt-1 text-sm font-medium text-muted-foreground line-clamp-2">
-                    {description}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-end shrink-0">
-                {headerExtra}
-                {recordCount !== undefined && (
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-primary sm:text-3xl leading-none">{recordCount}</span>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1">registros</p>
-                  </div>
-                )}
-              </div>
+    <section className={cn('min-w-0', className)}>
+      <Card className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border-border bg-card shadow-sm">
+        <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border/70 px-5 py-5 sm:px-6">
+          <div className="flex min-w-0 flex-1 basis-full items-start gap-3 sm:basis-64">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary [&_svg]:h-5 [&_svg]:w-5">
+              {icon}
             </div>
-
-            {children && (
-              <div className="relative rounded-2xl bg-background p-4 border border-border/40">
-                {children}
-              </div>
-            )}
-            
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <Button
-                variant="outline"
-                size="lg"
-                className="group/btn relative h-14 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary overflow-hidden"
-                onClick={onExportExcel}
-                disabled={isLoading || recordCount === 0}
-              >
-                <div className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">Excel</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-              </Button>
-
-              <Button
-                variant="outline"
-                size="lg"
-                className="group/btn relative h-14 rounded-2xl border-2 font-black uppercase tracking-widest text-[10px] transition-all hover:bg-primary hover:text-primary-foreground hover:border-primary overflow-hidden"
-                onClick={onExportPDF}
-                disabled={isLoading || recordCount === 0}
-              >
-                <div className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  <span className="hidden sm:inline">PDF</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-primary/80 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-              </Button>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold leading-snug tracking-tight text-foreground sm:text-lg">{title}</h3>
+              <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">{description}</p>
             </div>
           </div>
-        </div>
+          {(headerExtra || recordCount !== undefined) && (
+            <div className="flex flex-wrap items-center gap-3 pl-[3.25rem] sm:pl-0">
+              {headerExtra}
+              {recordCount !== undefined && (
+                <div className="border-l border-border pl-3 text-sm text-muted-foreground">
+                  <span className="font-semibold tabular-nums text-foreground">{recordCount.toLocaleString('es-CO')}</span> registros
+                </div>
+              )}
+            </div>
+          )}
+        </header>
+
+        {children && <div className="min-w-0 flex-1 p-4 sm:p-6">{children}</div>}
+
+        <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-border/70 bg-muted/20 px-4 py-3 sm:px-6">
+          <span className="text-xs text-muted-foreground">{recordCount === 0 ? 'Consulta los datos para exportar' : 'Descargar informe'}</span>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" className="gap-2 bg-card text-xs font-semibold" onClick={onExportExcel} disabled={exportDisabled}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FileSpreadsheet className="h-4 w-4" aria-hidden="true" />}
+              Excel
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="gap-2 bg-card text-xs font-semibold" onClick={onExportPDF} disabled={exportDisabled}>
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FileText className="h-4 w-4" aria-hidden="true" />}
+              PDF
+            </Button>
+          </div>
+        </footer>
       </Card>
-    </motion.div>
+    </section>
   );
 }

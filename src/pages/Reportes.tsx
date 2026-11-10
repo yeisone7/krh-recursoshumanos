@@ -1,4 +1,4 @@
-import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Scale, Stethoscope, Package, ClipboardCheck, Users2, Landmark } from 'lucide-react';
+import { FileBarChart, Users, FileText, Palmtree, Clock, GraduationCap, Package, ClipboardCheck } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   EmployeeReport,
@@ -35,38 +35,36 @@ const TABS = [
 
 export default function Reportes() {
   return (
-    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] p-8 sm:p-10 border border-border shadow-sm">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/20">
-            <FileBarChart className="h-8 w-8 text-primary-foreground" />
+    <div className="mx-auto w-full max-w-[1440px] space-y-5 pb-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 py-3 sm:py-5">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <FileBarChart className="h-6 w-6" aria-hidden="true" />
           </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase">
-              Centro de <span className="text-primary">Reportes</span>
-            </h1>
-            <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
-              Analítica y exportación de datos en tiempo real. Genera reportes inteligentes en Excel y PDF estructurados por categoría.
+          <div>
+            <p className="mb-1 text-xs font-semibold text-primary">Información para decidir</p>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Centro de reportes</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              Consulta, personaliza y exporta la información de tu equipo.
             </p>
           </div>
         </div>
-        {/* Decorative elements */}
-        
-        
-      </div>
+        <span className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground lg:inline-flex">
+          <FileBarChart className="h-4 w-4 text-primary" aria-hidden="true" />
+          Exportación en Excel y PDF
+        </span>
+      </header>
 
-      {/* Categorized Tabs */}
-      <Tabs defaultValue="personal" className="w-full">
-        <div className="sticky top-0 z-20 -mx-4 px-4 py-2 bg-background ">
-          <TabsList className="flex h-auto w-fit gap-2 bg-background p-1.5 rounded-[1.5rem] border border-border/50 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Tabs defaultValue="personal" className="w-full min-w-0">
+        <div className="sticky top-0 z-20 mb-5 overflow-x-auto border-b border-border bg-background pt-1 [scrollbar-width:thin]">
+          <TabsList aria-label="Categorías de reportes" className="flex h-auto w-max min-w-full justify-start gap-1 rounded-none border-0 bg-transparent p-0">
             {TABS.map(({ value, label, icon: Icon }) => (
               <TabsTrigger
                 key={value}
                 value={value}
-                className="rounded-2xl px-6 py-2.5 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground shadow-sm transition-all whitespace-nowrap"
+                className="relative gap-2 whitespace-nowrap rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-medium text-muted-foreground shadow-none transition-colors hover:bg-primary/5 hover:text-primary data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary data-[state=active]:shadow-none"
               >
-                <Icon className="mr-2 h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden="true" />
                 {label}
               </TabsTrigger>
             ))}

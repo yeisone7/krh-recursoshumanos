@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import {
   Check,
   CheckSquare,
@@ -77,11 +77,12 @@ function countActiveFilters(filters: GeneralEmployeeFilters) {
 }
 
 function FilterSelect({ label, value, options, onChange, allLabel, optionLabels }: FilterSelectProps) {
+  const id = useId();
   return (
     <div className="space-y-2">
-      <Label className="text-xs font-semibold text-foreground/80">{label}</Label>
+      <Label htmlFor={id} className="text-xs font-semibold text-foreground/80">{label}</Label>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="h-11 rounded-xl border-border/70 bg-background px-3 text-sm shadow-sm transition-colors hover:border-primary/40 focus:ring-2 focus:ring-primary/20">
+        <SelectTrigger id={id} className="h-10 rounded-lg border-border bg-card px-3 text-sm transition-colors hover:border-primary/40 focus:ring-2 focus:ring-primary/20">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -246,29 +247,29 @@ export function GeneralEmployeeReport() {
   return (
     <ReportCard
       className="md:col-span-2"
-      title="Informe General de Empleados"
-      description="Matriz configurable con información personal, laboral, demográfica, de diversidad, familiar y documental"
+      title="Informe general de empleados"
+      description="Toda la información de tu equipo en un informe. Elige los filtros y los campos que necesitas."
       icon={<UsersRound className="h-5 w-5" />}
       recordCount={filteredRows.length}
       isLoading={isFetching}
       onExportExcel={handleExportExcel}
       onExportPDF={handleExportPDF}
       headerExtra={(
-        <Badge variant="outline" className="mb-2 gap-1.5 border-primary/20 bg-primary/5 px-2.5 py-1 text-[10px] font-bold text-primary">
+        <Badge variant="outline" className="gap-1.5 rounded-md border-primary/15 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary">
           <CheckSquare className="h-3.5 w-3.5" /> {columns.length} de {GENERAL_EMPLOYEE_COLUMNS.length} campos
         </Badge>
       )}
     >
-      <div className="space-y-5">
-        <section className="overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/[0.055] via-background to-background shadow-[0_14px_35px_-28px_hsl(var(--primary))]">
-          <div className="flex flex-col gap-4 border-b border-primary/10 px-5 py-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-4">
+        <section className="overflow-hidden rounded-lg border border-border bg-muted/20">
+          <div className="flex flex-col gap-4 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <SlidersHorizontal className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="text-base font-bold tracking-tight">Configura la consulta</h4>
+                  <h4 className="text-base font-bold tracking-tight">Filtros de consulta</h4>
                   {hasPendingFilterChanges && (
                     <Badge className="border-amber-200 bg-amber-50 text-[10px] font-semibold text-amber-700 hover:bg-amber-50">
                       Cambios sin aplicar
@@ -276,7 +277,7 @@ export function GeneralEmployeeReport() {
                   )}
                 </div>
                 <p className="mt-0.5 text-sm text-muted-foreground">
-                  Define los criterios y consulta cuando estés listo. Los resultados no cambian automáticamente.
+                  Los filtros se aplican al consultar.
                 </p>
               </div>
             </div>
@@ -284,7 +285,7 @@ export function GeneralEmployeeReport() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 shrink-0 rounded-xl border-primary/20 bg-background px-4 font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5"
+              className="h-9 shrink-0 rounded-lg border-border bg-card px-3 text-xs font-semibold hover:bg-primary/5"
               onClick={() => setFieldsDialogOpen(true)}
             >
               <Columns3 className="mr-2 h-4 w-4 text-primary" />
@@ -295,7 +296,7 @@ export function GeneralEmployeeReport() {
             </Button>
           </div>
 
-          <div className="space-y-5 px-5 py-5">
+          <div className="space-y-4 px-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="general-employee-search" className="text-xs font-semibold text-foreground/80">Buscar empleado</Label>
               <div className="relative">
@@ -308,12 +309,12 @@ export function GeneralEmployeeReport() {
                     if (event.key === 'Enter') handleApplyFilters();
                   }}
                   placeholder="Documento, nombre, cargo, centro, área o correo"
-                  className="h-12 rounded-xl border-border/70 bg-background pl-10 pr-4 text-sm shadow-sm transition-colors focus-visible:border-primary/50 focus-visible:ring-primary/20"
+                  className="h-10 rounded-lg border-border bg-card pl-10 pr-4 text-sm focus-visible:ring-primary/20"
                 />
               </div>
             </div>
 
-            <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
               <FilterSelect label="Estado del empleado" value={filters.status} options={options.statuses} onChange={(value) => updateFilter('status', value)} allLabel="Todos los estados" />
               <FilterSelect label="Centro de operación" value={filters.center} options={options.centers} onChange={(value) => updateFilter('center', value)} allLabel="Todos los centros" />
               <FilterSelect label="Área" value={filters.area} options={options.areas} onChange={(value) => updateFilter('area', value)} allLabel="Todas las áreas" />
@@ -330,7 +331,7 @@ export function GeneralEmployeeReport() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 border-t border-primary/10 bg-background/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 border-t border-border/60 bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted">
                 <Filter className="h-3.5 w-3.5" />
@@ -341,7 +342,7 @@ export function GeneralEmployeeReport() {
                   : 'La consulta incluirá todos los empleados'}
               </span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -497,14 +498,16 @@ export function GeneralEmployeeReport() {
         </Dialog>
 
         {!hasAppliedQuery ? (
-          <section className="flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-primary/25 bg-gradient-to-b from-primary/[0.025] to-transparent px-6 py-12 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <section className="flex min-h-44 flex-col items-center justify-center rounded-lg bg-muted/25 px-5 py-7 text-center sm:flex-row sm:gap-5 sm:text-left">
+            <div className="mb-3 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-primary/10 bg-card text-primary sm:mb-0">
               <FileSearch className="h-6 w-6" />
             </div>
-            <h4 className="text-base font-bold tracking-tight">El informe está listo para consultar</h4>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Ajusta los filtros y presiona <span className="font-semibold text-foreground">Consultar empleados</span>. No cargaremos información hasta que ejecutes la consulta.
-            </p>
+            <div>
+              <h4 className="text-base font-bold tracking-tight">Tu informe comienza aquí</h4>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+                Personaliza los filtros y haz clic en <span className="font-semibold text-foreground">Consultar empleados</span> para ver los resultados y descargar tu informe.
+              </p>
+            </div>
           </section>
         ) : isFetching ? (
           <section className="overflow-hidden rounded-2xl border">
