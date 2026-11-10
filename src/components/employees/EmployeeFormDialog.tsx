@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { digitsOnly, formatProperName } from '@/lib/employeeIdentity';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { 
-  CalendarIcon, User, Briefcase, MapPin, Heart, Building, 
+  CalendarIcon, User, Briefcase, MapPin, Heart,
   CreditCard, Shield, Clock, Users as UsersIcon, Camera, AlertCircle,
   RotateCcw, GraduationCap, BookOpen, Loader2
 } from 'lucide-react';
@@ -214,6 +215,7 @@ interface EmployeeFormDialogProps {
 }
 
 export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: EmployeeFormDialogProps) {
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('identity');
   const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -542,30 +544,31 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="employee-form-dialog flex h-[min(880px,calc(100dvh-2rem))] w-[calc(100vw-1.5rem)] max-w-5xl flex-col overflow-hidden p-0">
+        <DialogContent className="employee-form-dialog flex h-[min(960px,calc(100dvh-1.5rem))] w-[calc(100vw-1.5rem)] max-w-[1440px] flex-col overflow-hidden p-0">
         <Form {...form}>
           <form onSubmit={handleFormSubmit} className="employee-form flex flex-col flex-1 min-h-0 overflow-hidden">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col flex-1 min-h-0">
-              <div className="shrink-0 border-b bg-background">
-                
+            <Tabs value={activeTab} onValueChange={setActiveTab} orientation={isMobile ? 'horizontal' : 'vertical'} className="employee-form-layout min-h-0 flex-1">
                 <DialogHeader className="employee-form-header">
-                  <DialogTitle className="flex items-center gap-2 pr-6 font-display text-lg text-foreground sm:text-xl">
-                    <Building className="w-5 h-5 text-primary" />
-                    {isEditMode ? 'Editar Empleado' : 'Nuevo Empleado'}
+                  <div className="employee-form-heading-icon" aria-hidden="true"><User className="h-6 w-6" /></div>
+                  <div className="min-w-0 space-y-2">
+                  <DialogTitle className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight sm:text-2xl">
+                    {isEditMode ? 'Editar empleado' : 'Nuevo empleado'}
                     {isEditMode && isLoadingEmployee && (
                       <Loader2 className="w-4 h-4 animate-spin text-muted-foreground ml-2" />
                     )}
                   </DialogTitle>
                   <DialogDescription className="text-muted-foreground mt-1">
                     {isEditMode 
-                      ? 'Modifique la información del empleado según sea necesario.'
-                      : 'Complete los datos del empleado. Los campos con * son obligatorios.'
+                      ? 'Actualice la ficha del empleado. Puede cambiar de sección sin perder los datos.'
+                      : 'Complete la ficha del empleado. Puede cambiar de sección sin perder los datos.'
                     }
                   </DialogDescription>
+                  </div>
                 </DialogHeader>
 
-                <div className="px-4 pb-3 sm:px-6">
-                    <TabsList aria-label="Secciones del empleado" className="employee-form-tabs grid h-auto w-full grid-cols-4 gap-1 rounded-xl bg-muted/60 p-1 md:grid-cols-8">
+                <aside className="employee-form-sidebar" aria-label="Ficha del empleado">
+                  <p className="employee-form-sidebar-title">Ficha del empleado</p>
+                    <TabsList aria-label="Secciones del empleado" className="employee-form-tabs">
                   {tabItems.map((tab) => {
                     const errorCount = getTabErrorCount(tab.value);
                     const hasErrors = tabsWithErrors.has(tab.value);
@@ -575,14 +578,14 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         key={tab.value}
                         value={tab.value}
                         className={cn(
-                          "relative min-h-10 min-w-0 justify-center gap-1.5 rounded-lg px-1.5 text-xs font-medium transition-colors hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm",
-                          hasErrors && "text-destructive data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground"
+                          "employee-form-tab focus-visible:ring-2 focus-visible:ring-ring",
+                          hasErrors && "employee-form-tab-error"
                         )}
                       >
-                        <tab.icon className="hidden h-3.5 w-3.5 shrink-0 lg:block" />
-                        <span className="truncate">{tab.label}</span>
+                        <tab.icon className="h-[18px] w-[18px] shrink-0" />
+                        <span>{tab.label}</span>
                         {hasErrors && (
-                          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                          <span className="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                             {errorCount}
                           </span>
                         )}
@@ -590,10 +593,10 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                     );
                   })}
                     </TabsList>
-              </div>
-            </div>
+                    <p className="employee-form-sidebar-note">Los campos con * son obligatorios.</p>
+                </aside>
 
-            <div ref={bodyRef} className="employee-form-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 scrollbar-themed sm:px-6">
+            <div ref={bodyRef} className="employee-form-body min-h-0 overflow-y-auto overscroll-contain scrollbar-themed">
                 {/* A. IDENTITY TAB */}
                 <TabsContent value="identity" className="mt-0 space-y-6">
                   {/* Photo Section */}
@@ -2252,8 +2255,8 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
               </div>
 
               {/* Footer */}
-              <div className="employee-form-footer flex shrink-0 items-center gap-2 border-t border-border bg-background px-4 py-3 sm:px-6">
-                <span className="mr-auto hidden text-xs text-muted-foreground sm:block">{tabItems.findIndex(tab => tab.value === activeTab) + 1} de {tabItems.length} secciones · {tabItems.find(tab => tab.value === activeTab)?.label}</span>
+              <div className="employee-form-footer flex shrink-0 items-center gap-2 border-t border-border bg-background">
+                <span className="mr-auto hidden text-xs text-muted-foreground sm:block"><span className="text-primary">*</span> Campos obligatorios</span>
                 <Button type="button" variant="outline" className="h-10 w-full px-5 sm:w-auto" onClick={() => onOpenChange(false)}>
                   Cancelar
                 </Button>
@@ -2262,7 +2265,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                   disabled={createEmployee.isPending || updateEmployee.isPending}
                   className="h-10 w-full px-5 shadow-sm sm:w-auto"
                 >
-                  {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar Cambios' : 'Crear Empleado')}
+                  {createEmployee.isPending || updateEmployee.isPending ? 'Guardando...' : (isEditMode ? 'Guardar cambios' : 'Crear empleado')}
                 </Button>
               </div>
             </Tabs>
