@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { CompanyCreateDialogContent } from '@/components/admin/CompanyCreateDialogContent';
+import { CompanyFormDialogContent } from '@/components/admin/CompanyFormDialogContent';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon, Briefcase, Mail, Phone, MapPin, Calendar, ExternalLink, Save, ArrowRight, LayoutGrid, MoreHorizontal, Upload } from 'lucide-react';
+import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Briefcase, Mail, Phone, MapPin, Calendar, ExternalLink, ArrowRight, LayoutGrid, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,12 +13,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Label } from '@/components/ui/label';
 import { useAdminUsers } from '@/hooks/useAdminUsers';
 import { UsersTable } from '@/components/admin/UsersTable';
 import { InviteUserDialog } from '@/components/admin/InviteUserDialog';
@@ -329,7 +328,7 @@ export default function SuperAdmin() {
                   REGISTRAR ENTIDAD
                 </Button>
               </DialogTrigger>
-              <CompanyCreateDialogContent
+              <CompanyFormDialogContent
                 company={newCompany}
                 onCompanyChange={setNewCompany}
                 logoFile={logoFile}
@@ -503,85 +502,23 @@ export default function SuperAdmin() {
 
       <InviteUserDialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen} />
 
-      {/* Edit Company Dialog - Modernized */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="rounded-[2.5rem] border-slate-100 p-0 shadow-2xl overflow-hidden sm:max-w-2xl bg-white">
-          <DialogHeader className="p-8 border-b border-slate-50 bg-slate-50/30">
-            <div className="flex items-center gap-5">
-              <div className="h-14 w-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-primary shadow-sm">
-                <Edit className="w-7 h-7 stroke-[2.5]" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Gestión de Entidad</DialogTitle>
-                <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Actualización de parámetros operativos</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          {editingCompany && (
-            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Razón Social Jurídica</Label>
-                  <Input value={editingCompany.name} onChange={e => setEditingCompany(p => ({ ...p!, name: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">NIT / Tax ID</Label>
-                  <Input value={editingCompany.nit} onChange={e => setEditingCompany(p => ({ ...p!, nit: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Línea Telefónica</Label>
-                  <Input value={editingCompany.phone} onChange={e => setEditingCompany(p => ({ ...p!, phone: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Correo Institucional</Label>
-                  <Input value={editingCompany.email} onChange={e => setEditingCompany(p => ({ ...p!, email: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs lowercase" />
-                </div>
-                <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Dirección Principal</Label>
-                  <Input value={editingCompany.address} onChange={e => setEditingCompany(p => ({ ...p!, address: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Prefijo de Contratos</Label>
-                  <Input 
-                    value={editingCompany.contract_prefix} 
-                    onChange={e => setEditingCompany(p => ({ ...p!, contract_prefix: e.target.value.toUpperCase() }))} 
-                    className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase"
-                    maxLength={5}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Sustituir Avatar</Label>
-                  <div onClick={() => document.getElementById('edit-logo-avatar')?.click()} className="group/logo relative h-32 w-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden mx-auto md:mx-0">
-                    {(logoFile || editingCompany.logo_url) ? <img src={logoFile ? URL.createObjectURL(logoFile) : editingCompany.logo_url!} className="w-full h-full object-contain p-4 transition-transform group-hover/logo:scale-110" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
-                    <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-white stroke-[3]" />
-                    </div>
-                  </div>
-                  <Input id="edit-logo-avatar" type="file" className="hidden" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Sustituir Logo</Label>
-                  <div onClick={() => document.getElementById('edit-logo-horizontal')?.click()} className="group/logo relative h-32 w-full rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden">
-                    {(horizontalLogoFile || editingCompany.horizontal_logo_url) ? <img src={horizontalLogoFile ? URL.createObjectURL(horizontalLogoFile) : editingCompany.horizontal_logo_url!} className="w-full h-full object-contain p-6 transition-transform group-hover/logo:scale-105" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
-                    <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-white stroke-[3]" />
-                    </div>
-                  </div>
-                  <Input id="edit-logo-horizontal" type="file" className="hidden" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} />
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter className="p-8 border-t border-slate-50">
-            <Button onClick={() => updateCompanyMutation.mutate()} disabled={!editingCompany?.name || !editingCompany?.nit || updateCompanyMutation.isPending} className="h-14 w-full rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20">
-              {updateCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <Save className="w-4 h-4 mr-3 stroke-[2.5]" />}
-              CONFIRMAR ACTUALIZACIÓN
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+        {editingCompany && (
+          <CompanyFormDialogContent
+            mode="edit"
+            company={editingCompany}
+            onCompanyChange={values => setEditingCompany(previous => previous ? { ...previous, ...values } : previous)}
+            currentLogoUrl={editingCompany.logo_url}
+            currentHorizontalLogoUrl={editingCompany.horizontal_logo_url}
+            logoFile={logoFile}
+            onLogoChange={setLogoFile}
+            horizontalLogoFile={horizontalLogoFile}
+            onHorizontalLogoChange={setHorizontalLogoFile}
+            pending={updateCompanyMutation.isPending}
+            onSubmit={() => updateCompanyMutation.mutate()}
+            onCancel={() => setEditOpen(false)}
+          />
+        )}
       </Dialog>
     </div>
   );

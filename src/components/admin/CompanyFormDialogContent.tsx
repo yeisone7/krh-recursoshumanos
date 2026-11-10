@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Building2, CheckCircle2, ImageIcon, Loader2, Upload } from 'lucide-react';
+import { Building2, CheckCircle2, ImageIcon, Loader2, Save, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,10 @@ interface CompanyDraft {
   contract_prefix: string;
 }
 
-interface CompanyCreateDialogContentProps {
+interface CompanyFormDialogContentProps {
+  mode?: 'create' | 'edit';
+  currentLogoUrl?: string | null;
+  currentHorizontalLogoUrl?: string | null;
   company: CompanyDraft;
   onCompanyChange: (company: CompanyDraft) => void;
   logoFile: File | null;
@@ -26,10 +29,11 @@ interface CompanyCreateDialogContentProps {
   onCancel: () => void;
 }
 
-function BrandFilePicker({ label, hint, file, onChange }: {
+function BrandFilePicker({ label, hint, file, currentUrl, onChange }: {
   label: string;
   hint: string;
   file: File | null;
+  currentUrl?: string | null;
   onChange: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,16 +45,17 @@ function BrandFilePicker({ label, hint, file, onChange }: {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
+  const imageUrl = preview || currentUrl;
   return (
     <div className="min-w-0">
-      <button type="button" className="company-brand-picker group" onClick={() => inputRef.current?.click()} aria-label={`${file ? 'Cambiar' : 'Subir'} ${label.toLowerCase()}`}>
+      <button type="button" className="company-brand-picker group" onClick={() => inputRef.current?.click()} aria-label={`${imageUrl ? 'Cambiar' : 'Subir'} ${label.toLowerCase()}`}>
         <span className="company-brand-preview">
-          {preview ? <img src={preview} alt={`Vista previa: ${label.toLowerCase()}`} /> : <ImageIcon className="h-6 w-6 text-muted-foreground/60" />}
+          {imageUrl ? <img src={imageUrl} alt={`Vista previa: ${label.toLowerCase()}`} /> : <ImageIcon className="h-6 w-6 text-muted-foreground/60" />}
         </span>
         <span className="min-w-0 flex-1 text-left">
           <span className="block text-sm font-medium text-foreground">{label}</span>
-          <span className="mt-1 block truncate text-xs text-muted-foreground" title={file?.name}>{file ? file.name : hint}</span>
-          <span className="mt-2 flex items-center gap-1.5 text-xs font-medium text-primary"><Upload className="h-3.5 w-3.5" />{file ? 'Cambiar imagen' : 'Subir imagen'}</span>
+          <span className="mt-1 block truncate text-xs text-muted-foreground" title={file?.name}>{file ? file.name : currentUrl ? 'Imagen actual' : hint}</span>
+          <span className="mt-2 flex items-center gap-1.5 text-xs font-medium text-primary"><Upload className="h-3.5 w-3.5" />{imageUrl ? 'Cambiar imagen' : 'Subir imagen'}</span>
         </span>
       </button>
       <input ref={inputRef} type="file" accept="image/*" className="hidden" aria-label={`Archivo de ${label.toLowerCase()}`} onChange={event => onChange(event.target.files?.[0] || null)} />
@@ -58,16 +63,17 @@ function BrandFilePicker({ label, hint, file, onChange }: {
   );
 }
 
-export function CompanyCreateDialogContent({ company, onCompanyChange, logoFile, onLogoChange, horizontalLogoFile, onHorizontalLogoChange, pending, onSubmit, onCancel }: CompanyCreateDialogContentProps) {
+export function CompanyFormDialogContent({ mode = 'create', currentLogoUrl, currentHorizontalLogoUrl, company, onCompanyChange, logoFile, onLogoChange, horizontalLogoFile, onHorizontalLogoChange, pending, onSubmit, onCancel }: CompanyFormDialogContentProps) {
   const id = useId();
+  const isEditing = mode === 'edit';
   const update = (field: keyof CompanyDraft, value: string) => onCompanyChange({ ...company, [field]: value });
   return (
     <DialogContent className="company-create-dialog w-[calc(100vw-1.5rem)] sm:max-w-[800px]">
       <DialogHeader className="company-create-header">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><Building2 className="h-6 w-6" /></span>
         <div className="min-w-0 space-y-1.5">
-          <DialogTitle className="text-xl font-semibold tracking-tight">Configuración maestra</DialogTitle>
-          <DialogDescription>Registre los datos y la identidad visual de la nueva empresa.</DialogDescription>
+          <DialogTitle className="text-xl font-semibold tracking-tight">{isEditing ? 'Editar empresa' : 'Configuración maestra'}</DialogTitle>
+          <DialogDescription>{isEditing ? 'Actualice los datos y la identidad visual de la empresa.' : 'Registre los datos y la identidad visual de la nueva empresa.'}</DialogDescription>
         </div>
       </DialogHeader>
       <form className="company-create-form" onSubmit={event => { event.preventDefault(); if (!pending) onSubmit(); }}>
@@ -110,8 +116,8 @@ export function CompanyCreateDialogContent({ company, onCompanyChange, logoFile,
           <section aria-labelledby={`${id}-brand`}>
             <h3 id={`${id}-brand`} className="company-create-section-title"><span>03</span> Identidad visual <small>Opcional</small></h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <BrandFilePicker label="Avatar de marca" hint="Imagen cuadrada" file={logoFile} onChange={onLogoChange} />
-              <BrandFilePicker label="Logo institucional" hint="Imagen horizontal" file={horizontalLogoFile} onChange={onHorizontalLogoChange} />
+              <BrandFilePicker label="Avatar de marca" hint="Imagen cuadrada" file={logoFile} currentUrl={currentLogoUrl} onChange={onLogoChange} />
+              <BrandFilePicker label="Logo institucional" hint="Imagen horizontal" file={horizontalLogoFile} currentUrl={currentHorizontalLogoUrl} onChange={onHorizontalLogoChange} />
             </div>
           </section>
         </div>
@@ -119,8 +125,8 @@ export function CompanyCreateDialogContent({ company, onCompanyChange, logoFile,
           <span className="mr-auto hidden text-xs text-muted-foreground sm:block"><span className="text-primary">*</span> Campos obligatorios</span>
           <Button type="button" variant="outline" onClick={onCancel} disabled={pending}>Cancelar</Button>
           <Button type="submit" disabled={!company.name || !company.nit || pending}>
-            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-            {pending ? 'Creando empresa…' : 'Crear empresa'}
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : isEditing ? <Save className="mr-2 h-4 w-4" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+            {pending ? (isEditing ? 'Guardando cambios…' : 'Creando empresa…') : (isEditing ? 'Guardar cambios' : 'Crear empresa')}
           </Button>
         </div>
       </form>
