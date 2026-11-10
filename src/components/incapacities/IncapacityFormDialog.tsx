@@ -262,51 +262,44 @@ export function IncapacityFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-2xl overflow-y-auto p-0 bg-background border-border/50 shadow-2xl rounded-[2rem]">
-        
-        {/* Premium Gradient Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-          
-          
-          <DialogHeader className="relative z-10">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner">
-                <Stethoscope className="w-6 h-6" />
-              </div>
-              <div>
-                <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1">
-                  {isEditing ? 'EDICIÓN' : isExtension ? 'PRÓRROGA' : 'NUEVO'}
-                </Badge>
-                <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
-                  {isEditing ? 'Editar Incapacidad' : isExtension ? 'Registrar Prórroga' : 'Nueva Incapacidad'}
-                </DialogTitle>
-              </div>
-            </div>
-          </DialogHeader>
-        </div>
-        
-        <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="mb-6 h-12 w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide">
-                  <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                    <User className="h-4 w-4 shrink-0" />
-                    General
-                  </TabsTrigger>
-                  <TabsTrigger value="clinical" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                    <Stethoscope className="h-4 w-4 shrink-0" />
-                    Clínico
-                  </TabsTrigger>
-                  <TabsTrigger value="payment" className="h-10 min-w-[112px] flex-1 gap-2 rounded-lg px-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm">
-                    <DollarSign className="h-4 w-4 shrink-0" />
-                    Pago
-                  </TabsTrigger>
-                </TabsList>
-                
+      <DialogContent className="incapacity-form-dialog w-[calc(100vw-1rem)] max-w-3xl gap-0 p-0">
+        <DialogHeader className="incapacity-form-header shrink-0 text-left">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Stethoscope className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <p className="text-xs font-medium text-primary">Gestión de ausencias</p>
+            <DialogTitle className="text-xl font-bold tracking-tight">
+              {isEditing ? 'Editar incapacidad' : isExtension ? 'Registrar prórroga' : 'Nueva incapacidad'}
+            </DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              Registra el periodo, la información clínica y los datos de pago.
+            </DialogDescription>
+          </div>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            if (errors.employee_id || errors.origin || errors.start_date || errors.duration_days || errors.end_date || errors.parent_incapacity_id) setActiveTab('general');
+            else if (errors.diagnosis || errors.cie10_code || errors.treating_doctor || errors.certificate_number || errors.medical_entity || errors.observations) setActiveTab('clinical');
+            else if (errors.daily_base_salary) setActiveTab('payment');
+          })} className="incapacity-form flex min-h-0 flex-1 flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
+              <TabsList aria-label="Secciones de la incapacidad" className="incapacity-form-tabs grid h-auto shrink-0 grid-cols-3 gap-0 rounded-none border-x-0 border-t-0 bg-card p-0">
+                <TabsTrigger value="general" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+                  <User className="h-4 w-4 shrink-0" aria-hidden="true" /> General
+                </TabsTrigger>
+                <TabsTrigger value="clinical" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+                  <Stethoscope className="h-4 w-4 shrink-0" aria-hidden="true" /> Clínico
+                </TabsTrigger>
+                <TabsTrigger value="payment" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+                  <DollarSign className="h-4 w-4 shrink-0" aria-hidden="true" /> Pago
+                </TabsTrigger>
+              </TabsList>
+              <div className="incapacity-form-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
                 {/* General Tab */}
-                <TabsContent value="general" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
+                <TabsContent value="general" className="mt-0 space-y-5">
+                  <div className="space-y-5">
                     <FormField
                   control={form.control}
                   name="employee_id"
@@ -326,7 +319,7 @@ export function IncapacityFormDialog({
                         />
                       </FormControl>
                       <FormDescription>
-                        Puede seleccionar empleados activos o inactivos y filtrar por nombre, documento, cargo o centro.
+                        Busca por nombre, documento, cargo o centro. Incluye activos e inactivos.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -361,25 +354,25 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="incapacity-period-grid grid gap-4 sm:grid-cols-[1fr_0.8fr_1fr]">
                   <FormField
                     control={form.control}
                     name="start_date"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha Inicio *</FormLabel>
+                      <FormItem className="min-w-0">
+                        <FormLabel>Fecha de inicio *</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full pl-3 text-left font-normal",
+                                  "incapacity-date-trigger h-11 w-full justify-start gap-2 px-3 text-left font-normal",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                {field.value ? format(field.value, "PPP", { locale: es }) : "Seleccionar"}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                {field.value ? format(field.value, "dd MMM yyyy", { locale: es }) : "Seleccionar"}
+                                <CalendarIcon className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                               </Button>
                             </FormControl>
                           </PopoverTrigger>
@@ -424,23 +417,23 @@ export function IncapacityFormDialog({
                     control={form.control}
                     name="end_date"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Fecha Fin</FormLabel>
+                      <FormItem className="min-w-0">
+                        <FormLabel>Fecha de fin</FormLabel>
                         <FormControl>
                           <Button
                             type="button"
                             variant="outline"
                             disabled
                             className={cn(
-                              "w-full pl-3 text-left font-normal opacity-100 disabled:cursor-default disabled:opacity-100",
+                              "incapacity-date-trigger h-11 w-full justify-start gap-2 px-3 text-left font-normal opacity-100 disabled:cursor-default disabled:opacity-100",
                               !field.value && "text-muted-foreground"
                             )}
                           >
-                            {field.value ? format(field.value, "PPP", { locale: es }) : "Calculada"}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            {field.value ? format(field.value, "dd MMM yyyy", { locale: es }) : "Calculada"}
+                            <CalendarIcon className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                           </Button>
                         </FormControl>
-                        <FormDescription>Se calcula automáticamente.</FormDescription>
+                        <FormDescription>Calculada automáticamente.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -453,20 +446,20 @@ export function IncapacityFormDialog({
                     control={form.control}
                     name="is_extension"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormItem className="incapacity-extension flex flex-row items-start space-x-3 space-y-0 rounded-lg border border-border bg-muted/30 p-4">
                         <FormControl>
                           <input
                             type="checkbox"
                             checked={field.value}
                             onChange={field.onChange}
-                            className="h-4 w-4"
+                            className="mt-0.5 h-4 w-4 shrink-0 accent-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                             disabled={isExtension}
                           />
                         </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Es prórroga de incapacidad existente</FormLabel>
+                        <div className="min-w-0 space-y-1">
+                          <FormLabel>Es una prórroga</FormLabel>
                           <FormDescription>
-                            Marque si esta incapacidad es continuación de otra
+                            Activa esta opción si continúa una incapacidad anterior.
                           </FormDescription>
                         </div>
                       </FormItem>
@@ -480,7 +473,7 @@ export function IncapacityFormDialog({
                     name="parent_incapacity_id"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Incapacidad Original</FormLabel>
+                        <FormLabel>Incapacidad original</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
@@ -504,8 +497,8 @@ export function IncapacityFormDialog({
                 </TabsContent>
                 
                 {/* Clinical Tab */}
-                <TabsContent value="clinical" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
+                <TabsContent value="clinical" className="mt-0 space-y-5">
+                  <div className="space-y-5">
                     <FormField
                   control={form.control}
                   name="diagnosis"
@@ -552,7 +545,7 @@ export function IncapacityFormDialog({
                     name="certificate_number"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>No. Certificado</FormLabel>
+                        <FormLabel>Número de certificado</FormLabel>
                         <FormControl>
                           <Input placeholder="Número del certificado" {...field} />
                         </FormControl>
@@ -568,7 +561,7 @@ export function IncapacityFormDialog({
                     name="treating_doctor"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Médico Tratante</FormLabel>
+                        <FormLabel>Médico tratante</FormLabel>
                         <FormControl>
                           <Input placeholder="Nombre del médico" {...field} />
                         </FormControl>
@@ -582,7 +575,7 @@ export function IncapacityFormDialog({
                     name="medical_entity"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Entidad Médica</FormLabel>
+                        <FormLabel>Entidad médica</FormLabel>
                         <FormControl>
                           <Input placeholder="IPS, clínica, hospital" {...field} />
                         </FormControl>
@@ -613,14 +606,14 @@ export function IncapacityFormDialog({
                 </TabsContent>
                 
                 {/* Payment Tab */}
-                <TabsContent value="payment" className="space-y-6 mt-0">
-                  <div className="p-6 rounded-3xl bg-background border border-border/50 space-y-6">
+                <TabsContent value="payment" className="mt-0 space-y-5">
+                  <div className="space-y-5">
                     <FormField
                   control={form.control}
                   name="daily_base_salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Salario Base Diario (IBC)</FormLabel>
+                      <FormLabel>Salario base diario (IBC)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
@@ -641,7 +634,7 @@ export function IncapacityFormDialog({
                   )}
                 />
                 
-                <div className="rounded-lg border bg-background p-4 space-y-2">
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
                   <h4 className="font-medium">Distribución de Pago (Ley Colombiana)</h4>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p><strong>Origen Común:</strong></p>
@@ -668,23 +661,21 @@ export function IncapacityFormDialog({
                 </div>
                   </div>
                 </TabsContent>
-              </Tabs>
-
-              {/* Absence Conflict Alert */}
-              <AbsenceConflictAlert conflicts={incapConflicts} />
-              
-              <div className="grid grid-cols-2 gap-3 pt-6 border-t sm:flex sm:justify-end">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading || hasIncapConflicts} className="h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isEditing ? 'Actualizar' : 'Registrar'}
+                <div className="mt-4"><AbsenceConflictAlert conflicts={incapConflicts} /></div>
+              </div>
+            </Tabs>
+            <footer className="incapacity-form-footer flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-5 py-4 sm:px-6">
+              <span className="text-xs text-muted-foreground">* Campos obligatorios</span>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="bg-card">Cancelar</Button>
+                <Button type="submit" disabled={isLoading || hasIncapConflicts}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+                  {isLoading ? 'Guardando...' : isEditing ? 'Guardar cambios' : isExtension ? 'Registrar prórroga' : 'Registrar incapacidad'}
                 </Button>
               </div>
-            </form>
-          </Form>
-        </div>
+            </footer>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
