@@ -1,10 +1,11 @@
 import { useState } from 'react';
+import { CompanyCreateDialogContent } from '@/components/admin/CompanyCreateDialogContent';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon, Briefcase, Mail, Phone, MapPin, Calendar, ExternalLink, Save, ArrowRight, LayoutGrid, CheckCircle2, MoreHorizontal, Upload } from 'lucide-react';
+import { Building2, Plus, Users, Loader2, Search, UserPlus, Shield, Edit, Image as ImageIcon, Briefcase, Mail, Phone, MapPin, Calendar, ExternalLink, Save, ArrowRight, LayoutGrid, MoreHorizontal, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -328,82 +329,17 @@ export default function SuperAdmin() {
                   REGISTRAR ENTIDAD
                 </Button>
               </DialogTrigger>
-              <DialogContent className="rounded-3xl border-slate-100 p-0 shadow-2xl overflow-hidden sm:max-w-2xl bg-white">
-                <DialogHeader className="p-8 border-b border-slate-50">
-                  <div className="flex items-center gap-5">
-                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                      <Building2 className="w-7 h-7 stroke-[2.5]" />
-                    </div>
-                    <div>
-                      <DialogTitle className="text-xl font-black uppercase tracking-tight text-foreground">Configuración Maestra</DialogTitle>
-                      <DialogDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Instalación de nueva infraestructura corporativa</DialogDescription>
-                    </div>
-                  </div>
-                </DialogHeader>
-                <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2 col-span-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Razón Social Jurídica</Label>
-                      <Input value={newCompany.name} onChange={e => setNewCompany(p => ({ ...p, name: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">NIT / Tax ID</Label>
-                      <Input value={newCompany.nit} onChange={e => setNewCompany(p => ({ ...p, nit: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Línea Telefónica</Label>
-                      <Input value={newCompany.phone} onChange={e => setNewCompany(p => ({ ...p, phone: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                    </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Correo Institucional</Label>
-                      <Input value={newCompany.email} onChange={e => setNewCompany(p => ({ ...p, email: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs lowercase" />
-                    </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Dirección Principal</Label>
-                      <Input value={newCompany.address} onChange={e => setNewCompany(p => ({ ...p, address: e.target.value }))} className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Prefijo de Contratos</Label>
-                      <Input 
-                        value={newCompany.contract_prefix} 
-                        onChange={e => setNewCompany(p => ({ ...p, contract_prefix: e.target.value.toUpperCase() }))} 
-                        className="h-12 rounded-xl bg-slate-50 border-none font-black text-xs uppercase"
-                        placeholder="CT"
-                        maxLength={5}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Avatar de Marca</Label>
-                      <div onClick={() => document.getElementById('new-logo-avatar')?.click()} className="group/logo relative h-32 w-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden mx-auto md:mx-0">
-                        {logoFile ? <img src={URL.createObjectURL(logoFile)} className="w-full h-full object-contain p-4 transition-transform group-hover/logo:scale-110" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
-                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="w-8 h-8 text-white stroke-[3]" />
-                        </div>
-                      </div>
-                      <Input id="new-logo-avatar" type="file" className="hidden" onChange={e => setLogoFile(e.target.files?.[0] || null)} />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Logo Institucional</Label>
-                      <div onClick={() => document.getElementById('new-logo-horizontal')?.click()} className="group/logo relative h-32 w-full rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center cursor-pointer transition-all hover:bg-white hover:border-primary/40 overflow-hidden">
-                        {horizontalLogoFile ? <img src={URL.createObjectURL(horizontalLogoFile)} className="w-full h-full object-contain p-6 transition-transform group-hover/logo:scale-105" /> : <ImageIcon className="w-8 h-8 text-slate-200" />}
-                        <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover/logo:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="w-8 h-8 text-white stroke-[3]" />
-                        </div>
-                      </div>
-                      <Input id="new-logo-horizontal" type="file" className="hidden" onChange={e => setHorizontalLogoFile(e.target.files?.[0] || null)} />
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter className="p-8 border-t border-slate-50">
-                  <Button onClick={() => createCompanyMutation.mutate()} disabled={!newCompany.name || !newCompany.nit || createCompanyMutation.isPending} className="h-14 w-full rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20">
-                    {createCompanyMutation.isPending ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-3" />}
-                    INSTALAR ENTIDAD
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
+              <CompanyCreateDialogContent
+                company={newCompany}
+                onCompanyChange={setNewCompany}
+                logoFile={logoFile}
+                onLogoChange={setLogoFile}
+                horizontalLogoFile={horizontalLogoFile}
+                onHorizontalLogoChange={setHorizontalLogoFile}
+                pending={createCompanyMutation.isPending}
+                onSubmit={() => createCompanyMutation.mutate()}
+                onCancel={() => setCreateOpen(false)}
+              />
             </Dialog>
           </div>
 
