@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, MediaTypeCard, StoryboardViewer, TrainingPeriodSelector, SlideDeckViewer, isSlideDeck } from '@/components/training';
 import { AvatarVideoPlayer } from '@/components/training/AvatarVideoPlayer';
-import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
+import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods } from '@/hooks/useTraining';
 import { supabase } from '@/integrations/supabase/client';
 import { applyWatermark } from '@/lib/watermark';
 import type { WatermarkConfig } from '@/lib/watermark';
@@ -25,7 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useSystemConfig } from '@/hooks/useSystemConfig';
 import { toast } from 'sonner';
 import type { TrainingCourseContent, TrainingQuizQuestion } from '@/types/training';
-import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
+import { useTrainingPeriodDraft } from '@/hooks/useTrainingPeriodDraft';
 
 const STEPS = [
   { label: 'Parámetros' },
@@ -145,7 +145,8 @@ export default function CrearCapacitacion() {
   const [vigencia, setVigencia] = useState<number | undefined>();
   const [obligatorio, setObligatorio] = useState(false);
   const [certificacion, setCertificacion] = useState(false);
-  const [periods, setPeriods] = useState<TrainingPeriodInput[]>([]);
+  const periodDraft = useTrainingPeriodDraft(activeCourseId);
+  const { periods, setPeriods } = periodDraft;
   const [additionalContext, setAdditionalContext] = useState('');
 
   // Content state
@@ -158,9 +159,8 @@ export default function CrearCapacitacion() {
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
   const savePeriods = useSaveTrainingCoursePeriods();
-  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(activeCourseId);
   const [isSavingCourse, setIsSavingCourse] = useState(false);
-  const isSaving = isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
+  const isSaving = !periodDraft.isReady || isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
 
   useEffect(() => {
     setVideoScript(null);
@@ -219,13 +219,6 @@ export default function CrearCapacitacion() {
       }
     }
   }, [existingCourse]);
-
-  useEffect(() => {
-    if (!activeCourseId) {
-      return;
-    }
-    setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
-  }, [activeCourseId, existingPeriods]);
 
   // Load existing avatar video from media
   useEffect(() => {
@@ -292,6 +285,10 @@ export default function CrearCapacitacion() {
 
   const handleSave = async (status: string) => {
     if (saveInProgressRef.current) return;
+    if (!periodDraft.isReady) {
+      toast.error('Espera a que se carguen los periodos antes de guardar.');
+      return;
+    }
     saveInProgressRef.current = true;
     setIsSavingCourse(true);
     try {
@@ -321,9 +318,10 @@ export default function CrearCapacitacion() {
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        periodDraft.adoptCreatedCourse(result.id);
         setCreatedCourseId(result.id);
-        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
+        navigate(`/capacitaciones/crear?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Capacitación publicada' : 'Borrador guardado');
       }
@@ -576,7 +574,15 @@ export default function CrearCapacitacion() {
                   </SelectContent></Select>
                 </div>
               </div>
-              <TrainingPeriodSelector value={periods} onChange={setPeriods} />
+              <fieldset disabled={isSaving} className="min-w-0">
+                <TrainingPeriodSelector value={periods} onChange={setPeriods} />
+              </fieldset>
+              {!periodDraft.isReady && (periodDraft.isError ? (
+                <div role="alert">
+                  <p>No se pudieron cargar los periodos. Reintenta antes de guardar.</p>
+                  <Button type="button" variant="outline" onClick={() => void periodDraft.retry()}>Reintentar</Button>
+                </div>
+              ) : <p role="status">Cargando periodos...</p>)}
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
                 <Textarea className="resize-none rounded-xl bg-background" value={additionalContext} onChange={e => setAdditionalContext(e.target.value)} placeholder="Proporciona información adicional que ayude a la IA a generar contenido más preciso..." rows={4} />

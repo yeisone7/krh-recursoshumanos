@@ -12,10 +12,10 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrainingStepIndicator, MarkdownContent, ImageUploader, VideoUploader, TrainingMediaGallery, TrainingPeriodSelector } from '@/components/training';
-import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods, useTrainingCoursePeriodAssignments } from '@/hooks/useTraining';
+import { useCreateFullCourse, useUpdateFullCourse, useTrainingCourse, useTrainingMedia, useCreateTrainingMedia, useDeleteTrainingMedia, useSaveTrainingCoursePeriods } from '@/hooks/useTraining';
 import { toast } from 'sonner';
 import type { TrainingCourseContent } from '@/types/training';
-import type { TrainingPeriodInput } from '@/lib/trainingPeriods';
+import { useTrainingPeriodDraft } from '@/hooks/useTrainingPeriodDraft';
 
 const STEPS = [{ label: 'Parámetros' }, { label: 'Contenido' }, { label: 'Evaluación' }];
 const NIVELES = ['Básico', 'Intermedio', 'Avanzado'];
@@ -54,7 +54,8 @@ export default function CrearManual() {
   const [obligatorio, setObligatorio] = useState(false);
   const [certificacion, setCertificacion] = useState(false);
   const [vigencia, setVigencia] = useState<number | undefined>();
-  const [periods, setPeriods] = useState<TrainingPeriodInput[]>([]);
+  const periodDraft = useTrainingPeriodDraft(activeCourseId);
+  const { periods, setPeriods } = periodDraft;
 
   const [descripcion, setDescripcion] = useState('');
   const [content, setContent] = useState<TrainingCourseContent>({ isManual: true, introduccion: '', objetivos: [''], contenido: '', puntosClave: [''], evaluacion: [] });
@@ -66,10 +67,9 @@ export default function CrearManual() {
   const createMedia = useCreateTrainingMedia();
   const deleteMedia = useDeleteTrainingMedia();
   const savePeriods = useSaveTrainingCoursePeriods();
-  const { data: existingPeriods = [] } = useTrainingCoursePeriodAssignments(activeCourseId);
   const [isSavingCourse, setIsSavingCourse] = useState(false);
 
-  const isSaving = isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
+  const isSaving = !periodDraft.isReady || isSavingCourse || createCourse.isPending || updateCourse.isPending || savePeriods.isPending;
 
   useEffect(() => {
     if (existingCourse) {
@@ -100,15 +100,12 @@ export default function CrearManual() {
     }
   }, [existingCourse]);
 
-  useEffect(() => {
-    if (!activeCourseId) {
-      return;
-    }
-    setPeriods(existingPeriods.map((period) => ({ year: period.year, month: period.month })));
-  }, [activeCourseId, existingPeriods]);
-
   const handleSave = async (status: string) => {
     if (saveInProgressRef.current) return;
+    if (!periodDraft.isReady) {
+      toast.error('Espera a que se carguen los periodos antes de guardar.');
+      return;
+    }
     saveInProgressRef.current = true;
     setIsSavingCourse(true);
     try {
@@ -129,9 +126,10 @@ export default function CrearManual() {
         toast.success(status === 'publicado' ? 'Publicada' : 'Cambios guardados');
       } else {
         const result = await createCourse.mutateAsync(courseData);
+        periodDraft.adoptCreatedCourse(result.id);
         setCreatedCourseId(result.id);
-        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         await savePeriods.mutateAsync({ courseId: result.id, periods });
+        navigate(`/capacitaciones/crear-manual?id=${result.id}`, { replace: true, state: { workspacePreserveDraft: true } });
         workspaceEditor.markSaved();
         toast.success(status === 'publicado' ? 'Publicada' : 'Borrador guardado');
       }
@@ -250,7 +248,15 @@ export default function CrearManual() {
                   </SelectContent></Select>
                 </div>
               </div>
-              <TrainingPeriodSelector value={periods} onChange={setPeriods} />
+              <fieldset disabled={isSaving} className="min-w-0">
+                <TrainingPeriodSelector value={periods} onChange={setPeriods} />
+              </fieldset>
+              {!periodDraft.isReady && (periodDraft.isError ? (
+                <div role="alert">
+                  <p>No se pudieron cargar los periodos. Reintenta antes de guardar.</p>
+                  <Button type="button" variant="outline" onClick={() => void periodDraft.retry()}>Reintentar</Button>
+                </div>
+              ) : <p role="status">Cargando periodos...</p>)}
               <div className="space-y-1.5 pt-4">
                 <Label className="flex items-center gap-1.5"><AlignLeft className="h-4 w-4" /> Descripción o Contexto Adicional</Label>
                 <Textarea className="resize-none rounded-xl bg-background" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Proporciona información adicional que ayude a definir el contenido de la capacitación..." rows={4} />

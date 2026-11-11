@@ -1065,6 +1065,27 @@ div[class*="DialogContent"] {
   }
 }
 
+/* Leave type editor: keep the title and actions visible around the form body. */
+[role="dialog"][data-dialog-content].leave-type-config-dialog {
+  max-height: calc(100dvh - 1.5rem);
+  padding: 0 !important;
+  gap: 0;
+  overflow: hidden !important;
+}
+
+.leave-type-config-dialog [data-workspace-back] {
+  flex-shrink: 0;
+  margin: 0.375rem 2.75rem 0 0.75rem;
+}
+
+[role="dialog"].leave-type-config-dialog .leave-type-config-body label {
+  margin: 0 !important;
+}
+
+[role="dialog"].leave-type-config-dialog input.leave-type-color-picker {
+  padding: 0.375rem !important;
+}
+
 /* Master company setup: compact sections and a single scrolling body. */
 [role="dialog"][data-dialog-content].company-create-dialog {
   height: min(850px, calc(100dvh - 1.5rem));
@@ -1187,6 +1208,38 @@ div[class*="DialogContent"] {
   .company-create-body { padding: 1rem; }
   .company-create-footer { padding: 0.75rem 1rem; }
   .company-create-footer button { flex: 1; padding-inline: 0.75rem; }
+}
+
+/* Invitation form shares the company editor's spacing and fixed actions. */
+[role="dialog"][data-dialog-content].invite-user-dialog {
+  height: min(740px, calc(100dvh - 1.5rem));
+}
+.invite-user-dialog .invite-roles-heading { margin-bottom: 0.5rem; }
+.invite-user-dialog .invite-roles-heading > span:not(:first-child) {
+  display: inline;
+  width: auto;
+  height: auto;
+  background: transparent;
+  font-size: inherit;
+}
+[role="dialog"].invite-user-dialog label.invite-role-option {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  margin: 0 !important;
+  padding: 0.875rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.625rem;
+  cursor: pointer;
+  background: hsl(var(--card));
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+.invite-role-option:hover { border-color: hsl(var(--primary) / 0.4); }
+.invite-role-option:focus-within { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+[role="dialog"].invite-user-dialog label.invite-role-selected {
+  border-color: hsl(var(--primary) / 0.4);
+  background: hsl(var(--primary) / 0.045);
 }
 
 /* Employee record: fixed header/actions, sidebar and one scrolling form pane. */

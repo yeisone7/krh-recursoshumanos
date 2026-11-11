@@ -11889,6 +11889,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      save_training_course_periods: {
+        Args: { p_company_id: string; p_course_id: string; p_periods: Json }
+        Returns: Database['public']['Tables']['training_course_periods']['Row'][]
+      }
       save_local_dotation_signature: {
         Args: { p_transaction_id: string; p_path: string; p_updated_at: string }
         Returns: string

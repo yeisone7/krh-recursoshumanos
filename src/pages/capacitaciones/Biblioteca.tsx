@@ -62,7 +62,7 @@ const MODALITY_LABELS: Record<string, string> = {
 export default function Biblioteca() {
   const navigate = useNavigate();
   const [periodFilter, setPeriodFilter] = useState<TrainingPeriodInput | null>(null);
-  const { data: courses = [] } = useTrainingCoursesByPeriod(periodFilter);
+  const { data: courses = [], isLoading, isError, isFetching, refetch } = useTrainingCoursesByPeriod(periodFilter);
   const deleteCourse = useDeleteCourse();
   const duplicateCourse = useDuplicateCourse();
   const publishCourse = usePublishCourse();
@@ -176,7 +176,16 @@ export default function Biblioteca() {
       </div>
 
       {/* Count */}
-      <p className="text-sm font-medium text-muted-foreground px-2">{filtered.length} capacitación(es) encontrada(s)</p>
+      {isLoading ? (
+        <p role="status" className="text-sm text-muted-foreground px-2">Cargando capacitaciones...</p>
+      ) : isError ? (
+        <div role="alert" className="space-y-2 px-2">
+          <p>No se pudieron cargar las capacitaciones. Intenta nuevamente.</p>
+          <Button variant="outline" disabled={isFetching} onClick={() => void refetch()}>Reintentar</Button>
+        </div>
+      ) : (
+        <p className="text-sm font-medium text-muted-foreground px-2">{filtered.length} capacitación(es) encontrada(s)</p>
+      )}
 
       {/* Grid View */}
       {viewMode === 'grid' && (
@@ -432,7 +441,7 @@ export default function Biblioteca() {
       )}
 
       {/* Empty state */}
-      {filtered.length === 0 && (
+      {!isLoading && !isError && filtered.length === 0 && (
         <div className="text-center py-16 text-muted-foreground">
           <BookOpen className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p>No se encontraron capacitaciones</p>

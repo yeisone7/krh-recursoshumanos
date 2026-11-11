@@ -164,33 +164,20 @@ export function useSaveTrainingCoursePeriods() {
     mutationFn: async ({ courseId, periods }: { courseId: string; periods: TrainingPeriodInput[] }) => {
       if (!currentCompanyId || !user) throw new Error('No company assigned');
 
-      const { error: deleteError } = await supabase
-        .from('training_course_periods')
-        .delete()
-        .eq('company_id', currentCompanyId)
-        .eq('course_id', courseId);
-
-      if (deleteError) throw deleteError;
-
-      if (periods.length === 0) return;
-
       const uniquePeriods = Array.from(
         new Map(periods.map((period) => [`${period.year}-${period.month}`, period])).values()
       );
 
-      const { error: insertError } = await supabase
-        .from('training_course_periods')
-        .insert(uniquePeriods.map((period) => ({
-          company_id: currentCompanyId,
-          course_id: courseId,
-          year: period.year,
-          month: period.month,
-          created_by: user.id,
-        })));
-
-      if (insertError) throw insertError;
+      const { data, error } = await supabase.rpc('save_training_course_periods', {
+        p_company_id: currentCompanyId,
+        p_course_id: courseId,
+        p_periods: uniquePeriods.map(({ year, month }) => ({ year, month })),
+      });
+      if (error) throw error;
+      return data as TrainingCoursePeriod[];
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (savedPeriods, variables) => {
+      queryClient.setQueryData(['training_course_periods_by_course', currentCompanyId, variables.courseId], savedPeriods);
       queryClient.invalidateQueries({ queryKey: ['training_course_periods'] });
       queryClient.invalidateQueries({ queryKey: ['training_course_periods_by_course', currentCompanyId, variables.courseId] });
       queryClient.invalidateQueries({ queryKey: ['training_courses_by_period'] });
@@ -241,12 +228,7 @@ export function useTrainingCoursesByPeriod(period?: TrainingPeriodInput | null) 
     enabled: !!currentCompanyId && !!period,
   });
 
-  return {
-    ...courses,
-    isLoading: period ? periodCourses.isLoading : courses.isLoading,
-    error: period ? periodCourses.error : courses.error,
-    data: period ? periodCourses.data : courses.data,
-  };
+  return period ? periodCourses : courses;
 }
 
 export function useCreateCourse() {

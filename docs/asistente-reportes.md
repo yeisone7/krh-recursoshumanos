@@ -211,3 +211,21 @@ con solicitud de reautenticación. No se ha publicado una versión web nueva.
 - Revisión de seguridad antes/después: 193 hallazgos preexistentes, sin nuevos.
 - La interfaz incluye tarjetas con preguntas de ejemplo sobre edad al contratar,
   edad actual, vencimientos, ausencias, capacitación y nómina.
+
+## Corrección de filtros de centro — 8 de octubre de 2026
+
+Una consulta de incapacidades de mujeres devolvía cero porque el proveedor agregó
+en `related.employees_v2` una igualdad entre `report_center_name` y un UUID de
+`screenFilters.centerIds`. El centro ya estaba aplicado a la fuente de incapacidades.
+
+La validación ahora rechaza UUID usados como nombres de centro tanto en la fuente
+principal como en cruces, antes de ejecutar o guardar el resultado. El intento de
+corrección del proveedor recibe el error y el plan rechazado. El planificador recibe
+los nombres de los centros seleccionados del catálogo autorizado y una instrucción
+expresa para conservar el centro histórico del evento, sin agregar el centro actual
+del empleado salvo que la pregunta lo solicite.
+
+Se aprobaron 41 pruebas del asistente, comprobación Deno y lint. La reproducción de
+la consulta con el mismo período, centro y permisos devolvió registros al eliminar
+la comparación incorrecta. Los resultados guardados conservan su fotografía original:
+se debe generar de nuevo la consulta para obtener un resultado corregido.

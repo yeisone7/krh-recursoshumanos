@@ -68,9 +68,12 @@ export function TrainingPeriodSelector({ value, onChange }: TrainingPeriodSelect
         </Select>
         <Button type="button" variant="outline" className="rounded-xl font-bold" onClick={handleAdd}>
           <Plus className="mr-2 h-4 w-4" />
-          Agregar
+          Agregar periodo
         </Button>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Selecciona mes y año y pulsa «Agregar periodo». Al guardar la capacitación se conservarán los periodos de la lista inferior.
+      </p>
       {value.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {sortTrainingPeriods(value).map((period) => (

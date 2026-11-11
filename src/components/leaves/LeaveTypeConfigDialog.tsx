@@ -4,7 +4,7 @@ import * as z from 'zod';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
+  DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
@@ -160,231 +160,188 @@ export function LeaveTypeConfigDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? `Configurar: ${config?.display_name}` : 'Crear tipo de permiso'}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="leave-type-config-dialog max-w-[52rem]">
+        <header className="shrink-0 border-b border-border px-5 py-4 pr-12 sm:px-6 sm:pr-14">
+          <p className="mb-1 text-xs font-medium text-muted-foreground">Tipos de permiso</p>
+          <DialogTitle className="break-words text-xl leading-snug sm:text-2xl">
+            {isEditing ? config?.display_name : 'Crear tipo de permiso'}
+          </DialogTitle>
+          <DialogDescription className="sr-only">Datos, límites y condiciones del tipo de permiso.</DialogDescription>
+        </header>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="display_name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nombre a Mostrar</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      onChange={(event) => {
-                        field.onChange(event);
-                        if (!isEditing && !form.formState.dirtyFields.leave_type) {
-                          form.setValue('leave_type', createLeaveTypeKey(event.target.value), { shouldValidate: true });
-                        }
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="leave_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ID técnico</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isEditing} placeholder="permiso_especial" />
-                  </FormControl>
-                  <FormDescription>
-                    Identificador único. Después de crear el tipo no se puede modificar.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descripción</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="max_days_per_year"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Máximo días/año</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="Sin límite"
-                        {...field}
-                        value={field.value ?? ''}
-                        onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
-                      />
-                    </FormControl>
-                    <FormDescription>Dejar vacío para sin límite</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="min_days_advance"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Días de anticipación</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min={0}
-                        {...field}
-                        onChange={e => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="color"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Color</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
-                      <Input type="color" {...field} className="w-16 h-10 p-1" />
-                      <Input {...field} placeholder="#3B82F6" className="min-w-0 flex-1" />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="space-y-4 pt-4 border-t">
-              <FormField
-                control={form.control}
-                name="is_paid"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <FormLabel>Remunerado</FormLabel>
-                      <FormDescription>El empleado recibe salario durante el permiso</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="requires_document"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <FormLabel>Requiere Documento</FormLabel>
-                      <FormDescription>Permite adjuntarlo al crear o dejarlo pendiente para cargar después</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              {form.watch('requires_document') && (
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col">
+            <div className="leave-type-config-body min-h-0 overflow-y-auto overscroll-contain md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.08fr)]">
+              <section aria-labelledby="leave-type-details" className="min-w-0 space-y-4 px-5 py-5 sm:px-6">
+                <h3 id="leave-type-details" className="text-sm font-semibold text-foreground">Datos del permiso</h3>
                 <FormField
                   control={form.control}
-                  name="document_description"
+                  name="display_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Descripción del documento</FormLabel>
+                      <FormLabel>Nombre visible</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej: Certificado médico" {...field} />
+                        <Input
+                          {...field}
+                          onChange={(event) => {
+                            field.onChange(event);
+                            if (!isEditing && !form.formState.dirtyFields.leave_type) {
+                              form.setValue('leave_type', createLeaveTypeKey(event.target.value), { shouldValidate: true });
+                            }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={3} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="leave_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Identificador</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled={isEditing} placeholder="permiso_especial" />
+                      </FormControl>
+                      <FormDescription>
+                        No se puede editar después de crear el tipo.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          aria-label="Elegir color"
+                          value={field.value}
+                          onChange={field.onChange}
+                          className="leave-type-color-picker w-11 shrink-0 cursor-pointer"
+                        />
+                        <FormControl>
+                          <Input {...field} placeholder="#3B82F6" className="min-w-0 flex-1 font-mono" />
+                        </FormControl>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </section>
 
-              <FormField
-                control={form.control}
-                name="allows_half_day"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <FormLabel>Permite Medio Día</FormLabel>
-                      <FormDescription>Se puede solicitar solo medio día</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              <section aria-labelledby="leave-type-rules" className="min-w-0 space-y-4 border-t border-border bg-muted/25 px-5 py-5 sm:px-6 md:border-l md:border-t-0">
+                <h3 id="leave-type-rules" className="text-sm font-semibold text-foreground">Reglas de solicitud</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="max_days_per_year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Máximo anual (días)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Sin límite"
+                            {...field}
+                            value={field.value ?? ''}
+                            onChange={e => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="min_days_advance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Anticipación (días)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min={0}
+                            {...field}
+                            onChange={e => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <FormField
-                control={form.control}
-                name="allows_hours"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <FormLabel>Permite Horas</FormLabel>
-                      <FormDescription>Se puede solicitar por horas</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
+                <fieldset aria-label="Opciones del permiso" className="min-w-0 divide-y divide-border border-y border-border">
+                  {([
+                    ['is_paid', 'Remunerado', 'El empleado recibe salario durante el permiso.'],
+                    ['allows_half_day', 'Permite medio día', 'Admite solicitudes de medio día.'],
+                    ['allows_hours', 'Permite horas', 'Admite solicitudes por horas.'],
+                    ['is_active', 'Activo', 'Disponible para nuevas solicitudes.'],
+                    ['requires_document', 'Requiere documento', 'El soporte se puede adjuntar al solicitarlo o después.'],
+                  ] as const).map(([name, label, description]) => (
+                    <FormField
+                      key={name}
+                      control={form.control}
+                      name={name}
+                      render={({ field }) => (
+                        <FormItem className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 space-y-0 py-2.5">
+                          <div>
+                            <FormLabel className="cursor-pointer text-sm font-medium">{label}</FormLabel>
+                            <FormDescription className="text-xs leading-relaxed">{description}</FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </fieldset>
+                {form.watch('requires_document') && (
+                  <FormField
+                    control={form.control}
+                    name="document_description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descripción del documento</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej: Certificado médico" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
-
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <FormLabel>Activo</FormLabel>
-                      <FormDescription>Disponible para nuevas solicitudes</FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+              </section>
             </div>
 
-            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
+            <footer className="flex shrink-0 items-center justify-end gap-2 border-t border-border bg-background px-5 py-3 sm:px-6">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="w-full sm:w-auto" disabled={isSaving}>
-                {isSaving ? 'Guardando...' : isEditing ? 'Guardar' : 'Crear tipo'}
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Crear tipo'}
               </Button>
-            </div>
+            </footer>
           </form>
         </Form>
       </DialogContent>

@@ -261,6 +261,9 @@ Deno.serve(async (req) => {
       context,
       previousDefinition,
       screenFilters: filters,
+      selectedCenters: (available.centers as { id: string; name: string }[])
+        .filter((center) => filters.centerIds?.includes(center.id))
+        .map((center) => ({ id: center.id, name: center.name })),
       catalog: selected,
     };
     let response = (await structured(

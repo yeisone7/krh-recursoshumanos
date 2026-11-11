@@ -121,6 +121,9 @@ export function validatePlan(value: unknown, sources: Source[]): ReportPlan {
       const values = list(f.values, 100);
       if (values.some((v) => typeof v !== 'string' || v.length > 500))
         fail('Valor de filtro inválido.');
+      if (col.key === 'report_center_name' && values.some((v) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v).trim())))
+        fail('report_center_name contiene el nombre del centro, no un UUID. Los centerIds de pantalla ya filtran la fuente principal: no los repitas en filters ni en related. Si la pregunta exige otro filtro de centro explícito, usa su nombre autorizado.');
       if (!['is_null', 'not_null'].includes(String(f.op)) && !values.length)
         fail('Falta el valor del filtro.');
       if (

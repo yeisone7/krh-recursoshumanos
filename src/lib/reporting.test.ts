@@ -27,6 +27,25 @@ const plan = {
   comparePrevious: false,
 };
 describe('structured report validation', () => {
+  it.each(['eq', 'in', 'contains'])('rejects center UUIDs used as names in the main source (%s)', op => {
+    expect(() => validatePlan({ ...plan, filters: [{ field: 'report_center_name', op,
+      values: ['a4b679c5-6fd4-4449-9ff6-af9addcd4b43'] }],
+    }, sources)).toThrow(/nombre del centro, no un UUID/);
+  });
+  it('rejects the reported cross-source UUID/name confusion before producing an empty report', () => {
+    const query = { ...plan, source: 'employee_incapacities', dimensions: [], metrics: [],
+      columns: ['report_employee_name', 'report_center_name'], chart: 'none',
+      related: [{ source: 'employees_v2', mode: 'exists', filters: [
+        { field: 'gender', op: 'eq', values: ['F'] },
+        { field: 'report_center_name', op: 'eq', values: [' A4B679C5-6FD4-4449-9FF6-AF9ADDCD4B43 '] },
+      ] }],
+    };
+    expect(() => validatePlan(query, sources)).toThrow(/no los repitas/);
+    const corrected = { ...query, related: [{ ...query.related[0], filters: [query.related[0].filters[0]] }] };
+    expect(() => validatePlan(corrected, sources)).not.toThrow();
+    expect(validateFilters({ centerIds: ['a4b679c5-6fd4-4449-9ff6-af9addcd4b43'] })).toBeDefined();
+    expect(() => validatePlan({ ...plan, filters: [{ field: 'report_center_name', op: 'eq', values: ['Principal'] }] }, sources)).not.toThrow();
+  });
   it('accepts repeated screen dates for the reported incapacity question and preserves demographic filters', () => {
     const source = sources.find((s) => s.key === 'employee_incapacities')!;
     const validated = validatePlan({ ...plan, source: source.key, dimensions: [],
