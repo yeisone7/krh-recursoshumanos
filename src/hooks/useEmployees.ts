@@ -925,7 +925,8 @@ export function useCreateEmployee() {
                 employment_cycle_id: employmentCycleId,
                 relationship: m.relationship,
                 full_name: m.fullName,
-                age: m.age || null,
+                birth_date: m.birthDate || null,
+                age: m.age ?? null,
                 gender: m.gender || null,
                 observations: m.observations || null,
               }))
@@ -1247,28 +1248,20 @@ export function useUpdateEmployee() {
         );
       }
 
-      // Family Members - delete existing and re-insert (separate from Promise.all)
-      const familyMembersDelete = scopeToEmploymentCycle(
-        supabase.from('employee_family_members').delete().eq('employee_id', id),
-        activeCycleId,
-      );
-      const { error: familyMembersDeleteError } = await familyMembersDelete;
-      if (familyMembersDeleteError) throw familyMembersDeleteError;
-      const members = (data.familyMembers || []).filter(m => m.fullName && m.relationship);
-      if (members.length > 0) {
-        const { error: familyMembersInsertError } = await supabase.from('employee_family_members').insert(
-          members.map(m => withEmploymentCycle({
-            employee_id: id,
-            company_id: currentCompanyId!,
-            relationship: m.relationship,
-            full_name: m.fullName,
-            age: m.age || null,
-            gender: m.gender || null,
-            observations: m.observations || null,
-          }, activeCycleId))
-        );
-        if (familyMembersInsertError) throw familyMembersInsertError;
-      }
+      const members = (data.familyMembers || []).filter(member => member.fullName && member.relationship);
+      const { error: familyError } = await supabase.rpc('replace_employee_family_members', {
+        p_employee_id: id,
+        p_members: members.map(member => ({
+          id: member.id ?? null,
+          relationship: member.relationship,
+          full_name: member.fullName,
+          birth_date: member.birthDate || null,
+          age: member.age ?? null,
+          gender: member.gender || null,
+          observations: member.observations || null,
+        })),
+      });
+      if (familyError) throw familyError;
 
       // Work Info
       if (existingWorkInfo) {

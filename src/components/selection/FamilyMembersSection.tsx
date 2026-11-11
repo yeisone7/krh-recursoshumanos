@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import { useState, useEffect } from 'react';
 import { Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +9,7 @@ interface FamilyMember {
   id: string;
   relationship: string;
   full_name: string;
+  birth_date: string | null;
   age: number | null;
   gender: string | null;
   observations: string | null;
@@ -64,7 +66,7 @@ export function FamilyMembersSection({ candidateId, refreshKey }: FamilyMembersS
                   <p className="text-sm font-medium truncate">{member.full_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {member.relationship}
-                    {member.age != null && ` • ${member.age} años`}
+                    {` • ${familyAgeLabel(member.birth_date, member.age)}`}
                     {member.gender && ` • ${genderLabels[member.gender] || member.gender}`}
                   </p>
                 </div>

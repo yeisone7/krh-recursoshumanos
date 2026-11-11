@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -213,7 +214,7 @@ export async function generateCandidatePdf(candidate: CandidateForPdf) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(80, 80, 80);
-    const cols = [marginL + 2, marginL + 35, marginL + 95, marginL + 115, marginL + 140];
+    const cols = [marginL + 2, marginL + 35, marginL + 95, marginL + 128, marginL + 140];
     doc.text('Parentesco', cols[0], y + 4);
     doc.text('Nombre Completo', cols[1], y + 4);
     doc.text('Edad', cols[2], y + 4);
@@ -225,13 +226,15 @@ export async function generateCandidatePdf(candidate: CandidateForPdf) {
     doc.setTextColor(33, 33, 33);
     const gMap: Record<string, string> = { M: 'M', F: 'F' };
     for (const fm of familyMembers as any[]) {
-      checkPage(7);
+      const ageLines = doc.splitTextToSize(familyAgeLabel(fm.birth_date, fm.age), cols[3] - cols[2] - 2);
+      const rowHeight = Math.max(6, ageLines.length * 3.5 + 2);
+      checkPage(rowHeight);
       doc.text(fm.relationship || '', cols[0], y + 4);
       doc.text(fm.full_name || '', cols[1], y + 4);
-      doc.text(fm.age != null ? fm.age.toString() : '', cols[2], y + 4);
+      doc.text(ageLines, cols[2], y + 4);
       doc.text(gMap[fm.gender] || '', cols[3], y + 4);
       doc.text((fm.observations || '').substring(0, 30), cols[4], y + 4);
-      y += 6;
+      y += rowHeight;
     }
     y += 2;
   }

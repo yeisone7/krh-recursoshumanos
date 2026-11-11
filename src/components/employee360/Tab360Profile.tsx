@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -191,9 +192,7 @@ export function Tab360Profile({ employee }: Tab360ProfileProps) {
                   <Badge variant="outline" className="text-xs">
                     {familyRelationshipLabels[member.relationship] || member.relationship}
                   </Badge>
-                  {member.age != null && (
-                    <span className="text-xs text-muted-foreground">{member.age} años</span>
-                  )}
+                  <span className="text-xs text-muted-foreground">{familyAgeLabel(member.birth_date, member.age)}</span>
                 </div>
                 <InfoRow label="Nombre" value={member.full_name} />
                 {member.gender && <InfoRow label="Sexo biológico" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}

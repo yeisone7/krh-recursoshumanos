@@ -1,3 +1,4 @@
+import { familyAgeLabel, familyCalendarDate } from '@/lib/familyBirthDate';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -352,10 +353,13 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         emergencyContactRelationship: currentEmployeeData.contact?.emergency_contact_relationship || undefined,
         
         // C. Family
-        familyMembers: (currentEmployeeData.family_members || []).map(m => ({
+        familyMembers: (currentEmployeeData.family_members || []).filter(member =>
+          (member.employment_cycle_id ?? null) === (currentEmployeeData.active_employment_cycle?.id ?? null)
+        ).map(m => ({
           id: m.id,
           relationship: m.relationship,
           fullName: m.full_name,
+          birthDate: m.birth_date ?? undefined,
           age: m.age ?? undefined,
           gender: (m.gender as any) || undefined,
           observations: m.observations || undefined,
@@ -1306,7 +1310,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                         size="sm"
                         onClick={() => {
                           const current = form.getValues('familyMembers') || [];
-                          form.setValue('familyMembers', [...current, { relationship: '', fullName: '', age: undefined, gender: undefined, observations: undefined }]);
+                          form.setValue('familyMembers', [...current, { relationship: '', fullName: '', birthDate: undefined, gender: undefined, observations: undefined }]);
                         }}
                       >
                         <UsersIcon className="w-4 h-4 mr-1" />
@@ -1375,20 +1379,16 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                           />
                           <FormField
                             control={form.control}
-                            name={`familyMembers.${index}.age`}
+                            name={`familyMembers.${index}.birthDate`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Edad</FormLabel>
+                                <FormLabel>Fecha de nacimiento</FormLabel>
                                 <FormControl>
-                                  <Input 
-                                    type="number" 
-                                    min={0} 
-                                    max={120}
-                                    placeholder="Edad"
-                                    value={field.value ?? ''}
-                                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                                  />
+                                  <Input {...field} type="date" max={familyCalendarDate()} value={field.value ?? ''} />
                                 </FormControl>
+                                <p className="text-xs text-muted-foreground">
+                                  {familyAgeLabel(field.value, form.watch(`familyMembers.${index}.age`))}
+                                </p>
                                 <FormMessage />
                               </FormItem>
                             )}

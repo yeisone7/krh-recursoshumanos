@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select plan(13);
 
 insert into auth.users (
   id, instance_id, aud, role, email, encrypted_password,
@@ -72,6 +72,15 @@ insert into public.employee_contact (
   date '2020-01-01', date '2022-12-31'
 );
 
+insert into public.employee_family_members (
+  employee_id, company_id, employment_cycle_id, relationship, full_name, birth_date
+) values (
+  '50000000-0000-0000-0000-000000000001',
+  '20000000-0000-0000-0000-000000000001',
+  '60000000-0000-0000-0000-000000000001',
+  'Hija', 'Familiar de prueba', date '2020-02-29'
+);
+
 create temp table rehire_start as
 select public.start_employee_rehire(
   '50000000-0000-0000-0000-000000000001',
@@ -90,9 +99,9 @@ select is(
   'selection stages start empty'
 );
 select is(
-  (select count(*)::bigint from public.candidate_family_members where candidate_id = (select (result ->> 'candidate_id')::uuid from rehire_start)),
-  0::bigint,
-  'family starts empty'
+  (select birth_date from public.candidate_family_members where candidate_id = (select (result ->> 'candidate_id')::uuid from rehire_start)),
+  date '2020-02-29',
+  'a rehire application carries the family birth date'
 );
 
 update public.candidates
@@ -148,6 +157,12 @@ select is((select count(*)::bigint from public.employee_onboarding_tasks where e
 select is((select count(*)::bigint from public.leave_balances where employment_cycle_id = (select (result ->> 'employment_cycle_id')::uuid from hiring_result)), 10::bigint, 'leave balances are reset for every leave type');
 select is((select count(*)::bigint from public.employee_bank_info where employment_cycle_id = (select (result ->> 'employment_cycle_id')::uuid from hiring_result)), 0::bigint, 'bank information remains pending');
 select is((select count(*)::bigint from public.employee_social_security where employment_cycle_id = (select (result ->> 'employment_cycle_id')::uuid from hiring_result)), 0::bigint, 'social security remains pending');
+select is(
+  (select birth_date from public.employee_family_members
+   where employment_cycle_id = (select (result ->> 'employment_cycle_id')::uuid from hiring_result)),
+  date '2020-02-29',
+  'hiring persists the family birth date in the new employment cycle'
+);
 
 create temp table hiring_retry as
 select public.complete_candidate_hiring(

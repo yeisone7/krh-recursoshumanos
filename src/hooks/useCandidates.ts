@@ -698,6 +698,7 @@ export function useLegacyConvertToEmployee() {
             company_id: currentCompanyId!,
             relationship: m.relationship,
             full_name: m.full_name,
+            birth_date: m.birth_date,
             age: m.age,
             gender: m.gender,
             observations: m.observations,

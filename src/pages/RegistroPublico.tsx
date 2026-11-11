@@ -1,3 +1,4 @@
+import { familyAgeLabel, familyBirthDateError, familyCalendarDate, isFamilyBirthDate } from '@/lib/familyBirthDate';
 import { useState, useEffect } from 'react';
 import { digitsOnly, DOCUMENT_NUMBER_PATTERN, formatProperName } from '@/lib/employeeIdentity';
 import { useSearchParams } from 'react-router-dom';
@@ -321,7 +322,6 @@ export default function RegistroPublico() {
   const [formData, setFormData] = useState<Record<string, any>>({ documentType: 'CC', identificationTypeId: '' });
   const [submitting, setSubmitting] = useState(false);
   const [prefilled, setPrefilled] = useState(false);
-  const [rehireEmployeeId, setRehireEmployeeId] = useState<string | null>(null);
   const [draftLoaded, setDraftLoaded] = useState(false);
   const [companyLogo, setCompanyLogo] = useState<string | null>(null);
   // Catalog data for dropdowns
@@ -382,6 +382,10 @@ export default function RegistroPublico() {
             delete draft.documentNumber;
             delete draft.candidateId;
             delete draft.employeeId;
+            delete draft.rehireEmployeeId;
+            delete draft.familyMembers;
+            delete draft.familyMembersChanged;
+            delete draft.copyFamilyMembers;
           }
           for (const key of NAME_FIELDS) {
             if (typeof draft[key] === 'string') draft[key] = formatProperName(draft[key]);
@@ -468,8 +472,14 @@ export default function RegistroPublico() {
   const handleChange = (key: string, value: any) => {
     setFormData(prev => {
       const next = { ...prev, [key]: value };
+      if (key === 'familyMembers') next.familyMembersChanged = true;
       if ((key === 'documentNumber' || key === 'documentType' || key === 'identificationTypeId') && value !== prev[key]) {
         delete next.candidateId;
+        delete next.employeeId;
+        delete next.rehireEmployeeId;
+        delete next.familyMembers;
+        delete next.familyMembersChanged;
+        delete next.copyFamilyMembers;
       }
       return next;
     });
@@ -498,6 +508,25 @@ export default function RegistroPublico() {
       toast.error('El documento solo puede contener dígitos');
       return;
     }
+
+    const familyMembers = enabledFields.includes('familyMembers')
+      && (formData.familyMembersChanged || formData.copyFamilyMembers)
+      && Array.isArray(formData.familyMembers)
+      ? formData.familyMembers
+      : null;
+    if (familyMembers?.some(member => member.birth_date && !isFamilyBirthDate(member.birth_date))) {
+      toast.error(familyBirthDateError);
+      return;
+    }
+    if (familyMembers?.some(member => !member.full_name?.trim() || !member.relationship?.trim())) {
+      toast.error('Complete el nombre y el parentesco de cada familiar.');
+      return;
+    }
+
+    const vaccines = Array.isArray(formData.vaccines) ? formData.vaccines.map(vaccine => ({
+      ...vaccine,
+      vaccine_type: vaccine.vaccine_type === 'covid19' ? 'COVID' : vaccine.vaccine_type,
+    })) : [];
 
     const mapGender = (val: string | undefined) => {
       if (!val) return null;
@@ -546,7 +575,7 @@ export default function RegistroPublico() {
         }
 
         if (!employeeId) {
-          const { data, error } = await supabase.rpc('submit_employee_registration', {
+          const { data, error } = await supabase.rpc('submit_employee_registration_with_family', {
             p_token: tokenParam!,
             p_first_name: employeeNamePayload.firstName,
             p_last_name: employeeNamePayload.lastName,
@@ -601,13 +630,16 @@ export default function RegistroPublico() {
             p_identification_type_id: formData.identificationTypeId || null,
             p_education_level_id: formData.educationLevelId || null,
             p_profession_id: formData.professionId || null,
+            p_family_members: familyMembers,
+            p_avatar_url: formData.avatarUrl || null,
+            p_vaccines: vaccines,
           });
           if (error) {
             throw new Error(getRpcErrorMessage(error, 'Error al crear el empleado'));
           }
           result = data;
           
-          if ((result as any)?.success && (result as any)?.employee_id) {
+          if ((result as any)?.success && (result as any)?.existing) {
             employeeId = (result as any).employee_id;
           }
         }
@@ -671,15 +703,8 @@ export default function RegistroPublico() {
             p_education_level_id: formData.educationLevelId || null,
             p_profession_id: formData.professionId || null,
             p_avatar_url: formData.avatarUrl || null,
-            p_vaccines: Array.isArray(formData.vaccines) ? formData.vaccines.map(v => ({
-              ...v,
-              vaccine_type: v.vaccine_type === 'covid19' ? 'COVID' : v.vaccine_type
-            })) : [],
-            p_family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers.map(m => ({
-              ...m,
-              document_type: m.document_type || 'CC',
-              document_number: m.document_number || ''
-            })) : []
+            p_vaccines: vaccines,
+            p_family_members: familyMembers === null ? null : { members: familyMembers },
           } as any);
           if (error) {
             throw new Error(getRpcErrorMessage(error, 'Error al actualizar el empleado'));
@@ -693,7 +718,7 @@ export default function RegistroPublico() {
 
         let data: any;
         let error: any;
-        if (rehireEmployeeId) {
+        if (formData.rehireEmployeeId) {
           const response = await (supabase as any).rpc('submit_employee_rehire_registration', {
             p_token: tokenParam!,
             p_profile: {
@@ -733,7 +758,7 @@ export default function RegistroPublico() {
               is_conflict_victim: formData.isConflictVictim === 'true',
               is_demobilized: formData.isDemobilized === 'true',
               identification_type_id: formData.identificationTypeId || null,
-              family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers : [],
+              family_members: familyMembers,
             },
           });
           data = response.data;
@@ -777,11 +802,7 @@ export default function RegistroPublico() {
           p_is_conflict_victim: formData.isConflictVictim === 'true' ? true : formData.isConflictVictim === 'false' ? false : null,
           p_is_demobilized: formData.isDemobilized === 'true' ? true : formData.isDemobilized === 'false' ? false : null,
           p_identification_type_id: formData.identificationTypeId || null,
-          p_family_members: Array.isArray(formData.familyMembers) ? formData.familyMembers.map(m => ({
-            ...m,
-            document_type: m.document_type || 'CC',
-            document_number: m.document_number || ''
-          })) : [],
+          p_family_members: familyMembers,
           } as any);
           data = response.data;
           error = response.error;
@@ -1231,6 +1252,23 @@ export default function RegistroPublico() {
                         handleChange(key, newItems);
                       }} placeholder="Hijo, Esposo(a)..." />
                     </div>
+                    <div className="w-full sm:w-44 space-y-1.5">
+                      <Label htmlFor={`family-birth-date-${idx}`} className="text-xs text-muted-foreground">
+                        Fecha de nacimiento
+                      </Label>
+                      <Input
+                        id={`family-birth-date-${idx}`}
+                        type="date"
+                        max={familyCalendarDate()}
+                        value={item.birth_date || ''}
+                        onChange={event => {
+                          const newItems = [...items];
+                          newItems[idx] = { ...item, birth_date: event.target.value || null };
+                          handleChange(key, newItems);
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground">{familyAgeLabel(item.birth_date, item.age)}</p>
+                    </div>
                     <div className="w-full sm:w-32 space-y-1.5">
                       <Label className="text-xs text-muted-foreground">N° Documento</Label>
                       <Input value={item.document_number || ''} onChange={e => {
@@ -1344,12 +1382,20 @@ export default function RegistroPublico() {
                 updates.vaccines = result.vaccinations;
               }
 
+              if (Array.isArray(result.family_members) && enabledFields.includes('familyMembers')) {
+                updates.familyMembers = result.family_members;
+              }
+
               // Remove nulls so we don't overwrite user input if they typed something while it was fetching
               Object.keys(updates).forEach(k => {
                 if (updates[k] === null || updates[k] === undefined) delete updates[k];
               });
 
-              setFormData(prev => ({ ...prev, ...updates }));
+              setFormData(prev => prev.documentNumber?.trim() === docNum ? ({
+                ...prev,
+                ...updates,
+                familyMembers: prev.familyMembersChanged ? prev.familyMembers : updates.familyMembers,
+              }) : prev);
               setPrefilled(true);
               toast.info('Se encontró información de tu perfil. Los campos han sido pre-llenados.');
             }
@@ -1362,7 +1408,6 @@ export default function RegistroPublico() {
             const candidateLookup = candidateLookupData as any;
             if (candidateLookup?.success && candidateLookup?.found && candidateLookup?.candidate) {
               const candidate = candidateLookup.candidate;
-              setRehireEmployeeId(candidateLookup.rehire ? candidateLookup.rehire_employee_id : null);
               const updates: Record<string, any> = {
                 candidateId: candidate.id,
                 firstName: formatProperName(candidate.first_name),
@@ -1404,23 +1449,27 @@ export default function RegistroPublico() {
                 documentType: candidate.document_type,
               };
 
-              if (Array.isArray(candidateLookup.family_members)) {
+              if (Array.isArray(candidateLookup.family_members) && enabledFields.includes('familyMembers')) {
                 updates.familyMembers = candidateLookup.family_members;
+                updates.copyFamilyMembers = candidateLookup.rehire && !candidateLookup.same_vacancy;
               }
 
               Object.keys(updates).forEach(k => {
                 if (updates[k] === null || updates[k] === undefined) delete updates[k];
               });
 
-              setFormData(prev => ({ ...prev, ...updates }));
+              setFormData(prev => prev.documentNumber?.trim() === docNum ? ({
+                ...prev,
+                ...updates,
+                rehireEmployeeId: candidateLookup.rehire ? candidateLookup.rehire_employee_id : undefined,
+                familyMembers: prev.familyMembersChanged ? prev.familyMembers : updates.familyMembers,
+              }) : prev);
               setPrefilled(true);
               toast.info(candidateLookup.rehire
-                ? 'Reingreso detectado. Solo precargamos tu identidad, datos personales y contacto; la nueva selección comienza limpia.'
+                ? 'Reingreso detectado. Revisa la información precargada antes de enviar.'
                 : 'Se encontró información previa asociada a este documento. Los campos han sido prellenados.');
               return;
             }
-
-            setRehireEmployeeId(null);
 
             const { data } = await supabase.rpc('check_candidate_background', {
               p_document_number: docNum,

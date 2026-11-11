@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import { useQuery } from '@tanstack/react-query';
 import { differenceInYears, format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -450,7 +451,7 @@ export function useGeneralEmployeeReport(enabled = true) {
           numero_parientes: relatives.length,
           detalle_parientes: joinDetails(relatives.map((relative) => {
             const relationship = familyRelationshipLabels[relative.relationship] || relative.relationship;
-            const age = relative.age === null ? '' : `, ${relative.age} años`;
+            const age = `, ${familyAgeLabel(relative.birth_date, relative.age)}`;
             const observations = relative.observations ? `, ${relative.observations}` : '';
             return `${relationship}: ${relative.full_name}${age}${observations}`;
           })),

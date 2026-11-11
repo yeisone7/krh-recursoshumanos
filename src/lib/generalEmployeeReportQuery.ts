@@ -3,7 +3,7 @@ export const GENERAL_EMPLOYEE_REPORT_SELECTS = {
   cycles: 'id, employee_id, cycle_number, status, start_date, end_date',
   contacts: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, residence_department, residence_city, residence_address, residence_neighborhood, email, personal_email, phone, mobile, emergency_contact_name, emergency_contact_phone, emergency_contact_relationship, residence_letter_expiry',
   families: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, spouse_name, spouse_gender, spouse_birth_date, spouse_works, children_count',
-  familyMembers: 'employee_id, employment_cycle_id, created_at, relationship, full_name, age, observations',
+  familyMembers: 'employee_id, employment_cycle_id, created_at, relationship, full_name, birth_date, age, observations',
   workInfos: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, operation_center_id, cost_center, area_id, position_id, position_name, work_city, hire_date, termination_date, link_type, observations, operation_centers(name), areas(name), positions(name)',
   socialSecurities: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, risk_level, eps, afp, arl, ccf, afc, ips',
   bankInfos: 'employee_id, employment_cycle_id, is_current, updated_at, created_at, valid_from, bank_name, account_type, account_number, account_registered',

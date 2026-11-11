@@ -1,3 +1,4 @@
+import { familyBirthDateError, isFamilyBirthDate } from '@/lib/familyBirthDate';
 import { z } from 'zod';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -177,9 +178,11 @@ export const vacancyFormSchema = z.object({
 export type VacancyFormData = z.infer<typeof vacancyFormSchema>;
 
 export const candidateFamilyMemberSchema = z.object({
+  id: z.string().uuid().optional(),
+  birthDate: z.string().refine(value => value === '' || isFamilyBirthDate(value), familyBirthDateError).optional(),
   relationship: z.string().min(1, 'El parentesco es requerido'),
   fullName: z.string().min(2, 'El nombre es requerido'),
-  age: z.number().min(0).max(120).optional(),
+  age: z.number().int().optional(),
   gender: z.enum(['M', 'F']).nullable().optional(),
   observations: z.string().max(500).optional(),
 });

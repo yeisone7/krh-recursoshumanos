@@ -435,6 +435,7 @@ export type Database = {
       candidate_family_members: {
         Row: {
           age: number | null
+          birth_date: string | null
           candidate_id: string
           company_id: string
           created_at: string
@@ -446,6 +447,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          birth_date?: string | null
           candidate_id: string
           company_id: string
           created_at?: string
@@ -457,6 +459,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          birth_date?: string | null
           candidate_id?: string
           company_id?: string
           created_at?: string
@@ -3988,6 +3991,7 @@ export type Database = {
       employee_family_members: {
         Row: {
           age: number | null
+          birth_date: string | null
           company_id: string
           created_at: string
           employee_id: string
@@ -4001,6 +4005,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          birth_date?: string | null
           company_id: string
           created_at?: string
           employee_id: string
@@ -4014,6 +4019,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          birth_date?: string | null
           company_id?: string
           created_at?: string
           employee_id?: string
@@ -12815,6 +12821,22 @@ export type Database = {
           }
       submit_employee_rehire_registration: {
         Args: { p_profile: Json; p_token: string }
+        Returns: Json
+      }
+      replace_employee_family_members: {
+        Args: { p_employee_id: string; p_members: Json }
+        Returns: undefined
+      }
+      replace_candidate_family_members: {
+        Args: { p_candidate_id: string; p_members: Json }
+        Returns: undefined
+      }
+      submit_employee_registration_with_family: {
+        Args: Database["public"]["Functions"]["submit_employee_registration"]["Args"] & {
+          p_family_members: Json
+          p_avatar_url?: string
+          p_vaccines?: Json
+        }
         Returns: Json
       }
       update_employee_from_registration: {

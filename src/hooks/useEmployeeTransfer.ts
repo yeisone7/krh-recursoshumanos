@@ -162,6 +162,7 @@ export function useExecuteTransfer() {
             company_id: targetCompanyId,
             relationship: fm.relationship,
             full_name: fm.full_name,
+            birth_date: fm.birth_date,
             age: fm.age,
             gender: fm.gender,
             observations: fm.observations,

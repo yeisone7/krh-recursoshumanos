@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import { useMemo, useRef, useState } from 'react';
 import type { ElementType, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -258,7 +259,7 @@ export function EmployeeCvDialog({ open, onOpenChange, employeeId }: EmployeeCvD
       .map((member) => joinText([
         familyRelationshipLabels[member.relationship] || member.relationship,
         member.full_name,
-        member.age != null ? `${member.age} años` : null,
+        familyAgeLabel(member.birth_date, member.age),
       ], ' - '))
       .filter(Boolean)
       .join(' | ')

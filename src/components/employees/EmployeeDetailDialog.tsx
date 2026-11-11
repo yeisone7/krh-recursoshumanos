@@ -1,3 +1,4 @@
+import { familyAgeLabel } from '@/lib/familyBirthDate';
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, differenceInYears, differenceInMonths, differenceInDays, differenceInCalendarDays } from 'date-fns';
@@ -58,7 +59,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { formatDateOnly, parseDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
+import { formatDateOnly as formatCalendarDate, parseDateOnlyOr } from '@/lib/dateOnly';
 import { useEmployee } from '@/hooks/useEmployees';
 import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from '@/hooks/useEmployeeHealth';
 import { useDeleteCandidateDocument } from '@/hooks/useCandidates';
@@ -175,9 +176,12 @@ function computeAge(birthDate: string): string {
   return `${differenceInYears(new Date(), parseDateOnlyOr(birthDate, new Date()))} años`;
 }
 
-function formatDateOnly(value: string | null | undefined, dateFormat: string): string | null {
-  const date = parseDateOnly(value);
-  return date ? format(date, dateFormat, { locale: es }) : null;
+function formatDateOnly(
+  value: string | null | undefined,
+  dateFormat: string,
+  options = { locale: es },
+): string | null {
+  return formatCalendarDate(value, dateFormat, options) || null;
 }
 
 // ── Expiring Items Alert ──
@@ -1228,7 +1232,10 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                         >
                           <div className="divide-y divide-border">
                             <InfoItem label="Nombre" value={member.full_name} />
-                            {member.age != null && <InfoItem label="Edad" value={`${member.age} años`} />}
+                            {member.birth_date && (
+                              <InfoItem label="Fecha de nacimiento" value={formatDateOnly(member.birth_date, 'dd/MM/yyyy')} />
+                            )}
+                            <InfoItem label="Edad" value={familyAgeLabel(member.birth_date, member.age)} />
                             {member.gender && <InfoItem label="Sexo biológico" value={genderLabels[member.gender as keyof typeof genderLabels] || member.gender} />}
                             {member.observations && <InfoItem label="Observaciones" value={member.observations} />}
                           </div>

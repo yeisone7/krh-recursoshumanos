@@ -1,3 +1,4 @@
+import { familyAgeLabel, familyCalendarDate } from '@/lib/familyBirthDate';
 import { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -184,6 +185,8 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
         familyMembers: ((familyMembers as any[]) || []).map((member) => ({
           relationship: member.relationship || '',
           fullName: member.full_name || '',
+          id: member.id,
+          birthDate: member.birth_date ?? undefined,
           age: member.age ?? undefined,
           gender: member.gender ?? null,
           observations: member.observations || '',
@@ -243,27 +246,19 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
           })
         : await createCandidate.mutateAsync(candidatePayload);
 
-      if (isEditMode) {
-        const { error: deleteFamilyError } = await supabase
-          .from('candidate_family_members' as any)
-          .delete()
-          .eq('candidate_id', candidate.id);
-        if (deleteFamilyError) throw deleteFamilyError;
-      }
-
-      // Save family members if any
-      if (data.familyMembers && data.familyMembers.length > 0) {
-        const familyInserts = data.familyMembers.map((m) => ({
-          candidate_id: candidate.id,
-          company_id: currentCompanyId,
-          relationship: m.relationship,
-          full_name: m.fullName,
-          age: m.age ?? null,
-          gender: m.gender ?? null,
-          observations: m.observations || null,
-        }));
-        await supabase.from('candidate_family_members' as any).insert(familyInserts);
-      }
+      const { error: familyError } = await supabase.rpc('replace_candidate_family_members', {
+        p_candidate_id: candidate.id,
+        p_members: data.familyMembers.map(member => ({
+          id: member.id ?? null,
+          relationship: member.relationship,
+          full_name: member.fullName,
+          birth_date: member.birthDate || null,
+          age: member.age ?? null,
+          gender: member.gender ?? null,
+          observations: member.observations || null,
+        })),
+      });
+      if (familyError) throw familyError;
 
       toast.success(isEditMode ? 'Candidato actualizado' : 'Candidato registrado', {
         description: isEditMode
@@ -1073,7 +1068,7 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => appendFamily({ relationship: '', fullName: '', age: undefined, gender: null, observations: '' })}
+                      onClick={() => appendFamily({ relationship: '', fullName: '', birthDate: undefined, gender: null, observations: '' })}
                       className="gap-1"
                     >
                       <Users className="w-4 h-4" />
@@ -1144,21 +1139,16 @@ export function CandidateFormDialog({ open, onOpenChange, vacancyId, onSuccess, 
                         />
                         <FormField
                           control={form.control}
-                          name={`familyMembers.${index}.age`}
+                          name={`familyMembers.${index}.birthDate`}
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs">Edad</FormLabel>
+                              <FormLabel>Fecha de nacimiento</FormLabel>
                               <FormControl>
-                                <Input
-                                  type="number"
-                                  placeholder="Edad"
-                                  className="w-20"
-                                  min={0}
-                                  max={120}
-                                  value={field.value ?? ''}
-                                  onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                                />
+                                <Input {...field} type="date" max={familyCalendarDate()} value={field.value ?? ''} />
                               </FormControl>
+                              <p className="text-xs text-muted-foreground">
+                                {familyAgeLabel(field.value, form.watch(`familyMembers.${index}.age`))}
+                              </p>
                               <FormMessage />
                             </FormItem>
                           )}
