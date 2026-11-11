@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -83,6 +83,19 @@ export function DotationItemTypeFormDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  useEffect(() => {
+    if (!open || !imageFile) return;
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [open, imageFile]);
+
+  useEffect(() => {
+    if (open) return;
+    setImageFile(null);
+    setImagePreview((itemType as { image_url?: string } | null | undefined)?.image_url ?? null);
+  }, [open, itemType]);
+
   const form = useForm<DotationItemTypeFormData>({
     resolver: zodResolver(dotationItemTypeSchema),
     defaultValues: itemType ? {
@@ -115,7 +128,6 @@ export function DotationItemTypeFormDialog({
       return;
     }
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
   };
 
   const removeImage = () => {

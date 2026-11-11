@@ -350,9 +350,11 @@ function Composer({
   useWorkspaceDirty(message.trim().length > 0 || files.length > 0);
   const [isRecording, setIsRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<BlobPart[]>([]);
+  const releaseRecordingRef = useRef<(() => void) | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => () => releaseRecordingRef.current?.(), []);
 
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
@@ -363,30 +365,60 @@ function Composer({
   };
 
   const startRecording = async () => {
+    if (releaseRecordingRef.current) return;
+    let stream: MediaStream | undefined;
+    let recorder: MediaRecorder | undefined;
+    const chunks: BlobPart[] = [];
+    const release = () => {
+      releaseRecordingRef.current = null;
+      recorderRef.current = null;
+      if (recorder) {
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.onerror = null;
+        if (recorder.state !== 'inactive') recorder.stop();
+      }
+      stream?.getTracks().forEach(track => track.stop());
+      chunks.length = 0;
+    };
+    releaseRecordingRef.current = release;
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorderRef.current = recorder;
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (releaseRecordingRef.current !== release) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      const activeRecorder = new MediaRecorder(stream);
+      recorder = activeRecorder;
+      recorderRef.current = activeRecorder;
+      activeRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
       };
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
+      activeRecorder.onstop = () => {
+        const blob = new Blob(chunks, { type: activeRecorder.mimeType || 'audio/webm' });
         const file = new File([blob], `nota-voz-${Date.now()}.webm`, { type: blob.type });
+        release();
+        setIsRecording(false);
         setFiles((current) => [...current, file]);
-        stream.getTracks().forEach((track) => track.stop());
       };
-      recorder.start();
+      activeRecorder.onerror = () => {
+        release();
+        setIsRecording(false);
+        toast({ title: 'No se pudo completar la grabación' });
+      };
+      activeRecorder.start();
       setIsRecording(true);
     } catch {
+      if (releaseRecordingRef.current !== release) return;
+      release();
       toast({ title: 'No se pudo acceder al micrófono', description: 'Revisa los permisos del navegador.' });
     }
   };
 
   const stopRecording = () => {
-    recorderRef.current?.stop();
-    setIsRecording(false);
+    const recorder = recorderRef.current;
+    if (recorder?.state === 'recording') recorder.stop();
   };
 
   return (

@@ -46,22 +46,30 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 const extractTextFromPdfFile = async (file: File): Promise<string> => {
   const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  const pages: string[] = [];
+  const loadingTask = pdfjsLib.getDocument({ data: buffer });
+  try {
+    const pdf = await loadingTask.promise;
+    const pages: string[] = [];
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) => ('str' in item ? item.str : ''))
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      try {
+        const content = await page.getTextContent();
+        const pageText = content.items
+          .map((item) => ('str' in item ? item.str : ''))
+          .join(' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (pageText) pages.push(pageText);
+      } finally {
+        page.cleanup();
+      }
+    }
 
-    if (pageText) pages.push(pageText);
+    return pages.join('\n\n').trim();
+  } finally {
+    await loadingTask.destroy();
   }
-
-  return pages.join('\n\n').trim();
 };
 
 const getFunctionErrorMessage = async (error: any, fallback: string): Promise<string> => {

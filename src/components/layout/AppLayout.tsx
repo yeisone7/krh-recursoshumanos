@@ -5,7 +5,6 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { useContractExpiryNotifications } from '@/hooks/useContractExpiryNotifications';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -36,7 +35,6 @@ export function AppLayout({ children }: AppLayoutProps) {
   const isMobile = useIsMobile();
   const isAiAssistant = location.pathname === '/asistente-ia';
   const showAiButton = permissionsLoaded && hasPermission('asistente_ia');
-  useInactivityTimeout();
   useContractExpiryNotifications();
 
   useSwipeGesture({

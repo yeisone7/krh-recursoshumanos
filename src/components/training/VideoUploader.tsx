@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,13 @@ interface VideoUploaderProps {
 
 export function VideoUploader({ courseId, onUploaded }: VideoUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    const url = previewFile ? URL.createObjectURL(previewFile) : null;
+    setPreview(url);
+    if (url) return () => URL.revokeObjectURL(url);
+  }, [previewFile]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,7 +36,7 @@ export function VideoUploader({ courseId, onUploaded }: VideoUploaderProps) {
       return;
     }
 
-    setPreview(URL.createObjectURL(file));
+    setPreviewFile(file);
     setIsUploading(true);
 
     try {
@@ -52,7 +58,7 @@ export function VideoUploader({ courseId, onUploaded }: VideoUploaderProps) {
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Error al subir el video');
-      setPreview(null);
+      setPreviewFile(null);
     } finally {
       setIsUploading(false);
     }
@@ -104,7 +110,7 @@ export function VideoUploader({ courseId, onUploaded }: VideoUploaderProps) {
               size="icon"
               className="h-8 w-8 rounded-xl shadow-lg"
               onClick={() => {
-                setPreview(null);
+                setPreviewFile(null);
                 const input = document.getElementById('video-upload-input') as HTMLInputElement;
                 if (input) input.value = '';
               }}
@@ -129,6 +135,7 @@ export function VideoUploader({ courseId, onUploaded }: VideoUploaderProps) {
         type="file" 
         className="hidden" 
         accept="video/*"
+        disabled={isUploading}
         onChange={handleFileChange}
       />
     </div>

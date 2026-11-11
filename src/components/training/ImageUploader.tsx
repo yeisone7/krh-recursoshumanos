@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,13 @@ interface ImageUploaderProps {
 
 export function ImageUploader({ courseId, onUploaded }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    const url = previewFile ? URL.createObjectURL(previewFile) : null;
+    setPreview(url);
+    if (url) return () => URL.revokeObjectURL(url);
+  }, [previewFile]);
 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,7 +35,7 @@ export function ImageUploader({ courseId, onUploaded }: ImageUploaderProps) {
       return;
     }
 
-    setPreview(URL.createObjectURL(file));
+    setPreviewFile(file);
     setIsUploading(true);
 
     try {
@@ -51,7 +57,7 @@ export function ImageUploader({ courseId, onUploaded }: ImageUploaderProps) {
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Error al subir la imagen');
-      setPreview(null);
+      setPreviewFile(null);
     } finally {
       setIsUploading(false);
     }
@@ -67,7 +73,7 @@ export function ImageUploader({ courseId, onUploaded }: ImageUploaderProps) {
         <div className="relative inline-block">
           <img src={preview} alt="Preview" className="h-24 rounded-lg border" />
           <button
-            onClick={() => setPreview(null)}
+            onClick={() => setPreviewFile(null)}
             className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5"
           >
             <X className="h-3 w-3" />

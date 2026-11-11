@@ -141,10 +141,6 @@ export default function Configuracion() {
   const [savingWatermark, setSavingWatermark] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
-  // Inactivity timeout state
-  const [inactivityEnabled, setInactivityEnabled] = useState(false);
-  const [inactivityMinutes, setInactivityMinutes] = useState(15);
-
   // Account lockout state
   const [lockoutEnabled, setLockoutEnabled] = useState(false);
   const [lockoutMaxAttempts, setLockoutMaxAttempts] = useState(5);
@@ -208,13 +204,6 @@ export default function Configuracion() {
         setWatermarkEnabled(wmConfig.enabled ?? DEFAULT_WATERMARK_CONFIG.enabled);
         setWatermarkPosition(wmConfig.position || DEFAULT_WATERMARK_CONFIG.position);
         setWatermarkLogoUrl(wmConfig.logo_url || null);
-      }
-
-      // Load inactivity timeout config
-      const timeoutConfig = systemConfig.inactivity_timeout_minutes;
-      if (timeoutConfig) {
-        setInactivityEnabled(timeoutConfig.enabled ?? false);
-        setInactivityMinutes(timeoutConfig.minutes ?? 15);
       }
 
       // Load account lockout config
@@ -824,11 +813,17 @@ export default function Configuracion() {
 
         {/* Security Tab */}
         <TabsContent value="security" className="focus-visible:outline-none px-1">
-          <SecurityTab 
-            systemConfig={systemConfig} 
-            onUpdateConfig={async (key, value, description) => {
-              return await updateConfig.mutateAsync({ key, value, description });
-            }}
+          <SecurityTab
+            lockoutEnabled={lockoutEnabled}
+            lockoutMaxAttempts={lockoutMaxAttempts}
+            lockoutMinutes={lockoutMinutes}
+            onLockoutEnabledChange={setLockoutEnabled}
+            onLockoutMaxAttemptsChange={setLockoutMaxAttempts}
+            onLockoutMinutesChange={setLockoutMinutes}
+            updateCheckEnabled={updateCheckEnabled}
+            updateCheckMinutes={updateCheckMinutes}
+            onUpdateCheckEnabledChange={setUpdateCheckEnabled}
+            onUpdateCheckMinutesChange={setUpdateCheckMinutes}
           />
         </TabsContent>
 

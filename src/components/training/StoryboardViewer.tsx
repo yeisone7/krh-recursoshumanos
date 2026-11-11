@@ -54,6 +54,21 @@ export function StoryboardViewer({
   const fullscreenTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    setIsPlaying(false);
+    setAudioProgress(0);
+    return () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      audio.pause();
+      audio.ontimeupdate = null;
+      audio.onended = null;
+      audio.removeAttribute('src');
+      audio.load();
+      audioRef.current = null;
+    };
+  }, [audioUrl]);
+
+  useEffect(() => {
     if (!workspaceActive) { audioRef.current?.pause(); setIsPlaying(false); }
   }, [workspaceActive]);
 
@@ -241,10 +256,10 @@ export function StoryboardViewer({
                 if (!audioRef.current) {
                   const audio = new Audio(audioUrl);
                   audioRef.current = audio;
-                  audio.addEventListener('timeupdate', () => {
+                  audio.ontimeupdate = () => {
                     if (audio.duration) setAudioProgress((audio.currentTime / audio.duration) * 100);
-                  });
-                  audio.addEventListener('ended', () => { setIsPlaying(false); setActiveSceneIdx(0); setAudioProgress(0); });
+                  };
+                  audio.onended = () => { setIsPlaying(false); setActiveSceneIdx(0); setAudioProgress(0); };
                 }
                 togglePlayback();
               }}>

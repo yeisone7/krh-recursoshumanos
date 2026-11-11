@@ -27,10 +27,6 @@ import { cn } from '@/lib/utils';
 import { confirmWorkspaceExit } from '@/lib/workspaceExit';
 
 interface SecurityTabProps {
-  inactivityMinutes: number;
-  inactivityEnabled: boolean;
-  onInactivityMinutesChange: (v: number) => void;
-  onInactivityEnabledChange: (v: boolean) => void;
   lockoutEnabled: boolean;
   lockoutMaxAttempts: number;
   lockoutMinutes: number;
@@ -44,10 +40,6 @@ interface SecurityTabProps {
 }
 
 export function SecurityTab({
-  inactivityMinutes,
-  inactivityEnabled,
-  onInactivityMinutesChange,
-  onInactivityEnabledChange,
   lockoutEnabled,
   lockoutMaxAttempts,
   lockoutMinutes,
@@ -62,7 +54,6 @@ export function SecurityTab({
   const { signOut } = useAuth();
   const updateConfig = useUpdateSystemConfig();
   const [signingOutAll, setSigningOutAll] = useState(false);
-  const [savingTimeout, setSavingTimeout] = useState(false);
   const [savingLockout, setSavingLockout] = useState(false);
   const [savingUpdateCheck, setSavingUpdateCheck] = useState(false);
 
@@ -77,22 +68,6 @@ export function SecurityTab({
       toast.error('Error al cerrar sesiones');
     } finally {
       setSigningOutAll(false);
-    }
-  };
-
-  const handleSaveTimeout = async () => {
-    setSavingTimeout(true);
-    try {
-      await updateConfig.mutateAsync({
-        key: 'inactivity_timeout_minutes',
-        value: { enabled: inactivityEnabled, minutes: inactivityEnabled ? inactivityMinutes : 0 },
-        description: 'Minutos de inactividad antes de cerrar sesión automáticamente',
-      });
-      toast.success('Configuración de seguridad guardada');
-    } catch {
-      toast.error('Error al guardar la configuración');
-    } finally {
-      setSavingTimeout(false);
     }
   };
 
@@ -190,80 +165,6 @@ export function SecurityTab({
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed max-w-2xl">
                 Ante cualquier sospecha de vulneración, utiliza el cierre global para desconectar inmediatamente todos los puntos de acceso. Tendrás que autenticarte de nuevo para recuperar el control.
               </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Timeout por Inactividad */}
-      <Card className="rounded-[2.5rem] bg-white border border-slate-100 shadow-sm overflow-hidden">
-        <CardHeader className="p-8 border-b border-slate-50">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <div className="h-14 w-14 rounded-2xl bg-slate-900 flex items-center justify-center text-primary shadow-xl shadow-slate-200">
-                <Timer className="w-7 h-7 stroke-[2.5]" />
-              </div>
-              <div className="space-y-1">
-                <CardTitle className="text-xl font-black uppercase tracking-tight text-slate-900">Timeout Automático</CardTitle>
-                <CardDescription className="text-[10px] font-black uppercase tracking-widest text-slate-400">Expiración de sesión por tiempo muerto</CardDescription>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="flex items-center gap-4 px-6 py-3 rounded-2xl bg-slate-50 border border-slate-100 shadow-inner w-full sm:w-auto justify-between">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Auto-Finalización</span>
-                <Switch 
-                  checked={inactivityEnabled} 
-                  onCheckedChange={onInactivityEnabledChange} 
-                  className="data-[state=checked]:bg-primary" 
-                />
-              </div>
-              <Button 
-                onClick={handleSaveTimeout} 
-                disabled={savingTimeout || !inactivityEnabled}
-                className="h-12 px-10 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-slate-200 w-full sm:w-auto active:scale-95 transition-all"
-              >
-                {savingTimeout ? <Loader2 className="w-4 h-4 mr-3 animate-spin" /> : <Save className="w-4 h-4 mr-3" />}
-                SINCRONIZAR TIMEOUT
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-10">
-          <div className={cn(
-            "transition-all duration-700",
-            !inactivityEnabled && "opacity-30 pointer-events-none grayscale scale-[0.98]"
-          )}>
-            <div className="grid gap-10 lg:grid-cols-2">
-              <div className="space-y-4 p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 shadow-inner">
-                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Ventana de Inactividad (Minutos)</Label>
-                <div className="flex flex-col sm:flex-row items-center gap-6">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={480}
-                    value={inactivityMinutes}
-                    onChange={(e) => onInactivityMinutesChange(Math.max(1, parseInt(e.target.value) || 15))}
-                    className="h-16 w-full sm:w-32 rounded-2xl bg-white border-none font-black text-lg text-slate-900 text-center shadow-sm focus:ring-2 focus:ring-primary/20"
-                  />
-                  <div className="h-16 px-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black text-xs uppercase tracking-widest shadow-2xl flex-1 whitespace-nowrap">
-                    {inactivityMinutes >= 60
-                      ? `${Math.floor(inactivityMinutes / 60)} HORAS Y ${inactivityMinutes % 60} MIN`
-                      : `${inactivityMinutes} MINUTOS CRONOMETRADOS`}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-6">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900">Protocolo de Advertencia</h4>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                    El sistema disparará un HUD visual 60 segundos antes del cierre forzoso, permitiendo al operador extender su nexo con la plataforma.
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
         </CardContent>

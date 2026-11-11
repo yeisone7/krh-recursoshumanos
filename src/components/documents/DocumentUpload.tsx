@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Upload, FileText, X, Loader2, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +32,12 @@ export function DocumentUpload({
   const [dragOver, setDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => () => {
+    if (progressIntervalRef.current !== null) clearInterval(progressIntervalRef.current);
+    progressIntervalRef.current = null;
+  }, []);
   
   const uploadDocument = useUploadDocument();
 
@@ -69,14 +75,14 @@ export function DocumentUpload({
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || progressIntervalRef.current !== null) return;
+
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => Math.min(prev + 10, 90));
+    }, 100);
+    progressIntervalRef.current = progressInterval;
 
     try {
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90));
-      }, 100);
-
       await uploadDocument.mutateAsync({
         file,
         entityType,
@@ -84,7 +90,7 @@ export function DocumentUpload({
         notes: notes || undefined,
       });
 
-      clearInterval(progressInterval);
+      if (progressIntervalRef.current !== progressInterval) return;
       setUploadProgress(100);
 
       toast.success('Documento subido correctamente');
@@ -93,10 +99,14 @@ export function DocumentUpload({
       setUploadProgress(0);
       onUploadComplete?.();
     } catch (error) {
+      if (progressIntervalRef.current !== progressInterval) return;
       setUploadProgress(0);
       const message = error instanceof Error ? error.message : 'Error al subir el documento';
       toast.error(message);
       console.error('Upload error:', error);
+    } finally {
+      clearInterval(progressInterval);
+      if (progressIntervalRef.current === progressInterval) progressIntervalRef.current = null;
     }
   };
 
