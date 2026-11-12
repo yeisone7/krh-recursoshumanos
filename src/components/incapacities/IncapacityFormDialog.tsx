@@ -9,14 +9,9 @@ import { useAbsenceConflicts } from '@/hooks/useAbsenceConflicts';
 import { AbsenceConflictAlert } from '@/components/shared/AbsenceConflictAlert';
 import { toast } from 'sonner';
 import { Cie10SearchInput } from './Cie10SearchInput';
+import { IncapacityDialogHeader } from './IncapacityDialogHeader';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -262,21 +257,11 @@ export function IncapacityFormDialog({
   
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="incapacity-form-dialog w-[calc(100vw-1rem)] max-w-3xl gap-0 p-0">
-        <DialogHeader className="incapacity-form-header shrink-0 text-left">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Stethoscope className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div className="min-w-0 space-y-1">
-            <p className="text-xs font-medium text-primary">Gestión de ausencias</p>
-            <DialogTitle className="text-xl font-bold tracking-tight">
-              {isEditing ? 'Editar incapacidad' : isExtension ? 'Registrar prórroga' : 'Nueva incapacidad'}
-            </DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
-              Registra el periodo, la información clínica y los datos de pago.
-            </DialogDescription>
-          </div>
-        </DialogHeader>
+      <DialogContent className="incapacity-dialog incapacity-form-dialog w-[calc(100vw-1rem)] max-w-3xl">
+        <IncapacityDialogHeader
+          title={isEditing ? 'Editar incapacidad' : isExtension ? 'Registrar prórroga' : 'Nueva incapacidad'}
+          description="Completa el periodo, la información clínica y los datos de pago."
+        />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
@@ -285,18 +270,18 @@ export function IncapacityFormDialog({
             else if (errors.daily_base_salary) setActiveTab('payment');
           })} className="incapacity-form flex min-h-0 flex-1 flex-col">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">
-              <TabsList aria-label="Secciones de la incapacidad" className="incapacity-form-tabs grid h-auto shrink-0 grid-cols-3 gap-0 rounded-none border-x-0 border-t-0 bg-card p-0">
-                <TabsTrigger value="general" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+              <TabsList aria-label="Secciones de la incapacidad" className="incapacity-dialog-tabs grid grid-cols-3">
+                <TabsTrigger value="general" className="incapacity-dialog-tab">
                   <User className="h-4 w-4 shrink-0" aria-hidden="true" /> General
                 </TabsTrigger>
-                <TabsTrigger value="clinical" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+                <TabsTrigger value="clinical" className="incapacity-dialog-tab">
                   <Stethoscope className="h-4 w-4 shrink-0" aria-hidden="true" /> Clínico
                 </TabsTrigger>
-                <TabsTrigger value="payment" className="incapacity-form-tab gap-2 rounded-none border-b-2 border-transparent px-2 py-3 text-sm font-semibold shadow-none data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary">
+                <TabsTrigger value="payment" className="incapacity-dialog-tab">
                   <DollarSign className="h-4 w-4 shrink-0" aria-hidden="true" /> Pago
                 </TabsTrigger>
               </TabsList>
-              <div className="incapacity-form-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
+              <div className="incapacity-dialog-body incapacity-form-body">
                 {/* General Tab */}
                 <TabsContent value="general" className="mt-0 space-y-5">
                   <div className="space-y-5">
@@ -664,7 +649,7 @@ export function IncapacityFormDialog({
                 <div className="mt-4"><AbsenceConflictAlert conflicts={incapConflicts} /></div>
               </div>
             </Tabs>
-            <footer className="incapacity-form-footer flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-5 py-4 sm:px-6">
+            <footer className="incapacity-dialog-footer incapacity-form-footer">
               <span className="text-xs text-muted-foreground">* Campos obligatorios</span>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="bg-card">Cancelar</Button>

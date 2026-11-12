@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { format, differenceInDays } from 'date-fns';
+import { useRef, useState } from 'react';
+import { differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatDateOnly, parseDateOnlyOr } from '@/lib/dateOnly';
 import { 
@@ -39,7 +39,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Collapsible,
   CollapsibleContent,
@@ -79,7 +78,17 @@ import { AuditLogViewer } from '@/components/audit/AuditLogViewer';
 import { useCurrentDocument } from '@/hooks/useDocuments';
 import { cn } from '@/lib/utils';
 import { IncapacityDialogSizeToggle } from './IncapacityDialogSizeToggle';
+import { IncapacityDialogHeader } from './IncapacityDialogHeader';
 import { IncapacityLegalFollowUpFields } from './IncapacityLegalFollowUpFields';
+
+const detailTabs = [
+  { value: 'general', label: 'General', icon: FileText },
+  { value: 'payment', label: 'Pagos', icon: DollarSign },
+  { value: 'recovery', label: 'Recobro', icon: CheckCircle2 },
+  { value: 'documents', label: 'Documentos', icon: File },
+  { value: 'history', label: 'Historial', icon: Clock },
+  { value: 'audit', label: 'Trazabilidad', icon: History },
+];
 
 interface IncapacityDetailDialogProps {
   open: boolean;
@@ -179,6 +188,7 @@ export function IncapacityDetailDialog({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
+  const tabBody = useRef<HTMLDivElement>(null);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
   const { data: pilaSettings } = usePilaUgppSettings();
@@ -268,279 +278,233 @@ export function IncapacityDetailDialog({
     minimumFractionDigits: rate * 100 % 1 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   }).format(rate);
+  const period = [incapacity.start_date, incapacity.end_date]
+    .map((date) => formatDateOnly(date, 'd MMM yyyy', { locale: es }))
+    .join(' – ');
   
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           className={cn(
-            'flex flex-col overflow-hidden border-border/50 bg-background p-0 shadow-2xl',
+            'incapacity-dialog flex flex-col overflow-hidden bg-card',
             isMaximized
-              ? 'h-[100dvh] max-h-[100dvh] w-screen max-w-none rounded-none border-0 sm:h-[100dvh] sm:max-h-[100dvh] sm:w-screen sm:max-w-none'
-              : 'h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-6xl rounded-[2rem] sm:h-[92vh] sm:max-h-[92vh]',
+              ? 'incapacity-dialog-maximized h-dvh max-h-dvh w-screen max-w-none sm:w-screen'
+              : 'h-[calc(100dvh-1rem)] max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-6xl sm:h-[calc(100dvh-2rem)] sm:w-[calc(100vw-2rem)]',
           )}
         >
-          
-          {/* Premium Gradient Header */}
-          <div className="relative shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-8 py-8 border-b border-border/50">
-            
-            
-            <DialogHeader className="relative z-10">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0 shadow-inner hidden sm:flex">
-                    <Stethoscope className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <Badge variant="outline" className="text-primary border-primary/20 font-bold uppercase tracking-widest text-[9px] px-2 py-0.5 mb-1 hidden sm:inline-flex">
-                      DETALLE
-                    </Badge>
-                    <DialogTitle className="text-2xl font-black tracking-tight text-foreground">
-                      {incapacity.is_extension ? `Prórroga #${incapacity.extension_number}` : 'Incapacidad'} - {employeeName}
-                    </DialogTitle>
-                    <DialogDescription className="font-medium mt-1">
-                      {formatDateOnly(incapacity.start_date, "d 'de' MMMM, yyyy", { locale: es })} - {format(endDate, "d 'de' MMMM, yyyy", { locale: es })}
-                    </DialogDescription>
-                    <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <IdCard className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="font-medium text-foreground">Documento:</span>
-                        <span>{incapacity.employee?.document_number || 'Sin registrar'}</span>
-                      </span>
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <Briefcase className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="font-medium text-foreground">Cargo:</span>
-                        <span>{currentWorkInfo?.position_name || 'Sin registrar'}</span>
-                      </span>
-                      <span className="flex min-w-0 items-center gap-1.5">
-                        <Building2 className="h-4 w-4 shrink-0 text-primary" />
-                        <span className="font-medium text-foreground">Centro de Operación:</span>
-                        <span>{currentWorkInfo?.operation_centers?.name || 'Sin registrar'}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 pr-8 sm:mt-0 sm:justify-end">
-                  <IncapacityDialogSizeToggle
-                    isMaximized={isMaximized}
-                    onToggle={() => setIsMaximized((current) => !current)}
-                  />
-                  <Badge variant={isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'destructive' : 'secondary'} className="rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
+          <IncapacityDialogHeader
+            title={`${incapacity.is_extension ? `Prórroga #${incapacity.extension_number}` : 'Incapacidad'} · ${employeeName}`}
+            description={period}
+            actions={<IncapacityDialogSizeToggle isMaximized={isMaximized} onToggle={() => setIsMaximized((current) => !current)} />}
+          />
+
+          <Tabs
+            defaultValue="general"
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
+            onValueChange={() => {
+              if (tabBody.current) tabBody.current.scrollTop = 0;
+            }}
+          >
+              <TabsList aria-label="Secciones del detalle" className="incapacity-dialog-tabs grid grid-cols-3 sm:grid-cols-6">
+                {detailTabs.map(({ value, label, icon: Icon }) => (
+                  <TabsTrigger key={value} value={value} className="incapacity-dialog-tab">
+                    <Icon className="hidden size-4 shrink-0 md:block" aria-hidden="true" />
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <div ref={tabBody} className="incapacity-dialog-body">
+                <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground sm:text-sm">
+                  {[
+                    { label: 'Documento', value: incapacity.employee?.document_number, icon: IdCard },
+                    { label: 'Cargo', value: currentWorkInfo?.position_name, icon: Briefcase },
+                    { label: 'Centro de operación', value: currentWorkInfo?.operation_centers?.name, icon: Building2 },
+                  ].map(({ label, value, icon: Icon }) => (
+                    <span key={label} className="flex min-w-0 items-start gap-1.5">
+                      <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                      <span className="break-words">{label} <span className="font-medium text-foreground">{value || 'Sin registrar'}</span></span>
+                    </span>
+                  ))}
+                  <Badge variant={isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'destructive' : 'secondary'}>
                     {getIncapacityOriginLabel(incapacity.origin)}
                   </Badge>
-                  {isActive && (
-                    <Badge variant="default" className="bg-green-500 rounded-xl px-3 py-1 text-xs uppercase tracking-wider font-bold">
-                      Activa
-                    </Badge>
-                  )}
+                  {isActive && <Badge className="border-success/20 bg-success/10 text-success">Activa</Badge>}
                 </div>
-              </div>
-            </DialogHeader>
-          </div>
-          
-          <div className="flex min-h-0 flex-1 flex-col px-4 py-4 sm:px-8 sm:py-6">
-            <Tabs defaultValue="general" className="flex min-h-0 flex-1 flex-col">
-              <TabsList className="mb-4 h-12 w-full shrink-0 justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-xl border border-border bg-slate-100 p-1 scrollbar-hide sm:mb-6">
-                <TabsTrigger value="general" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><FileText className="h-4 w-4 shrink-0" />General</TabsTrigger>
-                <TabsTrigger value="payment" className="h-10 min-w-[104px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><DollarSign className="h-4 w-4 shrink-0" />Pagos</TabsTrigger>
-                <TabsTrigger value="recovery" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><CheckCircle2 className="h-4 w-4 shrink-0" />Recobro</TabsTrigger>
-                <TabsTrigger value="documents" className="h-10 min-w-[132px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><File className="h-4 w-4 shrink-0" />Documentos</TabsTrigger>
-                <TabsTrigger value="history" className="h-10 min-w-[112px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><Clock className="h-4 w-4 shrink-0" />Historial</TabsTrigger>
-                <TabsTrigger value="audit" className="h-10 min-w-[132px] flex-1 gap-2 whitespace-nowrap rounded-lg px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-all data-[state=active]:bg-white data-[state=active]:text-primary data-[state=active]:shadow-sm"><History className="h-4 w-4 shrink-0" />Trazabilidad</TabsTrigger>
-              </TabsList>
-              <ScrollArea className="-mx-4 min-h-0 flex-1 px-4 pb-4 sm:-mx-8 sm:px-8 sm:pb-6">
-              
+
               {/* General Tab */}
               <TabsContent value="general" className="mt-0 space-y-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-4">
-                  <Card>
-                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription className="whitespace-nowrap">Días Totales</CardDescription>
+                <dl aria-label="Resumen de la incapacidad" className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border bg-border sm:grid-cols-4">
+                  {[
+                    { label: 'Días de incapacidad', value: incapacity.total_days },
+                    { label: 'Días de la cadena', value: totalChainDays },
+                    {
+                      label: daysRemaining < 0 ? 'Estado' : 'Días restantes',
+                      value: daysRemaining < 0 ? 'Finalizada' : daysRemaining,
+                      tone: daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : '',
+                    },
+                    { label: 'Valor total', value: formatCurrency(incapacity.total_amount), tone: 'text-primary' },
+                  ].map(({ label, value, tone }) => (
+                    <div key={label} className="min-w-0 bg-card px-3 py-2.5 sm:px-4 sm:py-3">
+                      <dt className="text-xs font-medium text-muted-foreground sm:text-sm">{label}</dt>
+                      <dd className={cn('mt-0.5 break-words text-lg font-semibold tabular-nums sm:text-2xl', tone)}>{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+                  <div className="min-w-0 space-y-3">
+                    <Card>
+                      <CardHeader className="px-4 pb-3 pt-4">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          Información clínica
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3 px-4 pb-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Diagnóstico</p>
+                          <p className="break-words text-base font-semibold">{incapacity.diagnosis}</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-3 break-words sm:grid-cols-2">
+                          {incapacity.cie10_code && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Código CIE-10</p>
+                              <p className="font-medium">{incapacity.cie10_code}</p>
+                            </div>
+                          )}
+                          {incapacity.certificate_number && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">No. Certificado</p>
+                              <p className="font-medium">{incapacity.certificate_number}</p>
+                            </div>
+                          )}
+                          {incapacity.treating_doctor && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Médico Tratante</p>
+                              <p className="font-medium">{incapacity.treating_doctor}</p>
+                            </div>
+                          )}
+                          {incapacity.medical_entity && (
+                            <div>
+                              <p className="text-sm text-muted-foreground">Entidad Médica</p>
+                              <p className="font-medium">{incapacity.medical_entity}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {incapacity.observations && (
+                          <div>
+                            <p className="text-sm text-muted-foreground">Observaciones</p>
+                            <p className="whitespace-pre-wrap break-words text-sm">{incapacity.observations}</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                    {incapacity.requires_reintegration_exam && (
+                      <Card className="border-warning">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base flex items-center gap-2 text-warning">
+                            <AlertTriangle className="h-4 w-4" />
+                            Examen de Reintegro Requerido
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <p className="text-sm text-muted-foreground">
+                            Esta incapacidad supera los 30 días. Se requiere examen médico de reintegro antes de que el empleado retorne a sus labores.
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {incapacity.reintegration_exam_id ? (
+                              <Badge variant="outline" className="bg-success/10 text-success border-success/30">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Examen Creado
+                              </Badge>
+                            ) : (
+                              <>
+                                <Badge variant="destructive">
+                                  <XCircle className="h-3 w-3 mr-1" />
+                                  Pendiente
+                                </Badge>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      await createReintegrationExamMutation.mutateAsync({ incapacity });
+                                      toast.success('Examen de reintegro creado exitosamente');
+                                    } catch (error) {
+                                      toast.error('Error al crear el examen de reintegro');
+                                    }
+                                  }}
+                                  disabled={createReintegrationExamMutation.isPending}
+                                >
+                                  {createReintegrationExamMutation.isPending ? (
+                                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  ) : (
+                                    <Plus className="h-4 w-4 mr-1" />
+                                  )}
+                                  Crear Examen
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                  <Card className="border-primary/20 bg-primary/5">
+                    <CardHeader className="gap-1 p-4">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-primary" />
+                        Seguimiento legal Colombia
+                      </CardTitle>
+                      <CardDescription>
+                        Etapa actual: {legalStage.label} - Responsable: {legalStage.responsible}
+                      </CardDescription>
                     </CardHeader>
-                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className="text-2xl font-bold">{incapacity.total_days}</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription className="whitespace-nowrap">Días Cadena</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className="text-2xl font-bold">{totalChainDays}</p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription className="whitespace-nowrap">Días Restantes</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className={`whitespace-nowrap text-2xl font-bold ${daysRemaining < 0 ? 'text-muted-foreground' : daysRemaining <= 3 ? 'text-destructive' : ''}`}>
-                        {daysRemaining < 0 ? 'Finalizada' : daysRemaining}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="p-3 pb-2 sm:p-6 sm:pb-2">
-                      <CardDescription className="whitespace-nowrap">Valor Total</CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
-                      <p className="whitespace-nowrap text-xl font-bold tabular-nums sm:text-2xl">{formatCurrency(incapacity.total_amount)}</p>
-                    </CardContent>
+                    {legalMilestones.length > 0 && (
+                      <CardContent className="space-y-3 px-4 pb-4">
+                        {legalMilestones.map((milestone) => (
+                          <div
+                            key={milestone.key}
+                            className={`rounded-lg border p-3 ${
+                              milestone.isReached
+                                ? 'border-warning/30 bg-warning/10'
+                                : milestone.daysRemaining <= 20
+                                  ? 'border-amber-200 bg-amber-50'
+                                  : 'border-border bg-background'
+                            }`}
+                          >
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div>
+                                <p className="font-medium text-sm">{milestone.title}</p>
+                                <p className="text-xs text-muted-foreground mt-1">{milestone.description}</p>
+                              </div>
+                              <Badge variant={milestone.isReached ? 'destructive' : 'outline'} className="w-fit shrink-0">
+                                {milestone.isReached ? 'Alcanzado' : `Faltan ${milestone.daysRemaining} dias`}
+                              </Badge>
+                            </div>
+                            {!isLoadingChainRoot && chainRoot && (milestone.key === 'day_120' || milestone.key === 'day_540') && (
+                              <IncapacityLegalFollowUpFields
+                                incapacity={chainRoot}
+                                kind={milestone.key === 'day_120' ? 'rehabilitation' : 'pcl'}
+                              />
+                            )}
+                            <MilestoneDocumentAttachment
+                              entityType={milestone.documentEntityType}
+                              entityId={followUpDocumentEntityId}
+                              title={milestone.title}
+                              thresholdDays={milestone.day}
+                              allowUpload={milestone.isReached}
+                              isLoadingEntity={isLoadingChainRoot}
+                            />
+                          </div>
+                        ))}
+                      </CardContent>
+                    )}
                   </Card>
                 </div>
-                
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-primary" />
-                      Seguimiento legal Colombia
-                    </CardTitle>
-                    <CardDescription>
-                      Etapa actual: {legalStage.label} - Responsable: {legalStage.responsible}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {legalMilestones.map((milestone) => (
-                      <div
-                        key={milestone.key}
-                        className={`rounded-lg border p-3 ${
-                          milestone.isReached
-                            ? 'border-warning/30 bg-warning/10'
-                            : milestone.daysRemaining <= 20
-                              ? 'border-amber-200 bg-amber-50'
-                              : 'border-border bg-background'
-                        }`}
-                      >
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                          <div>
-                            <p className="font-medium text-sm">{milestone.title}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{milestone.description}</p>
-                          </div>
-                          <Badge variant={milestone.isReached ? 'destructive' : 'outline'} className="w-fit shrink-0">
-                            {milestone.isReached ? 'Alcanzado' : `Faltan ${milestone.daysRemaining} dias`}
-                          </Badge>
-                        </div>
-                        {!isLoadingChainRoot && chainRoot && (milestone.key === 'day_120' || milestone.key === 'day_540') && (
-                          <IncapacityLegalFollowUpFields
-                            incapacity={chainRoot}
-                            kind={milestone.key === 'day_120' ? 'rehabilitation' : 'pcl'}
-                          />
-                        )}
-                        <MilestoneDocumentAttachment
-                          entityType={milestone.documentEntityType}
-                          entityId={followUpDocumentEntityId}
-                          title={milestone.title}
-                          thresholdDays={milestone.day}
-                          allowUpload={milestone.isReached}
-                          isLoadingEntity={isLoadingChainRoot}
-                        />
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Información Clínica
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Diagnóstico</p>
-                      <p className="font-medium">{incapacity.diagnosis}</p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      {incapacity.cie10_code && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Código CIE-10</p>
-                          <p className="font-medium">{incapacity.cie10_code}</p>
-                        </div>
-                      )}
-                      {incapacity.certificate_number && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">No. Certificado</p>
-                          <p className="font-medium">{incapacity.certificate_number}</p>
-                        </div>
-                      )}
-                      {incapacity.treating_doctor && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Médico Tratante</p>
-                          <p className="font-medium">{incapacity.treating_doctor}</p>
-                        </div>
-                      )}
-                      {incapacity.medical_entity && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Entidad Médica</p>
-                          <p className="font-medium">{incapacity.medical_entity}</p>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {incapacity.observations && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Observaciones</p>
-                        <p className="text-sm">{incapacity.observations}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                
-                {incapacity.requires_reintegration_exam && (
-                  <Card className="border-warning">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base flex items-center gap-2 text-warning">
-                        <AlertTriangle className="h-4 w-4" />
-                        Examen de Reintegro Requerido
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Esta incapacidad supera los 30 días. Se requiere examen médico de reintegro antes de que el empleado retorne a sus labores.
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {incapacity.reintegration_exam_id ? (
-                          <Badge variant="outline" className="bg-success/10 text-success border-success/30">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Examen Creado
-                          </Badge>
-                        ) : (
-                          <>
-                            <Badge variant="destructive">
-                              <XCircle className="h-3 w-3 mr-1" />
-                              Pendiente
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={async () => {
-                                try {
-                                  await createReintegrationExamMutation.mutateAsync({ incapacity });
-                                  toast.success('Examen de reintegro creado exitosamente');
-                                } catch (error) {
-                                  toast.error('Error al crear el examen de reintegro');
-                                }
-                              }}
-                              disabled={createReintegrationExamMutation.isPending}
-                            >
-                              {createReintegrationExamMutation.isPending ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                              ) : (
-                                <Plus className="h-4 w-4 mr-1" />
-                              )}
-                              Crear Examen
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </TabsContent>
               
               {/* Payment Tab */}
@@ -967,28 +931,27 @@ export function IncapacityDetailDialog({
                 </Card>
               </TabsContent>
 
-              <TabsContent value="audit" className="mt-0 min-h-full space-y-4 pb-6">
+              <TabsContent value="audit" className="mt-0 space-y-4">
                 <AuditLogViewer entityType="incapacity" entityId={incapacity.id} compact />
               </TabsContent>
-              </ScrollArea>
-            </Tabs>
-          </div>
-          
-          <div className="flex shrink-0 flex-col-reverse gap-3 border-t bg-background /10 px-4 py-4 sm:flex-row sm:justify-between sm:px-8 sm:py-6">
-            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
-              <Trash2 className="h-4 w-4 mr-1" />
+              </div>
+          </Tabs>
+
+          <footer className="incapacity-dialog-footer">
+            <Button variant="ghost" onClick={() => setShowDeleteConfirm(true)} className="px-2 text-destructive hover:bg-destructive/10 hover:text-destructive sm:px-3">
+              <Trash2 className="size-4" aria-hidden="true" />
               Eliminar
             </Button>
-            <div className="grid grid-cols-2 gap-3 sm:flex">
-              <Button variant="outline" onClick={() => handleOpenChange(false)} className="h-12 px-6 rounded-2xl w-full sm:w-auto font-bold tracking-widest text-xs uppercase">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>
                 Cerrar
               </Button>
-              <Button onClick={() => openEditDialog(incapacity.id)} className="h-12 px-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 bg-primary text-primary-foreground hover:bg-primary/90 transition-all w-full sm:w-auto">
-                <Edit className="h-4 w-4 mr-2" />
+              <Button onClick={() => openEditDialog(incapacity.id)}>
+                <Edit className="size-4" aria-hidden="true" />
                 Editar
               </Button>
             </div>
-          </div>
+          </footer>
         </DialogContent>
       </Dialog>
       

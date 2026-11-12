@@ -21,7 +21,7 @@ export function IncapacityDialogSizeToggle({
       aria-label={label}
       aria-pressed={isMaximized}
       title={label}
-      className="h-9 gap-2 rounded-xl border-primary/20 bg-background/80 px-3 text-xs font-bold shadow-sm backdrop-blur-sm"
+      className="h-9 gap-2 px-2.5 text-xs"
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
       <span className="hidden xl:inline">{label}</span>

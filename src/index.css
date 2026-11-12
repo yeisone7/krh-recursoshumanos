@@ -2498,34 +2498,81 @@ div.requisition-grid:has(table),
   margin: 0.375rem 2.5rem 0.125rem 0.5rem;
 }
 
-/* Incapacity registration: one scroll region with persistent navigation/actions. */
-[role="dialog"][data-dialog-content].incapacity-form-dialog {
-  max-height: calc(100dvh - 1rem);
+/* Incapacity dialogs share a compact frame and scroll only the tab body. */
+[role="dialog"][data-dialog-content].incapacity-dialog {
+  --incapacity-dialog-gutter: 0.875rem;
   gap: 0;
   padding: 0 !important;
   overflow: hidden !important;
 }
-.incapacity-form-dialog [data-workspace-back] {
-  flex-shrink: 0;
-  margin: 0.5rem 2.5rem 0.25rem 0.75rem;
+[role="dialog"][data-dialog-content].incapacity-dialog-maximized {
+  border: 0 !important;
+  border-radius: 0 !important;
 }
-[role="dialog"].incapacity-form-dialog .incapacity-form-header {
+.incapacity-dialog [data-workspace-back] {
+  flex-shrink: 0;
+  margin: 0.375rem 2.5rem 0 var(--incapacity-dialog-gutter);
+}
+[role="dialog"].incapacity-dialog [data-dialog-header].incapacity-dialog-header {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0.75rem var(--incapacity-dialog-gutter) !important;
+  background: hsl(var(--card)) !important;
+}
+[role="dialog"].incapacity-dialog .incapacity-dialog-header > div:first-child {
+  padding-inline-end: 2rem;
+}
+.incapacity-dialog .incapacity-dialog-tabs {
+  flex-shrink: 0;
+  height: auto;
+  gap: 0;
+  padding: 0 var(--incapacity-dialog-gutter);
+  border-width: 1px 0;
+  border-radius: 0;
+  background: hsl(var(--muted) / 0.45);
+}
+.incapacity-dialog .incapacity-dialog-tab {
+  min-width: 0;
+  gap: 0.375rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-size: 0.8125rem;
+  box-shadow: none;
+}
+.incapacity-dialog .incapacity-dialog-tab[data-state="active"] {
+  border-bottom-color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.07);
+  color: hsl(var(--primary));
+}
+.incapacity-dialog .incapacity-dialog-tab:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+.incapacity-dialog-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.875rem var(--incapacity-dialog-gutter);
+}
+.incapacity-dialog-footer {
   display: flex;
-  flex-direction: row;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.875rem;
-  margin: 0;
-  padding: 1.25rem 2.75rem 1.25rem 1.5rem;
-  border-bottom: 1px solid hsl(var(--border));
-  background: hsl(var(--card));
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem var(--incapacity-dialog-gutter);
+  border-top: 1px solid hsl(var(--border));
+  background: hsl(var(--muted) / 0.35);
+}
+[role="dialog"][data-dialog-content].incapacity-form-dialog {
+  max-height: calc(100dvh - 1rem);
 }
 [role="dialog"] form.incapacity-form {
   padding: 0 !important;
   background: hsl(var(--card)) !important;
-}
-[role="dialog"].incapacity-form-dialog .incapacity-form-tab {
-  border-radius: 0;
-  box-shadow: none;
 }
 [role="dialog"].incapacity-form-dialog .incapacity-form-body label {
   margin-bottom: 0 !important;
@@ -2536,11 +2583,12 @@ div.requisition-grid:has(table),
   font-variant-numeric: tabular-nums;
 }
 .incapacity-form-footer > div { margin-left: auto; }
-@media (max-width: 639px) {
-  [role="dialog"].incapacity-form-dialog .incapacity-form-header {
-    padding: 1rem 2.5rem 1rem 1.25rem;
-    align-items: flex-start;
+@media (min-width: 640px) {
+  [role="dialog"][data-dialog-content].incapacity-dialog {
+    --incapacity-dialog-gutter: 1.25rem;
   }
+}
+@media (max-width: 639px) {
   .incapacity-form-footer > div { width: 100%; }
-  .incapacity-form-footer > div > button { flex: 1; padding-inline: 0.75rem; }
+  .incapacity-form-footer > div > button { flex: 1; padding-inline: 0.5rem; }
 }
