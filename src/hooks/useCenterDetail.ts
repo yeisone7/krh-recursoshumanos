@@ -96,8 +96,8 @@ export function useCenterDetail(centerId: string | undefined) {
   const shifts = useMemo<ShiftInfo[]>(() => {
     const map: Record<string, ShiftInfo> = {};
     (timeConfigsQuery.data || []).forEach(tc => {
-      const schedule = tc.work_schedules as any;
-      const cycle = tc.shift_cycles as any;
+      const schedule = tc.work_schedules;
+      const cycle = tc.shift_cycles;
       if (schedule?.name) {
         const key = `s_${schedule.id}`;
         if (!map[key]) map[key] = { name: schedule.name, type: 'schedule', employeeCount: 0 };
@@ -114,7 +114,7 @@ export function useCenterDetail(centerId: string | undefined) {
   const areas = useMemo<AreaInfo[]>(() => {
     const map: Record<string, { name: string; count: number }> = {};
     (employeesQuery.data || []).forEach(e => {
-      const area = e.areas as any;
+      const area = e.areas;
       if (area?.id) {
         if (!map[area.id]) map[area.id] = { name: area.name, count: 0 };
         map[area.id].count++;
@@ -140,6 +140,11 @@ export function useCenterDetail(centerId: string | undefined) {
 
   return {
     isLoading: employeesQuery.isLoading,
+    isLoadingShifts: employeesQuery.isLoading || timeConfigsQuery.isLoading,
+    isLoadingContracts: employeesQuery.isLoading || contractsQuery.isLoading,
+    employeesError: employeesQuery.isError,
+    shiftsError: employeesQuery.isError || timeConfigsQuery.isError,
+    contractsError: employeesQuery.isError || contractsQuery.isError,
     totalEmployees,
     positionCounts,
     shifts,
