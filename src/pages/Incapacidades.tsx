@@ -79,6 +79,14 @@ function getPosition(incapacity: IncapacityWithEmployee) {
   return incapacity.employee?.employee_work_info?.find((info) => info.is_current)?.position_name;
 }
 
+function getCasePendingBalance(incapacity: IncapacityWithEmployee) {
+  const initialBalance = getIncapacityRecoveryAmounts(incapacity).pending;
+  return incapacity.extensions?.reduce(
+    (balance, extension) => balance + getIncapacityRecoveryAmounts(extension).pending,
+    initialBalance,
+  ) ?? initialBalance;
+}
+
 export default function Incapacidades() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -314,7 +322,7 @@ export default function Incapacidades() {
               </span>
             </AccordionTrigger>
             <AccordionContent className="col-span-full rounded-xl border bg-card px-4 pt-4">
-              <IncapacityAlertsPanel onViewIncapacity={handleOpenDetail} />
+              <IncapacityAlertsPanel onIncapacityClick={handleOpenDetail} />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -409,6 +417,7 @@ export default function Incapacidades() {
                         <TableHead>Fecha final</TableHead>
                         <TableHead>Diagnóstico</TableHead>
                         <TableHead>Estado del recobro</TableHead>
+                        <TableHead className="text-center">Prórrogas</TableHead>
                         <TableHead className="text-right">Saldo pendiente</TableHead>
                         <TableHead className="text-center">Acciones</TableHead>
                       </TableRow>
@@ -455,8 +464,9 @@ export default function Incapacidades() {
                               {recoveryStatusLabels[inc.recovery_status]}
                             </Badge>
                           </TableCell>
+                          <TableCell className="text-center">{inc.extensions?.length ?? 0}</TableCell>
                           <TableCell className="whitespace-nowrap text-right font-medium">
-                            {formatCurrency(getIncapacityRecoveryAmounts(inc).pending)}
+                            {formatCurrency(getCasePendingBalance(inc))}
                           </TableCell>
                           <TableCell className="text-center">
                             <Button
