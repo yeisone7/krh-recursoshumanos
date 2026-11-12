@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, parseISO, format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { employeeDocumentTypeLabels, type EmployeeDocumentType } from '@/types/employee';
+import { getIncapacityRecoveryAmounts } from '@/lib/incapacityRecovery';
 
 export type AlertLevel = 'critical' | 'warning' | 'info';
 export type AlertType = 
@@ -95,7 +96,7 @@ export function useEmployee360Alerts(employeeId: string | undefined) {
         // Incapacities
         supabase
           .from('employee_incapacities')
-          .select('id, end_date, diagnosis, recovery_status, total_amount, recovered_amount')
+          .select('id, end_date, diagnosis, recovery_status, eps_amount, arl_amount, recovered_amount')
           .eq('employee_id', employeeId),
         
         // Vacation Balances
@@ -250,15 +251,15 @@ export function useEmployee360Alerts(employeeId: string | undefined) {
           }
 
           // Pending recovery (recobro)
-          if (inc.recovery_status === 'pendiente' && inc.total_amount > 0) {
-            const pendingAmount = inc.total_amount - (inc.recovered_amount || 0);
-            if (pendingAmount > 0) {
+          if (inc.recovery_status === 'pendiente') {
+            const { pending } = getIncapacityRecoveryAmounts(inc);
+            if (pending > 0) {
               alerts.push({
                 id: `inc-recovery-${inc.id}`,
                 type: 'incapacity',
                 level: 'warning',
                 title: 'Recobro pendiente',
-                description: `$${pendingAmount.toLocaleString()} por recuperar`,
+                description: `$${pending.toLocaleString()} por recuperar`,
                 daysRemaining: 0,
                 eventDate: inc.end_date,
                 actionLabel: 'Gestionar recobro',

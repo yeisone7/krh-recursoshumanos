@@ -1,7 +1,7 @@
 import { addDays, differenceInCalendarDays, format, isValid, parseISO, startOfDay } from 'date-fns';
 import { applyRecoveryStatusToPaymentDistribution, calculatePaymentDistribution, getLegalMinimumMonthlyWage, type IncapacityOrigin } from '@/types/incapacity';
 import type { IncapacityAnalyticsRow } from './incapacityAnalytics';
-import { getRecoveryPayments, sumRecoveryPayments } from './incapacityRecovery';
+import { getExpectedIncapacityRecovery, getRecoveryPayments, sumRecoveryPayments } from './incapacityRecovery';
 
 export type AllocationSource = IncapacityAnalyticsRow & {
   end_date?: string | null;
@@ -91,9 +91,8 @@ export function allocateIncapacity<T extends AllocationSource>(
     result[`${payer}_days`] = days;
     if (payer !== 'employer') result[`${payer}_amount`] = portion(source[`${payer}_amount`], weightBefore, weightThrough, weightTotal);
   }
-  const expected = source.recovery_status === 'asumido_empresa' ? 0 :
-    Number(source.eps_amount || 0) + Number(source.arl_amount || 0) + Number(source.afp_amount || 0);
-  const allocatedExpected = result.eps_amount + result.arl_amount + result.afp_amount;
+  const expected = getExpectedIncapacityRecovery(source);
+  const allocatedExpected = getExpectedIncapacityRecovery(result);
   const paidThroughCutoff = getRecoveryPayments(source).filter(({ date }) => {
     const paymentDate = parseIncapacityDate(date);
     return paymentDate && paymentDate <= cutoffDay;

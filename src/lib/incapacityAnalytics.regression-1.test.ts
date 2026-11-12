@@ -13,7 +13,17 @@ describe('incapacity recovery amounts', () => {
       afp_amount: 25,
       recovered_amount: 220,
       recovery_status: 'pagado',
-    })).toEqual({ expected: 175, recovered: 175, pending: 0 });
+    })).toEqual({ expected: 150, recovered: 150, pending: 0 });
+  });
+
+  it('excludes AFP-only records and credits recorded payments against the EPS and ARL base', () => {
+    expect(getIncapacityRecoveryAmounts({ afp_amount: 600_000, recovery_status: 'pendiente' }))
+      .toEqual({ expected: 0, recovered: 0, pending: 0 });
+    expect(getIncapacityRecoveryAmounts({
+      eps_amount: 400_000, afp_amount: 600_000, recovered_amount: 100_000, recovery_status: 'pendiente',
+    })).toEqual({ expected: 400_000, recovered: 100_000, pending: 300_000 });
+    expect(getIncapacityRecoveryAmounts({ eps_amount: 0.1, arl_amount: 0.2, recovered_amount: 0.3 }).pending)
+      .toBe(0);
   });
 
   it('uses the full recoverable base when a paid case has no recorded amount', () => {

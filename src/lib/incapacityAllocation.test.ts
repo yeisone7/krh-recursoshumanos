@@ -66,6 +66,20 @@ describe('calendar allocation of incapacity analytics', () => {
     expect(october.eps_amount).toBe(150000);
   });
 
+  it('leaves AFP in the allocation but allocates recovered money only to the EPS slice', () => {
+    const row = {
+      ...maternity, origin: 'comun' as const, accumulatedDays: 176,
+      start_date: '2026-09-27', end_date: '2026-10-06', total_days: 10,
+      eps_amount: 400_000, afp_amount: 600_000, recovered_amount: 100_000, actual_payment_date: '2026-10-07',
+    };
+    const cutoff = date('2026-10-07');
+    const september = allocateIncapacity(row, { start: date('2026-09-01'), end: date('2026-09-30') }, cutoff)!;
+    const october = allocateIncapacity(row, { start: date('2026-10-01'), end: date('2026-10-31') }, cutoff)!;
+    expect(getIncapacityRecoveryAmounts(september)).toEqual({ expected: 400_000, recovered: 100_000, pending: 300_000 });
+    expect(october).toMatchObject({ afp_days: 6, afp_amount: 600_000 });
+    expect(getIncapacityRecoveryAmounts(october)).toEqual({ expected: 0, recovered: 0, pending: 0 });
+  });
+
   it('handles leap days, year changes, single days and invalid intervals', () => {
     expect(allocateIncapacity({ ...maternity, start_date: '2024-02-28', end_date: '2024-03-01' }, null, date('2024-03-01'))?.total_days).toBe(3);
     expect(allocateIncapacity({ ...maternity, start_date: '2025-12-31', end_date: '2026-01-01' }, null, date('2026-01-01'))?.total_days).toBe(2);

@@ -127,6 +127,18 @@ describe('Analítica de Incapacidades calendar allocation', () => {
     expect(months.filter((row: { key: string }) => row.key !== '2026-09').every((row: { Dias: number }) => row.Dias === 0)).toBe(true);
   });
 
+  it('keeps actual AFP receipts in cash flow without creating a receivable', () => {
+    fixture.rows = [certificate({
+      origin: 'comun', eps_amount: 0, afp_amount: 4000, recovered_amount: 250,
+      actual_payment_date: '2026-09-20',
+    })];
+    open();
+    expect(screen.getByText('Recobro pendiente').parentElement).toHaveTextContent('$ 0');
+    const totals = screen.getByLabelText('Totales del mapa de recobros');
+    expect(totals).toHaveTextContent('Total estimado$ 0');
+    expect(totals).toHaveTextContent('Total recuperado$ 250');
+  });
+
   it('counts a certificate once in the period while showing it in both affected months', () => {
     vi.setSystemTime(new Date('2026-10-05T12:00:00'));
     open();

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
 import { logAuditEvent } from '@/lib/auditService';
+import { getIncapacityRecoveryAmounts } from '@/lib/incapacityRecovery';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
@@ -501,12 +502,13 @@ export function useUpdateIncapacity() {
 
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (record, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_360_alerts', record.employee_id] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
       queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', variables.id] });
     },
@@ -712,12 +714,13 @@ export function useUpdateRecoveryStatus() {
         void queryClient.invalidateQueries({ queryKey: ['incapacity', id] });
       }
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (record, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['employee_incapacities'] });
       queryClient.invalidateQueries({ queryKey: ['incapacity-alerts'] });
+      queryClient.invalidateQueries({ queryKey: ['employee_360_alerts', record.employee_id] });
       queryClient.invalidateQueries({ queryKey: ['audit_logs'] });
       queryClient.invalidateQueries({ queryKey: ['audit_trail', 'incapacity', variables.id] });
     },
@@ -969,7 +972,7 @@ export function useIncapacityAlerts() {
         }
         
         // Root incapacities keep their existing post-end recovery alert.
-        if (!inc.is_extension && inc.recovery_status === 'pendiente' && isBefore(endDate, today)) {
+        if (!inc.is_extension && inc.recovery_status === 'pendiente' && isBefore(endDate, today) && getIncapacityRecoveryAmounts(inc).pending > 0) {
           const daysSinceEnd = differenceInDays(today, endDate);
           alerts.push({
             id: `rec-${inc.id}`,

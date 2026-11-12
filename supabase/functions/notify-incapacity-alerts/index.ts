@@ -1,4 +1,5 @@
 import { getSecretKey } from "../_shared/apiKeys.ts";
+import { getIncapacityRecoveryAmounts } from "../_shared/incapacityRecovery.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -21,7 +22,7 @@ interface IncapacityAlert {
   origin: string;
   recovery_status: string;
   days_without_management: number;
-  total_amount: number;
+  pending_recovery_amount: number;
   alert_type: 'expiring' | 'recovery_pending';
   company_name: string;
   company_email: string | null;
@@ -87,7 +88,9 @@ async function getIncapacityAlerts(supabase: any): Promise<IncapacityAlert[]> {
       origin,
       diagnosis,
       recovery_status,
-      total_amount,
+      eps_amount,
+      arl_amount,
+      recovered_amount,
       created_at,
       company_id,
       employee:employees_v2!inner(first_name, last_name, document_number),
@@ -108,6 +111,7 @@ async function getIncapacityAlerts(supabase: any): Promise<IncapacityAlert[]> {
     const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     const daysSinceCreation = Math.floor((today.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
 
+    const { pending } = getIncapacityRecoveryAmounts(inc);
     const baseAlert = {
       id: inc.id,
       employee_name: `${inc.employee.first_name} ${inc.employee.last_name}`,
@@ -118,7 +122,7 @@ async function getIncapacityAlerts(supabase: any): Promise<IncapacityAlert[]> {
       total_days: inc.total_days,
       origin: inc.origin,
       recovery_status: inc.recovery_status,
-      total_amount: inc.total_amount || 0,
+      pending_recovery_amount: pending,
       company_name: inc.company.name,
       company_email: inc.company.email,
     };
@@ -134,7 +138,7 @@ async function getIncapacityAlerts(supabase: any): Promise<IncapacityAlert[]> {
     }
 
     // Alert for recovery pending more than 15 days without management
-    if (inc.recovery_status === 'pendiente' && daysSinceCreation >= 15) {
+    if (inc.recovery_status === 'pendiente' && daysSinceCreation >= 15 && pending > 0) {
       alerts.push({
         ...baseAlert,
         days_remaining: daysRemaining,
@@ -221,7 +225,7 @@ function generateRecoveryPendingEmailHtml(alerts: IncapacityAlert[]): string {
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${recoveryStatusLabels[a.recovery_status]}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">
-        $${a.total_amount.toLocaleString('es-CO')}
+        $${a.pending_recovery_amount.toLocaleString('es-CO')}
       </td>
     </tr>
   `).join('');
@@ -248,7 +252,7 @@ function generateRecoveryPendingEmailHtml(alerts: IncapacityAlert[]): string {
               <th style="padding: 12px; text-align: left; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Origen</th>
               <th style="padding: 12px; text-align: center; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Días Sin Gestión</th>
               <th style="padding: 12px; text-align: left; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Estado</th>
-              <th style="padding: 12px; text-align: right; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Monto</th>
+              <th style="padding: 12px; text-align: right; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Saldo pendiente</th>
             </tr>
           </thead>
           <tbody>

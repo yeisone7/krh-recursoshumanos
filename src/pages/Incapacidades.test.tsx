@@ -37,20 +37,22 @@ const partiallyPaid = {
   total_days: 5,
   total_amount: 400,
   eps_amount: 400,
+  afp_amount: 600,
   recovered_amount: 100,
   recovery_status: 'pendiente',
 };
-const paid = {
-  id: 'extension-paid',
+const afpExtension = {
+  id: 'extension-afp',
   is_extension: true,
   extension_number: 2,
   origin: 'comun',
   start_date: '2026-10-10',
   end_date: '2026-10-16',
   total_days: 7,
-  eps_amount: 600,
-  recovered_amount: 600,
-  recovery_status: 'pagado',
+  eps_amount: 0,
+  afp_amount: 600,
+  recovered_amount: 0,
+  recovery_status: 'radicado',
 };
 const initial = {
   id: 'initial',
@@ -63,7 +65,7 @@ const initial = {
   eps_amount: 800,
   recovered_amount: 100,
   recovery_status: 'radicado',
-  extensions: [partiallyPaid, paid],
+  extensions: [partiallyPaid, afpExtension],
 };
 const standalone = {
   ...initial,

@@ -1,6 +1,6 @@
 import { eachMonthOfInterval, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { allocateIncapacity, parseIncapacityDate, type AllocationMetadata } from './incapacityAllocation';
-import { getRecoveryPayments, type IncapacityRecoveryPayment } from './incapacityRecovery';
+import { getIncapacityRecoveryAmounts, getRecoveryPayments, type IncapacityRecoveryPayment } from './incapacityRecovery';
 import {
   calculateIncapacityEmployerCost,
   type IncapacityEmployerCostBreakdown,
@@ -32,11 +32,7 @@ export interface IncapacityAnalyticsRow {
   } | null;
 }
 
-export interface IncapacityRecoveryAmounts {
-  expected: number;
-  recovered: number;
-  pending: number;
-}
+export { getIncapacityRecoveryAmounts };
 
 export interface ActualRecoveryPayment {
   date: Date;
@@ -144,25 +140,6 @@ const roundPercentage = (value: number, total: number) => {
 
 export function getLongCaseShare(longCases: number, totalCases: number) {
   return roundPercentage(Math.max(0, longCases), Math.max(0, totalCases));
-}
-
-export function getIncapacityRecoveryAmounts(row: IncapacityAnalyticsRow): IncapacityRecoveryAmounts {
-  const expected = row.recovery_status === 'asumido_empresa'
-    ? 0
-    : Math.max(0, Number(row.eps_amount || 0))
-      + Math.max(0, Number(row.arl_amount || 0))
-      + Math.max(0, Number(row.afp_amount || 0));
-  const recordedRecovered = Math.max(0, Number(row.recovered_amount || 0));
-  const uncappedRecovered = !row.allocation && row.recovery_payments == null && row.recovery_status === 'pagado' && recordedRecovered === 0
-    ? expected
-    : recordedRecovered;
-  const recovered = Math.min(expected, uncappedRecovered);
-
-  return {
-    expected,
-    recovered,
-    pending: Math.max(0, expected - recovered),
-  };
 }
 
 export function getActualRecoveryPayments(row: IncapacityAnalyticsRow): ActualRecoveryPayment[] {

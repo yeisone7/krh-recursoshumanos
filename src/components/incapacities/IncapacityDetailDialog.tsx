@@ -56,7 +56,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useIncapacity, useDeleteIncapacity, useCreateReintegrationExam } from '@/hooks/useIncapacities';
-import { formatRecoveryCurrency, getRecoveryPayments } from '@/lib/incapacityRecovery';
+import { formatRecoveryCurrency, getExpectedIncapacityRecovery, getRecoveryPayments } from '@/lib/incapacityRecovery';
 import { 
   getIncapacityOriginLabel,
   calculateIncapacityEmployerCost,
@@ -260,7 +260,7 @@ export function IncapacityDetailDialog({
   const recoveryPayments = getRecoveryPayments(incapacity);
   const expectedRecoveryAmount = (() => {
     if (incapacity.recovery_status !== 'asumido_empresa') {
-      return (incapacity.eps_amount || 0) + (incapacity.arl_amount || 0) + (incapacity.afp_amount || 0);
+      return getExpectedIncapacityRecovery(incapacity);
     }
     const distribution = calculatePaymentDistribution(
       chainRootIncapacity.origin,
@@ -269,7 +269,7 @@ export function IncapacityDetailDialog({
       incapacity.is_extension ? getAccumulatedDays(incapacity, [chainRootIncapacity, ...(chainRootIncapacity.extensions || [])]) : 0,
       getLegalMinimumMonthlyWage(incapacity.start_date),
     );
-    return distribution.epsAmount + distribution.arlAmount + distribution.afpAmount;
+    return getExpectedIncapacityRecovery({ eps_amount: distribution.epsAmount, arl_amount: distribution.arlAmount });
   })();
   const totalChainDays = getTotalChainDays(chainRootIncapacity);
   const legalStage = getCurrentLegalStage(chainRootIncapacity.origin, totalChainDays);

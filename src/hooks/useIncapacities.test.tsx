@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { useIncapacities } from './useIncapacities';
+import { useIncapacities, useIncapacityAlerts } from './useIncapacities';
 
 const api = vi.hoisted(() => ({ fetch: vi.fn() }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ currentCompanyId: 'company-1' }) }));
@@ -21,12 +21,12 @@ afterEach(() => {
   api.fetch.mockReset();
 });
 
-function renderList() {
+function renderIncapacityHook<T>(hook: () => T) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   function wrapper({ children }: PropsWithChildren) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   }
-  return renderHook(useIncapacities, { wrapper });
+  return renderHook(hook, { wrapper });
 }
 
 function mockApi(rowCount: number, serverLimit: number, failAfterFirstPage = false) {
@@ -51,7 +51,7 @@ function mockApi(rowCount: number, serverLimit: number, failAfterFirstPage = fal
 describe('useIncapacities pagination', () => {
   it.each([1000, 600])('loads and groups records across pages when the API returns at most %s rows', async (serverLimit) => {
     mockApi(1001, serverLimit);
-    const { result } = renderList();
+    const { result } = renderIncapacityHook(useIncapacities);
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data).toHaveLength(1000);
@@ -70,9 +70,30 @@ describe('useIncapacities pagination', () => {
 
   it('reports a failed later page without returning a partial list', async () => {
     mockApi(1001, 1000, true);
-    const { result } = renderList();
+    const { result } = renderIncapacityHook(useIncapacities);
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toMatchObject({ message: 'Page failed' });
     expect(result.current.data).toBeUndefined();
+  });
+});
+
+describe('useIncapacityAlerts', () => {
+  it('only alerts for outstanding EPS or ARL amounts and keeps AFP extension filing reminders', async () => {
+    const record = {
+      origin: 'comun', end_date: '2024-08-10', recovery_status: 'pendiente', total_days: 5, afp_amount: 600,
+    };
+    api.fetch.mockResolvedValueOnce(Response.json([
+      { ...record, id: 'afp' },
+      { ...record, id: 'afp-extension', is_extension: true, parent_incapacity_id: 'afp' },
+      { ...record, id: 'mixed', eps_amount: 400, recovered_amount: 100 },
+      { ...record, id: 'settled', arl_amount: 400, recovered_amount: 400 },
+    ]));
+
+    const { result } = renderIncapacityHook(useIncapacityAlerts);
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.map(({ id, type }) => [id, type])).toEqual([
+      ['extension-filing-afp-extension', 'extension_pending'],
+      ['rec-mixed', 'recovery_pending'],
+    ]);
   });
 });

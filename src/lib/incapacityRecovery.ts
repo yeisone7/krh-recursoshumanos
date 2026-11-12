@@ -1,3 +1,5 @@
+export { getExpectedIncapacityRecovery, getIncapacityRecoveryAmounts } from '../../supabase/functions/_shared/incapacityRecovery';
+
 export type IncapacityRecoveryPayment = {
   date: string | null;
   amount: number;
