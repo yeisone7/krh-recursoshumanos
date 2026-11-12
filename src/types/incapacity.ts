@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { buildDateOnlyFromParts } from '@/lib/dateOnly';
+import { MAX_RECOVERY_AMOUNT, type IncapacityRecoveryPayment } from '@/lib/incapacityRecovery';
 
 // =====================================================
 // ENUMS AND TYPES
@@ -276,6 +278,7 @@ export interface EmployeeIncapacity {
   expected_payment_date: string | null;
   actual_payment_date: string | null;
   recovered_amount: number | null;
+  recovery_payments?: IncapacityRecoveryPayment[] | null;
   recovery_notes: string | null;
   
   // Extension
@@ -358,8 +361,18 @@ export const recoveryFormSchema = z.object({
   filing_date: z.date().optional(),
   filing_number: z.string().optional(),
   expected_payment_date: z.date().optional(),
-  actual_payment_date: z.date().optional(),
-  recovered_amount: z.number().min(0).optional(),
+  payments: z.array(z.object({
+    date: z.string().refine((date) => {
+      if (!date) return true;
+      const [year, month, day] = date.split('-');
+      return buildDateOnlyFromParts(year, month, day) === date;
+    }, 'Ingresa una fecha de pago válida.'),
+    amount: z.string().refine((amount) => (
+      /^\d+(?:[.,]\d{1,2})?$/.test(amount) &&
+      Number(amount.replace(',', '.')) > 0 &&
+      Number(amount.replace(',', '.')) <= MAX_RECOVERY_AMOUNT
+    ), 'Ingresa un valor positivo con hasta dos decimales.'),
+  })),
   recovery_notes: z.string().optional(),
 });
 

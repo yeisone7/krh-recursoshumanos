@@ -75,13 +75,14 @@ import {
   buildLegalResponsibilityDays,
   buildMonthlyEpsRecovery,
   getEarliestIncapacityStartDate,
-  getActualRecoveryPayment,
+  getActualRecoveryPayments,
   getIncapacityRecoveryAmounts,
   getLongCaseShare,
   getTotalAssumedByCompany,
   type IncapacityDurationBucket,
   type MonthlyEpsRecoveryRow,
 } from '@/lib/incapacityAnalytics';
+import { getRecoveryPayments, sumRecoveryPayments } from '@/lib/incapacityRecovery';
 import { allocateIncapacity, allocationWeekdays, hasValidIncapacityInterval, parseIncapacityDate } from '@/lib/incapacityAllocation';
 import type { IncapacityOperationsRow } from '@/lib/incapacityOperationsReport';
 import { cn } from '@/lib/utils';
@@ -1420,7 +1421,9 @@ export default function AnaliticaIncapacidades() {
       chainDaysByRoot.set(item.rootId, (chainDaysByRoot.get(item.rootId) || 0) + (slice?.total_days || 0));
     });
     const invalidDates = all.filter(matchesStaticFilters).filter(item => !hasValidIncapacityInterval(item)).length;
-    const undatedPayments = all.filter(matchesStaticFilters).filter(item => Number(item.recovered_amount) > 0 && !parseIncapacityDate(item.actual_payment_date));
+    const undatedPayments = all.filter(matchesStaticFilters)
+      .flatMap(getRecoveryPayments)
+      .filter(({ date }) => !parseIncapacityDate(date));
 
     const trend = (current: number, prev: number) => {
       if (!prev) return current > 0 ? 100 : 0;
@@ -1492,12 +1495,13 @@ export default function AnaliticaIncapacidades() {
 
     const recoveredByPaymentMonth = new Map<string, number>();
     all.filter(matchesStaticFilters).forEach((item) => {
-      const payment = getActualRecoveryPayment(item);
-      if (!payment || parseIncapacityDate(item.actual_payment_date)! > today || (range && parseIncapacityDate(item.actual_payment_date)! < range.start)) return;
-      recoveredByPaymentMonth.set(
-        payment.monthKey,
-        (recoveredByPaymentMonth.get(payment.monthKey) || 0) + payment.amount,
-      );
+      for (const payment of getActualRecoveryPayments(item)) {
+        if (payment.date > today || (range && payment.date < range.start)) continue;
+        recoveredByPaymentMonth.set(
+          payment.monthKey,
+          (recoveredByPaymentMonth.get(payment.monthKey) || 0) + Math.round(payment.amount * 100),
+        );
+      }
     });
 
     const monthly = months.map((month) => {
@@ -1523,7 +1527,7 @@ export default function AnaliticaIncapacidades() {
         Dias: monthItems.reduce((sum, item) => sum + item.total_days, 0),
         ...originDays,
         Estimado: Math.round(monthItems.reduce((sum, item) => sum + getIncapacityRecoveryAmounts(item).expected, 0)),
-        Recuperado: Math.round(recoveredByPaymentMonth.get(key) || 0),
+        Recuperado: (recoveredByPaymentMonth.get(key) || 0) / 100,
       };
     });
 
@@ -1612,7 +1616,7 @@ export default function AnaliticaIncapacidades() {
     return {
       invalidDates,
       undatedPaymentCount: undatedPayments.length,
-      undatedPaymentAmount: undatedPayments.reduce((sum, item) => sum + Number(item.recovered_amount || 0), 0),
+      undatedPaymentAmount: sumRecoveryPayments(undatedPayments),
       total: filtered.length,
       totalDays,
       active: activeItems.length,

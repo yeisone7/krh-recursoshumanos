@@ -546,6 +546,7 @@ export function useIncapacityAnalyticsData() {
           recovery_status,
           actual_payment_date,
           recovered_amount,
+          recovery_payments,
           is_extension,
           parent_incapacity_id,
           extension_number,
@@ -592,11 +593,13 @@ export function useIncapacityAnalyticsData() {
   });
 }
 
+export class RecoveryUpdateConflict extends Error {}
+
 export function useUpdateRecoveryStatus() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: RecoveryFormData }) => {
+    mutationFn: async ({ id, updatedAt, data }: { id: string; updatedAt: string; data: RecoveryFormData }) => {
       const { data: currentRecord, error: currentError } = await supabase
         .from('employee_incapacities')
         .select('*')
@@ -604,6 +607,7 @@ export function useUpdateRecoveryStatus() {
         .single();
 
       if (currentError) throw currentError;
+      if (currentRecord.updated_at !== updatedAt) throw new RecoveryUpdateConflict();
 
       const { data: employeeRecords, error: employeeRecordsError } = await supabase
         .from('employee_incapacities')
@@ -634,13 +638,20 @@ export function useUpdateRecoveryStatus() {
         accumulatedDays,
       );
 
-      const updateData: Record<string, unknown> = {
+      const payments = data.payments.map(({ date, amount }) => ({
+        date: date || null,
+        amount: Number(amount.replace(',', '.')),
+      }));
+      const preserveLegacyPayment = currentRecord.recovery_payments === null &&
+        !currentRecord.recovered_amount && payments.length === 0 &&
+        (data.recovery_status !== 'pagado' || currentRecord.recovery_status === 'pagado');
+
+      const updateData = {
         recovery_status: data.recovery_status,
         filing_date: data.filing_date ? format(data.filing_date, 'yyyy-MM-dd') : null,
         filing_number: data.filing_number || null,
         expected_payment_date: data.expected_payment_date ? format(data.expected_payment_date, 'yyyy-MM-dd') : null,
-        actual_payment_date: data.actual_payment_date ? format(data.actual_payment_date, 'yyyy-MM-dd') : null,
-        recovered_amount: data.recovered_amount ?? 0,
+        recovery_payments: preserveLegacyPayment ? null : payments,
         recovery_notes: data.recovery_notes || null,
         employer_days: distribution.employerDays,
         eps_days: distribution.epsDays,
@@ -657,10 +668,12 @@ export function useUpdateRecoveryStatus() {
         .from('employee_incapacities')
         .update(updateData)
         .eq('id', id)
+        .eq('updated_at', updatedAt)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
+      if (!result) throw new RecoveryUpdateConflict();
 
       await logAuditEvent({
         company_id: currentRecord.company_id,
@@ -672,7 +685,7 @@ export function useUpdateRecoveryStatus() {
           ? `Prórroga #${currentRecord.extension_number || 0}`
           : `Incapacidad ${currentRecord.diagnosis}`,
         description: currentRecord.is_extension
-          ? `Se actualizó el radicado independiente de la prórroga #${currentRecord.extension_number || 0}.`
+          ? `Se actualizó el recobro de la prórroga #${currentRecord.extension_number || 0}.`
           : 'Se actualizó el recobro de la incapacidad inicial.',
         old_values: {
           recovery_status: currentRecord.recovery_status,
@@ -681,13 +694,23 @@ export function useUpdateRecoveryStatus() {
           expected_payment_date: currentRecord.expected_payment_date,
           actual_payment_date: currentRecord.actual_payment_date,
           recovered_amount: currentRecord.recovered_amount,
+          recovery_payments: currentRecord.recovery_payments,
           recovery_notes: currentRecord.recovery_notes,
         },
-        new_values: updateData,
+        new_values: {
+          ...updateData,
+          actual_payment_date: result.actual_payment_date,
+          recovered_amount: result.recovered_amount,
+        },
         metadata: { is_extension: currentRecord.is_extension },
       });
 
       return result;
+    },
+    onError: (error, { id }) => {
+      if (error instanceof RecoveryUpdateConflict) {
+        void queryClient.invalidateQueries({ queryKey: ['incapacity', id] });
+      }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['incapacities'] });

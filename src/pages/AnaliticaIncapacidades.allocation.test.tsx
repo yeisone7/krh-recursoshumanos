@@ -136,4 +136,29 @@ describe('Analítica de Incapacidades calendar allocation', () => {
     expect(screen.getByText('Dias de incapacidad').parentElement).toHaveTextContent('12 dias promedio');
     expect(screen.getByText('Casos filtrados').parentElement?.children[1]).toHaveTextContent(/^1$/);
   });
+
+  it('groups each dated abono by its own month, including those from an extension', () => {
+    vi.setSystemTime(new Date('2026-10-05T12:00:00'));
+    fixture.rows = [certificate({
+      recovered_amount: 80,
+      actual_payment_date: '2026-10-02',
+      recovery_payments: [
+        { date: '2026-09-20', amount: 40 },
+        { date: '2026-10-02', amount: 30 },
+        { date: null, amount: 10 },
+      ],
+      extensions: [certificate({
+        id: 'extension',
+        is_extension: true,
+        recovered_amount: 20,
+        actual_payment_date: '2026-10-02',
+        recovery_payments: [{ date: '2026-10-02', amount: 20 }],
+      })],
+    })];
+    open();
+    const months = JSON.parse(screen.getByTestId('monthly-data').textContent!);
+    expect(months.find((row: { key: string }) => row.key === '2026-09')).toMatchObject({ Recuperado: 40 });
+    expect(months.find((row: { key: string }) => row.key === '2026-10')).toMatchObject({ Recuperado: 50 });
+    expect(screen.getByRole('status')).toHaveTextContent('1 pagos');
+  });
 });

@@ -4,7 +4,8 @@ import {
   buildIncapacityEmployerCostSummary,
   buildIncapacityDurationBuckets,
   buildMonthlyEpsRecovery,
-  getActualRecoveryPayment,
+  getActualRecoveryPayments,
+  getIncapacityRecoveryAmounts,
   getTotalAssumedByCompany,
 } from './incapacityAnalytics';
 
@@ -94,28 +95,48 @@ describe('incapacity analytics', () => {
   });
 
   it('assigns the recovered amount to the month of the actual payment date', () => {
-    expect(getActualRecoveryPayment({
+    expect(getActualRecoveryPayments({
       start_date: '2026-07-09',
       actual_payment_date: '2026-08-28',
       recovered_amount: 2_160_667,
       recovery_status: 'pagado',
-    })).toEqual({ monthKey: '2026-08', amount: 2_160_667 });
+    })).toEqual([expect.objectContaining({ monthKey: '2026-08', amount: 2_160_667 })]);
   });
 
   it('does not infer a recovered value without an actual payment date', () => {
-    expect(getActualRecoveryPayment({
+    expect(getActualRecoveryPayments({
       actual_payment_date: null,
       recovered_amount: 2_160_667,
       recovery_status: 'pagado',
-    })).toBeNull();
+    })).toEqual([]);
   });
 
   it('does not replace a recorded zero with the estimated amount', () => {
-    expect(getActualRecoveryPayment({
+    expect(getActualRecoveryPayments({
       actual_payment_date: '2026-08-28',
       recovered_amount: 0,
       eps_amount: 2_160_667,
       recovery_status: 'pagado',
-    })).toEqual({ monthKey: '2026-08', amount: 0 });
+    })).toEqual([]);
+  });
+
+  it('uses each recorded abono once and leaves undated legacy amounts outside cash flow', () => {
+    expect(getActualRecoveryPayments({
+      recovered_amount: 1_000_000,
+      actual_payment_date: '2026-10-20',
+      recovery_payments: [
+        { date: null, amount: 100_000 },
+        { date: '2026-09-20', amount: 300_000 },
+        { date: '2026-10-20', amount: 400_000 },
+        { date: '2026-10-20', amount: 200_000 },
+      ],
+    })).toEqual([
+      expect.objectContaining({ monthKey: '2026-09', amount: 300_000 }),
+      expect.objectContaining({ monthKey: '2026-10', amount: 400_000 }),
+      expect.objectContaining({ monthKey: '2026-10', amount: 200_000 }),
+    ]);
+    expect(getIncapacityRecoveryAmounts({
+      recovery_status: 'pagado', eps_amount: 1000, recovered_amount: 0, recovery_payments: [],
+    })).toEqual({ expected: 1000, recovered: 0, pending: 1000 });
   });
 });

@@ -56,9 +56,12 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { useIncapacity, useDeleteIncapacity, useCreateReintegrationExam } from '@/hooks/useIncapacities';
+import { formatRecoveryCurrency, getRecoveryPayments } from '@/lib/incapacityRecovery';
 import { 
   getIncapacityOriginLabel,
   calculateIncapacityEmployerCost,
+  calculatePaymentDistribution,
+  getAccumulatedDays,
   isWorkRelatedIncapacityOrigin,
   recoveryStatusLabels, 
   recoveryStatusColors,
@@ -67,6 +70,7 @@ import {
   getIncapacityRootId,
   getLegalMilestones,
   getLegalMinimumDailyWage,
+  getLegalMinimumMonthlyWage,
   getTotalChainDays,
   type IncapacityFollowUpDocumentType,
 } from '@/types/incapacity';
@@ -189,6 +193,7 @@ export function IncapacityDetailDialog({
   const [selectedExtensionId, setSelectedExtensionId] = useState<string | null>(null);
   const [isMaximized, setIsMaximized] = useState(false);
   const tabBody = useRef<HTMLDivElement>(null);
+  const recoveryTrigger = useRef<HTMLButtonElement>(null);
   
   const { data: incapacity, isLoading } = useIncapacity(incapacityId || undefined);
   const { data: pilaSettings } = usePilaUgppSettings();
@@ -252,6 +257,20 @@ export function IncapacityDetailDialog({
     : 'Empleado';
   
   const chainRootIncapacity = chainRoot || incapacity;
+  const recoveryPayments = getRecoveryPayments(incapacity);
+  const expectedRecoveryAmount = (() => {
+    if (incapacity.recovery_status !== 'asumido_empresa') {
+      return (incapacity.eps_amount || 0) + (incapacity.arl_amount || 0) + (incapacity.afp_amount || 0);
+    }
+    const distribution = calculatePaymentDistribution(
+      chainRootIncapacity.origin,
+      incapacity.total_days,
+      chainRootIncapacity.daily_base_salary || 0,
+      incapacity.is_extension ? getAccumulatedDays(incapacity, [chainRootIncapacity, ...(chainRootIncapacity.extensions || [])]) : 0,
+      getLegalMinimumMonthlyWage(incapacity.start_date),
+    );
+    return distribution.epsAmount + distribution.arlAmount + distribution.afpAmount;
+  })();
   const totalChainDays = getTotalChainDays(chainRootIncapacity);
   const legalStage = getCurrentLegalStage(chainRootIncapacity.origin, totalChainDays);
   const legalMilestones = getLegalMilestones(chainRootIncapacity.origin, totalChainDays);
@@ -685,7 +704,7 @@ export function IncapacityDetailDialog({
                           Gestión del recobro ante {isWorkRelatedIncapacityOrigin(incapacity.origin) ? 'ARL' : 'EPS'}
                         </CardDescription>
                       </div>
-                      <Button size="sm" onClick={() => setShowRecoveryDialog(true)} className="w-full sm:w-auto">
+                      <Button ref={recoveryTrigger} size="sm" disabled={isLoadingChainRoot} onClick={() => setShowRecoveryDialog(true)} className="w-full sm:w-auto">
                         <Edit className="h-4 w-4 mr-1" />
                         Actualizar
                       </Button>
@@ -717,18 +736,22 @@ export function IncapacityDetailDialog({
                           <p className="font-medium">{formatDateOnly(incapacity.expected_payment_date, 'dd/MM/yyyy')}</p>
                         </div>
                       )}
-                      {incapacity.actual_payment_date && (
-                        <div>
-                          <p className="text-sm text-muted-foreground">Fecha Real de Pago</p>
-                          <p className="font-medium">{formatDateOnly(incapacity.actual_payment_date, 'dd/MM/yyyy')}</p>
-                        </div>
-                      )}
                     </div>
                     
-                    {incapacity.recovered_amount !== null && incapacity.recovered_amount > 0 && (
+                    {recoveryPayments.length > 0 && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Monto Recuperado</p>
-                        <p className="text-lg font-bold text-green-600">{formatCurrency(incapacity.recovered_amount)}</p>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                          <h4 className="text-sm font-medium">Pagos recibidos</h4>
+                          <p className="text-sm font-semibold tabular-nums">{formatRecoveryCurrency(incapacity.recovered_amount || 0)} en total</p>
+                        </div>
+                        <ul className="mt-2 divide-y rounded-lg border px-3 text-sm">
+                          {[...recoveryPayments].sort((first, second) => (second.date || '').localeCompare(first.date || '')).map((payment, index) => (
+                            <li key={index} className="flex justify-between gap-3 py-2">
+                              <span className="text-muted-foreground">{formatDateOnly(payment.date, 'dd/MM/yyyy') || 'Sin fecha registrada'}</span>
+                              <span className="font-medium tabular-nums">{formatRecoveryCurrency(payment.amount)}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                     
@@ -976,6 +999,8 @@ export function IncapacityDetailDialog({
         open={showRecoveryDialog}
         onOpenChange={setShowRecoveryDialog}
         incapacity={incapacity}
+        expectedAmount={expectedRecoveryAmount}
+        onRestoreFocus={() => recoveryTrigger.current?.focus()}
       />
       
       {/* Delete Confirmation */}

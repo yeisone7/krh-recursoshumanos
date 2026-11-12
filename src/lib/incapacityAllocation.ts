@@ -1,6 +1,7 @@
 import { addDays, differenceInCalendarDays, format, isValid, parseISO, startOfDay } from 'date-fns';
 import { applyRecoveryStatusToPaymentDistribution, calculatePaymentDistribution, getLegalMinimumMonthlyWage, type IncapacityOrigin } from '@/types/incapacity';
 import type { IncapacityAnalyticsRow } from './incapacityAnalytics';
+import { getRecoveryPayments, sumRecoveryPayments } from './incapacityRecovery';
 
 export type AllocationSource = IncapacityAnalyticsRow & {
   end_date?: string | null;
@@ -93,10 +94,13 @@ export function allocateIncapacity<T extends AllocationSource>(
   const expected = source.recovery_status === 'asumido_empresa' ? 0 :
     Number(source.eps_amount || 0) + Number(source.arl_amount || 0) + Number(source.afp_amount || 0);
   const allocatedExpected = result.eps_amount + result.arl_amount + result.afp_amount;
-  const paidDate = parseIncapacityDate(source.actual_payment_date);
+  const paidThroughCutoff = getRecoveryPayments(source).filter(({ date }) => {
+    const paymentDate = parseIncapacityDate(date);
+    return paymentDate && paymentDate <= cutoffDay;
+  });
   // This is a recovery allocation for the cohort, not a cash-flow payment.
-  result.recovered_amount = paidDate && paidDate <= cutoffDay && expected > 0
-    ? Math.min(expected, Math.max(0, Number(source.recovered_amount || 0))) * allocatedExpected / expected : 0;
+  result.recovered_amount = expected > 0
+    ? Math.min(expected, sumRecoveryPayments(paidThroughCutoff)) * allocatedExpected / expected : 0;
   return result;
 }
 

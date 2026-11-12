@@ -4096,6 +4096,7 @@ export type Database = {
           origin: Database["public"]["Enums"]["incapacity_origin"]
           parent_incapacity_id: string | null
           recovered_amount: number | null
+          recovery_payments: Json | null
           recovery_notes: string | null
           recovery_status: Database["public"]["Enums"]["recovery_status"]
           reintegration_exam_id: string | null
@@ -4146,6 +4147,7 @@ export type Database = {
           origin?: Database["public"]["Enums"]["incapacity_origin"]
           parent_incapacity_id?: string | null
           recovered_amount?: number | null
+          recovery_payments?: Json | null
           recovery_notes?: string | null
           recovery_status?: Database["public"]["Enums"]["recovery_status"]
           reintegration_exam_id?: string | null
@@ -4196,6 +4198,7 @@ export type Database = {
           origin?: Database["public"]["Enums"]["incapacity_origin"]
           parent_incapacity_id?: string | null
           recovered_amount?: number | null
+          recovery_payments?: Json | null
           recovery_notes?: string | null
           recovery_status?: Database["public"]["Enums"]["recovery_status"]
           reintegration_exam_id?: string | null
