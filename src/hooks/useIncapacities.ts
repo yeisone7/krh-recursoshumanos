@@ -1,18 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format, differenceInDays, isBefore, isAfter } from 'date-fns';
+import { format, differenceInDays, isBefore } from 'date-fns';
 import { toast } from 'sonner';
 import { cleanupShiftAssignments } from '@/hooks/useCleanupShiftAssignments';
 import { parseDateOnlyOr } from '@/lib/dateOnly';
-import { getIncapacityRecoveryAmounts } from '@/lib/incapacityAnalytics';
 import { logAuditEvent } from '@/lib/auditService';
 import type { 
   EmployeeIncapacity, 
   IncapacityWithEmployee, 
   IncapacityFormData,
   RecoveryFormData,
-  IncapacityOrigin,
   RecoveryStatus 
 } from '@/types/incapacity';
 import {
@@ -25,7 +23,6 @@ import {
   getLegalMinimumMonthlyWage,
   getRootIncapacity,
   getTotalChainDays,
-  incapacityOriginValues,
   requiresReintegrationExam,
 } from '@/types/incapacity';
 import { calculateExpirationDate, PERIODIC_EXAM_VALIDITY_MONTHS } from '@/types/medicalExam';
@@ -39,27 +36,42 @@ export function useIncapacities() {
   
   return useQuery({
     queryKey: ['incapacities', currentCompanyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employee_incapacities')
-        .select(`
-          *,
-          employee:employees_v2(
-            id, first_name, last_name, document_number, gender,
-            employee_work_info(position_name, is_current)
-          )
-        `)
-        .eq('company_id', currentCompanyId!)
-        .eq('employee.employee_work_info.is_current', true)
-        .order('start_date', { ascending: false });
-      
-      if (error) throw error;
+    queryFn: async ({ signal }) => {
+      const pageSize = 1000;
+      const rows: IncapacityWithEmployee[] = [];
+      let lastId: string | undefined;
+
+      for (;;) {
+        const page = supabase
+          .from('employee_incapacities')
+          .select(`
+            *,
+            employee:employees_v2(
+              id, first_name, last_name, document_number, gender,
+              employee_work_info(position_name, is_current)
+            )
+          `)
+          .eq('company_id', currentCompanyId!)
+          .eq('employee.employee_work_info.is_current', true)
+          .order('id')
+          .limit(pageSize)
+          .abortSignal(signal);
+
+        const { data, error } = await (lastId ? page.gt('id', lastId) : page);
+        if (error) throw error;
+        if (!data.length) break;
+
+        rows.push(...data as unknown as IncapacityWithEmployee[]);
+        lastId = data[data.length - 1].id;
+      }
+
+      rows.sort((a, b) => b.start_date.localeCompare(a.start_date) || a.id.localeCompare(b.id));
       
       // Group extensions under parent incapacities
       const incapacityMap = new Map<string, IncapacityWithEmployee>();
       const extensions: IncapacityWithEmployee[] = [];
       
-      for (const inc of (data as unknown as IncapacityWithEmployee[])) {
+      for (const inc of rows) {
         if (inc.is_extension && inc.parent_incapacity_id) {
           extensions.push(inc);
         } else {
@@ -989,92 +1001,6 @@ export function useIncapacityAlerts() {
       });
       
       return alerts;
-    },
-    enabled: !!currentCompanyId,
-  });
-}
-
-// =====================================================
-// STATISTICS HOOK
-// =====================================================
-
-export interface IncapacityStats {
-  totalActive: number;
-  totalThisMonth: number;
-  totalDaysThisMonth: number;
-  pendingRecovery: number;
-  pendingRecoveryAmount: number;
-  pendingBalance: number;
-  byOrigin: Record<IncapacityOrigin, number>;
-  avgDuration: number;
-}
-
-export function useIncapacityStats() {
-  const { currentCompanyId } = useAuth();
-  
-  return useQuery({
-    queryKey: ['incapacity-stats', currentCompanyId],
-    queryFn: async () => {
-      const today = new Date();
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-      
-      const { data, error } = await supabase
-        .from('employee_incapacities')
-        .select('*')
-        .eq('company_id', currentCompanyId!);
-      
-      if (error) throw error;
-      
-      const incapacities = data as EmployeeIncapacity[];
-      
-      // Active incapacities (currently ongoing)
-      const totalActive = incapacities.filter(inc => {
-        const start = parseDateOnlyOr(inc.start_date, today);
-        const end = parseDateOnlyOr(inc.end_date, today);
-        return isBefore(start, today) && isAfter(end, today);
-      }).length;
-      
-      // This month's incapacities
-      const thisMonth = incapacities.filter(inc => {
-        const start = parseDateOnlyOr(inc.start_date, today);
-        return isAfter(start, startOfMonth);
-      });
-      
-      // Pending recovery
-      const pendingRecovery = incapacities.filter(inc => 
-        inc.recovery_status === 'pendiente' && isBefore(parseDateOnlyOr(inc.end_date, today), today)
-      );
-      
-      // By origin
-      const byOrigin = incapacityOriginValues.reduce(
-        (acc, origin) => {
-          acc[origin] = 0;
-          return acc;
-        },
-        {} as Record<IncapacityOrigin, number>
-      );
-
-      for (const inc of incapacities) {
-        if (inc.origin in byOrigin) {
-          byOrigin[inc.origin]++;
-        }
-      }
-      
-      // Average duration
-      const avgDuration = incapacities.length > 0
-        ? incapacities.reduce((sum, inc) => sum + inc.total_days, 0) / incapacities.length
-        : 0;
-      
-      return {
-        totalActive,
-        totalThisMonth: thisMonth.length,
-        totalDaysThisMonth: thisMonth.reduce((sum, inc) => sum + inc.total_days, 0),
-        pendingRecovery: pendingRecovery.length,
-        pendingRecoveryAmount: pendingRecovery.reduce((sum, inc) => sum + (inc.total_amount || 0), 0),
-        pendingBalance: incapacities.reduce((sum, inc) => sum + getIncapacityRecoveryAmounts(inc).pending, 0),
-        byOrigin,
-        avgDuration: Math.round(avgDuration * 10) / 10,
-      } as IncapacityStats;
     },
     enabled: !!currentCompanyId,
   });

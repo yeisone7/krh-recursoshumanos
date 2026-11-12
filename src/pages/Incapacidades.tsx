@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Link, useSearchParams } from 'react-router-dom';
 import { PullToRefresh } from '@/components/shared/PullToRefresh';
-import { formatDateOnly, parseDateOnly } from '@/lib/dateOnly';
+import { formatDateOnly, parseDateOnly, todayDateOnlyString } from '@/lib/dateOnly';
 import {
   Plus,
   Search,
@@ -28,10 +28,12 @@ import {
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { getIncapacityRecoveryAmounts } from '@/lib/incapacityAnalytics';
+import { getIncapacityIndicators } from '@/lib/incapacityIndicators';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -49,7 +51,8 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { useIncapacities, useIncapacityAlerts, useIncapacityStats } from '@/hooks/useIncapacities';
+import { useIncapacities, useIncapacityAlerts } from '@/hooks/useIncapacities';
+import { IncapacityIndicatorDialog } from '@/components/incapacities/IncapacityIndicatorDialog';
 import { 
   IncapacityFormDialog, 
   IncapacityDetailDialog,
@@ -87,6 +90,16 @@ function getCasePendingBalance(incapacity: IncapacityWithEmployee) {
   ) ?? initialBalance;
 }
 
+const currencyFormatter = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0,
+});
+
+function formatCurrency(amount: number | null) {
+  return amount ? currencyFormatter.format(amount) : '$0';
+}
+
 export default function Incapacidades() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,11 +112,14 @@ export default function Incapacidades() {
   const [showFormDialog, setShowFormDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [selectedIncapacityId, setSelectedIncapacityId] = useState<string | null>(null);
+  const [selectedIndicator, setSelectedIndicator] = useState<string | null>(null);
   
-  const { data: incapacities, isLoading } = useIncapacities();
-  const { data: stats } = useIncapacityStats();
+  const { data: incapacities, isLoading, isError, refetch } = useIncapacities();
   const { data: alerts } = useIncapacityAlerts();
   const isMobile = useIsMobile();
+  const today = todayDateOnlyString();
+  const stats = useMemo(() => getIncapacityIndicators(incapacities ?? [], today), [incapacities, today]);
+  const indicatorsUnavailable = isError && !incapacities;
 
   const epsOptions = useMemo(() => (
     Array.from(new Set(incapacities?.flatMap((inc) => inc.eps_name ? [inc.eps_name] : [])))
@@ -152,15 +168,6 @@ export default function Incapacidades() {
     setSelectedIncapacityId(id);
   };
   
-  const formatCurrency = (amount: number | null) => {
-    if (!amount) return '$0';
-    return new Intl.NumberFormat('es-CO', { 
-      style: 'currency', 
-      currency: 'COP', 
-      maximumFractionDigits: 0 
-    }).format(amount);
-  };
-  
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();
   const filteredIncapacities = incapacities?.filter((inc) => {
     const startDate = parseDateOnly(inc.start_date);
@@ -190,11 +197,34 @@ export default function Incapacidades() {
   const previewRecovery = preview && getIncapacityRecoveryAmounts(preview);
   const togglePreview = (id: string) => setPreviewId((currentId) => currentId === id ? null : id);
   const metrics = [
-    { label: 'Activas', value: stats?.totalActive ?? 0, note: 'En curso', icon: Calendar, tone: 'bg-blue-500/10 text-blue-600 dark:text-blue-300' },
-    { label: 'Este mes', value: stats?.totalThisMonth ?? 0, note: `${stats?.totalDaysThisMonth ?? 0} días`, icon: Clock, tone: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300' },
-    { label: 'Recobros pendientes', value: stats?.pendingRecovery ?? 0, note: formatCurrency(stats?.pendingRecoveryAmount ?? 0), icon: ClipboardList, tone: 'bg-blue-500/10 text-blue-600 dark:text-blue-300' },
-    { label: 'Cartera pendiente', value: formatCurrency(stats?.pendingBalance ?? 0), icon: AlertTriangle, tone: 'bg-amber-500/10 text-amber-700 dark:text-amber-300' },
-    { label: 'Origen común', value: stats?.byOrigin.comun ?? 0, note: 'casos', icon: TrendingUp, tone: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' },
+    {
+      label: 'Activas', value: stats.active.length, note: 'En curso', records: stats.active,
+      description: 'Incapacidades y prórrogas en curso hoy.',
+      icon: Calendar, tone: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
+    },
+    {
+      label: 'Este mes', value: stats.thisMonth.length, note: `${stats.totalDaysThisMonth} días`, records: stats.thisMonth,
+      description: `Registros con fecha de inicio en el mes actual · ${stats.totalDaysThisMonth} días registrados.`,
+      icon: Clock, tone: 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',
+    },
+    {
+      label: 'Recobros pendientes', value: stats.pendingRecovery.length,
+      note: formatCurrency(stats.pendingRecoveryAmount), records: stats.pendingRecovery,
+      description: `Registros finalizados pendientes de radicar · Valor liquidado total ${formatCurrency(stats.pendingRecoveryAmount)}.`,
+      amount: { label: 'Valor liquidado', format: (record: IncapacityWithEmployee) => formatCurrency(record.total_amount) },
+      icon: ClipboardList, tone: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
+    },
+    {
+      label: 'Cartera pendiente', value: formatCurrency(stats.pendingBalanceAmount), records: stats.pendingBalance,
+      description: `Registros con saldo por recobrar · Saldo total ${formatCurrency(stats.pendingBalanceAmount)}.`,
+      amount: { label: 'Saldo pendiente', format: (record: IncapacityWithEmployee) => formatCurrency(getIncapacityRecoveryAmounts(record).pending) },
+      icon: AlertTriangle, tone: 'bg-amber-500/10 text-amber-700 dark:text-amber-300',
+    },
+    {
+      label: 'Origen común', value: stats.commonOrigin.length, note: 'casos', records: stats.commonOrigin,
+      description: 'Incapacidades y prórrogas clasificadas como de origen común.',
+      icon: TrendingUp, tone: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+    },
   ];
 
   return (
@@ -231,20 +261,47 @@ export default function Incapacidades() {
         </header>
 
         <section aria-label="Indicadores de incapacidades" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {metrics.map(({ label, value, note, icon: Icon, tone }) => (
-            <Card key={label} className="flex items-center gap-3 rounded-xl p-3 shadow-none">
-              <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${tone}`}>
-                <Icon className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-primary">{label}</p>
-                <div className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="text-xl font-bold tabular-nums">{value}</span>
-                  {note && <span className="text-xs text-muted-foreground">{note}</span>}
-                </div>
-              </div>
-            </Card>
+          {metrics.map(({ label, value, note, icon: Icon, tone, records, description, amount }) => (
+            <Dialog key={label} open={selectedIndicator === label} onOpenChange={(open) => setSelectedIndicator(open ? label : null)}>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  disabled={isLoading || indicatorsUnavailable}
+                  className="group flex min-w-0 items-center gap-3 rounded-xl border bg-card p-3 text-left text-card-foreground transition-colors enabled:hover:border-primary/40 enabled:hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${tone}`}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium text-primary">{label}</span>
+                    <span className="flex flex-wrap items-baseline gap-x-2">
+                      <span className="text-xl font-bold tabular-nums">{isLoading || indicatorsUnavailable ? '—' : value}</span>
+                      {!isLoading && !indicatorsUnavailable && note && <span className="text-xs text-muted-foreground">{note}</span>}
+                    </span>
+                  </span>
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-primary" />
+                </button>
+              </DialogTrigger>
+              {selectedIndicator === label && (
+                <IncapacityIndicatorDialog
+                  title={label}
+                  description={description}
+                  records={records}
+                  amount={amount}
+                  onView={(id) => {
+                    setSelectedIndicator(null);
+                    handleOpenDetail(id);
+                  }}
+                />
+              )}
+            </Dialog>
           ))}
+          {indicatorsUnavailable && (
+            <div className="col-span-full flex flex-wrap items-center gap-2 text-sm">
+              <p role="status">No se pudieron cargar los indicadores.</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Reintentar</Button>
+            </div>
+          )}
         </section>
 
         <Accordion type="multiple" className="grid grid-cols-3 gap-2">
@@ -303,12 +360,12 @@ export default function Incapacidades() {
               <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
                 <div>
                   <dt className="text-muted-foreground">Duración promedio</dt>
-                  <dd className="font-semibold">{stats?.avgDuration ?? 0} días</dd>
+                  <dd className="font-semibold">{stats.avgDuration} días</dd>
                 </div>
                 {incapacityOriginOptions.filter((option) => option.value !== 'comun').map((option) => (
                   <div key={option.value}>
                     <dt className="text-muted-foreground">{option.kpiLabel}</dt>
-                    <dd className="font-semibold">{stats?.byOrigin[option.value] ?? 0} casos</dd>
+                    <dd className="font-semibold">{stats.byOrigin[option.value]} casos</dd>
                   </div>
                 ))}
               </dl>
