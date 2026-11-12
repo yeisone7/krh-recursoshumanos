@@ -141,10 +141,18 @@ function AppUpdateNotifierContent() {
       activeUpdateKeyRef.current = deploymentKey;
       updateNotifiedRef.current = true;
 
+      const postponeUpdate = () => {
+        acknowledgeDeploymentKey(deploymentKey);
+        activeUpdateKeyRef.current = null;
+        updateNotifiedRef.current = false;
+      };
+
       toast.info('Nueva versión disponible', {
         id: UPDATE_TOAST_ID,
         description: 'Se han aplicado mejoras y correcciones importantes.',
         duration: Infinity,
+        closeButton: true,
+        onDismiss: postponeUpdate,
         action: {
           label: 'Actualizar',
           onClick: async () => {
@@ -153,12 +161,7 @@ function AppUpdateNotifierContent() {
         },
         cancel: {
           label: 'Más tarde',
-          onClick: () => {
-            acknowledgeDeploymentKey(deploymentKey);
-            activeUpdateKeyRef.current = null;
-            updateNotifiedRef.current = false;
-            toast.dismiss(UPDATE_TOAST_ID);
-          },
+          onClick: postponeUpdate,
         },
       });
     },
