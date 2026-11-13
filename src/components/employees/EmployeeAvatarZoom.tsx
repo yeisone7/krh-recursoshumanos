@@ -3,7 +3,6 @@ import { ZoomIn } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 
 interface EmployeeAvatarZoomProps {
   imageUrl?: string | null;
@@ -54,22 +53,18 @@ export function EmployeeAvatarZoom({
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
-          className="max-w-xl overflow-hidden p-0"
+          className="max-w-md gap-4"
           onClick={(event) => event.stopPropagation()}
         >
-          <DialogHeader className="border-b px-5 py-4">
-            <DialogTitle className="text-base font-bold">{name}</DialogTitle>
+          <DialogHeader className="px-6 text-center sm:text-center">
+            <DialogTitle className="text-base font-semibold leading-snug">{name}</DialogTitle>
             <DialogDescription className="sr-only">Fotografía ampliada de {name}</DialogDescription>
           </DialogHeader>
-          <div className="bg-slate-950 p-4">
-            <div className="flex max-h-[72dvh] items-center justify-center overflow-hidden rounded-lg bg-slate-900">
-              <img
-                src={imageUrl || ''}
-                alt={name}
-                className={cn('max-h-[72dvh] w-auto max-w-full object-contain')}
-              />
-            </div>
-          </div>
+          <img
+            src={imageUrl || undefined}
+            alt={name}
+            className="max-h-[68dvh] w-auto max-w-full shrink-0 self-center rounded-lg object-contain"
+          />
         </DialogContent>
       </Dialog>
     </>
