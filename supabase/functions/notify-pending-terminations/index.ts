@@ -98,11 +98,12 @@ async function getPendingTerminations(supabase: any, defaultMinDays: number = 7)
       effective_date,
       created_at,
       company_id,
-      employees!inner(first_name, last_name, position),
+      employees_v2!inner(first_name, last_name, employee_work_info(position_name)),
       companies!inner(name, email),
       termination_documents(is_generated, is_required)
     `)
-    .eq('is_completed', false);
+    .eq('is_completed', false)
+    .eq('employees_v2.employee_work_info.is_current', true);
 
   if (error) {
     console.error('Error fetching pending terminations:', error);
@@ -127,8 +128,8 @@ async function getPendingTerminations(supabase: any, defaultMinDays: number = 7)
 
       results.push({
         id: item.id,
-        employee_name: `${item.employees.first_name} ${item.employees.last_name}`,
-        employee_position: item.employees.position,
+        employee_name: `${item.employees_v2.first_name} ${item.employees_v2.last_name}`,
+        employee_position: item.employees_v2.employee_work_info?.[0]?.position_name || 'Sin cargo',
         termination_type: item.termination_type,
         effective_date: item.effective_date,
         created_at: item.created_at,
@@ -183,7 +184,7 @@ function generateEmailHtml(terminations: PendingTermination[]): string {
               <th style="padding: 12px; text-align: left; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Cargo</th>
               <th style="padding: 12px; text-align: left; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Tipo</th>
               <th style="padding: 12px; text-align: center; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Días Pendiente</th>
-              <th style="padding: 12px; text-align: center; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Documentos</th>
+              <th style="padding: 12px; text-align: center; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Formatos resueltos</th>
               <th style="padding: 12px; text-align: left; font-weight: 600; color: #6b7280; border-bottom: 2px solid #e5e7eb;">Fecha Efectiva</th>
             </tr>
           </thead>
@@ -194,7 +195,7 @@ function generateEmailHtml(terminations: PendingTermination[]): string {
         
         <div style="margin-top: 24px; padding: 16px; background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f97316;">
           <p style="margin: 0; color: #92400e; font-size: 14px;">
-            <strong>Acción requerida:</strong> Por favor, complete los documentos pendientes para finalizar estos procesos de desvinculación.
+            <strong>Acción requerida:</strong> Revise el checklist y finalice los procesos de desvinculación que tengan todos sus formatos resueltos.
           </p>
         </div>
         
