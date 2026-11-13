@@ -103,4 +103,17 @@ No revertir eliminando el esquema o documentos si ya hay Otrosí registrados.
   La suite histórica `payroll_control_cuts.sql` falla en la actualización de
   marcaciones cerradas (`PCC01`); se reprodujo el mismo fallo sin esta migración.
   Los escenarios de cortes específicos del nuevo flujo sí están cubiertos y pasan.
-- No se aplicó la migración ni se publicó el frontend en producción.
+- Producción verificada el 13 de noviembre de 2026: migración
+  `20261113042457` instalada y registrada, frontend `487d6f3f` publicado en
+  `https://empatiq.portalpetrocasinos.com` y función `notify-contract-preaviso`
+  actualizada. El historial remoto anterior de migraciones se conservó intacto.
+- Suite SQL ejecutada nuevamente sobre la migración instalada: aprobada.
+  Cron `employee-amendments-apply` activo cada minuto, con ejecuciones exitosas.
+- Prueba real en navegador sobre producción con empresa y empleado aislados:
+  carga de plantilla, borrador sin afectar salario, Word con comparación,
+  carga de PDF de prueba, confirmación y aplicación de salario y descanso,
+  preservación de contrato/ciclo/antigüedad y descarga autorizada del soporte.
+  La eliminación del soporte desde Storage con el usuario fue rechazada.
+  No se observaron excepciones de ejecución en el navegador.
+- Los usuarios, empresa, empleado, registros y archivos temporales se eliminaron
+  al finalizar; no se alteraron las condiciones de empleados reales.
