@@ -1,70 +1,33 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { OrgChart } from '@/components/organigrama';
+import { Network } from 'lucide-react';
+import { OrgChart } from '@/components/organigrama/OrgChart';
 import { useAreas, usePositions } from '@/hooks/useSystemConfig';
 import { useEmployees } from '@/hooks/useEmployees';
-import { Briefcase } from 'lucide-react';
 
 export default function Organigrama() {
-  const { data: areas = [], isLoading: loadingAreas } = useAreas();
-  const { data: positions = [], isLoading: loadingPositions } = usePositions();
-  const { data: employees = [], isLoading: loadingEmployees } = useEmployees();
-
-  const isLoading = loadingAreas || loadingPositions || loadingEmployees;
-
-  const employeesForChart = employees.map(emp => ({
-    id: emp.id,
-    first_name: emp.first_name,
-    last_name: emp.last_name,
-    avatar_url: emp.avatar_url,
-    work_info: emp.work_info ? {
-      position_id: emp.work_info.position_id,
-    } : null,
-  }));
-
-  const areasForChart = areas.map(a => ({ id: a.id, name: a.name }));
+  const areas = useAreas();
+  const positions = usePositions();
+  const employees = useEmployees();
+  const queries = [areas, positions, employees];
 
   return (
-    <div className="flex h-full min-h-0 flex-col space-y-6 sm:space-y-8">
-      {/* Premium Header */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent p-8 sm:p-10 border border-border shadow-sm">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-primary shadow-lg shadow-primary/20">
-            <Briefcase className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl font-black tracking-tight sm:text-4xl text-foreground uppercase">
-              Estructura <span className="text-primary">Organizacional</span>
-            </h1>
-            <p className="mt-2 text-sm font-medium text-muted-foreground sm:text-lg max-w-2xl leading-relaxed">
-              Visualiza la jerarquía y distribución de cargos de tu empresa. Navega de forma interactiva a través de las diferentes áreas y niveles.
-            </p>
-          </div>
+    <div className="flex h-full min-h-[34rem] min-w-0 flex-col gap-3">
+      <header className="flex shrink-0 items-center gap-3 rounded-xl border border-neutral-500 bg-neutral-600 px-3.5 py-3 text-white sm:px-4">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-white/15 bg-white/10">
+          <Network className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">Organigrama</h1>
+          <p className="text-xs leading-snug text-neutral-200 sm:text-sm">Explora la jerarquía, los cargos y las personas asignadas.</p>
         </div>
-        {/* Decorative elements */}
-        
-        
-      </div>
-
-      <Card className="flex-1 min-h-0 rounded-[2.5rem] border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.02)] overflow-hidden">
-        <CardHeader className="px-8 pt-8 pb-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-black uppercase tracking-widest text-foreground/80">Organigrama Dinámico</CardTitle>
-              <CardDescription className="text-sm font-medium">
-                Interactúa con los nodos para explorar la estructura subordinada
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <OrgChart
-            positions={positions}
-            areas={areasForChart}
-            employees={employeesForChart}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
+      </header>
+      <OrgChart
+        positions={positions.data}
+        areas={areas.data}
+        employees={employees.data}
+        isLoading={queries.some(query => query.isLoading)}
+        hasError={queries.some(query => query.isError)}
+        onRetry={() => queries.filter(query => query.isError).forEach(query => void query.refetch())}
+      />
     </div>
   );
 }

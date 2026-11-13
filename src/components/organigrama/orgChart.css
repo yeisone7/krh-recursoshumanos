@@ -1,0 +1,37 @@
+.org-viewport {
+  background-color: hsl(var(--muted) / 0.55);
+  background-image: radial-gradient(hsl(var(--muted-foreground) / 0.32) 0.8px, transparent 0.8px);
+  background-size: 20px 20px;
+  scrollbar-width: thin;
+}
+.org-forest, .org-children {
+  --org-line: hsl(var(--muted-foreground) / 0.53);
+  --org-gap: 24px;
+  display: flex;
+  justify-content: center;
+  width: max-content;
+}
+.org-forest { gap: 32px; }
+.org-branch { display: flex; flex-direction: column; align-items: center; position: relative; }
+.org-children { position: relative; padding-top: 44px; }
+.org-children::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 22px;
+  border-left: 1px solid var(--org-line);
+}
+.org-children > .org-branch { padding-inline: calc(var(--org-gap) / 2); }
+.org-children > .org-branch::before, .org-children > .org-branch::after {
+  content: '';
+  position: absolute;
+  top: -22px;
+  width: 50%;
+  height: 22px;
+  border-top: 1px solid var(--org-line);
+}
+.org-children > .org-branch::before { right: 50%; }
+.org-children > .org-branch::after { left: 50%; border-left: 1px solid var(--org-line); }
+.org-children > .org-branch:first-child::before { border-top: 0; }
+.org-children > .org-branch:last-child::after { border-top: 0; }
