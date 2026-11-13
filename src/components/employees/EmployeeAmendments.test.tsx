@@ -44,4 +44,17 @@ describe('employee amendment workflow', () => {
     expect(screen.getByText(/no representa un acuerdo contractual/)).toBeInTheDocument();
     expect(screen.queryByLabelText(/PDF firmado/)).not.toBeInTheDocument();
   });
+  it('shows direct edits with frozen values and no document actions', () => {
+    const [draft] = mocks.data.records;
+    mocks.data.records = [{
+      ...draft, kind: 'direct', status: 'applied', reason: null, contract_id: null,
+      changes: { position: { label: 'Supervisora' } }, before_values: { position: { label: 'Auxiliar' } },
+    }];
+    render(<EmployeeAmendments employeeId="employee" />);
+    expect(screen.getByRole('heading', { name: /Edición directa/ })).toBeInTheDocument();
+    expect(screen.getByText('Auxiliar')).toBeInTheDocument();
+    expect(screen.getByText('Supervisora')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Subsanar con nuevo registro' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ver soporte firmado' })).not.toBeInTheDocument();
+  });
 });

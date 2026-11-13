@@ -385,10 +385,11 @@ export function useCreateEmployeeTimeConfig() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, config) => {
       queryClient.invalidateQueries({ queryKey: ['schedule-reviews'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] });
       queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] });
+      queryClient.invalidateQueries({ queryKey: ['employee-amendments', currentCompanyId, config.employee_id] });
     },
   });
 }

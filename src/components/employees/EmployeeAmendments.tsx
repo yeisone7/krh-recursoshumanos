@@ -13,7 +13,7 @@ import { usePositions } from '@/hooks/useSystemConfig';
 import { useContractTypes } from '@/hooks/useContractTypes';
 import { useWorkSchedules, useShiftCycles } from '@/hooks/useSchedules';
 import { useEmployeeAmendments, useAmendmentCommand, uploadAmendmentFile, openAmendmentFile } from '@/hooks/useEmployeeAmendments';
-import { amendmentFields, amendmentStatuses, conditionLabel, filterAmendments, type AmendmentData, type AmendmentField, type ConditionValue, type EmployeeAmendment, type EmploymentConditions } from '@/types/amendment';
+import { amendmentFields, employmentHistoryFields, amendmentStatuses, conditionLabel, filterAmendments, type AmendmentData, type AmendmentField, type EmploymentHistoryField, type ConditionValue, type EmployeeAmendment, type EmploymentConditions } from '@/types/amendment';
 
 const selectClass = 'h-10 w-full rounded-md border border-input bg-background px-3 text-sm';
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -58,7 +58,7 @@ function AmendmentWorkspace({ employeeId, data, contractId }: { employeeId: stri
     {!canStart && <p className="text-sm text-muted-foreground">Para registrar cambios se necesita una vinculación activa con su contrato e información laboral completos.</p>}
     {data.can_manage && <TemplateSettings data={data} />}
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-      <select aria-label="Filtrar por campo" className={selectClass} value={filters.field} onChange={e => setFilters({ ...filters, field: e.target.value })}><option value="">Todos los campos</option>{fields.map(f => <option key={f} value={f}>{amendmentFields[f]}</option>)}</select>
+      <select aria-label="Filtrar por campo" className={selectClass} value={filters.field} onChange={e => setFilters({ ...filters, field: e.target.value })}><option value="">Todos los campos</option>{Object.entries(employmentHistoryFields).map(([field, label]) => <option key={field} value={field}>{label}</option>)}</select>
       <select aria-label="Filtrar por estado" className={selectClass} value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}><option value="">Todos los estados</option>{Object.entries(amendmentStatuses).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
       <select aria-label="Filtrar por vinculación" className={selectClass} value={filters.cycle} onChange={e => setFilters({ ...filters, cycle: e.target.value })}><option value="">Todas las vinculaciones</option>{[...new Set(data.records.map(r => r.cycle_id))].map((id, i) => <option key={id} value={id}>{id === data.cycle_id ? 'Vinculación actual' : `Vinculación anterior ${i + 1}`}</option>)}</select>
       <Input aria-label="Vigencia desde" type="date" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} />
@@ -67,11 +67,11 @@ function AmendmentWorkspace({ employeeId, data, contractId }: { employeeId: stri
     {records.length === 0 && <p className="py-5 text-sm text-muted-foreground">No hay registros para estos filtros.</p>}
     {records.map(record => <article key={record.id} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-2"><div>
-        <h4 className="font-medium">{record.kind === 'correction' ? 'Corrección' : 'Otrosí'} #{record.number}</h4>
+        <h4 className="font-medium">{record.kind === 'direct' ? 'Edición directa' : record.kind === 'correction' ? 'Corrección' : 'Otrosí'} #{record.number}</h4>
         <p className="text-xs text-muted-foreground">Vigencia: {record.effective_on} · Registrado por {record.actor_name} · {new Date(record.created_at).toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</p>
         {record.related_id && <p className="text-xs">Subsana el registro #{data.records.find(r => r.id === record.related_id)?.number || record.related_id}</p>}
       </div><Badge variant={record.status === 'needs_review' ? 'destructive' : 'secondary'}>{amendmentStatuses[record.status]}</Badge></div>
-      <p className="whitespace-pre-wrap text-sm">{record.reason}</p>
+      {record.kind !== 'direct' && <p className="whitespace-pre-wrap text-sm">{record.reason}</p>}
       <ChangesTable before={record.before_values} changes={record.changes} />
       {record.has_salary && !record.changes.salary && <p className="text-sm text-muted-foreground">Incluye información salarial restringida.</p>}
       {record.declared_before && <p className="text-xs text-muted-foreground">Los valores anteriores fueron declarados a partir del soporte; preceden al historial observado.</p>}
@@ -80,7 +80,7 @@ function AmendmentWorkspace({ employeeId, data, contractId }: { employeeId: stri
       <div className="flex flex-wrap gap-2">
         {record.generated_path && <Button type="button" size="sm" variant="outline" onClick={() => openAmendmentFile(record.generated_path!).catch(e => toast.error(e.message))}>Ver Word generado</Button>}
         {record.signed_path && <Button type="button" size="sm" variant="outline" onClick={() => openAmendmentFile(record.signed_path!).catch(e => toast.error(e.message))}>Ver soporte firmado</Button>}
-        {(record.kind === 'correction' ? data.can_correct : data.can_manage) && (!record.has_salary || data.can_salary) && <>
+        {record.kind !== 'direct' && (record.kind === 'correction' ? data.can_correct : data.can_manage) && (!record.has_salary || data.can_salary) && <>
           {editable(record) && <Button type="button" size="sm" onClick={() => setEditor({ id: record.id, record, kind: record.kind })}>Continuar registro</Button>}
           {record.status === 'applied' && canStart && <Button type="button" size="sm" variant="outline" onClick={() => setEditor({ id: crypto.randomUUID(), kind: record.kind, relatedId: record.id })}>Subsanar con nuevo registro</Button>}
           {record.status === 'needs_review' && canStart && record.cycle_id === data.cycle_id && <Button type="button" size="sm" variant="outline" disabled={command.isPending} onClick={() => command.mutateAsync({ action: 'retry', payload: { id: record.id } }).then(() => toast.success('Aplicación reintentada')).catch(e => toast.error(e.message))}>Reintentar aplicación</Button>}
@@ -88,7 +88,7 @@ function AmendmentWorkspace({ employeeId, data, contractId }: { employeeId: stri
         </>}
       </div>
       {cancel === record.id && <div className="flex flex-wrap gap-2"><Input aria-label="Motivo de cancelación" placeholder="Motivo de cancelación" value={reason} onChange={e => setReason(e.target.value)} /><Button type="button" variant="destructive" disabled={reason.trim().length < 5 || command.isPending} onClick={cancelRecord}>Confirmar cancelación</Button><Button type="button" variant="ghost" onClick={() => setCancel(null)}>Volver</Button></div>}
-      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Seguimiento del registro</summary>{record.events.map(e => <p key={e.id}>{({ save: 'Borrador guardado', generated: 'Documento generado', confirm: 'Registro confirmado', applied: 'Cambios aplicados', cancel: 'Registro cancelado', needs_review: 'Requiere revisión' } as Record<string, string>)[e.action] || e.action} · {new Date(e.occurred_at).toLocaleString('es-CO')}</p>)}</details>
+      <details className="text-xs text-muted-foreground"><summary className="cursor-pointer">Seguimiento del registro</summary>{record.events.map(e => <p key={e.id}>{({ save: 'Borrador guardado', generated: 'Documento generado', confirm: 'Registro confirmado', applied: 'Cambios aplicados', direct_edit: 'Edición directa', cancel: 'Registro cancelado', needs_review: 'Requiere revisión' } as Record<string, string>)[e.action] || e.action} · {new Date(e.occurred_at).toLocaleString('es-CO')}</p>)}</details>
     </article>)}
     <Dialog open={!!editor} onOpenChange={value => { if (!value) setEditor(null); }}><DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>{editor?.kind === 'correction' ? 'Corregir error de captura' : 'Registrar Otrosí'}</DialogTitle><DialogDescription>Compare los valores, indique la vigencia y registre el soporte.</DialogDescription></DialogHeader>
@@ -98,7 +98,7 @@ function AmendmentWorkspace({ employeeId, data, contractId }: { employeeId: stri
 }
 
 function ChangesTable({ before, changes }: { before: EmploymentConditions; changes: EmploymentConditions }) {
-  return <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-2 pr-3">Campo</th><th className="py-2 pr-3">Antes</th><th className="py-2">Después</th></tr></thead><tbody>{Object.entries(changes).map(([key, value]) => <tr key={key} className="border-b last:border-0"><td className="py-2 pr-3 align-top">{amendmentFields[key as AmendmentField]}</td><td className="py-2 pr-3 align-top">{conditionLabel(key as AmendmentField, before[key as AmendmentField])}</td><td className="py-2 align-top">{conditionLabel(key as AmendmentField, value)}</td></tr>)}</tbody></table></div>;
+  return <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-2 pr-3">Campo</th><th className="py-2 pr-3">Antes</th><th className="py-2">Después</th></tr></thead><tbody>{Object.entries(changes).map(([key, value]) => <tr key={key} className="border-b last:border-0"><td className="py-2 pr-3 align-top">{employmentHistoryFields[key as EmploymentHistoryField]}</td><td className="py-2 pr-3 align-top">{conditionLabel(key as EmploymentHistoryField, before[key as EmploymentHistoryField])}</td><td className="py-2 align-top">{conditionLabel(key as EmploymentHistoryField, value)}</td></tr>)}</tbody></table></div>;
 }
 
 function AmendmentEditor({ employeeId, data, id, record, kind, relatedId, onDone }: { employeeId: string; data: AmendmentData; id: string; record?: EmployeeAmendment; kind: 'amendment' | 'correction'; relatedId?: string; onDone: () => void }) {

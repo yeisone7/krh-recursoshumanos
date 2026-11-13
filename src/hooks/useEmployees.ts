@@ -1151,28 +1151,6 @@ export function useUpdateEmployee() {
         fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active', activeCycleId),
       ]);
 
-      // Check before any writes, so a protected-field change cannot partially save
-      // personal data and only then fail at the database guard.
-      const protectedChanges = [
-        [existingWorkInfo?.position_id, data.positionId],
-        [existingWorkInfo?.position_name, data.positionName],
-        [existingWorkInfo?.operation_center_id, data.operationCenterId],
-        [existingWorkInfo?.link_type, data.linkType || 'indefinido'],
-        [existingSchedule?.rest_day, data.restDay],
-        [existingSchedule?.shift_type_id, validShiftTypeId],
-        [existingSchedule?.is_office_schedule ?? true, data.isOfficeSchedule],
-        [existingTimeConfig?.mode, data.timeMode],
-        [existingTimeConfig?.work_schedule_id, data.timeMode === 'administrative' ? data.workScheduleId : null],
-        [existingTimeConfig?.shift_cycle_id, data.timeMode === 'shift' ? data.shiftCycleId : null],
-        [existingTimeConfig?.cycle_start_date, data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null],
-      ].some(([oldValue, newValue]) => (oldValue ?? '') !== (newValue ?? ''));
-      if (activeCycleId && existingWorkInfo && protectedChanges) {
-        const { data: activeContracts, error: contractError } = await supabase.from('contracts')
-          .select('id').eq('employment_cycle_id', activeCycleId).or('is_terminated.is.null,is_terminated.eq.false').limit(1);
-        if (contractError) throw contractError;
-        if (activeContracts?.length) throw new Error('Registre estos cambios desde Otrosí o Corregir error de captura en la ficha del empleado.');
-      }
-
       // 1. Update core employee
       const { data: employee, error: empError } = await supabase
         .from('employees_v2')
@@ -1227,6 +1205,7 @@ export function useUpdateEmployee() {
 
       // Prepare upsert operations
       const upsertOperations = [];
+      const laborOperations = [];
 
       // Contact
       if (existingContact) {
@@ -1287,7 +1266,7 @@ export function useUpdateEmployee() {
 
       // Work Info
       if (existingWorkInfo) {
-        upsertOperations.push(
+        laborOperations.push(
           supabase.from('employee_work_info')
             .update({
               operation_center_id: data.operationCenterId || null,
@@ -1305,7 +1284,7 @@ export function useUpdateEmployee() {
             .select('id')
         );
       } else {
-        upsertOperations.push(
+        laborOperations.push(
           supabase.from('employee_work_info').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId,
@@ -1388,7 +1367,7 @@ export function useUpdateEmployee() {
 
       // Schedule
       if (existingSchedule) {
-        upsertOperations.push(
+        laborOperations.push(
           supabase.from('employee_schedule')
             .update({
               payroll_type: data.payrollType || 'quincenal',
@@ -1401,7 +1380,7 @@ export function useUpdateEmployee() {
             .select('id')
         );
       } else {
-        upsertOperations.push(
+        laborOperations.push(
           supabase.from('employee_schedule').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
@@ -1415,43 +1394,36 @@ export function useUpdateEmployee() {
       }
 
       // Time Config (Modalidad de Tiempo)
-      if (existingTimeConfig) {
-        upsertOperations.push(
+      const timeConfig = {
+        mode: data.timeMode,
+        work_schedule_id: (data.timeMode === 'administrative' && data.workScheduleId) || null,
+        shift_cycle_id: (data.timeMode === 'shift' && data.shiftCycleId) || null,
+        cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
+        start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
+        notes: data.timeModeNotes || null,
+        is_active: true,
+      };
+      if (existingTimeConfig && Object.entries(timeConfig).some(([key, value]) =>
+        (existingTimeConfig[key] ?? null) !== (value ?? null)
+      )) {
+        laborOperations.push(
           supabase.from('employee_time_config')
-            .update({
-              mode: data.timeMode,
-              work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
-              shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
-              cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
-              start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
-              notes: data.timeModeNotes || null,
-              is_active: true,
-            })
+            .update(timeConfig)
             .eq('id', existingTimeConfig.id)
             .select('id')
         );
-      } else {
-        upsertOperations.push(
+      } else if (!existingTimeConfig) {
+        laborOperations.push(
           supabase.from('employee_time_config').insert(withEmploymentCycle({
             employee_id: id,
             company_id: currentCompanyId!,
-            mode: data.timeMode,
-            work_schedule_id: data.timeMode === 'administrative' ? data.workScheduleId : null,
-            shift_cycle_id: data.timeMode === 'shift' ? data.shiftCycleId : null,
-            cycle_start_date: data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null,
-            start_date: format(data.timeModeStartDate, 'yyyy-MM-dd'),
-            notes: data.timeModeNotes || null,
-            is_active: true,
+            ...timeConfig,
             created_by: user.id,
           }, activeCycleId)).select('id')
         );
       }
 
-      // Execute all upsert operations and check for errors
-      const upsertResults = await Promise.all(upsertOperations);
-      
-      // Check for errors in any of the upsert operations
-      for (const result of upsertResults) {
+      const checkSaved = (result: { error: { message: string } | null; data: { id: string }[] | null }) => {
         if (result.error) {
           console.error('Error in upsert operation:', result.error);
           throw new Error(`Error guardando datos relacionados: ${result.error.message}`);
@@ -1459,7 +1431,12 @@ export function useUpdateEmployee() {
         if (!result.data || result.data.length === 0) {
           throw new Error('No se modificaron los datos relacionados del empleado');
         }
+      };
+      // Labor edits share one cycle lock and must run in order.
+      for (const operation of laborOperations) {
+        checkSaved(await operation);
       }
+      (await Promise.all(upsertOperations)).forEach(checkSaved);
 
       const assignedCenterIds = getAssignedOperationCenterIds(data);
       const assignmentsDelete = scopeToEmploymentCycle(
@@ -1504,6 +1481,7 @@ export function useUpdateEmployee() {
         queryClient.invalidateQueries({ queryKey: ['employees_v2_paginated'] }),
         queryClient.invalidateQueries({ queryKey: ['employees_v2_infinite'] }),
         queryClient.invalidateQueries({ queryKey: ['employee_v2', data.id] }),
+        queryClient.invalidateQueries({ queryKey: ['employee-amendments', currentCompanyId, data.id] }),
         queryClient.invalidateQueries({ queryKey: ['employee_time_configs'] }),
         queryClient.invalidateQueries({ queryKey: ['employee_time_config_active'] }),
       ]);

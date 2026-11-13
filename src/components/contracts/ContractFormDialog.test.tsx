@@ -54,9 +54,10 @@ describe('contract date editing', () => {
     expect(mocks.update).not.toHaveBeenCalled();
     fireEvent.keyDown(day, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar Cambios' }));
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith('Registre el cambio desde Otrosí o Corregir error de captura.'));
-    expect(mocks.update).not.toHaveBeenCalled();
-    expect(screen.getByRole('dialog', { name: 'Editar Contrato' })).toBeInTheDocument();
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
+      start_date: '2026-09-25', end_date: '2027-01-24',
+    })));
+    expect(mocks.error).not.toHaveBeenCalled();
   });
 
   it('retains a manually selected end date for an obra/labor contract', async () => {
@@ -71,7 +72,7 @@ describe('contract date editing', () => {
     expect(mocks.update).not.toHaveBeenCalled();
     fireEvent.keyDown(day, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar Cambios' }));
-    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith('Registre el cambio desde Otrosí o Corregir error de captura.'));
-    expect(mocks.update).not.toHaveBeenCalled();
+    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ end_date: '2026-09-28' })));
+    expect(mocks.error).not.toHaveBeenCalled();
   });
 });

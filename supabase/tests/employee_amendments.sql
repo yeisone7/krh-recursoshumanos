@@ -38,7 +38,6 @@ INSERT INTO storage.objects(bucket_id,name,metadata) VALUES('amendments','ac0000
 SET LOCAL ROLE authenticated;
 SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000080","revision":1,"signed_path":"ac000000-0000-4000-8000-000000000010/ac000000-0000-4000-8000-000000000080/1/signed.pdf"}');
 SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000080","revision":1}');
-SELECT pg_temp.denied($q$UPDATE public.contracts SET salary=1 WHERE id='ac000000-0000-4000-8000-000000000070'$q$,'Otrosí');
 SELECT pg_temp.assert(public.employee_amendments('ac000000-0000-4000-8000-000000000040')#>>'{records,0,status}'='applied','visible applied event');
 RESET ROLE;
 SELECT pg_temp.assert((SELECT salary=2000000 AND start_date='2020-01-01' FROM public.contracts WHERE id='ac000000-0000-4000-8000-000000000070'),'salary and identity');
@@ -126,5 +125,67 @@ INSERT INTO public.companies(id,name,nit) VALUES('ac000000-0000-4000-8000-000000
 INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_name) VALUES('ac000000-0000-4000-8000-000000000041','ac000000-0000-4000-8000-000000000011','OTHER-TEST','Otra','Empresa');
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.denied($q$SELECT public.employee_amendments('ac000000-0000-4000-8000-000000000041')$q$,'no autorizado');
+RESET ROLE;
+
+-- Use a second isolated active cycle to exercise direct edits alongside agreements.
+INSERT INTO public.employees_v2(id,company_id,document_number,first_name,last_name)
+VALUES('ac000000-0000-4000-8000-000000000042','ac000000-0000-4000-8000-000000000010','DIRECT-TEST','Direct','Test');
+INSERT INTO public.employee_employment_cycles(id,company_id,employee_id,cycle_number,status,source,start_date)
+VALUES('ac000000-0000-4000-8000-000000000052','ac000000-0000-4000-8000-000000000010','ac000000-0000-4000-8000-000000000042',1,'active','backfill','2020-01-01');
+INSERT INTO public.employee_work_info(employee_id,company_id,employment_cycle_id,position_name,operation_center_id,hire_date,valid_from)
+VALUES('ac000000-0000-4000-8000-000000000042','ac000000-0000-4000-8000-000000000010','ac000000-0000-4000-8000-000000000052','Directo inicial','ac000000-0000-4000-8000-000000000030','2020-01-01','2020-01-01');
+INSERT INTO public.employee_schedule(employee_id,company_id,employment_cycle_id,rest_day,valid_from)
+VALUES('ac000000-0000-4000-8000-000000000042','ac000000-0000-4000-8000-000000000010','ac000000-0000-4000-8000-000000000052','domingo','2020-01-01');
+INSERT INTO public.employee_time_config(employee_id,company_id,employment_cycle_id,mode,work_schedule_id,start_date,operation_center_id)
+VALUES('ac000000-0000-4000-8000-000000000042','ac000000-0000-4000-8000-000000000010','ac000000-0000-4000-8000-000000000052','administrative','ac000000-0000-4000-8000-000000000060',(now() AT TIME ZONE 'America/Bogota')::date,'ac000000-0000-4000-8000-000000000030');
+SET LOCAL ROLE authenticated;
+UPDATE public.employee_work_info SET position_name='Editado sin contrato' WHERE employee_id='ac000000-0000-4000-8000-000000000042';
+SELECT pg_temp.assert(public.employee_amendments('ac000000-0000-4000-8000-000000000042')#>>'{records,0,kind}'='direct','history without contract');
+UPDATE public.employees_v2 SET middle_name='Personal' WHERE id='ac000000-0000-4000-8000-000000000042';
+UPDATE public.employee_work_info SET position_name=position_name WHERE employee_id='ac000000-0000-4000-8000-000000000042';
+RESET ROLE;
+SELECT pg_temp.assert((SELECT count(*)=1 FROM amendment_private.records WHERE cycle_id='ac000000-0000-4000-8000-000000000052'),'no entry for personal and no-op writes');
+INSERT INTO public.contracts(id,employee_id,company_id,employment_cycle_id,contract_type,start_date,salary)
+VALUES('ac000000-0000-4000-8000-000000000072','ac000000-0000-4000-8000-000000000042','ac000000-0000-4000-8000-000000000010','ac000000-0000-4000-8000-000000000052','indefinido','2020-01-01',1600000);
+SET LOCAL ROLE authenticated;
+SELECT public.employee_amendment_command('save',jsonb_build_object('id','ac000000-0000-4000-8000-000000000091','employee_id','ac000000-0000-4000-8000-000000000042','kind','amendment','effective_on',(now() AT TIME ZONE 'America/Bogota')::date+5,'reason','Cambio futuro de salario','changes','{"salary":{"amount":2200000}}'::jsonb));
+SELECT public.employee_amendment_command('save',jsonb_build_object('id','ac000000-0000-4000-8000-000000000092','employee_id','ac000000-0000-4000-8000-000000000042','kind','amendment','effective_on',(now() AT TIME ZONE 'America/Bogota')::date+5,'reason','Cambiar descanso futuro','changes','{"rest_day":{"value":"viernes"}}'::jsonb));
+SELECT public.employee_amendment_command('save',jsonb_build_object('id','ac000000-0000-4000-8000-000000000093','employee_id','ac000000-0000-4000-8000-000000000042','kind','correction','effective_on',(now() AT TIME ZONE 'America/Bogota')::date,'reason','Borrador antes de cambio directo','changes','{"salary":{"amount":1900000}}'::jsonb));
+RESET ROLE;
+INSERT INTO storage.objects(bucket_id,name,metadata)
+SELECT 'amendments','ac000000-0000-4000-8000-000000000010/'||id||'/1/signed.pdf','{"mimetype":"application/pdf"}'
+FROM unnest(ARRAY['ac000000-0000-4000-8000-000000000091','ac000000-0000-4000-8000-000000000092']) id;
+SET LOCAL ROLE authenticated;
+SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000091","revision":1,"signed_path":"ac000000-0000-4000-8000-000000000010/ac000000-0000-4000-8000-000000000091/1/signed.pdf"}');
+SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000092","revision":1,"signed_path":"ac000000-0000-4000-8000-000000000010/ac000000-0000-4000-8000-000000000092/1/signed.pdf"}');
+UPDATE public.contracts SET salary=1800000,contract_type='fijo',end_date=current_date+90 WHERE id='ac000000-0000-4000-8000-000000000072';
+SELECT pg_temp.denied($q$SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000093","revision":1}')$q$,'Las condiciones cambiaron');
+UPDATE public.employee_work_info SET operation_center_id='ac000000-0000-4000-8000-000000000031',position_id='ac000000-0000-4000-8000-000000000032',position_name='Nuevo cargo'
+WHERE employee_id='ac000000-0000-4000-8000-000000000042' AND is_current;
+UPDATE public.employee_time_config SET work_schedule_id='ac000000-0000-4000-8000-000000000061' WHERE employee_id='ac000000-0000-4000-8000-000000000042' AND is_active;
+RESET ROLE;
+SELECT pg_temp.assert((SELECT status='needs_review' AND signed_path IS NOT NULL FROM amendment_private.records WHERE id='ac000000-0000-4000-8000-000000000091'),'conflicting scheduled salary retained for review');
+SELECT pg_temp.assert((SELECT status='scheduled' FROM amendment_private.records WHERE id='ac000000-0000-4000-8000-000000000092'),'unrelated scheduled rest day retained');
+SELECT pg_temp.assert((SELECT (before_values#>>'{salary,amount}')::numeric=1600000 AND (changes#>>'{salary,amount}')::numeric=1800000
+  AND created_by='ac000000-0000-4000-8000-000000000001' AND (changes ? 'contract_type')
+  FROM amendment_private.records WHERE cycle_id='ac000000-0000-4000-8000-000000000052' AND kind='direct' AND changes ? 'salary'),'direct contract audit');
+SELECT pg_temp.assert((SELECT count(*)=2 FROM amendment_private.records WHERE cycle_id='ac000000-0000-4000-8000-000000000052' AND kind='direct' AND (changes ? 'center' OR changes ? 'schedule')),'direct workplace and schedule audit');
+UPDATE amendment_private.records SET effective_on=(now() AT TIME ZONE 'America/Bogota')::date WHERE id='ac000000-0000-4000-8000-000000000092';
+SELECT amendment_private.apply_record('ac000000-0000-4000-8000-000000000092');
+SELECT pg_temp.assert((SELECT salary=1800000 AND contract_type='fijo' FROM public.contracts WHERE id='ac000000-0000-4000-8000-000000000072'),'unrelated amendment preserves contract edits');
+SET LOCAL ROLE authenticated;
+SELECT public.employee_amendment_command('save',jsonb_build_object('id','ac000000-0000-4000-8000-000000000094','employee_id','ac000000-0000-4000-8000-000000000042','kind','correction','effective_on',(now() AT TIME ZONE 'America/Bogota')::date-2,'reason','Corrección retroactiva antes de edición','changes','{"salary":{"amount":1700000}}'::jsonb,'declared_before','{"salary":{"amount":1600000}}'::jsonb));
+SELECT public.employee_amendment_command('confirm','{"id":"ac000000-0000-4000-8000-000000000094","revision":1}');
+SELECT pg_temp.assert(public.employee_amendments('ac000000-0000-4000-8000-000000000042',(now() AT TIME ZONE 'America/Bogota')::date-1)#>>'{snapshot,salary,amount}'='1700000','retro history before direct salary');
+SELECT pg_temp.assert((public.employee_amendments('ac000000-0000-4000-8000-000000000042',(now() AT TIME ZONE 'America/Bogota')::date)#>>'{snapshot,salary,amount}')::numeric=1800000,'dated direct salary remains');
+UPDATE public.employee_schedule SET rest_day='sabado' WHERE employee_id='ac000000-0000-4000-8000-000000000042' AND is_current;
+RESET ROLE;
+SELECT pg_temp.assert((SELECT salary=1800000 FROM public.contracts WHERE id='ac000000-0000-4000-8000-000000000072'),'retro cannot overwrite later direct salary');
+SELECT set_config('request.jwt.claim.sub','ac000000-0000-4000-8000-000000000002',true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert(NOT EXISTS(
+ SELECT 1 FROM jsonb_array_elements(public.employee_amendments('ac000000-0000-4000-8000-000000000042')->'records') AS r
+ WHERE r->>'kind'='direct' AND (r->'changes' ? 'salary' OR r->'before_values' ? 'salary' OR r ? 'base_snapshot')
+),'direct salaries omitted for unauthorized reader');
 RESET ROLE;
 SELECT 'employee_amendments: all assertions passed' AS result;

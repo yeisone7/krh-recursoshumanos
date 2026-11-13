@@ -262,13 +262,14 @@ export function ContractFormDialog({
       };
 
       if (isEditMode && contractToEdit) {
-        if (salaryNumber !== Number(contractToEdit.salary) || dbContractType !== contractToEdit.contract_type || (data.workLaborDescription || null) !== (contractToEdit.work_labor_description || null) || (contractData.end_date || null) !== (contractToEdit.end_date || null)) {
-          toast.error('Registre el cambio desde Otrosí o Corregir error de captura.');
-          return;
-        }
         await updateContract.mutateAsync({
           id: contractToEdit.id,
           ...contractData,
+          ...(!canViewSalaries || !canManageSalaries ? {
+            salary: undefined,
+            salary_type: undefined,
+            transport_allowance: undefined,
+          } : {}),
         });
         toast.success('Contrato actualizado', {
           description: 'Los cambios han sido guardados exitosamente.',

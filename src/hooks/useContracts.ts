@@ -350,6 +350,7 @@ export function useUpdateContract() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['contract', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['employee-amendments', currentCompanyId, data.employee_id] });
     },
   });
 }

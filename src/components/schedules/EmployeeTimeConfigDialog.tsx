@@ -147,7 +147,7 @@ export function EmployeeTimeConfigDialog({
           <DialogTitle>Asignar Modalidad de Tiempo</DialogTitle>
         </DialogHeader>
 
-        {form.watch('employee_id') && <div className="space-y-1"><EmployeeAmendments employeeId={form.watch('employee_id')} compact /><p className="text-xs text-muted-foreground">Para cambiar el horario habitual de una persona con contrato, utilice Otrosí o corrección.</p></div>}
+        {form.watch('employee_id') && <div className="space-y-1"><EmployeeAmendments employeeId={form.watch('employee_id')} compact /><p className="text-xs text-muted-foreground">Guarde el horario aquí o registre un Otrosí si necesita documentar un acuerdo.</p></div>}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 overflow-y-auto min-h-0 px-1 pb-1 sm:px-2">
             {!preselectedEmployeeId && (
