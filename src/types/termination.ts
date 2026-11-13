@@ -296,14 +296,14 @@ export function calculateChecklistStatus(
       type,
       label: terminationDocumentLabels[type],
       description: terminationDocumentDescriptions[type],
-      isRequired: true,
+      isRequired: doc?.isRequired ?? true,
       isGenerated: doc?.isGenerated ?? false,
       isSigned: doc?.isSigned ?? false,
     };
   });
 
   const totalDocuments = checklistItems.length;
-  const completedDocuments = checklistItems.filter((d) => d.isGenerated).length;
+  const completedDocuments = checklistItems.filter((d) => d.isGenerated || !d.isRequired).length;
   const requiredDocuments = checklistItems.filter((d) => d.isRequired).length;
   const completedRequired = checklistItems.filter((d) => d.isRequired && d.isGenerated).length;
   

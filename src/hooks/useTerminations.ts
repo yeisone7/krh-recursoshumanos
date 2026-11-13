@@ -279,6 +279,51 @@ export function useMarkDocumentGenerated() {
         queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] });
       }
       queryClient.invalidateQueries({ queryKey: ['employee-termination-process'] });
+      queryClient.invalidateQueries({ queryKey: ['active-terminations'] });
+    },
+  });
+}
+
+export function useSetTerminationDocumentOmitted() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      documentId,
+      terminationId,
+      omitted,
+    }: {
+      documentId: string;
+      terminationId: string;
+      omitted: boolean;
+      contractId: string | null;
+      employeeId: string;
+    }) => {
+      if (!currentCompanyId) throw new Error('Seleccione una empresa');
+
+      const { error } = await supabase
+        .from('termination_documents')
+        .update({ is_required: !omitted })
+        .eq('id', documentId)
+        .eq('termination_id', terminationId)
+        .eq('company_id', currentCompanyId)
+        .eq('is_generated', false)
+        .select('id')
+        .single();
+
+      if (error) throw error;
+    },
+    onSuccess: async (_, { contractId, employeeId }) => {
+      await Promise.all([
+        contractId
+          ? queryClient.invalidateQueries({ queryKey: ['termination-process', contractId] })
+          : queryClient.invalidateQueries({ queryKey: ['employee-termination-process', employeeId] }),
+        queryClient.invalidateQueries({ queryKey: ['active-terminations', currentCompanyId] }),
+      ]);
+    },
+    onError: () => {
+      toast.error('No se pudo guardar el cambio en el checklist de retiro');
     },
   });
 }
@@ -419,6 +464,7 @@ export function useCompleteTermination() {
         queryClient.invalidateQueries({ queryKey: ['contract', contractId] });
       }
       queryClient.invalidateQueries({ queryKey: ['employee-termination-process', employeeId] });
+      queryClient.invalidateQueries({ queryKey: ['active-terminations', currentCompanyId] });
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       queryClient.invalidateQueries({ queryKey: ['employees'] });
       queryClient.invalidateQueries({ queryKey: ['employees_v2'] });

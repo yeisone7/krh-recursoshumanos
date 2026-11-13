@@ -68,12 +68,11 @@ export function useActiveTerminations() {
       const activeTerminations: ActiveTermination[] = data.map((item) => {
         const documents = item.termination_documents || [];
         const totalDocs = documents.length;
-        const completedDocs = documents.filter((d: any) => d.is_generated).length;
-        const progress = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0;
-        
         const pendingDocs = documents
-          .filter((d: any) => !d.is_generated)
-          .map((d: any) => d.document_type as TerminationDocumentType);
+          .filter(d => d.is_required && !d.is_generated)
+          .map(d => d.document_type as TerminationDocumentType);
+        const completedDocs = totalDocs - pendingDocs.length;
+        const progress = totalDocs > 0 ? Math.round((completedDocs / totalDocs) * 100) : 0;
 
         const effectiveDate = new Date(item.effective_date);
         const daysUntilEffective = Math.ceil((effectiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));

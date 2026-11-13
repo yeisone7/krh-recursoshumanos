@@ -100,7 +100,7 @@ async function getPendingTerminations(supabase: any, defaultMinDays: number = 7)
       company_id,
       employees!inner(first_name, last_name, position),
       companies!inner(name, email),
-      termination_documents(is_generated)
+      termination_documents(is_generated, is_required)
     `)
     .eq('is_completed', false);
 
@@ -121,7 +121,9 @@ async function getPendingTerminations(supabase: any, defaultMinDays: number = 7)
     if (daysPending >= minDays) {
       const documents = item.termination_documents || [];
       const totalDocs = documents.length;
-      const completedDocs = documents.filter((d: any) => d.is_generated).length;
+      const pendingDocs = documents.filter((d: { is_required: boolean; is_generated: boolean }) =>
+        d.is_required && !d.is_generated
+      ).length;
 
       results.push({
         id: item.id,
@@ -131,7 +133,7 @@ async function getPendingTerminations(supabase: any, defaultMinDays: number = 7)
         effective_date: item.effective_date,
         created_at: item.created_at,
         days_pending: daysPending,
-        pending_documents: totalDocs - completedDocs,
+        pending_documents: pendingDocs,
         total_documents: totalDocs,
         company_name: item.companies.name,
         company_email: item.companies.email,
