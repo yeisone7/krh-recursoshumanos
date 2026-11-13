@@ -11,13 +11,13 @@ export default function Organigrama() {
 
   return (
     <div className="flex h-full min-h-[34rem] min-w-0 flex-col gap-3">
-      <header className="flex shrink-0 items-center gap-3 rounded-xl border border-neutral-500 bg-neutral-600 px-3.5 py-3 text-white sm:px-4">
-        <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-white/15 bg-white/10">
+      <header className="flex shrink-0 items-center gap-3 rounded-xl border border-l-4 border-border border-l-primary bg-secondary px-3.5 py-3 text-secondary-foreground sm:px-4">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
           <Network className="size-5" aria-hidden="true" />
         </span>
         <div>
           <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">Organigrama</h1>
-          <p className="text-xs leading-snug text-neutral-200 sm:text-sm">Explora la jerarquía, los cargos y las personas asignadas.</p>
+          <p className="text-xs leading-snug text-muted-foreground sm:text-sm">Explora la jerarquía, los cargos y las personas asignadas.</p>
         </div>
       </header>
       <OrgChart

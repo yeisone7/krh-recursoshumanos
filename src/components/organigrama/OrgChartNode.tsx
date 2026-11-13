@@ -35,23 +35,23 @@ export function OrgChartNode({ position, children, expanded, onToggle, onSelect,
   return (
     <li className="org-branch">
       <div className={cn(
-        'relative z-10 w-[13.25rem] rounded-xl border border-border/90 bg-card shadow-[0_4px_14px_rgba(24,24,27,0.08)]',
-        root && 'border-neutral-500 bg-neutral-600 text-white',
+        'relative z-10 w-[13.25rem] rounded-xl border border-border bg-card text-card-foreground shadow-[var(--shadow-card)]',
+        root && 'border-primary/40 bg-primary-light',
         matched && 'ring-2 ring-primary/60',
         current && 'ring-[3px] ring-primary',
       )} data-org-map-node={position.id}>
         <button type="button" onClick={onSelect} aria-label={`Ver cargo ${position.name}`}
-          className="block w-full rounded-xl px-3 pb-4 pt-3 text-left transition-colors hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          className="block w-full rounded-xl px-3 pb-4 pt-3 text-left transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
           <span className="flex items-start gap-2.5">
-            <span className={cn('grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary', root && 'bg-white/10 text-neutral-100')}>
+            <span className={cn('grid size-7 shrink-0 place-items-center rounded-md', root ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary')}>
               <BriefcaseBusiness className="size-3.5" aria-hidden="true" />
             </span>
             <span className="min-w-0">
               <span className="block break-words text-sm font-semibold leading-tight">{position.name}</span>
-              <span className={cn('mt-0.5 block break-words text-[11px]', root ? 'text-neutral-200' : 'text-muted-foreground')}>{position.areaName || 'Sin área'}</span>
+              <span className="mt-0.5 block break-words text-[11px] text-muted-foreground">{position.areaName || 'Sin área'}</span>
             </span>
           </span>
-          <span className={cn('mt-2.5 flex min-h-8 items-center justify-between gap-2 border-t pt-2 text-xs', root ? 'border-white/20 text-neutral-100' : 'text-muted-foreground')}>
+          <span className="mt-2.5 flex min-h-8 items-center justify-between gap-2 border-t border-border pt-2 text-xs text-muted-foreground">
             {person ? <OrgPerson person={person} /> : (
               <span className="flex items-center gap-2"><Users className="size-3.5" aria-hidden="true" />Sin asignación</span>
             )}
@@ -62,7 +62,7 @@ export function OrgChartNode({ position, children, expanded, onToggle, onSelect,
           <button type="button" aria-expanded={expanded} aria-controls={expanded ? groupId : undefined}
             aria-label={`${expanded ? 'Contraer' : 'Expandir'} subordinados de ${position.name}`}
             onClick={onToggle}
-            className="absolute -bottom-3 left-1/2 flex h-6 -translate-x-1/2 items-center gap-1 rounded-md border border-neutral-400 bg-neutral-600 px-2 text-xs font-medium text-white shadow-sm hover:bg-neutral-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            className="absolute -bottom-3 left-1/2 flex h-6 -translate-x-1/2 items-center gap-1 rounded-md border border-primary bg-primary px-2 text-xs font-medium text-primary-foreground shadow-sm hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
             {position.children.length}
           </button>

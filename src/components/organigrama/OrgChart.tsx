@@ -301,7 +301,7 @@ export function OrgChart({ positions = emptyPositions, areas = emptyAreas, emplo
   return (
     <div ref={shell} className={cn('relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border bg-background shadow-sm',
       full && 'fixed inset-0 z-[70] h-[100dvh] w-full rounded-none border-0')}>
-      <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1.5 bg-neutral-500 p-2 sm:grid-cols-[minmax(10rem,1fr)_minmax(9rem,13rem)_auto_auto] sm:gap-2">
+      <div className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-1.5 border-b border-border bg-secondary p-2 sm:grid-cols-[minmax(10rem,1fr)_minmax(9rem,13rem)_auto_auto] sm:gap-2">
         <div className="relative col-span-3 min-w-0 sm:col-span-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <Input ref={searchField} value={search} onChange={event => updateSearch(event.target.value)}
@@ -323,11 +323,11 @@ export function OrgChart({ positions = emptyPositions, areas = emptyAreas, emplo
             {areas.map(area => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div role="group" aria-label="Vista del organigrama" className="inline-flex h-9 items-center gap-0.5 rounded-lg border border-white/20 bg-neutral-600 p-0.5">
+        <div role="group" aria-label="Vista del organigrama" className="inline-flex h-9 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5">
           {([{ id: 'map', title: 'Mapa', icon: Network }, { id: 'list', title: 'Lista', icon: ListTree }] as const).map(({ id, title, icon: Icon }) => (
             <button key={id} type="button" aria-pressed={view === id} onClick={() => changeView(id)}
               className={cn('flex h-full items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:px-2.5',
-                view === id ? 'bg-white text-neutral-800' : 'text-white hover:bg-white/10')}>
+                view === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground')}>
               <Icon className="hidden size-3.5 min-[400px]:block" aria-hidden="true" />{title}
             </button>
           ))}
