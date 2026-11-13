@@ -335,7 +335,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
         gender: currentEmployeeData.gender as any,
         genderIdentity: (currentEmployeeData as any).gender_identity || undefined,
         genderIdentityOther: (currentEmployeeData as any).gender_identity_other || undefined,
-        bloodType: currentEmployeeData.blood_type as any,
+        bloodType: currentEmployeeData.blood_type || undefined,
         maritalStatus: currentEmployeeData.marital_status as any,
         educationLevelIds: currentEmployeeData.education_level_ids || [],
         professionId: currentEmployeeData.profession_id || undefined,
