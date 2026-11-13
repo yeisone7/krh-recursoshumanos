@@ -57,6 +57,7 @@ type TimeConfigWithCatalogs = TimeConfig & {
 type CenterAssignmentWithCatalog = CenterAssignment & { operation_centers: NamedRelation };
 type ContractWithExtensions = Contract & {
   contract_extensions?: Array<{
+    start_date?: string;
     extension_number: number;
     end_date: string;
     document_url: string | null;
@@ -64,10 +65,13 @@ type ContractWithExtensions = Contract & {
 };
 
 export interface ReportContractCandidate {
+  contract_type?: string;
+  amendment_effective_on?: string | null;
   start_date: string;
   end_date: string | null;
   is_terminated: boolean | null;
   contract_extensions?: Array<{
+    start_date?: string;
     extension_number: number;
     end_date: string;
     document_url: string | null;
@@ -75,7 +79,8 @@ export interface ReportContractCandidate {
 }
 
 export function getEffectiveContractEnd(item: ReportContractCandidate): string | undefined {
-  return [...(item.contract_extensions || [])]
+  if (item.contract_type === 'indefinido') return undefined;
+  return [...(item.contract_extensions || [])].filter(e => !item.amendment_effective_on || (e.start_date && e.start_date >= item.amendment_effective_on))
     .sort((left, right) => right.extension_number - left.extension_number
       || right.end_date.localeCompare(left.end_date))[0]?.end_date
     || item.end_date

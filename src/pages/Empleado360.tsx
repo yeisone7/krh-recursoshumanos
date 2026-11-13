@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { EmployeeAmendments } from '@/components/employees/EmployeeAmendments';
 import { useParams, Navigate, useSearchParams } from 'react-router-dom';
 import {
   Activity,
@@ -228,6 +229,7 @@ export default function Empleado360() {
             </TabsContent>
             <TabsContent value="labor" className="m-0">
               <Tab360Labor employee={data.employee} />
+              <EmployeeAmendments employeeId={data.employee.id} />
             </TabsContent>
             <TabsContent value="contracts" className="m-0">
               <Tab360Contracts
@@ -235,6 +237,7 @@ export default function Empleado360() {
                 terminations={data.terminations}
                 isLoading={data.isLoadingContracts || data.isLoadingTerminations}
               />
+              <EmployeeAmendments employeeId={data.employee.id} />
             </TabsContent>
             <TabsContent value="timeline" className="m-0">
               <Tab360Timeline

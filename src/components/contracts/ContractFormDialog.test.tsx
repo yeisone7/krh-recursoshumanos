@@ -5,13 +5,15 @@ import { ContractFormDialog } from './ContractFormDialog';
 import { WorkspacePaneContext } from '@/components/workspace/WorkspacePaneContext';
 
 const mocks = vi.hoisted(() => ({
-  update: vi.fn().mockResolvedValue({}), create: vi.fn(),
+  update: vi.fn().mockResolvedValue({}), create: vi.fn(), error: vi.fn(),
   employees: [{ id: 'employee', first_name: 'Empleado', last_name: 'Prueba', document_number: 'TEST-1', is_active: true }],
   types: [
     { id: 'fixed', is_active: true, contract_type: 'fijo', display_name: 'Término fijo', requires_end_date: true },
     { id: 'work', is_active: true, contract_type: 'obra_labor', display_name: 'Obra o labor', requires_end_date: true },
   ],
 }));
+vi.mock('sonner', () => ({ toast: { error: mocks.error, success: vi.fn() } }));
+vi.mock('@/components/employees/EmployeeAmendments', () => ({ EmployeeAmendments: () => <button type="button">Otrosí e historial laboral</button> }));
 vi.mock('@/hooks/useEmployees', () => ({ useEmployees: () => ({ data: mocks.employees }) }));
 vi.mock('@/hooks/useCompanies', () => ({ useOperationCenters: () => ({ data: [] }) }));
 vi.mock('@/hooks/useContractTypes', () => ({ useContractTypes: () => ({ data: mocks.types }) }));
@@ -52,10 +54,9 @@ describe('contract date editing', () => {
     expect(mocks.update).not.toHaveBeenCalled();
     fireEvent.keyDown(day, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar Cambios' }));
-    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
-      id: 'contract', start_date: '2026-09-25', end_date: '2027-01-24',
-    })));
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Editar Contrato' })).toBeNull());
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith('Registre el cambio desde Otrosí o Corregir error de captura.'));
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Editar Contrato' })).toBeInTheDocument();
   });
 
   it('retains a manually selected end date for an obra/labor contract', async () => {
@@ -70,8 +71,7 @@ describe('contract date editing', () => {
     expect(mocks.update).not.toHaveBeenCalled();
     fireEvent.keyDown(day, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: 'Guardar Cambios' }));
-    await waitFor(() => expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({
-      start_date: '2026-09-24', end_date: '2026-09-28',
-    })));
+    await waitFor(() => expect(mocks.error).toHaveBeenCalledWith('Registre el cambio desde Otrosí o Corregir error de captura.'));
+    expect(mocks.update).not.toHaveBeenCalled();
   });
 });

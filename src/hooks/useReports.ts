@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -695,9 +696,11 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
           start_date,
           end_date,
           is_terminated,
+          amendment_effective_on,
           contract_extensions(
             id,
             extension_number,
+            start_date,
             end_date
           )
         `)
@@ -721,8 +724,9 @@ export function useContractsExpiringSoonReport(daysRange: number = 30) {
         let effectiveEndDate = contract.end_date ? parseDateOnlyOr(contract.end_date, new Date()) : null;
         let currentExtensionNumber = 0;
         
-        if (contract.contract_extensions?.length) {
-          const sortedExtensions = [...contract.contract_extensions].sort(
+        const extensions = effectiveContractExtensions(contract);
+        if (extensions.length) {
+          const sortedExtensions = [...extensions].sort(
             (a, b) => b.extension_number - a.extension_number
           );
           effectiveEndDate = parseDateOnlyOr(sortedExtensions[0].end_date, new Date());

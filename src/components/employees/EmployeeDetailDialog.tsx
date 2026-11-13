@@ -65,6 +65,8 @@ import { useDeleteCertification, useDeleteVaccination, useDeleteDocument } from 
 import { useDeleteCandidateDocument } from '@/hooks/useCandidates';
 import { useContracts } from '@/hooks/useContracts';
 import { useWorkInfoHistory } from '@/hooks/useWorkInfoHistory';
+import { EmployeeAmendments } from './EmployeeAmendments';
+import { openAmendmentFile } from '@/hooks/useEmployeeAmendments';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
 import { ContractFormDialog } from '@/components/contracts/ContractFormDialog';
 import { CertificationFormDialog } from './CertificationFormDialog';
@@ -382,6 +384,7 @@ function getDocumentFilePath(fileUrl: string) {
 }
 
 async function openEmployeeDocument(doc: EmployeeDocument) {
+  if (doc.file_url.startsWith('amendments/')) return openAmendmentFile(doc.file_url.slice('amendments/'.length));
   const path = getDocumentFilePath(doc.file_url);
   const { data, error } = await supabase.storage.from('documents').createSignedUrl(path, 3600);
   if (error) throw error;
@@ -925,6 +928,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
 
                       {/* Work Info History */}
                       <WorkInfoHistoryCard employeeId={employee.id} />
+                      <EmployeeAmendments employeeId={employee.id} />
 
                       {employee.work_info.observations && (
                         <SectionCard title="Observaciones" icon={FileText}>
@@ -1197,7 +1201,7 @@ export function EmployeeDetailDialog({ open, onOpenChange, employeeId }: Employe
                                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleOpenDocument(item.doc as EmployeeDocument)} title="Abrir documento">
                                             <ExternalLink className="h-4 w-4" />
                                           </Button>
-                                          {canDeleteEmployeeDocs && (
+                                          {canDeleteEmployeeDocs && !item.doc.file_url?.startsWith('amendments/') && (
                                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => item.source === 'employee' ? handleDeleteDocument(item.doc.id) : handleDeleteCandidateDocument(item.doc)} title="Eliminar documento">
                                               <Trash2 className="h-3.5 w-3.5 text-destructive" />
                                             </Button>

@@ -1122,6 +1122,57 @@ export function useUpdateEmployee() {
       if (!user) throw new Error('No hay usuario activo');
       const validShiftTypeId = await resolveValidShiftTypeId(data.shiftTypeId, currentCompanyId);
 
+      const { data: activeCycle, error: activeCycleError } = await supabase
+        .from('employee_employment_cycles')
+        .select('id')
+        .eq('employee_id', id)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (activeCycleError) throw activeCycleError;
+      const activeCycleId = activeCycle?.id || null;
+
+      // 2. Update or insert related records
+      // First, check which records exist
+      const [
+        existingContact,
+        existingFamily,
+        existingWorkInfo,
+        existingSocialSecurity,
+        existingBankInfo,
+        existingSchedule,
+        existingTimeConfig,
+      ] = await Promise.all([
+        fetchBestEmployeeRelatedRecord('employee_contact', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_family', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_work_info', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id, 'is_current', activeCycleId),
+        fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active', activeCycleId),
+      ]);
+
+      // Check before any writes, so a protected-field change cannot partially save
+      // personal data and only then fail at the database guard.
+      const protectedChanges = [
+        [existingWorkInfo?.position_id, data.positionId],
+        [existingWorkInfo?.position_name, data.positionName],
+        [existingWorkInfo?.operation_center_id, data.operationCenterId],
+        [existingWorkInfo?.link_type, data.linkType || 'indefinido'],
+        [existingSchedule?.rest_day, data.restDay],
+        [existingSchedule?.shift_type_id, validShiftTypeId],
+        [existingSchedule?.is_office_schedule ?? true, data.isOfficeSchedule],
+        [existingTimeConfig?.mode, data.timeMode],
+        [existingTimeConfig?.work_schedule_id, data.timeMode === 'administrative' ? data.workScheduleId : null],
+        [existingTimeConfig?.shift_cycle_id, data.timeMode === 'shift' ? data.shiftCycleId : null],
+        [existingTimeConfig?.cycle_start_date, data.cycleStartDate ? format(data.cycleStartDate, 'yyyy-MM-dd') : null],
+      ].some(([oldValue, newValue]) => (oldValue ?? '') !== (newValue ?? ''));
+      if (activeCycleId && existingWorkInfo && protectedChanges) {
+        const { data: activeContracts, error: contractError } = await supabase.from('contracts')
+          .select('id').eq('employment_cycle_id', activeCycleId).or('is_terminated.is.null,is_terminated.eq.false').limit(1);
+        if (contractError) throw contractError;
+        if (activeContracts?.length) throw new Error('Registre estos cambios desde Otrosí o Corregir error de captura en la ficha del empleado.');
+      }
+
       // 1. Update core employee
       const { data: employee, error: empError } = await supabase
         .from('employees_v2')
@@ -1160,35 +1211,6 @@ export function useUpdateEmployee() {
         .single();
 
       if (empError) throw empError;
-
-      const { data: activeCycle, error: activeCycleError } = await supabase
-        .from('employee_employment_cycles')
-        .select('id')
-        .eq('employee_id', id)
-        .eq('status', 'active')
-        .maybeSingle();
-      if (activeCycleError) throw activeCycleError;
-      const activeCycleId = activeCycle?.id || null;
-
-      // 2. Update or insert related records
-      // First, check which records exist
-      const [
-        existingContact,
-        existingFamily,
-        existingWorkInfo,
-        existingSocialSecurity,
-        existingBankInfo,
-        existingSchedule,
-        existingTimeConfig,
-      ] = await Promise.all([
-        fetchBestEmployeeRelatedRecord('employee_contact', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_family', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_work_info', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_social_security', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_bank_info', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_schedule', '*', id, 'is_current', activeCycleId),
-        fetchBestEmployeeRelatedRecord('employee_time_config', '*', id, 'is_active', activeCycleId),
-      ]);
 
       await Promise.all([
         deactivateOtherCurrentRecords('employee_contact', id, existingContact?.id, 'is_current', activeCycleId),

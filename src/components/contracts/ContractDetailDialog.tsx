@@ -36,6 +36,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { EmployeeAmendments } from '@/components/employees/EmployeeAmendments';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
@@ -114,7 +115,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const canRetireContract = canUpdateContracts || canUpdate('empleados');
   
   // Map DB contract to UI Contract interface
-  const contract = initialContract || (dbContract ? (() => {
+  const contract = (dbContract ? (() => {
     const contractType: Contract['contractType'] = dbContract.contract_type === 'indefinido' ? 'indefinite' :
                    dbContract.contract_type === 'fijo' ? 'fixed' :
                    dbContract.contract_type === 'obra_labor' ? 'work_labor' :
@@ -164,7 +165,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
       hasNonCompeteClause: dbContract.has_non_compete_clause || false,
       hasConfidentialityClause: dbContract.has_confidentiality_clause || false,
     } as Contract;
-  })() : null);
+  })() : null) || initialContract;
 
   // Fetch termination process status
   const { data: terminationProcess } = useContractTerminationProcess(contract?.id);
@@ -298,7 +299,7 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
   const extensionFormCurrentEndDate = editingExtension
     ? addDays(editingExtension.startDate, -1)
     : contract.currentEndDate;
-  const extensionFormNumber = editingExtension?.extensionNumber || contract.extensions.length + 1;
+  const extensionFormNumber = editingExtension?.extensionNumber || Math.max(0, ...(dbContract?.historical_contract_extensions || []).map(e => e.extension_number), ...contract.extensions.map(e => e.extensionNumber)) + 1;
   const extensionFormExistingExtensions = editingExtension
     ? contract.extensions.filter((extension) => extension.id !== editingExtension.id)
     : contract.extensions;
@@ -893,6 +894,8 @@ export function ContractDetailDialog({ open, onOpenChange, contractId, contract:
               )}
 
               {/* Document Section */}
+              {!!dbContract?.amendment_effective_on && <details className="rounded-lg border p-3 text-sm"><summary>Prórrogas históricas anteriores al cambio contractual</summary>{dbContract.historical_contract_extensions?.filter(e => e.start_date < dbContract.amendment_effective_on!).map(e => <p key={e.id}>Prórroga #{e.extension_number}: {e.start_date} → {e.end_date}</p>)}</details>}
+              <EmployeeAmendments employeeId={contract.employeeId} contractId={contract.id} compact />
               <Separator />
               <DocumentSection
                 entityType="contract"

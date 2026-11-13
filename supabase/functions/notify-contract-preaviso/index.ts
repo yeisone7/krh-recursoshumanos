@@ -81,7 +81,7 @@ async function getContractsInPreaviso(supabase: any): Promise<ContractPreaviso[]
       end_date,
       employee_id,
       is_terminated,
-      contract_extensions(id, end_date, extension_number)
+      amendment_effective_on, contract_extensions(id, start_date, end_date, extension_number)
     `)
     .eq('is_terminated', false)
     .neq('contract_type', 'indefinido');
@@ -96,10 +96,11 @@ async function getContractsInPreaviso(supabase: any): Promise<ContractPreaviso[]
   for (const contract of contracts || []) {
     // Calculate current end date considering extensions
     let currentEndDate = contract.end_date;
-    const extensionCount = contract.contract_extensions?.length || 0;
+    const extensions = (contract.contract_extensions || []).filter(e => !contract.amendment_effective_on || e.start_date >= contract.amendment_effective_on);
+    const extensionCount = extensions.length;
     
     if (extensionCount > 0) {
-      const latestExtension = contract.contract_extensions.reduce(
+      const latestExtension = extensions.reduce(
         (latest: any, current: any) =>
           current.extension_number > latest.extension_number ? current : latest
       );

@@ -151,6 +151,7 @@ import {
   familyRelationshipOptions,
 } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
+import { EmployeeAmendments } from './EmployeeAmendments';
 import { useCreateEmployee, useUpdateEmployee, useEmployee } from '@/hooks/useEmployees';
 import { useAreas, usePositions, useIdentificationTypes } from '@/hooks/useSystemConfig';
 import { useAuth } from '@/contexts/AuthContext';
@@ -567,6 +568,7 @@ export function EmployeeFormDialog({ open, onOpenChange, employee, onSuccess }: 
                       : 'Complete la ficha del empleado. Puede cambiar de sección sin perder los datos.'
                     }
                   </DialogDescription>
+                  {isEditMode && employee && <EmployeeAmendments employeeId={employee.id} compact />}
                   </div>
                 </DialogHeader>
 

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import type { Database } from '@/integrations/supabase/types';
 import { formatDateForSupabase, type AutomaticExtensionPreview } from '@/lib/contractExtensionRegularization';
 
@@ -95,6 +96,7 @@ export function useContracts() {
           is_approved,
           created_at,
           updated_at,
+          amendment_effective_on,
           contract_extensions(id, extension_number, start_date, end_date, extension_type, reason),
           employees:employees_v2!contracts_employee_id_fkey(
             id, 
@@ -133,6 +135,8 @@ export function useContracts() {
         
         return {
           ...contract,
+          contract_extensions: effectiveContractExtensions(contract),
+          historical_contract_extensions: contract.contract_extensions,
           employees: employee ? {
             id: employee.id,
             first_name: employee.first_name,
@@ -178,6 +182,8 @@ export function useContract(id: string | undefined) {
 
       return {
         ...contract,
+        contract_extensions: effectiveContractExtensions(contract),
+        historical_contract_extensions: contract.contract_extensions,
         employees: employee ? {
           id: employee.id,
           first_name: employee.first_name,

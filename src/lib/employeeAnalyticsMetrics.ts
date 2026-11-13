@@ -107,18 +107,22 @@ export function countTerminationsForMonth(
 }
 
 interface AnalyticsContract {
+  contract_type?: string;
+  amendment_effective_on?: string | null;
   employee_id?: string | null;
   end_date: string | null;
   is_terminated: boolean;
   contract_extensions?: Array<{
     id?: string;
     end_date: string | null;
+    start_date?: string;
     extension_number: number;
   }> | null;
 }
 
 export function getEffectiveContractEndDate(contract: AnalyticsContract) {
-  const latestExtension = [...(contract.contract_extensions || [])]
+  if (contract.contract_type === 'indefinido') return null;
+  const latestExtension = [...(contract.contract_extensions || [])].filter(e => !contract.amendment_effective_on || (e.start_date && e.start_date >= contract.amendment_effective_on))
     .sort((a, b) => b.extension_number - a.extension_number || (b.id || '').localeCompare(a.id || ''))[0];
 
   return latestExtension?.end_date || contract.end_date;

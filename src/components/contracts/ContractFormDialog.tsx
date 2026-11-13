@@ -54,6 +54,7 @@ import { getEmployeeFullName } from '@/types/employee';
 import { useOperationCenters } from '@/hooks/useCompanies';
 import { useCreateContract, useUpdateContract, useContracts } from '@/hooks/useContracts';
 import { useContractTypes } from '@/hooks/useContractTypes';
+import { EmployeeAmendments } from '@/components/employees/EmployeeAmendments';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Database } from '@/integrations/supabase/types';
 import { Badge } from '@/components/ui/badge';
@@ -261,6 +262,10 @@ export function ContractFormDialog({
       };
 
       if (isEditMode && contractToEdit) {
+        if (salaryNumber !== Number(contractToEdit.salary) || dbContractType !== contractToEdit.contract_type || (data.workLaborDescription || null) !== (contractToEdit.work_labor_description || null) || (contractData.end_date || null) !== (contractToEdit.end_date || null)) {
+          toast.error('Registre el cambio desde Otrosí o Corregir error de captura.');
+          return;
+        }
         await updateContract.mutateAsync({
           id: contractToEdit.id,
           ...contractData,
@@ -353,6 +358,7 @@ export function ContractFormDialog({
           </div>
         </div>
 
+        {isEditMode && contractToEdit && <div className="px-4 py-2"><EmployeeAmendments employeeId={contractToEdit.employee_id} contractId={contractToEdit.id} compact /></div>}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="flex min-h-0 flex-1 flex-col">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-0 flex-1 flex-col">

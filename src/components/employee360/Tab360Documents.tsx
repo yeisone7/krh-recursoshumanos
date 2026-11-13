@@ -27,6 +27,7 @@ import { formatDateOnly } from '@/lib/dateOnly';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { openAmendmentFile } from '@/hooks/useEmployeeAmendments';
 
 interface Tab360DocumentsProps {
   employee: EmployeeV2WithRelations;
@@ -95,6 +96,11 @@ function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
 
   const handleView = async () => {
     if (!doc.file_url) return;
+    if (doc.file_url.startsWith('amendments/')) {
+      try { await openAmendmentFile(doc.file_url.slice('amendments/'.length)); }
+      catch (error) { toast.error((error as Error).message); }
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -121,8 +127,9 @@ function DocumentTreeItem({ item }: { item: DocumentTreeItemData }) {
 
     setIsLoading(true);
     try {
-      const storagePath = extractStoragePath(doc.file_url);
-      const { data, error } = await supabase.storage.from('documents').download(storagePath);
+      const isAmendment = doc.file_url.startsWith('amendments/');
+      const storagePath = isAmendment ? doc.file_url.slice('amendments/'.length) : extractStoragePath(doc.file_url);
+      const { data, error } = await supabase.storage.from(isAmendment ? 'amendments' : 'documents').download(storagePath);
 
       if (error) {
         console.error('Error downloading document:', error);

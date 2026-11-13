@@ -2149,6 +2149,7 @@ export type Database = {
       }
       contracts: {
         Row: {
+          amendment_effective_on: string | null
           approved_at: string | null
           approved_by: string | null
           company_id: string
@@ -2181,6 +2182,7 @@ export type Database = {
           work_labor_description: string | null
         }
         Insert: {
+          amendment_effective_on?: string | null
           approved_at?: string | null
           approved_by?: string | null
           company_id: string
@@ -2213,6 +2215,7 @@ export type Database = {
           work_labor_description?: string | null
         }
         Update: {
+          amendment_effective_on?: string | null
           approved_at?: string | null
           approved_by?: string | null
           company_id?: string

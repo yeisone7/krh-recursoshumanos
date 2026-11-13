@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from './effectiveContractExtensions';
 import { eachDayOfInterval, format, getDay, parseISO, subDays } from 'date-fns';
 import type { Database } from '@/integrations/supabase/types';
 import { getPayrollRestDay } from '@/lib/payrollRestDay';
@@ -376,10 +377,10 @@ function overlaps(date: string, start: string, end?: string | null) {
   return start <= date && (!end || end >= date);
 }
 function contractEnd(contract: QueryContract) {
-  const extensionEnd = [...(contract.contract_extensions || [])].sort(
+  const extensionEnd = effectiveContractExtensions(contract).sort(
     (a, b) => b.extension_number - a.extension_number,
   )[0]?.end_date;
-  const end = extensionEnd || contract.end_date;
+  const end = contract.contract_type === 'indefinido' ? null : extensionEnd || contract.end_date;
   return contract.termination_date && (!end || contract.termination_date < end)
     ? contract.termination_date
     : end;

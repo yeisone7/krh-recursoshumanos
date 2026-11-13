@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -168,7 +169,7 @@ export function useEmployeeKPIs() {
           end_date,
           contract_type,
           is_terminated,
-          contract_extensions(end_date, extension_number)
+          amendment_effective_on, contract_extensions(start_date, end_date, extension_number)
         `)
         .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
@@ -181,8 +182,9 @@ export function useEmployeeKPIs() {
       if (contracts) {
         for (const contract of contracts) {
           let currentEndDate = contract.end_date;
-          if (contract.contract_extensions && contract.contract_extensions.length > 0) {
-            const latest = contract.contract_extensions.reduce((a: any, b: any) => 
+          const extensions = effectiveContractExtensions(contract);
+          if (extensions.length > 0) {
+            const latest = extensions.reduce((a: any, b: any) =>
               a.extension_number > b.extension_number ? a : b
             );
             currentEndDate = latest.end_date;

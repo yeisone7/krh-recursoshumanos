@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -175,7 +176,7 @@ export function useUnifiedAlerts() {
           contract_type,
           is_terminated,
           created_at,
-          contract_extensions(id, end_date, extension_number)
+          amendment_effective_on, contract_extensions(id, start_date, end_date, extension_number)
         `)
         .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
@@ -186,9 +187,10 @@ export function useUnifiedAlerts() {
           const employee = employeeMap.get(contract.employee_id);
           if (!employee) continue;
 
-          let currentEndDate = contract.end_date;
-          if (contract.contract_extensions && contract.contract_extensions.length > 0) {
-            const latestExtension = contract.contract_extensions.reduce(
+          let currentEndDate = contract.contract_type === 'indefinido' ? null : contract.end_date;
+          const extensions = effectiveContractExtensions(contract);
+          if (extensions.length > 0) {
+            const latestExtension = extensions.reduce(
               (latest: any, current: any) =>
                 current.extension_number > latest.extension_number ? current : latest
             );
@@ -197,7 +199,7 @@ export function useUnifiedAlerts() {
 
           const daysRemaining = calculateDaysRemaining(currentEndDate);
           if (daysRemaining !== null && daysRemaining >= -7 && daysRemaining <= 30) {
-            const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
+            const hasExtensions = extensions.length > 0;
             const isExpired = daysRemaining < 0;
             
             alerts.push({

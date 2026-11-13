@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { differenceInDays, parseISO, format } from 'date-fns';
@@ -66,7 +67,7 @@ export function useEmployee360Alerts(employeeId: string | undefined) {
         // Contracts & Extensions
         supabase
           .from('contracts')
-          .select('id, end_date, contract_type, is_terminated, contract_extensions(id, end_date, extension_number)')
+          .select('id, end_date, contract_type, is_terminated, amendment_effective_on, contract_extensions(id, start_date, end_date, extension_number)')
           .eq('employee_id', employeeId)
           .eq('is_terminated', false)
           .neq('contract_type', 'indefinido'),
@@ -118,7 +119,7 @@ export function useEmployee360Alerts(employeeId: string | undefined) {
       if (contractsRes.data) {
         for (const contract of contractsRes.data) {
           let currentEndDate = contract.end_date;
-          const extensions = contract.contract_extensions as any[] | null;
+          const extensions = effectiveContractExtensions(contract);
           
           if (extensions && extensions.length > 0) {
             const latestExtension = extensions.reduce((latest: any, current: any) =>

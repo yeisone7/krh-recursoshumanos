@@ -1,3 +1,4 @@
+import { effectiveContractExtensions } from '@/lib/effectiveContractExtensions';
 import { parseDateOnly, toDateOnlyString } from '@/lib/dateOnly';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,7 +91,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
           end_date,
           contract_type,
           is_terminated,
-          contract_extensions(id, end_date, extension_number)
+          amendment_effective_on, contract_extensions(id, start_date, end_date, extension_number)
         `)
         .eq('company_id', currentCompanyId!)
         .eq('is_terminated', false)
@@ -105,8 +106,9 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
 
           // Calculate current end date considering extensions
           let currentEndDate = contract.end_date;
-          if (contract.contract_extensions && contract.contract_extensions.length > 0) {
-            const latestExtension = contract.contract_extensions.reduce(
+          const extensions = effectiveContractExtensions(contract);
+          if (extensions.length > 0) {
+            const latestExtension = extensions.reduce(
               (latest: any, current: any) =>
                 current.extension_number > latest.extension_number ? current : latest
             );
@@ -116,7 +118,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
           const daysRemaining = calculateDaysRemaining(currentEndDate);
           if (daysRemaining === null) continue;
           
-          const hasExtensions = contract.contract_extensions && contract.contract_extensions.length > 0;
+          const hasExtensions = extensions.length > 0;
           const employeeName = `${employee.first_name} ${employee.last_name}`;
           
           // Alerta de PREAVISO: 35-31 días antes del vencimiento
@@ -128,7 +130,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
               level: 'warning',
               title: '⚖️ Período de Preaviso Activo',
               description: hasExtensions 
-                ? `Prórroga #${contract.contract_extensions!.length}: Decide antes de ${daysRemaining - 30} día(s) si será pactada o automática`
+                ? `Prórroga #${extensions.length}: Decide antes de ${daysRemaining - 30} día(s) si será pactada o automática`
                 : `Contrato: Decide antes de ${daysRemaining - 30} día(s) si será prórroga pactada o automática`,
               daysRemaining,
               entityName: employeeName,
@@ -145,7 +147,7 @@ export function useDashboardAlerts(options: DashboardAlertsOptions = {}) {
               level: getAlertLevel(daysRemaining),
               title: hasExtensions ? 'Prórroga por vencer' : 'Contrato por vencer',
               description: hasExtensions 
-                ? `Prórroga #${contract.contract_extensions!.length} vence en ${daysRemaining} días`
+                ? `Prórroga #${extensions.length} vence en ${daysRemaining} días`
                 : `Contrato a término fijo vence en ${daysRemaining} días`,
               daysRemaining,
               entityName: employeeName,
