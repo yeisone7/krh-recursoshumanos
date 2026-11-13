@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EmployeeTermination } from '@/types/termination';
 import { requiredDocumentsByType } from '@/types/termination';
@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   termination: null as EmployeeTermination | null,
   setOmitted: vi.fn(),
   complete: vi.fn(),
+  cancel: vi.fn(),
   download: vi.fn(),
 }));
 
@@ -25,6 +26,7 @@ vi.mock('@/hooks/useTerminations', () => ({
   useMarkDocumentGenerated: () => ({}),
   useSetTerminationDocumentOmitted: () => ({ mutate: mocks.setOmitted }),
   useCompleteTermination: () => ({ mutateAsync: mocks.complete }),
+  useCancelPendingTermination: () => ({ mutateAsync: mocks.cancel }),
 }));
 
 afterEach(() => {
@@ -33,6 +35,27 @@ afterEach(() => {
 });
 
 describe('checklist de retiro', () => {
+  it('confirma la cancelación del retiro pendiente y oculta la opción para retiros finalizados', async () => {
+    const date = new Date(2026, 10, 13);
+    const termination: EmployeeTermination = {
+      id: 'termination', employeeId: 'employee', companyId: 'company', contractId: null,
+      terminationType: 'mutuo_acuerdo', terminationDate: date, effectiveDate: date,
+      createdAt: date, updatedAt: date, isCompleted: false, documents: [],
+    };
+    mocks.termination = termination;
+    const onOpenChange = vi.fn();
+    const dialog = () => <TerminationProcessDialog open onOpenChange={onOpenChange} employee={{ id: 'employee', first_name: 'Prueba' }} />;
+    const view = render(dialog());
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar proceso de retiro' }));
+    expect(mocks.cancel).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar cancelación' }));
+    expect(mocks.cancel).toHaveBeenCalledWith(termination);
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    mocks.termination = { ...termination, isCompleted: true };
+    view.rerender(dialog());
+    expect(screen.queryByRole('button', { name: 'Cancelar proceso de retiro' })).not.toBeInTheDocument();
+  });
+
   it('permite finalizar con formatos generados y omitidos, y vuelve a bloquear al deshacer', () => {
     const date = new Date(2026, 10, 13);
     const termination: EmployeeTermination = {

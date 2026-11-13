@@ -369,6 +369,47 @@ export function useMarkDocumentSigned() {
   });
 }
 
+export function useCancelPendingTermination() {
+  const queryClient = useQueryClient();
+  const { currentCompanyId } = useAuth();
+
+  return useMutation({
+    mutationFn: async (termination: EmployeeTermination) => {
+      if (!currentCompanyId || termination.companyId !== currentCompanyId) {
+        throw new Error('Seleccione la empresa del proceso de retiro');
+      }
+
+      const { error } = await supabase.rpc('cancel_pending_employee_termination', {
+        p_termination_id: termination.id,
+        p_company_id: currentCompanyId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async (_, { employeeId, contractId }) => {
+      const queryKeys = [
+        ['employee-termination-process', employeeId],
+        ['employee_v2', employeeId],
+        ['employees_v2'],
+        ['employees_v2_paginated'],
+        ['employees_v2_infinite'],
+        ['employees'],
+        ['contracts'],
+        ['active-terminations', currentCompanyId],
+        ['employee_360_terminations', employeeId],
+        ['employee_360_latest_termination', employeeId],
+        ['employee_360_timeline', employeeId],
+        ['employee_360_audit', employeeId],
+      ];
+      if (contractId) queryKeys.push(['termination-process', contractId], ['contract', contractId]);
+      await Promise.all(queryKeys.map(queryKey => queryClient.invalidateQueries({ queryKey })));
+      toast.success('Proceso de retiro cancelado');
+    },
+    onError: (error) => {
+      toast.error('No se pudo cancelar el proceso de retiro', { description: error.message });
+    },
+  });
+}
+
 // Complete termination process
 export function useCompleteTermination() {
   const queryClient = useQueryClient();
@@ -396,7 +437,9 @@ export function useCompleteTermination() {
           completed_at: new Date().toISOString(),
           completed_by: user?.id,
         })
-        .eq('id', terminationId);
+        .eq('id', terminationId)
+        .select('id')
+        .single();
 
       if (terminationError) throw terminationError;
 

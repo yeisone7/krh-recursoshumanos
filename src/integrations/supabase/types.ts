@@ -12347,6 +12347,10 @@ export type Database = {
         }
         Returns: number
       }
+      cancel_pending_employee_termination: {
+        Args: { p_termination_id: string; p_company_id: string }
+        Returns: undefined
+      }
       cancel_leave_request_workflow: {
         Args: { p_reason: string; p_request_id: string }
         Returns: Database["public"]["Tables"]["leave_requests"]["Row"]

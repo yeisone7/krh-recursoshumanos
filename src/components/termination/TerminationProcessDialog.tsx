@@ -74,6 +74,7 @@ import {
   useInitiateTermination,
   useMarkDocumentGenerated,
   useSetTerminationDocumentOmitted,
+  useCancelPendingTermination,
   useCompleteTermination,
 } from '@/hooks/useTerminations';
 import { downloadTerminationDocument } from '@/lib/terminationPdfGenerator';
@@ -103,6 +104,7 @@ export function TerminationProcessDialog({
   const [step, setStep] = useState<'initiate' | 'checklist'>('initiate');
   const [companyData, setCompanyData] = useState<any>(null);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [showCertificateDialog, setShowCertificateDialog] = useState(false);
   const [certificateDocumentId, setCertificateDocumentId] = useState<string | null>(null);
@@ -121,6 +123,7 @@ export function TerminationProcessDialog({
   const markDocumentGenerated = useMarkDocumentGenerated();
   const setDocumentOmitted = useSetTerminationDocumentOmitted();
   const completeTermination = useCompleteTermination();
+  const cancelTermination = useCancelPendingTermination();
   const isUpdatingChecklist = isGeneratingDocument || markDocumentGenerated.isPending || setDocumentOmitted.isPending;
   const resolvedEmployee = employeeData || employee;
   const workInfo = resolvedEmployee?.work_info;
@@ -175,6 +178,7 @@ export function TerminationProcessDialog({
 
   // Handle dialog close attempt
   const handleCloseAttempt = () => {
+    if (cancelTermination.isPending) return;
     if (step === 'checklist' && hasPendingDocuments) {
       setShowExitConfirmation(true);
     } else {
@@ -279,7 +283,7 @@ export function TerminationProcessDialog({
 
   // Complete termination
   const handleComplete = async () => {
-    if (!termination || !checklist?.canFinalize || isUpdatingChecklist || completeTermination.isPending) return;
+    if (!termination || !checklist?.canFinalize || isUpdatingChecklist || completeTermination.isPending || cancelTermination.isPending) return;
     
     try {
       await completeTermination.mutateAsync({
@@ -298,6 +302,20 @@ export function TerminationProcessDialog({
       setShowTransferDialog(true);
     } else {
       onOpenChange(false);
+    }
+  };
+
+  const handleCancelTermination = async () => {
+    if (!termination || termination.isCompleted || completeTermination.isPending || isUpdatingChecklist || cancelTermination.isPending) return;
+
+    try {
+      await cancelTermination.mutateAsync(termination);
+      setShowCancelConfirmation(false);
+      setStep('initiate');
+      form.reset();
+      onOpenChange(false);
+    } catch {
+      // The mutation reports the error and leaves the checklist available.
     }
   };
 
@@ -533,7 +551,7 @@ export function TerminationProcessDialog({
                             <Button
                               variant={doc.isGenerated ? 'outline' : 'default'}
                               size="sm"
-                              disabled={isUpdatingChecklist || completeTermination.isPending || !terminationDoc || (isLaborCertificate && !employeeData)}
+                              disabled={isUpdatingChecklist || completeTermination.isPending || cancelTermination.isPending || !terminationDoc || (isLaborCertificate && !employeeData)}
                               onClick={async () => {
                                 if (!terminationDoc) return;
                                 if (isLaborCertificate) {
@@ -564,7 +582,7 @@ export function TerminationProcessDialog({
                               variant="outline"
                               size="sm"
                               aria-label={isOmitted ? `Deshacer omisión de ${doc.label}` : `Omitir ${doc.label}`}
-                              disabled={isUpdatingChecklist || completeTermination.isPending || !terminationDoc}
+                              disabled={isUpdatingChecklist || completeTermination.isPending || cancelTermination.isPending || !terminationDoc}
                               onClick={changeOmission}
                             >
                               {isOmitted ? 'Deshacer omisión' : 'Omitir'}
@@ -608,10 +626,21 @@ export function TerminationProcessDialog({
                     <Save className="w-4 h-4 mr-2" />
                     Guardar y Continuar Después
                   </Button>
+                  {termination && !termination.isCompleted && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => setShowCancelConfirmation(true)}
+                      disabled={isUpdatingChecklist || completeTermination.isPending || cancelTermination.isPending}
+                    >
+                      Cancelar proceso de retiro
+                    </Button>
+                  )}
                 </div>
                 <Button
                   onClick={handleComplete}
-                  disabled={!checklist.canFinalize || isUpdatingChecklist || completeTermination.isPending}
+                  disabled={!checklist.canFinalize || isUpdatingChecklist || completeTermination.isPending || cancelTermination.isPending}
                   className={cn(!checklist.canFinalize && 'opacity-50')}
                 >
                   {completeTermination.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -626,6 +655,33 @@ export function TerminationProcessDialog({
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showCancelConfirmation} onOpenChange={value => {
+        if (!cancelTermination.isPending) setShowCancelConfirmation(value);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cancelar el proceso de retiro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se descartará el checklist guardado y se retirará la fecha provisional de este proceso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelTermination.isPending}>Conservar proceso</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelTermination.isPending || completeTermination.isPending || !termination || termination.isCompleted}
+              onClick={event => {
+                event.preventDefault();
+                void handleCancelTermination();
+              }}
+            >
+              {cancelTermination.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar cancelación
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Exit confirmation dialog */}
       <AlertDialog open={showExitConfirmation} onOpenChange={setShowExitConfirmation}>
